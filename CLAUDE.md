@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.32.41 | **File**: `SentencifyAI_v1_28.jsx` (~920 KB) | **Runtime**: Standalone + Vercel
+**Version**: 1.32.42 | **File**: `SentencifyAI_v1_28.jsx` (~920 KB) | **Runtime**: Standalone + Vercel
 
 ## Architecture
 
@@ -48,6 +48,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.32.42 | Tailwind CDN → PostCSS: build-time compilation, remove warning de produção, tailwindcss v3 |
 | v1.32.41 | Suporte a deploy Vercel: serverless functions (/api/*), API_BASE dinâmico, vercel.json |
 | v1.32.40 | Toggle para ativar/desativar logs de thinking no console (Config IA > logThinking) |
 | v1.32.39 | Log de thinking no console do browser: Claude (extended thinking) e Gemini 3 (includeThoughts) para debug/análise |
