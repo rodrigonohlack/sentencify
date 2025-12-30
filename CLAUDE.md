@@ -32,7 +32,7 @@
 
 ## Deploy (Vercel)
 
-**URL Produção**: https://sentencify-five.vercel.app
+**URL Produção**: https://sentencifyai.vercel.app
 **Repositório**: https://github.com/rodrigonohlack/sentencify
 
 **Auto-deploy**: Sempre que fizer alterações no código, fazer `git add . && git commit -m "descrição" && git push`. A Vercel faz deploy automático em ~1 minuto.
