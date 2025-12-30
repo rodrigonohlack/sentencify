@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.1'; // v1.33.1: Fix CORS proxy + UI embeddings simplificada
+const APP_VERSION = '1.33.2'; // v1.33.2: Remover logs de AI/Search em produção
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.2', feature: 'Remover logs de AI/Search em produção (apenas em DEV)' },
   { version: '1.33.1', feature: 'Fix CORS: proxy serverless para download embeddings, UI simplificada (remove import manual), z-index modal corrigido' },
   { version: '1.33.0', feature: 'Auto-download de embeddings via CDN: legislação e jurisprudência baixados automaticamente do GitHub Releases (~250MB)' },
   { version: '1.32.42', feature: 'Migrar Tailwind CDN para PostCSS: build-time compilation, remove warning de produção, CSS otimizado' },
@@ -298,7 +299,7 @@ const detectAICapabilities = () => {
     crossOriginIsolated: !!window.crossOriginIsolated
   };
 
-  console.log('[AI] Capabilities:', caps);
+  if (import.meta.env.DEV) console.log('[AI] Capabilities:', caps);
   return caps;
 };
 
@@ -385,14 +386,14 @@ const AIModelService = {
     this._notify();
 
     const caps = detectAICapabilities();
-    console.log(`[AI] Iniciando ${modelType}...`, caps);
+    if (import.meta.env.DEV) console.log(`[AI] Iniciando ${modelType}...`, caps);
 
     try {
       await this._call(`init-${modelType}`);
       this.status[modelType] = 'ready';
       this.progress[modelType] = 100;
       this._notify();
-      console.log(`[AI] ${modelType} pronto!`);
+      if (import.meta.env.DEV) console.log(`[AI] ${modelType} pronto!`);
       return true;
     } catch (err) {
       this.status[modelType] = 'error';
@@ -19675,7 +19676,7 @@ const LegalDecisionEditor = () => {
   // v1.32.06: Auto-inicializar Search ao carregar página se estava ativado
   React.useEffect(() => {
     if (searchEnabled && !searchModelReady && !searchInitializing) {
-      console.log('[SEARCH] Auto-inicializando modelo (estava ativado)...');
+      if (import.meta.env.DEV) console.log('[SEARCH] Auto-inicializando modelo (estava ativado)...');
       // Delay para não bloquear render inicial
       const timer = setTimeout(() => {
         initSearchModel();
