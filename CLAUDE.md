@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.32.42 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
+**Version**: 1.33.0 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
 
 ## Architecture
 
@@ -44,10 +44,17 @@
 - `JURIS/juris-embeddings.json`
 - `sentencify-modelos-com-embeddings.json`
 
+**Embeddings via CDN** (v1.33.0):
+- Hospedados no GitHub Releases: `embeddings-v1`
+- URLs: `https://github.com/rodrigonohlack/sentencify/releases/download/embeddings-v1/legis-embeddings.json` e `juris-embeddings.json`
+- Download automático na primeira execução via modal
+- `EmbeddingsCDNService` gerencia download com retry e progresso
+
 ## Recent Changes
 
 | Version | Feature |
 |---------|---------|
+| v1.33.0 | Auto-download embeddings via CDN: legislação e jurisprudência baixados do GitHub Releases (~250MB), modal de download com progresso |
 | v1.32.42 | Tailwind CDN → PostCSS: build-time compilation, remove warning de produção, tailwindcss v3 |
 | v1.32.41 | Suporte a deploy Vercel: serverless functions (/api/*), API_BASE dinâmico, vercel.json |
 | v1.32.40 | Toggle para ativar/desativar logs de thinking no console (Config IA > logThinking) |
