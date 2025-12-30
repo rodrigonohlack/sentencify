@@ -30344,7 +30344,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 
       {/* 🌐 v1.33.0: Modal de Download de Embeddings do CDN */}
       {showEmbeddingsDownloadModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={handleDismissEmbeddingsPrompt}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={handleDismissEmbeddingsPrompt}>
           <div className="theme-bg-primary rounded-lg shadow-xl max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center p-4 border-b theme-border-primary">
               <h2 className="text-lg font-semibold theme-text-primary flex items-center gap-2">
