@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.32.42 | **File**: `SentencifyAI_v1_28.jsx` (~920 KB) | **Runtime**: Standalone + Vercel
+**Version**: 1.32.42 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
 
 ## Architecture
 
