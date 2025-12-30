@@ -30,6 +30,20 @@
 
 > **Nota**: Este projeto agora roda como aplicação standalone (fora do sandbox Claude.ai). Não há mais limite de tamanho de arquivo nem necessidade de minificação.
 
+## Deploy (Vercel)
+
+**URL Produção**: https://sentencify-five.vercel.app
+**Repositório**: https://github.com/rodrigonohlack/sentencify
+
+**Auto-deploy**: Sempre que fizer alterações no código, fazer `git add . && git commit -m "descrição" && git push`. A Vercel faz deploy automático em ~1 minuto.
+
+**Arquivos estáticos**: Colocar na pasta `public/` (ex: `MANUAL_USUARIO_AVANCADO.html`)
+
+**Arquivos grandes ignorados** (não vão para o GitHub/Vercel):
+- `LEGIS/embeddings.json` (211 MB)
+- `JURIS/juris-embeddings.json`
+- `sentencify-modelos-com-embeddings.json`
+
 ## Recent Changes
 
 | Version | Feature |
