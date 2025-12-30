@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.32.41'; // v1.32.41: Suporte a deploy Vercel (serverless functions)
+const APP_VERSION = '1.32.42'; // v1.32.42: Migrar Tailwind CDN para PostCSS (remove warning produção)
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.32.42', feature: 'Migrar Tailwind CDN para PostCSS: build-time compilation, remove warning de produção, CSS otimizado' },
   { version: '1.32.41', feature: 'Suporte a deploy Vercel: serverless functions (/api/claude, /api/gemini), API_BASE dinâmico (local vs prod)' },
   { version: '1.32.40', feature: 'Toggle para ativar/desativar logs de thinking no console (Config IA > Log thinking no console)' },
   { version: '1.32.39', feature: 'Log de thinking no console do browser: Claude (extended thinking) e Gemini 3 (includeThoughts) para debug e análise' },
