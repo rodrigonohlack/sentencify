@@ -873,8 +873,12 @@ const JurisEmbeddingsService = {
 
 // 🌐 CDN SERVICE para download automático de embeddings (v1.33.0)
 const EmbeddingsCDNService = {
-  CDN_BASE: 'https://github.com/rodrigonohlack/sentencify/releases/download/embeddings-v1/',
   VERSION: '1.0.0',
+
+  // Retorna URL do proxy (funciona local e Vercel, resolve CORS)
+  getProxyUrl(file) {
+    return `${API_BASE}/api/embeddings?file=${file}`;
+  },
 
   // Verifica se precisa baixar embeddings
   async needsDownload(type) {
@@ -922,7 +926,7 @@ const EmbeddingsCDNService = {
 
   // Baixa e salva embeddings de legislação
   async downloadLegislacao(onProgress, onBatchComplete) {
-    const url = `${this.CDN_BASE}legis-embeddings.json`;
+    const url = this.getProxyUrl('legis-embeddings.json');
     const text = await this.downloadFile(url, onProgress);
     const items = JSON.parse(text);
 
@@ -941,7 +945,7 @@ const EmbeddingsCDNService = {
 
   // Baixa e salva embeddings de jurisprudência
   async downloadJurisprudencia(onProgress, onBatchComplete) {
-    const url = `${this.CDN_BASE}juris-embeddings.json`;
+    const url = this.getProxyUrl('juris-embeddings.json');
     const text = await this.downloadFile(url, onProgress);
     const items = JSON.parse(text);
 
@@ -29710,18 +29714,16 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       {semanticSearchEnabled && (
                         <div className="space-y-3 pt-2 border-t theme-border-subtle">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <input ref={embeddingsFileInputRef} type="file" accept=".json" onChange={handleImportEmbeddings} className="hidden" />
-                            <button onClick={() => embeddingsFileInputRef.current?.click()} disabled={importingEmbeddings}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${!importingEmbeddings ? 'bg-blue-600 text-white hover-blue-700' : 'bg-gray-400 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed'}`}>
-                              {importingEmbeddings ? (<><RefreshCw className="w-3 h-3 animate-spin" /> Importando... {embeddingsProgress.current}/{embeddingsProgress.total}</>) : (<><Upload className="w-3 h-3" /> Importar JSON</>)}
-                            </button>
+                            {embeddingsCount === 0 ? (
+                              <button onClick={() => setShowEmbeddingsDownloadModal(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                                <Download className="w-3 h-3" /> Baixar do CDN
+                              </button>
+                            ) : (
+                              <span className="text-xs text-green-500 flex items-center gap-1"><Check className="w-3 h-3" /> Instalado</span>
+                            )}
                             {embeddingsCount > 0 && (<button onClick={clearEmbeddings} className="px-2 py-1.5 text-red-500 dark:text-red-400 text-xs"><Trash2 className="w-3 h-3" /></button>)}
                           </div>
-                          {importingEmbeddings && embeddingsProgress.total > 0 && (
-                            <div className="h-1.5 bg-gray-600 rounded-full overflow-hidden">
-                              <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${(embeddingsProgress.current / embeddingsProgress.total) * 100}%` }} />
-                            </div>
-                          )}
                           <div className="flex items-center gap-3">
                             <span className="text-xs theme-text-muted">Threshold:</span>
                             <input type="range" min="20" max="80" value={semanticThreshold} onChange={(e) => { setSemanticThreshold(Number(e.target.value)); localStorage.setItem('semanticThreshold', e.target.value); }} className="flex-1 h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer" />
@@ -29746,18 +29748,16 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       {jurisSemanticEnabled && (
                         <div className="space-y-3 pt-2 border-t theme-border-subtle">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <input ref={jurisEmbeddingsFileInputRef} type="file" accept=".json" onChange={handleImportJurisEmbeddings} className="hidden" />
-                            <button onClick={() => jurisEmbeddingsFileInputRef.current?.click()} disabled={importingJurisEmbeddings}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${!importingJurisEmbeddings ? 'bg-blue-600 text-white hover-blue-700' : 'bg-gray-400 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed'}`}>
-                              {importingJurisEmbeddings ? (<><RefreshCw className="w-3 h-3 animate-spin" /> Importando... {jurisEmbeddingsProgress.current}/{jurisEmbeddingsProgress.total}</>) : (<><Upload className="w-3 h-3" /> Importar JSON</>)}
-                            </button>
+                            {jurisEmbeddingsCount === 0 ? (
+                              <button onClick={() => setShowEmbeddingsDownloadModal(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                                <Download className="w-3 h-3" /> Baixar do CDN
+                              </button>
+                            ) : (
+                              <span className="text-xs text-green-500 flex items-center gap-1"><Check className="w-3 h-3" /> Instalado</span>
+                            )}
                             {jurisEmbeddingsCount > 0 && (<button onClick={clearJurisEmbeddings} className="px-2 py-1.5 text-red-500 dark:text-red-400 text-xs"><Trash2 className="w-3 h-3" /></button>)}
                           </div>
-                          {importingJurisEmbeddings && jurisEmbeddingsProgress.total > 0 && (
-                            <div className="h-1.5 bg-gray-600 rounded-full overflow-hidden">
-                              <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${(jurisEmbeddingsProgress.current / jurisEmbeddingsProgress.total) * 100}%` }} />
-                            </div>
-                          )}
                           <div className="flex items-center gap-3">
                             <span className="text-xs theme-text-muted">Threshold:</span>
                             <input type="range" min="20" max="80" value={jurisSemanticThreshold} onChange={(e) => { setJurisSemanticThreshold(Number(e.target.value)); localStorage.setItem('jurisSemanticThreshold', e.target.value); }} className="flex-1 h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer" />
