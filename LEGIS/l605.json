@@ -1,0 +1,329 @@
+[
+  {
+    "id": "l605-art-1",
+    "numero": "1",
+    "caput": "Todo empregado tem direito ao repouso semanal remunerado de vinte e quatro horas consecutivas, preferentemente aos domingos e, nos limites das exigências técnicas das empresas, nos feriados civis e religiosos, de acordo com a tradição local.",
+    "paragrafos": [],
+    "alineas": [],
+    "status": "vigente",
+    "keywords": [
+      "repouso",
+      "semanal",
+      "remunerado",
+      "feriado",
+      "empregado",
+      "semana"
+    ]
+  },
+  {
+    "id": "l605-art-2",
+    "numero": "2",
+    "caput": "Entre os empregados a que se refere esta lei, incluem-se os trabalhos rurais, salvo os que operem em qualquer regime de parceria, meação, ou forma semelhante de participação na produção.",
+    "paragrafos": [],
+    "alineas": [],
+    "status": "vigente",
+    "keywords": [
+      "empregado",
+      "trabalho"
+    ]
+  },
+  {
+    "id": "l605-art-3",
+    "numero": "3",
+    "caput": "O regime desta lei será extensivo àqueles que, sob forma autônoma, trabalhem agrupados, por intermédio de Sindicato, Caixa Portuária, ou entidade congênere. A remuneração do repouso obrigatório, nesse caso, consistirá no acréscimo de um 1/6 (um sext",
+    "paragrafos": [],
+    "alineas": [],
+    "status": "vigente",
+    "keywords": [
+      "repouso",
+      "remuneração"
+    ]
+  },
+  {
+    "id": "l605-art-4",
+    "numero": "4",
+    "caput": "É devido o repouso semanal remunerado, nos termos desta lei, aos trabalhadores das autarquias e de empresas industriais, ou sob administração da União, dos Estados e dos Municípios ou incorporadas nos seus patrimônios, que não estejam subordinados ao regime do funcionalismo público.",
+    "paragrafos": [],
+    "alineas": [],
+    "status": "vigente",
+    "keywords": [
+      "repouso",
+      "semanal",
+      "remunerado",
+      "autarquia",
+      "semana"
+    ]
+  },
+  {
+    "id": "l605-art-5",
+    "numero": "5",
+    "caput": "Esta lei não se aplica às seguintes pessoas:",
+    "paragrafos": [
+      {
+        "numero": "único",
+        "texto": "São exigências técnicas, para os efeitos desta lei, as que, pelas condições peculiares às atividades da empresa, ou em razão do interesse público, tornem indispensável a continuidade do serviço."
+      }
+    ],
+    "alineas": [
+      {
+        "letra": "a",
+        "texto": "aos empregados domésticos, assim considerados, de modo geral, os que prestem serviço de natureza não econômica e pessoa ou a família no âmbito residencial destas;"
+      },
+      {
+        "letra": "b",
+        "texto": "aos funcionários públicos da União, dos Estados e dos Municípios e aos respectivos extranumerários em serviço nas próprias repartições;"
+      },
+      {
+        "letra": "c",
+        "texto": "aos servidores de autarquias paraestatais, desde que sujeitos a regime próprio de proteção ao trabalho que lhes assegure situação análoga à dos funcionários públicos."
+      }
+    ],
+    "status": "revogado",
+    "keywords": []
+  },
+  {
+    "id": "l605-art-6",
+    "numero": "6",
+    "caput": "Não será devida a remuneração quando, sem motivo justificado, o empregado não tiver trabalhado durante toda a semana anterior, cumprindo integralmente o seu horário de trabalho.",
+    "paragrafos": [
+      {
+        "numero": "1",
+        "texto": "São motivos justificados: a) os previstos no artigo 473 e seu"
+      },
+      {
+        "numero": "único",
+        "texto": "da Consolidação das Leis do Trabalho ; b) a ausência do empregado devidamente justificada, a critério da administração do estabelecimento; c) a paralisação do serviço nos dias em que, por conveniência do empregador, não tenha havido trabalho; d) a ausência do empregado, até três dias consecutivos, em virtude do seu casamento; e) a falta ao serviço com fundamento na lei sobre acidente do trabalho; f) a doença do empregado, devidamente comprovada."
+      },
+      {
+        "numero": "2",
+        "texto": "A doença será comprovada, mediante atestado de médico da emprêsa, ou por ela designado e pago, e na falta dêste, de médico da instituição de previdência social a que esteja filiado o empregado, de médico do Serviço Social da Indústria ou do Serviço Social do Comércio, de médico a serviço de repartição federal, estadual ou municipal incumbida de assuntos de higiene e saúde, ou, não existindo êstes na localidade em que trabalhar o empregado, de médico de sua escolha."
+      },
+      {
+        "numero": "2",
+        "texto": "A doença será comprovada mediante atestado de médico da instituição da previdência social a que estiver filiado o empregado, e, na falta dêste e sucessivamente, de médico do Serviço Social do Comércio ou da Indústria; de médico da emprêsa ou por ela designado; de médico a serviço de representação federal, estadual ou municipal incumbido de assuntos de higiene ou de saúde pública; ou não existindo êstes, na localidade em que trabalhar, de médico de sua escôlha."
+      },
+      {
+        "numero": "3",
+        "texto": "Nas empresas em que vigorar regime de trabalho reduzido, a freqüência exigida corresponderá ao número de dias em que o empregado tiver de trabalhar."
+      },
+      {
+        "numero": "4",
+        "texto": "Durante período de emergência em saúde pública decorrente da Covid-19, a imposição de isolamento dispensará o empregado da comprovação de doença por 7 (sete) dias."
+      },
+      {
+        "numero": "5",
+        "texto": "No caso de imposição de isolamento em razão da Covid-19, o trabalhador poderá apresentar como justificativa válida, no oitavo dia de afastamento, além do disposto neste artigo, documento de unidade de saúde do Sistema Único de Saúde (SUS) ou documento eletrônico regulamentado pelo Ministério da Saúde."
+      }
+    ],
+    "alineas": [
+      {
+        "letra": "a",
+        "texto": "os previstos no artigo 473 e seu"
+      },
+      {
+        "letra": "b",
+        "texto": "a ausência do empregado devidamente justificada, a critério da administração do estabelecimento;"
+      },
+      {
+        "letra": "c",
+        "texto": "a paralisação do serviço nos dias em que, por conveniência do empregador, não tenha havido trabalho;"
+      },
+      {
+        "letra": "d",
+        "texto": "a ausência do empregado, até três dias consecutivos, em virtude do seu casamento;"
+      },
+      {
+        "letra": "e",
+        "texto": "a falta ao serviço com fundamento na lei sobre acidente do trabalho;"
+      },
+      {
+        "letra": "f",
+        "texto": "a doença do empregado, devidamente comprovada."
+      }
+    ],
+    "status": "revogado",
+    "keywords": [
+      "empregado",
+      "empregador",
+      "trabalho",
+      "remuneração",
+      "semana",
+      "dia"
+    ]
+  },
+  {
+    "id": "l605-art-7",
+    "numero": "7",
+    "caput": "A remuneração do repouso semanal corresponderá:",
+    "paragrafos": [
+      {
+        "numero": "1",
+        "texto": "Os empregados cujos salários não sofram descontos por motivo de feriados civis ou religiosos são considerados já remunerados nesses mesmos dias de repouso, conquanto tenham direito à remuneração dominical."
+      },
+      {
+        "numero": "2",
+        "texto": "Consideram-se já remunerados os dias de repouso semanal do empregado mensalista ou quinzenalista cujo cálculo de salário mensal ou quinzenal, ou cujos descontos por falta sejam efetuados na base do número de dias do mês ou de 30 (trinta) e 15 (quinze) diárias, respectivamente."
+      }
+    ],
+    "alineas": [
+      {
+        "letra": "a",
+        "texto": "para os que trabalham por dia, semana, quinzena ou mês, à de um dia de serviço, não computadas as horas suplementares;"
+      },
+      {
+        "letra": "a",
+        "texto": "para os que trabalham por dia, semana, quinzena ou mês, à de um dia de serviço, computadas as horas extraordinárias habitualmente prestadas;"
+      },
+      {
+        "letra": "b",
+        "texto": "para os que trabalham por hora, à de sua jornada normal de trabalho, excluídas as horas complementares;"
+      },
+      {
+        "letra": "b",
+        "texto": "para os que trabalham por hora, à sua jornada norma de trabalho, computadas as horas extraordinárias habitualmente prestadas;"
+      },
+      {
+        "letra": "c",
+        "texto": "para os que trabalham por tarefa ou peça, o equivalente ao salário correspondente às tarefas ou peças feitas durante a semana, no horário normal de trabalho, dividido pelos dias de serviço efetivamente prestados ao empregador;"
+      },
+      {
+        "letra": "d",
+        "texto": "para o empregado em domicílio, o equivalente ao quociente da divisão por 6 (seis) da importância total da sua produção na semana."
+      }
+    ],
+    "status": "revogado",
+    "keywords": [
+      "repouso",
+      "semanal",
+      "remunerado",
+      "feriado",
+      "empregado",
+      "salário",
+      "remuneração",
+      "semana",
+      "dia"
+    ]
+  },
+  {
+    "id": "l605-art-8",
+    "numero": "8",
+    "caput": "Excetuados os casos em que a execução do serviço for imposta pelas exigências técnicas das empresas, é vedado o trabalho em dias feriados, civis e religiosos, garantida, entretanto, aos empregados a remuneração respectiva, observados os dispositivos dos artigos 6º e 7º desta lei.",
+    "paragrafos": [],
+    "alineas": [],
+    "status": "revogado",
+    "keywords": [
+      "feriado",
+      "empregado",
+      "trabalho",
+      "remuneração",
+      "dia"
+    ]
+  },
+  {
+    "id": "l605-art-9",
+    "numero": "9",
+    "caput": "Nas atividades em que não for possível, em virtude das exigências técnicas das empresas, a suspensão do trabalho, nos dias feriados civis e religiosos, a remuneração será paga em dobro, salvo se o empregador determinar outro dia de folga.",
+    "paragrafos": [
+      {
+        "numero": "único",
+        "texto": "O Poder Executivo, em decreto especial ou no regulamento que expedir par fiel execução desta lei, definirá as mesmas exigências e especificará, tanto quanto possível, as empresas a elas sujeitas, ficando desde já incluídas entre elas as de serviços públicos e de transportes. (Revogado pela Medida Provisória nº 905, de 2019)  (Revogada pela Medida Provisória nº 955, de 2020) Vigência encerrada"
+      },
+      {
+        "numero": "único",
+        "texto": "O Poder Executivo, em decreto especial ou no regulamento que expedir par fiel execução desta lei, definirá as mesmas exigências e especificará, tanto quanto possível, as empresas a elas sujeitas, ficando desde já incluídas entre elas as de serviços públicos e de transportes. (Revogado pela Medida Provisória nº 905, de 2019)  (Vigência encerrada)"
+      }
+    ],
+    "alineas": [],
+    "status": "revogado",
+    "keywords": [
+      "feriado",
+      "empregado",
+      "empregador",
+      "trabalho",
+      "remuneração",
+      "dia",
+      "folga"
+    ]
+  },
+  {
+    "id": "l605-art-10",
+    "numero": "10",
+    "caput": "Na verificação das exigências técnicas a que se referem os artigos anteriores, ter-se-ão em vista as de ordem econômica, permanentes ou ocasionais, bem como as peculiaridades locais.",
+    "paragrafos": [
+      {
+        "numero": "único",
+        "texto": "O Poder Executivo, em decreto especial ou no regulamento que expedir par fiel execução desta lei, definirá as mesmas exigências e especificará, tanto quanto possível, as empresas a elas sujeitas, ficando desde já incluídas entre elas as de serviços públicos e de transportes."
+      }
+    ],
+    "alineas": [],
+    "status": "revogado",
+    "keywords": []
+  },
+  {
+    "id": "l605-art-11",
+    "numero": "11",
+    "caput": "São feriados civis os declarados em lei federal. São feriados religiosos os dias de guarda, declarados em lei municipal, de acordo com a tradição local e em número não superior a quatro, neste incluída a Sexta-Feira da Paixão . Harmonização de multas trabalhistas constantes de legislações esparsas",
+    "paragrafos": [],
+    "alineas": [],
+    "status": "revogado",
+    "keywords": [
+      "feriado",
+      "dia",
+      "multa"
+    ]
+  },
+  {
+    "id": "l605-art-12",
+    "numero": "12",
+    "caput": "As infrações ao disposto nesta Lei serão punidas, com multa de R$ 40,25 (quarenta reais e vinte e cinco centavo",
+    "paragrafos": [],
+    "alineas": [],
+    "status": "vigente",
+    "keywords": [
+      "multa"
+    ]
+  },
+  {
+    "id": "l605-art-13",
+    "numero": "13",
+    "caput": "Serão originariamente competentes, para a imposição das multas de que trata a presente lei, os delegados regionais do Ministério do Trabalho e, nos Estados, onde houver delegação de atribuições, a autoridade delegada.",
+    "paragrafos": [],
+    "alineas": [],
+    "status": "vigente",
+    "keywords": [
+      "trabalho",
+      "multa"
+    ]
+  },
+  {
+    "id": "l605-art-14",
+    "numero": "14",
+    "caput": "A fiscalização da execução da presente lei, o processo de autuação dos seus infratores, os recursos e a cobrança das multas reger-se-ão pelo disposto no Título VII da Consolidação das Leis do Trabalho .",
+    "paragrafos": [],
+    "alineas": [],
+    "status": "vigente",
+    "keywords": [
+      "trabalho",
+      "multa",
+      "fiscalização"
+    ]
+  },
+  {
+    "id": "l605-art-15",
+    "numero": "15",
+    "caput": "A presente lei entrará em vigor na data de sua publicação.",
+    "paragrafos": [],
+    "alineas": [],
+    "status": "vigente",
+    "keywords": []
+  },
+  {
+    "id": "l605-art-16",
+    "numero": "16",
+    "caput": "Revogam-se as disposições em contrário. Rio de Janeiro, 5 de janeiro de 1949; 128º da Independência e 61º da República. EURICO GASPAR DUTRA Adroaldo Mesquita da Costa Sylvio de Noronha Canrobert P. da Costa Raul Fernandes Corrêa e Castro Clóvis Pestana Daniel de Carvalho Clemente Mariani Honório Monteiro Armando Trompowsky Este texto não substitui o publicado no DOU de 14.1.1949 *",
+    "paragrafos": [],
+    "alineas": [],
+    "status": "vigente",
+    "keywords": []
+  }
+]

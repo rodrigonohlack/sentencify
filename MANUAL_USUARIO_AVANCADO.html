@@ -1,0 +1,3124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual do Usuário Avançado - SentencifyAI v1.28</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-green: #22c55e;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-cyan: #06b6d4;
+            --border-color: #475569;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .light-theme {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #cbd5e1;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            padding: 2rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .subtitle {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .header-controls {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .theme-toggle {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            max-width: 1600px;
+            margin: 0 auto;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 120px;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .nav-item.active {
+            background: var(--bg-tertiary);
+            border-left-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .nav-icon {
+            font-size: 1.25rem;
+            width: 1.5rem;
+            text-align: center;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Styles */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .section-icon {
+            font-size: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-icon {
+            font-size: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .feature-item {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .feature-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .feature-text h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-text p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-blue { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); }
+        .badge-purple { background: rgba(139, 92, 246, 0.2); color: var(--accent-purple); }
+        .badge-green { background: rgba(34, 197, 94, 0.2); color: var(--accent-green); }
+        .badge-amber { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); }
+        .badge-red { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+        .badge-cyan { background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); }
+
+        /* Tips and Alerts */
+        .tip-box {
+            padding: 1rem 1.25rem;
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .tip-box.info {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .tip-box.success {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid var(--accent-green);
+        }
+
+        .tip-box.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--accent-amber);
+        }
+
+        .tip-box.danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid var(--accent-red);
+        }
+
+        .tip-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        /* Steps */
+        .steps {
+            margin: 1.5rem 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        .step-number {
+            width: 2rem;
+            height: 2rem;
+            background: var(--accent-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .step-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Keyboard shortcuts */
+        kbd {
+            background: var(--bg-tertiary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Collapsible sections */
+        .collapsible {
+            margin: 1rem 0;
+        }
+
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .collapsible-header:hover {
+            background: var(--border-color);
+        }
+
+        .collapsible-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .collapsible-arrow {
+            transition: transform 0.3s;
+        }
+
+        .collapsible.open .collapsible-arrow {
+            transform: rotate(180deg);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible.open .collapsible-content {
+            max-height: 5000px;
+        }
+
+        .collapsible-inner {
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+        }
+
+        /* Flow Diagram */
+        .flow-diagram {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 1rem;
+        }
+
+        .flow-step {
+            background: var(--bg-secondary);
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .flow-step-icon {
+            font-size: 1.5rem;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-arrow {
+            color: var(--accent-blue);
+            font-size: 1.5rem;
+        }
+
+        /* Search highlight */
+        .highlight {
+            background: rgba(245, 158, 11, 0.3);
+            padding: 0.1rem 0.25rem;
+            border-radius: 0.25rem;
+        }
+
+        /* Code blocks */
+        code {
+            background: var(--bg-tertiary);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+        }
+
+        pre {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin: 1rem 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                display: none;
+            }
+            .main-container {
+                flex-direction: column;
+            }
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Mobile navigation */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 0.5rem;
+            z-index: 100;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-nav {
+                display: flex;
+                gap: 0.25rem;
+            }
+            .content {
+                padding-bottom: 5rem;
+            }
+        }
+
+        .mobile-nav-item {
+            flex: 0 0 auto;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .mobile-nav-item.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .mobile-nav-item span {
+            display: block;
+            font-size: 1.25rem;
+        }
+
+        /* Quick reference */
+        .quick-ref {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .quick-ref-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        /* Progress indicator */
+        .progress-bar {
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>📚 Manual do Usuário Avançado</h1>
+        <p class="subtitle">SentencifyAI v1.28 — Guia Completo de Funcionalidades</p>
+        <div class="header-controls">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌓</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="nav-section">
+                <div class="nav-section-title">Introdução</div>
+                <div class="nav-item active" onclick="showTab('intro')">
+                    <span class="nav-icon">🏠</span>
+                    <span>Visão Geral</span>
+                </div>
+                <div class="nav-item" onclick="showTab('workflow')">
+                    <span class="nav-icon">🔄</span>
+                    <span>Fluxo de Trabalho</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Abas do Sistema</div>
+                <div class="nav-item" onclick="showTab('upload')">
+                    <span class="nav-icon">📤</span>
+                    <span>Upload & Análise</span>
+                </div>
+                <div class="nav-item" onclick="showTab('topicos')">
+                    <span class="nav-icon">📋</span>
+                    <span>Tópicos</span>
+                </div>
+                <div class="nav-item" onclick="showTab('provas')">
+                    <span class="nav-icon">⚖️</span>
+                    <span>Provas</span>
+                </div>
+                <div class="nav-item" onclick="showTab('editor')">
+                    <span class="nav-icon">✏️</span>
+                    <span>Editor</span>
+                </div>
+                <div class="nav-item" onclick="showTab('juris')">
+                    <span class="nav-icon">📖</span>
+                    <span>Jurisprudência</span>
+                </div>
+                <div class="nav-item" onclick="showTab('legis')">
+                    <span class="nav-icon">📜</span>
+                    <span>Legislação</span>
+                </div>
+                <div class="nav-item" onclick="showTab('modelos')">
+                    <span class="nav-icon">📦</span>
+                    <span>Modelos</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Configurações</div>
+                <div class="nav-item" onclick="showTab('config')">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Configurações IA</span>
+                </div>
+                <div class="nav-item" onclick="showTab('atalhos')">
+                    <span class="nav-icon">⌨️</span>
+                    <span>Atalhos de Teclado</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Avançado</div>
+                <div class="nav-item" onclick="showTab('ia-local')">
+                    <span class="nav-icon">🧠</span>
+                    <span>IA Local (Offline)</span>
+                </div>
+                <div class="nav-item" onclick="showTab('dicas')">
+                    <span class="nav-icon">💡</span>
+                    <span>Dicas e Boas Práticas</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+
+            <!-- Intro Tab -->
+            <div id="intro" class="tab-content active">
+                <div class="section-header">
+                    <span class="section-icon">🏠</span>
+                    <div>
+                        <h2 class="section-title">Bem-vindo ao SentencifyAI</h2>
+                        <p class="section-subtitle">Sistema de auxílio à redação de sentenças trabalhistas para magistrados brasileiros</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🎯</span>
+                        <h3 class="card-title">O que é o SentencifyAI?</h3>
+                    </div>
+                    <p>O SentencifyAI é uma ferramenta avançada que roda 100% no navegador (via Claude.ai artifacts) e auxilia juízes trabalhistas na redação de sentenças completas, desde a extração de tópicos até a geração do dispositivo final.</p>
+
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">📄</span>
+                            <div class="feature-text">
+                                <h4>Extração Automática</h4>
+                                <p>Analisa petições e contestações para extrair tópicos automaticamente</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🤖</span>
+                            <div class="feature-text">
+                                <h4>Assistente IA</h4>
+                                <p>Chat interativo para auxiliar na redação e análise de provas</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📚</span>
+                            <div class="feature-text">
+                                <h4>Biblioteca de Modelos</h4>
+                                <p>Reutilize fundamentações genéricas com sugestões inteligentes</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🔒</span>
+                            <div class="feature-text">
+                                <h4>Anonimização</h4>
+                                <p>Remove dados sensíveis antes de enviar à IA (100% local)</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🧠</span>
+                            <div class="feature-text">
+                                <h4>Busca Semântica</h4>
+                                <p>Encontre legislação e jurisprudência por significado, não apenas palavras</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📝</span>
+                            <div class="feature-text">
+                                <h4>Revisão Crítica</h4>
+                                <p>IA analisa omissões, contradições e obscuridades na sentença</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🗂️</span>
+                        <h3 class="card-title">Estrutura do Sistema (7 Abas)</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Aba</th>
+                                    <th>Ícone</th>
+                                    <th>Função Principal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Upload & Análise</strong></td>
+                                    <td>📤</td>
+                                    <td>Carregar documentos (PDF/texto) e extrair tópicos</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tópicos</strong></td>
+                                    <td>📋</td>
+                                    <td>Gerenciar tópicos extraídos (editar, mesclar, dividir, reordenar)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Provas</strong></td>
+                                    <td>⚖️</td>
+                                    <td>Upload de evidências e vinculação aos tópicos</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Editor</strong></td>
+                                    <td>✏️</td>
+                                    <td>Redigir fundamentação com editor rico e sugestões de modelos</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Jurisprudência</strong></td>
+                                    <td>📖</td>
+                                    <td>Buscar súmulas, OJs, IRRs e precedentes (textual ou semântica)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Legislação</strong></td>
+                                    <td>📜</td>
+                                    <td>Buscar artigos de lei (CLT, CPC, CF/88, etc.)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Modelos</strong></td>
+                                    <td>📦</td>
+                                    <td>Biblioteca de templates reutilizáveis de fundamentação</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tip-box info">
+                    <span class="tip-icon">💡</span>
+                    <div>
+                        <strong>Dica:</strong> Navegue por este manual usando o menu lateral. Cada aba do sistema tem sua própria seção detalhada com passo a passo completo.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Tab -->
+            <div id="workflow" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">🔄</span>
+                    <div>
+                        <h2 class="section-title">Fluxo de Trabalho Completo</h2>
+                        <p class="section-subtitle">Do upload dos documentos até a sentença final</p>
+                    </div>
+                </div>
+
+                <div class="flow-diagram">
+                    <div class="flow-step">
+                        <span class="flow-step-icon">📤</span>
+                        <div>1. Upload</div>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <span class="flow-step-icon">🔍</span>
+                        <div>2. Análise</div>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <span class="flow-step-icon">📋</span>
+                        <div>3. Tópicos</div>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <span class="flow-step-icon">⚖️</span>
+                        <div>4. Provas</div>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <span class="flow-step-icon">✏️</span>
+                        <div>5. Edição</div>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <span class="flow-step-icon">📝</span>
+                        <div>6. Dispositivo</div>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <span class="flow-step-icon">✅</span>
+                        <div>7. Revisão</div>
+                    </div>
+                </div>
+
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Upload de Documentos</h4>
+                            <p>Carregue a <strong>Petição Inicial</strong> (obrigatória) e a <strong>Contestação</strong> (recomendada). Pode adicionar documentos complementares opcionalmente. Escolha o modo de processamento: PDF.js (gratuito) ou Claude Vision (OCR avançado).</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Extração de Tópicos</h4>
+                            <p>Clique em <strong>"Analisar Documentos"</strong>. A IA extrai automaticamente os tópicos (pedidos) identificados nas peças, organizados por categoria: Preliminar, Prejudicial, Mérito e Processual.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Refinamento dos Tópicos</h4>
+                            <p>Na aba <strong>Tópicos</strong>, revise a lista. Você pode: renomear, dividir tópicos muito amplos, mesclar tópicos relacionados, reordenar arrastando e alterar categorias.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Upload e Vinculação de Provas</h4>
+                            <p>Na aba <strong>Provas</strong>, carregue evidências (PDFs ou texto). Vincule cada prova aos tópicos relacionados. Use <strong>"Analisar com IA"</strong> para obter análise contextual ou livre.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h4>Redação da Fundamentação</h4>
+                            <p>Na aba <strong>Editor</strong>, clique em cada tópico para redigir. Use o painel lateral com <strong>sugestões de modelos</strong>, consulte jurisprudência/legislação e use o <strong>Assistente IA</strong> para tirar dúvidas. Selecione o resultado (Procedente/Improcedente/Parcial).</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">6</div>
+                        <div class="step-content">
+                            <h4>Geração do Dispositivo</h4>
+                            <p>Com todos os tópicos decididos, clique em <strong>"Gerar Dispositivo"</strong>. A IA cria o dispositivo estruturado baseado nos resultados selecionados (verbos em negrito, itens numerados).</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">7</div>
+                        <div class="step-content">
+                            <h4>Revisão Crítica</h4>
+                            <p>Clique em <strong>"Revisar Sentença"</strong>. A IA atua como "advogado do diabo", buscando omissões, contradições e obscuridades que poderiam gerar embargos de declaração. Corrija e exporte a minuta final.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tip-box success">
+                    <span class="tip-icon">✅</span>
+                    <div>
+                        <strong>Pronto!</strong> Com a revisão concluída, exporte a sentença em Word/PDF ou salve o projeto em JSON para continuar depois.
+                    </div>
+                </div>
+
+                <!-- NOVO: Import/Export Projeto -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">💾</span>
+                        <h3 class="card-title">Importar / Exportar Projeto</h3>
+                    </div>
+                    <p>Salve e restaure seu trabalho completo a qualquer momento:</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Operação</th>
+                                    <th>O que Inclui</th>
+                                    <th>Localização</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Exportar Projeto</strong> 📤</td>
+                                    <td>Tópicos, Provas, Relatório, Dispositivo, Resultados, Vínculos, Análises</td>
+                                    <td>Botão no canto superior direito (header)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Importar Projeto</strong> 📥</td>
+                                    <td>Restaura estado completo do projeto de um JSON exportado</td>
+                                    <td>Botão no canto superior direito (header)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Exportar Minuta</strong> 📄</td>
+                                    <td>Relatório + Fundamentação + Dispositivo formatados (Word/HTML)</td>
+                                    <td>Botão "Exportar Minuta" na aba Tópicos</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tip-box warning">
+                        <span class="tip-icon">⚠️</span>
+                        <div><strong>Importante:</strong> O JSON de projeto NÃO inclui os PDFs originais (apenas texto extraído). Mantenha os arquivos originais arquivados.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Tab -->
+            <div id="upload" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">📤</span>
+                    <div>
+                        <h2 class="section-title">Upload & Análise</h2>
+                        <p class="section-subtitle">Carregamento de documentos e extração de tópicos</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📄</span>
+                        <h3 class="card-title">Documentos Suportados</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Documento</th>
+                                    <th>Obrigatório?</th>
+                                    <th>Formatos</th>
+                                    <th>Uso</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Petição Inicial</strong></td>
+                                    <td><span class="badge badge-red">Sim</span></td>
+                                    <td>PDF (até 10MB) ou texto colado</td>
+                                    <td>Base para extração de tópicos</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Contestação</strong></td>
+                                    <td><span class="badge badge-amber">Recomendado</span></td>
+                                    <td>PDF (até 10MB) ou texto colado</td>
+                                    <td>Argumentos da defesa nos mini-relatórios</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Complementares</strong></td>
+                                    <td><span class="badge badge-green">Opcional</span></td>
+                                    <td>Múltiplos PDFs ou textos</td>
+                                    <td>Consulta pelo Assistente IA (não usado nos relatórios automáticos)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">⚙️</span>
+                        <h3 class="card-title">Modos de Processamento de PDF</h3>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>📝 PDF.js (Recomendado)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p><strong>Como funciona:</strong> Extrai texto localmente no navegador</p>
+                                <div class="quick-ref">
+                                    <div class="quick-ref-item">✅ Gratuito (sem custo de API)</div>
+                                    <div class="quick-ref-item">✅ Rápido (instantâneo)</div>
+                                    <div class="quick-ref-item">✅ Permite anonimização</div>
+                                    <div class="quick-ref-item">❌ Não funciona com PDFs escaneados</div>
+                                </div>
+                                <p><strong>Ideal para:</strong> PDFs nativos (gerados de Word, sistemas, etc.)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>👁️ Claude Vision (OCR Avançado)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p><strong>Como funciona:</strong> Envia páginas como imagem para Claude analisar</p>
+                                <div class="quick-ref">
+                                    <div class="quick-ref-item">✅ Funciona com qualquer PDF</div>
+                                    <div class="quick-ref-item">✅ Lê PDFs escaneados</div>
+                                    <div class="quick-ref-item">💰 ~$0.04 USD / 10 páginas</div>
+                                    <div class="quick-ref-item">⏱️ ~3-8s por página</div>
+                                </div>
+                                <p><strong>Ideal para:</strong> PDFs escaneados, documentos com imagens</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>📄 PDF Puro (Binário)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p><strong>Como funciona:</strong> Envia o PDF completo sem extração prévia</p>
+                                <div class="quick-ref">
+                                    <div class="quick-ref-item">✅ Preserva 100% do documento</div>
+                                    <div class="quick-ref-item">💰 Usa mais tokens</div>
+                                    <div class="quick-ref-item">❌ Não permite anonimização</div>
+                                </div>
+                                <p><strong>Ideal para:</strong> Documentos com formatação complexa que precisa ser preservada</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">▶️</span>
+                        <h3 class="card-title">Como Analisar Documentos</h3>
+                    </div>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Faça upload da Petição Inicial</h4>
+                                <p>Arraste o PDF para a área de upload ou clique para selecionar. Alternativamente, cole o texto diretamente.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Adicione a Contestação (recomendado)</h4>
+                                <p>O sistema gera mini-relatórios melhores quando tem acesso aos argumentos da defesa.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Escolha o modo de processamento</h4>
+                                <p>Use PDF.js para PDFs nativos (gratuito e rápido). Use Claude Vision para escaneados.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h4>Clique em "Analisar Documentos"</h4>
+                                <p>A IA extrai os tópicos automaticamente. Se anonimização estiver ativa, confirme os nomes antes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tip-box warning">
+                    <span class="tip-icon">⚠️</span>
+                    <div>
+                        <strong>Anonimização:</strong> Se ativada, só funciona com PDF.js. O sistema pedirá para confirmar os nomes antes de enviar à IA. Use "Detectar Nomes" para detecção automática (requer modelo NER).
+                    </div>
+                </div>
+            </div>
+
+            <!-- Topicos Tab -->
+            <div id="topicos" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">📋</span>
+                    <div>
+                        <h2 class="section-title">Tópicos</h2>
+                        <p class="section-subtitle">Gerenciamento dos pedidos extraídos</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🏷️</span>
+                        <h3 class="card-title">O que é um Tópico?</h3>
+                    </div>
+                    <p>Cada <strong>tópico</strong> representa um pedido ou questão a ser decidida na sentença. O sistema extrai automaticamente:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li><strong>Título</strong> — Nome do pedido (ex: "HORAS EXTRAS")</li>
+                        <li><strong>Categoria</strong> — Preliminar, Prejudicial, Mérito ou Processual</li>
+                        <li><strong>Mini-relatório</strong> — Resumo automático das alegações das partes</li>
+                        <li><strong>Fundamentação</strong> — Sua decisão (você redige)</li>
+                        <li><strong>Resultado</strong> — Procedente, Improcedente ou Parcialmente Procedente</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🛠️</span>
+                        <h3 class="card-title">Ações em Cada Tópico</h3>
+                    </div>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">✏️</span>
+                            <div class="feature-text">
+                                <h4>Editar</h4>
+                                <p>Abre o editor para redigir fundamentação e mini-relatório</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📝</span>
+                            <div class="feature-text">
+                                <h4>Renomear</h4>
+                                <p>Alterar título (com ou sem regenerar mini-relatório)</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">✂️</span>
+                            <div class="feature-text">
+                                <h4>Separar (Dividir)</h4>
+                                <p>Dividir tópico amplo em múltiplos subtópicos</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🔗</span>
+                            <div class="feature-text">
+                                <h4>Unir (Mesclar)</h4>
+                                <p>Combinar 2+ tópicos em um único (selecione primeiro)</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">↕️</span>
+                            <div class="feature-text">
+                                <h4>Reordenar</h4>
+                                <p>Arraste o card ou use setas/números para mudar ordem</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🗑️</span>
+                            <div class="feature-text">
+                                <h4>Excluir</h4>
+                                <p>Remover tópico da lista (com confirmação)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">⚖️</span>
+                        <h3 class="card-title">Resultado (Decisão)</h3>
+                    </div>
+                    <p>Cada tópico precisa de um <strong>resultado</strong> para gerar o dispositivo:</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Resultado</th>
+                                    <th>Ícone</th>
+                                    <th>Significado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Procedente</td><td>✅</td><td>Pedido totalmente acolhido</td></tr>
+                                <tr><td>Improcedente</td><td>❌</td><td>Pedido totalmente rejeitado</td></tr>
+                                <tr><td>Parcialmente Procedente</td><td>⚖️</td><td>Pedido parcialmente acolhido</td></tr>
+                                <tr><td>Acolhido</td><td>✅</td><td>Alternativa para "Procedente"</td></tr>
+                                <tr><td>Rejeitado</td><td>❌</td><td>Alternativa para "Improcedente"</td></tr>
+                                <tr><td>Sem Resultado</td><td>⏸️</td><td>Ainda não decidido</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tip-box info">
+                        <span class="tip-icon">💡</span>
+                        <div>O sistema pode <strong>detectar automaticamente</strong> o resultado baseado na fundamentação (badge "Auto" aparece). Você sempre pode sobrescrever manualmente.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📝</span>
+                        <h3 class="card-title">Tópicos Especiais</h3>
+                    </div>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">📜</span>
+                            <div class="feature-text">
+                                <h4>RELATÓRIO</h4>
+                                <p>Narrativa do histórico processual. Posição fixa no início da sentença.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">⚡</span>
+                            <div class="feature-text">
+                                <h4>DISPOSITIVO</h4>
+                                <p>Parte final com os comandos da sentença. Gerado automaticamente.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔍</span>
+                        <h3 class="card-title">Revisar Sentença</h3>
+                    </div>
+                    <p>Botão <strong>"Revisar Sentença"</strong> ativa análise crítica pela IA:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li><strong>Omissões</strong> — Pedidos/argumentos não abordados</li>
+                        <li><strong>Contradições</strong> — Conflitos entre fundamentação e dispositivo</li>
+                        <li><strong>Obscuridades</strong> — Passagens confusas ou ambíguas</li>
+                    </ul>
+                    <p>Resultado inclui nota (A/B/C/D) e recomendações específicas para correção.</p>
+                </div>
+
+                <!-- NOVO: Exportar Minuta -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📄</span>
+                        <h3 class="card-title">Exportar Minuta</h3>
+                    </div>
+                    <p>Botão <strong>"Exportar Minuta"</strong> gera documento formatado com toda a sentença:</p>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">📋</span>
+                            <div class="feature-text">
+                                <h4>Estrutura</h4>
+                                <p>RELATÓRIO → FUNDAMENTAÇÃO (todos os tópicos) → DISPOSITIVO</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📝</span>
+                            <div class="feature-text">
+                                <h4>Formato</h4>
+                                <p>HTML formatado, compatível para colar no Word ou sistema judicial</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tip-box info" style="margin-top: 1rem;">
+                        <span class="tip-icon">💡</span>
+                        <div><strong>Dica:</strong> Antes de exportar, confirme que todos os tópicos têm <strong>resultado definido</strong> e que o <strong>dispositivo foi gerado</strong>.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Provas Tab -->
+            <div id="provas" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">⚖️</span>
+                    <div>
+                        <h2 class="section-title">Provas</h2>
+                        <p class="section-subtitle">Gerenciamento de evidências e análise com IA</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📤</span>
+                        <h3 class="card-title">Upload de Provas</h3>
+                    </div>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">📄</span>
+                            <div class="feature-text">
+                                <h4>Upload de PDFs</h4>
+                                <p>Arraste ou clique para enviar múltiplos PDFs de prova</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📝</span>
+                            <div class="feature-text">
+                                <h4>Colar Texto</h4>
+                                <p>Adicione transcrições, depoimentos ou documentos em texto</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔗</span>
+                        <h3 class="card-title">Vinculação de Provas a Tópicos</h3>
+                    </div>
+                    <p>Vincular provas aos tópicos permite:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Análise contextual mais precisa pela IA</li>
+                        <li>Visualização das provas vinculadas no painel do Editor</li>
+                        <li>Referência rápida durante a redação da fundamentação</li>
+                    </ul>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Clique em "Vincular a Tópicos"</h4>
+                                <p>No card da prova, abra o modal de vinculação</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Selecione os tópicos relacionados</h4>
+                                <p>Uma prova pode estar vinculada a múltiplos tópicos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NOVO: Campo Conclusões -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">✍️</span>
+                        <h3 class="card-title">Conclusões do Juiz</h3>
+                    </div>
+                    <p>Após analisar uma prova (com IA ou manualmente), você pode registrar suas conclusões:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li><strong>Campo "Conclusão/Observações"</strong> — Clique para editar no card da prova</li>
+                        <li>Registre o que você concluiu sobre a prova (ex: "Comprova vínculo empregatício")</li>
+                        <li>Suas conclusões são <strong>enviadas ao Assistente IA</strong> junto com a análise</li>
+                        <li>Aparecem na exportação e ficam disponíveis para referência</li>
+                    </ul>
+                    <div class="tip-box success">
+                        <span class="tip-icon">✅</span>
+                        <div><strong>Por que usar:</strong> A IA recebe tanto a análise automática quanto suas conclusões, permitindo fundamentações mais precisas e alinhadas com sua convicção.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🤖</span>
+                        <h3 class="card-title">Análise de Provas com IA</h3>
+                    </div>
+
+                    <div class="collapsible open">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>💜 Análise Contextual</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p><strong>O que faz:</strong> Compara a prova com as alegações da petição e contestação</p>
+                                <p><strong>Contexto enviado:</strong> Documentos do processo + mini-relatórios dos tópicos vinculados</p>
+                                <p><strong>Resultado:</strong> Análise de como a prova impacta cada pedido (comprova, refuta ou é neutra)</p>
+                                <div class="tip-box info">
+                                    <span class="tip-icon">💡</span>
+                                    <div>Opção "Usar apenas mini-relatórios" economiza tokens quando você quer contexto resumido.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>💚 Análise Livre</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p><strong>O que faz:</strong> Envia apenas a prova + suas instruções personalizadas</p>
+                                <p><strong>Contexto enviado:</strong> Nenhum (ou tópicos vinculados se ativado)</p>
+                                <p><strong>Ideal para:</strong> Perguntas específicas, extrações de dados, análises pontuais</p>
+                                <p><strong>Exemplo:</strong> "Identifique os valores mencionados nesta prova"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tip-box warning">
+                    <span class="tip-icon">⚠️</span>
+                    <div>
+                        <strong>Com Anonimização Ativa:</strong> PDFs devem ter texto extraído antes de analisar. Clique em "Extrair Texto" primeiro. O badge "⚠️ CONFLITO" indica que precisa resolver.
+                    </div>
+                </div>
+
+                <!-- NOVO: Provas no Assistente IA -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">💬</span>
+                        <h3 class="card-title">Provas no Assistente IA (Chat)</h3>
+                    </div>
+                    <p>Quando você usa o Assistente IA no editor, as provas vinculadas ao tópico são enviadas automaticamente. Você controla <strong>o que é enviado</strong>:</p>
+
+                    <div class="collapsible open">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>📊 Modo Padrão (Toggle desligado)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p>Por padrão, o Assistente IA recebe apenas:</p>
+                                <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                                    <li><strong>Nome da prova</strong></li>
+                                    <li><strong>Resultado da análise</strong> (contextual ou livre, se houver)</li>
+                                    <li><strong>Conclusões do juiz</strong> (se preenchidas)</li>
+                                </ul>
+                                <div class="tip-box info">
+                                    <span class="tip-icon">💡</span>
+                                    <div><strong>Vantagem:</strong> Economiza tokens, pois não envia o conteúdo completo da prova.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>📄 Modo Conteúdo Integral (Toggle ligado)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p>Ao ativar o toggle <strong>"Enviar conteúdo integral"</strong> no card da prova, o Assistente IA recebe:</p>
+                                <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                                    <li>Tudo do modo padrão, <strong>mais</strong>:</li>
+                                    <li><strong>Conteúdo completo da prova</strong> (texto extraído ou PDF binário)</li>
+                                </ul>
+                                <div class="tip-box warning">
+                                    <span class="tip-icon">⚠️</span>
+                                    <div><strong>Atenção:</strong> Consome significativamente mais tokens. Use quando precisar que a IA consulte detalhes específicos da prova.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>🔗 Vinculação e Escopo</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p><strong>Importante:</strong> Apenas provas <strong>vinculadas ao tópico sendo editado</strong> são enviadas ao Assistente IA.</p>
+                                <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                                    <li>Se uma prova está vinculada aos tópicos A e B, ela será enviada ao editar A ou B</li>
+                                    <li>Se uma prova não está vinculada a nenhum tópico, ela <strong>não é enviada</strong> ao chat</li>
+                                    <li>A configuração "Enviar conteúdo integral" é <strong>por prova</strong> (não global)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-container" style="margin-top: 1rem;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Toggle</th>
+                                    <th>O que é enviado</th>
+                                    <th>Consumo de tokens</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Desligado (padrão)</td>
+                                    <td>Nome + Análise + Conclusões</td>
+                                    <td>Baixo</td>
+                                </tr>
+                                <tr>
+                                    <td>Ligado</td>
+                                    <td>Nome + Análise + Conclusões + <strong>Conteúdo completo</strong></td>
+                                    <td>Alto</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor Tab -->
+            <div id="editor" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">✏️</span>
+                    <div>
+                        <h2 class="section-title">Editor</h2>
+                        <p class="section-subtitle">Redação da fundamentação com sugestões inteligentes</p>
+                    </div>
+                </div>
+
+                <!-- NOVO: Tipos de Editor -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔀</span>
+                        <h3 class="card-title">Tipos de Editor</h3>
+                    </div>
+                    <p>O sistema oferece <strong>dois modos de edição</strong> com características distintas:</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Editor</th>
+                                    <th>Acesso</th>
+                                    <th>Características</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Editor Individual</strong></td>
+                                    <td>Botão "Editar" no card do tópico</td>
+                                    <td>Edita <strong>um tópico por vez</strong>. Tem modo Fullscreen (<kbd>Ctrl+F</kbd>). Painel lateral de sugestões. Split mode com modelos.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Editor Global</strong></td>
+                                    <td>Botão "Edição Global" na aba Tópicos</td>
+                                    <td>Edita <strong>múltiplos tópicos</strong> selecionados simultaneamente. Exibe todos em sequência. Ideal para revisão e consistência.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tip-box info">
+                        <span class="tip-icon">💡</span>
+                        <div><strong>Quando usar:</strong> Use o <em>Individual</em> para trabalho focado em um tópico. Use o <em>Global</em> para revisar/ajustar vários tópicos de uma vez.</div>
+                    </div>
+                </div>
+
+                <!-- NOVO: Botões da Toolbar -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🛠️</span>
+                        <h3 class="card-title">Botões da Toolbar</h3>
+                    </div>
+                    <p>Botões disponíveis no topo do editor:</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Botão</th>
+                                    <th>Ícone</th>
+                                    <th>Função</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Jurisprudência</strong></td>
+                                    <td>📖</td>
+                                    <td>Abre modal de busca de precedentes (TST, STF, OJs, Súmulas, IRRs)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Extrair Modelo</strong></td>
+                                    <td>🤖</td>
+                                    <td>IA <strong>generaliza</strong> a fundamentação e cria modelo reutilizável (remove nomes, valores, datas)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Salvar como Modelo</strong></td>
+                                    <td>💾</td>
+                                    <td>Salva a fundamentação <strong>como está</strong> na biblioteca de modelos (sem generalização)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Assistente IA</strong></td>
+                                    <td>💬</td>
+                                    <td>Abre chat interativo para tirar dúvidas, gerar textos, analisar provas</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Regenerar Relatório</strong></td>
+                                    <td>🔄</td>
+                                    <td>Regenera o mini-relatório do tópico com IA (útil após renomear/ajustar)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- NOVO: Formatação Avançada -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🎨</span>
+                        <h3 class="card-title">Formatação Avançada</h3>
+                    </div>
+                    <p>Controles de visualização na barra superior do editor:</p>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">Aa</span>
+                            <div class="feature-text">
+                                <h4>Tamanho de Fonte</h4>
+                                <p>Dropdown com opções de tamanho (pequeno, normal, grande, etc.)</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">↕️</span>
+                            <div class="feature-text">
+                                <h4>Espaçamento</h4>
+                                <p>Controle de espaçamento entre parágrafos (line-height)</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🌓</span>
+                            <div class="feature-text">
+                                <h4>Tema do Editor</h4>
+                                <p>Toggle escuro/claro (independente do tema geral)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tip-box info">
+                        <span class="tip-icon">ℹ️</span>
+                        <div>Esses controles afetam apenas a <strong>visualização no editor</strong>, não o HTML final exportado.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🖊️</span>
+                        <h3 class="card-title">Editor de Texto Rico</h3>
+                    </div>
+                    <p>O editor Quill.js oferece formatação completa:</p>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon"><strong>B</strong></span>
+                            <div class="feature-text">
+                                <h4>Formatação Básica</h4>
+                                <p>Negrito, Itálico, Sublinhado, Riscado</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📋</span>
+                            <div class="feature-text">
+                                <h4>Listas</h4>
+                                <p>Numeradas, com marcadores, indentação</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">≡</span>
+                            <div class="feature-text">
+                                <h4>Alinhamento</h4>
+                                <p>Esquerda, Centro, Direita, Justificado</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">H1</span>
+                            <div class="feature-text">
+                                <h4>Cabeçalhos</h4>
+                                <p>H1, H2, H3, H4 para hierarquia</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EXPANDIDO: Sugestões de Modelos com ações -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">💡</span>
+                        <h3 class="card-title">Sugestões de Modelos</h3>
+                    </div>
+                    <p>Ao editar um tópico, o painel lateral exibe até 5 modelos relevantes. <strong>Ranking por estrelas:</strong></p>
+                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                        <li>⭐⭐⭐⭐⭐ = 1º mais relevante</li>
+                        <li>⭐⭐⭐⭐ = 2º mais relevante, e assim por diante</li>
+                    </ul>
+
+                    <p style="margin-top: 1rem;"><strong>Ações disponíveis em cada sugestão:</strong></p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ação</th>
+                                    <th>Ícone</th>
+                                    <th>Descrição</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Inserir</strong></td>
+                                    <td>➕</td>
+                                    <td>Insere o conteúdo completo do modelo no campo Fundamentação (append)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Visualizar</strong></td>
+                                    <td>👁️</td>
+                                    <td>Abre preview em modal para ver o modelo completo antes de inserir</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Copiar</strong></td>
+                                    <td>📋</td>
+                                    <td>Copia o conteúdo do modelo para a área de transferência</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>QuickEdit</strong></td>
+                                    <td>✏️</td>
+                                    <td>Abre o modelo para edição rápida antes de inserir (permite ajustes)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Favoritar</strong></td>
+                                    <td>⭐</td>
+                                    <td>Marca/desmarca como favorito (favoritos aparecem no topo)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tip-box info">
+                        <span class="tip-icon">🧠</span>
+                        <div>Com <strong>IA Local ativa</strong>, as sugestões são calculadas por busca semântica (badge "🤖 IA Local"), sem custo de API e instantaneamente.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🤖</span>
+                        <h3 class="card-title">Assistente IA (Chat)</h3>
+                    </div>
+                    <p>Botão <strong>"Assistente IA"</strong> abre chat interativo:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Contexto automático (título, relatório, fundamentação atual)</li>
+                        <li>Conversação multi-turno (histórico de até 20 mensagens)</li>
+                        <li>Botão <strong>"Usar Mensagem"</strong> para inserir resposta no editor</li>
+                        <li>Prompts rápidos pré-configurados (Avaliar, Melhorar, Verificar Omissões)</li>
+                    </ul>
+                </div>
+
+                <!-- NOVO: Slash Menu - Inserção rápida de modelos -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">⚡</span>
+                        <h3 class="card-title">Slash Menu (Inserir Modelos)</h3>
+                    </div>
+                    <p>No <strong>editor de fundamentação</strong>, digite <kbd>/</kbd> para abrir o menu de inserção rápida de modelos:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Um menu aparece com seus modelos disponíveis</li>
+                        <li>Continue digitando para <strong>filtrar</strong> por título/keywords</li>
+                        <li>Use <kbd>↑</kbd> <kbd>↓</kbd> para navegar, <kbd>Enter</kbd> para inserir</li>
+                        <li>O conteúdo do modelo selecionado é inserido no cursor</li>
+                    </ul>
+                    <div class="tip-box info" style="margin-top: 1rem;">
+                        <span class="tip-icon">💡</span>
+                        <div>Ideal para inserir trechos padronizados rapidamente. Funciona no campo Fundamentação tanto no editor individual quanto no global.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📜</span>
+                        <h3 class="card-title">Versionamento (Histórico)</h3>
+                    </div>
+                    <p>O sistema salva automaticamente <strong>até 10 versões</strong> do campo Fundamentação:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Botão <strong>📜 (N)</strong> mostra quantidade de versões</li>
+                        <li>Clique para ver dropdown com timestamps</li>
+                        <li>Selecione uma versão para comparar (lado a lado)</li>
+                        <li>Botão <strong>"Restaurar"</strong> volta àquela versão (salva atual antes)</li>
+                    </ul>
+                    <div class="tip-box success">
+                        <span class="tip-icon">✅</span>
+                        <div>Versões são salvas automaticamente ao sair do campo (blur). Edite com confiança!</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🖥️</span>
+                        <h3 class="card-title">Modos de Tela</h3>
+                    </div>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">⛶</span>
+                            <div class="feature-text">
+                                <h4>Fullscreen</h4>
+                                <p><kbd>Ctrl+F</kbd> — Editor ocupa 100% da tela (apenas Editor Individual)</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📚</span>
+                            <div class="feature-text">
+                                <h4>Split Mode</h4>
+                                <p><kbd>Ctrl+M</kbd> — Editor + Modelos lado a lado</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1rem;">No Split Mode, arraste o divisor central para ajustar a proporção (mín 20%, máx 80%).</p>
+                </div>
+            </div>
+
+            <!-- Jurisprudencia Tab -->
+            <div id="juris" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">📖</span>
+                    <div>
+                        <h2 class="section-title">Jurisprudência</h2>
+                        <p class="section-subtitle">Busca de precedentes e teses vinculantes</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📚</span>
+                        <h3 class="card-title">Tipos de Precedentes</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th>Descrição</th>
+                                    <th>Tribunais</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Súmula</strong></td><td>Entendimento pacificado</td><td>TST, STF, STJ</td></tr>
+                                <tr><td><strong>OJ</strong></td><td>Orientação Jurisprudencial</td><td>TST (SDI-1, SDI-2, SDC)</td></tr>
+                                <tr><td><strong>IRR</strong></td><td>Incidente de Recursos Repetitivos</td><td>TST</td></tr>
+                                <tr><td><strong>IAC</strong></td><td>Incidente de Assunção de Competência</td><td>TST</td></tr>
+                                <tr><td><strong>IRDR</strong></td><td>Incidente de Demandas Repetitivas</td><td>STJ, STF</td></tr>
+                                <tr><td><strong>Informativo</strong></td><td>Resumos de decisões relevantes</td><td>TST</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔍</span>
+                        <h3 class="card-title">Modos de Busca</h3>
+                    </div>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">🔤</span>
+                            <div class="feature-text">
+                                <h4>Busca Textual</h4>
+                                <p>Por palavras-chave, número do tema, título. Hierarquiza automaticamente TST > STF > STJ.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🧠</span>
+                            <div class="feature-text">
+                                <h4>Busca Semântica</h4>
+                                <p>Por significado. "Trabalho extraordinário" encontra "horas extras". Mostra % de similaridade.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tip-box info">
+                        <span class="tip-icon">💡</span>
+                        <div>Toggle <strong>🧠/🔤</strong> alterna entre os modos. Busca semântica requer embeddings importados (ver seção IA Local).</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🎚️</span>
+                        <h3 class="card-title">Filtros Disponíveis</h3>
+                    </div>
+                    <div class="quick-ref">
+                        <div class="quick-ref-item"><span class="badge badge-purple">IRR</span></div>
+                        <div class="quick-ref-item"><span class="badge badge-purple">IAC</span></div>
+                        <div class="quick-ref-item"><span class="badge badge-purple">Súmula</span></div>
+                        <div class="quick-ref-item"><span class="badge badge-purple">OJ</span></div>
+                        <div class="quick-ref-item"><span class="badge badge-purple">Informativo</span></div>
+                        <div class="quick-ref-item"><span class="badge badge-blue">TST</span></div>
+                        <div class="quick-ref-item"><span class="badge badge-blue">STF</span></div>
+                        <div class="quick-ref-item"><span class="badge badge-blue">STJ</span></div>
+                    </div>
+                    <p style="margin-top: 1rem;">Clique nos filtros para ativar/desativar. Múltiplos filtros funcionam com lógica AND.</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📋</span>
+                        <h3 class="card-title">Como Inserir na Fundamentação</h3>
+                    </div>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Busque o precedente</h4>
+                                <p>Use filtros e busca (textual ou semântica) para encontrar</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Clique em "Copiar"</h4>
+                                <p>O botão 📋 copia a tese completa formatada para o clipboard</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Cole no Editor</h4>
+                                <p>Vá ao campo Fundamentação e cole (Ctrl+V)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legislacao Tab -->
+            <div id="legis" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">📜</span>
+                    <div>
+                        <h2 class="section-title">Legislação</h2>
+                        <p class="section-subtitle">Consulta de artigos e dispositivos legais</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📚</span>
+                        <h3 class="card-title">Leis Disponíveis</h3>
+                    </div>
+                    <div class="quick-ref">
+                        <div class="quick-ref-item"><span class="badge badge-blue">CLT</span> Consolidação das Leis do Trabalho</div>
+                        <div class="quick-ref-item"><span class="badge badge-purple">CF/88</span> Constituição Federal</div>
+                        <div class="quick-ref-item"><span class="badge badge-green">CPC</span> Código de Processo Civil</div>
+                        <div class="quick-ref-item"><span class="badge badge-amber">CC</span> Código Civil</div>
+                        <div class="quick-ref-item"><span class="badge badge-red">CDC</span> Código de Defesa do Consumidor</div>
+                    </div>
+                    <p style="margin-top: 1rem;">Leis adicionais podem ser importadas via JSON.</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔍</span>
+                        <h3 class="card-title">Modos de Busca</h3>
+                    </div>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">🔤</span>
+                            <div class="feature-text">
+                                <h4>Busca Textual</h4>
+                                <p>Por número do artigo ou palavras-chave. Ex: "7" encontra Art. 7º</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🧠</span>
+                            <div class="feature-text">
+                                <h4>Busca Semântica</h4>
+                                <p>Por significado. "Limite de jornada" encontra Art. 58 CLT</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📄</span>
+                        <h3 class="card-title">Estrutura dos Artigos</h3>
+                    </div>
+                    <p>Cada artigo é exibido com estrutura completa:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li><strong>Caput</strong> — Texto principal do artigo</li>
+                        <li><strong>Parágrafos (§)</strong> — Subdivisões do caput</li>
+                        <li><strong>Incisos (I, II, III...)</strong> — Itens enumerados</li>
+                        <li><strong>Alíneas (a, b, c...)</strong> — Sub-itens dos incisos</li>
+                    </ul>
+                    <div class="tip-box success">
+                        <span class="tip-icon">✨</span>
+                        <div>Na busca semântica, o trecho mais similar é <span class="highlight">destacado em amarelo</span> para fácil identificação.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">⚙️</span>
+                        <h3 class="card-title">Threshold (Limite de Similaridade)</h3>
+                    </div>
+                    <p>Ajuste o threshold em <strong>Configurações IA > Legislação</strong>:</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Threshold</th>
+                                    <th>Resultados</th>
+                                    <th>Quando usar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>20-30%</td><td>Muitos (menos precisos)</td><td>Pesquisas exploratórias</td></tr>
+                                <tr><td>40-50%</td><td>Equilibrado</td><td>Uso padrão</td></tr>
+                                <tr><td>60-80%</td><td>Poucos (muito precisos)</td><td>Busca específica</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modelos Tab -->
+            <div id="modelos" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">📦</span>
+                    <div>
+                        <h2 class="section-title">Modelos</h2>
+                        <p class="section-subtitle">Biblioteca de templates reutilizáveis</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📝</span>
+                        <h3 class="card-title">O que é um Modelo?</h3>
+                    </div>
+                    <p>Um <strong>modelo</strong> é um template de fundamentação genérica que pode ser reutilizado em diferentes processos. Cada modelo contém:</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Campo</th>
+                                    <th>Obrigatório</th>
+                                    <th>Descrição</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Título</strong></td><td>✅</td><td>Nome descritivo (ex: "HORAS EXTRAS - PROCEDENTE")</td></tr>
+                                <tr><td><strong>Conteúdo</strong></td><td>✅</td><td>Fundamentação jurídica genérica (HTML formatado)</td></tr>
+                                <tr><td><strong>Categoria</strong></td><td>❌</td><td>Classificação temática (ex: "Jornada de Trabalho")</td></tr>
+                                <tr><td><strong>Palavras-chave</strong></td><td>❌</td><td>Tags para busca (separadas por vírgula)</td></tr>
+                                <tr><td><strong>Favorito</strong></td><td>❌</td><td>Marcação para acesso rápido</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">➕</span>
+                        <h3 class="card-title">Formas de Criar Modelos</h3>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>✏️ Criação Manual</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p>Botão <strong>"Novo Modelo"</strong> abre formulário para preencher manualmente.</p>
+                                <p>Dica: Botão <strong>"Gerar com IA"</strong> cria título e palavras-chave automaticamente baseado no conteúdo.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>💾 Salvar Tópico como Modelo</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p>No Editor de tópico, clique em <strong>"Salvar como Modelo"</strong>.</p>
+                                <p>A fundamentação atual é convertida em modelo reutilizável.</p>
+                                <div class="tip-box warning" style="margin-top: 0.75rem;">
+                                    <span class="tip-icon">🔍</span>
+                                    <div>
+                                        <strong>Detecção de Duplicatas:</strong> O sistema usa TF-IDF para verificar se já existe modelo similar. Se encontrado, exibe comparação lado a lado com % de similaridade, permitindo decidir entre atualizar o existente ou criar novo.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>🤖 Extrair com IA (Generalização)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p>Botão <strong>"Extrair Modelo com IA"</strong> no Editor.</p>
+                                <p>A IA remove nomes, valores, datas específicas e cria versão genérica automaticamente.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>📁 Criação em Lote (Bulk)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p>Botão <strong>"Criar de Arquivos"</strong> processa múltiplos arquivos (PDF, DOCX, TXT).</p>
+                                <p>A IA extrai modelos automaticamente de cada arquivo (até 20 por lote).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">💡</span>
+                        <h3 class="card-title">Sugestões Automáticas</h3>
+                    </div>
+                    <p>Enquanto você edita um tópico, o sistema busca modelos similares automaticamente:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li><strong>TF-IDF</strong> — Algoritmo de relevância por frequência de termos</li>
+                        <li><strong>Refinamento com IA</strong> — Claude ordena os top 10 por pertinência real</li>
+                        <li><strong>IA Local</strong> — Se ativa, usa embeddings (instantâneo, sem custo)</li>
+                    </ul>
+                    <div class="tip-box info">
+                        <span class="tip-icon">🧠</span>
+                        <div>Ative <strong>"Sugestões via IA Local"</strong> nas configurações para sugestões instantâneas sem custo de API.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">💾</span>
+                        <h3 class="card-title">Importar / Exportar</h3>
+                    </div>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">📤</span>
+                            <div class="feature-text">
+                                <h4>Exportar</h4>
+                                <p>Baixa JSON com todos os modelos (inclui embeddings se gerados)</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📥</span>
+                            <div class="feature-text">
+                                <h4>Importar</h4>
+                                <p>Carrega modelos de JSON exportado anteriormente (detecta duplicatas)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tip-box warning">
+                        <span class="tip-icon">⚠️</span>
+                        <div>Faça backup regularmente! Exporte seus modelos antes de limpar dados do navegador.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Config Tab -->
+            <div id="config" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">⚙️</span>
+                    <div>
+                        <h2 class="section-title">Configurações IA</h2>
+                        <p class="section-subtitle">Personalização do comportamento do sistema</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🧠</span>
+                        <h3 class="card-title">Pensamento Prolongado</h3>
+                    </div>
+                    <p>Permite que a IA use tempo extra para análises mais profundas.</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Budget</th>
+                                    <th>Uso</th>
+                                    <th>Recomendado para</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>10K tokens</td><td>Análise básica</td><td>Casos simples</td></tr>
+                                <tr><td>20K tokens</td><td>Balanço ideal</td><td>Maioria dos casos</td></tr>
+                                <tr><td>40K tokens</td><td>Análise profunda</td><td>Casos complexos</td></tr>
+                                <tr><td>64K tokens</td><td>Máximo</td><td>Casos muito complexos</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📊</span>
+                        <h3 class="card-title">Tópicos por Requisição</h3>
+                    </div>
+                    <p>Quantos mini-relatórios gerar por chamada à API:</p>
+                    <div class="quick-ref">
+                        <div class="quick-ref-item"><strong>1</strong> = Mais requisições, processamento individual</div>
+                        <div class="quick-ref-item"><strong>3-5</strong> = Balanceado, recomendado</div>
+                        <div class="quick-ref-item"><strong>Todos</strong> = 1 requisição, mais rápido</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔒</span>
+                        <h3 class="card-title">Anonimização</h3>
+                    </div>
+                    <p>Quando ativada, remove dados sensíveis antes de enviar à IA:</p>
+                    <div class="quick-ref">
+                        <div class="quick-ref-item">✅ CPF</div>
+                        <div class="quick-ref-item">✅ RG</div>
+                        <div class="quick-ref-item">✅ PIS/PASEP</div>
+                        <div class="quick-ref-item">✅ CTPS</div>
+                        <div class="quick-ref-item">✅ Telefones</div>
+                        <div class="quick-ref-item">✅ E-mails</div>
+                        <div class="quick-ref-item">✅ Dados Bancários</div>
+                        <div class="quick-ref-item">✅ Nº Processo</div>
+                        <div class="quick-ref-item">✅ Nomes (com NER)</div>
+                        <div class="quick-ref-item">⬜ Valores R$ (opcional)</div>
+                    </div>
+                    <div class="tip-box warning">
+                        <span class="tip-icon">⚠️</span>
+                        <div>Anonimização só funciona com <strong>PDF.js</strong>. Não disponível com PDF Puro ou Claude Vision.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📝</span>
+                        <h3 class="card-title">Templates Personalizados</h3>
+                    </div>
+                    <p>Defina a estrutura padrão para geração de textos. São <strong>4 templates</strong> configuráveis:</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Template</th>
+                                    <th>Descrição</th>
+                                    <th>Quando é Usado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Modelo de Mini-Relatório</strong></td>
+                                    <td>Template para os mini-relatórios automáticos de cada tópico</td>
+                                    <td>Na extração de tópicos e ao regenerar relatório</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Modelo de RELATÓRIO</strong></td>
+                                    <td>Template especial para o tópico RELATÓRIO (histórico processual, partes, datas)</td>
+                                    <td>Na geração do relatório principal da sentença</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Modelo de Dispositivo</strong></td>
+                                    <td>Estrutura da parte dispositiva (verbos em negrito, itens numerados)</td>
+                                    <td>Na geração automática do dispositivo</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Estilo de Redação</strong></td>
+                                    <td>Instruções gerais de estilo para toda a redação</td>
+                                    <td>Aplicado em todas as gerações de texto</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tip-box info">
+                        <span class="tip-icon">💡</span>
+                        <div>Os templates podem conter placeholders como <code>[RECLAMANTE]</code>, <code>[RECLAMADA]</code>, <code>[DATA]</code> que serão substituídos automaticamente.</div>
+                    </div>
+                </div>
+
+                <!-- NOVO: Tópicos Complementares Automáticos -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📋</span>
+                        <h3 class="card-title">Tópicos Complementares Automáticos</h3>
+                    </div>
+                    <p>Após a extração de tópicos, o sistema pode adicionar automaticamente tópicos padrão ao final:</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tópico</th>
+                                    <th>Categoria</th>
+                                    <th>Descrição</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Honorários Advocatícios</strong></td><td>Mérito</td><td>Sucumbência e honorários do advogado</td></tr>
+                                <tr><td><strong>Honorários Periciais</strong></td><td>Mérito</td><td>Responsabilidade pelos custos periciais</td></tr>
+                                <tr><td><strong>Juros e Correção Monetária</strong></td><td>Mérito</td><td>Índices de correção e taxa de juros</td></tr>
+                                <tr><td><strong>Deduções Previdenciárias e Fiscais</strong></td><td>Mérito</td><td>INSS e IRRF sobre as verbas</td></tr>
+                                <tr><td><strong>Compensação/Dedução/Abatimento</strong></td><td>Mérito</td><td>Valores já pagos a compensar</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p style="margin-top: 1rem;"><strong>Configuração:</strong> Cada tópico pode ser ativado/desativado individualmente. A ordem pode ser alterada arrastando.</p>
+                </div>
+
+                <!-- NOVO: Dashboard de Tokens -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📊</span>
+                        <h3 class="card-title">Dashboard de Uso de Tokens</h3>
+                    </div>
+                    <p>O painel de monitoramento exibe métricas de uso da API:</p>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">🔢</span>
+                            <div class="feature-text">
+                                <h4>Total de Tokens</h4>
+                                <p>Entrada + Saída + Cache</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📡</span>
+                            <div class="feature-text">
+                                <h4>Requisições</h4>
+                                <p>Número de chamadas à API</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">💾</span>
+                            <div class="feature-text">
+                                <h4>Taxa de Cache</h4>
+                                <p>Percentual de reuso (economia)</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📈</span>
+                            <div class="feature-text">
+                                <h4>Breakdown</h4>
+                                <p>Input, Output, Cache Read/Write</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1rem;"><strong>Custo Estimado por Modelo:</strong></p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Modelo</th>
+                                    <th>Input</th>
+                                    <th>Output</th>
+                                    <th>Cache Read</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Sonnet 4/4.5</strong></td><td>$3.00/1M</td><td>$15.00/1M</td><td>$0.30/1M</td></tr>
+                                <tr><td><strong>Opus 4.5</strong></td><td>$5.00/1M</td><td>$25.00/1M</td><td>$0.50/1M</td></tr>
+                                <tr><td><strong>Gemini 3 Flash</strong></td><td>$0.50/1M</td><td>$3.00/1M</td><td>$0.05/1M</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tip-box success">
+                        <span class="tip-icon">💰</span>
+                        <div>O sistema usa <strong>cache automático</strong> para reutilizar contexto entre requisições, economizando 40-50% dos tokens.</div>
+                    </div>
+                </div>
+
+                <!-- NOVO: Salvamento Automático -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">💾</span>
+                        <h3 class="card-title">Salvamento Automático</h3>
+                    </div>
+                    <p>O sistema salva seu trabalho automaticamente para evitar perda de dados:</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Característica</th>
+                                    <th>Descrição</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Frequência</strong></td><td>Salva automaticamente a cada <strong>10 segundos</strong> de inatividade</td></tr>
+                                <tr><td><strong>Indicador Visual</strong></td><td>"Auto-salvando..." aparece brevemente na interface</td></tr>
+                                <tr><td><strong>Salvamento Manual</strong></td><td><kbd>Ctrl+S</kbd> salva imediatamente</td></tr>
+                                <tr><td><strong>Armazenamento</strong></td><td>localStorage (metadados) + IndexedDB (modelos e PDFs)</td></tr>
+                                <tr><td><strong>Persistência</strong></td><td>Dados persistem mesmo após fechar o navegador</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tip-box warning">
+                        <span class="tip-icon">⚠️</span>
+                        <div><strong>Atenção:</strong> Limpar dados do navegador (Ctrl+Shift+Del) apaga tudo! Exporte backups regularmente.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">⚡</span>
+                        <h3 class="card-title">Prompts Rápidos</h3>
+                    </div>
+                    <p>Atalhos pré-configurados para o Assistente IA:</p>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">⚖️</span>
+                            <div class="feature-text">
+                                <h4>Avaliar Decisão</h4>
+                                <p>Análise crítica da qualidade</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">✨</span>
+                            <div class="feature-text">
+                                <h4>Sugerir Melhorias</h4>
+                                <p>Recomendações de redação</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🔍</span>
+                            <div class="feature-text">
+                                <h4>Verificar Omissões</h4>
+                                <p>Encontra pontos não abordados</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🎤</span>
+                            <div class="feature-text">
+                                <h4>Análise de Prova Oral</h4>
+                                <p>Extrai informações de depoimentos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1rem;">Você pode editar, adicionar ou remover prompts nas configurações.</p>
+                </div>
+
+                <!-- NOVO: Importar/Exportar Configurações -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📦</span>
+                        <h3 class="card-title">Importar / Exportar Configurações</h3>
+                    </div>
+                    <p>Faça backup ou transfira suas configurações entre navegadores:</p>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">📤</span>
+                            <div class="feature-text">
+                                <h4>Exportar</h4>
+                                <p>Baixa JSON com: templates, thresholds, prompts rápidos, configurações de anonimização</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📥</span>
+                            <div class="feature-text">
+                                <h4>Importar</h4>
+                                <p>Restaura configurações de um backup anterior</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1rem;"><strong>Localização:</strong> Botões no topo do modal de Configurações IA</p>
+                </div>
+            </div>
+
+            <!-- Atalhos Tab -->
+            <div id="atalhos" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">⌨️</span>
+                    <div>
+                        <h2 class="section-title">Atalhos de Teclado</h2>
+                        <p class="section-subtitle">Navegue e edite mais rápido</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">✏️</span>
+                        <h3 class="card-title">Editor de Texto</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Atalho</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><kbd>Ctrl</kbd> + <kbd>B</kbd></td><td>Negrito</td></tr>
+                                <tr><td><kbd>Ctrl</kbd> + <kbd>I</kbd></td><td>Itálico</td></tr>
+                                <tr><td><kbd>Ctrl</kbd> + <kbd>U</kbd></td><td>Sublinhado</td></tr>
+                                <tr><td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>Desfazer</td></tr>
+                                <tr><td><kbd>Ctrl</kbd> + <kbd>Y</kbd></td><td>Refazer</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🖥️</span>
+                        <h3 class="card-title">Navegação e Modos</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Atalho</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>Salvar (sem fechar)</td></tr>
+                                <tr><td><kbd>Ctrl</kbd> + <kbd>F</kbd></td><td>Fullscreen (toggle)</td></tr>
+                                <tr><td><kbd>Ctrl</kbd> + <kbd>M</kbd></td><td>Split Mode - Modelos (toggle)</td></tr>
+                                <tr><td><kbd>ESC</kbd></td><td>Fechar modal / Sair de modo especial</td></tr>
+                                <tr><td><kbd>Alt</kbd> + <kbd>Espaço</kbd></td><td>Abrir sugestões de modelos</td></tr>
+                                <tr><td><kbd>/</kbd></td><td>Abrir menu de Slash Commands (no chat)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📋</span>
+                        <h3 class="card-title">Tópicos</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Atalho</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Mover tópico para cima/baixo</td></tr>
+                                <tr><td>Números <kbd>1</kbd>-<kbd>9</kbd></td><td>Ir para posição específica</td></tr>
+                                <tr><td>Arrastar</td><td>Reordenar tópicos</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IA Local Tab -->
+            <div id="ia-local" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">🧠</span>
+                    <div>
+                        <h2 class="section-title">IA Local (Offline)</h2>
+                        <p class="section-subtitle">Modelos que rodam 100% no navegador</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔒</span>
+                        <h3 class="card-title">Por que usar IA Local?</h3>
+                    </div>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">🔐</span>
+                            <div class="feature-text">
+                                <h4>Privacidade Total</h4>
+                                <p>Dados nunca saem do seu navegador</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">💰</span>
+                            <div class="feature-text">
+                                <h4>Custo Zero</h4>
+                                <p>Sem cobranças por uso de API</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">⚡</span>
+                            <div class="feature-text">
+                                <h4>Instantâneo</h4>
+                                <p>Respostas em milissegundos</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📴</span>
+                            <div class="feature-text">
+                                <h4>Funciona Offline</h4>
+                                <p>Após carregar, não precisa de internet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">👤</span>
+                        <h3 class="card-title">Modelo NER (Detecção de Nomes)</h3>
+                    </div>
+                    <p><strong>Finalidade:</strong> Detecta automaticamente nomes de pessoas para anonimização</p>
+                    <p><strong>Uso de RAM:</strong> ~200-300MB quando carregado</p>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Upload dos arquivos do modelo</h4>
+                                <p>6 arquivos: config.json, tokenizer.json, tokenizer_config.json, vocab.txt, model_quantized.onnx, ort-wasm.wasm</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Clique em "Inicializar"</h4>
+                                <p>Carrega o modelo na memória. Badge fica verde quando pronto.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Use "Detectar Nomes"</h4>
+                                <p>No modal de anonimização, clique para detectar automaticamente.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔍</span>
+                        <h3 class="card-title">Modelo E5-base (Busca Semântica)</h3>
+                    </div>
+                    <p><strong>Finalidade:</strong> Permite busca por significado em legislação, jurisprudência e modelos</p>
+                    <p><strong>Uso de RAM:</strong> ~400-500MB quando carregado</p>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>📜 Embeddings de Legislação</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p>Gere offline com Python: <code>python generate_embeddings.py</code></p>
+                                <p>Importe o JSON gerado em Configurações IA > Legislação > Importar JSON</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>📚 Embeddings de Jurisprudência</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p>Gere offline com Python: <code>python generate_juris_embeddings.py</code></p>
+                                <p>Suporta chunking automático para teses longas (IRR, IAC)</p>
+                                <p>Importe o JSON em Configurações IA > Jurisprudência > Importar JSON</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>📦 Embeddings de Modelos</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p>Gere diretamente na interface: Configurações IA > Modelos > Gerar Embeddings</p>
+                                <p>Ative "Sugestões via IA Local" para sugestões instantâneas sem API</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tip-box success">
+                    <span class="tip-icon">💡</span>
+                    <div>
+                        <strong>Dica de Performance:</strong> Descarregue modelos não utilizados para liberar memória. Os arquivos permanecem salvos no IndexedDB para rápida reinicialização.
+                    </div>
+                </div>
+
+                <!-- Chamadas à API Claude -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📡</span>
+                        <h3 class="card-title">Chamadas à API Claude (Custo por Uso)</h3>
+                    </div>
+                    <p>Estas operações enviam dados à API Claude e consomem tokens. Entenda o que é enviado em cada requisição para estimar custos:</p>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>📄 Extração de Tópicos</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <ul>
+                                    <li>System prompt com instruções de formatação</li>
+                                    <li>Petição inicial completa</li>
+                                    <li>Contestação completa</li>
+                                    <li>Documentos complementares (se ativado)</li>
+                                    <li>Instruções para gerar mini-relatórios</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>🔍 Análise de Prova (Contextual)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <ul>
+                                    <li>Petição + Contestação + Complementares (cache)</li>
+                                    <li>Texto/PDF da prova analisada</li>
+                                    <li>Mini-relatórios dos tópicos vinculados</li>
+                                    <li>Instrução customizada (se houver)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>📋 Análise de Prova (Livre)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <ul>
+                                    <li>Apenas a prova</li>
+                                    <li>Instrução customizada</li>
+                                    <li>Opcionalmente: tópicos vinculados</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>💡 Sugestões de Modelos (via API)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <ul>
+                                    <li>Título + Categoria + Mini-relatório do tópico</li>
+                                    <li>Top 10 modelos candidatos (pré-selecionados por TF-IDF)</li>
+                                    <li>Instrução para ordenar por relevância real</li>
+                                </ul>
+                                <p class="tip" style="margin-top: 10px;">💡 <strong>Dica:</strong> Ative "IA Local" em Configurações para sugestões gratuitas e offline.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>⚖️ Geração de Dispositivo</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <ul>
+                                    <li>Todos os tópicos selecionados (título, categoria, mini-relatório, fundamentação, RESULTADO)</li>
+                                    <li>Primeiro parágrafo do relatório (nomes das partes)</li>
+                                    <li>Template de dispositivo (se configurado)</li>
+                                    <li>Instruções de formatação (verbos negrito, itens numerados)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>🔎 Revisão da Sentença</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p><strong>Opção 1:</strong> Apenas decisão (Relatório + Fundamentações + Dispositivo)</p>
+                                <p><strong>Opção 2:</strong> Decisão + Documentos originais</p>
+                                <p>System prompt especializado com protocolo 5 fases, exemplos de omissões, contradições e obscuridades</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>📚 Refinamento de Jurisprudência</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <ul>
+                                    <li>Título + Mini-relatório do tópico</li>
+                                    <li>Até 40 precedentes candidatos (tipo, número, tribunal, título, tese resumida)</li>
+                                    <li>Instrução para selecionar os 10 mais relevantes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>💬 Chat / Assistente IA</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <p><strong>Sempre enviado:</strong></p>
+                                <ul>
+                                    <li>Histórico da conversa (até 20 mensagens)</li>
+                                    <li>Contexto do tópico atual (título, mini-relatório, fundamentação)</li>
+                                    <li>Documentos do processo (petição, contestação, complementares)</li>
+                                </ul>
+                                <p style="margin-top: 10px;"><strong>Provas vinculadas ao tópico:</strong></p>
+                                <ul>
+                                    <li><strong>Padrão:</strong> Nome + Análise IA + Conclusões do juiz</li>
+                                    <li><strong>Com toggle ativado:</strong> + Conteúdo completo da prova</li>
+                                </ul>
+                                <p class="tip" style="margin-top: 10px;">⚠️ <strong>Atenção:</strong> Os documentos são enviados em toda mensagem do chat. Veja a seção "Provas no Assistente IA" na aba Provas para detalhes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Processamento Local -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🧠</span>
+                        <h3 class="card-title">Processamento Local (Gratuito / Offline)</h3>
+                    </div>
+                    <p>Estas operações rodam 100% no seu navegador, sem enviar dados à API. Custo zero e funcionam offline:</p>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>💡 Sugestões de Modelos (IA Local)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <ul>
+                                    <li>Gera embedding do tópico (título + categoria + mini-relatório)</li>
+                                    <li>Compara com embeddings pré-computados dos modelos</li>
+                                    <li>Retorna os 5 mais similares acima do threshold</li>
+                                </ul>
+                                <p><strong>Requisito:</strong> Modelos precisam ter embeddings (gerados via Python ou ao salvar)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>🔍 Busca Semântica (Legislação)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <ul>
+                                    <li>Texto digitado → embedding com prefixo "query: "</li>
+                                    <li>Comparação com embeddings dos artigos (prefixo "passage: ")</li>
+                                    <li>Threshold configurável (20-80%)</li>
+                                </ul>
+                                <p><strong>Requisito:</strong> Arquivo de embeddings importado (JSON do Python)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>🔍 Busca Semântica (Jurisprudência)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <ul>
+                                    <li>Texto digitado → embedding com prefixo "query: "</li>
+                                    <li>Comparação com embeddings das teses (com chunking para teses longas)</li>
+                                    <li>Threshold configurável (20-80%)</li>
+                                </ul>
+                                <p><strong>Requisito:</strong> Arquivo de embeddings importado (JSON do Python)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>🔍 Busca Semântica (Modelos)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <ul>
+                                    <li>Texto digitado na busca → embedding</li>
+                                    <li>Comparação com embeddings dos modelos</li>
+                                    <li>Toggle 🧠/🔤 para alternar entre semântico e textual</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <h3>👤 Detecção de Nomes (NER)</h3>
+                            <span class="collapsible-arrow">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="collapsible-inner">
+                                <ul>
+                                    <li>Modelo BERT treinado para português</li>
+                                    <li>Detecta entidades do tipo PESSOA no texto</li>
+                                    <li>Usado na anonimização automática</li>
+                                </ul>
+                                <p><strong>Requisito:</strong> Arquivos do modelo NER carregados em Configurações IA</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dicas Tab -->
+            <div id="dicas" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">💡</span>
+                    <div>
+                        <h2 class="section-title">Dicas e Boas Práticas</h2>
+                        <p class="section-subtitle">Maximize sua produtividade</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">⚡</span>
+                        <h3 class="card-title">Performance</h3>
+                    </div>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Use <strong>PDF.js</strong> em vez de Claude Vision para PDFs nativos (mais rápido e gratuito)</li>
+                        <li>Configure <strong>"Tópicos por Requisição"</strong> para 5 ou "Todos" para acelerar</li>
+                        <li>Ative <strong>IA Local</strong> para buscas e sugestões instantâneas</li>
+                        <li>Descarregue modelos NER/E5 quando não estiver usando (libera RAM)</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">💰</span>
+                        <h3 class="card-title">Economia de Tokens</h3>
+                    </div>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Use <strong>"Apenas mini-relatórios"</strong> na análise de provas (menos contexto)</li>
+                        <li>Ative <strong>Sugestões via IA Local</strong> — custo zero para sugestões de modelos</li>
+                        <li>Use <strong>busca semântica local</strong> em vez de refinamento via API</li>
+                        <li>O sistema usa <strong>cache de prompts</strong> automaticamente para documentos longos</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔐</span>
+                        <h3 class="card-title">Segurança de Dados</h3>
+                    </div>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Ative <strong>Anonimização</strong> para casos sensíveis</li>
+                        <li>Use <strong>detecção automática de nomes</strong> (NER local) para não esquecer ninguém</li>
+                        <li>Modelo NER e busca semântica são <strong>100% offline</strong> — dados não saem do navegador</li>
+                        <li>Exporte projetos regularmente como <strong>backup</strong></li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📝</span>
+                        <h3 class="card-title">Qualidade da Redação</h3>
+                    </div>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Use <strong>"Revisar Sentença"</strong> antes de finalizar — encontra omissões e contradições</li>
+                        <li>Configure <strong>templates personalizados</strong> para manter consistência</li>
+                        <li>Use o <strong>versionamento</strong> para experimentar sem medo (📜 restaura versões)</li>
+                        <li>Sempre selecione o <strong>resultado correto</strong> antes de gerar dispositivo</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🗂️</span>
+                        <h3 class="card-title">Organização</h3>
+                    </div>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li><strong>Vincule provas</strong> aos tópicos corretos para análise contextual precisa</li>
+                        <li>Use <strong>categorias</strong> nos modelos para facilitar busca</li>
+                        <li>Marque modelos frequentes como <strong>favoritos</strong> (⭐)</li>
+                        <li><strong>Exporte modelos</strong> regularmente — são sua biblioteca pessoal</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔒</span>
+                        <h3 class="card-title">Bloqueio de Abas (Multi-Tab)</h3>
+                    </div>
+                    <p>O Sentencify usa <strong>localStorage</strong>, que é compartilhado entre abas do mesmo navegador. Para evitar conflitos:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Apenas <strong>uma aba</strong> pode editar o projeto por vez</li>
+                        <li>Se você abrir o Sentencify em outra aba, verá um <strong>overlay de bloqueio</strong></li>
+                        <li>Clique em <strong>"Assumir Controle"</strong> para transferir a edição para esta aba</li>
+                        <li>A aba anterior será bloqueada automaticamente</li>
+                    </ul>
+                    <div class="tip-box info">
+                        <span class="tip-icon">💡</span>
+                        <div>Isso previne que alterações de uma aba sobrescrevam as de outra. Sempre trabalhe em <strong>apenas uma aba</strong> para evitar confusão.</div>
+                    </div>
+                </div>
+
+                <div class="tip-box success">
+                    <span class="tip-icon">🎯</span>
+                    <div>
+                        <strong>Fluxo Ideal:</strong> Upload → Análise → Refine tópicos → Vincule provas → Edite com sugestões → Gere dispositivo → Revise → Exporte!
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav">
+        <button class="mobile-nav-item active" onclick="showTab('intro')">
+            <span>🏠</span>
+            Início
+        </button>
+        <button class="mobile-nav-item" onclick="showTab('upload')">
+            <span>📤</span>
+            Upload
+        </button>
+        <button class="mobile-nav-item" onclick="showTab('topicos')">
+            <span>📋</span>
+            Tópicos
+        </button>
+        <button class="mobile-nav-item" onclick="showTab('provas')">
+            <span>⚖️</span>
+            Provas
+        </button>
+        <button class="mobile-nav-item" onclick="showTab('editor')">
+            <span>✏️</span>
+            Editor
+        </button>
+        <button class="mobile-nav-item" onclick="showTab('juris')">
+            <span>📖</span>
+            Juris
+        </button>
+        <button class="mobile-nav-item" onclick="showTab('legis')">
+            <span>📜</span>
+            Legis
+        </button>
+        <button class="mobile-nav-item" onclick="showTab('modelos')">
+            <span>📦</span>
+            Modelos
+        </button>
+        <button class="mobile-nav-item" onclick="showTab('config')">
+            <span>⚙️</span>
+            Config
+        </button>
+    </nav>
+
+    <script>
+        // Tab Navigation
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelectorAll('.mobile-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+
+            // Activate nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                if (item.onclick && item.onclick.toString().includes(tabId)) {
+                    item.classList.add('active');
+                }
+            });
+            document.querySelectorAll('.mobile-nav-item').forEach(item => {
+                if (item.onclick && item.onclick.toString().includes(tabId)) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+        }
+
+        // Load saved theme
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-theme');
+        }
+
+        // Collapsible sections
+        function toggleCollapsible(header) {
+            const collapsible = header.parentElement;
+            collapsible.classList.toggle('open');
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                // Close any open collapsibles
+                document.querySelectorAll('.collapsible.open').forEach(c => {
+                    c.classList.remove('open');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

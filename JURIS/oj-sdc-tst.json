@@ -1,0 +1,542 @@
+[
+  {
+    "id": "oj-sdc-1",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 1,
+    "titulo": "Acordo coletivo. Descumprimento. Existência de ação própria. Abusividade da greve deflagrada para substituí-la. Inserida em 27.03.1998",
+    "enunciado": "O ordenamento legal vigente assegura a via da ação de cumprimento para as hipóteses de inobservância de norma coletiva em vigor, razão pela qual é abusivo o movimento grevista deflagrado em substituição ao meio pacífico próprio para a solução do conflito.",
+    "status": "Cancelada",
+    "keywords": [
+      "greve",
+      "acordo coletivo",
+      "abusividade",
+      "norma coletiva"
+    ]
+  },
+  {
+    "id": "oj-sdc-2",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 2,
+    "titulo": "Acordo homologado. Extensão a partes não subscreventes. Inviabilidade",
+    "enunciado": "É inviável aplicar condições constantes de acordo homologado nos autos de dissídio coletivo, extensivamente, às partes que não o subscreveram, exceto se observado o procedimento previsto no art. 868 e seguintes, da CLT.",
+    "status": "Válida",
+    "keywords": [
+      "dissídio coletivo",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdc-3",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 3,
+    "titulo": "Arresto. Apreensão. Depósito. Pretensões insuscetíveis de dedução em sede coletiva",
+    "enunciado": "São incompatíveis com a natureza e finalidade do dissídio coletivo as pretensões de provimento judicial de arresto, apreensão ou depósito.",
+    "status": "Válida",
+    "keywords": [
+      "dissídio coletivo"
+    ]
+  },
+  {
+    "id": "oj-sdc-4",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 4,
+    "titulo": "Disputa por titularidade de representação. Incompetência da Justiça do Trabalho",
+    "enunciado": "A disputa intersindical pela representatividade de certa categoria refoge ao âmbito da competência material da Justiça do Trabalho.",
+    "status": "Cancelada",
+    "keywords": [
+      "categoria",
+      "representação",
+      "competência"
+    ]
+  },
+  {
+    "id": "oj-sdc-5",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 5,
+    "titulo": "DISSÍDIO COLETIVO. PESSOA JURÍDICA DE DIREITO PÚBLICO. POSSIBILIDADE JURÍDICA. CLÁUSULA DE NATUREZA SOCIAL (redação alterada na sessão do Tribunal Pleno realizada em 14.09.2012)",
+    "enunciado": "Em face de pessoa jurídica de direito público que mantenha empregados, cabe dissídio coletivo exclusivamente para apreciação de cláusulas de natureza social. Inteligência da Convenção n.º 151 da Organização Internacional do Trabalho, ratificada pelo Decreto Legislativo n.º 206/2010.",
+    "status": "Válida",
+    "keywords": [
+      "dissídio coletivo",
+      "cláusula",
+      "pessoa jurídica",
+      "direito público",
+      "empregado"
+    ]
+  },
+  {
+    "id": "oj-sdc-6",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 6,
+    "titulo": "Dissídio coletivo. Natureza jurídica. Imprescindibilidade de realização de assembléia de trabalhadores e negociação prévia",
+    "enunciado": "O dissídio coletivo de natureza jurídica não prescinde da autorização da categoria, reunida em assembléia, para legitimar o sindicato próprio, nem da etapa negocial prévia para buscar solução de consenso.",
+    "status": "Cancelada",
+    "keywords": [
+      "dissídio coletivo",
+      "sindicato",
+      "categoria",
+      "assembléia"
+    ]
+  },
+  {
+    "id": "oj-sdc-7",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 7,
+    "titulo": "Dissídio coletivo. Natureza jurídica. Interpretação de norma de caráter genérico. Inviabilidade",
+    "enunciado": "Não se presta o dissídio coletivo de natureza jurídica à interpretação de normas de caráter genérico, a teor do disposto no art. 313, II, do RITST.",
+    "status": "Válida",
+    "keywords": [
+      "dissídio coletivo"
+    ]
+  },
+  {
+    "id": "oj-sdc-8",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 8,
+    "titulo": "Dissídio coletivo. Pauta reivindicatória não registrada em ata. Causa de extinção",
+    "enunciado": "A ata da assembléia de trabalhadores que legitima a atuação da entidade sindical respectiva em favor de seus interesses deve registrar, obrigatoriamente, a pauta reivindicatória, produto da vontade expressa da categoria.",
+    "status": "Válida",
+    "keywords": [
+      "dissídio coletivo",
+      "categoria",
+      "assembléia"
+    ]
+  },
+  {
+    "id": "oj-sdc-9",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 9,
+    "titulo": "Enquadramento sindical. Incompetência material da Justiça do Trabalho",
+    "enunciado": "O dissídio coletivo não é meio próprio para o Sindicato vir a obter o reconhecimento de que a categoria que representa é diferenciada, pois esta matéria - enquadramento sindical - envolve a interpretação de norma genérica, notadamente do art. 577 da CLT.",
+    "status": "Válida",
+    "keywords": [
+      "dissídio coletivo",
+      "sindicato",
+      "categoria",
+      "competência",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdc-10",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 10,
+    "titulo": "Greve abusiva não gera efeitos",
+    "enunciado": "É incompatível com a declaração de abusividade de movimento grevista o estabelecimento de quaisquer vantagens ou garantias a seus partícipes, que assumiram os riscos inerentes à utilização do instrumento de pressão máximo.",
+    "status": "Válida",
+    "keywords": [
+      "greve",
+      "abusividade"
+    ]
+  },
+  {
+    "id": "oj-sdc-11",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 11,
+    "titulo": "Greve. Imprescindibilidade de tentativa direta e pacífica da solução do conflito. Etapa negocial prévia",
+    "enunciado": "É abusiva a greve levada a efeito sem que as partes hajam tentado, direta e pacificamente, solucionar o conflito que lhe constitui o objeto.",
+    "status": "Válida",
+    "keywords": [
+      "greve"
+    ]
+  },
+  {
+    "id": "oj-sdc-12",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 12,
+    "titulo": "Greve. Qualificação jurídica. Ilegitimidade ativa \"ad causam\" do sindicato profissional que deflagra o movimento",
+    "enunciado": "Não se legitima o Sindicato profissional a requerer judicialmente a qualificação legal de movimento paredista que ele próprio fomentou.",
+    "status": "Cancelada",
+    "keywords": [
+      "greve",
+      "sindicato",
+      "legitimidade"
+    ]
+  },
+  {
+    "id": "oj-sdc-13",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 13,
+    "titulo": "Legitimação da entidade sindical. Assembléia deliberativa. \"Quorum\" de validade. Art. 612 da CLT",
+    "enunciado": "Mesmo após a promulgação da Constituição Federal de 1988, subordina-se a validade da assembléia de trabalhadores que legitima a atuação da entidade sindical respectiva em favor de seus interesses à observância do \"quorum\" estabelecido no art. 612 da CLT.",
+    "status": "Cancelada",
+    "keywords": [
+      "assembléia",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdc-14",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 14,
+    "titulo": "Sindicato. Base territorial excedente de um município. Obrigatoriedade da realização de múltiplas assemblÉias",
+    "enunciado": "Se a base territorial do Sindicato representativo da categoria abrange mais de um Município, a realização de assembléia deliberativa em apenas um deles inviabiliza a manifestação de vontade da totalidade dos trabalhadores envolvidos na controvérsia, pelo que conduz à insuficiência de \"quorum\" deliberativo, exceto quando particularizado o conflito.",
+    "status": "Cancelada",
+    "keywords": [
+      "sindicato",
+      "categoria",
+      "base territorial",
+      "assembléia"
+    ]
+  },
+  {
+    "id": "oj-sdc-15",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 15,
+    "titulo": "Sindicato. Legitimidade \"ad processum\". Imprescindibilidade do registro no Ministério do Trabalho",
+    "enunciado": "A comprovação da legitimidade \"ad processum\" da entidade sindical se faz por seu registro no órgão competente do Ministério do Trabalho, mesmo após a promulgação da Constituição Federal de 1988.",
+    "status": "Válida",
+    "keywords": [
+      "sindicato",
+      "legitimidade"
+    ]
+  },
+  {
+    "id": "oj-sdc-16",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 16,
+    "titulo": "Taxa de homologação de rescisão contratual. Ilegalidade.",
+    "enunciado": "É contrária ao espírito da lei (art. 477, § 7º, da CLT) e da função precípua do Sindicato a cláusula coletiva que estabelece taxa para homologação de rescisão contratual, a ser paga pela empresa a favor do sindicato profissional.",
+    "status": "Cancelada",
+    "keywords": [
+      "sindicato",
+      "cláusula",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdc-17",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 17,
+    "titulo": "Contribuições para entidades sindicais. Inconstitucionalidade de sua extensão a não associadosDEJT divulgado em 25.08.2014",
+    "enunciado": "As cláusulas coletivas que estabeleçam contribuição em favor de entidade sindical, a qualquer título, obrigando trabalhadores não sindicalizados, são ofensivas ao direito de livre associação e sindicalização, constitucionalmente assegurado, e, portanto, nulas, sendo passíveis de devolução, por via própria, os respectivos valores eventualmente descontados.",
+    "status": "Válida",
+    "keywords": [
+      "cláusula",
+      "contribuição"
+    ]
+  },
+  {
+    "id": "oj-sdc-18",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 18,
+    "titulo": "Descontos autorizados no salário pelo trabalhador. Limitação máxima de 70% do salário base",
+    "enunciado": "Os descontos efetuados com base em cláusula de acordo firmado entre as partes não podem ser superiores a 70% do salário base percebido pelo empregado, pois deve-se assegurar um mínimo de salário em espécie ao trabalhador.",
+    "status": "Válida",
+    "keywords": [
+      "cláusula",
+      "empregado"
+    ]
+  },
+  {
+    "id": "oj-sdc-19",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 19,
+    "titulo": "Dissídio coletivo contra empresa. Legitimação da entidade sindical. Autorização dos trabalhadores diretamente envolvidos no conflito",
+    "enunciado": "A legitimidade da entidade sindical para a instauração da instância contra determinada empresa está condicionada à prévia autorização dos trabalhadores da suscitada diretamente envolvidos no conflito",
+    "status": "Válida",
+    "keywords": [
+      "dissídio coletivo",
+      "legitimidade"
+    ]
+  },
+  {
+    "id": "oj-sdc-20",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 20,
+    "titulo": "Empregados sindicalizados. Admissão preferencial. Condição violadora do art. 8º, V, da CF/88",
+    "enunciado": "Viola o art. 8º, V, da CF/1988 cláusula de instrumento normativo que estabelece a preferência, na contratação de mão de obra, do trabalhador sindicalizado sobre os demais.",
+    "status": "Válida",
+    "keywords": [
+      "cláusula",
+      "empregado"
+    ]
+  },
+  {
+    "id": "oj-sdc-21",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 21,
+    "titulo": "Ilegitimidade \"ad causam\" do sindicato. Ausência de indicação do total de associados da entidade sindical. Insuficiência de \"quorum\" (art. 612 da CLT)",
+    "enunciado": "(OJ cancelada/convertida)",
+    "status": "Cancelada",
+    "keywords": [
+      "sindicato",
+      "legitimidade",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdc-22",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 22,
+    "titulo": "Legitimidade \"ad causam\" do sindicato. Correspondência entre as atividades exercidas pelos setores profissional e econômico envolvidos no conflito. Necessidade",
+    "enunciado": "É necessária a correspondência entre as atividades exercidas pelos setores profissional e econômico, a fim de legitimar os envolvidos no conflito a ser solucionado pela via do dissídio coletivo.",
+    "status": "Válida",
+    "keywords": [
+      "dissídio coletivo",
+      "sindicato",
+      "legitimidade"
+    ]
+  },
+  {
+    "id": "oj-sdc-23",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 23,
+    "titulo": "Legitimidade \"ad causam\". Sindicato representativo de segmento profissional ou patronal. Impossibilidade",
+    "enunciado": "A representação sindical abrange toda a categoria, não comportando separação fundada na maior ou menor dimensão de cada ramo ou empresa.",
+    "status": "Válida",
+    "keywords": [
+      "sindicato",
+      "categoria",
+      "representação",
+      "legitimidade"
+    ]
+  },
+  {
+    "id": "oj-sdc-24",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 24,
+    "titulo": "Negociação prévia insuficiente. Realização de mesa redonda perante a DRT. Art. 114, § 2º, da CF/88. Violação.",
+    "enunciado": "(OJ cancelada/convertida)",
+    "status": "Cancelada",
+    "keywords": []
+  },
+  {
+    "id": "oj-sdc-25",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 25,
+    "titulo": "Salário normativo. Contrato de experiência. Limitação. Tempo de serviço. Possibilidade",
+    "enunciado": "Não fere o princípio da isonomia salarial (art. 7º, XXX, da CF/88) a previsão de salário normativo tendo em vista o fator tempo de serviço.",
+    "status": "Válida",
+    "keywords": []
+  },
+  {
+    "id": "oj-sdc-26",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 26,
+    "titulo": "Salário normativo. Menor empregado. Art. 7º, XXX, da CF/88. Violação",
+    "enunciado": "Os empregados menores não podem ser discriminados em cláusula que fixa salário mínimo profissional para a categoria.",
+    "status": "Válida",
+    "keywords": [
+      "categoria",
+      "cláusula",
+      "empregado"
+    ]
+  },
+  {
+    "id": "oj-sdc-27",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 27,
+    "titulo": "Custas. Ausência de intimação. Deserção. Caracterização",
+    "enunciado": "A deserção se impõe mesmo não tendo havido intimação, pois incumbe à parte, na defesa do próprio interesse, obter os cálculos necessários para efetivar o preparo.",
+    "status": "Válida",
+    "keywords": []
+  },
+  {
+    "id": "oj-sdc-28",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 28,
+    "titulo": "Edital de convocação da AGT. Publicação. Base territorial. Validade",
+    "enunciado": "O edital de convocação para a AGT deve ser publicado em jornal que circule em cada um dos municípios componentes da base territorial.",
+    "status": "Válida",
+    "keywords": [
+      "base territorial"
+    ]
+  },
+  {
+    "id": "oj-sdc-29",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 29,
+    "titulo": "Edital de convocação e ata da assembléia geral. Requisitos essenciais para instauração de dissídio coletivo",
+    "enunciado": "O edital de convocação da categoria e a respectiva ata da AGT constituem peças essenciais à instauração do processo de dissídio coletivo.",
+    "status": "Válida",
+    "keywords": [
+      "dissídio coletivo",
+      "categoria",
+      "assembléia"
+    ]
+  },
+  {
+    "id": "oj-sdc-30",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 30,
+    "titulo": "Estabilidade da gestante. Renúncia ou transação de direitos constitucionais. Impossibilidade (republicada em decorrência de erro material)",
+    "enunciado": "Nos termos do art. 10, II, \"b\", do ADCT, a proteção à maternidade foi erigida à hierarquia constitucional, pois retirou do âmbito do direito potestativo do empregador a possibilidade de despedir arbitrariamente a empregada em estado gravídico. Portanto, a teor do artigo 9º da CLT, torna-se nula de pleno direito a cláusula que estabelece a possibilidade de renúncia ou transação, pela gestante, das garantias referentes à manutenção do emprego e salário.",
+    "status": "Válida",
+    "keywords": [
+      "cláusula",
+      "empregado",
+      "empregador",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdc-31",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 31,
+    "titulo": "Estabilidade do acidentado. Acordo homologado. Prevalência. Impossibilidade. Violação do art. 118 da Lei nº 8.213/91",
+    "enunciado": "Não é possível a prevalência de acordo sobre legislação vigente, quando ele é menos benéfico do que a própria lei, porquanto o caráter imperativo dessa última restringe o campo de atuação da vontade das partes.",
+    "status": "Válida",
+    "keywords": []
+  },
+  {
+    "id": "oj-sdc-32",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 32,
+    "titulo": "Reivindicações da categoria. Fundamentação das cláusulas. Necessidade. Aplicação do Precedente Normativo nº 37 do TST",
+    "enunciado": "É pressuposto indispensável à constituição válida e regular da ação coletiva a apresentação em forma clausulada e fundamentada das reivindicações da categoria, conforme orientação do item VI, letra \"e\", da Instrução Normativa nº 4/93.",
+    "status": "Válida",
+    "keywords": [
+      "categoria",
+      "cláusula"
+    ]
+  },
+  {
+    "id": "oj-sdc-33",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 33,
+    "titulo": "Ação rescisória. Ministério Público. Legitimidade restrita. Hipóteses do art. 487, incisos I e III, do CPC",
+    "enunciado": "A teor do disposto no art. 487, incisos I e III, do CPC, o Ministério Público apenas detém legitimidade para propor ação rescisória nas hipóteses em que tenha sido parte no processo no qual proferida a decisão rescindenda; nas quais deixou de manifestar-se ou intervir na lide, quando por previsão legal expressa deveria tê-lo feito, ou ainda naquelas em que a sentença resultou de colusão das partes, com o intuito de fraudar a lei.",
+    "status": "Cancelada",
+    "keywords": [
+      "legitimidade"
+    ]
+  },
+  {
+    "id": "oj-sdc-34",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 34,
+    "titulo": "Acordo extrajudicial. Homologação. Justiça do Trabalho. Prescindibilidade",
+    "enunciado": "É desnecessária a homologação, por Tribunal Trabalhista, do acordo extrajudicialmente celebrado, sendo suficiente, para que surta efeitos, sua formalização perante o Ministério do Trabalho (art. 614 da CLT e art. 7º, inciso XXVI , da Constituição Federal).",
+    "status": "Válida",
+    "keywords": [
+      "trabalhista",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdc-35",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 35,
+    "titulo": "Edital de Convocação da AGT. Disposição estatutária específica. Prazo mínimo entre a publicação e a realização da assembléia. Observância obrigatória",
+    "enunciado": "Se os estatutos da entidade sindical contam com norma específica que estabeleça prazo mínimo entre a data de publicação do edital convocatório e a realização da assembléia correspondente, então a validade desta última depende da observância desse interregno.",
+    "status": "Válida",
+    "keywords": [
+      "assembléia"
+    ]
+  },
+  {
+    "id": "oj-sdc-36",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 36,
+    "titulo": "Empregados de empresa de processamento de dados. Reconhecimento como categoria diferenciada. Impossibilidade",
+    "enunciado": "É por lei e não por decisão judicial, que as categorias diferenciadas são reconhecidas como tais. De outra parte, no que tange aos profissionais da informática, o trabalho que desempenham sofre alterações, de acordo com a atividade econômica exercida pelo empregador.",
+    "status": "Válida",
+    "keywords": [
+      "categoria",
+      "empregado",
+      "empregador"
+    ]
+  },
+  {
+    "id": "oj-sdc-37",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 37,
+    "titulo": "Empregados de entidades sindicais. Estabelecimento de condições coletivas de trabalho distintas daquelas às quais sujeitas as categorias representadas pelos empregadores. Impossibilidade jurídica. Art. 10 da Lei nº 4.725/65",
+    "enunciado": "O art. 10 da Lei nº 4.725/65 assegura, para os empregados de entidades sindicais, as mesmas condições coletivas de trabalho fixadas para os integrantes das categorias que seus empregadores representam. Assim, a previsão legal expressa constitui óbice ao ajuizamento de dissídio coletivo com vistas a estabelecer para aqueles profissionais regramento próprio.",
+    "status": "Cancelada",
+    "keywords": [
+      "dissídio coletivo",
+      "categoria",
+      "empregado",
+      "empregador"
+    ]
+  },
+  {
+    "id": "oj-sdc-38",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDC",
+    "numero": 38,
+    "titulo": "Greve. Serviços essenciais. Garantia das necessidades inadiáveis da população usuária. Fator determinante da qualificação jurídica do movimento",
+    "enunciado": "É abusiva a greve que se realiza em setores que a lei define como sendo essenciais à comunidade, se não é assegurado o atendimento básico das necessidades inadiáveis dos usuários do serviço, na forma prevista na Lei nº 7.783/89.",
+    "status": "Válida",
+    "keywords": [
+      "greve"
+    ]
+  }
+]

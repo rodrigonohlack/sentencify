@@ -1,0 +1,31 @@
+[
+  {
+    "id": "iac-tst-1",
+    "tribunal": "TST",
+    "tipoProcesso": "IAC",
+    "numero": 1,
+    "numeroProcesso": "IAC-423-11.2010.5.09.0041",
+    "tese": "",
+    "status": "Inadmitido",
+    "observacao": "Incidente inadmitido. Transitado em Julgado.",
+    "keywords": []
+  },
+  {
+    "id": "iac-tst-2",
+    "tribunal": "TST",
+    "tipoProcesso": "IAC",
+    "numero": 2,
+    "numeroProcesso": "IAC-5639-31.2013.5.12.0051",
+    "processoRelacionado": "PetCiv-1000059-12.2020.5.02.0382",
+    "tese": "É inaplicável ao regime de trabalho temporário, disciplinado pela Lei n.º 6.019/74, a garantia de estabilidade provisória à empregada gestante, prevista no art. 10, II, b, do Ato das Disposições Constitucionais Transitórias.",
+    "status": "Em revisão",
+    "observacao": "INSTAURADO INCIDENTE DE SUPERAÇÃO DO ENTENDIMENTO FIRMADO (27/6/2024), em razão das teses jurídicas de repercussão geral fixadas pelo STF no RE 629.053 (Tema 497) e RE 842.844 (Tema 542). Vista Regimental.",
+    "keywords": [
+      "gestante",
+      "estabilidade",
+      "trabalho temporário",
+      "Lei 6.019/74",
+      "ADCT"
+    ]
+  }
+]

@@ -1,0 +1,2300 @@
+[
+  {
+    "id": "oj-sdi2-1",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 1,
+    "titulo": "AÇÃO RESCISÓRIA. AÇÃO CAUTELAR INCIDENTAL. PLANOS ECONÔMICOS",
+    "enunciado": "Procede o pedido de cautelar incidental somente se o autor da ação rescisória, fundada no art. 485, inciso V, do CPC, invocar na respectiva petição inicial afronta ao art. 5º, inciso XXXVI, da Constituição Federal de 1988.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 405",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-2",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 2,
+    "titulo": "AÇÃO RESCISÓRIA. ADICIONAL DE INSALUBRIDADE. BASE DE CÁLCULO. SALÁRIO MÍNIMO. CABÍVEL",
+    "enunciado": "Viola o art. 192 da CLT decisão que acolhe pedido de adicional de insalubridade com base na remuneração do empregado.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "adicional",
+      "insalubridade",
+      "salário",
+      "remuneração",
+      "CLT",
+      "empregado"
+    ]
+  },
+  {
+    "id": "oj-sdi2-3",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 3,
+    "titulo": "AÇÃO RESCISÓRIA. ANTECIPAÇÃO DE TUTELA DE MÉRITO REQUERIDA EM FASE RECURSAL. RECEBIMENTO COMO MEDIDA ACAUTELATÓRIA. MEDIDA PROVISÓRIA Nº 1.906 E REEDIÇÕES",
+    "enunciado": "Em face do que dispõe a Medida Provisória nº 1906 e reedições, é recebido como medida acautelatória em ação rescisória o pedido de antecipação de tutela formulado por entidade pública em recurso ordinário, visando a suspender a execução até o trânsito em julgado da decisão proferida na ação principal.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 405",
+    "keywords": [
+      "ação rescisória",
+      "tutela",
+      "execução",
+      "recurso"
+    ]
+  },
+  {
+    "id": "oj-sdi2-4",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 4,
+    "titulo": "AÇÃO RESCISÓRIA. BANCO DO BRASIL. ADICIONAL DE CARÁTER PESSOAL. ACP",
+    "enunciado": "Procede, por ofensa ao art. 5º, inciso XXXVI, da CF/1988, o pedido de rescisão de julgado que acolheu Adicional de Caráter Pessoal em favor de empregado do Banco do Brasil S.A.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "adicional",
+      "empregado",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-5",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 5,
+    "titulo": "AÇÃO RESCISÓRIA. BANCO DO BRASIL. AP E ADI. HORAS EXTRAS. SÚMULA Nº 83 DO TST. APLICÁVEL",
+    "enunciado": "Não se acolhe pedido de rescisão de julgado que deferiu a empregado do Banco do Brasil S.A. horas extras após a sexta, não obstante o pagamento dos adicionais AP e ADI, ou AFR quando a decisão rescindenda for anterior à Orientação Jurisprudencial nº 17, da Seção de Dissídios Individuais do TST (07.11.94). Incidência das Súmulas nºs 83 do TST e 343 do STF.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "empregado",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-6",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 6,
+    "titulo": "AÇÃO RESCISÓRIA. CIPEIRO SUPLENTE. ESTABILIDADE. ADCT DA CF/88, ART. 10, II, \"A\". SÚMULA Nº 83 DO TST (nova redação)",
+    "enunciado": "Rescinde-se o julgado que nega estabilidade a membro suplente de CIPA, representante de empregado, por ofensa ao art. 10, II, \"a\", do ADCT da CF/88, ainda que se cuide de decisão anterior à Súmula nº 339 do TST. Incidência da Súmula nº 83 do TST.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "empregado",
+      "estabilidade"
+    ]
+  },
+  {
+    "id": "oj-sdi2-7",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 7,
+    "titulo": "AÇÃO RESCISÓRIA. COMPETÊNCIA. CRIAÇÃO DE TRIBUNAL REGIONAL DO TRABALHO. NA OMISSÃO DA LEI, É FIXADA PELO ART. 678, INC. I, \"C\", ITEM 2, DA CLT (nova redação)",
+    "enunciado": "A Lei nº 7.872/89 que criou o Tribunal Regional do Trabalho da 17ª Região não fixou a sua competência para apreciar as ações rescisórias de decisões oriundas da 1ª Região, o que decorreu do art. 678, I, \"c\", item 2, da CLT.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "competência",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdi2-8",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 8,
+    "titulo": "AÇÃO RESCISÓRIA. COMPLEMENTAÇÃO DE APOSENTADORIA. BANESPA. SÚMULA Nº 83 DO TST (nova redação)",
+    "enunciado": "Não se rescinde julgado que acolheu pedido de complementação de aposentadoria integral em favor de empregado do BANESPA, antes da Súmula nº 313 do TST, em virtude da notória controvérsia jurisprudencial então reinante. Incidência da Súmula nº 83 do TST.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "empregado"
+    ]
+  },
+  {
+    "id": "oj-sdi2-9",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 9,
+    "titulo": "AÇÃO RESCISÓRIA. CONAB. AVISO DIREH 2/84. SÚMULA Nº 83 DO TST. APLICÁVEL",
+    "enunciado": "Não se rescinde julgado que reconheceu garantia de emprego com base no Aviso DIREH 02/84 da CONAB, antes da Súmula nº 355 do TST, em virtude da notória controvérsia jurisprudencial então reinante. Incidência da Súmula nº 83 do TST.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-10",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 10,
+    "titulo": "AÇÃO RESCISÓRIA. CONTRATO NULO. ADMINISTRAÇÃO PÚBLICA. EFEITOS. ART. 37, II E § 2º, DA CF/1988",
+    "enunciado": "Somente por ofensa ao art. 37, II e § 2º, da CF/1988, procede o pedido de rescisão de julgado para considerar nula a contratação, sem concurso público, de servidor, após a CF/1988.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "rescisão",
+      "contrato"
+    ]
+  },
+  {
+    "id": "oj-sdi2-11",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 11,
+    "titulo": "AÇÃO RESCISÓRIA. CORREÇÃO MONETÁRIA. LEI Nº 7.596/87. UNIVERSIDADES FEDERAIS. IMPLANTAÇÃO TARDIA DO PLANO DE CLASSIFICAÇÃO DE CARGOS. VIOLAÇÃO DE LEI. SÚMULA Nº 83 DO TST. APLICÁVEL",
+    "enunciado": "Não se rescinde julgado que acolhe pedido de correção monetária decorrente da implantação tardia do Plano de Classificação de Cargos de Universidade Federal previsto na Lei nº 7.596/87, à época em que era controvertida tal matéria na jurisprudência. Incidência da Súmula nº 83 do TST.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-12",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 12,
+    "titulo": "AÇÃO RESCISÓRIA. DECADÊNCIA. CONSUMAÇÃO ANTES OU DEPOIS DA EDIÇÃO DA MEDIDA PROVISÓRIA Nº 1.577/97. AMPLIAÇÃO DO PRAZO",
+    "enunciado": "I - A vigência da Medida Provisória nº 1.577/97 e de suas reedições implicou o elastecimento do prazo decadencial para o ajuizamento da ação rescisória a favor dos entes de direito público, autarquias e fundações públicas. Se o biênio decadencial do art. 495 do CPC de 1973 findou após a entrada em vigor da referida medida provisória e até sua suspensão pelo STF em sede liminar de ação direta de inconstitucionalidade (ADIn 1753-2), tem-se como aplicável o prazo decadencial elastecido à rescisória. (ex-OJ nº 17 da SDI-2 - inserida em 20.09.2000)\nII - A regra ampliativa do prazo decadencial para a propositura de ação rescisória em favor de pessoa jurídica de direito público não se aplica se, ao tempo em que sobreveio a Medida Provisória nº 1.577/97, já se exaurira o biênio do art. 495 do CPC de 1973. Preservação do direito adquirido da parte à decadência já consumada sob a égide da lei velha. (ex-OJ nº 12 da SDI-2 - inserida em 20.09.2000)",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "decadência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-13",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 13,
+    "titulo": "AÇÃO RESCISÓRIA. DECADÊNCIA. \"DIES AD QUEM\". ART. 775 DA CLT. APLICÁVEL",
+    "enunciado": "Prorroga-se até o primeiro dia útil imediatamente subseqüente o prazo decadencial para ajuizamento de ação rescisória quando expira em férias forenses, feriados, finais de semana ou em dia em que não houver expediente forense. Aplicação do art. 775 da CLT.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "decadência",
+      "férias",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdi2-14",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 14,
+    "titulo": "AÇÃO RESCISÓRIA. DECADÊNCIA. \"DIES A QUO\". RECURSO INTEMPESTIVO",
+    "enunciado": "(OJ cancelada/convertida)",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "recurso",
+      "decadência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-15",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 15,
+    "titulo": "AÇÃO RESCISÓRIA. DECADÊNCIA. DUAS DECISÕES RESCINDENDAS",
+    "enunciado": "(OJ cancelada/convertida)",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "decadência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-16",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 16,
+    "titulo": "AÇÃO RESCISÓRIA. DECADÊNCIA. EXCEÇÃO DE INCOMPETÊNCIA",
+    "enunciado": "A exceção de incompetência, ainda que oposta no prazo recursal, sem ter sido aviado o recurso próprio, não tem o condão de afastar a consumação da coisa julgada e, assim, postergar o termo inicial do prazo decadencial para a ação rescisória.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "competência",
+      "recurso",
+      "decadência",
+      "coisa julgada"
+    ]
+  },
+  {
+    "id": "oj-sdi2-17",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 17,
+    "titulo": "AÇÃO RESCISÓRIA. DECADÊNCIA. NÃO-CONSUMAÇÃO ANTES DA EDIÇÃO DA MEDIDA PROVISÓRIA Nº 1577/97. AMPLIAÇÃO DO PRAZO",
+    "enunciado": "A vigência da Medida Provisória nº 1577/97 e de suas reedições implicou o elastecimento do prazo decadencial para o ajuizamento da ação rescisória a favor dos entes de direito público, autarquias e fundações públicas. Se o biênio decadencial do art. 495 do CPC findou após a entrada em vigor da referida medida provisória e até sua suspensão pelo STF em sede liminar de ação direta de inconstitucionalidade (ADIn 1753-2), tem-se como aplicável o prazo decadencial elastecido à rescisória.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "decadência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-18",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 18,
+    "titulo": "AÇÃO RESCISÓRIA. DECADÊNCIA. UNIÃO. LEI COMPLEMENTAR Nº 73/1993, ART. 67. LEI Nº 8.682/1993, ART. 6º",
+    "enunciado": "O art. 67 da Lei Complementar nº 73/1993 interrompeu todos os prazos, inclusive o de decadência, em favor da União no período compreendido entre 14.02.1993 e 14.08.1993.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "decadência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-19",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 19,
+    "titulo": "AÇÃO RESCISÓRIA. DESLIGAMENTO INCENTIVADO. IMPOSTO DE RENDA. ABONO PECUNIÁRIO. VIOLAÇÃO DE LEI. SÚMULA Nº 83 DO TST. APLICÁVEL",
+    "enunciado": "Havendo notória controvérsia jurisprudencial acerca da incidência de imposto de renda sobre parcela paga pelo empregador (\"abono pecuniário\") a título de \"desligamento incentivado\", improcede pedido de rescisão do julgado. Incidência da Súmula nº 83 do TST.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "empregado",
+      "empregador",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-20",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 20,
+    "titulo": "AÇÃO RESCISÓRIA. DOCUMENTO NOVO. DISSÍDIO COLETIVO. SENTENÇA NORMATIVA",
+    "enunciado": "Documento novo é o cronologicamente velho, já existente ao tempo da decisão rescindenda, mas ignorado pelo interessado ou de impossível utilização à época no processo. Não é documento novo apto a viabilizar a desconstituição de julgado.\na) a sentença normativa proferida ou transitada em julgado posteriormente à sentença rescindenda.\nb) a sentença normativa preexistente à sentença rescindenda, mas não exibida no processo principal, em virtude de negligência da parte, quando podia e deveria louvar-se de documento já existente e não ignorado quando emitida a decisão rescindenda.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 402",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-21",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 21,
+    "titulo": "AÇÃO RESCISÓRIA. DUPLO GRAU DE JURISDIÇÃO. TRÂNSITO EM JULGADO. INOBSERVÂNCIA. DECRETO-LEI Nº 779/69, ART. 1º, V. INCABÍVEL (nova redação)",
+    "enunciado": "É incabível ação rescisória para a desconstituição de sentença não transitada em julgado porque ainda não submetida ao necessário duplo grau de jurisdição, na forma do Decreto-Lei nº 779/69. Determina-se que se oficie ao Presidente do TRT para que proceda à avocatória do processo principal para o reexame da sentença rescindenda.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-22",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 22,
+    "titulo": "AÇÃO RESCISÓRIA. ESTABILIDADE. ART. 41, CF/1988. CELETISTA. ADMINISTRAÇÃO DIRETA, AUTÁRQUICA OU FUNDACIONAL. APLICABILIDADE",
+    "enunciado": "O servidor público celetista da administração direta, autárquica ou fundacional é beneficiário da estabilidade prevista no art. 41 da Constituição Federal.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 390",
+    "keywords": [
+      "ação rescisória",
+      "estabilidade"
+    ]
+  },
+  {
+    "id": "oj-sdi2-23",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 23,
+    "titulo": "AÇÃO RESCISÓRIA. ESTABILIDADE. PERÍODO PRÉ-ELEITORAL. VIOLAÇÃO DE LEI. SÚMULA Nº 83 DO TST. APLICÁVEL",
+    "enunciado": "Não procede pedido de rescisão de sentença de mérito que assegura ou nega estabilidade pré-eleitoral, quando a decisão rescindenda for anterior à Orientação Jurisprudencial nº 51, da Seção de Dissídios Individuais do TST (25.11.96). Incidência da Súmula nº 83 do TST.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "rescisão",
+      "estabilidade"
+    ]
+  },
+  {
+    "id": "oj-sdi2-24",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 24,
+    "titulo": "AÇÃO RESCISÓRIA. ESTABILIDADE PROVISÓRIA. REINTEGRAÇÃO EM PERÍODO POSTERIOR. DIREITO LIMITADO AOS SALÁRIOS E CONSECTÁRIOS DO PERÍODO DA ESTABILIDADE",
+    "enunciado": "Rescinde-se o julgado que reconhece estabilidade provisória e determina a reintegração de empregado, quando já exaurido o respectivo período de estabilidade. Em juízo rescisório, restringe-se a condenação quanto aos salários e consectários até o termo final da estabilidade.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "salário",
+      "empregado",
+      "estabilidade"
+    ]
+  },
+  {
+    "id": "oj-sdi2-25",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 25,
+    "titulo": "AÇÃO RESCISÓRIA. regÊNCIA pelo cpc de 1973. EXPRESSÃO \"LEI\" DO ART. 485, V, DO CPC de 1973. NÃO INCLUSÃO DO ACT, CCT, PORTARIA, REGULAMENTO, SÚMULA E ORIENTAÇÃO JURISPRUDENCIAL DE TRIBUNAL.Res. 212/2016, DEJT divulgado em 20, 21 e 22.09.2016",
+    "enunciado": "Não procede pedido de rescisão fundado no art. 485, V, do CPC de 1973 quando se aponta contrariedade à norma de convenção coletiva de trabalho, acordo coletivo de trabalho, portaria do Poder Executivo, regulamento de empresa e súmula ou orientação jurisprudencial de tribunal. (ex-OJ 25 da SDI-2, inserida em 20.09.2000 e ex-OJ 118 da SDI-2, DJ 11.08.2003)",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-26",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 26,
+    "titulo": "AÇÃO RESCISÓRIA. GRATIFICAÇÃO DE NÍVEL SUPERIOR. SUFRAMA",
+    "enunciado": "A extensão da gratificação instituída pela SUFRAMA aos servidores celetistas exercentes de atividade de nível superior não ofende as disposições contidas nos arts. 37, XIII e 39, § 1º, da CF/1988.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "gratificação"
+    ]
+  },
+  {
+    "id": "oj-sdi2-27",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 27,
+    "titulo": "AÇÃO RESCISÓRIA. HONORÁRIOS ADVOCATÍCIOS",
+    "enunciado": "Incabível condenação em honorários advocatícios em ação rescisória no processo trabalhista, salvo preenchidos os requisitos da Lei nº 5.584/70.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "trabalhista",
+      "honorários"
+    ]
+  },
+  {
+    "id": "oj-sdi2-28",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 28,
+    "titulo": "AÇÃO RESCISÓRIA. JUÍZO RESCISÓRIO. RESTITUIÇÃO DA PARCELA JÁ RECEBIDA. DEVE A PARTE PROPOR AÇÃO PRÓPRIA",
+    "enunciado": "Inviável em sede de ação rescisória pleitear condenação relativa à devolução dos valores pagos aos empregados quando ultimada a execução da decisão rescindenda, devendo a empresa buscar por meio de procedimento próprio essa devolução.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "execução",
+      "empregado"
+    ]
+  },
+  {
+    "id": "oj-sdi2-29",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 29,
+    "titulo": "AÇÃO RESCISÓRIA. MATÉRIA CONSTITUCIONAL. SÚMULA Nº 83 DO TST E SÚMULA Nº 343 DO STF. INAPLICÁVEIS",
+    "enunciado": "No julgamento de ação rescisória fundada no art. 485, inciso V, do CPC, não se aplica o óbice das Súmulas nºs 83 do TST e 343 do STF, quando se tratar de matéria constitucional.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-30",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 30,
+    "titulo": "AÇÃO RESCISÓRIA. MULTA. ART. 920 DO CÓDIGO CIVIL DE 1916 (ART. 412 DO CÓDIGO CIVIL DE 2002) (nova redação em decorrência da incorporação da Orientação Jurisprudencial nº 31 da SBDI-II)",
+    "enunciado": "Não se acolhe, por violação do art. 920 do Código Civil de 1916 (art. 412 do Código Civil de 2002), pedido de rescisão de julgado que:\na) em processo de conhecimento, impôs condenação ao pagamento de multa, quando a decisão rescindenda for anterior à Orientação Jurisprudencial nº 54 da Subseção I Especializada em Dissídios Individuais do TST (30.05.94), incidindo o óbice da Súmula nº 83 do TST; (ex-OJ nº 30 da SDI-2 inserida em 20.09.2000)\nb) em execução, rejeita-se limitação da condenação ao pagamento de multa, por inexistência de violação literal. (ex-OJ nº 31 da SDI-2 - inserida em 20.09.2000)",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "execução",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-31",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 31,
+    "titulo": "AÇÃO RESCISÓRIA. MULTA. VIOLAÇÃO DO ART. 920 DO CÓDIGO CIVIL. DECISÃO RESCINDENDA EM EXECUÇÃO",
+    "enunciado": "Não se acolhe, por violação do art. 920 do Código Civil, pedido de rescisão de julgado que, em execução, rejeita limitação da condenação ao pagamento de multa. Inexistência de violação literal.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "execução",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-32",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 32,
+    "titulo": "AÇÃO RESCISÓRIA. PETIÇÃO INICIAL. CAUSA DE PEDIR. AUSÊNCIA DE CAPITULAÇÃO, OU CAPITULAÇÃO ERRÔNEA NO ART. 485 DO CPC. PRINCÍPIO \"IURA NOVIT CURIA\"",
+    "enunciado": "Não padece de inépcia a petição inicial de ação rescisória apenas porque omite a subsunção do fundamento de rescindibilidade no art. 485 do CPC, ou o capitula erroneamente. Contanto que não se afaste dos fatos e fundamentos invocados como causa de pedir, ao Tribunal é lícito emprestar-lhes a adequada qualificação jurídica (\"iura novit curia\").",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 408",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-33",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 33,
+    "titulo": "AÇÃO RESCISÓRIA. PETIÇÃO INICIAL. VIOLAÇÃO LITERAL DE LEI. PRINCÍPIO \"IURA NOVIT CURIA\"",
+    "enunciado": "Fundando-se a ação rescisória no art. 485, inciso V, do CPC, é indispensável expressa indicação na petição inicial da ação rescisória do dispositivo legal violado, não se aplicando, no caso, o princípio \"iura novit curia\".",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 408",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-34",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 34,
+    "titulo": "AÇÃO RESCISÓRIA. PLANOS ECONÔMICOS",
+    "enunciado": "I - O acolhimento de pedido em ação rescisória de plano econômico, fundada no art. 485, inciso V, do CPC de 1973, pressupõe, necessariamente, expressa invocação na petição inicial de afronta ao art. 5º, inciso XXXVI, da Constituição Federal de 1988. A indicação de ofensa literal a preceito de lei ordinária atrai a incidência da Súmula nº 83 do TST e Súmula nº 343 do STF.\nII - Se a decisão rescindenda é posterior à Súmula nº 315 do TST (Res. 07, DJ 22.09.93), inaplicável a Súmula nº 83 do TST.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-35",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 35,
+    "titulo": "AÇÃO RESCISÓRIA. PLANOS ECONÔMICOS. COISA JULGADA. LIMITAÇÃO À DATA-BASE NA FASE DE EXECUÇÃO",
+    "enunciado": "Não ofende a coisa julgada a limitação à data-base da categoria, na fase executória, da condenação ao pagamento de diferenças salariais decorrentes de planos econômicos, quando a decisão exeqüenda silenciar sobre a limitação, uma vez que a limitação decorre de norma cogente. Apenas quando a sentença exeqüenda houver expressamente afastado a limitação à data-base é que poderá ocorrer ofensa à coisa julgada.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "execução",
+      "coisa julgada"
+    ]
+  },
+  {
+    "id": "oj-sdi2-36",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 36,
+    "titulo": "AÇÃO RESCISÓRIA. PREQUESTIONAMENTO. VIOLAÇÃO OCORRIDA NA PRÓPRIA DECISÃO RESCINDENDA",
+    "enunciado": "Não é absoluta a exigência de prequestionamento na ação rescisória: ainda que a ação rescisória tenha por fundamento violação de dispositivo legal, é prescindível o prequestionamento quando o vício nasce no próprio julgamento, como se dá com a sentença \"extra, citra e ultra petita\".",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-37",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 37,
+    "titulo": "AÇÃO RESCISÓRIA. PRESCRIÇÃO QÜINQÜENAL. MATÉRIA CONSTITUCIONAL. SÚMULA Nº 83 DO TST E SÚMULA Nº 343 DO STF. INAPLICÁVEISDJ 22.08.2005",
+    "enunciado": "No julgamento de ação rescisória fundada no art. 485, inciso V, do CPC, não se aplica o óbice das Súmulas nºs 83 do TST e 343 do STF quando se tratar de prazo prescricional com assento constitucional.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "prescrição"
+    ]
+  },
+  {
+    "id": "oj-sdi2-38",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 38,
+    "titulo": "AÇÃO RESCISÓRIA. PROFESSOR-ADJUNTO. INGRESSO NO CARGO DE PROFESSOR-TITULAR. EXIGÊNCIA DE CONCURSO PÚBLICO (LEI Nº 7.596/1987, DECRETO Nº 94.664/87 E ART. 206, V, CF/1988)",
+    "enunciado": "A assunção do professor-adjunto ao cargo de professor titular de universidade pública, sem prévia aprovação em concurso público, viola o art. 206, inciso V, da Constituição Federal. Procedência do pedido de rescisão do julgado.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-39",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 39,
+    "titulo": "AÇÃO RESCISÓRIA. REAJUSTES BIMESTRAIS E QUADRIMESTRAIS. LEI Nº 8.222/1991. SÚMULA Nº 83 DO TST. APLICÁVEL",
+    "enunciado": "Havendo controvérsia jurisprudencial à época, não se rescinde decisão que aprecia a possibilidade de cumulação das antecipações bimestrais e reajustes quadrimestrais de salário previstos na Lei nº 8.222/91. Incidência da Súmula nº 83 do TST.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "salário"
+    ]
+  },
+  {
+    "id": "oj-sdi2-40",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 40,
+    "titulo": "AÇÃO RESCISÓRIA. REAJUSTES SALARIAIS PREVISTOS EM NORMA COLETIVA. PREVALÊNCIA DA LEGISLAÇÃO DE POLÍTICA SALARIAL QUANDO A NORMA COLETIVA É ANTERIOR À LEI",
+    "enunciado": "Os reajustes salariais previstos em norma coletiva de trabalho não prevalecem frente à legislação superveniente de política salarial.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 375",
+    "keywords": [
+      "ação rescisória",
+      "salarial"
+    ]
+  },
+  {
+    "id": "oj-sdi2-41",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 41,
+    "titulo": "AÇÃO RESCISÓRIA. SENTENÇA “CITRA PETITA”. CABIMENTO",
+    "enunciado": "Revelando-se a sentença \"citra petita\", o vício processual vulnera os arts. 141 e 492 do CPC de 2015 (arts. 128 e 460 do CPC de 1973), tornando-a passível de desconstituição, ainda que não interpostos embargos de declaração.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "embargos"
+    ]
+  },
+  {
+    "id": "oj-sdi2-42",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 42,
+    "titulo": "AÇÃO RESCISÓRIA. SENTENÇA DE MÉRITO. COMPETÊNCIA DO TST. ACÓRDÃO RESCINDENDO DO TST. NÃO CONHECIMENTO DE RECURSO. SÚMULA Nº 192. NÃO APLICAÇÃO",
+    "enunciado": "Acórdão rescindendo do TST que não conhece de recurso de embargos ou de revista, seja examinando a argüição de violação de dispositivo de lei, seja decidindo de acordo com súmula de direito material ou em consonância com iterativa, notória e atual jurisprudência de direito material da SDI (Súmula nº 333) examina o mérito da causa, comportando ação rescisória da competência do Tribunal Superior do Trabalho.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "competência",
+      "recurso",
+      "embargos"
+    ]
+  },
+  {
+    "id": "oj-sdi2-43",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 43,
+    "titulo": "AÇÃO RESCISÓRIA. SENTENÇA DE MÉRITO. DECISÃO DE TRIBUNAL REGIONAL DO TRABALHO EM AGRAVO REGIMENTAL CONFIRMANDO DECISÃO MONOCRÁTICA DO RELATOR QUE, APLICANDO A SÚMULA Nº 83 DO TST, INDEFERIU A PETIÇÃO INICIAL DA AÇÃO RESCISÓRIA. CABIMENTO",
+    "enunciado": "Se a decisão recorrida, em agravo regimental, aprecia a matéria na fundamentação, sob o enfoque das Súmulas nºs 83 do TST e 343 do STF, constitui sentença de mérito ainda que haja resultado no indeferimento da petição inicial e na extinção do processo, \"sem julgamento do mérito\". Sujeita-se, assim, à reforma pelo TST a decisão do Tribunal que, invocando controvérsia na interpretação da lei, indefere a petição inicial de ação rescisória.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 411",
+    "keywords": [
+      "ação rescisória",
+      "agravo"
+    ]
+  },
+  {
+    "id": "oj-sdi2-44",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 44,
+    "titulo": "AÇÃO RESCISÓRIA. SENTENÇA DE MÉRITO. DECISÃO HOMOLOGATÓRIA DE ADJUDICAÇÃO. INCABÍVEL",
+    "enunciado": "Incabível ação rescisória para impugnar decisão homologatória de adjudicação.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 399",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-45",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 45,
+    "titulo": "AÇÃO RESCISÓRIA. SENTENÇA DE MÉRITO. DECISÃO HOMOLOGATÓRIA DE ARREMATAÇÃO. INCABÍVEL",
+    "enunciado": "Incabível ação rescisória para impugnar decisão homologatória de arrematação.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 399",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-46",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 46,
+    "titulo": "AÇÃO RESCISÓRIA. SENTENÇA DE MÉRITO. QUESTÃO PROCESSUAL",
+    "enunciado": "Pode uma questão processual ser objeto de rescisão desde que consista em pressuposto de validade de uma sentença de mérito.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 412",
+    "keywords": [
+      "ação rescisória",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-47",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 47,
+    "titulo": "AÇÃO RESCISÓRIA. SENTENÇA DE MÉRITO. VIOLAÇÃO DO ART. 896, \"A\", DA CLT",
+    "enunciado": "Incabível ação rescisória, por violação do art. 896, \"a\", da CLT, contra decisão que não conhece de recurso de revista, com base em divergência jurisprudencial, pois não se cuida de sentença de mérito (art. 485 do CPC).",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 413",
+    "keywords": [
+      "ação rescisória",
+      "recurso",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdi2-48",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 48,
+    "titulo": "AÇÃO RESCISÓRIA. SENTENÇA E ACÓRDÃO. SUBSTITUIÇÃO",
+    "enunciado": "Em face do disposto no art. 512 do CPC, é juridicamente impossível o pedido explícito de desconstituição de sentença quando substituída por acórdão Regional.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-49",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 49,
+    "titulo": "MANDADO DE SEGURANÇA. AÇÃO DE CUMPRIMENTO FUNDADA EM DECISÃO NORMATIVA QUE SOFREU POSTERIOR REFORMA, QUANDO JÁ TRANSITADA EM JULGADO A SENTENÇA CONDENATÓRIA PROFERIDA NA AÇÃO DE CUMPRIMENTO",
+    "enunciado": "É cabível o mandado de segurança para extinguir a execução fundada em sentença proferida em ação de cumprimento, quando excluída da sentença normativa a cláusula que lhe serviu de sustentáculo.",
+    "status": "Cancelada",
+    "keywords": [
+      "mandado de segurança",
+      "execução"
+    ]
+  },
+  {
+    "id": "oj-sdi2-50",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 50,
+    "titulo": "MANDADO DE SEGURANÇA. ANTECIPAÇÃO DE TUTELA. CABIMENTO",
+    "enunciado": "A tutela antecipada concedida antes da prolação da sentença é impugnável mediante mandado de segurança, por não comportar recurso próprio.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 414",
+    "keywords": [
+      "mandado de segurança",
+      "tutela",
+      "recurso"
+    ]
+  },
+  {
+    "id": "oj-sdi2-51",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 51,
+    "titulo": "MANDADO DE SEGURANÇA. ANTECIPAÇÃO DE TUTELA CONCEDIDA EM SENTENÇA. REINTEGRAÇÃO. NÃO CABIMENTO",
+    "enunciado": "A antecipação da tutela conferida na sentença não comporta impugnação pela via do mandado de segurança, por ser impugnável mediante recurso ordinário. A ação cautelar é o meio próprio para se obter efeito suspensivo a recurso.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 414",
+    "keywords": [
+      "mandado de segurança",
+      "tutela",
+      "recurso"
+    ]
+  },
+  {
+    "id": "oj-sdi2-52",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 52,
+    "titulo": "MANDADO DE SEGURANÇA. ART. 284, CPC. APLICABILIDADE",
+    "enunciado": "Exigindo o mandado de segurança prova documental pré-constituída, inaplicável se torna o art. 284 do CPC quando verificada na petição inicial do \"mandamus\" a ausência de documento indispensável ou sua autenticação.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 415",
+    "keywords": [
+      "mandado de segurança"
+    ]
+  },
+  {
+    "id": "oj-sdi2-53",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 53,
+    "titulo": "MANDADO DE SEGURANÇA. COOPERATIVA EM LIQUIDAÇÃO EXTRAJUDICIAL. LEI Nº 5.764/71, ART. 76. INAPLICÁVEL. NÃO SUSPENDE A EXECUÇÃO",
+    "enunciado": "A liquidação extrajudicial de sociedade cooperativa não suspende a execução dos créditos trabalhistas existentes contra ela.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "execução",
+      "trabalhista"
+    ]
+  },
+  {
+    "id": "oj-sdi2-54",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 54,
+    "titulo": "MANDADO DE SEGURANÇA. EMBARGOS DE TERCEIRO. CUMULAÇÃO. PENHORA. INCABÍVEL",
+    "enunciado": "Ajuizados embargos de terceiro (art. 674 do CPC de 2015 - art. 1.046 do CPC de 1973) para pleitear a desconstituição da penhora, é incabível mandado de segurança com a mesma finalidade.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "embargos"
+    ]
+  },
+  {
+    "id": "oj-sdi2-55",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 55,
+    "titulo": "MANDADO DE SEGURANÇA. EXECUÇÃO. LEI Nº 8.432/1992. ART. 897, § 1º, DA CLT. CABIMENTO",
+    "enunciado": "Devendo o agravo de petição delimitar justificadamente a matéria e os valores objeto de discordância, não fere direito líquido e certo o prosseguimento da execução quanto aos tópicos e valores não especificados no agravo.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 416",
+    "keywords": [
+      "mandado de segurança",
+      "execução",
+      "agravo",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdi2-56",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 56,
+    "titulo": "MANDADO DE SEGURANÇA. EXECUÇÃO. PENDÊNCIA DE RECURSO EXTRAORDINÁRIO",
+    "enunciado": "Não há direito líquido e certo à execução definitiva na pendência de recurso extraordinário, ou de agravo de instrumento visando a destrancá-lo.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "execução",
+      "recurso",
+      "agravo"
+    ]
+  },
+  {
+    "id": "oj-sdi2-57",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 57,
+    "titulo": "MANDADO DE SEGURANÇA. INSS. TEMPO DE SERVIÇO. AVERBAÇÃO E/OU RECONHECIMENTO",
+    "enunciado": "Conceder-se-á mandado de segurança para impugnar ato que determina ao INSS o reconhecimento e/ou averbação de tempo de serviço.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança"
+    ]
+  },
+  {
+    "id": "oj-sdi2-58",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 58,
+    "titulo": "MANDADO DE SEGURANÇA PARA CASSAR LIMINAR CONCEDIDA EM AÇÃO CIVIL PÚBLICA. CABÍVEL",
+    "enunciado": "É cabível o mandado de segurança visando a cassar liminar concedida em ação civil pública.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 414",
+    "keywords": [
+      "mandado de segurança"
+    ]
+  },
+  {
+    "id": "oj-sdi2-59",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 59,
+    "titulo": "MANDADO DE SEGURANÇA. PENHORA. CARTA DE FIANÇA BANCÁRIA. SEGURO GARANTIA JUDICIAL (nova redação em decorrência do CPC 2015)",
+    "enunciado": "A carta de fiança bancária e o seguro garantia judicial, desde que em valor não inferior ao do débito em execução, acrescido de trinta por cento, equivalem a dinheiro para efeito da gradação dos bens penhoráveis, estabelecida no art. 835 do CPC de 2015 (art. 655 do CPC de 1973).",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "execução"
+    ]
+  },
+  {
+    "id": "oj-sdi2-60",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 60,
+    "titulo": "MANDADO DE SEGURANÇA. PENHORA EM DINHEIRO. BANCO",
+    "enunciado": "Não fere direito líquido e certo do impetrante o ato judicial que determina penhora em dinheiro de banco, em execução definitiva, para garantir crédito exeqüendo, uma vez que obedece à gradação prevista no art. 655 do CPC.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 417",
+    "keywords": [
+      "mandado de segurança",
+      "execução"
+    ]
+  },
+  {
+    "id": "oj-sdi2-61",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 61,
+    "titulo": "MANDADO DE SEGURANÇA. PENHORA EM DINHEIRO. EXECUÇÃO DEFINITIVA. DEPÓSITO EM BANCO OFICIAL NO ESTADO. ARTIGOS 612 E 666 DO CPC",
+    "enunciado": "Havendo discordância do credor, em execução definitiva, não tem o executado direito líquido e certo a que os valores penhorados em dinheiro fiquem depositados no próprio banco, ainda que atenda aos requisitos do art. 666, I, do CPC.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 417",
+    "keywords": [
+      "mandado de segurança",
+      "execução"
+    ]
+  },
+  {
+    "id": "oj-sdi2-62",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 62,
+    "titulo": "MANDADO DE SEGURANÇA. PENHORA EM DINHEIRO. EXECUÇÃO PROVISÓRIA",
+    "enunciado": "Em se tratando de execução provisória, fere direito líquido e certo do impetrante a determinação de penhora em dinheiro, quando nomeados outros bens à penhora, pois o executado tem direito a que a execução se processe da forma que lhe seja menos gravosa, nos termos do art. 620 do CPC.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 417",
+    "keywords": [
+      "mandado de segurança",
+      "execução"
+    ]
+  },
+  {
+    "id": "oj-sdi2-63",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 63,
+    "titulo": "MANDADO DE SEGURANÇA. REINTEGRAÇÃO. AÇÃO CAUTELAR",
+    "enunciado": "Comporta a impetração de mandado de segurança o deferimento de reintegração no emprego em ação cautelar.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança"
+    ]
+  },
+  {
+    "id": "oj-sdi2-64",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 64,
+    "titulo": "MANDADO DE SEGURANÇA. REINTEGRAÇÃO LIMINARMENTE CONCEDIDA",
+    "enunciado": "Não fere direito líquido e certo a concessão de tutela antecipada para reintegração de empregado protegido por estabilidade provisória decorrente de lei ou norma coletiva.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "tutela",
+      "empregado",
+      "estabilidade"
+    ]
+  },
+  {
+    "id": "oj-sdi2-65",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 65,
+    "titulo": "MANDADO DE SEGURANÇA. REINTEGRAÇÃO LIMINARMENTE CONCEDIDA. DIRIGENTE SINDICAL",
+    "enunciado": "Ressalvada a hipótese do art. 494 da CLT, não fere direito líquido e certo a determinação liminar de reintegração no emprego de dirigente sindical, em face da previsão do inciso X do art. 659 da CLT.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdi2-66",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 66,
+    "titulo": "MANDADO DE SEGURANÇA. SENTENÇA HOMOLOGATÓRIA DE ADJUDICAÇÃO. INCABÍVELRes. 212/2016, DEJT divulgado em 20, 21 e 22.09.2016",
+    "enunciado": "I – Sob a égide do CPC de 1973 é incabível o mandado de segurança contra sentença homologatória de adjudicação, uma vez que existe meio próprio para impugnar o ato judicial, consistente nos embargos à adjudicação (CPC de 1973, art. 746).\nII – Na vigência do CPC de 2015 também não cabe mandado de segurança, pois o ato judicial pode ser impugnado por simples petição, na forma do artigo 877, caput, do CPC de 2015.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "embargos"
+    ]
+  },
+  {
+    "id": "oj-sdi2-67",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 67,
+    "titulo": "MANDADO DE SEGURANÇA. TRANSFERÊNCIA. ART. 659, IX, DA CLT",
+    "enunciado": "Não fere direito líquido e certo a concessão de liminar obstativa de transferência de empregado, em face da previsão do inciso IX do art. 659 da CLT.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "CLT",
+      "empregado"
+    ]
+  },
+  {
+    "id": "oj-sdi2-68",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 68,
+    "titulo": "ANTECIPAÇÃO DE TUTELA. COMPETÊNCIA (nova redação)",
+    "enunciado": "Nos Tribunais, compete ao relator decidir sobre o pedido de antecipação de tutela, submetendo sua decisão ao Colegiado respectivo, independentemente de pauta, na sessão imediatamente subseqüente.",
+    "status": "Válida",
+    "keywords": [
+      "tutela",
+      "competência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-69",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 69,
+    "titulo": "FUNGIBILIDADE RECURSAL. INDEFERIMENTO LIMINAR DE AÇÃO RESCISÓRIA OU MANDADO DE SEGURANÇA. RECURSO PARA O TST. RECEBIMENTO COMO AGRAVO REGIMENTAL E DEVOLUÇÃO DOS AUTOS AO TRT",
+    "enunciado": "Recurso ordinário interposto contra despacho monocrático indeferitório da petição inicial de ação rescisória ou de mandado de segurança pode, pelo princípio de fungibilidade recursal, ser recebido como agravo regimental. Hipótese de não conhecimento do recurso pelo TST e devolução dos autos ao TRT, para que aprecie o apelo como agravo regimental.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "mandado de segurança",
+      "recurso",
+      "agravo"
+    ]
+  },
+  {
+    "id": "oj-sdi2-70",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 70,
+    "titulo": "AÇÃO RESCISÓRIA. regência pelo cpc de 1973. MANIFESTO E INESCUSÁVEL EQUÍVOCO NO DIRECIONAMENTO. INÉPCIA DA INICIAL. EXTINÇÃO DO PROCESSO",
+    "enunciado": "Sob a égide do CPC de 1973, o manifesto equívoco da parte em ajuizar ação rescisória no TST para desconstituir julgado proferido pelo TRT, ou vice-versa, implica a extinção do processo sem julgamento do mérito por inépcia da inicial.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-71",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 71,
+    "titulo": "AÇÃO RESCISÓRIA. SALÁRIO PROFISSIONAL. FIXAÇÃO. MÚLTIPLO DE SALÁRIO MÍNIMO. ART. 7º, IV, DA CF/88 (nova redação)",
+    "enunciado": "A estipulação do salário profissional em múltiplos do salário mínimo não afronta o art. 7º, inciso IV, da Constituição Federal de 1988, só incorrendo em vulneração do referido preceito constitucional a fixação de correção automática do salário pelo reajuste do salário mínimo.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "salário"
+    ]
+  },
+  {
+    "id": "oj-sdi2-72",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 72,
+    "titulo": "AÇÃO RESCISÓRIA. PREQUESTIONAMENTO QUANTO À MATÉRIA E AO CONTEÚDO DA NORMA, NÃO NECESSARIAMENTE DO DISPOSITIVO LEGAL TIDO POR VIOLADO",
+    "enunciado": "O prequestionamento exigido em ação rescisória diz respeito à matéria e ao enfoque específico da tese debatida na ação e não, necessariamente, ao dispositivo legal tido por violado. Basta que o conteúdo da norma reputada como violada tenha sido abordado na decisão rescindenda para que se considere preenchido o pressuposto do prequestionamento.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-73",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 73,
+    "titulo": "ART. 557 DO CPC. CONSTITUCIONALIDADE",
+    "enunciado": "Não há como se cogitar da inconstitucionalidade do art. 557 do CPC, meramente pelo fato de a decisão ser exarada pelo Relator, sem a participação do Colegiado, porquanto o princípio da publicidade insculpido no inciso IX do art. 93 da CF/1988 não está jungido ao julgamento pelo Colegiado e sim o acesso ao processo pelas partes, seus advogados ou terceiros interessados, direito preservado pela Lei nº 9.756/1998, ficando, outrossim, assegurado o acesso ao Colegiado através de agravo.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 435",
+    "keywords": [
+      "agravo"
+    ]
+  },
+  {
+    "id": "oj-sdi2-74",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 74,
+    "titulo": "EMBARGOS DECLARATÓRIOS CONTRA DECISÃO MONOCRÁTICA DO RELATOR, CALCADA NO ART. 557 DO CPC. CABIMENTO",
+    "enunciado": "I - Tendo o despacho monocrático de provimento ou denegação de recurso, previsto no art. 557 do CPC, conteúdo decisório definitivo e conclusivo da lide, comporta ser esclarecido pela via dos embargos declaratórios, em despacho aclaratório, também monocrático quando se pretende tão-somente suprir omissão e não modificação do julgado.\nII - Postulando o embargante efeito modificativo, os embargos declaratórios deverão ser submetidos ao pronunciamento do Colegiado, convertidos em agravo, em face dos princípios da fungibilidade e celeridade processual.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 421",
+    "keywords": [
+      "recurso",
+      "embargos",
+      "agravo"
+    ]
+  },
+  {
+    "id": "oj-sdi2-75",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 75,
+    "titulo": "REMESSA DE OFÍCIO. AÇÃO RESCISÓRIA. PREQUESTIONAMENTO. DECISÃO REGIONAL QUE SIMPLESMENTE CONFIRMA A SENTENÇA",
+    "enunciado": "Para efeito de ação rescisória, considera-se prequestionada a matéria tratada na sentença quando, examinando remessa de ofício, o Tribunal simplesmente a confirma.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-76",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 76,
+    "titulo": "AÇÃO RESCISÓRIA. AÇÃO CAUTELAR PROPOSTA SOB A VIGÊNCIA DO CPC de 1973. SUSPENSÃO DA EXECUÇÃO. JUNTADA DE DOCUMENTO INDISPENSÁVEL. POSSIBILIDADE DE ÊXITO NA RESCISÃO DO JULGADO",
+    "enunciado": "É indispensável a instrução da ação cautelar proposta sob a vigência do CPC de 1973 com as provas documentais necessárias à aferição da plausibilidade de êxito na rescisão do julgado. Assim sendo, devem vir junto com a inicial da cautelar as cópias da petição inicial da ação rescisória principal, da decisão rescindenda, da certidão do trânsito em julgado da decisão rescindenda e informação do andamento atualizado da execução.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "execução",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-77",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 77,
+    "titulo": "AÇÃO RESCISÓRIA. APLICAÇÃO DA SÚMULA Nº 83 DO TST. MATÉRIA CONTROVERTIDA. LIMITE TEMPORAL. DATA DE INSERÇÃO EM ORIENTAÇÃO JURISPRUDENCIAL DO TST",
+    "enunciado": "A data da inclusão da matéria discutida na ação rescisória, na Orientação Jurisprudencial do TST, é o divisor de águas quanto a ser, ou não, controvertida nos Tribunais a interpretação dos dispositivos legais citados na ação rescisória.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-78",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 78,
+    "titulo": "AÇÃO RESCISÓRIA. CUMULAÇÃO SUCESSIVA DE PEDIDOS. RESCISÃO DA SENTENÇA E DO ACÓRDÃO. AÇÃO ÚNICA. art. 326 do cpc de 2015. ART. 289 DO CPC de 1973",
+    "enunciado": "É admissível o ajuizamento de uma única ação rescisória contendo mais de um pedido, em ordem sucessiva, de rescisão da sentença e do acórdão. Sendo inviável a tutela jurisdicional de um deles, o julgador está obrigado a apreciar os demais, sob pena de negativa de prestação jurisdicional.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "tutela",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-79",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 79,
+    "titulo": "AÇÃO RESCISÓRIA. DECADÊNCIA AFASTADA. IMEDIATO JULGAMENTO DO MÉRITO. INEXISTÊNCIA DE OFENSA AO DUPLO GRAU DE JURISDIÇÃO",
+    "enunciado": "Não ofende o princípio do duplo grau de jurisdição a decisão do TST que, após afastar a decadência em sede de recurso ordinário, aprecia desde logo a lide, se a causa versar questão exclusivamente de direito e estiver em condições de imediato julgamento.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "recurso",
+      "decadência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-80",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 80,
+    "titulo": "AÇÃO RESCISÓRIA. DECADÊNCIA. \"DIES A QUO\". RECURSO DESERTO. SÚMULA Nº 100 DO TST",
+    "enunciado": "O não-conhecimento do recurso por deserção não antecipa o \"dies a quo\" do prazo decadencial para o ajuizamento da ação rescisória, atraindo, na contagem do prazo, a aplicação da Súmula nº 100 do TST.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "recurso",
+      "decadência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-81",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 81,
+    "titulo": "AÇÃO RESCISÓRIA. DESCONTOS LEGAIS. FASE DE EXECUÇÃO. SENTENÇA EXEQÜENDA OMISSA. INEXISTÊNCIA DE OFENSA À COISA JULGADA",
+    "enunciado": "Os descontos previdenciários e fiscais devem ser efetuados pelo juízo executório, ainda que a sentença exeqüenda tenha sido omissa sobre a questão, dado o caráter de ordem pública ostentado pela norma que os disciplina. A ofensa à coisa julgada somente poderá ser caracterizada na hipótese de o título exeqüendo, expressamente, afastar a dedução dos valores a título de imposto de renda e de contribuição previdenciária.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 401",
+    "keywords": [
+      "ação rescisória",
+      "execução",
+      "coisa julgada",
+      "contribuição"
+    ]
+  },
+  {
+    "id": "oj-sdi2-82",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 82,
+    "titulo": "AÇÃO RESCISÓRIA. LITISCONSÓRCIO. NECESSÁRIO NO PÓLO PASSIVO E FACULTATIVO NO ATIVO",
+    "enunciado": "O litisconsórcio, na ação rescisória, é necessário em relação ao pólo passivo da demanda, porque supõe uma comunidade de direito ou de obrigações que não admite solução díspar para os litisconsortes, em face da indivisibilidade do objeto. Já em relação ao pólo ativo, o litisconsórcio é facultativo, uma vez que a aglutinação de autores se faz por conveniência, e não pela necessidade decorrente da natureza do litígio, pois não se pode condicionar o exercício do direito individual de um dos litigantes no processo originário à anuência dos demais para retomar a lide.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 406",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-83",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 83,
+    "titulo": "AÇÃO RESCISÓRIA. MINISTÉRIO PÚBLICO. LEGITIMIDADE \"AD CAUSAM\" PREVISTA NO ART. 487, III, \"A\" E \"B\", DO CPC. AS HIPÓTESES SÃO MERAMENTE EXEMPLIFICATIVAS",
+    "enunciado": "A legitimidade \"ad causam\" do Ministério Público para propor ação rescisória, ainda que não tenha sido parte no processo que deu origem à decisão rescindenda, não está limitada às alíneas \"a\" e \"b\" do inciso III do art. 487 do CPC, uma vez que traduzem hipóteses meramente exemplificativas.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 407",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-84",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 84,
+    "titulo": "AÇÃO RESCISÓRIA. AUSÊNCIA DA DECISÃO RESCINDENDA E/OU DA CERTIDÃO DE SEU TRÂNSITO EM JULGADO DEVIDAMENTE AUTENTICADAS. CONCESSÃO DE PRAZO PARA COMPLEMENTAÇÃO DA DOCUMENTAÇÃO.  (alterada em decorrência do CPC de 2015)",
+    "enunciado": "São peças essenciais para o julgamento da ação rescisória a decisão rescindenda e/ou a certidão do seu trânsito em julgado, devidamente autenticadas, à exceção de cópias reprográficas apresentadas por pessoa jurídica de direito público, a teor do art. 24 da Lei nº 10.522/2002, ou declaradas autênticas pelo advogado na forma do artigo 830 da CLT com a redação dada pela Lei nº 11.925/2009. Em fase recursal, verificada a ausência de qualquer delas, cumpre ao Relator do recurso ordinário conceder o prazo de 5 (cinco) dias ao recorrente para que seja complementada a documentação exigível, nos termos do art. 932, parágrafo único, do CPC de 2015.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "recurso",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdi2-85",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 85,
+    "titulo": "AÇÃO RESCISÓRIA. SENTENÇA HOMOLOGATÓRIA DE CÁLCULO. EXISTÊNCIA DE CONTRADITÓRIO. DECISÃO DE MÉRITO. CABIMENTO",
+    "enunciado": "A decisão homologatória de cálculos apenas comporta rescisão quando enfrentar as questões envolvidas na elaboração da conta de liquidação, quer solvendo a controvérsia das partes, quer explicitando, de ofício, os motivos pelos quais acolheu os cálculos oferecidos por uma das partes, ou pelo setor de cálculos, e não contestados pela outra. A sentença meramente homologatória, que silencia sobre os motivos de convencimento do juiz, não se mostra rescindível, por ausência de prequestionamento.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-86",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 86,
+    "titulo": "MANDADO DE SEGURANÇA. ANTECIPAÇÃO DE TUTELA. SENTENÇA SUPERVENIENTE. PERDA DE OBJETO",
+    "enunciado": "Perde objeto o mandado de segurança que impugna tutela antecipada pelo fato de haver sido proferida sentença de mérito nos autos originários.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 414",
+    "keywords": [
+      "mandado de segurança",
+      "tutela"
+    ]
+  },
+  {
+    "id": "oj-sdi2-87",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 87,
+    "titulo": "MANDADO DE SEGURANÇA. REINTEGRAÇÃO EM EXECUÇÃO PROVISÓRIA. IMPOSSIBILIDADEDJ 22.08.2005",
+    "enunciado": "O art. 899 da CLT, ao impedir a execução definitiva do título executório, enquanto pendente recurso, alcança tanto as execuções por obrigação de pagar quanto as por obrigação de fazer. Assim, tendo a obrigação de reintegrar caráter definitivo, somente pode ser decretada, liminarmente, nas hipóteses legalmente previstas, em sede de tutela antecipada ou tutela específica.",
+    "status": "Cancelada",
+    "keywords": [
+      "mandado de segurança",
+      "tutela",
+      "execução",
+      "recurso",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdi2-88",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 88,
+    "titulo": "MANDADO DE SEGURANÇA. VALOR DA CAUSA. CUSTAS PROCESSUAIS. CABIMENTO",
+    "enunciado": "Incabível a impetração de mandado de segurança contra ato judicial que, de ofício, arbitrou novo valor à causa, acarretando a majoração das custas processuais, uma vez que cabia à parte, após recolher as custas, calculadas com base no valor dado à causa na inicial, interpor recurso ordinário e, posteriormente, agravo de instrumento no caso de o recurso ser considerado deserto.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "recurso",
+      "agravo",
+      "custas"
+    ]
+  },
+  {
+    "id": "oj-sdi2-89",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 89,
+    "titulo": "\"HABEAS CORPUS\". DEPOSITÁRIO. TERMO DE DEPÓSITO NÃO ASSINADO PELO PACIENTE. NECESSIDADE DE ACEITAÇÃO DO ENCARGO. IMPOSSIBILIDADE DE PRISÃO CIVIL",
+    "enunciado": "A investidura no encargo de depositário depende da aceitação do nomeado que deve assinar termo de compromisso no auto de penhora, sem o que, é inadmissível a restrição de seu direito de liberdade.",
+    "status": "Válida",
+    "keywords": [
+      "habeas corpus"
+    ]
+  },
+  {
+    "id": "oj-sdi2-90",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 90,
+    "titulo": "RECURSO ORDINÁRIO. APELO QUE NÃO ATACA OS FUNDAMENTOS DA DECISÃO RECORRIDA. NÃO-CONHECIMENTO. ART. 514, II, DO CPC",
+    "enunciado": "Não se conhece de recurso ordinário para o TST, pela ausência do requisito de admissibilidade inscrito no art. 514, II, do CPC, quando as razões do recorrente não impugnam os fundamentos da decisão recorrida, nos termos em que fora proposta.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 422",
+    "keywords": [
+      "recurso"
+    ]
+  },
+  {
+    "id": "oj-sdi2-91",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 91,
+    "titulo": "MANDADO DE SEGURANÇA. AUTENTICAÇÃO DE CÓPIAS PELAS SECRETARIAS DOS TRIBUNAIS REGIONAIS DO TRABALHO. REQUERIMENTO INDEFERIDO. ART. 789, § 9º, DA CLT",
+    "enunciado": "Não sendo a parte beneficiária da assistência judiciária gratuita, inexiste direito líquido e certo à autenticação, pelas Secretarias dos Tribunais, de peças extraídas do processo principal, para formação do agravo de instrumento.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "agravo",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdi2-92",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 92,
+    "titulo": "MANDADO DE SEGURANÇA. EXISTÊNCIA DE RECURSO PRÓPRIO",
+    "enunciado": "Não cabe mandado de segurança contra decisão judicial passível de reforma mediante recurso próprio, ainda que com efeito diferido.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "recurso"
+    ]
+  },
+  {
+    "id": "oj-sdi2-93",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 93,
+    "titulo": "PENHORA SOBRE PARTE DA RENDA DE ESTABELECIMENTO COMERCIAL. POSSIBILIDADE. (alterada em decorrência do CPC de 2015)",
+    "enunciado": "Nos termos do art. 866 do CPC de 2015, é admissível a penhora sobre a renda mensal ou faturamento de empresa, limitada a percentual, que não comprometa o desenvolvimento regular de suas atividades, desde que não haja outros bens penhoráveis ou, havendo outros bens, eles sejam de difícil alienação ou insuficientes para satisfazer o crédito executado.",
+    "status": "Válida",
+    "keywords": []
+  },
+  {
+    "id": "oj-sdi2-94",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 94,
+    "titulo": "AÇÃO RESCISÓRIA. COLUSÃO. FRAUDE À LEI. RECLAMATÓRIA SIMULADA EXTINTA",
+    "enunciado": "A decisão ou acordo judicial subjacente à reclamação trabalhista, cuja tramitação deixa nítida a simulação do litígio para fraudar a lei e prejudicar terceiros, enseja ação rescisória, com lastro em colusão. No juízo rescisório, o processo simulado deve ser extinto.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "trabalhista"
+    ]
+  },
+  {
+    "id": "oj-sdi2-95",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 95,
+    "titulo": "AÇÃO RESCISÓRIA DE AÇÃO RESCISÓRIA. VIOLAÇÃO DE LEI. INDICAÇÃO DOS MESMOS DISPOSITIVOS LEGAIS APONTADOS NA RESCISÓRIA PRIMITIVA",
+    "enunciado": "Em se tratando de rescisória de rescisória, o vício apontado deve nascer na decisão rescindenda, não se admitindo a rediscussão do acerto do julgamento da rescisória anterior. Assim, não se admite rescisória calcada no inciso V do art. 485 do CPC, para discussão, por má aplicação, dos mesmos dispositivos de lei tidos por violados na rescisória anterior, bem como para argüição de questões inerentes à ação rescisória primitiva.\nLegislação:\nArt. 485 do CPC",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 400",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-96",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 96,
+    "titulo": "AÇÃO RESCISÓRIA. VÍCIO DE INTIMAÇÃO DA DECISÃO RESCINDENDA. AUSÊNCIA DA FORMAÇÃO DA COISA JULGADA MATERIAL. CARÊNCIA DE AÇÃO",
+    "enunciado": "O pretenso vício de intimação posterior à decisão que se pretende rescindir, se efetivamente ocorrido, não permite a formação da coisa julgada material. Assim, a ação rescisória deve ser julgada extinta sem julgamento do mérito por carência de ação, por inexistir decisão transitada em julgado a ser rescindida.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "coisa julgada"
+    ]
+  },
+  {
+    "id": "oj-sdi2-97",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 97,
+    "titulo": "AÇÃO RESCISÓRIA. VIOLAÇÃO DO ART. 5º, II, LIV E LV, DA CONSTITUIÇÃO FEDERAL. PRINCÍPIOS DA LEGALIDADE, DO DEVIDO PROCESSO LEGAL, DO CONTRADITÓRIO E DA AMPLA DEFESA (nova redação)",
+    "enunciado": "Os princípios da legalidade, do devido processo legal, do contraditório e da ampla defesa não servem de fundamento para a desconstituição de decisão judicial transitada em julgado, quando se apresentam sob a forma de pedido genérico e desfundamentado, acompanhando dispositivos legais que tratam especificamente da matéria debatida, estes sim, passíveis de fundamentarem a análise do pleito rescisório.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-98",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 98,
+    "titulo": "MANDADO DE SEGURANÇA. CABÍVEL PARA ATACAR EXIGÊNCIA DE DEPÓSITO PRÉVIO DE HONORÁRIOS PERICIAIS (nova redação)",
+    "enunciado": "É ilegal a exigência de depósito prévio para custeio dos honorários periciais, dada a incompatibilidade com o processo do trabalho, sendo cabível o mandado de segurança visando à realização da perícia, independentemente do depósito.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "honorários"
+    ]
+  },
+  {
+    "id": "oj-sdi2-99",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 99,
+    "titulo": "MANDADO DE SEGURANÇA. ESGOTAMENTO DE TODAS AS VIAS PROCESSUAIS DISPONÍVEIS. TRÂNSITO EM JULGADO FORMAL. DESCABIMENTO",
+    "enunciado": "Esgotadas as vias recursais existentes, não cabe mandado de segurança.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança"
+    ]
+  },
+  {
+    "id": "oj-sdi2-100",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 100,
+    "titulo": "RECURSO ORDINÁRIO PARA O TST. DECISÃO DE TRT PROFERIDA EM AGRAVO REGIMENTAL CONTRA LIMINAR EM AÇÃO CAUTELAR OU EM MANDADO DE SEGURANÇA. INCABÍVEL",
+    "enunciado": "Não cabe recurso ordinário para o TST de decisão proferida pelo Tribunal Regional do Trabalho em agravo regimental interposto contra despacho que concede ou não liminar em ação cautelar ou em mandado de segurança, uma vez que o processo ainda pende de decisão definitiva do Tribunal \"a quo\".",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "recurso",
+      "agravo"
+    ]
+  },
+  {
+    "id": "oj-sdi2-101",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 101,
+    "titulo": "AÇÃO RESCISÓRIA.  INCISO IV do art. 966 DO CPC de 2015. ART. 485, IV, DO CPC de 1973. OFENSA A COISA JULGADA. NECESSIDADE DE FIXAÇÃO DE TESE NA DECISÃO RESCINDENDA",
+    "enunciado": "Para viabilizar a desconstituição do julgado pela causa de rescindibilidade do inciso IV do art. 966 do CPC de 2015 (inciso IV do art. 485 do CPC de 1973), é necessário que a decisão rescindenda tenha enfrentado as questões ventiladas na ação rescisória, sob pena de inviabilizar o cotejo com o título executivo judicial tido por desrespeitado, de modo a se poder concluir pela ofensa à coisa julgada.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "coisa julgada"
+    ]
+  },
+  {
+    "id": "oj-sdi2-102",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 102,
+    "titulo": "AÇÃO RESCISÓRIA. CERTIDÃO DE TRÂNSITO EM JULGADO. DESCOMPASSO COM A REALIDADE. PRESUNÇÃO RELATIVA DE VERACIDADE",
+    "enunciado": "O juízo rescindente não está adstrito à certidão de trânsito em julgado juntada com a ação rescisória, podendo formar sua convicção através de outros elementos dos autos quanto à antecipação ou postergação do \"dies a quo\" do prazo decadencial.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-103",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 103,
+    "titulo": "AÇÃO RESCISÓRIA. CONTRADIÇÃO ENTRE FUNDAMENTAÇÃO E PARTE DISPOSITIVA DO JULGADO. CABIMENTO. ERRO DE FATO (DJ 29.04.2003)",
+    "enunciado": "É cabível a rescisória para corrigir contradição entre a parte dispositiva do acórdão rescindendo e a sua fundamentação, por erro de fato na retratação do que foi decidido.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-104",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 104,
+    "titulo": "AÇÃO RESCISÓRIA. DECADÊNCIA. SENTENÇA HOMOLOGATÓRIA DE ACORDO. MOMENTO DO TRÂNSITO EM JULGADO",
+    "enunciado": "O acordo homologado judicialmente tem força de decisão irrecorrível, na forma do art. 831 da CLT. Assim sendo, o termo conciliatório transita em julgado na data da sua homologação judicial.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "decadência",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdi2-105",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 105,
+    "titulo": "AÇÃO RESCISÓRIA. DECISÃO RESCINDENDA. AGRAVO DE INSTRUMENTO. NÃO-SUBSTITUIÇÃO. IMPOSSIBILIDADE JURÍDICA",
+    "enunciado": "É manifesta a impossibilidade jurídica do pedido de rescisão de julgado proferido em agravo de instrumento que, limitando-se a aferir o eventual desacerto do juízo negativo de admissibilidade do recurso de revista, não substitui o acórdão regional, na forma do art. 512 do CPC.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "recurso",
+      "agravo",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-106",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 106,
+    "titulo": "AÇÃO RESCISÓRIA. DECISÃO RESCINDENDA. AUSÊNCIA DE TRÂNSITO EM JULGADO. DESCABIMENTO DE AÇÃO RESCISÓRIA PREVENTIVA",
+    "enunciado": "A comprovação do trânsito em julgado da decisão rescindenda é pressuposto processual indispensável ao tempo do ajuizamento da ação rescisória. Eventual trânsito em julgado posterior ao ajuizamento da ação rescisória não reabilita a ação proposta, na medida em que o ordenamento jurídico não contempla a ação rescisória preventiva.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-107",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 107,
+    "titulo": "AÇÃO RESCISÓRIA. DECISÃO RESCINDENDA DE MÉRITO. SENTENÇA DECLARATÓRIA DE EXTINÇÃO DE EXECUÇÃO. SATISFAÇÃO DA OBRIGAÇÃO",
+    "enunciado": "Embora não haja atividade cognitiva, a decisão que declara extinta a execução, nos termos do art. 924, incisos I a IV c/c art. 925 do CPC de 2015 (art. 794 c/c art. 795 do CPC de 1973), extingue a relação processual e a obrigacional, sendo passível de corte rescisório.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "execução"
+    ]
+  },
+  {
+    "id": "oj-sdi2-108",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 108,
+    "titulo": "AÇÃO RESCISÓRIA. FUNDAMENTO PARA INVALIDAR CONFISSÃO. CONFISSÃO FICTA. INADEQUAÇÃO DO ENQUADRAMENTO NO ART. 485, VIII, DO CPC",
+    "enunciado": "O art. 485, VIII, do CPC, ao tratar do fundamento para invalidar a confissão como hipótese de rescindibilidade da decisão judicial, refere-se à confissão real, fruto de erro, dolo ou coação, e não à confissão ficta resultante de revelia.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 404",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-109",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 109,
+    "titulo": "AÇÃO RESCISÓRIA. REEXAME DE FATOS E PROVAS. INVIABILIDADE",
+    "enunciado": "A ação rescisória calcada em violação de lei não admite reexame de fatos e provas do processo que originou a decisão rescindenda.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 410",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-110",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 110,
+    "titulo": "AÇÃO RESCISÓRIA. RÉU SINDICATO. SUBSTITUTO PROCESSUAL NA AÇÃO ORIGINÁRIA. LEGITIMIDADE PASSIVA \"AD CAUSAM\". INEXISTÊNCIA DE LITISCONSÓRCIO PASSIVO NECESSÁRIO",
+    "enunciado": "O Sindicato, substituto processual e autor da reclamação trabalhista, em cujos autos fora proferida a decisão rescindenda, possui legitimidade para figurar como réu na ação rescisória, sendo descabida a exigência de citação de todos os empregados substituídos, porquanto inexistente litisconsórcio passivo necessário.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 406",
+    "keywords": [
+      "ação rescisória",
+      "trabalhista",
+      "empregado",
+      "sindicato"
+    ]
+  },
+  {
+    "id": "oj-sdi2-111",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 111,
+    "titulo": "AÇÃO RESCISÓRIA. SENTENÇA HOMOLOGATÓRIA DE ACORDO. DOLO DA PARTE VENCEDORA EM DETRIMENTO DA VENCIDA. ART. 485, III, DO CPC. INVIÁVEL",
+    "enunciado": "Se a decisão rescindenda é homologatória de acordo, não há parte vencedora ou vencida, razão pela qual não é possível a sua desconstituição calcada no inciso III do art. 485 do CPC (dolo da parte vencedora em detrimento da vencida), pois constitui fundamento de rescindibilidade que supõe solução jurisdicional para a lide.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 403",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-112",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 112,
+    "titulo": "AÇÃO RESCISÓRIA. VIOLAÇÃO DE LEI. DECISÃO RESCINDENDA POR DUPLO FUNDAMENTO. IMPUGNAÇÃO PARCIAL (DJ 29.04.2003)",
+    "enunciado": "Para que a violação da lei dê causa à rescisão de decisão de mérito alicerçada em duplo fundamento, é necessário que o Autor da ação rescisória invoque causas de rescindibilidade que, em tese, possam infirmar a motivação dúplice da decisão rescindenda.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-113",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 113,
+    "titulo": "AÇÃO CAUTELAR. EFEITO SUSPENSIVO AO RECURSO ORDINÁRIO EM MANDADO DE SEGURANÇA. INCABÍVEL. AUSÊNCIA DE INTERESSE. EXTINÇÃO",
+    "enunciado": "É incabível medida cautelar para imprimir efeito suspensivo a recurso interposto contra decisão proferida em mandado de segurança, pois ambos visam, em última análise, à sustação do ato atacado. Extingue-se, pois, o processo, sem julgamento do mérito, por ausência de interesse de agir, para evitar que decisões judiciais conflitantes e inconciliáveis passem a reger idêntica situação jurídica.",
+    "status": "Cancelada",
+    "keywords": [
+      "mandado de segurança",
+      "recurso"
+    ]
+  },
+  {
+    "id": "oj-sdi2-114",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 114,
+    "titulo": "COMPETÊNCIA. EXECUÇÃO POR CARTA. EMBARGOS DE TERCEIRO. JUÍZO DEPRECANTE",
+    "enunciado": "Na execução por carta precatória, os embargos de terceiro serão oferecidos no juízo deprecante ou no juízo deprecado, mas a competência para julgá-los é do juízo deprecante, salvo se versarem, unicamente, sobre vícios ou irregularidades da penhora, avaliação ou alienação dos bens, praticados pelo juízo deprecado, em que a competência será deste último.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 419",
+    "keywords": [
+      "competência",
+      "execução",
+      "embargos"
+    ]
+  },
+  {
+    "id": "oj-sdi2-115",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 115,
+    "titulo": "COMPETÊNCIA FUNCIONAL. CONFLITO NEGATIVO. TRT E VARA DO TRABALHO DE IDÊNTICA REGIÃO. NÃO CONFIGURAÇÃO",
+    "enunciado": "Não se configura conflito de competência entre Tribunal Regional do Trabalho e Vara do Trabalho a ele vinculada.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 420",
+    "keywords": [
+      "competência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-116",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 116,
+    "titulo": "AÇÃO RESCISÓRIA. ART. 485, IV, DO CPC. AÇÃO DE CUMPRIMENTO. OFENSA À COISA JULGADA EMANADA DE SENTENÇA NORMATIVA MODIFICADA EM GRAU DE RECURSO. INVIABILIDADE",
+    "enunciado": "Não procede ação rescisória calcada em ofensa à coisa julgada perpetrada por decisão proferida em ação de cumprimento, em face de a sentença normativa, na qual se louvava, ter sido modificada em grau de recurso, porque em dissídio coletivo somente se consubstancia coisa julgada formal. Assim, os meios processuais, aptos a atacarem a execução da cláusula reformada, são a exceção da pré-executividade e o mandado de segurança, no caso de descumprimento do art. 572 do CPC.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 397",
+    "keywords": [
+      "ação rescisória",
+      "mandado de segurança",
+      "execução",
+      "recurso",
+      "coisa julgada"
+    ]
+  },
+  {
+    "id": "oj-sdi2-117",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 117,
+    "titulo": "AÇÃO RESCISÓRIA. DEPÓSITO RECURSAL. PEDIDO RESCISÓRIO PROCEDENTE. CONDENAÇÃO EM PECÚNIA. INSTRUÇÃO NORMATIVA Nº 3/93, III",
+    "enunciado": "Havendo recurso ordinário em sede de rescisória, o depósito recursal prévio só é exigível quando for julgado procedente o pedido e imposta condenação em pecúnia.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "recurso",
+      "depósito recursal"
+    ]
+  },
+  {
+    "id": "oj-sdi2-118",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 118,
+    "titulo": "AÇÃO RESCISÓRIA. EXPRESSÃO \"LEI\" DO ART. 485, V, DO CPC. INDICAÇÃO DE CONTRARIEDADE A SÚMULA OU ORIENTAÇÃO JURISPRUDENCIAL DO TST. DESCABIMENTO",
+    "enunciado": "Não prospera pedido de rescisão fundado no art. 485, inciso V, do CPC, com indicação de contrariedade a súmula, uma vez que a jurisprudência consolidada dos tribunais não corresponde ao conceito de lei.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-119",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 119,
+    "titulo": "AÇÃO RESCISÓRIA. PRAZO PRESCRICIONAL. TOTAL OU PARCIAL. VIOLAÇÃO DO ART. 7º, XXIX, DA CF/1988. MATÉRIA INFRACONSTITUCIONAL",
+    "enunciado": "Não procede ação rescisória calcada em violação do art. 7º, XXIX, da CF/1988, quando a questão envolve discussão sobre a espécie de prazo prescricional aplicável aos créditos trabalhistas, se total ou parcial, porque a matéria tem índole infraconstitucional, construída, na Justiça do Trabalho, no plano jurisprudencial.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 409",
+    "keywords": [
+      "ação rescisória",
+      "trabalhista"
+    ]
+  },
+  {
+    "id": "oj-sdi2-120",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 120,
+    "titulo": "MANDADO DE SEGURANÇA. RECUSA À HOMOLOGAÇÃO DE ACORDO. INEXISTÊNCIA DE DIREITO LÍQUIDO E CERTO",
+    "enunciado": "Não comporta mandado de segurança a negativa de homologação de acordo, por inexistir direito líquido e certo à homologação, já que se trata de atividade jurisdicional alicerçada no livre convencimento do juiz.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 418",
+    "keywords": [
+      "mandado de segurança"
+    ]
+  },
+  {
+    "id": "oj-sdi2-121",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 121,
+    "titulo": "AÇÃO RESCISÓRIA. PEDIDO DE ANTECIPAÇÃO DE TUTELA. DESCABIMENTO",
+    "enunciado": "Não se admite tutela antecipada em sede de ação rescisória, na medida em que não se pode desconstituir antecipadamente a coisa julgada, com base em juízo de verossimilhança, dadas as garantias especiais de que se reveste o pronunciamento estatal transitado em julgado.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 405",
+    "keywords": [
+      "ação rescisória",
+      "tutela",
+      "coisa julgada"
+    ]
+  },
+  {
+    "id": "oj-sdi2-122",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 122,
+    "titulo": "AÇÃO RESCISÓRIA. DECADÊNCIA. MINISTÉRIO PÚBLICO. \"DIES A QUO\" DO PRAZO. CONTAGEM. COLUSÃO DAS PARTES",
+    "enunciado": "Na hipótese de colusão das partes, o prazo decadencial da ação rescisória somente começa a fluir para o Ministério Público, que não interveio no processo principal, a partir do momento em que tem ciência da fraude.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "decadência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-123",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 123,
+    "titulo": "AÇÃO RESCISÓRIA. INTERPRETAÇÃO DO SENTIDO E ALCANCE DO TÍTULO EXECUTIVO. INEXISTÊNCIA DE OFENSA À COISA JULGADA (título alterado)",
+    "enunciado": "O acolhimento da ação rescisória calcada em ofensa à coisa julgada supõe dissonância patente entre as decisões exeqüenda e rescindenda, o que não se verifica quando se faz necessária a interpretação do título executivo judicial para se concluir pela lesão à coisa julgada.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "coisa julgada"
+    ]
+  },
+  {
+    "id": "oj-sdi2-124",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 124,
+    "titulo": "AÇÃO RESCISÓRIA. art. 966, INCISo II, do cpc de 2015. ART. 485, inciso II, DO CPC de 1973. ARGUIÇÃO DE INCOMPETÊNCIA ABSOLUTA. PREQUESTIONAMENTO INEXIGÍVEL.",
+    "enunciado": "Na hipótese em que a ação rescisória tem como causa de rescindibilidade o inciso II do art. 966 do CPC de 2015 (inciso II do art. 485 do CPC de 1973), a arguição de incompetência absoluta prescinde de prequestionamento.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "competência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-125",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 125,
+    "titulo": "AÇÃO RESCISÓRIA. ART. 485, III, DO CPC. SILÊNCIO DA PARTE VENCEDORA ACERCA DE EVENTUAL FATO QUE LHE SEJA DESFAVORÁVEL. DESCARACTERIZADO O DOLO PROCESSUAL",
+    "enunciado": "Não caracteriza dolo processual, previsto no art. 485, III, do CPC, o simples fato de a parte vencedora haver silenciado a respeito de fatos contrários a ela, porque o procedimento, por si só, não constitui ardil do qual resulte cerceamento de defesa e, em consequência, desvie o juiz de uma sentença não-condizente com a verdade.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 403",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-126",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 126,
+    "titulo": "AÇÃO RESCISÓRIA. AUSÊNCIA DE DEFESA. INAPLICÁVEIS OS EFEITOS DA REVELIA",
+    "enunciado": "Na ação rescisória, o que se ataca na ação é a sentença, ato oficial do Estado, acobertado pelo manto da coisa julgada. Assim sendo e, considerando que a coisa julgada envolve questão de ordem pública, a revelia não produz confissão na ação rescisória.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 398",
+    "keywords": [
+      "ação rescisória",
+      "coisa julgada"
+    ]
+  },
+  {
+    "id": "oj-sdi2-127",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 127,
+    "titulo": "MANDADO DE SEGURANÇA. DECADÊNCIA. CONTAGEM. EFETIVO ATO COATOR (DJ 09.12.2003)",
+    "enunciado": "Na contagem do prazo decadencial para ajuizamento de mandado de segurança, o efetivo ato coator é o primeiro em que se firmou a tese hostilizada e não aquele que a ratificou.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "decadência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-128",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 128,
+    "titulo": "AÇÃO RESCISÓRIA. CONCURSO PÚBLICO ANULADO POSTERIORMENTE. APLICAÇÃO DA SÚMULA Nº 363 DO TST (DJ 09.12.2003)",
+    "enunciado": "O certame público posteriormente anulado equivale à contratação realizada sem a observância da exigência contida no art. 37, II, da Constituição Federal de 1988. Assim sendo, aplicam-se à hipótese os efeitos previstos na Súmula nº 363 do TST.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-129",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 129,
+    "titulo": "AÇÃO ANULATÓRIA. COMPETÊNCIA ORIGINÁRIA (DJ 04.05.2004)",
+    "enunciado": "Em se tratando de ação anulatória, a competência originária se dá no mesmo juízo em que praticado o ato supostamente eivado de vício.",
+    "status": "Válida",
+    "keywords": [
+      "competência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-130",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 130,
+    "titulo": "AÇÃO CIVIL PÚBLICA. COMPETÊNCIA. LOCAL DO DANO. LEI nº 7.347/1985, ART. 2º. CÓDIGO DE DEFESA DO CONSUMIDOR, ART. 93 (redação alterada na sessão do Tribunal Pleno realizada em 14.09.2012)",
+    "enunciado": "I – A competência para a Ação Civil Pública fixa-se pela extensão do dano.\nII – Em caso de dano de abrangência regional, que atinja cidades sujeitas à jurisdição de mais de uma Vara do Trabalho, a competência será de qualquer das varas das localidades atingidas, ainda que vinculadas a Tribunais Regionais do Trabalho distintos.\nIII – Em caso de dano de abrangência suprarregional ou nacional, há competência concorrente para a Ação Civil Pública das Varas do Trabalho das sedes dos Tribunais Regionais do Trabalho.\nIV – Estará prevento o juízo a que a primeira ação houver sido distribuída.",
+    "status": "Válida",
+    "keywords": [
+      "competência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-131",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 131,
+    "titulo": "AÇÃO RESCISÓRIA. AÇÃO CAUTELAR PARA SUSPENDER EXECUÇÃO DA DECISÃO RESCINDENDA. PENDÊNCIA DE TRÂNSITO EM JULGADO DA AÇÃO RESCISÓRIA PRINCIPAL. EFEITOS (DJ 04.05.2004)",
+    "enunciado": "A ação cautelar não perde o objeto enquanto ainda estiver pendente o trânsito em julgado da ação rescisória principal, devendo o pedido cautelar ser julgado procedente, mantendo-se os efeitos da liminar eventualmente deferida, no caso de procedência do pedido rescisório ou, por outro lado, improcedente, se o pedido da ação rescisória principal tiver sido julgado improcedente.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "execução"
+    ]
+  },
+  {
+    "id": "oj-sdi2-132",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 132,
+    "titulo": "AÇÃO RESCISÓRIA. ACORDO HOMOLOGADO. ALCANCE. OFENSA À COISA JULGADA (DJ 04.05.2004)",
+    "enunciado": "Acordo celebrado - homologado judicialmente - em que o empregado dá plena e ampla quitação, sem qualquer ressalva, alcança não só o objeto da inicial, como também todas as demais parcelas referentes ao extinto contrato de trabalho, violando a coisa julgada, a propositura de nova reclamação trabalhista.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "coisa julgada",
+      "trabalhista",
+      "empregado",
+      "contrato"
+    ]
+  },
+  {
+    "id": "oj-sdi2-133",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 133,
+    "titulo": "AÇÃO RESCISÓRIA. DECISÃO EM AGRAVO REGIMENTAL. APLICAÇÃO DA SÚMULA Nº 333. JUÍZO DE MÉRITO",
+    "enunciado": "A decisão proferida pela SDI, em sede de agravo regimental, calcada na Súmula nº 333, substitui acórdão de Turma do TST, porque emite juízo de mérito, comportando, em tese, o corte rescisório.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "agravo"
+    ]
+  },
+  {
+    "id": "oj-sdi2-134",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 134,
+    "titulo": "AÇÃO RESCISÓRIA. DECISÃO QUE DECLARA PRECLUSA A OPORTUNIDADE DE IMPUGNAÇÃO DA SENTENÇA DE LIQUIDAÇÃO. PRODUÇÃO DE COISA JULGADA FORMAL. IRRESCINDIBILIDADE. (alterada em decorrência do CPC de 2015)",
+    "enunciado": "A decisão proferida em embargos à execução ou em agravo de petição que apenas declara preclusa a oportunidade de impugnação da sentença de liquidação não é rescindível, em virtude de produzir tão-somente coisa julgada formal.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "execução",
+      "embargos",
+      "agravo",
+      "coisa julgada"
+    ]
+  },
+  {
+    "id": "oj-sdi2-135",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 135,
+    "titulo": "AÇÃO RESCISÓRIA. VIOLAÇÃO DO ART. 37, “CAPUT”, DA CF/1988. NECESSIDADE DE PREQUESTIONAMENTO (DJ 04.05.2004)",
+    "enunciado": "A ação rescisória calcada em violação do artigo 37, “caput”, da Constituição Federal, por desrespeito ao princípio da legalidade administrativa exige que ao menos o princípio constitucional tenha sido prequestionado na decisão.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-136",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 136,
+    "titulo": "AÇÃO RESCISÓRIA. ERRO DE FATO. CARACTERIZAÇÃO",
+    "enunciado": "A caracterização do erro de fato como causa de rescindibilidade de decisão judicial transitada em julgado supõe a afirmação categórica e indiscutida de um fato, na decisão rescindenda, que não corresponde à realidade dos autos. O fato afirmado pelo julgador, que pode ensejar ação rescisória calcada no inciso VIII do art. 966 do CPC de 2015 (inciso IX do art. 485 do CPC de 1973), é apenas aquele que se coloca como premissa fática indiscutida de um silogismo argumentativo, não aquele que se apresenta ao final desse mesmo silogismo, como conclusão decorrente das premissas que especificaram as provas oferecidas, para se concluir pela existência do fato. Esta última hipótese é afastada pelo § 1º do art. 966 do CPC de 2015 (§ 2º do art. 485 do CPC de 1973), ao exigir que não tenha havido controvérsia sobre o fato e pronunciamento judicial esmiuçando as provas.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória"
+    ]
+  },
+  {
+    "id": "oj-sdi2-137",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 137,
+    "titulo": "MANDADO DE SEGURANÇA. DIRIGENTE SINDICAL. ART. 494 DA CLT. APLICÁVEL (DJ 04.05.2004)",
+    "enunciado": "Constitui direito líquido e certo do empregador a suspensão do empregado, ainda que detentor de estabilidade sindical, até a decisão final do inquérito em que se apure a falta grave a ele imputada, na forma do art. 494, “caput” e parágrafo único, da CLT.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "CLT",
+      "empregado",
+      "empregador",
+      "estabilidade"
+    ]
+  },
+  {
+    "id": "oj-sdi2-138",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 138,
+    "titulo": "MANDADO DE SEGURANÇA. INCOMPETÊNCIA DA JUSTIÇA DO TRABALHO. COBRANÇA DE HONORÁRIOS ADVOCATÍCIOS. CONTRATO DE NATUREZA CIVIL",
+    "enunciado": "A Justiça do Trabalho é incompetente para apreciar ação de cobrança de honorários advocatícios, pleiteada na forma do art. 24, §§ 1º e 2º, da Lei nº 8.906/94, em face da natureza civil do contrato de honorários.\nLegislação:\nCF/1988, art. 114\nLei nº 8.906/94, art. 24, § 1º",
+    "status": "Cancelada",
+    "keywords": [
+      "mandado de segurança",
+      "competência",
+      "contrato",
+      "honorários"
+    ]
+  },
+  {
+    "id": "oj-sdi2-139",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 139,
+    "titulo": "MANDADO DE SEGURANÇA. LIMINAR EM AÇÃO CIVIL PÚBLICA. SENTENÇA DE MÉRITO SUPERVENIENTE. PERDA DE OBJETO",
+    "enunciado": "Perde objeto o mandado de segurança que impugna liminar em ação civil pública substituída por sentença de mérito superveniente.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 414",
+    "keywords": [
+      "mandado de segurança"
+    ]
+  },
+  {
+    "id": "oj-sdi2-140",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 140,
+    "titulo": "MANDADO DE SEGURANÇA CONTRA LIMINAR, CONCEDIDA OU DENEGADA EM OUTRA SEGURANÇA. INCABÍVEL. (ART. 8º DA LEI Nº 1.533/51)",
+    "enunciado": "Não cabe mandado de segurança para impugnar despacho que acolheu ou indeferiu liminar em outro mandado de segurança.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança"
+    ]
+  },
+  {
+    "id": "oj-sdi2-141",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 141,
+    "titulo": "MANDADO DE SEGURANÇA PARA CONCEDER LIMINAR DENEGADA EM AÇÃO CAUTELAR",
+    "enunciado": "A concessão de liminar constitui faculdade do juiz, no uso de seu poder discricionário e de cautela, inexistindo direito líquido e certo tutelável pela via do mandado de segurança.",
+    "status": "Cancelada",
+    "convertidaEm": "Súmula 418",
+    "keywords": [
+      "mandado de segurança"
+    ]
+  },
+  {
+    "id": "oj-sdi2-142",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 142,
+    "titulo": "MANDADO DE SEGURANÇA. REINTEGRAÇÃO LIMINARMENTE CONCEDIDA (DJ 04.05.2004)",
+    "enunciado": "Inexiste direito líquido e certo a ser oposto contra ato de Juiz que, antecipando a tutela jurisdicional, determina a reintegração do empregado até a decisão final do processo, quando demonstrada a razoabilidade do direito subjetivo material, como nos casos de anistiado pela Lei nº 8.878/94, aposentado, integrante de comissão de fábrica, dirigente sindical, portador de doença profissional, portador de vírus HIV ou detentor de estabilidade provisória prevista em norma coletiva.\nLegislação:\nCLT, artigo 659, inciso X",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "tutela",
+      "CLT",
+      "empregado",
+      "estabilidade",
+      "doença"
+    ]
+  },
+  {
+    "id": "oj-sdi2-143",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 143,
+    "titulo": "“HABEAS CORPUS”. PENHORA SOBRE COISA FUTURA e incerta. PRISÃO. DEPOSITÁRIO INFIEL (alterada)",
+    "enunciado": "Não se caracteriza a condição de depositário infiel quando a penhora recair sobre coisa futura e incerta, circunstância que, por si só, inviabiliza a materialização do depósito no momento da constituição do paciente em depositário, autorizando-se a concessão de “habeas corpus” diante da prisão ou ameaça de prisão que sofra.",
+    "status": "Válida",
+    "keywords": [
+      "habeas corpus"
+    ]
+  },
+  {
+    "id": "oj-sdi2-144",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 144,
+    "titulo": "MANDADO DE SEGURANÇA. PROIBIÇÃO DE PRÁTICA DE ATOS FUTUROS. SENTENÇA GENÉRICA. EVENTO FUTURO. INCABÍVEL (nova redação)",
+    "enunciado": "O mandado de segurança não se presta à obtenção de uma sentença genérica, aplicável a eventos futuros, cuja ocorrência é incerta.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança"
+    ]
+  },
+  {
+    "id": "oj-sdi2-145",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 145,
+    "titulo": "AÇÃO RESCISÓRIA. DECADÊNCIA. NÃO ESGOTAMENTO DAS VIAS RECURSAIS. PRAZO LEGAL DO RECURSO EXTRAORDINÁRIO",
+    "enunciado": "Conta-se o prazo decadencial da ação rescisória, após o decurso do prazo legal previsto para a interposição do recurso extraordinário, apenas quando esgotadas todas as vias recursais ordinárias.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "recurso",
+      "decadência"
+    ]
+  },
+  {
+    "id": "oj-sdi2-146",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 146,
+    "titulo": "AÇÃO RESCISÓRIA. INÍCIO DO PRAZO PARA APRESENTAÇÃO DA CONTESTAÇÃO. ART. 774 DA CLT",
+    "enunciado": "A contestação apresentada em ação rescisória obedece à regra relativa à contagem de prazo constante do art. 774 da CLT, sendo inaplicável o art. 231 do CPC de 2015 (art. 241 do CPC de 1973).",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdi2-147",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 147,
+    "titulo": "AÇÃO RESCISÓRIA. VALOR DA CAUSA",
+    "enunciado": "O valor da causa, na ação rescisória de sentença de mérito advinda de processo de conhecimento, corresponde ao valor da causa fixado no processo originário, corrigido monetariamente. No caso de se pleitear a rescisão de decisão proferida na fase de execução, o valor da causa deve corresponder ao montante da condenação.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "execução",
+      "rescisão"
+    ]
+  },
+  {
+    "id": "oj-sdi2-148",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 148,
+    "titulo": "CUSTAS. MANDADO DE SEGURANÇA. RECURSO ORDINÁRIO. EXIGÊNCIA DO PAGAMENTO (conversão da Orientação Jurisprudencial nº 29 da SBDI-I)",
+    "enunciado": "É responsabilidade da parte, para interpor recurso ordinário em mandado de segurança, a comprovação do recolhimento das custas processuais no prazo recursal, sob pena de deserção. (ex-OJ nº 29 - inserida em 20.09.2000)",
+    "status": "Convertida em Súmula",
+    "keywords": [
+      "mandado de segurança",
+      "recurso",
+      "custas"
+    ]
+  },
+  {
+    "id": "oj-sdi2-149",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 149,
+    "titulo": "CONFLITO DE COMPETÊNCIA. incompetência territorial. hipótese do art. 651, § 3º, da clt. impossibilidade de declaração de ofício de incompetência relativa. (DEJT divulgado em 03, 04 e 05.12.2008)",
+    "enunciado": "Não cabe declaração de ofício de incompetência territorial no caso do uso, pelo trabalhador, da faculdade prevista no art. 651, § 3º, da CLT. Nessa hipótese, resolve-se o conflito pelo reconhecimento da competência do juízo do local onde a ação foi proposta.",
+    "status": "Válida",
+    "keywords": [
+      "competência",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdi2-150",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 150,
+    "titulo": "AÇÃO RESCISÓRIA. REGÊNCIA PELO CPC DE 1973. DECISÃO RESCINDENDA QUE EXTINGUE O PROCESSO SEM RESOLUÇÃO DE MÉRITO POR ACOLHIMENTO DE COISA JULGADA. CONTEÚDO MERAMENTE PROCESSUAL. IMPOSSIBILIDADE JURÍDICA DO PEDIDORes. 212/2016, DEJT divulgado em 20, 21 e 22.09.2016",
+    "enunciado": "Reputa-se juridicamente impossível o pedido de corte rescisório de decisão que, reconhecendo a existência de coisa julgada, nos termos do art. 267, V, do CPC de 1973, extingue o processo sem resolução de mérito, o que, ante o seu conteúdo meramente processual, a torna insuscetível de produzir a coisa julgada material.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "coisa julgada"
+    ]
+  },
+  {
+    "id": "oj-sdi2-151",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 151,
+    "titulo": "AÇÃO RESCISÓRIA E MANDADO DE SEGURANÇA. PROCURAÇÃO. PODERES ESPECÍFICOS PARA AJUIZAMENTO DE RECLAMAÇÃO TRABALHISTA. IRREGULARIDADE DE REPRESENTAÇÃO PROCESSUAL. FASE RECURSAL. VÍCIO PROCESSUAL SANÁVEL. (nova redação em decorrência do CPC de 2015)",
+    "enunciado": "A procuração outorgada com poderes específicos para ajuizamento de reclamação trabalhista não autoriza a propositura de ação rescisória e mandado de segurança. Constatado, todavia, o defeito de representação processual na fase recursal, cumpre ao relator ou ao tribunal conceder prazo de 5 (cinco) dias para a regularização, nos termos da Súmula nº 383, item II, do TST.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "mandado de segurança",
+      "trabalhista"
+    ]
+  },
+  {
+    "id": "oj-sdi2-152",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 152,
+    "titulo": "AÇÃO RESCISÓRIA E MANDADO DE SEGURANÇA. RECURSO DE REVISTA DE ACÓRDÃO REGIONAL QUE JULGA AÇÃO RESCISÓRIA OU MANDADO DE SEGURANÇA. PRINCÍPIO DA FUNGIBILIDADE. INAPLICABILIDADE. ERRO GROSSEIRO NA INTERPOSIÇÃO DO RECURSO (DEJT divulgado em 03, 04 e 05.12.2008)",
+    "enunciado": "A interposição de recurso de revista de decisão definitiva de Tribunal Regional do Trabalho em ação rescisória ou em mandado de segurança, com fundamento em violação legal e divergência jurisprudencial e remissão expressa ao art. 896 da CLT, configura erro grosseiro, insuscetível de autorizar o seu recebimento como recurso ordinário, em face do disposto no art. 895, “b”, da CLT.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "mandado de segurança",
+      "recurso",
+      "CLT"
+    ]
+  },
+  {
+    "id": "oj-sdi2-153",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 153,
+    "titulo": "MANDADO DE SEGURANÇA. EXECUÇÃO. ORDEM DE PENHORA SOBRE VALORES EXISTENTES EM CONTA SALÁRIO. ART. 649, IV, DO CPC de 1973. ILEGALIDADE",
+    "enunciado": "Ofende direito líquido e certo decisão que determina o bloqueio de numerário existente em conta salário, para satisfação de crédito trabalhista, ainda que seja limitado a determinado percentual dos valores recebidos ou a valor revertido para fundo de aplicação ou poupança, visto que o art. 649, IV, do CPC de 1973 contém norma imperativa que não admite interpretação ampliativa, sendo a exceção prevista no art. 649, § 2º, do CPC de 1973 espécie e não gênero de crédito de natureza alimentícia, não englobando o crédito trabalhista.",
+    "status": "Válida",
+    "keywords": [
+      "mandado de segurança",
+      "execução",
+      "salário",
+      "trabalhista"
+    ]
+  },
+  {
+    "id": "oj-sdi2-154",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 154,
+    "titulo": "AÇÃO RESCISÓRIA. ACORDO PRÉVIO AO AJUIZAMENTO DA RECLAMAÇÃO. QUITAÇÃO GERAL. LIDE SIMULADA. POSSIBILIDADE DE RESCISÃO DA SENTENÇA HOMOLOGATÓRIA DE ACORDO APENAS SE VERIFICADA A EXISTÊNCIA DE VÍCIO DE CONSENTIMENTO. (DEJT divulgado em 09, 10 e 11.06.2010)",
+    "enunciado": "A sentença homologatória de acordo prévio ao ajuizamento de reclamação trabalhista, no qual foi conferida quitação geral do extinto contrato, sujeita-se ao corte rescisório tão somente se verificada a existência de fraude ou vício de consentimento.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "trabalhista",
+      "rescisão",
+      "contrato"
+    ]
+  },
+  {
+    "id": "oj-sdi2-155",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 155,
+    "titulo": "AÇÃO RESCISÓRIA E MANDADO DE SEGURANÇA. VALOR ATRIBUÍDO À CAUSA NA INICIAL. MAJORAÇÃO DE OFÍCIO. INVIABILIDADE.",
+    "enunciado": "Atribuído o valor da causa na inicial da ação rescisória ou do mandado de segurança e não havendo impugnação, nos termos do art. 261 do CPC, é defeso ao Juízo majorá-lo de ofício, ante a ausência de amparo legal. Inaplicável, na hipótese, a Orientação Jurisprudencial da SBDI-II nº 147 e o art. 2º, II, da Instrução Normativa nº 31 do TST.",
+    "status": "Cancelada",
+    "keywords": [
+      "ação rescisória",
+      "mandado de segurança"
+    ]
+  },
+  {
+    "id": "oj-sdi2-156",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 156,
+    "titulo": "“HABEAS CORPUS” ORIGINÁRIO NO TST. SUBSTITUTIVO DE RECURSO ORDINÁRIO EM “HABEAS CORPUS”. CABIMENTO CONTRA DECISÃO DEFINITIVA PROFERIDA por TRIBUNAL REGIONAL DO TRABALHO. (DEJT divulgado em 09, 10 e 11.06.2010)",
+    "enunciado": "É cabível ajuizamento de “habeas corpus” originário no Tribunal Superior do Trabalho, em substituição de recurso ordinário em “habeas corpus”, de decisão definitiva proferida por Tribunal Regional do Trabalho, uma vez que o órgão colegiado passa a ser a autoridade coatora no momento em que examina o mérito do “habeas corpus” impetrado no âmbito da Corte local.",
+    "status": "Válida",
+    "keywords": [
+      "habeas corpus",
+      "recurso"
+    ]
+  },
+  {
+    "id": "oj-sdi2-157",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 157,
+    "titulo": "AÇÃO RESCISÓRIA. DECISÕES PROFERIDAS EM FASES DISTINTAS DE UMA MESMA AÇÃO. COISA JULGADA. NÃO CONFIGURAÇÃO.",
+    "enunciado": "A ofensa à coisa julgada de que trata o inciso IV do art. 966 do CPC de 2015 (inciso IV do art. 485 do CPC de 1973) refere-se apenas a relações processuais distintas. A invocação de desrespeito à coisa julgada formada no processo de conhecimento, na correspondente fase de execução, somente é possível com base na violação do art. 5º, XXXVI, da Constituição da República.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória",
+      "execução",
+      "coisa julgada"
+    ]
+  },
+  {
+    "id": "oj-sdi2-158",
+    "tribunal": "TST",
+    "tipoProcesso": "OJ",
+    "orgao": "SDI-2",
+    "numero": 158,
+    "titulo": "AÇÃO RESCISÓRIA. DECLARAÇÃO DE NULIDADE DE DECISÃO HOMOLOGATÓRIA DE ACORDO EM RAZÃO DE COLUSÃO (ART. 485, III, DO CPC). MULTA POR LITIGÂNCIA DE MÁ-FÉ. IMPOSSIBILIDADE. (DEJT divulgado em 12, 13 e 16.04.2012)",
+    "enunciado": "A declaração de nulidade de decisão homologatória de acordo, em razão da colusão entre as partes (art. 485, III, do CPC), é sanção suficiente em relação ao procedimento adotado, não havendo que ser aplicada a multa por litigância de má-fé.",
+    "status": "Válida",
+    "keywords": [
+      "ação rescisória"
+    ]
+  }
+]

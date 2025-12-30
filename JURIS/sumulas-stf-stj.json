@@ -1,0 +1,1271 @@
+[
+  {
+    "id": "sumula-stf-35",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 35,
+    "enunciado": "Em caso de acidente do trabalho ou de transporte, a concubina tem direito de ser indenizada pela morte do amásio, se entre eles não havia impedimento para o matrimônio., em parte.• Atualmente, a forma correta de ler essa súmula é a seguinte: “Em caso de acidente do trabalho ou de transporte, o(a) companheiro(a) tem direito de ser indenizado(a) pela morte da pessoa com quem vivia em união estável.• O termo concubinato é, atualmente, reservado apenas para o relacionamento entre duas pessoas no qual pelo menos uma delas é impedida de casar (art. 1.727 do CC).",
+    "status": "Válida",
+    "area": "Direito do trabalho > Acidente do trabalho",
+    "keywords": [
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-194",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 194,
+    "enunciado": "É competente o Ministro do Trabalho para a especificação das atividades insalubres.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Insalubridade",
+    "keywords": []
+  },
+  {
+    "id": "sumula-stf-195",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 195,
+    "enunciado": "Contrato de trabalho para obra certa, ou de prazo determinado, transforma-se em contrato de prazo indeterminado, quando prorrogado por mais de quatro anos.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "contrato"
+    ]
+  },
+  {
+    "id": "sumula-stf-196",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 196,
+    "enunciado": "Ainda que exerça atividade rural, o empregado de empresa industrial ou comercial é classificado de acordo com a categoria do empregador.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Temas diversos",
+    "keywords": [
+      "empregado",
+      "empregador",
+      "rural"
+    ]
+  },
+  {
+    "id": "sumula-stf-197",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 197,
+    "enunciado": "O empregado com representação sindical só pode ser despedido mediante inquérito em que se apure falta grave.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Sindicatos",
+    "keywords": [
+      "empregado",
+      "sindicato"
+    ]
+  },
+  {
+    "id": "sumula-stf-198",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 198,
+    "enunciado": "As ausências motivadas por acidente do trabalho não são descontáveis do período aquisitivo das férias.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Acidente do trabalho",
+    "keywords": [
+      "férias",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-199",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 199,
+    "enunciado": "O salário das férias do empregado horista corresponde à media do período aquisitivo, não podendo ser inferior ao mínimo.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Salário",
+    "keywords": [
+      "empregado",
+      "férias"
+    ]
+  },
+  {
+    "id": "sumula-stf-201",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 201,
+    "enunciado": "O vendedor pracista, remunerado mediante comissão, não tem direito ao repouso semanal remunerado.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": []
+  },
+  {
+    "id": "sumula-stf-202",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 202,
+    "enunciado": "Na equiparação de salário, em caso de trabalho igual, toma-se em conta o tempo de serviço na função, e não no emprego.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Salário",
+    "keywords": []
+  },
+  {
+    "id": "sumula-stf-203",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 203,
+    "enunciado": "Não está sujeita à vacância de sessenta dias a vigência de novos níveis de salário-mínimo.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": []
+  },
+  {
+    "id": "sumula-stf-204",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 204,
+    "enunciado": "Tem direito o trabalhador substituto, ou de reserva, ao salário-mínimo no dia em que fica à disposição do empregador sem ser aproveitado na função específica; se aproveitado, recebe o salário contratual.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "empregado",
+      "empregador"
+    ]
+  },
+  {
+    "id": "sumula-stf-205",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 205,
+    "enunciado": "Tem direito a salário integral o menor não sujeito a aprendizagem metódica.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": []
+  },
+  {
+    "id": "sumula-stf-207",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 207,
+    "enunciado": "As gratificações habituais, inclusive a de natal, consideram-se tacitamente convencionadas, integrando o salário.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Habitualidade",
+    "keywords": []
+  },
+  {
+    "id": "sumula-stf-209",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 209,
+    "enunciado": "O salário-produção, como outras modalidades de salário-prêmio, é devido, desde que verificada a condição a que estiver subordinado, e não pode ser suprimido unilateralmente pelo empregador, quando pago com habitualidade.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Habitualidade",
+    "keywords": [
+      "empregado",
+      "empregador"
+    ]
+  },
+  {
+    "id": "sumula-stf-212",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 212,
+    "enunciado": "Tem direito ao adicional de serviço perigoso o empregado de posto de revenda de combustível líquido.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Temas diversos",
+    "keywords": [
+      "empregado",
+      "adicional"
+    ]
+  },
+  {
+    "id": "sumula-stf-213",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 213,
+    "enunciado": "É devido o adicional de serviço noturno, ainda que sujeito o empregado ao regime de revezamento.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Serviço noturno",
+    "keywords": [
+      "empregado",
+      "adicional"
+    ]
+  },
+  {
+    "id": "sumula-stf-214",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 214,
+    "enunciado": "A duração legal da hora de serviço noturno (52 minutos e 30 segundos) constitui vantagem suplementar, que não dispensa o salário adicional.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Serviço noturno",
+    "keywords": [
+      "adicional"
+    ]
+  },
+  {
+    "id": "sumula-stf-215",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 215,
+    "enunciado": "Conta-se a favor de empregado readmitido o tempo de serviço anterior, salvo se houver sido despedido por falta grave ou tiver recebido a indenização legal.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Temas diversos",
+    "keywords": [
+      "empregado",
+      "indenização"
+    ]
+  },
+  {
+    "id": "sumula-stf-217",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 217,
+    "enunciado": "Tem direito de retornar ao emprego, ou ser indenizado em caso de recusa do empregador, o aposentado que recupera a capacidade de trabalho dentro de cinco anos, a contar da aposentadoria, que se torna definitiva após esse prazo.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "empregado",
+      "empregador",
+      "aposentadoria"
+    ]
+  },
+  {
+    "id": "sumula-stf-219",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 219,
+    "enunciado": "Para a indenização devida a empregado que tinha direito a ser readmitido, e não foi, levam-se em conta as vantagens advindas à sua categoria no período do afastamento.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Indenização",
+    "keywords": [
+      "empregado",
+      "indenização"
+    ]
+  },
+  {
+    "id": "sumula-stf-220",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 220,
+    "enunciado": "A indenização devida a empregado estável, que não é readmitido ao cessar sua aposentadoria, deve ser paga em dobro.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Indenização",
+    "keywords": [
+      "empregado",
+      "indenização",
+      "aposentadoria"
+    ]
+  },
+  {
+    "id": "sumula-stf-221",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 221,
+    "enunciado": "A transferência de estabelecimento, ou a sua extinção parcial, por motivo que não seja de força maior, não justifica a transferência de empregado estável.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Temas diversos",
+    "keywords": [
+      "empregado"
+    ]
+  },
+  {
+    "id": "sumula-stf-222",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 222,
+    "enunciado": "O princípio da identidade física do juiz não é aplicável às Juntas de Conciliação e Julgamento da Justiça do Trabalho., mas com adaptações. Não existem mais \"juntas de conciliação e julgamento\". Agora, são \"varas do trabalho\".• A súmula deve ser lida assim: “O princípio da identidade física do juiz não é aplicável no processo do trabalho”.• Fundamentos: simplicidade, celeridade e efetividade da prestação jurisdicional.• Esse entendimento ganhou força pelo fato de que o CPC/2015, ao contrário do que fazia o CPC/1973, não previu expressamente o princípio da identidade física do juiz.",
+    "status": "Válida",
+    "dataAprovacao": "13/12/1963",
+    "area": "Direito processual do trabalho > Outros temas",
+    "keywords": [
+      "justiça do trabalho"
+    ]
+  },
+  {
+    "id": "sumula-stf-223",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 223,
+    "enunciado": "Concedida isenção de custas ao empregado, por elas não responde o sindicato que o representa em juízo.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Honorários advocatícios e custas processuais",
+    "keywords": [
+      "empregado",
+      "sindicato",
+      "honorários",
+      "custas"
+    ]
+  },
+  {
+    "id": "sumula-stf-224",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 224,
+    "enunciado": "Os juros da mora, nas reclamações trabalhistas, são contados desde a notificação inicial.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "trabalhista"
+    ]
+  },
+  {
+    "id": "sumula-stf-224",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 224,
+    "enunciado": "Os juros da mora, nas reclamações trabalhistas, são contados desde a notificação inicial.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "trabalhista"
+    ]
+  },
+  {
+    "id": "sumula-stf-225",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 225,
+    "enunciado": "Não é absoluto o valor probatório das anotações da carteira profissional.• Vide Súmula 12 do TST.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Temas diversos",
+    "keywords": []
+  },
+  {
+    "id": "sumula-stf-227",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 227,
+    "enunciado": "A concordata do empregador não impede a execução de crédito nem a reclamação de empregado na Justiça do Trabalho.• Atualmente, a Lei não fala mais em concordata, mas sim em recuperação judicial.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Temas diversos",
+    "keywords": [
+      "empregado",
+      "empregador",
+      "execução",
+      "justiça do trabalho"
+    ]
+  },
+  {
+    "id": "sumula-stf-229",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 229,
+    "enunciado": "A indenização acidentária não exclui a do direito comum, em caso de dolo ou culpa grave do empregador.• Vide art. 7º, XXVIII, da CF/88.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "empregado",
+      "empregador",
+      "indenização"
+    ]
+  },
+  {
+    "id": "sumula-stf-229",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 229,
+    "enunciado": "A indenização acidentária não exclui a do direito comum, em caso de dolo ou culpa grave do empregador.• Vide art. 7º, XXVIII, da CF/88.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "empregado",
+      "empregador",
+      "indenização"
+    ]
+  },
+  {
+    "id": "sumula-stf-230",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 230,
+    "enunciado": "A prescrição da ação de acidente do trabalho conta-se do exame pericial que comprovar a enfermidade ou verificar a natureza da incapacidade.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Acidente do trabalho",
+    "keywords": [
+      "prescrição",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-232",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 232,
+    "enunciado": "Em caso de acidente do trabalho, são devidas diárias até doze meses, as quais não se confundem com a indenização acidentária, nem com o auxílio-enfermidade.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "indenização",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-232",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 232,
+    "enunciado": "Em caso de acidente do trabalho, são devidas diárias até doze meses, as quais não se confundem com a indenização acidentária, nem com o auxílio-enfermidade.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "indenização",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-234",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 234,
+    "enunciado": "São devidos honorários de advogado em ação de acidente do trabalho julgada procedente.• Polêmica.• Importante que você saiba a recente OJ 421 da SDI-I do TST: “A condenação em honorários advocatícios nos autos de ação de indenização por danos morais e materiais decorrentes de acidente de trabalho ou de doença profissional, remetida à Justiça do Trabalho após ajuizamento na Justiça comum, antes da vigência da Emenda Constitucional nº 45/2004, decorre da mera sucumbência, nos termos do art. 20 do CPC, não se sujeitando aos requisitos da Lei nº 5.584/1970.”",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Honorários advocatícios e custas processuais",
+    "keywords": [
+      "indenização",
+      "justiça do trabalho",
+      "acidente",
+      "doença",
+      "honorários",
+      "custas"
+    ]
+  },
+  {
+    "id": "sumula-stf-235",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 235,
+    "enunciado": "É competente para a ação de acidente do trabalho a justiça cível comum, inclusive em segunda instância, ainda que seja parte autarquia seguradora., mas a interpretação deve ser feita nos termos do que foi explicado nos comentários à SV 22-STF.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "competência",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-236",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 236,
+    "enunciado": "Em ação de acidente do trabalho, a autarquia seguradora não tem isenção de custas.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "acidente",
+      "custas"
+    ]
+  },
+  {
+    "id": "sumula-stf-236",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 236,
+    "enunciado": "Em ação de acidente do trabalho, a autarquia seguradora não tem isenção de custas.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "acidente",
+      "custas"
+    ]
+  },
+  {
+    "id": "sumula-stf-238",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 238,
+    "enunciado": "Em caso de acidente do trabalho, a multa pelo retardamento da liquidação é exigível do segurador sub-rogado, ainda que autarquia.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-238",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 238,
+    "enunciado": "Em caso de acidente do trabalho, a multa pelo retardamento da liquidação é exigível do segurador sub-rogado, ainda que autarquia.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-240",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 240,
+    "enunciado": "O depósito para recorrer, em ação de acidente do trabalho, é exigível do segurador sub-rogado, ainda que autarquia.",
+    "status": "Superada",
+    "dataAprovacao": "13/12/1963",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-307",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 307,
+    "enunciado": "É devido o adicional de serviço insalubre, calculado à base do salário-mínimo da região, ainda que a remuneração contratual seja superior ao salário-mínimo acrescido da taxa de insalubridade.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "adicional"
+    ]
+  },
+  {
+    "id": "sumula-stf-311",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 311,
+    "enunciado": "No típico acidente do trabalho, a existência de ação judicial não exclui a multa pelo retardamento da liquidação.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-312",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 312,
+    "enunciado": "Músico integrante de orquestra da empresa, com atuação permanente e vínculo de subordinação, está sujeito à legislação geral do trabalho, e não a especial dos artistas.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": []
+  },
+  {
+    "id": "sumula-stf-313",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 313,
+    "enunciado": "Provada a identidade entre o trabalho diurno e o noturno, é devido o adicional, quanto a este, sem a limitação do art. 73, parágrafo 3, da CLT, independentemente da natureza da atividade do empregador.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Serviço noturno",
+    "keywords": [
+      "CLT",
+      "empregado",
+      "empregador",
+      "adicional"
+    ]
+  },
+  {
+    "id": "sumula-stf-314",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 314,
+    "enunciado": "Na composição do dano por acidente do trabalho, ou de transporte, não é contrário à lei tomar para base da indenização o salário do tempo da perícia ou da sentença.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Acidente do trabalho",
+    "keywords": [
+      "indenização",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-315",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 315,
+    "enunciado": "Indispensável o traslado das razões da revista, para julgamento, pelo Tribunal Superior do Trabalho, do agravo para sua admissão.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Recursos",
+    "keywords": [
+      "recurso"
+    ]
+  },
+  {
+    "id": "sumula-stf-316",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 316,
+    "enunciado": "A simples adesão à greve não constitui falta grave.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Falta grave",
+    "keywords": [
+      "greve"
+    ]
+  },
+  {
+    "id": "sumula-stf-327",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 327,
+    "enunciado": "O direito trabalhista admite a prescrição intercorrente.",
+    "status": "Válida",
+    "dataAprovacao": "13/12/1963",
+    "area": "Direito do trabalho > Acidente do trabalho",
+    "keywords": [
+      "trabalhista",
+      "prescrição",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-327",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 327,
+    "enunciado": "O direito trabalhista admite a prescrição intercorrente.",
+    "status": "Válida",
+    "dataAprovacao": "13/12/1963",
+    "area": "Direito processual do trabalho > Outros temas",
+    "keywords": [
+      "trabalhista",
+      "prescrição"
+    ]
+  },
+  {
+    "id": "sumula-stf-337",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 337,
+    "enunciado": "A controvérsia entre o empregador e o segurador não suspende o pagamento devido ao empregado por acidente do trabalho.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "empregado",
+      "empregador",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-338",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 338,
+    "enunciado": "Não cabe ação rescisória no âmbito da Justiça do Trabalho.• É possível ação rescisória na Justiça do Trabalho.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Outros temas",
+    "keywords": [
+      "justiça do trabalho"
+    ]
+  },
+  {
+    "id": "sumula-stf-349",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 349,
+    "enunciado": "A prescrição atinge somente as prestações de mais de dois anos, reclamadas com fundamento em decisão normativa da justiça do trabalho, ou em convenção coletiva de trabalho, quando não estiver em causa a própria validade de tais atos.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Temas diversos",
+    "keywords": [
+      "prescrição",
+      "justiça do trabalho",
+      "convenção coletiva"
+    ]
+  },
+  {
+    "id": "sumula-stf-401",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 401,
+    "enunciado": "Não se conhece do recurso de revista, nem dos embargos de divergência, do processo trabalhista, quando houver jurisprudência firme do Tribunal Superior do Trabalho no mesmo sentido da decisão impugnada, salvo se houver colisão com a jurisprudência do Supremo Tribunal Federal.pela Súmula 333 do TST (Não ensejam recurso de revista decisões superadas por iterativa, notória e atual jurisprudência do Tribunal Superior do Trabalho).",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Recursos",
+    "keywords": [
+      "trabalhista",
+      "recurso",
+      "embargos"
+    ]
+  },
+  {
+    "id": "sumula-stf-402",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 402,
+    "enunciado": "Vigia noturno tem direito a salário adicional.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Serviço noturno",
+    "keywords": [
+      "adicional"
+    ]
+  },
+  {
+    "id": "sumula-stf-403",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 403,
+    "enunciado": "É de decadência o prazo de trinta dias para instauração do inquérito judicial, a contar da suspensão, por falta grave, de empregado estável., mas sem nenhuma relevância.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Falta grave",
+    "keywords": [
+      "empregado"
+    ]
+  },
+  {
+    "id": "sumula-stf-433",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 433,
+    "enunciado": "É competente o Tribunal Regional do Trabalho para julgar mandado de segurança contra ato de seu presidente em execução de sentença trabalhista.• Art. 114, IV, da CF/88.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "trabalhista",
+      "execução",
+      "competência"
+    ]
+  },
+  {
+    "id": "sumula-stf-434",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 434,
+    "enunciado": "A controvérsia entre seguradores indicados pelo empregador na ação de acidente do trabalho não suspende o pagamento devido ao acidentado.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "empregado",
+      "empregador",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-457",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 457,
+    "enunciado": "O Tribunal Superior do Trabalho, conhecendo da revista, julgará a causa, aplicando o direito à espécie.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Recursos",
+    "keywords": [
+      "recurso"
+    ]
+  },
+  {
+    "id": "sumula-stf-458",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 458,
+    "enunciado": "O processo da execução trabalhista não exclui a remição pelo executado.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Outros temas",
+    "keywords": [
+      "trabalhista",
+      "execução"
+    ]
+  },
+  {
+    "id": "sumula-stf-459",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 459,
+    "enunciado": "No cálculo da indenização por despedida injusta, incluem-se os adicionais, ou gratificações, que, pela habitualidade, se tenham incorporado ao salário.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Habitualidade",
+    "keywords": [
+      "indenização"
+    ]
+  },
+  {
+    "id": "sumula-stf-460",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 460,
+    "enunciado": "Para efeito do adicional de insalubridade, a perícia judicial, em reclamação trabalhista, não dispensa o enquadramento da atividade entre as insalubres, que é ato da competência do Ministro do Trabalho e Previdência Social.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Insalubridade",
+    "keywords": [
+      "trabalhista",
+      "adicional",
+      "competência",
+      "previdência"
+    ]
+  },
+  {
+    "id": "sumula-stf-461",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 461,
+    "enunciado": "É duplo, e não triplo, o pagamento do salário nos dias destinados a descanso.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Salário",
+    "keywords": []
+  },
+  {
+    "id": "sumula-stf-462",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 462,
+    "enunciado": "No cálculo da indenização por despedida injusta inclui-se, quando devido, o repouso semanal remunerado.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "indenização"
+    ]
+  },
+  {
+    "id": "sumula-stf-463",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 463,
+    "enunciado": "Para efeito de indenização e estabilidade, conta-se o tempo em que o empregado esteve afastado, em serviço militar obrigatório, mesmo anteriormente a Lei 4.072, de 01.06.62.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Indenização",
+    "keywords": [
+      "empregado",
+      "indenização",
+      "estabilidade"
+    ]
+  },
+  {
+    "id": "sumula-stf-464",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 464,
+    "enunciado": "No cálculo da indenização por acidente do trabalho inclui-se, quando devido, o repouso semanal remunerado.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Acidente do trabalho",
+    "keywords": [
+      "indenização",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-501",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 501,
+    "enunciado": "Compete a justiça ordinária estadual o processo e o julgamento, em ambas as instâncias, das causas de acidente do trabalho, ainda que promovidas contra a união, suas autarquias, empresas públicas ou sociedades de economia mista., mas a interpretação deve ser feita nos termos do que foi explicado nos comentários à SV 22-STF. Assim, por exemplo, se um empregado de uma empresa pública federal sofre um acidente de trabalho e deseja ingressar com ação de indenização contra esta empresa pública, a competência será da Justiça do Trabalho (art. 114, I, da CF/88; SV 22).",
+    "status": "Válida",
+    "dataAprovacao": "03/12/1969",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "empregado",
+      "indenização",
+      "competência",
+      "justiça do trabalho",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-505",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 505,
+    "enunciado": "Salvo quando contrariarem a Constituição, não cabe recurso para o Supremo Tribunal Federal, de quaisquer decisões da Justiça do Trabalho, inclusive dos presidentes de seus tribunais.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Recursos",
+    "keywords": [
+      "justiça do trabalho",
+      "recurso"
+    ]
+  },
+  {
+    "id": "sumula-stf-529",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 529,
+    "enunciado": "Subsiste a responsabilidade do empregador pela indenização decorrente de acidente do trabalho, quando o segurador, por haver entrado em liquidação, ou por outro motivo, não se encontrar em condições financeiras, de efetuar, na forma da lei, o pagamento que o seguro obrigatório visava garantir.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "empregado",
+      "empregador",
+      "indenização",
+      "responsabilidade",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-531",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 531,
+    "enunciado": "É inconstitucional o Decreto 51.668, de 17.01.1963, que estabeleceu salário profissional para trabalhadores de transportes marítimos, fluviais e lacustres.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Salário",
+    "keywords": []
+  },
+  {
+    "id": "sumula-stf-552",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 552,
+    "enunciado": "Com a regulamentação do art. 15, da Lei 5.316/67, pelo Decreto 71.037/72, tornou-se exeqüível a exigência da exaustão da via administrativa antes do início da ação de acidente do trabalho.",
+    "status": "Superada",
+    "area": "Direito processual do trabalho > Outros temas",
+    "keywords": [
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-593",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 593,
+    "enunciado": "Incide o percentual do fundo de garantia do tempo de serviço (FGTS) sobre a parcela da remuneração correspondente a horas extraordinárias de trabalho.",
+    "status": "Válida",
+    "area": "Direito do trabalho > FGTS",
+    "keywords": [
+      "FGTS"
+    ]
+  },
+  {
+    "id": "sumula-stf-612",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 612,
+    "enunciado": "Ao trabalhador rural não se aplicam, por analogia, os benefícios previstos na Lei nº 6.367, de 19.10.76.",
+    "status": "Superada",
+    "area": "Direito do trabalho > Súmulas superadas",
+    "keywords": [
+      "rural"
+    ]
+  },
+  {
+    "id": "sumula-stf-633",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 633,
+    "enunciado": "É incabível a condenação em verba honorária nos recursos extraordinários interpostos em processo trabalhista, exceto nas hipóteses previstas na Lei 5.584/70.",
+    "status": "Superada",
+    "dataAprovacao": "24/09/2003",
+    "area": "Direito processual do trabalho > Honorários advocatícios e custas processuais",
+    "keywords": [
+      "trabalhista",
+      "honorários",
+      "custas",
+      "recurso"
+    ]
+  },
+  {
+    "id": "sumula-stf-675",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 675,
+    "enunciado": "Os intervalos fixados para descanso e alimentação durante a jornada de seis horas não descaracterizam o sistema de turnos ininterruptos de revezamento para o efeito do art. 7º, XIV, da Constituição.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Temas diversos",
+    "keywords": [
+      "jornada"
+    ]
+  },
+  {
+    "id": "sumula-stf-676",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 676,
+    "enunciado": "A garantia da estabilidade provisória prevista no art. 10, II, a, do ADCT, também se aplica ao suplente do cargo de direção de comissões internas de prevenção de acidentes (CIPA).",
+    "status": "Válida",
+    "area": "Direito do trabalho > Estabilidade",
+    "keywords": [
+      "estabilidade",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stf-677",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 677,
+    "enunciado": "Até que lei venha a dispor a respeito, incumbe ao Ministério do Trabalho proceder ao registro das entidades sindicais e zelar pela observância do princípio da unicidade.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Sindicatos",
+    "keywords": [
+      "sindicato"
+    ]
+  },
+  {
+    "id": "sumula-stf-678",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 678,
+    "enunciado": "São inconstitucionais os incisos I e III do art. 7º da Lei 8.162/91, que afastam, para efeito de anuênio e de licença-prêmio, a contagem do tempo de serviço regido pela CLT dos servidores que passaram a submeter-se ao Regime Jurídico Único.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Servidor público",
+    "keywords": [
+      "CLT",
+      "servidor público"
+    ]
+  },
+  {
+    "id": "sumula-stf-679",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 679,
+    "enunciado": "A fixação de vencimentos dos servidores públicos não pode ser objeto de convenção coletiva.",
+    "status": "Válida",
+    "area": "Direito do trabalho > Servidor público",
+    "keywords": [
+      "convenção coletiva",
+      "servidor público"
+    ]
+  },
+  {
+    "id": "sumula-stf-736",
+    "tribunal": "STF",
+    "tipoProcesso": "Súmula",
+    "numero": 736,
+    "enunciado": "Compete à Justiça do Trabalho julgar as ações que tenham como causa de pedir o descumprimento de normas trabalhistas relativos à segurança, higiene e saúde dos trabalhadores.",
+    "status": "Válida",
+    "dataAprovacao": "26/11/2003",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "trabalhista",
+      "competência",
+      "justiça do trabalho"
+    ]
+  },
+  {
+    "id": "sumula-stj-10",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 10,
+    "enunciado": "Instalada a Junta de Conciliação e Julgamento (vara do trabalho), cessa a competência do juiz de direito em matéria trabalhista, inclusive para a execução das sentenças por ele proferidas., mas deve-se esclarecer que não mais existem as juntas de conciliação e julgamento. Assim, em seu lugar deve-se ler “juiz do trabalho”.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "trabalhista",
+      "execução",
+      "competência"
+    ]
+  },
+  {
+    "id": "sumula-stj-15",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 15,
+    "enunciado": "Compete à Justiça Estadual processar e julgar os litígios decorrentes de acidente do trabalho., mas apenas nos casos de ação proposta contra o INSS pleiteando benefício decorrente de acidente de trabalho.• Segundo a jurisprudência do STF e STJ, causas decorrentes de acidente do trabalho não são apenas aquelas em que figuram como partes o empregado acidentado e o órgão da Previdência Social, mas também as que são promovidas pelo cônjuge, ou por herdeiros ou dependentes do acidentado, para haver indenização por dano moral (da competência da Justiça do Trabalho — CF, art. 114, VI), ou para haver benefício previdenciário, pensão por morte, ou sua revisão (da competência da Justiça Estadual) (CC 121.352/SP, j. em 11/04/2012).• Vide anotações feitas à SV 22-STF.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "empregado",
+      "indenização",
+      "dano moral",
+      "competência",
+      "justiça do trabalho",
+      "acidente",
+      "previdência",
+      "INSS"
+    ]
+  },
+  {
+    "id": "sumula-stj-57",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 57,
+    "enunciado": "Compete à Justiça Comum Estadual processar e julgar ação de cumprimento fundada em acordo ou convenção coletiva não homologados pela Justiça do Trabalho.• Trata-se de competência da Justiça do Trabalho por força da Lei nº 8.984/95 e do art. 114, IX, da CF/88.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "competência",
+      "justiça do trabalho",
+      "convenção coletiva"
+    ]
+  },
+  {
+    "id": "sumula-stj-89",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 89,
+    "enunciado": "A ação acidentária prescinde do exaurimento da via administrativa.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Outros temas",
+    "keywords": []
+  },
+  {
+    "id": "sumula-stj-97",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 97,
+    "enunciado": "Compete à Justiça do Trabalho processar e julgar reclamação de servidor público relativamente a vantagens trabalhistas anteriores a instituição do regime jurídico único.",
+    "status": "Válida",
+    "dataAprovacao": "03/03/1994",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "trabalhista",
+      "competência",
+      "justiça do trabalho",
+      "servidor público"
+    ]
+  },
+  {
+    "id": "sumula-stj-154",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 154,
+    "enunciado": "Os optantes pelo FGTS, nos termos da Lei nº 5.958, de 1973, têm direito à taxa progressiva dos juros, na forma do art. 4º da Lei nº 5.107, de 1966.",
+    "status": "Válida",
+    "area": "Direito do trabalho > FGTS",
+    "keywords": [
+      "FGTS"
+    ]
+  },
+  {
+    "id": "sumula-stj-180",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 180,
+    "enunciado": "Na lide trabalhista, compete ao Tribunal Regional do Trabalho dirimir conflito de competência verificado, na respectiva região, entre juiz estadual e Junta de Conciliação e Julgamento (leia-se: juiz do trabalho)., mas deve-se esclarecer que não mais existem as juntas de conciliação e julgamento. Assim, em seu lugar deve-se ler “juiz do trabalho”.• O que a Súmula 180 do STJ quer dizer é que compete ao TRT dirimir conflito de competência verificado entre juiz de direito investido na jurisdição trabalhista e juiz do trabalho que estejam vinculados à mesma região.• Fundamento: art. 114, V, da CF/88 e art. 808, “a”, da CLT.• De outro lado, compete ao TST julgar conflitos de competência estabelecidos entre juiz de direito a quem se atribui jurisdição trabalhista e juiz do trabalho submetidos a TRT’s diferentes (vide Súmula 236 STJ).",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "trabalhista",
+      "CLT",
+      "competência"
+    ]
+  },
+  {
+    "id": "sumula-stj-210",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 210,
+    "enunciado": "A ação de cobrança das contribuições para o FGTS prescreve em trinta (30) anos.",
+    "status": "Superada",
+    "dataAprovacao": "27/05/1998",
+    "area": "Direito do trabalho > FGTS",
+    "keywords": [
+      "FGTS"
+    ]
+  },
+  {
+    "id": "sumula-stj-225",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 225,
+    "enunciado": "Compete ao Tribunal Regional do Trabalho apreciar recurso contra sentença proferida por órgão de primeiro grau da Justiça Trabalhista, ainda que para declarar-lhe a nulidade em virtude de incompetência.• Importante.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "trabalhista",
+      "competência",
+      "recurso"
+    ]
+  },
+  {
+    "id": "sumula-stj-226",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 226,
+    "enunciado": "O Ministério Público tem legitimidade para recorrer na ação de acidente do trabalho, ainda que o segurado esteja assistido por advogado.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Recursos",
+    "keywords": [
+      "acidente",
+      "recurso"
+    ]
+  },
+  {
+    "id": "sumula-stj-236",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 236,
+    "enunciado": "Não compete ao Superior Tribunal de Justiça dirimir conflitos de competência entre juízes trabalhistas vinculados a Tribunais Regionais do Trabalho diversos.• Importante.• Trata-se de competência do TST.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "trabalhista",
+      "competência"
+    ]
+  },
+  {
+    "id": "sumula-stj-353",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 353,
+    "enunciado": "As disposições do Código Tributário Nacional não se aplicam às contribuições para o FGTS.",
+    "status": "Válida",
+    "area": "Direito do trabalho > FGTS",
+    "keywords": [
+      "FGTS"
+    ]
+  },
+  {
+    "id": "sumula-stj-366",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 366,
+    "enunciado": "Compete à Justiça estadual processar e julgar ação indenizatória proposta por viúva e filhos de empregado falecido em acidente de trabalho.• Cancelada.• Ação de indenização decorrente de acidente de trabalho é julgada pela Justiça do Trabalho (art. 114, VI, da CF/88).",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "empregado",
+      "indenização",
+      "competência",
+      "justiça do trabalho",
+      "acidente"
+    ]
+  },
+  {
+    "id": "sumula-stj-367",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 367,
+    "enunciado": "A competência estabelecida pela EC n. 45/2004 não alcança os processos já sentenciados.• Importante.",
+    "status": "Válida",
+    "area": "Direito processual do trabalho > Competência",
+    "keywords": [
+      "competência"
+    ]
+  },
+  {
+    "id": "sumula-stj-466",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 466,
+    "enunciado": "O titular da conta vinculada ao FGTS tem o direito de sacar o saldo respectivo quando declarado nulo seu contrato de trabalho por ausência de prévia aprovação em concurso público.• Art. 19-A da Lei nº 8.036/90.",
+    "status": "Válida",
+    "area": "Direito do trabalho > FGTS",
+    "keywords": [
+      "contrato",
+      "FGTS"
+    ]
+  },
+  {
+    "id": "sumula-stj-466",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 466,
+    "enunciado": "O titular da conta vinculada ao FGTS tem o direito de sacar o saldo respectivo quando declarado nulo seu contrato de trabalho por ausência de prévia aprovação em concurso público.• Veja o que diz a Lei nº 8.036/90:",
+    "status": "Válida",
+    "area": "Direito do trabalho > FGTS",
+    "keywords": [
+      "contrato",
+      "FGTS"
+    ]
+  },
+  {
+    "id": "sumula-stj-514",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 514,
+    "enunciado": "A CEF é responsável pelo fornecimento dos extratos das contas individualizadas vinculadas ao FGTS dos trabalhadores participantes do Fundo de Garantia do Tempo de Serviço, inclusive para fins de exibição em juízo, independentemente do período em discussão.• Importante.",
+    "status": "Válida",
+    "area": "Direito do trabalho > FGTS",
+    "keywords": [
+      "FGTS"
+    ]
+  },
+  {
+    "id": "sumula-stj-571",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 571,
+    "enunciado": "A taxa progressiva de juros não se aplica às contas vinculadas ao FGTS de trabalhadores qualificados como avulsos.",
+    "status": "Válida",
+    "dataAprovacao": "27/04/2016",
+    "informativo": "546",
+    "area": "Direito do trabalho > FGTS",
+    "keywords": [
+      "FGTS"
+    ]
+  },
+  {
+    "id": "sumula-stj-578",
+    "tribunal": "STJ",
+    "tipoProcesso": "Súmula",
+    "numero": 578,
+    "enunciado": "Os empregados que laboram no cultivo da cana-de-açúcar para empresa agroindustrial ligada ao setor sucroalcooleiro detêm a qualidade de rurícola, ensejando a isenção do FGTS desde a edição da Lei Complementar n. 11/1971 até a promulgação da Constituição Federal de 1988.",
+    "status": "Válida",
+    "area": "Direito do trabalho > FGTS",
+    "keywords": [
+      "empregado",
+      "FGTS"
+    ]
+  }
+]

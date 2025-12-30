@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+nul
+
+# Logs
+*.log
+npm-debug.log*
+
+# Vercel
+.vercel/
+
+# Large files / duplicates
+*.onnx
+sentencify-modelos-com-embeddings.json
+PLANO_SERVIDOR_MULTIPROVIDER.md
+LEGIS/embeddings.json
+JURIS/juris-embeddings.json
+
+# Backup / duplicates
+bkp/
+SENTENCIFY_AI/
+SENTENCIFY_STANDALONE/
+LOCAL IA/
+
+# Python
+*.pyc
+__pycache__/
+*.py
