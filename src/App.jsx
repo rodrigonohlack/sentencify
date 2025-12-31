@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.14'; // v1.33.14: NER fixes (case-insensitive, dedup, fallback ORG)
+const APP_VERSION = '1.33.15'; // v1.33.15: Fix batchSize hardcoded + contraste Erro 429 tema escuro
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.15', feature: 'Fix batchSize hardcoded em mini-relatórios/subtópicos + contraste "Erro 429" no tema escuro' },
   { version: '1.33.14', feature: 'Fix NER: indexOf case-insensitive, dedup inclui entityType, fallback ORG limitado a 4 palavras + normaliza espaços' },
   { version: '1.33.13', feature: 'NER healing: subtokens órfãos (##edo) unidos ao prefixo (Mac→Macedo) + fallback regex para ORG (V2 LTDA)' },
   { version: '1.33.12', feature: 'Fix contraste do aviso de erro 429 no tema claro' },
@@ -22508,7 +22509,7 @@ Se não houver informações específicas nos documentos, indique de forma clara
         includeComplementares: true
       }));
       const { results, errors } = await generateMiniReportsBatch(topicsToGenerate, {
-        batchSize: 3,
+        batchSize: aiIntegration.aiSettings.parallelRequests || 5,
         delayBetweenBatches: 1000,
         onProgress: (current, total, batchNum, totalBatches) => {
           setAnalysisProgress(`🚀 Gerando subtópicos... ${current}/${total} (Lote ${batchNum}/${totalBatches})`);
@@ -25078,7 +25079,7 @@ Extraia e classifique todos os tópicos/pedidos em:
             documentsOverride: documentsForBatch
           })),
           {
-            batchSize: 3,
+            batchSize: aiIntegration.aiSettings.parallelRequests || 5,
             delayBetweenBatches: 1000,
             onProgress: (current, total, batchNum, totalBatches) => {
               setAnalysisProgress(`📝 Gerando mini-relatórios... ${current}/${total} (Lote ${batchNum}/${totalBatches})`);
@@ -29504,7 +29505,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       </ul>
                     </div>
                   </div>
-                  <p className="mt-2 text-yellow-700 dark:text-yellow-400/80">⚠️ Erro 429 = limite excedido. Reduza o valor.</p>
+                  <p className="mt-2 text-orange-600 dark:text-orange-300 font-medium">⚠️ Erro 429 = limite excedido. Reduza o valor.</p>
                 </div>
               </div>
 
