@@ -3,14 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.14'; // v1.33.14: NER indexOf case-insensitive
+const APP_VERSION = '1.33.14'; // v1.33.14: NER fixes (case-insensitive, dedup, fallback ORG)
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
-  { version: '1.33.14', feature: 'Fix NER indexOf case-insensitive: BERT retorna "Mac" mas texto é "MACEDO", tokens eram perdidos' },
+  { version: '1.33.14', feature: 'Fix NER: indexOf case-insensitive, dedup inclui entityType, fallback ORG limitado a 4 palavras + normaliza espaços' },
   { version: '1.33.13', feature: 'NER healing: subtokens órfãos (##edo) unidos ao prefixo (Mac→Macedo) + fallback regex para ORG (V2 LTDA)' },
   { version: '1.33.12', feature: 'Fix contraste do aviso de erro 429 no tema claro' },
   { version: '1.33.11', feature: 'Requisições paralelas configuráveis: escolha 3-20 em Config IA, com explicativo de limites por API/tier' },
@@ -452,12 +452,7 @@ const AIModelService = {
         // v1.32.08: Chamar worker ao invés de pipeline direto
         const chunkEntities = await this._call('ner', chunk, { truncation: true, max_length: 512 });
 
-        // DEBUG: Ver todos os tokens do BERT antes de qualquer filtro
-        console.log('[NER] BERT raw:', chunkEntities.slice(0, 60).map(t =>
-          `${t.word}(${t.entity})`).join(', '));
-
         // OFFSETS MANUAIS via indexOf (Transformers.js retorna start/end incorretos)
-        // v1.33.13: Manter tokens 'O' para healing em processTokens (só filtrar tokens especiais)
         // v1.33.14: Busca case-insensitive (BERT retorna "Mac" mas texto é "MACEDO")
         let cursor = 0;
         const chunkLower = chunk.toLowerCase();
@@ -479,10 +474,11 @@ const AIModelService = {
       }
     }
 
-    // Deduplicar
+    // Deduplicar (v1.33.14: incluir tipo de entidade na key para não confundir Mac/LOC com Mac/PER)
     const seen = new Set();
     const unique = allRaw.filter(e => {
-      const key = `${e.word?.toLowerCase()}-${Math.floor((e.start || 0) / 50)}`;
+      const entityType = (e.entity || '').replace(/^(B-|I-)/, ''); // PER, LOC, ORG
+      const key = `${e.word?.toLowerCase()}-${entityType}-${Math.floor((e.start || 0) / 50)}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -20329,14 +20325,22 @@ const LegalDecisionEditor = () => {
       return false;
     });
 
-    // v1.33.13: Fallback regex para ORG não detectadas pelo modelo
+    // v1.33.14: Fallback regex para ORG não detectadas pelo modelo
     // Captura padrões conhecidos: "NOME LTDA", "NOME EIRELI", "NOME S/A", etc.
+    // Limitado a 4 palavras antes do sufixo para evitar capturar contexto demais
     if (nerIncludeOrg) {
-      const ORG_REGEX = /\b([A-Z0-9][A-Z0-9\s]{1,40})\s+(LTDA|EIRELI|S\.?A\.?|ME|EPP)\b/gi;
+      const ORG_REGEX = /\b([A-Z0-9]+(?:\s+[A-Z0-9]+){0,3})\s+(LTDA|EIRELI|S\.?A\.?|ME|EPP)\b/gi;
+      const ORG_PREFIX_STOP = ['O', 'A', 'OS', 'AS', 'DE', 'DO', 'DA', 'EM', 'FACE', 'CONTRA', 'RECLAMADA', 'RECLAMANTE'];
       const textoUpper = textoCompleto.toUpperCase();
       let match;
       while ((match = ORG_REGEX.exec(textoUpper)) !== null) {
-        const fullOrg = match[0].trim();
+        let fullOrg = match[0].trim().replace(/\s+/g, ' '); // Normalizar espaços múltiplos
+        // Remover palavras comuns do início
+        let words = fullOrg.split(' ');
+        while (words.length > 2 && ORG_PREFIX_STOP.includes(words[0])) {
+          words.shift();
+        }
+        fullOrg = words.join(' ');
         // Verificar se já não foi detectado pelo modelo
         const alreadyDetected = entidadesFiltradas.some(e =>
           e.text.toUpperCase().includes(fullOrg) || fullOrg.includes(e.text.toUpperCase())

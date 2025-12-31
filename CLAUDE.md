@@ -54,7 +54,7 @@
 
 | Version | Feature |
 |---------|---------|
-| v1.33.14 | Fix NER indexOf case-insensitive: BERT retorna "Mac" mas texto é "MACEDO", tokens eram perdidos |
+| v1.33.14 | Fix NER: indexOf case-insensitive, dedup inclui entityType, fallback ORG limitado a 4 palavras + normaliza espaços |
 | v1.33.13 | NER healing: subtokens órfãos (##edo) unidos ao prefixo (Mac→Macedo) + fallback regex para ORG (V2 LTDA) |
 | v1.33.12 | Fix contraste do aviso de erro 429 no tema claro |
 | v1.33.11 | Requisições paralelas configuráveis: escolha 3-20 em Config IA, com explicativo de limites por API/tier |
