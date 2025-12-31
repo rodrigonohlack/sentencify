@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.3'; // v1.33.3: Feedback visual no SimilarityWarningModal
+const APP_VERSION = '1.33.4'; // v1.33.4: Unificar UI busca semântica de modelos
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.4', feature: 'Unificar UI busca semântica de modelos: usar ModelCard com editar/duplicar/excluir, respeitar modo cards/lista, badge de similaridade' },
   { version: '1.33.3', feature: 'Feedback visual "Salvando..." no SimilarityWarningModal durante geração de embedding' },
   { version: '1.33.2', feature: 'Remover logs de AI/Search em produção (apenas em DEV)' },
   { version: '1.33.1', feature: 'Fix CORS: proxy serverless para download embeddings, UI simplificada (remove import manual), z-index modal corrigido' },
@@ -8061,6 +8062,16 @@ const ModelCard = React.memo(({
                   {model.category}
                 </span>
               )}
+              {/* v1.33.4: Badge de similaridade para busca semântica */}
+              {model.similarity !== undefined && (
+                <span className={`text-xs px-2 py-1 rounded font-medium ${
+                  model.similarity >= 0.7 ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                  model.similarity >= 0.5 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                  'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                }`}>
+                  {Math.round(model.similarity * 100)}% similar
+                </span>
+              )}
               {model.createdAt && (
                 <span className="text-xs theme-text-disabled">
                   {new Date(model.createdAt).toLocaleDateString('pt-BR')}
@@ -8148,6 +8159,16 @@ const ModelCard = React.memo(({
               {model.category && (
                 <span className="text-xs px-2 py-0.5 rounded theme-bg-purple-accent theme-text-purple border border-purple-500/30">
                   {model.category}
+                </span>
+              )}
+              {/* v1.33.4: Badge de similaridade para busca semântica */}
+              {model.similarity !== undefined && (
+                <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                  model.similarity >= 0.7 ? 'bg-green-500/20 text-green-400' :
+                  model.similarity >= 0.5 ? 'bg-yellow-500/20 text-yellow-400' :
+                  'bg-gray-500/20 text-gray-400'
+                }`}>
+                  {Math.round(model.similarity * 100)}%
                 </span>
               )}
               {model.keywords && (() => {
@@ -28451,47 +28472,45 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     </div>
                   </div>
 
-                  {/* v1.27.01: Resultados semânticos */}
+                  {/* v1.27.01: Resultados semânticos - v1.33.4: Usando ModelCard para UI consistente */}
                   {useModelSemanticSearch && modelSemanticResults && modelSemanticResults.length > 0 ? (
-                    <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
+                    <div className="space-y-3">
                       <div className="flex items-center gap-2 mb-3 text-sm theme-text-muted">
                         <span className="text-purple-400">🧠</span>
                         <span>{modelSemanticResults.length} resultado(s) semântico(s)</span>
                         {searchingModelSemantics && <RefreshCw className="w-4 h-4 animate-spin" />}
                       </div>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {modelSemanticResults.map((model) => (
-                          <div key={model.id} className="theme-bg-secondary rounded-lg p-4 border theme-border-secondary">
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                {model.category && (
-                                  <span className="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400">{model.category}</span>
-                                )}
-                                <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                                  model.similarity >= 0.7 ? 'bg-green-500/20 text-green-400' :
-                                  model.similarity >= 0.5 ? 'bg-yellow-500/20 text-yellow-400' :
-                                  'bg-gray-500/20 text-gray-400'
-                                }`}>
-                                  {Math.round(model.similarity * 100)}%
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <button onClick={() => startEditingModel(model)} className="p-1.5 rounded hover-icon-blue-scale" title="Editar">
-                                  <Edit3 className="w-4 h-4" />
-                                </button>
-                                <button onClick={() => toggleFavorite(model.id)} className="p-1.5 rounded" title="Favorito">
-                                  {model.favorite ? '⭐' : '☆'}
-                                </button>
-                              </div>
-                            </div>
-                            <h4 className="font-semibold theme-text-primary text-sm mb-2">{model.title}</h4>
-                            {model.keywords && (
-                              <p className="text-xs theme-text-muted mb-2 line-clamp-1">{model.keywords}</p>
-                            )}
-                            <div className="text-sm theme-text-secondary line-clamp-3" dangerouslySetInnerHTML={{ __html: sanitizeHTML(model.content) }} />
-                          </div>
-                        ))}
-                      </div>
+                      {modelLibrary.modelViewMode === 'cards' ? (
+                        <div className="grid md:grid-cols-2 gap-4">
+                          {modelSemanticResults.map((model) => (
+                            <ModelCard
+                              key={model.id}
+                              model={model}
+                              viewMode="cards"
+                              onEdit={startEditingModel}
+                              onToggleFavorite={toggleFavorite}
+                              onDuplicate={duplicateModel}
+                              onDelete={confirmDeleteModel}
+                              sanitizeHTML={sanitizeHTML}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {modelSemanticResults.map((model) => (
+                            <ModelCard
+                              key={model.id}
+                              model={model}
+                              viewMode="list"
+                              onEdit={startEditingModel}
+                              onToggleFavorite={toggleFavorite}
+                              onDuplicate={duplicateModel}
+                              onDelete={confirmDeleteModel}
+                              sanitizeHTML={sanitizeHTML}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ) : useModelSemanticSearch && modelSemanticResults && modelSemanticResults.length === 0 ? (
                     <div className="text-center py-12 theme-text-muted">
