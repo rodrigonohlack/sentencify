@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.9'; // v1.33.9: Fix contraste badge similaridade no tema claro
+const APP_VERSION = '1.33.10'; // v1.33.10: Tooltip SlashCommand mostra modelo completo
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.10', feature: 'Tooltip no SlashCommand mostra modelo completo (não truncado)' },
   { version: '1.33.9', feature: 'Fix contraste do badge de similaridade no SlashCommand (tema claro)' },
   { version: '1.33.8', feature: 'SlashCommand melhorado: posicionamento viewport-aware, tooltip preview, busca semântica, hover corrigido nos toggles 🧠' },
   { version: '1.33.7', feature: 'Feedback visual ao duplicar modelo: toast "Duplicando..." durante geração de embedding' },
@@ -13092,10 +13093,10 @@ const SlashCommandMenu = React.memo(({
   if (!isOpen) return null;
 
   // v1.33.8: Helper para extrair texto puro do HTML (para tooltip)
+  // v1.33.10: Mostrar modelo completo no tooltip
   const getPreviewText = (content) => {
     if (!content) return 'Sem conteúdo';
-    const text = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-    return text.length > 200 ? text.substring(0, 200) + '...' : text;
+    return content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   };
 
   return (
