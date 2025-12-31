@@ -452,9 +452,10 @@ const AIModelService = {
         const chunkEntities = await this._call('ner', chunk, { truncation: true, max_length: 512 });
 
         // OFFSETS MANUAIS via indexOf (Transformers.js retorna start/end incorretos)
+        // v1.33.13: Manter tokens 'O' para healing em processTokens (só filtrar tokens especiais)
         let cursor = 0;
         const adjusted = chunkEntities.reduce((acc, e) => {
-          if (e.entity === 'O' || e.word === '[UNK]' || e.word === '[CLS]' || e.word === '[SEP]') return acc;
+          if (e.word === '[UNK]' || e.word === '[CLS]' || e.word === '[SEP]') return acc;
           const cleanWord = (e.word || '').replace(/^##/, '');
           if (!cleanWord) return acc;
           const idx = chunk.indexOf(cleanWord, cursor);
