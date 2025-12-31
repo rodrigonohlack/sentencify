@@ -10,6 +10,7 @@ const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.3', feature: 'Feedback visual "Salvando..." no SimilarityWarningModal durante geração de embedding' },
   { version: '1.33.2', feature: 'Remover logs de AI/Search em produção (apenas em DEV)' },
   { version: '1.33.1', feature: 'Fix CORS: proxy serverless para download embeddings, UI simplificada (remove import manual), z-index modal corrigido' },
   { version: '1.33.0', feature: 'Auto-download de embeddings via CDN: legislação e jurisprudência baixados automaticamente do GitHub Releases (~250MB)' },
@@ -11938,7 +11939,8 @@ const LockedTabOverlay = React.memo(({ isPrimaryTab, activeTab, setActiveTab }) 
 LockedTabOverlay.displayName = 'LockedTabOverlay';
 
 // 🔍 Modal de Aviso de Similaridade (v1.13.3 - Comparação lado a lado)
-const SimilarityWarningModal = React.memo(({ warning, onCancel, onSaveNew, onReplace, sanitizeHTML = (html) => html || '' }) => {
+// v1.33.3: Feedback visual "Salvando..." durante geração de embedding
+const SimilarityWarningModal = React.memo(({ warning, saving, onCancel, onSaveNew, onReplace, sanitizeHTML = (html) => html || '' }) => {
   if (!warning) return null;
   const { newModel, similarModel, similarity } = warning;
   const pct = Math.round(similarity * 100);
@@ -11965,12 +11967,12 @@ const SimilarityWarningModal = React.memo(({ warning, onCancel, onSaveNew, onRep
               <div className="flex-1 overflow-y-auto text-sm theme-text-secondary border theme-border-input rounded p-3 theme-bg-tertiary" style={{maxHeight:'300px'}} dangerouslySetInnerHTML={{__html: sanitizeHTML(similarModel.content || '')}} />
             </div>
           </div>
-          <p className="text-sm theme-text-muted text-center">O que deseja fazer?</p>
+          <p className="text-sm theme-text-muted text-center">{saving ? 'Salvando modelo...' : 'O que deseja fazer?'}</p>
         </div>
         <div className="px-6 pb-6 flex gap-3 justify-center">
-          <button onClick={onCancel} className={CSS.btnSecondary}>Cancelar</button>
-          <button onClick={onSaveNew} className={CSS.btnSuccess}>Salvar Mesmo Assim</button>
-          <button onClick={onReplace} className="px-4 py-2 rounded-lg font-medium bg-amber-600 text-white hover-amber-700-from-600">Substituir Existente</button>
+          <button onClick={onCancel} className={CSS.btnSecondary} disabled={saving}>Cancelar</button>
+          <button onClick={onSaveNew} className={CSS.btnSuccess} disabled={saving}>{saving ? 'Salvando...' : 'Salvar Mesmo Assim'}</button>
+          <button onClick={onReplace} className="px-4 py-2 rounded-lg font-medium bg-amber-600 text-white hover-amber-700-from-600 disabled:opacity-50" disabled={saving}>{saving ? 'Salvando...' : 'Substituir Existente'}</button>
         </div>
       </div>
     </div>
@@ -18336,6 +18338,7 @@ const LegalDecisionEditor = () => {
   const copyTimeoutRef = React.useRef(null);
   const [modelSaved, setModelSaved] = useState(false);
   const [savingModel, setSavingModel] = useState(false); // v1.27.02: Feedback visual durante geração de embedding
+  const [savingFromSimilarity, setSavingFromSimilarity] = useState(false); // v1.33.3: Feedback no modal de similaridade
 
   // v1.17.0: Estados para modal de anonimização (nomes inseridos pelo usuário)
   const [showAnonymizationModal, setShowAnonymizationModal] = useState(false);
@@ -23573,34 +23576,47 @@ ${decisionText}`;
       modelLibrary.setSimilarityWarning(null);
     }
   };
+  // v1.33.3: Feedback visual "Salvando..." no modal de similaridade
   const handleSimilaritySaveNew = async () => {
     const w = modelLibrary.similarityWarning;
     if (!w) return;
+
+    setSavingFromSimilarity(true);
+    await new Promise(resolve => setTimeout(resolve, 50)); // yield para UI
+
     if (w.context === 'saveModel') await executeSaveModel(w.newModel);
     else if (w.context === 'saveExtractedModel') await executeExtractedModelSave(w.newModel);
     else if (w.context === 'saveAsNew') await executeSaveAsNew(w.newModel);
     else if (w.context === 'saveBulkModel') {
+      setSavingFromSimilarity(false);
       modelLibrary.setSimilarityWarning(null);
       // v1.20.2: Mutação direta para evitar cópias
       w.bulkSaved.push(w.newModel);
       setTimeout(() => processBulkSaveNext(w.bulkQueue, w.bulkSaved, w.bulkSkipped, w.bulkReplacements), 0);
       return;
     }
+    setSavingFromSimilarity(false);
     modelLibrary.setSimilarityWarning(null);
   };
   const handleSimilarityReplace = async () => {
     const w = modelLibrary.similarityWarning;
     if (!w) return;
+
+    setSavingFromSimilarity(true);
+    await new Promise(resolve => setTimeout(resolve, 50)); // yield para UI
+
     if (w.context === 'saveModel') await executeSaveModel(w.newModel, true, w.similarModel.id);
     else if (w.context === 'saveExtractedModel') await executeExtractedModelSave(w.newModel, true, w.similarModel.id);
     else if (w.context === 'saveAsNew') await executeSaveAsNew(w.newModel, true, w.similarModel.id);
     else if (w.context === 'saveBulkModel') {
+      setSavingFromSimilarity(false);
       modelLibrary.setSimilarityWarning(null);
       // v1.20.2: Mutação direta para evitar cópias
       w.bulkReplacements.push({ oldId: w.similarModel.id, newModel: w.newModel });
       setTimeout(() => processBulkSaveNext(w.bulkQueue, w.bulkSaved, w.bulkSkipped, w.bulkReplacements), 0);
       return;
     }
+    setSavingFromSimilarity(false);
     modelLibrary.setSimilarityWarning(null);
   };
 
@@ -30609,6 +30625,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
       {/* 🔍 v1.13.1: Modal de Aviso de Similaridade */}
       <SimilarityWarningModal
         warning={modelLibrary.similarityWarning}
+        saving={savingFromSimilarity}
         onCancel={handleSimilarityCancel}
         onSaveNew={handleSimilaritySaveNew}
         onReplace={handleSimilarityReplace}
