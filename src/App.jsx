@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.5'; // v1.33.5: Layout 1 card por linha na busca semântica
+const APP_VERSION = '1.33.6'; // v1.33.6: Layout 1 card por linha em toda aba Modelos
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.6', feature: 'Layout 1 card por linha em toda aba Modelos (busca textual + inicial)' },
   { version: '1.33.5', feature: 'Layout 1 card por linha na busca semântica de modelos' },
   { version: '1.33.4', feature: 'Unificar UI busca semântica de modelos: usar ModelCard com editar/duplicar/excluir, respeitar modo cards/lista, badge de similaridade' },
   { version: '1.33.3', feature: 'Feedback visual "Salvando..." no SimilarityWarningModal durante geração de embedding' },
@@ -28527,8 +28528,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     </div>
                   ) : modelLibrary.modelViewMode === 'cards' ? (
                     /* Visualização em CARDS - v1.2.7: Componentizado (mantém paginação) */
+                    /* v1.33.6: 1 card por linha */
                     <>
-                      <div className="grid md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                         {currentModels.map((model) => (
                           <ModelCard
                             key={model.id}
