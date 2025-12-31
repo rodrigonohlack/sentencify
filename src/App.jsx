@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.7'; // v1.33.7: Feedback visual ao duplicar modelo
+const APP_VERSION = '1.33.8'; // v1.33.8: SlashCommand melhorado (viewport, tooltip, semântico)
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.8', feature: 'SlashCommand melhorado: posicionamento viewport-aware, tooltip preview, busca semântica, hover corrigido nos toggles 🧠' },
   { version: '1.33.7', feature: 'Feedback visual ao duplicar modelo: toast "Duplicando..." durante geração de embedding' },
   { version: '1.33.6', feature: 'Layout 1 card por linha em toda aba Modelos (busca textual + inicial)' },
   { version: '1.33.5', feature: 'Layout 1 card por linha na busca semântica de modelos' },
@@ -8942,12 +8943,13 @@ const JurisprudenciaTab = React.memo(({
           )}
         </div>
         {/* v1.27.00: Toggle de busca semântica */}
+        {/* v1.33.8: Adicionado hover:bg-purple-700 ao estado semântico */}
         {semanticAvailable && (
           <button
             onClick={() => setUseSemanticSearch(prev => !prev)}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
               useSemanticSearch
-                ? 'bg-purple-600 text-white'
+                ? 'bg-purple-600 text-white hover:bg-purple-700'
                 : 'theme-bg-tertiary theme-text-secondary hover-slate-600'
             }`}
             title={useSemanticSearch ? 'Busca semântica (por significado)' : 'Busca textual (por palavras)'}
@@ -9279,12 +9281,13 @@ const LegislacaoTab = React.memo(({
           )}
         </div>
         {/* v1.26.00: Toggle de busca semântica */}
+        {/* v1.33.8: Adicionado hover:bg-purple-700 ao estado semântico */}
         {semanticAvailable && (
           <button
             onClick={() => setUseSemanticSearch(prev => !prev)}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
               useSemanticSearch
-                ? 'bg-purple-600 text-white'
+                ? 'bg-purple-600 text-white hover:bg-purple-700'
                 : 'theme-bg-tertiary theme-text-secondary hover-bg-purple-opacity'
             }`}
             title={useSemanticSearch ? 'Busca semântica (por significado)' : 'Busca textual (por palavras)'}
@@ -12955,7 +12958,8 @@ const ModelPreviewModal = React.memo(({
 
 ModelPreviewModal.displayName = 'ModelPreviewModal';
 
-// 📝 SLASH COMMAND MENU (v1.15.3) - Acesso rápido a modelos com /
+// 📝 SLASH COMMAND MENU (v1.33.8) - Acesso rápido a modelos com /
+// v1.33.8: Viewport-aware positioning, tooltip preview, toggle busca semântica
 const SlashCommandMenu = React.memo(({
   isOpen,
   position,
@@ -12965,13 +12969,70 @@ const SlashCommandMenu = React.memo(({
   onSelect,
   onClose,
   onSearchChange,
-  onNavigate
+  onNavigate,
+  semanticAvailable,      // v1.33.8: indica se busca semântica está disponível
+  searchModelsBySimilarity // v1.33.8: função para busca semântica
 }) => {
   const inputRef = React.useRef(null);
   const listRef = React.useRef(null);
+  const menuRef = React.useRef(null);
 
-  // Filtrar modelos pelo termo de busca
+  // v1.33.8: Estado para toggle busca semântica
+  const [useSemanticSearch, setUseSemanticSearch] = React.useState(false);
+  const [semanticResults, setSemanticResults] = React.useState(null);
+  const [isSearching, setIsSearching] = React.useState(false);
+
+  // v1.33.8: Ajustar posição para ficar dentro da viewport
+  const adjustedPosition = React.useMemo(() => {
+    const menuHeight = 360; // altura aproximada do menu
+    const menuWidth = 320;
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+
+    let top = position.top;
+    let left = position.left;
+
+    // Se vai sair pela parte inferior, posicionar acima
+    if (top + menuHeight > viewportHeight - 20) {
+      top = Math.max(20, viewportHeight - menuHeight - 20);
+    }
+
+    // Se vai sair pela direita, ajustar
+    if (left + menuWidth > viewportWidth - 20) {
+      left = Math.max(20, viewportWidth - menuWidth - 20);
+    }
+
+    return { top, left };
+  }, [position]);
+
+  // v1.33.8: Busca semântica com debounce
+  React.useEffect(() => {
+    if (!useSemanticSearch || !searchModelsBySimilarity || !searchTerm || searchTerm.trim().length < 2) {
+      setSemanticResults(null);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const results = await searchModelsBySimilarity(models, searchTerm.toLowerCase(), { threshold: 0.3, limit: 10 });
+        setSemanticResults(results);
+      } catch (error) {
+        console.error('[SlashCommand] Erro na busca semântica:', error);
+        setSemanticResults(null);
+      }
+      setIsSearching(false);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, useSemanticSearch, models, searchModelsBySimilarity]);
+
+  // Filtrar modelos pelo termo de busca (textual)
   const filteredModels = React.useMemo(() => {
+    // Se busca semântica está ativa e tem resultados, usar eles
+    if (useSemanticSearch && semanticResults) {
+      return semanticResults;
+    }
     if (!models || models.length === 0) return [];
     const term = (searchTerm || '').toLowerCase().trim();
     if (!term) return models.slice(0, 10);
@@ -12979,7 +13040,7 @@ const SlashCommandMenu = React.memo(({
       m.title.toLowerCase().includes(term) ||
       (m.keywords && m.keywords.toLowerCase().includes(term))
     ).slice(0, 10);
-  }, [models, searchTerm]);
+  }, [models, searchTerm, useSemanticSearch, semanticResults]);
 
   // Auto-focus no input quando abre
   React.useEffect(() => {
@@ -13029,10 +13090,18 @@ const SlashCommandMenu = React.memo(({
 
   if (!isOpen) return null;
 
+  // v1.33.8: Helper para extrair texto puro do HTML (para tooltip)
+  const getPreviewText = (content) => {
+    if (!content) return 'Sem conteúdo';
+    const text = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return text.length > 200 ? text.substring(0, 200) + '...' : text;
+  };
+
   return (
     <div
+      ref={menuRef}
       className="slash-command-menu fixed z-[100] theme-bg-secondary border theme-border-input rounded-lg shadow-xl w-80"
-      style={{ top: position.top, left: position.left, maxHeight: '320px' }}
+      style={{ top: adjustedPosition.top, left: adjustedPosition.left, maxHeight: '360px' }}
     >
       <div className="p-2 border-b theme-border-input flex items-center gap-2">
         <input
@@ -13041,9 +13110,26 @@ const SlashCommandMenu = React.memo(({
           value={searchTerm}
           onChange={(e) => onSearchChange?.(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Buscar modelo..."
+          placeholder={useSemanticSearch ? "Busca semântica..." : "Buscar modelo..."}
           className="flex-1 px-2 py-1.5 theme-bg-primary theme-text-primary border theme-border-input rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
         />
+        {/* v1.33.8: Toggle busca semântica */}
+        {semanticAvailable && (
+          <button
+            onClick={() => {
+              setUseSemanticSearch(prev => !prev);
+              setSemanticResults(null);
+            }}
+            className={`p-1.5 rounded text-sm transition-colors ${
+              useSemanticSearch
+                ? 'bg-purple-600 text-white hover:bg-purple-700'
+                : 'theme-bg-tertiary theme-text-secondary hover-slate-600'
+            }`}
+            title={useSemanticSearch ? 'Busca semântica (por significado)' : 'Busca textual (por palavras)'}
+          >
+            {useSemanticSearch ? '🧠' : '🔤'}
+          </button>
+        )}
         <button
           onClick={onClose}
           className="p-1 rounded hover-slate-600 theme-text-muted"
@@ -13054,8 +13140,12 @@ const SlashCommandMenu = React.memo(({
           </svg>
         </button>
       </div>
-      <div ref={listRef} className="overflow-y-auto" style={{ maxHeight: '260px' }}>
-        {filteredModels.length === 0 ? (
+      <div ref={listRef} className="overflow-y-auto" style={{ maxHeight: '280px' }}>
+        {isSearching ? (
+          <div className="px-3 py-4 text-sm theme-text-muted text-center">
+            <span className="animate-pulse">Buscando...</span>
+          </div>
+        ) : filteredModels.length === 0 ? (
           <div className="px-3 py-4 text-sm theme-text-muted text-center">
             Nenhum modelo encontrado
           </div>
@@ -13069,8 +13159,21 @@ const SlashCommandMenu = React.memo(({
                   ? 'bg-purple-600/30 border-purple-500'
                   : 'border-transparent hover-slate-700'
               }`}
+              title={getPreviewText(model.content)}
             >
-              <div className="text-sm font-medium theme-text-primary truncate">{model.title}</div>
+              <div className="flex items-center gap-2">
+                <div className="text-sm font-medium theme-text-primary truncate flex-1">{model.title}</div>
+                {/* v1.33.8: Badge de similaridade (busca semântica) */}
+                {model.similarity !== undefined && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                    model.similarity >= 0.7 ? 'bg-green-500/20 text-green-400' :
+                    model.similarity >= 0.5 ? 'bg-yellow-500/20 text-yellow-400' :
+                    'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    {Math.round(model.similarity * 100)}%
+                  </span>
+                )}
+              </div>
               <div className="text-xs theme-text-muted truncate">{model.category}</div>
             </div>
           ))
@@ -13082,6 +13185,7 @@ const SlashCommandMenu = React.memo(({
         <span>Enter</span> inserir
         <span className="mx-1">·</span>
         <span>Esc</span> fechar
+        {useSemanticSearch && <span className="ml-auto text-purple-400">🧠</span>}
       </div>
     </div>
   );
@@ -28403,7 +28507,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                               }}
                               className={`px-3 py-3 rounded-lg text-lg transition-colors ${
                                 useModelSemanticSearch
-                                  ? 'bg-purple-600 text-white'
+                                  ? 'bg-purple-600 text-white hover:bg-purple-700'
                                   : 'theme-bg-secondary theme-text-secondary hover-slate-600'
                               }`}
                               title={useModelSemanticSearch ? 'Busca semântica (por significado)' : 'Busca textual (por palavras)'}
@@ -30810,6 +30914,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
       />
 
       {/* v1.15.3: Slash Command Menu - Acesso rápido a modelos com / */}
+      {/* v1.33.8: Adicionado suporte a busca semântica e tooltip preview */}
       <SlashCommandMenu
         isOpen={slashMenu.isOpen}
         position={slashMenu.position}
@@ -30820,6 +30925,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         onClose={() => closeSlashMenu(true)}
         onSearchChange={updateSlashSearchTerm}
         onNavigate={navigateSlashMenu}
+        semanticAvailable={modelSemanticAvailable}
+        searchModelsBySimilarity={searchModelsBySimilarity}
       />
 
       {/* Toast Notification */}
