@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.10'; // v1.33.10: Tooltip SlashCommand mostra modelo completo
+const APP_VERSION = '1.33.11'; // v1.33.11: Requisições paralelas configuráveis
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.11', feature: 'Requisições paralelas configuráveis: escolha 3-20 em Config IA, com explicativo de limites por API/tier' },
   { version: '1.33.10', feature: 'Tooltip no SlashCommand mostra modelo completo (não truncado)' },
   { version: '1.33.9', feature: 'Fix contraste do badge de similaridade no SlashCommand (tema claro)' },
   { version: '1.33.8', feature: 'SlashCommand melhorado: posicionamento viewport-aware, tooltip preview, busca semântica, hover corrigido nos toggles 🧠' },
@@ -1344,6 +1345,7 @@ const useAIIntegration = () => {
     ocrLanguage: 'por',
     detailedMiniReports: false,
     topicsPerRequest: 1,
+    parallelRequests: 5,  // v1.33.11: Requisições paralelas configuráveis (3-20)
     // v1.16.0: Anonimização de dados sensíveis (só funciona com ocrEngine: 'pdfjs')
     anonymization: {
       enabled: false,
@@ -14302,7 +14304,8 @@ const GlobalEditorModal = React.memo(({
       setIsAnalyzingResults(true);
       setAnalyzingProgress({ current: 0, total: topicsToAnalyze.length });
 
-      const BATCH_SIZE = 3; // Mesmo limite do extrator de modelos
+      // v1.33.11: Usar valor configurável de requisições paralelas
+      const BATCH_SIZE = aiIntegration?.aiSettings?.parallelRequests || 5;
 
       for (let i = 0; i < topicsToAnalyze.length; i += BATCH_SIZE) {
         const batch = topicsToAnalyze.slice(i, i + BATCH_SIZE);
@@ -24161,7 +24164,8 @@ ${textToAnalyze}`;
     }
   };
 
-  const BULK_BATCH_SIZE = 3; // Processar 3 arquivos por vez
+  // v1.33.11: Usar valor configurável de requisições paralelas
+  const BULK_BATCH_SIZE = aiIntegration.aiSettings.parallelRequests || 5;
   const INTER_BATCH_DELAY = 3000; // 3s entre batches
 
   const processBulkFiles = async () => {
@@ -29403,6 +29407,53 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                 </div>
               </div>
 
+              {/* v1.33.11: Requisições Paralelas */}
+              <div>
+                <label className="block text-sm font-medium theme-text-tertiary mb-3">Requisições Paralelas</label>
+                <div className="flex items-center justify-between p-4 rounded-lg theme-bg-secondary-30 theme-border-input border-2">
+                  <div className="flex-1">
+                    <p className="text-sm theme-text-primary font-medium">Quantas requisições enviar simultaneamente</p>
+                    <p className="text-xs theme-text-muted mt-1">
+                      Mais paralelas = mais rápido, mas pode causar erro 429 se exceder limite da API.
+                    </p>
+                  </div>
+                  <select
+                    value={aiIntegration.aiSettings.parallelRequests || 5}
+                    onChange={(e) => {
+                      aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, parallelRequests: parseInt(e.target.value) });
+                    }}
+                    className="ml-4 px-3 py-2 rounded-lg theme-bg-primary theme-text-primary theme-border-input border text-sm font-medium"
+                  >
+                    <option value={3}>3 (Conservador)</option>
+                    <option value={5}>5 (Padrão)</option>
+                    <option value={10}>10 (Rápido)</option>
+                    <option value={15}>15 (Alto volume)</option>
+                    <option value={20}>20 (Máximo)</option>
+                  </select>
+                </div>
+                {/* Texto explicativo com limites */}
+                <div className="mt-2 p-3 rounded-lg theme-bg-tertiary text-xs theme-text-muted">
+                  <p className="font-semibold theme-text-secondary mb-1">Limites por API (RPM = requisições/minuto):</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-purple-400 font-medium">Claude:</span>
+                      <ul className="ml-2 mt-0.5 space-y-0.5">
+                        <li>• Tier 1 ($5): 50 RPM → usar 3-5</li>
+                        <li>• Tier 2+ ($40+): 1000+ RPM → 10-15</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <span className="text-blue-400 font-medium">Gemini:</span>
+                      <ul className="ml-2 mt-0.5 space-y-0.5">
+                        <li>• Free: 5-10 RPM → usar 3</li>
+                        <li>• Pago: 300+ RPM → 10-20</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-yellow-400/80">⚠️ Erro 429 = limite excedido. Reduza o valor.</p>
+                </div>
+              </div>
+
               {/* v1.12.25: Modo de Processamento de PDF (PDF Puro | Extrair Texto → PDF.js | Claude Vision) */}
               {/* Nota: "Extração Automática de Texto de PDFs" foi removido por ser redundante */}
               <div>
@@ -30753,7 +30804,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         bulkCancelController={modelLibrary.bulkCancelController}
         generatedModels={modelLibrary.bulkGeneratedModels}
         bulkCurrentBatch={modelLibrary.bulkCurrentBatch}
-        bulkBatchSize={3}
+        bulkBatchSize={aiIntegration.aiSettings.parallelRequests || 5}
         openModal={openModal}
       />
 
