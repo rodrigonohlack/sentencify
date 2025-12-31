@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.6'; // v1.33.6: Layout 1 card por linha em toda aba Modelos
+const APP_VERSION = '1.33.7'; // v1.33.7: Feedback visual ao duplicar modelo
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.7', feature: 'Feedback visual ao duplicar modelo: toast "Duplicando..." durante geração de embedding' },
   { version: '1.33.6', feature: 'Layout 1 card por linha em toda aba Modelos (busca textual + inicial)' },
   { version: '1.33.5', feature: 'Layout 1 card por linha na busca semântica de modelos' },
   { version: '1.33.4', feature: 'Unificar UI busca semântica de modelos: usar ModelCard com editar/duplicar/excluir, respeitar modo cards/lista, badge de similaridade' },
@@ -23058,8 +23059,12 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
   };
 
   // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
+  // v1.33.7: Feedback visual ao duplicar modelo
   const duplicateModel = async (model) => {
     try {
+      showToast('⏳ Duplicando modelo...', 'info');
+      await new Promise(resolve => setTimeout(resolve, 50)); // yield para UI
+
       const modelId = generateModelId();
       const duplicatedModel = {
         ...model,

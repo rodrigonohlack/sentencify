@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.6 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
+**Version**: 1.33.7 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
 
 ## Architecture
 
@@ -54,6 +54,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.7 | Feedback visual ao duplicar modelo: toast "Duplicando..." durante geração de embedding |
 | v1.33.6 | Layout 1 card por linha em toda aba Modelos (busca textual + inicial) |
 | v1.33.5 | Layout 1 card por linha na busca semântica de modelos |
 | v1.33.4 | Unificar UI busca semântica de modelos: usar ModelCard com editar/duplicar/excluir, respeitar modo cards/lista, badge de similaridade |
