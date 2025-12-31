@@ -1,72 +1,40 @@
 /**
  * AI Worker - Executa modelos de IA em thread separada
- * v1.33.14 - GLiNER para NER (spans ao invés de tokens)
+ * v1.32.09 - Transformers.js via npm
  *
  * Modelos:
- * - NER: onnx-community/gliner_small-v2.1 (via pacote gliner) - spans completos
+ * - NER: Xenova/bert-base-multilingual-cased-ner-hrl (PER, ORG, LOC) - BERT completo para qualidade
  * - Embeddings: Xenova/multilingual-e5-base (busca semântica)
  */
 
 import { pipeline, env } from '@xenova/transformers';
-import { Gliner } from 'gliner';
 
 // Configurar para baixar modelos do HuggingFace
 env.allowLocalModels = false;
 env.allowRemoteModels = true;
 env.useBrowserCache = true;
 
-let glinerInstance = null;
+let nerPipeline = null;
 let searchPipeline = null;
 
-// Inicializar GLiNER
+// Inicializar pipeline NER
 async function initNER(onProgress) {
-  if (glinerInstance) return glinerInstance;
+  if (nerPipeline) return nerPipeline;
 
-  onProgress?.({ model: 'ner', status: 'initiate', name: 'onnx-community/gliner_small-v2.1' });
+  nerPipeline = await pipeline(
+    'token-classification',
+    'Xenova/bert-base-multilingual-cased-ner-hrl',
+    {
+      quantized: true,
+      progress_callback: (progress) => {
+        if (progress.status === 'progress' && onProgress) {
+          onProgress({ model: 'ner', ...progress });
+        }
+      }
+    }
+  );
 
-  glinerInstance = new Gliner({
-    tokenizerPath: "onnx-community/gliner_small-v2.1",
-    onnxSettings: {
-      modelPath: "onnx-community/gliner_small-v2.1",
-      executionProvider: "wasm",
-      multiThread: true,
-      maxThreads: 4,
-    },
-    transformersSettings: {
-      useBrowserCache: true,
-    },
-  });
-
-  await glinerInstance.initialize();
-
-  onProgress?.({ model: 'ner', status: 'done' });
-  return glinerInstance;
-}
-
-// Extrair entidades com GLiNER
-async function extractEntitiesGLiNER(text, options = {}) {
-  const gliner = await initNER();
-
-  // Entidades a detectar (zero-shot!)
-  const entityTypes = options.includeOrg
-    ? ["person", "organization", "company"]
-    : ["person"];
-
-  const results = await gliner.inference({
-    texts: [text],
-    entities: entityTypes,
-    threshold: 0.5,
-    flatNer: true,
-  });
-
-  // Mapear para formato compatível com código existente
-  return results[0].map(r => ({
-    text: r.text,
-    type: r.label === 'person' ? 'PER' : 'ORG',
-    score: r.score,
-    start: r.start,
-    end: r.end,
-  }));
+  return nerPipeline;
 }
 
 // Inicializar pipeline de Embeddings
@@ -93,6 +61,7 @@ async function initSearch(onProgress) {
 self.onmessage = async (event) => {
   const { id, type, text, options } = event.data;
 
+  // Função para reportar progresso
   const onProgress = (progress) => {
     self.postMessage({ id, type: 'progress', progress });
   };
@@ -106,14 +75,14 @@ self.onmessage = async (event) => {
         result = { ready: true };
         break;
 
-      case 'ner':
-        // v1.33.14: Usar GLiNER ao invés de BERT
-        result = await extractEntitiesGLiNER(text, options);
-        break;
-
       case 'init-search':
         await initSearch(onProgress);
         result = { ready: true };
+        break;
+
+      case 'ner':
+        const ner = await initNER(onProgress);
+        result = await ner(text, options);
         break;
 
       case 'embedding':
@@ -128,16 +97,18 @@ self.onmessage = async (event) => {
 
       case 'status':
         result = {
-          ner: !!glinerInstance,
+          ner: !!nerPipeline,
           search: !!searchPipeline
         };
         break;
 
       case 'unload':
-        // v1.33.14: GLiNER unload
+        // v1.32.17: Chamar dispose() para liberar memória WASM
         if (options?.model === 'ner' || !options?.model) {
-          // GLiNER não tem dispose(), apenas limpar referência para GC
-          glinerInstance = null;
+          if (nerPipeline?.dispose) {
+            try { await nerPipeline.dispose(); } catch (e) { /* ignore */ }
+          }
+          nerPipeline = null;
         }
         if (options?.model === 'search' || !options?.model) {
           if (searchPipeline?.dispose) {

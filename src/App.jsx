@@ -3,14 +3,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.14'; // v1.33.14: Migração NER para GLiNER (spans, zero-shot)
+const APP_VERSION = '1.33.13'; // v1.33.13: NER healing subtokens + fallback ORG
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
-  { version: '1.33.14', feature: 'Migração NER para GLiNER: detecção por spans (sem fragmentação), zero-shot para qualquer entidade, SIMD/multi-thread' },
   { version: '1.33.13', feature: 'NER healing: subtokens órfãos (##edo) unidos ao prefixo (Mac→Macedo) + fallback regex para ORG (V2 LTDA)' },
   { version: '1.33.12', feature: 'Fix contraste do aviso de erro 429 no tema claro' },
   { version: '1.33.11', feature: 'Requisições paralelas configuráveis: escolha 3-20 em Config IA, com explicativo de limites por API/tier' },
@@ -429,38 +428,167 @@ const AIModelService = {
     console.log(`[AI] ${modelType} descarregado`);
   },
 
-  // v1.33.14: Extrair entidades NER via GLiNER (spans completos, sem processamento complexo)
-  async extractEntities(text, options = {}) {
+  // v1.32.08: Extrair entidades NER via Worker (lógica v1.28 com offsets manuais)
+  async extractEntities(text) {
     if (!this.isReady('ner')) await this.init('ner');
 
     const cleanText = text.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const CHUNK_SIZE = 1000;
+    const OVERLAP = 200;
+    let allRaw = [];
 
-    // v1.33.14: GLiNER processa texto longo internamente, mas limitar para performance
-    const MAX_LENGTH = 5000;
-    const textToProcess = cleanText.slice(0, MAX_LENGTH);
+    for (let i = 0; i < cleanText.length; i += (CHUNK_SIZE - OVERLAP)) {
+      let chunk = cleanText.slice(i, i + CHUNK_SIZE);
+      if (chunk.length < 10) continue;
 
-    try {
-      // Chamar worker com GLiNER
-      const entities = await this._call('ner', textToProcess, {
-        includeOrg: options.includeOrg || false
-      });
+      // Segment Title Case para ALL CAPS
+      chunk = chunk.replace(
+        /\b([A-ZÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]{2,}(?:\s+[A-ZÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]{2,})+)\b/g,
+        (match) => match.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase())
+      );
 
-      // GLiNER já retorna spans completos - apenas filtrar por score
-      const result = entities.filter(e => e.score >= 0.5);
+      try {
+        // v1.32.08: Chamar worker ao invés de pipeline direto
+        const chunkEntities = await this._call('ner', chunk, { truncation: true, max_length: 512 });
 
-      if (import.meta.env.DEV) {
-        console.log('[NER/GLiNER] Entidades:', result.map(e => `${e.text}(${e.type}:${e.score.toFixed(2)})`).join(', '));
+        // OFFSETS MANUAIS via indexOf (Transformers.js retorna start/end incorretos)
+        let cursor = 0;
+        const adjusted = chunkEntities.reduce((acc, e) => {
+          if (e.entity === 'O' || e.word === '[UNK]' || e.word === '[CLS]' || e.word === '[SEP]') return acc;
+          const cleanWord = (e.word || '').replace(/^##/, '');
+          if (!cleanWord) return acc;
+          const idx = chunk.indexOf(cleanWord, cursor);
+          if (idx !== -1) {
+            cursor = idx + cleanWord.length;
+            acc.push({ ...e, start: idx + i, end: idx + cleanWord.length + i });
+          }
+          return acc;
+        }, []);
+
+        allRaw = allRaw.concat(adjusted);
+      } catch (err) {
+        console.warn('[NER] Erro no chunk:', err.message);
+      }
+    }
+
+    // Deduplicar
+    const seen = new Set();
+    const unique = allRaw.filter(e => {
+      const key = `${e.word?.toLowerCase()}-${Math.floor((e.start || 0) / 50)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    const processed = this.processTokens(unique);
+    const result = this.mergeOrgLoc(processed, cleanText); // v1.32.10
+
+    // v1.32.17: Liberar memória NER após uso (modelo será recarregado no próximo uso)
+    this.unload('ner');
+
+    return result;
+  },
+
+  // v1.33.13: Processar tokens NER com healing de subtokens órfãos
+  // Healing: se subtoken (##xxx) é entidade mas prefixo foi 'O', unir se adjacentes
+  processTokens(rawEntities) {
+    const sorted = [...rawEntities].sort((a, b) => a.start - b.start);
+
+    // v1.33.13: Log de debug para análise
+    console.log('[NER] Tokens brutos:', rawEntities.slice(0, 50).map(t =>
+      `${t.word}(${t.entity}:${t.start}-${t.end})`).join(', '));
+
+    const result = [];
+    let current = null;
+    let pendingPrefix = null; // Token 'O' que pode ser prefixo de subtoken
+
+    for (const token of sorted) {
+      const isSubtoken = (token.word || '').startsWith('##');
+      const cleanWord = (token.word || '').replace(/^##/, '');
+      if (!cleanWord) continue;
+
+      // Se token é 'O', guardar como possível prefixo
+      if (token.entity === 'O') {
+        pendingPrefix = { word: cleanWord, end: token.end, start: token.start };
+        continue;
       }
 
-      return result;
+      const entityType = (token.entity || '').replace(/^(B-|I-)/, '');
+      let wordToUse = cleanWord;
 
-    } catch (err) {
-      console.error('[NER/GLiNER] Erro:', err.message);
-      return [];
-    } finally {
-      // v1.32.17: Liberar memória NER após uso
-      this.unload('ner');
+      // v1.33.13: HEALING - Se é subtoken entidade e temos prefixo pendente adjacente
+      if (isSubtoken && pendingPrefix && token.start === pendingPrefix.end) {
+        // Prefixo ignorado deve ser unido ao subtoken
+        wordToUse = pendingPrefix.word + cleanWord;
+        console.log(`[NER] Healing: "${pendingPrefix.word}" + "##${cleanWord}" → "${wordToUse}"`);
+      }
+      pendingPrefix = null; // Limpar prefixo após usar ou pular
+
+      if (current) {
+        const distance = token.start - current.end;
+
+        // FUSÃO: mesmo tipo E adjacente (distance 0 ou 1)
+        if (current.type === entityType && distance >= 0 && distance <= 1) {
+          const separator = distance === 0 ? '' : ' ';
+          current.text += separator + wordToUse;
+          current.end = token.end;
+          current.score = Math.min(current.score, token.score || 1);
+          continue;
+        }
+      }
+
+      // NOVA ENTIDADE
+      if (current) result.push(current);
+      current = {
+        text: wordToUse,
+        type: entityType,
+        score: token.score || 1,
+        start: token.start,
+        end: token.end
+      };
     }
+
+    if (current) result.push(current);
+    return result;
+  },
+
+  // v1.32.10: Fundir ORG + LOC quando conectados por "DE/DO/DA"
+  // Ex: "COMPANHIA DE TRANSITO E TRANSPORTE" (ORG) + "MACAPA" (LOC) → "COMPANHIA DE TRANSITO E TRANSPORTE DE MACAPA" (ORG)
+  mergeOrgLoc(entities, originalText) {
+    const result = [];
+    let i = 0;
+
+    while (i < entities.length) {
+      const current = entities[i];
+      const next = entities[i + 1];
+
+      // v1.32.12: Padrão ORG + (LOC ou ORG curto) com preposição no meio
+      // Modelo NER frequentemente classifica cidades como ORG quando parte de nome de empresa
+      const isOrgOrLoc = next && (next.type === 'LOC' || next.type === 'ORG');
+      const nextIsShort = next && next.text.split(/\s+/).length <= 2; // Max 2 palavras = provavelmente cidade
+
+      if (next && current.type === 'ORG' && isOrgOrLoc && nextIsShort) {
+        const gap = originalText.substring(current.end, next.start).trim().toUpperCase();
+
+        if (gap === 'DE' || gap === 'DO' || gap === 'DA' || gap === 'DOS' || gap === 'DAS') {
+          // Fundir: ORG absorve LOC
+          result.push({
+            text: `${current.text} ${gap} ${next.text}`,
+            type: 'ORG',
+            score: Math.min(current.score, next.score),
+            start: current.start,
+            end: next.end
+          });
+          i += 2; // Pular ambos
+          continue;
+        }
+      }
+
+      result.push(current);
+      i++;
+    }
+
+    return result;
   },
 
   // v1.32.08: Gerar embedding via Worker
@@ -20125,10 +20253,8 @@ const LegalDecisionEditor = () => {
       }
     } // Fim do else (coleta de texto de petição/contestação)
 
-    // v1.33.14: Executar NER com GLiNER (passa includeOrg para zero-shot)
-    const entidades = await AIModelService.extractEntities(textoCompleto, {
-      includeOrg: nerIncludeOrg
-    });
+    // Executar NER
+    const entidades = await AIModelService.extractEntities(textoCompleto);
 
     // v1.25.23: Separar STOP_WORDS em dois grupos para evitar filtrar "ALMEIDA" (contém "ME")
     // v1.29.02: Removido LTDA/EIRELI - são sufixos válidos de empresas que agora detectamos
@@ -20195,7 +20321,24 @@ const LegalDecisionEditor = () => {
       return false;
     });
 
-    // v1.33.14: Fallback regex removido - GLiNER detecta ORG via zero-shot
+    // v1.33.13: Fallback regex para ORG não detectadas pelo modelo
+    // Captura padrões conhecidos: "NOME LTDA", "NOME EIRELI", "NOME S/A", etc.
+    if (nerIncludeOrg) {
+      const ORG_REGEX = /\b([A-Z0-9][A-Z0-9\s]{1,40})\s+(LTDA|EIRELI|S\.?A\.?|ME|EPP)\b/gi;
+      const textoUpper = textoCompleto.toUpperCase();
+      let match;
+      while ((match = ORG_REGEX.exec(textoUpper)) !== null) {
+        const fullOrg = match[0].trim();
+        // Verificar se já não foi detectado pelo modelo
+        const alreadyDetected = entidadesFiltradas.some(e =>
+          e.text.toUpperCase().includes(fullOrg) || fullOrg.includes(e.text.toUpperCase())
+        );
+        if (!alreadyDetected && !ORG_STOP_WORDS.some(sw => fullOrg.includes(sw))) {
+          console.log(`[NER] Fallback ORG: "${fullOrg}"`);
+          entidadesFiltradas.push({ text: fullOrg, type: 'ORG', score: 0.9 });
+        }
+      }
+    }
 
     // v1.29.02: Manter tipo junto com texto para fuzzy dedup separado
     const nomesComTipo = entidadesFiltradas.map(e => ({
@@ -29658,7 +29801,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           {nerEnabled && (
                             <div className="theme-bg-tertiary rounded-lg p-3 border theme-border-input">
                               <p className="text-xs theme-text-muted mb-3">
-                                Modelo GLiNER (spans) - baixado automaticamente (~183MB). Mais preciso que BERT.
+                                Modelo NER multilíngue - baixado automaticamente do HuggingFace (~150MB).
                               </p>
                               <div className="space-y-2 mb-3">
                                 <div className="flex items-center justify-between">
