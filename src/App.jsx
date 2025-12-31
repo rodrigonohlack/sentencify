@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.4'; // v1.33.4: Unificar UI busca semântica de modelos
+const APP_VERSION = '1.33.5'; // v1.33.5: Layout 1 card por linha na busca semântica
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.5', feature: 'Layout 1 card por linha na busca semântica de modelos' },
   { version: '1.33.4', feature: 'Unificar UI busca semântica de modelos: usar ModelCard com editar/duplicar/excluir, respeitar modo cards/lista, badge de similaridade' },
   { version: '1.33.3', feature: 'Feedback visual "Salvando..." no SimilarityWarningModal durante geração de embedding' },
   { version: '1.33.2', feature: 'Remover logs de AI/Search em produção (apenas em DEV)' },
@@ -28480,8 +28481,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         <span>{modelSemanticResults.length} resultado(s) semântico(s)</span>
                         {searchingModelSemantics && <RefreshCw className="w-4 h-4 animate-spin" />}
                       </div>
+                      {/* v1.33.5: 1 card por linha na busca semântica */}
                       {modelLibrary.modelViewMode === 'cards' ? (
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           {modelSemanticResults.map((model) => (
                             <ModelCard
                               key={model.id}
