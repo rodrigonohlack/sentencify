@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.13'; // v1.33.13: NER healing subtokens + fallback ORG
+const APP_VERSION = '1.33.14'; // v1.33.14: NER indexOf case-insensitive
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.14', feature: 'Fix NER indexOf case-insensitive: BERT retorna "Mac" mas texto é "MACEDO", tokens eram perdidos' },
   { version: '1.33.13', feature: 'NER healing: subtokens órfãos (##edo) unidos ao prefixo (Mac→Macedo) + fallback regex para ORG (V2 LTDA)' },
   { version: '1.33.12', feature: 'Fix contraste do aviso de erro 429 no tema claro' },
   { version: '1.33.11', feature: 'Requisições paralelas configuráveis: escolha 3-20 em Config IA, com explicativo de limites por API/tier' },
@@ -451,14 +452,20 @@ const AIModelService = {
         // v1.32.08: Chamar worker ao invés de pipeline direto
         const chunkEntities = await this._call('ner', chunk, { truncation: true, max_length: 512 });
 
+        // DEBUG: Ver todos os tokens do BERT antes de qualquer filtro
+        console.log('[NER] BERT raw:', chunkEntities.slice(0, 60).map(t =>
+          `${t.word}(${t.entity})`).join(', '));
+
         // OFFSETS MANUAIS via indexOf (Transformers.js retorna start/end incorretos)
         // v1.33.13: Manter tokens 'O' para healing em processTokens (só filtrar tokens especiais)
+        // v1.33.14: Busca case-insensitive (BERT retorna "Mac" mas texto é "MACEDO")
         let cursor = 0;
+        const chunkLower = chunk.toLowerCase();
         const adjusted = chunkEntities.reduce((acc, e) => {
           if (e.word === '[UNK]' || e.word === '[CLS]' || e.word === '[SEP]') return acc;
           const cleanWord = (e.word || '').replace(/^##/, '');
           if (!cleanWord) return acc;
-          const idx = chunk.indexOf(cleanWord, cursor);
+          const idx = chunkLower.indexOf(cleanWord.toLowerCase(), cursor);
           if (idx !== -1) {
             cursor = idx + cleanWord.length;
             acc.push({ ...e, start: idx + i, end: idx + cleanWord.length + i });
