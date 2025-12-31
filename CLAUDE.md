@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.13 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
+**Version**: 1.33.14 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
 
 ## Architecture
 
@@ -19,7 +19,7 @@
 - `sentencify-legislacao-embeddings` (IndexedDB) → embeddings pré-computados da legislação
 - `sentencify-juris-embeddings` (IndexedDB) → embeddings pré-computados da jurisprudência
 - `sentencifySession` (localStorage) → metadados + textos
-- Modelos NER/E5 (cache browser) → baixados automaticamente do HuggingFace CDN
+- Modelos NER/E5 (cache browser) → GLiNER (~183MB) + E5-base (~350MB) do HuggingFace CDN
 
 ## Critical Guidelines
 
@@ -54,6 +54,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.14 | Migração NER: BERT → GLiNER (detecção por spans, zero-shot, SIMD/multi-thread, ~183MB) |
 | v1.33.13 | NER healing: subtokens órfãos (##edo) unidos ao prefixo (Mac→Macedo) + fallback regex para ORG (V2 LTDA) |
 | v1.33.12 | Fix contraste do aviso de erro 429 no tema claro |
 | v1.33.11 | Requisições paralelas configuráveis: escolha 3-20 em Config IA, com explicativo de limites por API/tier |
