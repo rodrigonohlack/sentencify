@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.8'; // v1.33.8: SlashCommand melhorado (viewport, tooltip, semântico)
+const APP_VERSION = '1.33.9'; // v1.33.9: Fix contraste badge similaridade no tema claro
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.9', feature: 'Fix contraste do badge de similaridade no SlashCommand (tema claro)' },
   { version: '1.33.8', feature: 'SlashCommand melhorado: posicionamento viewport-aware, tooltip preview, busca semântica, hover corrigido nos toggles 🧠' },
   { version: '1.33.7', feature: 'Feedback visual ao duplicar modelo: toast "Duplicando..." durante geração de embedding' },
   { version: '1.33.6', feature: 'Layout 1 card por linha em toda aba Modelos (busca textual + inicial)' },
@@ -13164,11 +13165,12 @@ const SlashCommandMenu = React.memo(({
               <div className="flex items-center gap-2">
                 <div className="text-sm font-medium theme-text-primary truncate flex-1">{model.title}</div>
                 {/* v1.33.8: Badge de similaridade (busca semântica) */}
+                {/* v1.33.9: Fix contraste tema claro */}
                 {model.similarity !== undefined && (
                   <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                    model.similarity >= 0.7 ? 'bg-green-500/20 text-green-400' :
-                    model.similarity >= 0.5 ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-gray-500/20 text-gray-400'
+                    model.similarity >= 0.7 ? 'bg-green-500/20 text-green-700 dark:text-green-400' :
+                    model.similarity >= 0.5 ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400' :
+                    'bg-gray-500/20 text-gray-700 dark:text-gray-400'
                   }`}>
                     {Math.round(model.similarity * 100)}%
                   </span>
