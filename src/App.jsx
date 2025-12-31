@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.11'; // v1.33.11: Requisições paralelas configuráveis
+const APP_VERSION = '1.33.12'; // v1.33.12: Fix contraste aviso 429 tema claro
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.12', feature: 'Fix contraste do aviso de erro 429 no tema claro' },
   { version: '1.33.11', feature: 'Requisições paralelas configuráveis: escolha 3-20 em Config IA, com explicativo de limites por API/tier' },
   { version: '1.33.10', feature: 'Tooltip no SlashCommand mostra modelo completo (não truncado)' },
   { version: '1.33.9', feature: 'Fix contraste do badge de similaridade no SlashCommand (tema claro)' },
@@ -29450,7 +29451,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       </ul>
                     </div>
                   </div>
-                  <p className="mt-2 text-yellow-400/80">⚠️ Erro 429 = limite excedido. Reduza o valor.</p>
+                  <p className="mt-2 text-yellow-700 dark:text-yellow-400/80">⚠️ Erro 429 = limite excedido. Reduza o valor.</p>
                 </div>
               </div>
 

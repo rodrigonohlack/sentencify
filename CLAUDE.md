@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.11 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
+**Version**: 1.33.12 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
 
 ## Architecture
 
@@ -54,6 +54,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.12 | Fix contraste do aviso de erro 429 no tema claro |
 | v1.33.11 | Requisições paralelas configuráveis: escolha 3-20 em Config IA, com explicativo de limites por API/tier |
 | v1.33.10 | Tooltip no SlashCommand mostra modelo completo (não truncado) |
 | v1.33.9 | Fix contraste do badge de similaridade no SlashCommand (tema claro) |
