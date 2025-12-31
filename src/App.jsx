@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.12'; // v1.33.12: Fix contraste aviso 429 tema claro
+const APP_VERSION = '1.33.13'; // v1.33.13: NER healing subtokens + fallback ORG
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.13', feature: 'NER healing: subtokens órfãos (##edo) unidos ao prefixo (Mac→Macedo) + fallback regex para ORG (V2 LTDA)' },
   { version: '1.33.12', feature: 'Fix contraste do aviso de erro 429 no tema claro' },
   { version: '1.33.11', feature: 'Requisições paralelas configuráveis: escolha 3-20 em Config IA, com explicativo de limites por API/tier' },
   { version: '1.33.10', feature: 'Tooltip no SlashCommand mostra modelo completo (não truncado)' },
@@ -488,19 +489,40 @@ const AIModelService = {
     return result;
   },
 
-  // v1.32.07: Processar tokens NER (restaurado lógica v1.28 com distance)
-  // distance 0 = subtoken (cola direto), distance 1 = espaço, distance > 1 = entidades diferentes
+  // v1.33.13: Processar tokens NER com healing de subtokens órfãos
+  // Healing: se subtoken (##xxx) é entidade mas prefixo foi 'O', unir se adjacentes
   processTokens(rawEntities) {
     const sorted = [...rawEntities].sort((a, b) => a.start - b.start);
+
+    // v1.33.13: Log de debug para análise
+    console.log('[NER] Tokens brutos:', rawEntities.slice(0, 50).map(t =>
+      `${t.word}(${t.entity}:${t.start}-${t.end})`).join(', '));
+
     const result = [];
     let current = null;
+    let pendingPrefix = null; // Token 'O' que pode ser prefixo de subtoken
 
     for (const token of sorted) {
-      if (token.entity === 'O') continue;
-
-      const entityType = (token.entity || '').replace(/^(B-|I-)/, '');
+      const isSubtoken = (token.word || '').startsWith('##');
       const cleanWord = (token.word || '').replace(/^##/, '');
       if (!cleanWord) continue;
+
+      // Se token é 'O', guardar como possível prefixo
+      if (token.entity === 'O') {
+        pendingPrefix = { word: cleanWord, end: token.end, start: token.start };
+        continue;
+      }
+
+      const entityType = (token.entity || '').replace(/^(B-|I-)/, '');
+      let wordToUse = cleanWord;
+
+      // v1.33.13: HEALING - Se é subtoken entidade e temos prefixo pendente adjacente
+      if (isSubtoken && pendingPrefix && token.start === pendingPrefix.end) {
+        // Prefixo ignorado deve ser unido ao subtoken
+        wordToUse = pendingPrefix.word + cleanWord;
+        console.log(`[NER] Healing: "${pendingPrefix.word}" + "##${cleanWord}" → "${wordToUse}"`);
+      }
+      pendingPrefix = null; // Limpar prefixo após usar ou pular
 
       if (current) {
         const distance = token.start - current.end;
@@ -508,7 +530,7 @@ const AIModelService = {
         // FUSÃO: mesmo tipo E adjacente (distance 0 ou 1)
         if (current.type === entityType && distance >= 0 && distance <= 1) {
           const separator = distance === 0 ? '' : ' ';
-          current.text += separator + cleanWord;
+          current.text += separator + wordToUse;
           current.end = token.end;
           current.score = Math.min(current.score, token.score || 1);
           continue;
@@ -518,7 +540,7 @@ const AIModelService = {
       // NOVA ENTIDADE
       if (current) result.push(current);
       current = {
-        text: cleanWord,
+        text: wordToUse,
         type: entityType,
         score: token.score || 1,
         start: token.start,
@@ -20298,6 +20320,25 @@ const LegalDecisionEditor = () => {
       }
       return false;
     });
+
+    // v1.33.13: Fallback regex para ORG não detectadas pelo modelo
+    // Captura padrões conhecidos: "NOME LTDA", "NOME EIRELI", "NOME S/A", etc.
+    if (nerIncludeOrg) {
+      const ORG_REGEX = /\b([A-Z0-9][A-Z0-9\s]{1,40})\s+(LTDA|EIRELI|S\.?A\.?|ME|EPP)\b/gi;
+      const textoUpper = textoCompleto.toUpperCase();
+      let match;
+      while ((match = ORG_REGEX.exec(textoUpper)) !== null) {
+        const fullOrg = match[0].trim();
+        // Verificar se já não foi detectado pelo modelo
+        const alreadyDetected = entidadesFiltradas.some(e =>
+          e.text.toUpperCase().includes(fullOrg) || fullOrg.includes(e.text.toUpperCase())
+        );
+        if (!alreadyDetected && !ORG_STOP_WORDS.some(sw => fullOrg.includes(sw))) {
+          console.log(`[NER] Fallback ORG: "${fullOrg}"`);
+          entidadesFiltradas.push({ text: fullOrg, type: 'ORG', score: 0.9 });
+        }
+      }
+    }
 
     // v1.29.02: Manter tipo junto com texto para fuzzy dedup separado
     const nomesComTipo = entidadesFiltradas.map(e => ({
