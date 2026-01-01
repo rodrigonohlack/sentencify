@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.31'; // v1.33.31: Migração para Render + heartbeat keepalive (sem limite de payload)
+const APP_VERSION = '1.33.32'; // v1.33.32: Fix embeddings 502 - streaming para evitar OOM no Render free tier
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
