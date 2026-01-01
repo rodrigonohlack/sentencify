@@ -1,8 +1,20 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  // Configuração do Vitest para testes unitários
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    include: ['src/**/*.{test,spec}.{js,jsx}'],
+    coverage: {
+      reporter: ['text', 'html'],
+      exclude: ['node_modules/', 'src/test/'],
+    },
+  },
   server: {
     port: 3000,
     proxy: {
@@ -12,8 +24,6 @@ export default defineConfig({
       }
     },
     // v1.31.04: Headers COOP/COEP para habilitar SharedArrayBuffer e multi-threading
-    // Isso permite crossOriginIsolated === true no browser
-    // Nota: 'credentialless' permite recursos cross-origin (CDN Transformers.js)
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'credentialless'

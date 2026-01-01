@@ -43,3 +43,6 @@ LOCAL IA/
 *.pyc
 __pycache__/
 *.py
+
+playwright-report/
+test-results/
