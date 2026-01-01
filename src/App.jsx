@@ -2,17 +2,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
-// 🎣 HOOKS EXTRAÍDOS
-import useModalManager from './hooks/useModalManager';
-
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.26'; // v1.33.26: Refatorar useModalManager para arquivo separado (src/hooks/useModalManager.js)
+const APP_VERSION = '1.33.27'; // v1.33.27: Reverter useModalManager para App.jsx (consistência: todos hooks no mesmo padrão)
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.27', feature: 'Reverter useModalManager para App.jsx (consistência: todos hooks no mesmo padrão)' },
   { version: '1.33.26', feature: 'Refatorar useModalManager para arquivo separado (melhor testabilidade)' },
   { version: '1.33.25', feature: 'Fix setState durante render: contextualInsertFn como ref em useModelPreview' },
   { version: '1.33.24', feature: 'Fix HTML nesting warning: spinner div→span no GlobalEditorModal' },
@@ -1261,6 +1259,67 @@ Por favor, forneça uma análise completa e detalhada em uma única mensagem con
 
 Ao final de cada resposta, revise-a e identifique se houve alucinação ao citar dados.`;
 
+
+// 🎣 CUSTOM HOOK: useModalManager
+const useModalManager = () => {
+  const [modals, setModals] = useState({
+    modelForm: false,
+    extractModelConfirm: false,
+    extractedModelPreview: false,
+    export: false,
+    import: false,
+    exportModels: false,
+    deleteModel: false,
+    deleteAllModels: false,
+    deleteAllPrecedentes: false,
+    rename: false,
+    merge: false,
+    split: false,
+    newTopic: false,
+    deleteTopic: false,
+    aiAssistant: false,
+    aiAssistantModel: false,
+    analysis: false,
+    settings: false,
+    dispositivo: false,
+    restoreSession: false,
+    clearProject: false,
+    bulkModel: false,
+    bulkReview: false,
+    bulkDiscardConfirm: false,
+    confirmBulkCancel: false,
+    addProofText: false,
+    deleteProof: false,
+    linkProof: false,
+    proofAnalysis: false,
+    globalEditor: false,
+    jurisIndividual: false,
+    proofTextAnonymization: false,
+    proofExtractionAnonymization: false,
+    sentenceReview: false,
+    sentenceReviewResult: false
+  });
+
+  const [textPreview, setTextPreview] = useState({ isOpen: false, title: '', text: '' });
+
+  const openModal = React.useCallback((modalName) => {
+    setModals(prev => ({ ...prev, [modalName]: true }));
+  }, []);
+
+  const closeModal = React.useCallback((modalName) => {
+    setModals(prev => ({ ...prev, [modalName]: false }));
+  }, []);
+
+  const closeAllModals = React.useCallback(() => {
+    setModals(prev => Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {}));
+  }, []);
+
+  const isAnyModalOpen = React.useMemo(() => {
+    return Object.values(modals).some(value => value === true);
+  }, [modals]);
+
+  return { modals, openModal, closeModal, closeAllModals, isAnyModalOpen, textPreview, setTextPreview };
+};
 
 // 🎣 CUSTOM HOOK: useAIIntegration
 // 🔧 Reducer para estados de geração de IA (consolidado)
