@@ -18,6 +18,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.32', feature: 'Fix embeddings 502: streaming com Readable.fromWeb() evita OOM no Render free tier (512MB RAM)' },
   { version: '1.33.31', feature: 'Migração para Render: sem limite de payload (100MB vs 4.5MB Vercel), heartbeat keepalive, timeout 100min' },
   { version: '1.33.30', feature: 'Testes sanitizeHTML expandidos (39 testes XSS) - total 285 testes (261 unit + 24 E2E)' },
   { version: '1.33.29', feature: 'Testes E2E expandidos (24 testes) - total 267 testes (243 unit + 24 E2E)' },
