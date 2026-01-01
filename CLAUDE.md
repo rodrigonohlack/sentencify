@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.28 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
+**Version**: 1.33.29 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
 
 ## Architecture
 
@@ -54,6 +54,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.29 | Testes E2E expandidos (24 testes) - total 267 testes (243 unit + 24 E2E) |
 | v1.33.28 | Testes useTopicManager (42 testes) - total 243 testes unitários |
 | v1.33.27 | Reverter useModalManager para App.jsx (consistência: todos hooks no mesmo padrão) |
 | v1.33.26 | Refatorar useModalManager para arquivo separado (src/hooks/useModalManager.js) |

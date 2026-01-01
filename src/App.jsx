@@ -3,13 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.28'; // v1.33.28: Testes useTopicManager (42 testes) - total 243 testes unitários
+const APP_VERSION = '1.33.29'; // v1.33.29: Testes E2E expandidos (24 testes) - total 267 testes (243 unit + 24 E2E)
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.29', feature: 'Testes E2E expandidos (24 testes) - total 267 testes (243 unit + 24 E2E)' },
   { version: '1.33.28', feature: 'Testes useTopicManager (42 testes) - total 243 testes unitários' },
   { version: '1.33.27', feature: 'Reverter useModalManager para App.jsx (consistência: todos hooks no mesmo padrão)' },
   { version: '1.33.26', feature: 'Refatorar useModalManager para arquivo separado (melhor testabilidade)' },
