@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.15 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
+**Version**: 1.33.25 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
 
 ## Architecture
 
@@ -54,6 +54,16 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.25 | Fix setState durante render: contextualInsertFn como ref em useModelPreview |
+| v1.33.24 | Fix HTML nesting warning: spinner div→span no GlobalEditorModal |
+| v1.33.23 | Fix infinite loop: ref para handleInsertModel em GlobalEditorModal (useMemo insuficiente) |
+| v1.33.22 | Fix infinite loop: useMemo em useFieldVersioning e useModelPreview (bug latente exposto por re-renders extras) |
+| v1.33.21 | Fix botão limpar formatação: usa format(key,false) em vez de removeFormat (wrapper não expõe getSelection) |
+| v1.33.20 | Fix botão limpar formatação (onMouseDown) + toggle semântico por padrão + badge similaridade sempre visível |
+| v1.33.19 | Botão limpar formatação no InlineFormattingToolbar + toggle 🧠/🔤 semântico na busca manual de modelos (editor individual e global) |
+| v1.33.18 | Badge % similaridade em jurisprudência e modelos sugeridos |
+| v1.33.17 | Fix modal jurisprudência: sincronizar toggle com config IA Local ao abrir |
+| v1.33.16 | Modal jurisprudência: badge IA Local + toggle semântico/textual |
 | v1.33.15 | Fix batchSize hardcoded em mini-relatórios/subtópicos + contraste "Erro 429" no tema escuro |
 | v1.33.14 | Fix NER: indexOf case-insensitive, dedup inclui entityType, fallback ORG limitado a 4 palavras + normaliza espaços |
 | v1.33.13 | NER healing: subtokens órfãos (##edo) unidos ao prefixo (Mac→Macedo) + fallback regex para ORG (V2 LTDA) |
@@ -193,5 +203,5 @@
 | v1.14.0 | Detecção TF-IDF de similaridade + Botão "Salvar como Modelo" + Comparação lado a lado |
 | v1.12.27 | Progresso de extração inline no ProofCard (não mais banner de erro) |
 
-**Last Updated**: 2025-12-30
+**Last Updated**: 2025-12-31
 - sempre atualize a versão nas alterações realizadas

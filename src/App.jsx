@@ -3,13 +3,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.15'; // v1.33.15: Fix batchSize hardcoded + contraste Erro 429 tema escuro
+const APP_VERSION = '1.33.25'; // v1.33.25: Fix setState durante render (contextualInsertFn como ref em useModelPreview)
 
 // v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
 const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.23', feature: 'Fix infinite loop: ref para handleInsertModel em GlobalEditorModal' },
+  { version: '1.33.22', feature: 'Fix infinite loop: useMemo em useFieldVersioning e useModelPreview' },
+  { version: '1.33.21', feature: 'Fix botão limpar formatação (usa format(key,false) em vez de removeFormat)' },
+  { version: '1.33.20', feature: 'Fix botão limpar formatação + toggle semântico por padrão + badge similaridade sempre visível' },
+  { version: '1.33.19', feature: 'Botão limpar formatação no editor + toggle 🧠/🔤 semântico na busca manual de modelos' },
+  { version: '1.33.18', feature: 'Badge % similaridade em jurisprudência e modelos sugeridos (modo semântico)' },
+  { version: '1.33.17', feature: 'Fix modal jurisprudência: sincronizar toggle com config IA Local ao abrir' },
+  { version: '1.33.16', feature: 'Modal jurisprudência: badge 🤖 IA Local + toggle 🧠/🔤 semântico/textual' },
   { version: '1.33.15', feature: 'Fix batchSize hardcoded em mini-relatórios/subtópicos + contraste "Erro 429" no tema escuro' },
   { version: '1.33.14', feature: 'Fix NER: indexOf case-insensitive, dedup inclui entityType, fallback ORG limitado a 4 palavras + normaliza espaços' },
   { version: '1.33.13', feature: 'NER healing: subtokens órfãos (##edo) unidos ao prefixo (Mac→Macedo) + fallback regex para ORG (V2 LTDA)' },
@@ -3537,7 +3545,11 @@ const useFieldVersioning = () => {
     } catch { return null; }
   }, [saveVersion]);
 
-  return { saveVersion, getVersions, restoreVersion };
+  // v1.33.22: useMemo para evitar novo objeto a cada render (causa infinite loop em VersionSelect)
+  return React.useMemo(
+    () => ({ saveVersion, getVersions, restoreVersion }),
+    [saveVersion, getVersions, restoreVersion]
+  );
 };
 
 const sortArtigosNatural = (artigos) => {
@@ -5253,7 +5265,11 @@ const useModelPreview = () => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [editedContent, setEditedContent] = React.useState('');
   // v1.15.2: Função de inserção contextual (para GlobalEditorModal)
-  const [contextualInsertFn, setContextualInsertFn] = React.useState(null);
+  // v1.33.25: Usar ref em vez de state para não causar recriação do objeto modelPreview
+  const contextualInsertFnRef = React.useRef(null);
+  const setContextualInsertFn = React.useCallback((fn) => {
+    contextualInsertFnRef.current = fn;
+  }, []);
   // v1.15.3: Estado para "Salvar como Novo Modelo"
   const [saveAsNewData, setSaveAsNewData] = React.useState(null);
   // v1.19.2: Callback para notificar quando modelo é atualizado (sincroniza sugestões do GlobalEditor)
@@ -5320,7 +5336,8 @@ const useModelPreview = () => {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isPreviewOpen, isEditing, cancelEditing, closePreview]);
 
-  return {
+  // v1.33.22: useMemo para evitar novo objeto a cada render (causa infinite loop em GlobalEditorModal)
+  return React.useMemo(() => ({
     previewingModel,
     isPreviewOpen,
     isEditing,
@@ -5331,7 +5348,7 @@ const useModelPreview = () => {
     cancelEditing,
     setEditedContent,
     // v1.15.2: Função de inserção contextual
-    contextualInsertFn,
+    contextualInsertFnRef,
     setContextualInsertFn,
     // v1.15.3: Salvar como Novo Modelo
     saveAsNewData,
@@ -5340,7 +5357,11 @@ const useModelPreview = () => {
     closeSaveAsNew,
     // v1.19.2: Callback para sincronizar sugestões do GlobalEditor
     onModelUpdatedRef,
-  };
+  }), [
+    previewingModel, isPreviewOpen, isEditing, editedContent,
+    openPreview, closePreview, startEditing, cancelEditing,
+    saveAsNewData, openSaveAsNew, closeSaveAsNew
+  ]);
 };
 
 // 🔧 UTILITY FUNCTIONS (v1.6.1)
@@ -7089,6 +7110,7 @@ const SuggestionCard = React.memo(({
   onInsert,
   sanitizeHTML,
   showRanking = true,
+  similarity, // v1.33.18: % similaridade (opcional, vem de busca semântica)
 }) => {
   // Validação de Props
   if (!model) {
@@ -7136,6 +7158,12 @@ const SuggestionCard = React.memo(({
                 ({rankingLabels[stars]})
               </span>
             </div>
+          )}
+          {/* v1.33.20: Badge de similaridade (independente do ranking) */}
+          {similarity && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-green-600 text-white inline-block mb-1">
+              {Math.round(similarity * 100)}% similar
+            </span>
           )}
         </div>
 
@@ -7417,6 +7445,7 @@ const FullscreenModelPanel = React.memo(({
                 <SuggestionCard
                   key={`search-${model.id}`}
                   model={model}
+                  similarity={model.similarity}
                   onPreview={onPreview}
                   onInsert={onInsert}
                   sanitizeHTML={sanitizeHTML}
@@ -7450,6 +7479,7 @@ const FullscreenModelPanel = React.memo(({
                 <SuggestionCard
                   key={`suggestion-${model.id}`}
                   model={model}
+                  similarity={model.similarity}
                   index={idx}
                   totalSuggestions={suggestions.length}
                   onPreview={onPreview}
@@ -13529,7 +13559,8 @@ const JURIS_TIPOS_DISPONIVEIS = ['IRR', 'IAC', 'IRDR', 'Súmula', 'OJ', 'RG', 'A
 const JURIS_TRIBUNAIS_DISPONIVEIS = ['TST', 'STF', 'STJ', 'TRT8'];
 
 // v1.32.18: Adicionado useLocalAI e jurisSemanticThreshold para busca semântica
-const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRelatorio, callAI, useLocalAI = false, jurisSemanticThreshold = 50 }) => {
+// v1.33.16: Adicionado jurisSemanticEnabled para toggle interno + badge IA Local
+const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRelatorio, callAI, useLocalAI = false, jurisSemanticThreshold = 50, jurisSemanticEnabled = false }) => {
   const [suggestions, setSuggestions] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [copiedId, setCopiedId] = React.useState(null);
@@ -13537,6 +13568,7 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
   const [searchTerm, setSearchTerm] = React.useState('');
   const [searchApplied, setSearchApplied] = React.useState('');
   const [searchSource, setSearchSource] = React.useState(null); // 'local' ou 'text'
+  const [useSemanticMode, setUseSemanticMode] = React.useState(useLocalAI); // v1.33.16: estado interno para toggle
 
   // v1.32.18: Busca semântica via IA Local
   const doSemanticSearch = React.useCallback(async (queryText) => {
@@ -13559,8 +13591,8 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
     setSuggestions([]);
     setSearchApplied(term);
     try {
-      // v1.32.18: Usar busca semântica se IA Local ativa
-      if (useLocalAI) {
+      // v1.33.16: Usar busca semântica se toggle ativo E IA Local habilitada
+      if (useSemanticMode && jurisSemanticEnabled) {
         // v1.32.19: Usar apenas título para query mais focada (relatório longo dilui relevância)
         const queryText = term || topicTitle;
         const results = await doSemanticSearch(queryText);
@@ -13573,13 +13605,21 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
       }
     } catch { setSuggestions([]); }
     setLoading(false);
-  }, [topicTitle, topicRelatorio, callAI, filtros, useLocalAI, doSemanticSearch]);
+  }, [topicTitle, topicRelatorio, callAI, filtros, useSemanticMode, jurisSemanticEnabled, doSemanticSearch]);
 
+  // v1.33.16: Re-busca quando toggle muda
   React.useEffect(() => {
     if (isOpen && topicTitle) {
       doSearch(searchApplied);
     }
-  }, [isOpen, topicTitle, filtros]);
+  }, [isOpen, topicTitle, filtros, useSemanticMode]);
+
+  // v1.33.17: Sincronizar useSemanticMode com useLocalAI quando modal abre
+  React.useEffect(() => {
+    if (isOpen) {
+      setUseSemanticMode(useLocalAI);
+    }
+  }, [isOpen, useLocalAI]);
 
   React.useEffect(() => {
     if (!isOpen) {
@@ -13613,9 +13653,12 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
     <div className="fixed inset-0 z-[70] flex items-start justify-center pt-10 bg-black/50 overflow-y-auto" onClick={onClose}>
       <div className="theme-bg-primary rounded-xl shadow-2xl flex flex-col" style={{ width: '80vw', maxHeight: '90vh' }} onClick={(e) => e.stopPropagation()}>
         <div className="p-4 border-b theme-border flex justify-between items-center flex-shrink-0">
-          <h3 className="font-semibold theme-text-primary">
-            <Scale className="w-4 h-4 inline mr-2" />
+          <h3 className="font-semibold theme-text-primary flex items-center gap-2">
+            <Scale className="w-4 h-4" />
             Jurisprudência: {topicTitle}
+            {searchSource === 'local' && (
+              <span className="bg-purple-600 text-white px-1.5 py-0.5 rounded text-[10px]">🤖 IA Local</span>
+            )}
           </h3>
           <button onClick={onClose} className="p-1 rounded hover-bg-tertiary">
             <X className="w-5 h-5 theme-text-secondary" />
@@ -13682,6 +13725,20 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
                 <X className="w-3 h-3" />
               </button>
             )}
+            {/* v1.33.16: Toggle semântico/textual */}
+            {jurisSemanticEnabled && (
+              <button
+                onClick={() => setUseSemanticMode(prev => !prev)}
+                className={`px-2 py-1 rounded text-xs transition-colors ${
+                  useSemanticMode
+                    ? 'bg-purple-600 text-white hover:bg-purple-700'
+                    : 'theme-bg-tertiary theme-text-secondary hover-slate-600'
+                }`}
+                title={useSemanticMode ? 'Busca semântica (por significado)' : 'Busca textual (por palavras)'}
+              >
+                {useSemanticMode ? '🧠' : '🔤'}
+              </button>
+            )}
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -13711,6 +13768,12 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
                     )}
                     {p.orgao && <span className="text-xs px-2 py-0.5 rounded theme-badge-purple">{p.orgao}</span>}
                     {p.tribunal && <span className="text-xs px-2 py-0.5 rounded theme-badge-blue">{p.tribunal}</span>}
+                    {/* v1.33.18: Badge de similaridade no modo semântico */}
+                    {searchSource === 'local' && p.similarity && (
+                      <span className="text-xs px-2 py-0.5 rounded bg-green-600 text-white">
+                        {Math.round(p.similarity * 100)}%
+                      </span>
+                    )}
                   </div>
                 </div>
                 {p.titulo && <p className="text-xs font-medium theme-text-primary mb-1">{p.titulo}</p>}
@@ -13762,6 +13825,19 @@ const InlineFormattingToolbar = React.memo(({ editorRef }) => {
     editorRef.current.focus();
   }, [editorRef, updateFormats]);
 
+  // v1.33.21: Limpar formatação usando format(key, false) - wrapper não tem getSelection/removeFormat
+  const removeFormatting = React.useCallback(() => {
+    if (!editorRef?.current) return;
+    const quill = editorRef.current;
+    const formats = quill.getFormat();
+    // Remover cada formato ativo usando format(name, false)
+    ['bold', 'italic', 'underline', 'strike', 'color', 'background', 'header', 'list', 'align', 'indent', 'link'].forEach(key => {
+      if (formats[key]) quill.format(key, false);
+    });
+    updateFormats();
+    quill.focus();
+  }, [editorRef, updateFormats]);
+
   const btnClass = (isActive) =>
     `px-1.5 py-0.5 text-xs rounded transition-colors ${isActive
       ? 'bg-blue-600 text-white'
@@ -13792,6 +13868,8 @@ const InlineFormattingToolbar = React.memo(({ editorRef }) => {
       <button onClick={() => toggleFormat('align', 'center')} className={btnClass(activeFormats.align === 'center')} title="Centralizar">≡</button>
       <button onClick={() => toggleFormat('align', 'right')} className={btnClass(activeFormats.align === 'right')} title="Alinhar à direita">⫸</button>
       <button onClick={() => toggleFormat('align', 'justify')} className={btnClass(activeFormats.align === 'justify')} title="Justificar">☰</button>
+      <span className="text-gray-500 text-xs">|</span>
+      <button onClick={() => removeFormatting()} className="px-1.5 py-0.5 text-xs rounded transition-colors theme-bg-secondary theme-text-secondary hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400" title="Limpar formatação">✖</button>
     </div>
   );
 });
@@ -13994,7 +14072,11 @@ const GlobalEditorModal = React.memo(({
   useLocalAIForJuris = false,
   jurisSemanticThreshold = 50,
   searchModelReady = false,
-  jurisEmbeddingsCount = 0
+  jurisEmbeddingsCount = 0,
+  // v1.33.19: Função para busca semântica de modelos
+  searchModelsBySimilarity = null,
+  // v1.33.20: Config de busca semântica de modelos (para inicializar toggle)
+  modelSemanticEnabled = false
 }) => {
   // Estado local para os tópicos (cópia para edição)
   const [localTopics, setLocalTopics] = React.useState([]);
@@ -14014,6 +14096,11 @@ const GlobalEditorModal = React.memo(({
   // Estados para busca manual de modelos - v1.12.12
   const [globalManualSearchTerm, setGlobalManualSearchTerm] = React.useState('');
   const [globalManualSearchResults, setGlobalManualSearchResults] = React.useState([]);
+
+  // v1.33.19: Estados para busca semântica na busca manual do editor global
+  // v1.33.20: Inicializa com modelSemanticEnabled (respeitando config IA)
+  const [useGlobalSemanticSearch, setUseGlobalSemanticSearch] = React.useState(modelSemanticEnabled);
+  const [globalSemanticSearching, setGlobalSemanticSearching] = React.useState(false);
 
   // Estados para modais de confirmação
   const [showCancelConfirm, setShowCancelConfirm] = React.useState(false);
@@ -14090,6 +14177,26 @@ const GlobalEditorModal = React.memo(({
       }, 300);
     };
   }, [models]);
+
+  // v1.33.19: useEffect para busca semântica na busca manual do editor global
+  React.useEffect(() => {
+    if (!useGlobalSemanticSearch || !searchModelReady || !searchModelsBySimilarity || !globalManualSearchTerm || globalManualSearchTerm.trim().length < 2) {
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setGlobalSemanticSearching(true);
+      try {
+        const results = await searchModelsBySimilarity(models || [], globalManualSearchTerm.toLowerCase(), { threshold: 0.3, limit: 10 });
+        setGlobalManualSearchResults(results);
+      } catch (error) {
+        console.error('[GlobalEditor] Erro na busca semântica:', error);
+      }
+      setGlobalSemanticSearching(false);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [useGlobalSemanticSearch, globalManualSearchTerm, searchModelReady, searchModelsBySimilarity, models]);
 
   // Inicializar localTopics quando abrir
   React.useEffect(() => {
@@ -14238,6 +14345,12 @@ const GlobalEditorModal = React.memo(({
     showToast?.('Modelo inserido', 'success');
   }, [currentFocusedTopic, showToast]);
 
+  // v1.33.23: Ref para handleInsertModel (evita loop infinito no useEffect abaixo)
+  const handleInsertModelRef = React.useRef(handleInsertModel);
+  React.useEffect(() => {
+    handleInsertModelRef.current = handleInsertModel;
+  }, [handleInsertModel]);
+
   const handlePreviewModel = React.useCallback((model) => {
     if (modelPreview?.openPreview) {
       modelPreview.openPreview(model);
@@ -14245,16 +14358,18 @@ const GlobalEditorModal = React.memo(({
   }, [modelPreview]);
 
   // v1.15.2: Registrar função de inserção contextual quando modal abre
+  // v1.33.23: Usa ref para evitar loop (handleInsertModel muda frequentemente)
   React.useEffect(() => {
     if (isOpen && modelPreview?.setContextualInsertFn) {
-      modelPreview.setContextualInsertFn(() => handleInsertModel);
+      // Wrapper com identidade estável que chama a ref
+      modelPreview.setContextualInsertFn((content) => handleInsertModelRef.current(content));
     }
     return () => {
       if (modelPreview?.setContextualInsertFn) {
         modelPreview.setContextualInsertFn(null);
       }
     };
-  }, [isOpen, modelPreview, handleInsertModel]);
+  }, [isOpen, modelPreview]); // Removido handleInsertModel das dependências
 
   // Salvar alterações (sem fechar) - usa isSavingRef para preservar sugestões
   const handleSaveOnly = React.useCallback(() => {
@@ -14972,7 +15087,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
               {currentFocusedTopic ? (
                 <p className="text-xs theme-text-muted flex items-center gap-1.5">
                   {loadingSuggestions && (
-                    <div className="w-3 h-3 border border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="w-3 h-3 border border-purple-500 border-t-transparent rounded-full animate-spin inline-block"></span>
                   )}
                   <span>
                     {loadingSuggestions ? 'Buscando para:' : 'Sugestões para:'}{' '}
@@ -14997,9 +15112,12 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
                     value={globalManualSearchTerm}
                     onChange={(e) => {
                       setGlobalManualSearchTerm(e.target.value);
-                      debouncedGlobalManualSearch(e.target.value);
+                      // v1.33.19: Só faz busca textual se não estiver em modo semântico
+                      if (!useGlobalSemanticSearch) {
+                        debouncedGlobalManualSearch(e.target.value);
+                      }
                     }}
-                    placeholder="Buscar modelos..."
+                    placeholder={useGlobalSemanticSearch ? "Busca por significado..." : "Buscar modelos..."}
                     className="w-full pl-9 pr-3 py-2 text-sm rounded theme-bg-primary border theme-border-input theme-text-primary"
                   />
                 </div>
@@ -15015,13 +15133,38 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
                     ✕
                   </button>
                 )}
+                {/* v1.33.19: Toggle busca semântica/textual */}
+                {searchModelReady && (
+                  <button
+                    onClick={() => {
+                      setUseGlobalSemanticSearch(prev => !prev);
+                      // Limpar resultados ao alternar modo
+                      setGlobalManualSearchResults([]);
+                    }}
+                    className={`px-2 py-1 rounded text-sm transition-colors ${
+                      useGlobalSemanticSearch
+                        ? 'bg-purple-600 text-white hover:bg-purple-700'
+                        : 'theme-bg-tertiary theme-text-secondary hover:bg-slate-600'
+                    }`}
+                    title={useGlobalSemanticSearch ? 'Busca semântica (por significado)' : 'Busca textual (por palavras)'}
+                  >
+                    {useGlobalSemanticSearch ? '🧠' : '🔤'}
+                  </button>
+                )}
               </div>
-              {globalManualSearchTerm && globalManualSearchResults.length > 0 && (
-                <p className="text-xs theme-text-muted mt-2">
-                  {globalManualSearchResults.length} modelo(s) encontrado(s)
+              {globalSemanticSearching && (
+                <p className="text-xs text-purple-400 mt-2 flex items-center gap-1">
+                  <span className="animate-spin inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full"></span>
+                  Buscando por significado...
                 </p>
               )}
-              {globalManualSearchTerm && globalManualSearchResults.length === 0 && (
+              {!globalSemanticSearching && globalManualSearchTerm && globalManualSearchResults.length > 0 && (
+                <p className="text-xs theme-text-muted mt-2">
+                  {globalManualSearchResults.length} modelo(s) encontrado(s)
+                  {useGlobalSemanticSearch && <span className="ml-1 text-purple-400">(semântica)</span>}
+                </p>
+              )}
+              {!globalSemanticSearching && globalManualSearchTerm && globalManualSearchResults.length === 0 && (
                 <p className="text-xs text-amber-400 mt-2">
                   Nenhum modelo encontrado para "{globalManualSearchTerm}"
                 </p>
@@ -15038,6 +15181,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
                     <SuggestionCard
                       key={model.id || `search-${idx}`}
                       model={model}
+                      similarity={model.similarity}
                       index={idx}
                       totalSuggestions={globalManualSearchResults.length}
                       onPreview={handlePreviewModel}
@@ -15052,6 +15196,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
                   <SuggestionCard
                     key={model.id || idx}
                     model={model}
+                    similarity={model.similarity}
                     index={idx}
                     totalSuggestions={suggestions.length}
                     onPreview={handlePreviewModel}
@@ -15154,6 +15299,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
 
       {/* v1.20.0: Modal de Jurisprudência (componente reutilizável) */}
       {/* v1.32.18: Props para busca semântica */}
+      {/* v1.33.16: jurisSemanticEnabled para toggle interno */}
       <JurisprudenciaModal
         isOpen={showJurisModal && jurisTopicIndex !== null}
         onClose={() => { setShowJurisModal(false); setJurisTopicIndex(null); }}
@@ -15162,6 +15308,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
         callAI={aiIntegration?.callAI}
         useLocalAI={useLocalAIForJuris && searchModelReady && jurisEmbeddingsCount > 0}
         jurisSemanticThreshold={jurisSemanticThreshold}
+        jurisSemanticEnabled={searchModelReady && jurisEmbeddingsCount > 0}
       />
     </div>
   );
@@ -18864,6 +19011,12 @@ const LegalDecisionEditor = () => {
     try { return JSON.parse(localStorage.getItem('useLocalAIForJuris')) || false; } catch { return false; }
   });
 
+  // v1.33.19: Toggle para busca semântica na busca manual de modelos (editores individual e global)
+  // v1.33.20: Inicializa com modelSemanticEnabled (respeitando config IA)
+  const [useSemanticManualSearch, setUseSemanticManualSearch] = useState(() => modelSemanticEnabled);
+  const [semanticManualSearchResults, setSemanticManualSearchResults] = useState(null);
+  const [semanticManualSearching, setSemanticManualSearching] = useState(false);
+
   // 📜 v1.26.02: Hook de legislação para geração de embeddings
   const legislacao = useLegislacao();
 
@@ -18966,6 +19119,30 @@ const LegalDecisionEditor = () => {
       }
     };
   }, []);
+
+  // v1.33.19: Effect para busca semântica manual de modelos
+  useEffect(() => {
+    if (!useSemanticManualSearch || !searchModelReady || !modelLibrary.manualSearchTerm || modelLibrary.manualSearchTerm.trim().length < 2) {
+      setSemanticManualSearchResults(null);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setSemanticManualSearching(true);
+      try {
+        const results = await searchModelsBySimilarity(modelLibrary.models, modelLibrary.manualSearchTerm.toLowerCase(), { threshold: 0.3, limit: 10 });
+        setSemanticManualSearchResults(results);
+        // Também atualizar os resultados no modelLibrary para exibição
+        modelLibrary.setManualSearchResults(results);
+      } catch (error) {
+        console.error('[ModelSearch] Erro na busca semântica:', error);
+        setSemanticManualSearchResults(null);
+      }
+      setSemanticManualSearching(false);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [useSemanticManualSearch, modelLibrary.manualSearchTerm, searchModelReady, modelLibrary.models]);
 
   // 🎨 Função para injetar estilos do Quill (dark theme)
   const injectQuillStyles = () => {
@@ -28282,9 +28459,12 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             value={modelLibrary.manualSearchTerm}
                             onChange={(e) => {
                               modelLibrary.setManualSearchTerm(e.target.value);
-                              modelLibrary.debouncedManualSearch(e.target.value); // 🚀 v1.4.1: Debounced search
+                              // v1.33.19: Só faz busca textual se não estiver em modo semântico
+                              if (!useSemanticManualSearch) {
+                                modelLibrary.debouncedManualSearch(e.target.value);
+                              }
                             }}
-                            placeholder="Digite para buscar modelos por título, palavras-chave ou conteúdo..."
+                            placeholder={useSemanticManualSearch ? "Busca por significado..." : "Digite para buscar modelos por título, palavras-chave ou conteúdo..."}
                             className="flex-1 px-3 py-2 theme-bg-primary border theme-border-input rounded-lg theme-text-primary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500"
                           />
                           {modelLibrary.manualSearchTerm && (
@@ -28292,6 +28472,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                               onClick={() => {
                                 modelLibrary.setManualSearchTerm('');
                                 modelLibrary.setManualSearchResults([]);
+                                setSemanticManualSearchResults(null);
                               }}
                               className="px-3 py-2 theme-bg-tertiary rounded-lg hover-slate-700 transition-colors text-sm"
                               title="Limpar busca"
@@ -28299,10 +28480,36 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                               ✕
                             </button>
                           )}
+                          {/* v1.33.19: Toggle busca semântica/textual */}
+                          {searchModelReady && (
+                            <button
+                              onClick={() => {
+                                setUseSemanticManualSearch(prev => !prev);
+                                // Limpar resultados ao alternar modo
+                                modelLibrary.setManualSearchResults([]);
+                                setSemanticManualSearchResults(null);
+                              }}
+                              className={`px-2 py-1 rounded text-sm transition-colors ${
+                                useSemanticManualSearch
+                                  ? 'bg-purple-600 text-white hover:bg-purple-700'
+                                  : 'theme-bg-tertiary theme-text-secondary hover:bg-slate-600'
+                              }`}
+                              title={useSemanticManualSearch ? 'Busca semântica (por significado)' : 'Busca textual (por palavras)'}
+                            >
+                              {useSemanticManualSearch ? '🧠' : '🔤'}
+                            </button>
+                          )}
                         </div>
-                        {modelLibrary.manualSearchTerm && modelLibrary.manualSearchResults.length > 0 && (
+                        {semanticManualSearching && (
+                          <p className="text-xs text-purple-400 mt-2 flex items-center gap-1">
+                            <span className="animate-spin inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full"></span>
+                            Buscando por significado...
+                          </p>
+                        )}
+                        {!semanticManualSearching && modelLibrary.manualSearchTerm && modelLibrary.manualSearchResults.length > 0 && (
                           <p className="text-xs theme-text-muted mt-2">
                             {modelLibrary.manualSearchResults.length} modelo{modelLibrary.manualSearchResults.length > 1 ? 's' : ''} encontrado{modelLibrary.manualSearchResults.length > 1 ? 's' : ''}
+                            {useSemanticManualSearch && <span className="ml-1 text-purple-400">(semântica)</span>}
                           </p>
                         )}
                       </div>
@@ -28315,6 +28522,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             <SuggestionCard
                               key={model.id || `manual-${idx}`}
                               model={model}
+                              similarity={model.similarity}
                               index={idx}
                               totalSuggestions={modelLibrary.manualSearchResults.length}
                               onPreview={modelPreview.openPreview}
@@ -28346,6 +28554,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                                   <SuggestionCard
                                     key={model.id || idx}
                                     model={model}
+                                    similarity={model.similarity}
                                     index={idx}
                                     totalSuggestions={modelLibrary.suggestions.length}
                                     onPreview={modelPreview.openPreview}
@@ -29072,6 +29281,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 
       {/* v1.20.0: Modal de Jurisprudência (editor individual) */}
       {/* v1.32.18: Props para busca semântica */}
+      {/* v1.33.16: jurisSemanticEnabled para toggle interno */}
       <JurisprudenciaModal
         isOpen={modals.jurisIndividual}
         onClose={() => closeModal('jurisIndividual')}
@@ -29080,6 +29290,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         callAI={aiIntegration?.callAI}
         useLocalAI={useLocalAIForJuris && searchModelReady && jurisEmbeddingsCount > 0}
         jurisSemanticThreshold={jurisSemanticThreshold}
+        jurisSemanticEnabled={searchModelReady && jurisEmbeddingsCount > 0}
       />
 
       <AIAssistantModelModal
@@ -30990,6 +31201,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         jurisSemanticThreshold={jurisSemanticThreshold}
         searchModelReady={searchModelReady}
         jurisEmbeddingsCount={jurisEmbeddingsCount}
+        searchModelsBySimilarity={searchModelsBySimilarity}
+        modelSemanticEnabled={modelSemanticEnabled}
       />
 
       {/* Modal de Preview de Modelo (Sugestões) - GLOBAL (v1.12.2: movido para depois do GlobalEditorModal) */}
@@ -30997,7 +31210,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
       <ModelPreviewModal
         isOpen={modelPreview.isPreviewOpen}
         model={modelPreview.previewingModel}
-        onInsert={modelPreview.contextualInsertFn || insertModelContent}
+        onInsert={modelPreview.contextualInsertFnRef?.current || insertModelContent}
         onClose={modelPreview.closePreview}
         sanitizeHTML={sanitizeHTML}
         showToast={showToast}
