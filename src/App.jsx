@@ -1,9 +1,126 @@
-// 📦 IMPORTS
+/**
+ * ╔════════════════════════════════════════════════════════════════════════════════════════╗
+ * ║                              SENTENCIFY AI - ÍNDICE DO CÓDIGO                          ║
+ * ╠════════════════════════════════════════════════════════════════════════════════════════╣
+ * ║ SEÇÃO                                    │ LINHAS          │ DESCRIÇÃO                 ║
+ * ╠══════════════════════════════════════════╪═════════════════╪═══════════════════════════╣
+ * ║ 1. IMPORTS & CONFIG                      │ 1-220           │ React, Lucide, constantes ║
+ * ║    └─ APP_VERSION                        │ ~115            │ Versão atual da app       ║
+ * ║    └─ CHANGELOG                          │ 130-225         │ ~95 versões documentadas  ║
+ * ║    └─ CSS (classes utilitárias)          │ 285-330         │ Tailwind helpers          ║
+ * ║                                          │                 │                           ║
+ * ║ 2. UTILITÁRIOS & SERVIÇOS                │ 280-1250        │ IA Local, Embeddings      ║
+ * ║    └─ AIModelService                     │ 460-765         │ NER/E5 Web Worker         ║
+ * ║    └─ EmbeddingsService                  │ 765-910         │ IndexedDB legislação      ║
+ * ║    └─ JurisEmbeddingsService             │ 930-1050        │ IndexedDB jurisprudência  ║
+ * ║    └─ EmbeddingsCDNService               │ 1050-1140       │ Download GitHub CDN       ║
+ * ║                                          │                 │                           ║
+ * ║ 3. HOOKS CUSTOMIZADOS                    │ 1300-8130       │ 21 hooks React            ║
+ * ║    └─ AI_INSTRUCTIONS                    │ 1305            │ System prompt para LLM    ║
+ * ║    └─ useModalManager                    │ 1390-1480       │ Controle de modais        ║
+ * ║    └─ useAIIntegration                   │ 1480-2385       │ Claude/Gemini API (905L)  ║
+ * ║    └─ useIndexedDB                       │ 2750-3165       │ Persistência modelos      ║
+ * ║    └─ usePrimaryTabLock                  │ 3165-3525       │ Sincronização abas        ║
+ * ║    └─ useFieldVersioning                 │ 3625-3700       │ Histórico de versões      ║
+ * ║    └─ useLocalStorage                    │ 3700-4680       │ Sessão (980 linhas)       ║
+ * ║    └─ useModelLibrary                    │ 4680-5375       │ CRUD modelos              ║
+ * ║    └─ useProofManager                    │ 5615-6000       │ Gestão de provas          ║
+ * ║    └─ useDocumentManager                 │ 6000-6390       │ Upload documentos         ║
+ * ║    └─ useTopicManager                    │ 6390-6575       │ CRUD tópicos              ║
+ * ║    └─ useChatAssistant                   │ 6575-6690       │ Chat interativo           ║
+ * ║    └─ useJurisprudencia                  │ 6690-6820       │ Busca precedentes         ║
+ * ║    └─ useLegislacao                      │ 6820-8130       │ 7000+ artigos (1305L)     ║
+ * ║                                          │                 │                           ║
+ * ║ 4. COMPONENTES DE UI                     │ 8130-9755       │ VirtualList, Modais base  ║
+ * ║    └─ VirtualList                        │ 8130-8220       │ Scroll virtualizado       ║
+ * ║    └─ JurisprudenciaModalContent         │ 8930-9355       │ Modal de jurisprudência   ║
+ * ║    └─ LegislacaoModalContent             │ 9360-9640       │ Modal de legislação       ║
+ * ║    └─ BaseModal                          │ 9750-9805       │ Template de modal         ║
+ * ║                                          │                 │                           ║
+ * ║ 5. MODAIS ESPECÍFICOS                    │ 9755-15705      │ ~50 modais da aplicação   ║
+ * ║    └─ RenameTopicModal                   │ 9870            │ Renomear tópico           ║
+ * ║    └─ DeleteTopicModal                   │ 9900            │ Excluir tópico            ║
+ * ║    └─ GlobalEditorModal                  │ ~12555          │ Editor em tela cheia      ║
+ * ║    └─ ConfigModal                        │ ~14055          │ Configurações IA          ║
+ * ║                                          │                 │                           ║
+ * ║ 6. QUILL EDITOR                          │ 15705-16810     │ Rich text editor          ║
+ * ║    └─ QuillEditorBase                    │ 15855           │ Editor base               ║
+ * ║    └─ QuillModelEditor                   │ 16120           │ Editor de modelos         ║
+ * ║    └─ QuillDecisionEditor                │ 16250           │ Editor de fundamentação   ║
+ * ║    └─ QuillMiniRelatorioEditor           │ 16660           │ Editor mini-relatório     ║
+ * ║                                          │                 │                           ║
+ * ║ 7. AI_PROMPTS                            │ 17625-18440     │ 20+ prompts estruturados  ║
+ * ║    └─ estiloRedacao                      │ ~17635          │ Estilo de escrita         ║
+ * ║    └─ formatacaoHTML                     │ ~17675          │ Regras de HTML            ║
+ * ║    └─ revisaoSentenca                    │ ~18155          │ Prompt de revisão         ║
+ * ║                                          │                 │                           ║
+ * ║ 8. LEGALDECISIONEDITOR                   │ 18440-31735     │ Componente principal      ║
+ * ║    └─ reorderTopicsViaLLM                │ 22170-22275     │ Ordenação IA (Art.337)    ║
+ * ║    └─ handleAnalyzeDocuments             │ 24735           │ Análise inicial           ║
+ * ║    └─ analyzeProof                       │ 25500-25915     │ Análise de provas         ║
+ * ║    └─ generateDispositivo                │ 26680-26925     │ Gerar dispositivo         ║
+ * ║                                          │                 │                           ║
+ * ║ 9. ERROR BOUNDARY & EXPORT               │ 31735-33215     │ Tratamento de erros       ║
+ * ║    └─ SentencifyAI (ErrorBoundary)       │ 31735           │ Wrapper com fallback      ║
+ * ║    └─ export default                     │ 33215           │ Exportação do componente  ║
+ * ╚════════════════════════════════════════════════════════════════════════════════════════╝
+ *
+ * ═══════════════════════════════════════════════════════════════════════════════════════════
+ * FLUXOS CRÍTICOS (para navegação rápida)
+ * ═══════════════════════════════════════════════════════════════════════════════════════════
+ *
+ * 📄 ANÁLISE INICIAL DE DOCUMENTOS:
+ *    handleAnalyzeDocuments() → extractTopics() → reorderTopicsViaLLM() → setTopics()
+ *    Linha inicial: ~24735 | Ordenação: ~22170
+ *
+ * ✍️ GERAÇÃO DE SENTENÇA (por tópico):
+ *    generateReportForTopic() → callAI() → updateTopic()
+ *    Linha inicial: ~22795
+ *
+ * 🔍 BUSCA SEMÂNTICA (IA Local):
+ *    AIModelService.getEmbedding() → cosineSimilarity() → rankResults()
+ *    Embeddings: linha ~460 | Busca: linha ~5320
+ *
+ * 📋 ANÁLISE DE PROVAS:
+ *    analyzeProof() → extractText() → anonimizar() → callAI()
+ *    Linha inicial: ~25500
+ *
+ * ═══════════════════════════════════════════════════════════════════════════════════════════
+ * HOOKS DISPONÍVEIS (ordem alfabética)
+ * ═══════════════════════════════════════════════════════════════════════════════════════════
+ * useAIIntegration    - Comunicação com Claude/Gemini APIs
+ * useAPICache         - Cache de respostas da IA
+ * useChatAssistant    - Chat interativo com contexto
+ * useDocumentManager  - Upload e processamento de documentos
+ * useFeatureFlags     - Feature toggles
+ * useFieldVersioning  - Histórico de versões dos campos
+ * useFontSizeControl  - Controle de tamanho de fonte
+ * useFullscreen       - Modo tela cheia
+ * useIndexedDB        - Persistência de modelos no IndexedDB
+ * useJurisprudencia   - Busca de precedentes (TST/STF)
+ * useLegislacao       - Busca de legislação (7000+ artigos)
+ * useLocalStorage     - Persistência de sessão
+ * useModelLibrary     - CRUD de modelos de texto
+ * useModelPreview     - Preview de modelos no editor
+ * useModalManager     - Controle de abertura/fechamento de modais
+ * usePrimaryTabLock   - Sincronização entre abas do navegador
+ * useProofManager     - Gestão de provas documentais
+ * useSpacingControl   - Controle de espaçamento
+ * useThrottledBroadcast - Broadcast throttled entre abas
+ * useTopicManager     - CRUD de tópicos da sentença
+ * ═══════════════════════════════════════════════════════════════════════════════════════════
+ */
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 📦 SEÇÃO 1: IMPORTS & CONFIGURAÇÃO
+// React, ícones Lucide, constantes globais, changelog
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.35'; // v1.33.35: Prompt de ordenação v3 - numeração única (6a-6f) + explicações contextuais
+const APP_VERSION = '1.33.40'; // v1.33.40: Validação de PDFs (33 testes): magic bytes, tamanho, tipo, estimativa tempo
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -18,6 +135,11 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.40', feature: 'Validação de PDFs (33 testes): magic bytes, tamanho, tipo, estimativa de tempo de processamento' },
+  { version: '1.33.39', feature: 'Testes de regressão de prompts (21 testes snapshot): validação de estrutura, Art. 337 CPC, ordem do mérito' },
+  { version: '1.33.38', feature: 'Testes de integração (71 testes): topicOrdering, analyzeProof, generateSentence + utilitários extraídos em src/utils' },
+  { version: '1.33.37', feature: 'Comentários padronizados: 9 seções com bordas ═══ e descrições (IMPORTS, UTILITÁRIOS, HOOKS, UI, MODAIS, QUILL, AI_PROMPTS, LEGALDECISIONEDITOR, ERROR BOUNDARY)' },
+  { version: '1.33.36', feature: 'Índice/mapa estruturado no topo do arquivo: navegação rápida para LLMs, 9 seções mapeadas, fluxos críticos documentados' },
   { version: '1.33.35', feature: 'Ordenação v3: numeração única (6a-6f), sem referências cruzadas, explicações contextuais mantidas' },
   { version: '1.33.34', feature: 'Ordenação v2: 7 grupos (tramitação, preliminares, prejudiciais, mérito, finais) + ordem lógica do mérito (CAUSA > OBRIGAÇÃO > EFEITO)' },
   { version: '1.33.33', feature: 'Ordenação de preliminares conforme Art. 337 CPC (13 incisos na ordem legal)' },
@@ -343,6 +465,11 @@ const detectAICapabilities = () => {
   if (import.meta.env.DEV) console.log('[AI] Capabilities:', caps);
   return caps;
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 🛠️ SEÇÃO 2: UTILITÁRIOS & SERVIÇOS
+// AIModelService (NER/E5), EmbeddingsService, JurisEmbeddingsService, EmbeddingsCDNService
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // 🧠 AI MODEL SERVICE - IA via Web Worker v1.32.08
 // Modelos: NER (Xenova/distilbert-base-multilingual-cased-ner-hrl)
@@ -1275,6 +1402,10 @@ Por favor, forneça uma análise completa e detalhada em uma única mensagem con
 
 Ao final de cada resposta, revise-a e identifique se houve alucinação ao citar dados.`;
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 🎣 SEÇÃO 3: HOOKS CUSTOMIZADOS
+// 21 hooks React para gerenciamento de estado, integração com IA, persistência e UI
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // 🎣 CUSTOM HOOK: useModalManager
 const useModalManager = () => {
@@ -8016,6 +8147,11 @@ const TopicCard = React.memo(({
 // Display name para React DevTools
 TopicCard.displayName = 'TopicCard';
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 📦 SEÇÃO 4: COMPONENTES DE UI
+// VirtualList, JurisprudenciaModalContent, LegislacaoModalContent
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
 // 📦 COMPONENTE: VirtualList (v1.7.1) - Virtual scrolling para performance
 // v1.19.2: Adicionado suporte a expandedIds para items com altura dinâmica
 const VirtualList = React.memo(({ items, itemHeight, renderItem, className = '', overscan = 5, expandedIds = new Set() }) => {
@@ -9635,7 +9771,10 @@ const LegislacaoTab = React.memo(({
 });
 LegislacaoTab.displayName = 'LegislacaoTab';
 
-// 📋 COMPONENTES DE MODAIS
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 📋 SEÇÃO 5: MODAIS ESPECÍFICOS
+// ~50 modais: RenameTopicModal, DeleteTopicModal, GlobalEditorModal, ConfigModal, etc.
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // 🔧 BaseModal: Componente base reutilizável para modais
 const BaseModal = React.memo(({
@@ -15588,6 +15727,11 @@ const prepareOralProofsContext = async (proofManager, topicTitle, fileToBase64Fn
   return { proofDocuments, proofsContext, hasProofs: true, noOralProofFound: false };
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// ✏️ SEÇÃO 6: QUILL EDITOR
+// QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
 // 🔧 QUILL.JS UTILITY FUNCTIONS (v1.4.0 - FASE 4)
 // Funções utilitárias puras para Quill.js - definidas em escopo global
 
@@ -17512,6 +17656,11 @@ INSTRUÇÕES IMPORTANTES:
   };
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 🤖 SEÇÃO 7: AI_PROMPTS
+// 20+ prompts estruturados para geração de decisões, análise de provas, revisão
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
 // 📝 CONSTANTES DE PROMPTS DE IA (Blocos Reutilizáveis)
 const AI_PROMPTS = {
   // System Prompts Centralizados (v1.18.0)
@@ -18325,6 +18474,12 @@ ${!incluiDocumentos ? '<h3>Limitações da Análise</h3><p>Esta análise foi rea
 
 Se NÃO encontrar vulnerabilidades significativas, atribua nota A e informe com tom positivo.`
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// ⚖️ SEÇÃO 8: LEGALDECISIONEDITOR
+// Componente principal da aplicação (~13.000 linhas)
+// Contém: reorderTopicsViaLLM, handleAnalyzeDocuments, analyzeProof, generateDispositivo
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // 📦 COMPONENTE PRINCIPAL: LegalDecisionEditor
 const LegalDecisionEditor = () => {
@@ -32939,6 +33094,11 @@ const ThemeStyles = () => (
     }
   `}</style>
 );
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 🛡️ SEÇÃO 9: ERROR BOUNDARY & EXPORT
+// Tratamento de erros com fallback, wrapper SentencifyAI, export default
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // 🛡️ ERROR BOUNDARY (v1.8.5) - Previne tela branca em erros
 class ErrorBoundary extends React.Component {

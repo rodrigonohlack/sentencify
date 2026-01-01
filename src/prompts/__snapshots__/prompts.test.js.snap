@@ -1,0 +1,103 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Prompts - Snapshot Tests > Prompt de Ordenação (reorderTopicsViaLLM) > snapshot: prompt completo de ordenação 1`] = `
+"Reordene os seguintes tópicos de uma ação trabalhista na ordem processual correta:
+
+ORDEM PROCESSUAL:
+1. RELATÓRIO
+2. TRAMITAÇÃO (Juízo Digital, Segredo Justiça, Prioridade)
+3. IMPUGNAÇÃO AOS DOCUMENTOS
+4. PRELIMINARES - Art. 337 CPC na ordem: citação → incompetência → valor → inépcia → perempção → litispendência → coisa julgada → conexão → representação → arbitragem → legitimidade → caução → gratuidade
+5. PREJUDICIAIS (prescrição bienal/quinquenal, decadência)
+6. MÉRITO - ordenar assim:
+   6a. Declaratórios/Constitutivos (vínculo, reversão justa causa, rescisão indireta)
+   6b. Obrigações de fazer (CTPS, guias)
+   6c. Condenatórios (verbas, horas extras, adicionais, danos)
+   6d. Responsabilidade - APÓS definir o que é devido (grupo econômico, solidária, subsidiária)
+   6e. Justiça Gratuita - ANTES de honorários
+   6f. Honorários - ÚLTIMO do mérito
+7. QUESTÕES FINAIS (litigância má-fé, ofícios, juros, limitação)
+
+TÓPICOS A ORDENAR:
+1. "TESTE" (Mérito)
+
+Responda APENAS com JSON: {"order": [1, 3, 2, ...]}
+Use os números originais da lista."
+`;
+
+exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: estiloRedacao 1`] = `
+"Use linguagem jurídica formal, objetiva e precisa.
+Evite repetições e redundâncias.
+Seja direto e conciso, sem perder a clareza.
+Utilize voz ativa sempre que possível.
+Mantenha coerência terminológica ao longo do texto."
+`;
+
+exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: formatacaoHTML 1`] = `
+"Formate a resposta em HTML válido.
+Use tags <p> para parágrafos, <strong> para negrito, <em> para itálico.
+Use <ul>/<ol> e <li> para listas.
+Exemplo: Exemplo de <strong>texto</strong>"
+`;
+
+exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: formatacaoParagrafos 1`] = `
+"Cada parágrafo deve estar em uma tag <p> separada.
+Não use <br> para separar parágrafos.
+Exemplo: <p>Parágrafo 1</p><p>Parágrafo 2</p>"
+`;
+
+exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: numeracaoReclamadas 1`] = `
+"Se houver mais de uma reclamada:
+- Use "primeira ré", "segunda ré", etc.
+- Na fundamentação, identifique claramente a qual ré se refere cada obrigação."
+`;
+
+exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: preservarAnonimizacao 1`] = `
+"IMPORTANTE: O texto pode conter placeholders de anonimização como [RECLAMANTE], [RECLAMADA], [VALOR], etc.
+PRESERVE estes placeholders exatamente como aparecem.
+NÃO substitua por nomes reais ou valores fictícios."
+`;
+
+exports[`Prompts - Snapshot Tests > Prompts de Geração > snapshot: gerarDispositivo 1`] = `
+"Gere o DISPOSITIVO da sentença trabalhista.
+Estrutura:
+1. Frase inicial (Ante o exposto / Diante do exposto)
+2. Decisão sobre cada pedido (procedente/improcedente)
+3. Condenações específicas com valores/critérios
+4. Justiça gratuita
+5. Honorários advocatícios
+6. Custas processuais
+
+Use verbos no JULGO, CONDENO, DEFIRO, INDEFIRO."
+`;
+
+exports[`Prompts - Snapshot Tests > Prompts de Geração > snapshot: gerarRelatorio 1`] = `
+"Gere o RELATÓRIO da sentença trabalhista.
+Estrutura:
+1. Identificação das partes (reclamante e reclamada(s))
+2. Síntese dos pedidos da petição inicial
+3. Resumo da defesa (se houver)
+4. Tramitação processual relevante
+
+Seja objetivo e conciso. Use voz passiva quando apropriado."
+`;
+
+exports[`Prompts - Snapshot Tests > Prompts de Geração > snapshot: revisaoSentenca com documentos 1`] = `
+"Você é um revisor jurídico especializado em sentenças trabalhistas.
+Sua tarefa é identificar:
+1. Omissões - pedidos ou teses não apreciados
+2. Contradições - entre fundamentação e dispositivo
+3. Obscuridades - trechos confusos ou ambíguos
+4. Erros formais - citações incorretas, inconsistências numéricas
+Você tem acesso à petição inicial e contestação para verificar omissões."
+`;
+
+exports[`Prompts - Snapshot Tests > Prompts de Geração > snapshot: revisaoSentenca sem documentos 1`] = `
+"Você é um revisor jurídico especializado em sentenças trabalhistas.
+Sua tarefa é identificar:
+1. Omissões - pedidos ou teses não apreciados
+2. Contradições - entre fundamentação e dispositivo
+3. Obscuridades - trechos confusos ou ambíguos
+4. Erros formais - citações incorretas, inconsistências numéricas
+"
+`;
