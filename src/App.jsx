@@ -10,6 +10,8 @@ const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.25', feature: 'Fix setState durante render: contextualInsertFn como ref em useModelPreview' },
+  { version: '1.33.24', feature: 'Fix HTML nesting warning: spinner div→span no GlobalEditorModal' },
   { version: '1.33.23', feature: 'Fix infinite loop: ref para handleInsertModel em GlobalEditorModal' },
   { version: '1.33.22', feature: 'Fix infinite loop: useMemo em useFieldVersioning e useModelPreview' },
   { version: '1.33.21', feature: 'Fix botão limpar formatação (usa format(key,false) em vez de removeFormat)' },
