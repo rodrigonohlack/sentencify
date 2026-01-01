@@ -3,13 +3,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.30'; // v1.33.30: Testes sanitizeHTML expandidos (39 testes) - total 285 testes (261 unit + 24 E2E)
+const APP_VERSION = '1.33.31'; // v1.33.31: Migração para Render + heartbeat keepalive (sem limite de payload)
 
-// v1.32.41: URL base da API (localhost em dev, relativo em prod/Vercel)
-const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3001';
+// v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
+const getApiBase = () => {
+  // Desenvolvimento local
+  if (!import.meta.env.PROD) {
+    return 'http://localhost:3001';
+  }
+  // Produção: usar mesmo domínio (funciona tanto no Render quanto no Vercel)
+  return '';
+};
+const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.31', feature: 'Migração para Render: sem limite de payload (100MB vs 4.5MB Vercel), heartbeat keepalive, timeout 100min' },
   { version: '1.33.30', feature: 'Testes sanitizeHTML expandidos (39 testes XSS) - total 285 testes (261 unit + 24 E2E)' },
   { version: '1.33.29', feature: 'Testes E2E expandidos (24 testes) - total 267 testes (243 unit + 24 E2E)' },
   { version: '1.33.28', feature: 'Testes useTopicManager (42 testes) - total 243 testes unitários' },
@@ -18389,6 +18398,29 @@ const LegalDecisionEditor = () => {
 
   // 🔒 v1.9.5: Sistema de Lock de Aba Primária ────────────────────────────
   const primaryTabLock = usePrimaryTabLock();
+
+  // 💓 v1.33.31: Heartbeat keepalive (evita Render free tier dormir)
+  const HEARTBEAT_INTERVAL = 10 * 60 * 1000; // 10 minutos
+  React.useEffect(() => {
+    // Só ativa em produção
+    if (!import.meta.env.PROD) return;
+
+    const keepAlive = async () => {
+      try {
+        await fetch(`${API_BASE}/api/health`, { method: 'GET' });
+      } catch (err) {
+        // Silencioso - servidor pode estar acordando
+      }
+    };
+
+    // Primeiro heartbeat imediato (acorda servidor se dormindo)
+    keepAlive();
+
+    // Heartbeats periódicos
+    const interval = setInterval(keepAlive, HEARTBEAT_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // 🎨 v1.9.13: Sistema de Tema Claro/Escuro GLOBAL ─────────────────────────
   const [appTheme, setAppTheme] = React.useState(() =>

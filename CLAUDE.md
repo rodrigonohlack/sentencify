@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.30 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Vercel
+**Version**: 1.33.31 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -30,16 +30,25 @@
 
 > **Nota**: Este projeto agora roda como aplicação standalone (fora do sandbox Claude.ai). Não há mais limite de tamanho de arquivo nem necessidade de minificação.
 
-## Deploy (Vercel)
+## Deploy (Render)
 
-**URL Produção**: https://sentencifyai.vercel.app
+**URL Produção**: https://sentencify.onrender.com
+**URL Backup**: https://sentencifyai.vercel.app (Vercel ainda funciona como fallback)
 **Repositório**: https://github.com/rodrigonohlack/sentencify
 
-**Auto-deploy**: Sempre que fizer alterações no código, fazer `git add . && git commit -m "descrição" && git push`. A Vercel faz deploy automático em ~1 minuto.
+**Auto-deploy**: Push para `main` dispara deploy automático (~2-3 min no Render).
+
+**Vantagens do Render vs Vercel**:
+- Sem limite de payload (100MB configurado vs 4.5MB no Vercel)
+- Timeout de 100 minutos (vs 1 minuto no Vercel)
+- WebSockets suportados
+- Servidor persistente (não serverless)
+
+**Free Tier**: Servidor dorme após 15 min de inatividade. Heartbeat no frontend (a cada 10 min) mantém servidor ativo durante uso.
 
 **Arquivos estáticos**: Colocar na pasta `public/` (ex: `MANUAL_USUARIO_AVANCADO.html`)
 
-**Arquivos grandes ignorados** (não vão para o GitHub/Vercel):
+**Arquivos grandes ignorados** (não vão para o GitHub):
 - `LEGIS/embeddings.json` (211 MB)
 - `JURIS/juris-embeddings.json`
 - `sentencify-modelos-com-embeddings.json`
@@ -54,6 +63,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.31 | Migração para Render: sem limite de payload (100MB), heartbeat keepalive, timeout 100min, CORS multi-origin |
 | v1.33.30 | Testes sanitizeHTML expandidos (39 testes XSS) - total 285 testes (261 unit + 24 E2E) |
 | v1.33.29 | Testes E2E expandidos (24 testes) - total 267 testes (243 unit + 24 E2E) |
 | v1.33.28 | Testes useTopicManager (42 testes) - total 243 testes unitários |
@@ -208,5 +218,5 @@
 | v1.14.0 | Detecção TF-IDF de similaridade + Botão "Salvar como Modelo" + Comparação lado a lado |
 | v1.12.27 | Progresso de extração inline no ProofCard (não mais banner de erro) |
 
-**Last Updated**: 2025-12-31
+**Last Updated**: 2026-01-01
 - sempre atualize a versão nas alterações realizadas

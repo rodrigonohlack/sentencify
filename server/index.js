@@ -14,15 +14,30 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// CORS para permitir requests do frontend
+// CORS para permitir requests do frontend (Render + Vercel + localhost)
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'https://sentencify.onrender.com',
+  'https://sentencifyai.vercel.app'
+];
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: function(origin, callback) {
+    // Permitir requests sem origin (ex: curl, Postman, health checks)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('CORS não permitido'), false);
+  },
   credentials: true
 }));
 
-// Parser JSON com limite aumentado para PDFs
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// Parser JSON com limite aumentado para PDFs grandes (Render não tem limite de plataforma)
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // Rotas de proxy para APIs de IA
 app.use('/api/claude', claudeRoutes);
