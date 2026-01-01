@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.33'; // v1.33.33: Ordenação de preliminares conforme Art. 337 CPC
+const APP_VERSION = '1.33.34'; // v1.33.34: Prompt de ordenação v2 - 7 grupos + ordem lógica do mérito (CAUSA > OBRIGAÇÃO > EFEITO)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -18,6 +18,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.34', feature: 'Ordenação v2: 7 grupos (tramitação, preliminares, prejudiciais, mérito, finais) + ordem lógica do mérito (CAUSA > OBRIGAÇÃO > EFEITO)' },
   { version: '1.33.33', feature: 'Ordenação de preliminares conforme Art. 337 CPC (13 incisos na ordem legal)' },
   { version: '1.33.32', feature: 'Fix embeddings 502: streaming com Readable.fromWeb() evita OOM no Render free tier (512MB RAM)' },
   { version: '1.33.31', feature: 'Migração para Render: sem limite de payload (100MB vs 4.5MB Vercel), heartbeat keepalive, timeout 100min' },
@@ -22064,32 +22065,30 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 
     const prompt = `Reordene os seguintes tópicos de uma ação trabalhista na ordem processual correta:
 
-ORDEM OBRIGATÓRIA:
-1. RELATÓRIO (sempre primeiro, se existir)
-2. IMPUGNAÇÃO AOS DOCUMENTOS (antes das preliminares)
-3. PRELIMINARES - ordenar conforme Art. 337 CPC:
-   I - inexistência ou nulidade da citação
-   II - incompetência absoluta e relativa
-   III - incorreção do valor da causa
-   IV - inépcia da petição inicial
-   V - perempção
-   VI - litispendência
-   VII - coisa julgada
-   VIII - conexão
-   IX - incapacidade da parte, defeito de representação ou falta de autorização
-   X - convenção de arbitragem
-   XI - ausência de legitimidade ou de interesse processual
-   XII - falta de caução ou de outra prestação que a lei exige como preliminar
-   XIII - indevida concessão do benefício de gratuidade de justiça
-4. PREJUDICIAIS (prescrição bienal/quinquenal, decadência)
-5. MÉRITO (verbas, pedidos principais)
-6. QUESTÕES PROCESSUAIS (juízo digital, litigância de má-fé, etc.)
+ORDEM OBRIGATÓRIA DOS GRUPOS:
+1. RELATÓRIO (sempre o primeiro tópico global)
+2. QUESTÕES DE TRAMITAÇÃO/RITO (Juízo 100% Digital, Segredo de Justiça, Prioridade de Tramitação) -> *Mover para cá mesmo se categorizado como "Questão Processual"*
+3. IMPUGNAÇÃO AOS DOCUMENTOS
+4. PRELIMINARES (Art. 337 CPC):
+   I - inexistência/nulidade citação; II - incompetência; III - valor da causa; IV - inépcia; V - perempção;
+   VI - litispendência; VII - coisa julgada; VIII - conexão; IX - incapacidade/defeito repr.;
+   X - convenção arbitragem; XI - ilegitimidade; XII - falta de caução; XIII - gratuidade indevida.
+5. PREJUDICIAIS (Prescrição bienal/quinquenal, Decadência)
+6. MÉRITO (Seguir "Ordem Lógica do Mérito" abaixo)
+7. QUESTÕES FINAIS (Litigância de má-fé, Expedição de ofícios, Juros/Correção, Limitação da Condenação)
 
-REGRAS ESPECIAIS DENTRO DO MÉRITO:
-- Verbas e pedidos principais primeiro
-- RESPONSABILIDADE (solidária, subsidiária, grupo econômico) no FINAL do mérito
-- JUSTIÇA GRATUITA deve vir ANTES de honorários
-- HONORÁRIOS ADVOCATÍCIOS deve ser o ÚLTIMO tópico de mérito
+ORDEM LÓGICA DO MÉRITO (CAUSA > OBRIGAÇÃO > EFEITO FINANCEIRO):
+1. PEDIDOS DECLARATÓRIOS/CONSTITUTIVOS (Prioridade Total):
+   - Reconhecimento de Vínculo, Unicidade Contratual, Reversão de Justa Causa, Nulidade de Pedido de Demissão, Rescisão Indireta.
+2. OBRIGAÇÕES DE FAZER (Formalização):
+   - Anotação/Baixa na CTPS, Retificação de dados, Entrega de guias.
+3. PEDIDOS CONDENATÓRIOS (Verbas e Indenizações):
+   - Verbas Rescisórias, Horas Extras, Adicionais (Insalubridade/Periculosidade), Danos Morais/Materiais.
+4. RESPONSABILIDADE:
+   - Grupo Econômico, Responsabilidade Solidária/Subsidiária, Sócios (Deve vir APÓS definir o que é devido).
+5. ENCERRAMENTO DO MÉRITO:
+   - Justiça Gratuita (Antes de honorários)
+   - Honorários Advocatícios (Obrigatoriamente o ÚLTIMO tópico de mérito)
 
 TÓPICOS A ORDENAR:
 ${topicsList}
