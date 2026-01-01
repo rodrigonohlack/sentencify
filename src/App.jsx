@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.32'; // v1.33.32: Fix embeddings 502 - streaming para evitar OOM no Render free tier
+const APP_VERSION = '1.33.33'; // v1.33.33: Ordenação de preliminares conforme Art. 337 CPC
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -18,6 +18,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.33', feature: 'Ordenação de preliminares conforme Art. 337 CPC (13 incisos na ordem legal)' },
   { version: '1.33.32', feature: 'Fix embeddings 502: streaming com Readable.fromWeb() evita OOM no Render free tier (512MB RAM)' },
   { version: '1.33.31', feature: 'Migração para Render: sem limite de payload (100MB vs 4.5MB Vercel), heartbeat keepalive, timeout 100min' },
   { version: '1.33.30', feature: 'Testes sanitizeHTML expandidos (39 testes XSS) - total 285 testes (261 unit + 24 E2E)' },
@@ -22066,7 +22067,20 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 ORDEM OBRIGATÓRIA:
 1. RELATÓRIO (sempre primeiro, se existir)
 2. IMPUGNAÇÃO AOS DOCUMENTOS (antes das preliminares)
-3. PRELIMINARES (inépcia, ilegitimidade, incompetência, suspensão)
+3. PRELIMINARES - ordenar conforme Art. 337 CPC:
+   I - inexistência ou nulidade da citação
+   II - incompetência absoluta e relativa
+   III - incorreção do valor da causa
+   IV - inépcia da petição inicial
+   V - perempção
+   VI - litispendência
+   VII - coisa julgada
+   VIII - conexão
+   IX - incapacidade da parte, defeito de representação ou falta de autorização
+   X - convenção de arbitragem
+   XI - ausência de legitimidade ou de interesse processual
+   XII - falta de caução ou de outra prestação que a lei exige como preliminar
+   XIII - indevida concessão do benefício de gratuidade de justiça
 4. PREJUDICIAIS (prescrição bienal/quinquenal, decadência)
 5. MÉRITO (verbas, pedidos principais)
 6. QUESTÕES PROCESSUAIS (juízo digital, litigância de má-fé, etc.)
