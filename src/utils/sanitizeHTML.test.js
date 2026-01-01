@@ -173,13 +173,131 @@ describe('sanitizeHTML', () => {
   describe('Fallback sem DOMPurify', () => {
     it('deve retornar string vazia se DOMPurify não estiver disponível', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
+
       const result = sanitizeHTML('<p>Texto</p>', null);
-      
+
       expect(result).toBe('');
       expect(consoleSpy).toHaveBeenCalled();
-      
+
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe('Segurança XSS - Cenários avançados', () => {
+    it('deve remover SVG com evento onload', () => {
+      const dirty = '<svg onload="alert(1)"><circle r="10"/></svg>';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).not.toContain('onload');
+    });
+
+    it('deve remover data: URI em src', () => {
+      const dirty = '<img src="data:text/html,<script>alert(1)</script>">';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      // img não é tag permitida, então é removida
+      expect(result).not.toContain('<img');
+    });
+
+    it('deve remover múltiplos scripts aninhados', () => {
+      const dirty = '<div><script>x</script><p><script>y</script></p></div>';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).not.toContain('<script');
+    });
+
+    it('deve remover script com variações de case', () => {
+      const dirty = '<SCRIPT>alert(1)</SCRIPT><ScRiPt>x</ScRiPt>';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result.toLowerCase()).not.toContain('<script');
+    });
+
+    it('deve remover onmouseover', () => {
+      const dirty = '<div onmouseover="alert(1)">Hover</div>';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).not.toContain('onmouseover');
+    });
+
+    it('deve remover onfocus', () => {
+      const dirty = '<input onfocus="alert(1)" autofocus>';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).not.toContain('onfocus');
+    });
+
+    it('deve remover script em comentário HTML', () => {
+      const dirty = '<!--<script>alert(1)</script>--><p>OK</p>';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).not.toContain('alert');
+    });
+  });
+
+  describe('Tags perigosas não permitidas', () => {
+    it('não deve permitir <iframe>', () => {
+      const dirty = '<iframe src="evil.com"></iframe>';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).not.toContain('<iframe');
+    });
+
+    it('não deve permitir <object>', () => {
+      const dirty = '<object data="evil.swf"></object>';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).not.toContain('<object');
+    });
+
+    it('não deve permitir <embed>', () => {
+      const dirty = '<embed src="evil.swf">';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).not.toContain('<embed');
+    });
+
+    it('não deve permitir <form>', () => {
+      const dirty = '<form action="evil.com"><input></form>';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).not.toContain('<form');
+    });
+
+    it('não deve permitir <meta>', () => {
+      const dirty = '<meta http-equiv="refresh" content="0;url=evil.com">';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).not.toContain('<meta');
+    });
+
+    it('não deve permitir <link>', () => {
+      const dirty = '<link rel="stylesheet" href="evil.css">';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).not.toContain('<link');
+    });
+
+    it('não deve permitir <base>', () => {
+      const dirty = '<base href="evil.com">';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).not.toContain('<base');
+    });
+  });
+
+  describe('Preservação de conteúdo seguro', () => {
+    it('deve preservar texto puro', () => {
+      const dirty = 'Texto simples sem HTML';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).toBe('Texto simples sem HTML');
+    });
+
+    it('deve preservar formatação complexa permitida', () => {
+      const dirty = '<p><strong>Negrito</strong> e <em>itálico</em> com <u>sublinhado</u></p>';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).toContain('<strong>');
+      expect(result).toContain('<em>');
+      expect(result).toContain('<u>');
+    });
+
+    it('deve preservar listas ordenadas', () => {
+      const dirty = '<ol><li>Primeiro</li><li>Segundo</li></ol>';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).toContain('<ol>');
+      expect(result).toContain('<li>');
+    });
+
+    it('deve preservar quebras de linha', () => {
+      const dirty = 'Linha 1<br>Linha 2<br/>Linha 3';
+      const result = sanitizeHTML(dirty, mockDOMPurify);
+      expect(result).toContain('<br>');
     });
   });
 });
