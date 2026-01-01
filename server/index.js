@@ -3,6 +3,7 @@ import cors from 'cors';
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { Readable } from 'stream';
 
 import claudeRoutes from './routes/claude.js';
 import geminiRoutes from './routes/gemini.js';
@@ -48,7 +49,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// v1.33.0: Proxy para embeddings do GitHub Releases (resolve CORS)
+// v1.33.32: Proxy para embeddings do GitHub Releases (streaming para evitar OOM)
 app.get('/api/embeddings', async (req, res) => {
   const { file } = req.query;
 
@@ -59,7 +60,7 @@ app.get('/api/embeddings', async (req, res) => {
   const githubUrl = `https://github.com/rodrigonohlack/sentencify/releases/download/embeddings-v1/${file}`;
 
   try {
-    console.log(`[Embeddings] Fetching ${file}...`);
+    console.log(`[Embeddings] Streaming ${file}...`);
 
     const response = await fetch(githubUrl);
 
@@ -73,9 +74,17 @@ app.get('/api/embeddings', async (req, res) => {
     }
     res.setHeader('Content-Type', 'application/json');
 
-    // Stream the response
-    const buffer = await response.arrayBuffer();
-    res.status(200).send(Buffer.from(buffer));
+    // Stream direto sem buffering (evita estouro de 512MB RAM no Render free tier)
+    const nodeStream = Readable.fromWeb(response.body);
+
+    nodeStream.on('error', (err) => {
+      console.error(`[Embeddings] Stream error:`, err.message);
+      if (!res.headersSent) {
+        res.status(500).json({ error: err.message });
+      }
+    });
+
+    nodeStream.pipe(res);
 
   } catch (error) {
     console.error(`[Embeddings] Error:`, error.message);
