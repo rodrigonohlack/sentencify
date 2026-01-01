@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.34 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.33.35 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -63,6 +63,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.35 | Ordenação v3: numeração única (6a-6f), sem referências cruzadas, explicações contextuais |
 | v1.33.34 | Ordenação v2: 7 grupos + ordem lógica do mérito (CAUSA > OBRIGAÇÃO > EFEITO FINANCEIRO) |
 | v1.33.33 | Ordenação de preliminares conforme Art. 337 CPC (13 incisos na ordem legal) |
 | v1.33.32 | Fix embeddings 502: streaming com Readable.fromWeb() evita OOM no Render free tier (512MB RAM) |
