@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview de Modais - SentencifyAI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-modal {
+      animation: fadeIn 0.2s ease-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 min-h-screen p-8">
+  <h1 class="text-3xl font-bold text-white mb-8 text-center">Preview de Estilos de Modal</h1>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+
+    <!-- OPÇÃO 1: Moderno -->
+    <div class="space-y-4">
+      <h2 class="text-xl font-semibold text-blue-400 text-center">Opção 1: Moderno</h2>
+      <p class="text-slate-400 text-sm text-center mb-4">Backdrop blur, ícone em círculo, animado</p>
+
+      <div class="relative bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700">
+        <!-- Modal -->
+        <div class="bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-600/50 animate-modal overflow-hidden">
+          <!-- Header -->
+          <div class="flex items-center justify-between p-4 border-b border-slate-700/50">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-white">Renomear Tópico</h3>
+                <p class="text-xs text-slate-400">Altere o nome do tópico</p>
+              </div>
+            </div>
+            <button class="w-8 h-8 rounded-lg bg-slate-700/50 hover:bg-slate-600 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <!-- Content -->
+          <div class="p-5 space-y-4">
+            <div>
+              <label class="block text-sm text-slate-400 mb-2">Nome atual</label>
+              <div class="px-3 py-2 bg-slate-900/50 rounded-lg text-slate-300 text-sm border border-slate-700/50">
+                HORAS EXTRAS
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm text-slate-400 mb-2">Novo nome</label>
+              <input type="text" placeholder="Digite o novo nome..." class="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+            </div>
+          </div>
+          <!-- Footer -->
+          <div class="flex gap-3 p-4 border-t border-slate-700/50 bg-slate-900/30">
+            <button class="flex-1 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium transition-colors">
+              Cancelar
+            </button>
+            <button class="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors shadow-lg shadow-blue-600/20">
+              Renomear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPÇÃO 2: Minimalista -->
+    <div class="space-y-4">
+      <h2 class="text-xl font-semibold text-emerald-400 text-center">Opção 2: Minimalista</h2>
+      <p class="text-slate-400 text-sm text-center mb-4">Clean, compacto, foco no conteúdo</p>
+
+      <div class="relative bg-black/50 rounded-2xl p-6 border border-slate-700">
+        <!-- Modal -->
+        <div class="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 animate-modal overflow-hidden">
+          <!-- Header compacto -->
+          <div class="flex items-center justify-between px-5 py-4">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              <h3 class="font-medium text-white">Renomear Tópico</h3>
+            </div>
+            <button class="text-slate-500 hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <!-- Content -->
+          <div class="px-5 pb-4 space-y-3">
+            <p class="text-sm text-slate-400">
+              De: <span class="text-slate-300">HORAS EXTRAS</span>
+            </p>
+            <input type="text" placeholder="Novo nome..." class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+          </div>
+          <!-- Footer -->
+          <div class="flex justify-end gap-2 px-5 py-3 bg-slate-900/50">
+            <button class="px-4 py-1.5 rounded-lg text-slate-400 hover:text-white text-sm font-medium transition-colors">
+              Cancelar
+            </button>
+            <button class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors">
+              Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPÇÃO 3: Glassmorphism -->
+    <div class="space-y-4">
+      <h2 class="text-xl font-semibold text-purple-400 text-center">Opção 3: Glassmorphism</h2>
+      <p class="text-slate-400 text-sm text-center mb-4">Transparência, blur, glow sutil</p>
+
+      <div class="relative bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-2xl p-6 border border-slate-700">
+        <!-- Modal -->
+        <div class="bg-white/5 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 animate-modal overflow-hidden" style="box-shadow: 0 0 40px rgba(139, 92, 246, 0.15)">
+          <!-- Header -->
+          <div class="flex items-center justify-between p-5 border-b border-white/10">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </div>
+              <h3 class="font-semibold text-white">Renomear Tópico</h3>
+            </div>
+            <button class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all border border-white/10">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <!-- Content -->
+          <div class="p-5 space-y-4">
+            <div>
+              <label class="block text-sm text-slate-300 mb-2">Nome atual</label>
+              <div class="px-3 py-2 bg-white/5 rounded-xl text-purple-300 text-sm border border-white/10">
+                HORAS EXTRAS
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm text-slate-300 mb-2">Novo nome</label>
+              <input type="text" placeholder="Digite o novo nome..." class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all">
+            </div>
+          </div>
+          <!-- Footer -->
+          <div class="flex gap-3 p-4 border-t border-white/10 bg-black/20">
+            <button class="flex-1 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-medium transition-all">
+              Cancelar
+            </button>
+            <button class="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-medium transition-all shadow-lg shadow-purple-500/25">
+              Renomear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal de Confirmação (Deletar) -->
+  <h2 class="text-2xl font-bold text-white mt-16 mb-8 text-center">Ação Destrutiva (Deletar)</h2>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+
+    <!-- Opção 1: Moderno - Delete -->
+    <div class="relative bg-black/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700">
+      <div class="bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-600/50 overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-slate-700/50">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-white">Excluir Tópico</h3>
+              <p class="text-xs text-slate-400">Esta ação não pode ser desfeita</p>
+            </div>
+          </div>
+          <button class="w-8 h-8 rounded-lg bg-slate-700/50 hover:bg-slate-600 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="p-5">
+          <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+            <p class="text-sm text-red-300">
+              Tem certeza que deseja excluir o tópico <span class="font-semibold text-red-200">"HORAS EXTRAS"</span>?
+            </p>
+          </div>
+        </div>
+        <div class="flex gap-3 p-4 border-t border-slate-700/50 bg-slate-900/30">
+          <button class="flex-1 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium transition-colors">
+            Cancelar
+          </button>
+          <button class="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-medium transition-colors shadow-lg shadow-red-600/20">
+            Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Opção 2: Minimalista - Delete -->
+    <div class="relative bg-black/50 rounded-2xl p-6 border border-slate-700">
+      <div class="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            <h3 class="font-medium text-white">Excluir Tópico</h3>
+          </div>
+          <button class="text-slate-500 hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="px-5 pb-4">
+          <p class="text-sm text-slate-300">
+            Excluir <span class="text-red-400 font-medium">"HORAS EXTRAS"</span>?
+          </p>
+        </div>
+        <div class="flex justify-end gap-2 px-5 py-3 bg-slate-900/50">
+          <button class="px-4 py-1.5 rounded-lg text-slate-400 hover:text-white text-sm font-medium transition-colors">
+            Cancelar
+          </button>
+          <button class="px-4 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition-colors">
+            Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Opção 3: Glassmorphism - Delete -->
+    <div class="relative bg-gradient-to-br from-red-900/30 to-orange-900/30 rounded-2xl p-6 border border-slate-700">
+      <div class="bg-white/5 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden" style="box-shadow: 0 0 40px rgba(239, 68, 68, 0.15)">
+        <div class="flex items-center justify-between p-5 border-b border-white/10">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/30">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </div>
+            <h3 class="font-semibold text-white">Excluir Tópico</h3>
+          </div>
+          <button class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all border border-white/10">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="p-5">
+          <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+            <p class="text-sm text-red-200">
+              Tem certeza que deseja excluir <span class="font-semibold">"HORAS EXTRAS"</span>?
+            </p>
+          </div>
+        </div>
+        <div class="flex gap-3 p-4 border-t border-white/10 bg-black/20">
+          <button class="flex-1 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-medium transition-all">
+            Cancelar
+          </button>
+          <button class="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-medium transition-all shadow-lg shadow-red-500/25">
+            Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="text-center text-slate-500 mt-12 text-sm">Qual estilo você prefere?</p>
+
+</body>
+</html>

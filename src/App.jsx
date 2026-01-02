@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.41'; // v1.33.41: Autenticação simples com senha hasheada (SHA-256)
+const APP_VERSION = '1.33.42'; // v1.33.42: Modais com estilo Glassmorphism (blur, gradientes, glow)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.42', feature: 'Modais com estilo Glassmorphism: blur, gradientes, ícones em círculos, botão X, animação suave' },
   { version: '1.33.41', feature: 'Autenticação simples: tela de login, senha hasheada (SHA-256), botão Sair no header' },
   { version: '1.33.40', feature: 'Validação de PDFs (33 testes): magic bytes, tamanho, tipo, estimativa de tempo de processamento' },
   { version: '1.33.39', feature: 'Testes de regressão de prompts (21 testes snapshot): validação de estrutura, Art. 337 CPC, ordem do mérito' },
@@ -297,12 +298,13 @@ const extractPlainText = (html) => {
 };
 
 // 🎨 CSS CLASSES CENTRALIZADAS (v1.12.5 - Classes utilitárias consolidadas)
+// v1.33.42: Glassmorphism style para modais
 const CSS = {
-  // Modal system
-  modalOverlay: "fixed inset-0 theme-modal-overlay flex items-center justify-center z-[90] p-4",
-  modalContainer: "theme-modal-container rounded-lg shadow-2xl border",
-  modalHeader: "p-6 border-b theme-border-secondary",
-  modalFooter: "p-6 border-t theme-border-secondary flex gap-3",
+  // Modal system - Glassmorphism v1.33.42
+  modalOverlay: "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[90] p-4",
+  modalContainer: "bg-white/5 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 theme-modal-glow",
+  modalHeader: "flex items-center justify-between p-5 border-b border-white/10",
+  modalFooter: "flex gap-3 p-4 border-t border-white/10 bg-black/20",
   // Input
   inputField: "w-full px-4 py-3 theme-input border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500",
   inputBase: "w-full theme-bg-secondary border theme-border-input rounded-lg theme-text-primary theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500",
@@ -319,15 +321,15 @@ const CSS = {
   flexGap3: "flex items-center gap-3",
   flexBetween: "flex items-center justify-between",
   flexCenterJustify: "flex items-center justify-center gap-2",
-  // Buttons
-  btnBase: "rounded-lg font-medium",
-  btnPrimary: "px-4 py-2 rounded-lg font-medium text-white bg-purple-600 hover-purple-700",
-  btnSecondary: "px-4 py-2 rounded-lg font-medium theme-bg-tertiary hover-slate-500",
-  btnDanger: "px-4 py-2 rounded-lg font-medium bg-red-600 text-white hover-red-700-from-600",
-  btnSuccess: "px-4 py-2 rounded-lg font-medium bg-green-600 text-white hover-green-700-from-600",
-  btnBlue: "px-4 py-2 rounded-lg font-medium bg-blue-600 text-white hover-blue-700",
-  btnRed: "px-4 py-2 rounded-lg font-medium bg-red-600 text-white hover-red-700-from-600",
-  btnGreen: "px-4 py-2 rounded-lg font-medium bg-green-600 text-white hover-green-700-from-600",
+  // Buttons - Glassmorphism v1.33.42
+  btnBase: "rounded-xl font-medium transition-all",
+  btnPrimary: "px-4 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-lg shadow-purple-500/25",
+  btnSecondary: "px-4 py-2.5 rounded-xl font-medium bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 transition-all",
+  btnDanger: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-lg shadow-red-500/25",
+  btnSuccess: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25",
+  btnBlue: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-lg shadow-blue-500/25",
+  btnRed: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-lg shadow-red-500/25",
+  btnGreen: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25",
   btnSmall: "px-2 py-1 rounded text-xs",
   // Cards
   cardBase: "rounded-lg border theme-border-input theme-bg-secondary",
@@ -9779,10 +9781,12 @@ LegislacaoTab.displayName = 'LegislacaoTab';
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // 🔧 BaseModal: Componente base reutilizável para modais
+// v1.33.42: Glassmorphism style
 const BaseModal = React.memo(({
   isOpen,
   onClose,
   title,
+  subtitle,
   icon,
   iconColor = 'blue',
   size = 'md',
@@ -9799,27 +9803,48 @@ const BaseModal = React.memo(({
     '2xl': 'max-w-5xl'
   };
 
-  const iconColors = {
-    blue: 'text-blue-500',
-    red: 'text-red-500',
-    green: 'text-green-500',
-    yellow: 'text-yellow-500',
-    purple: 'text-purple-500',
-    orange: 'text-orange-500'
+  // Gradientes para o círculo do ícone
+  const iconGradients = {
+    blue: 'from-blue-500 to-cyan-500 shadow-blue-500/30',
+    red: 'from-red-500 to-orange-500 shadow-red-500/30',
+    green: 'from-green-500 to-emerald-500 shadow-green-500/30',
+    yellow: 'from-yellow-500 to-orange-500 shadow-yellow-500/30',
+    purple: 'from-purple-500 to-blue-500 shadow-purple-500/30',
+    orange: 'from-orange-500 to-red-500 shadow-orange-500/30'
   };
 
   return (
-    <div className={CSS.modalOverlay}>
-      <div className={`${CSS.modalContainer} ${sizes[size] || sizes.md}`}>
+    <div className={CSS.modalOverlay} onClick={onClose}>
+      <div
+        className={`${CSS.modalContainer} ${sizes[size] || sizes.md} w-full animate-modal`}
+        onClick={e => e.stopPropagation()}
+        style={{ animation: 'modalFadeIn 0.2s ease-out' }}
+      >
+        {/* Header com ícone em círculo e botão X */}
         <div className={CSS.modalHeader}>
-          {icon && React.cloneElement(icon, {
-            className: `w-6 h-6 ${iconColors[iconColor] || iconColors.blue}`
-          })}
-          <h2 className="text-xl font-bold theme-text-primary">{title}</h2>
+          <div className="flex items-center gap-3">
+            {icon && (
+              <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${iconGradients[iconColor] || iconGradients.blue} flex items-center justify-center shadow-lg`}>
+                {React.cloneElement(icon, { className: 'w-4 h-4 text-white' })}
+              </div>
+            )}
+            <div>
+              <h2 className="font-semibold text-white">{title}</h2>
+              {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all border border-white/10"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
-        <div className="p-6">
+        {/* Content */}
+        <div className="p-5">
           {children}
         </div>
+        {/* Footer */}
         {footer && (
           <div className={CSS.modalFooter}>
             {footer}
