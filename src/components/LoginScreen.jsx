@@ -11,6 +11,15 @@ import { Lock, Loader2, AlertCircle, Scale } from 'lucide-react';
 
 const AUTH_STORAGE_KEY = 'sentencify-auth';
 
+// API base (mesmo padrão do App.jsx)
+const getApiBase = () => {
+  if (typeof import.meta !== 'undefined' && !import.meta.env.PROD) {
+    return 'http://localhost:3001';
+  }
+  return '';
+};
+const API_BASE = getApiBase();
+
 /**
  * Hook para gerenciar autenticação
  */
@@ -30,7 +39,7 @@ export const useAuth = () => {
         }
 
         // Verificar se auth está habilitada no servidor
-        const response = await fetch('/api/auth');
+        const response = await fetch(`${API_BASE}/api/auth`);
         const data = await response.json();
         setAuthEnabled(data.authEnabled);
 
@@ -53,7 +62,7 @@ export const useAuth = () => {
 
   const login = async (password) => {
     try {
-      const response = await fetch('/api/auth', {
+      const response = await fetch(`${API_BASE}/api/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
