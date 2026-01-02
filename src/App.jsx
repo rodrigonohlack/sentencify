@@ -20758,10 +20758,10 @@ const LegalDecisionEditor = ({ onLogout }) => {
       return;
     }
 
-    const { legislacao, jurisprudencia } = dataDownloadStatus;
+    const { legislacao: legStatus, jurisprudencia: jurisStatus } = dataDownloadStatus;
 
     // Download legislação se necessário
-    if (legislacao.needed && !legislacao.downloading && !legislacao.completed) {
+    if (legStatus.needed && !legStatus.downloading && !legStatus.completed) {
       setDataDownloadStatus(prev => ({
         ...prev,
         legislacao: { ...prev.legislacao, downloading: true, error: null }
@@ -20795,7 +20795,7 @@ const LegalDecisionEditor = ({ onLogout }) => {
     }
 
     // Download jurisprudência se necessário
-    if (jurisprudencia.needed && !jurisprudencia.downloading && !jurisprudencia.completed) {
+    if (jurisStatus.needed && !jurisStatus.downloading && !jurisStatus.completed) {
       setDataDownloadStatus(prev => ({
         ...prev,
         jurisprudencia: { ...prev.jurisprudencia, downloading: true, error: null }
