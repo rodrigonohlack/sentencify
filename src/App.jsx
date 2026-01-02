@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.43'; // v1.33.43: Fix modais - tema claro respeitado, transparência adequada
+const APP_VERSION = '1.33.44'; // v1.33.44: Fix título e botão X dos modais no tema claro
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.44', feature: 'Fix título e botão X dos modais no tema claro' },
   { version: '1.33.43', feature: 'Fix modais: tema claro respeitado, transparência adequada, glow adaptativo' },
   { version: '1.33.42', feature: 'Modais com estilo Glassmorphism: blur, gradientes, ícones em círculos, botão X, animação suave' },
   { version: '1.33.41', feature: 'Autenticação simples: tela de login, senha hasheada (SHA-256), botão Sair no header' },
@@ -9822,7 +9823,7 @@ const BaseModal = React.memo(({
         style={{ animation: 'modalFadeIn 0.2s ease-out' }}
       >
         {/* Header com ícone em círculo e botão X */}
-        <div className={CSS.modalHeader}>
+        <div className={`${CSS.modalHeader} flex items-center justify-between`}>
           <div className="flex items-center gap-3">
             {icon && (
               <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${iconGradients[iconColor] || iconGradients.blue} flex items-center justify-center shadow-lg`}>
@@ -9830,13 +9831,13 @@ const BaseModal = React.memo(({
               </div>
             )}
             <div>
-              <h2 className="font-semibold text-white">{title}</h2>
-              {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
+              <h2 className="font-semibold theme-text-primary">{title}</h2>
+              {subtitle && <p className="text-xs theme-text-secondary">{subtitle}</p>}
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all border border-white/10"
+            className="w-8 h-8 rounded-full theme-bg-secondary hover:theme-bg-tertiary flex items-center justify-center theme-text-secondary hover:theme-text-primary transition-all border theme-border-modal"
           >
             <X className="w-4 h-4" />
           </button>
