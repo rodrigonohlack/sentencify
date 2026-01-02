@@ -126,7 +126,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.58'; // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
+const APP_VERSION = '1.33.60'; // v1.33.60: Otimização drag O(n) com Set pré-computado
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -141,6 +141,8 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.60', feature: 'Otimização drag: collision detection O(n) com Set pré-computado (antes O(n²) com find)' },
+  { version: '1.33.59', feature: 'Fix drag feedback visual: collision detection customizado ignora RELATÓRIO/DISPOSITIVO' },
   { version: '1.33.58', feature: 'dnd-kit para drag and drop de tópicos - suporte a wheel scroll durante arraste' },
   { version: '1.33.57', feature: 'Modal estilizado para confirmação de logout (substituir window.confirm nativo)' },
   { version: '1.33.56', feature: 'Reduzir espaçamento entre cards no modo lista (space-y-1, itemHeight 90)' },
@@ -21347,6 +21349,28 @@ const LegalDecisionEditor = ({ onLogout }) => {
     })
   );
 
+  // v1.33.60: Set pré-computado para lookup O(1) no collision detection
+  const specialTopicIds = React.useMemo(() => {
+    return new Set(
+      selectedTopics
+        .filter(t => isSpecialTopic(t))
+        .map(t => t.id || t.title)
+    );
+  }, [selectedTopics]);
+
+  // v1.33.60: Collision detection otimizado - O(n) ao invés de O(n²)
+  // Ignora RELATÓRIO e DISPOSITIVO para evitar feedback visual enganoso
+  const customCollisionDetection = React.useCallback((args) => {
+    const { droppableContainers, ...rest } = args;
+
+    // Filtrar usando Set (O(1) por lookup)
+    const filteredContainers = droppableContainers.filter(
+      container => !specialTopicIds.has(container.id)
+    );
+
+    return closestCenter({ ...rest, droppableContainers: filteredContainers });
+  }, [specialTopicIds]);
+
   const handleDndDragEnd = React.useCallback((event) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -28462,10 +28486,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       </div>
                       
                       <div className="space-y-2">
-                        {/* v1.33.58: DndContext para drag and drop com suporte a wheel scroll */}
+                        {/* v1.33.59: DndContext com collision detection customizado (ignora RELATÓRIO/DISPOSITIVO) */}
                         <DndContext
                           sensors={dndSensors}
-                          collisionDetection={closestCenter}
+                          collisionDetection={customCollisionDetection}
                           onDragEnd={handleDndDragEnd}
                         >
                           <SortableContext

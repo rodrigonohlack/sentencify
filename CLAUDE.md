@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.58 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.33.60 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -63,6 +63,8 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.60 | Otimização drag: collision detection O(n) com Set pré-computado (antes O(n²) com find) |
+| v1.33.59 | Fix drag feedback visual: collision detection customizado ignora RELATÓRIO/DISPOSITIVO (não abre espaço em posições inválidas) |
 | v1.33.58 | dnd-kit para drag and drop de tópicos - suporte a wheel scroll durante arraste |
 | v1.33.57 | Modal estilizado para confirmação de logout (substituir window.confirm) |
 | v1.33.56 | Reduzir espaçamento entre cards no modo lista (space-y-1, itemHeight 90) |
