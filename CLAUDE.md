@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.48 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.33.49 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -63,6 +63,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.49 | Spinner Neon + Ripple no AnalysisModal (anéis girando com ondas pulsantes) |
 | v1.33.48 | ESC handler centralizado no BaseModal (18 modais beneficiados) |
 | v1.33.47 | Glassmorphism + ESC em 7 modais (ExtractModel, ExtractedModelPreview, AIAssistant, Dispositivo, Similarity, Config) + AnalysisModal visual only |
 | v1.33.46 | Aplicar estilo Glassmorphism ao BulkUploadModal (consistência visual) |

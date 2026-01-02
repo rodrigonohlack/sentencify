@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.48'; // v1.33.48: ESC handler no BaseModal (18 modais beneficiados)
+const APP_VERSION = '1.33.49'; // v1.33.49: Spinner Neon + Ripple no AnalysisModal
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.49', feature: 'Spinner Neon + Ripple no AnalysisModal (anéis girando com ondas pulsantes)' },
   { version: '1.33.48', feature: 'ESC handler centralizado no BaseModal (18 modais beneficiados)' },
   { version: '1.33.47', feature: 'Glassmorphism + ESC em 7 modais (ExtractModel, AIAssistant, Analysis, Dispositivo, Similarity, Config)' },
   { version: '1.33.46', feature: 'Aplicar estilo Glassmorphism ao BulkUploadModal (consistência visual)' },
@@ -11473,10 +11474,15 @@ const AnalysisModal = React.memo(({
 
         <div className="p-8">
           <div className="flex flex-col items-center gap-6">
-            {/* Spinner animado - dois Loader2 sobrepostos girando em direções opostas */}
-            <div className="relative flex items-center justify-center">
-              <Loader2 className="w-20 h-20 text-blue-500 animate-spin" />
-              <Loader2 className="w-10 h-10 text-purple-500 animate-spin absolute" style={{ animationDirection: 'reverse' }} />
+            {/* Spinner Neon + Ripple - v1.33.49 */}
+            <div className="spinner-neon-ripple">
+              <div className="ripple"></div>
+              <div className="ripple"></div>
+              <div className="ripple"></div>
+              <div className="core">
+                <div className="outer"></div>
+                <div className="inner"></div>
+              </div>
             </div>
 
             {/* Mensagem de progresso */}
