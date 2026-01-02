@@ -120,8 +120,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2, LogOut } from 'lucide-react';
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
+// v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS as DndCSS } from '@dnd-kit/utilities';
+
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.57'; // v1.33.57: Modal estilizado para confirmação de logout
+const APP_VERSION = '1.33.58'; // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +141,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.58', feature: 'dnd-kit para drag and drop de tópicos - suporte a wheel scroll durante arraste' },
   { version: '1.33.57', feature: 'Modal estilizado para confirmação de logout (substituir window.confirm nativo)' },
   { version: '1.33.56', feature: 'Reduzir espaçamento entre cards no modo lista (space-y-1, itemHeight 90)' },
   { version: '1.33.55', feature: 'Fix borda superior cortada no hover do modo lista - remover card-hover-lift (translateY invadia card acima)' },
@@ -7851,21 +7857,17 @@ const ProcessingModeSelector = React.memo(({ value, onChange, disabled = false, 
   );
 });
 
+// v1.33.58: TopicCard refatorado para dnd-kit (isDragging/isOver ao invés de handlers HTML5)
 const TopicCard = React.memo(({
   topic,
   selectedIdx,
   topicRefs,
   lastEditedTopicTitle,
-  draggedIndex,
-  dragOverIndex,
+  isDragging,  // v1.33.58: dnd-kit
+  isOver,      // v1.33.58: dnd-kit
   selectedTopics,
   extractedTopics,
   topicsToMerge,
-  handleDragStart,
-  handleDragEnd,
-  handleDragOver,
-  handleDragLeave,
-  handleDrop,
   toggleTopicSelection,
   moveTopicUp,
   moveTopicDown,
@@ -7897,24 +7899,19 @@ const TopicCard = React.memo(({
     return temConteudo && temResultado;
   };
 
+  // v1.33.58: Removido draggable e handlers HTML5 - agora controlado pelo SortableTopicCard
   return (
     <div
       key={topic.title}
       ref={(el) => topicRefs.current[topic.title] = el}
-      draggable={!isRelatorioOrDispositivo}
-      onDragStart={(e) => handleDragStart(e, selectedIdx)}
-      onDragEnd={handleDragEnd}
-      onDragOver={(e) => handleDragOver(e, selectedIdx)}
-      onDragLeave={handleDragLeave}
-      onDrop={(e) => handleDrop(e, selectedIdx)}
       className={`hover-topic-drag-area rounded-lg p-3 border-2 transition-all duration-300 ${
         isRelatorioOrDispositivo ? 'cursor-default' : 'cursor-move'
       } ${
         lastEditedTopicTitle === topic.title
           ? 'border-green-500 shadow-lg shadow-green-500/20'
-          : draggedIndex === selectedIdx
+          : isDragging
             ? 'border-blue-500 shadow-2xl shadow-blue-500/40'
-            : dragOverIndex === selectedIdx
+            : isOver
               ? 'border-purple-500 shadow-xl shadow-purple-500/30'
               : 'border-blue-500 card-hover-lift'
       }`}
@@ -7939,7 +7936,7 @@ const TopicCard = React.memo(({
         {!isRelatorioOrDispositivo && (
           <div className="flex-shrink-0 cursor-grab active:cursor-grabbing">
             <GripVertical className={`w-5 h-5 transition-colors ${
-              draggedIndex === selectedIdx ? 'text-blue-400' : 'theme-text-muted hover-theme-text-secondary'
+              isDragging ? 'text-blue-400' : 'theme-text-muted hover-theme-text-secondary'
             }`} />
           </div>
         )}
@@ -8166,6 +8163,43 @@ const TopicCard = React.memo(({
 
 // Display name para React DevTools
 TopicCard.displayName = 'TopicCard';
+
+// v1.33.58: SortableTopicCard - wrapper para dnd-kit com suporte a wheel scroll
+const SortableTopicCard = React.memo(({ topic, id, ...props }) => {
+  const isSpecial = isSpecialTopic(topic);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    isOver
+  } = useSortable({
+    id,
+    disabled: isSpecial
+  });
+
+  const style = {
+    transform: DndCSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 'auto'
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <TopicCard
+        topic={topic}
+        isDragging={isDragging}
+        isOver={isOver}
+        {...props}
+      />
+    </div>
+  );
+});
+SortableTopicCard.displayName = 'SortableTopicCard';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // 📦 SEÇÃO 4: COMPONENTES DE UI
@@ -21304,6 +21338,32 @@ const LegalDecisionEditor = ({ onLogout }) => {
 
   // 🎯 HANDLERS COM useCallback (memoizados para evitar recriação)
 
+  // v1.33.58: dnd-kit sensors e handler para drag and drop com wheel scroll
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Mínimo de 8px de movimento antes de iniciar drag (evita cliques acidentais)
+      },
+    })
+  );
+
+  const handleDndDragEnd = React.useCallback((event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = selectedTopics.findIndex(t => (t.id || t.title) === active.id);
+    const newIndex = selectedTopics.findIndex(t => (t.id || t.title) === over.id);
+
+    // Proteger tópicos especiais (RELATÓRIO e DISPOSITIVO)
+    if (isSpecialTopic(selectedTopics[oldIndex]) || isSpecialTopic(selectedTopics[newIndex])) {
+      return;
+    }
+
+    const reordered = arrayMove(selectedTopics, oldIndex, newIndex);
+    setSelectedTopics(reordered);
+  }, [selectedTopics, setSelectedTopics]);
+
+  // v1.33.58: Handlers HTML5 antigos mantidos temporariamente para complementares
   const handleDragStart = React.useCallback((e, index) => {
     // Bloquear drag de RELATÓRIO e DISPOSITIVO
     const topic = selectedTopics[index];
@@ -28402,38 +28462,44 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       </div>
                       
                       <div className="space-y-2">
-                        {/* Renderizar tópicos selecionados primeiro (na ordem correta) - v1.2.7: Componentizado */}
-                        {selectedTopics.map((topic, selectedIdx) => (
-                          <TopicCard
-                            key={topic.title}
-                            topic={topic}
-                            selectedIdx={selectedIdx}
-                            topicRefs={topicRefs}
-                            lastEditedTopicTitle={lastEditedTopicTitle}
-                            draggedIndex={draggedIndex}
-                            dragOverIndex={dragOverIndex}
-                            selectedTopics={selectedTopics}
-                            extractedTopics={extractedTopics}
-                            topicsToMerge={topicsToMerge}
-                            handleDragStart={handleDragStart}
-                            handleDragEnd={handleDragEnd}
-                            handleDragOver={handleDragOver}
-                            handleDragLeave={handleDragLeave}
-                            handleDrop={handleDrop}
-                            toggleTopicSelection={toggleTopicSelection}
-                            moveTopicUp={moveTopicUp}
-                            moveTopicDown={moveTopicDown}
-                            moveTopicToPosition={moveTopicToPosition}
-                            setSelectedTopics={setSelectedTopics}
-                            setExtractedTopics={setExtractedTopics}
-                            startEditing={startEditing}
-                            setTopicToRename={setTopicToRename}
-                            setNewTopicName={setNewTopicName}
-                            openModal={openModal}
-                            setTopicToSplit={setTopicToSplit}
-                            setTopicsToMerge={setTopicsToMerge}
-                          />
-                        ))}
+                        {/* v1.33.58: DndContext para drag and drop com suporte a wheel scroll */}
+                        <DndContext
+                          sensors={dndSensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={handleDndDragEnd}
+                        >
+                          <SortableContext
+                            items={selectedTopics.map(t => t.id || t.title)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            {/* Renderizar tópicos selecionados primeiro (na ordem correta) - v1.33.58: SortableTopicCard */}
+                            {selectedTopics.map((topic, selectedIdx) => (
+                              <SortableTopicCard
+                                key={topic.id || topic.title}
+                                id={topic.id || topic.title}
+                                topic={topic}
+                                selectedIdx={selectedIdx}
+                                topicRefs={topicRefs}
+                                lastEditedTopicTitle={lastEditedTopicTitle}
+                                selectedTopics={selectedTopics}
+                                extractedTopics={extractedTopics}
+                                topicsToMerge={topicsToMerge}
+                                toggleTopicSelection={toggleTopicSelection}
+                                moveTopicUp={moveTopicUp}
+                                moveTopicDown={moveTopicDown}
+                                moveTopicToPosition={moveTopicToPosition}
+                                setSelectedTopics={setSelectedTopics}
+                                setExtractedTopics={setExtractedTopics}
+                                startEditing={startEditing}
+                                setTopicToRename={setTopicToRename}
+                                setNewTopicName={setNewTopicName}
+                                openModal={openModal}
+                                setTopicToSplit={setTopicToSplit}
+                                setTopicsToMerge={setTopicsToMerge}
+                              />
+                            ))}
+                          </SortableContext>
+                        </DndContext>
 
                         {/* Renderizar tópicos NÃO selecionados por último */}
                         {/* v1.4.6.2: OPT-01 - Memoizado no corpo do componente (linha 10546) */}
