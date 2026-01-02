@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.56'; // v1.33.56: Reduzir espaçamento entre cards no modo lista (space-y-1, itemHeight 90)
+const APP_VERSION = '1.33.57'; // v1.33.57: Modal estilizado para confirmação de logout
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.57', feature: 'Modal estilizado para confirmação de logout (substituir window.confirm nativo)' },
   { version: '1.33.56', feature: 'Reduzir espaçamento entre cards no modo lista (space-y-1, itemHeight 90)' },
   { version: '1.33.55', feature: 'Fix borda superior cortada no hover do modo lista - remover card-hover-lift (translateY invadia card acima)' },
   { version: '1.33.54', feature: 'Fix borda sumindo no hover do modo lista (ModelCard) - border-2 para consistência com cards' },
@@ -1462,7 +1463,8 @@ const useModalManager = () => {
     proofTextAnonymization: false,
     proofExtractionAnonymization: false,
     sentenceReview: false,
-    sentenceReviewResult: false
+    sentenceReviewResult: false,
+    logout: false  // v1.33.57
   });
 
   const [textPreview, setTextPreview] = useState({ isOpen: false, title: '', text: '' });
@@ -11615,6 +11617,18 @@ const ClearProjectModal = React.memo(({ isOpen, onClose, onConfirmClear }) => (
   </BaseModal>
 ));
 ClearProjectModal.displayName = 'ClearProjectModal';
+
+// v1.33.57: Modal de confirmação de logout estilizado
+const LogoutConfirmModal = React.memo(({ isOpen, onClose, onConfirm }) => (
+  <BaseModal isOpen={isOpen} onClose={onClose} title="Sair do Sistema" icon={<LogOut />} iconColor="red" size="sm"
+    footer={<ModalFooter.Destructive onClose={onClose} onConfirm={onConfirm} confirmText="Sim, Sair" />}>
+    <div className="space-y-4">
+      <p className="theme-text-tertiary">Deseja realmente sair do sistema?</p>
+      <ModalInfoBox>💾 Seus dados permanecerão salvos localmente.</ModalInfoBox>
+    </div>
+  </BaseModal>
+));
+LogoutConfirmModal.displayName = 'LogoutConfirmModal';
 
 // Modal: Anonimização (migrado para BaseModal) - v1.25: + NER
 // v1.29.03: Adicionar overlay IA Local durante detecção
@@ -27429,15 +27443,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                   >
                     ⚙️ Configurações IA
                   </button>
-                  {/* 🔐 v1.33.41: Botão Sair (só aparece se auth está habilitada) */}
+                  {/* 🔐 v1.33.41: Botão Sair (só aparece se auth está habilitada) - v1.33.57: Modal estilizado */}
                   {onLogout && (
                     <button
-                      onClick={() => {
-                        if (window.confirm('Deseja sair do sistema?')) {
-                          onLogout();
-                          window.location.reload();
-                        }
-                      }}
+                      onClick={() => openModal('logout')}
                       className="px-3 py-1 rounded text-xs flex items-center gap-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 transition-colors duration-200"
                       title="Sair do sistema"
                     >
@@ -31390,6 +31399,19 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           setAnonymizationNamesText('');
         }}
       />
+
+      {/* v1.33.57: Modal de Confirmação de Logout */}
+      {onLogout && (
+        <LogoutConfirmModal
+          isOpen={modals.logout}
+          onClose={() => closeModal('logout')}
+          onConfirm={() => {
+            closeModal('logout');
+            onLogout();
+            window.location.reload();
+          }}
+        />
+      )}
 
       {/* Modal de Nomes para Anonimização - v1.17.0 (v1.25: + NER) */}
       <AnonymizationNamesModal
