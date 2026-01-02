@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.44'; // v1.33.44: Fix título e botão X dos modais no tema claro
+const APP_VERSION = '1.33.45'; // v1.33.45: Migrar ProofAnalysisModal e LinkProofModal para BaseModal
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.45', feature: 'Migrar ProofAnalysisModal e LinkProofModal para BaseModal (padronização UI)' },
   { version: '1.33.44', feature: 'Fix título e botão X dos modais no tema claro' },
   { version: '1.33.43', feature: 'Fix modais: tema claro respeitado, transparência adequada, glow adaptativo' },
   { version: '1.33.42', feature: 'Modais com estilo Glassmorphism: blur, gradientes, ícones em círculos, botão X, animação suave' },
@@ -10338,6 +10339,7 @@ const AddProofTextModal = React.memo(({ isOpen, onClose, newProofData, setNewPro
 });
 AddProofTextModal.displayName = 'AddProofTextModal';
 
+// v1.33.45: Migrado para BaseModal
 const ProofAnalysisModal = React.memo(({
   isOpen,
   onClose,
@@ -10351,137 +10353,124 @@ const ProofAnalysisModal = React.memo(({
   proofTopicLinks,
   onAnalyzeContextual,
   onAnalyzeFree,
-  editorTheme = 'dark' // v1.21.16: Para contraste correto no tema claro
+  editorTheme = 'dark'
 }) => {
   if (!isOpen || !proofToAnalyze) return null;
 
   const linkedTopicsCount = proofTopicLinks[proofToAnalyze.id]?.length || 0;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto">
-      <div className="theme-bg-primary rounded-lg shadow-2xl border border-blue-700 max-w-2xl w-full mb-8">
-        <div className={CSS.modalHeader}>
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-blue-400" />
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-blue-400">Analisar Prova com IA</h3>
-              <p className="text-sm theme-text-muted mt-1">
-                {proofToAnalyze.name}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="p-6 space-y-4">
-          <p className="text-sm theme-text-tertiary">
-            Selecione o tipo de análise que deseja realizar nesta prova:
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Analisar Prova com IA"
+      subtitle={proofToAnalyze.name}
+      icon={<Sparkles />}
+      iconColor="blue"
+      size="lg"
+      footer={<ModalFooter.CloseOnly onClose={onClose} text="Cancelar" />}
+    >
+      <div className="space-y-4">
+        <p className="text-sm theme-text-tertiary">
+          Selecione o tipo de análise que deseja realizar nesta prova:
+        </p>
+
+        {/* Campo de Instruções Personalizadas */}
+        <div>
+          <label className={CSS.label}>
+            Instruções Personalizadas (Opcional)
+          </label>
+          <textarea
+            value={customInstructions}
+            onChange={(e) => setCustomInstructions(e.target.value)}
+            placeholder="Adicione instruções específicas para esta análise (ex: 'Focar em valores monetários', 'Verificar datas de vínculos empregatícios', 'Identificar assinaturas e testemunhas', etc.)..."
+            rows={3}
+            className="w-full px-3 py-2 theme-bg-secondary-50 border theme-border-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-text-secondary text-sm resize-none"
+          />
+          <p className="text-xs theme-text-disabled mt-1">
+            Estas instruções serão adicionadas ao prompt de análise da IA.
           </p>
-
-          {/* Campo de Instruções Personalizadas */}
-          <div>
-            <label className={CSS.label}>
-              Instruções Personalizadas (Opcional)
-            </label>
-            <textarea
-              value={customInstructions}
-              onChange={(e) => setCustomInstructions(e.target.value)}
-              placeholder="Adicione instruções específicas para esta análise (ex: 'Focar em valores monetários', 'Verificar datas de vínculos empregatícios', 'Identificar assinaturas e testemunhas', etc.)..."
-              rows={3}
-              className="w-full px-3 py-2 theme-bg-secondary-50 border theme-border-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-text-secondary text-sm resize-none"
-            />
-            <p className="text-xs theme-text-disabled mt-1">
-              Estas instruções serão adicionadas ao prompt de análise da IA.
-            </p>
-          </div>
-
-          {/* Opção 1: Análise Contextual (com checkbox de mini-relatórios dentro) */}
-          <div className={`rounded-lg ${editorTheme === 'light' ? 'hover-button-contextual-light' : 'hover-button-contextual'}`}>
-            <button
-              onClick={onAnalyzeContextual}
-              className="w-full p-4 text-left"
-            >
-              <div className="flex items-start gap-3">
-                <div className="icon-wrapper p-2 bg-purple-600/20 rounded-lg transition-colors">
-                  <Scale className="w-5 h-5 text-purple-400" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold theme-text-secondary mb-1">Análise Contextual</h4>
-                  <p className="text-sm theme-text-muted">
-                    Compara a prova com as alegações da petição e contestação, avaliando se prova ou refuta os pontos discutidos no processo.
-                  </p>
-                </div>
-              </div>
-            </button>
-            {/* v1.10.9: Checkbox mini-relatórios DENTRO do card Contextual */}
-            {linkedTopicsCount > 0 && (
-              <div className="px-4 pb-4 pt-0">
-                <label
-                  className="flex items-center gap-2 cursor-pointer text-xs theme-text-muted hover-label-text-purple"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <input
-                    type="checkbox"
-                    checked={useOnlyMiniRelatorios}
-                    onChange={(e) => setUseOnlyMiniRelatorios(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border-purple-600 theme-bg-secondary text-purple-500 focus:ring-1 focus:ring-purple-500 cursor-pointer"
-                  />
-                  <span>Usar apenas mini-relatórios dos {linkedTopicsCount} tópico(s) vinculado(s)</span>
-                </label>
-              </div>
-            )}
-          </div>
-
-          {/* Opção 2: Análise Livre (v1.10.10 - com checkbox de tópicos vinculados) */}
-          <div className={`rounded-lg ${editorTheme === 'light' ? 'hover-button-free-light' : 'hover-button-free'}`}>
-            <button
-              onClick={onAnalyzeFree}
-              className="w-full p-4 text-left"
-            >
-              <div className="flex items-start gap-3">
-                <div className="icon-wrapper p-2 bg-green-600/20 rounded-lg transition-colors">
-                  <Edit className="w-5 h-5 text-green-400" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold theme-text-secondary mb-1">Análise Livre</h4>
-                  <p className="text-sm theme-text-muted">
-                    Envia apenas a prova e suas instruções personalizadas.
-                  </p>
-                </div>
-              </div>
-            </button>
-            {/* v1.10.10: Checkbox para incluir tópicos vinculados */}
-            {linkedTopicsCount > 0 && (
-              <div className="px-4 pb-4 pt-0">
-                <label
-                  className="flex items-center gap-2 cursor-pointer text-xs theme-text-muted hover-label-text-green"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <input
-                    type="checkbox"
-                    checked={includeLinkedTopicsInFree}
-                    onChange={(e) => setIncludeLinkedTopicsInFree(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border-green-600 theme-bg-secondary text-green-500 focus:ring-1 focus:ring-green-500 cursor-pointer"
-                  />
-                  <span>Incluir tópicos vinculados ({linkedTopicsCount} tóp.)</span>
-                </label>
-              </div>
-            )}
-          </div>
         </div>
-        <div className={`${CSS.modalFooter} justify-end`}>
+
+        {/* Opção 1: Análise Contextual (com checkbox de mini-relatórios dentro) */}
+        <div className={`rounded-lg ${editorTheme === 'light' ? 'hover-button-contextual-light' : 'hover-button-contextual'}`}>
           <button
-            onClick={onClose}
-            className="px-6 py-2 theme-bg-secondary rounded-lg hover-slate-600-from-700"
+            onClick={onAnalyzeContextual}
+            className="w-full p-4 text-left"
           >
-            Cancelar
+            <div className="flex items-start gap-3">
+              <div className="icon-wrapper p-2 bg-purple-600/20 rounded-lg transition-colors">
+                <Scale className="w-5 h-5 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold theme-text-secondary mb-1">Análise Contextual</h4>
+                <p className="text-sm theme-text-muted">
+                  Compara a prova com as alegações da petição e contestação, avaliando se prova ou refuta os pontos discutidos no processo.
+                </p>
+              </div>
+            </div>
           </button>
+          {linkedTopicsCount > 0 && (
+            <div className="px-4 pb-4 pt-0">
+              <label
+                className="flex items-center gap-2 cursor-pointer text-xs theme-text-muted hover-label-text-purple"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <input
+                  type="checkbox"
+                  checked={useOnlyMiniRelatorios}
+                  onChange={(e) => setUseOnlyMiniRelatorios(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-purple-600 theme-bg-secondary text-purple-500 focus:ring-1 focus:ring-purple-500 cursor-pointer"
+                />
+                <span>Usar apenas mini-relatórios dos {linkedTopicsCount} tópico(s) vinculado(s)</span>
+              </label>
+            </div>
+          )}
+        </div>
+
+        {/* Opção 2: Análise Livre (com checkbox de tópicos vinculados) */}
+        <div className={`rounded-lg ${editorTheme === 'light' ? 'hover-button-free-light' : 'hover-button-free'}`}>
+          <button
+            onClick={onAnalyzeFree}
+            className="w-full p-4 text-left"
+          >
+            <div className="flex items-start gap-3">
+              <div className="icon-wrapper p-2 bg-green-600/20 rounded-lg transition-colors">
+                <Edit className="w-5 h-5 text-green-400" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold theme-text-secondary mb-1">Análise Livre</h4>
+                <p className="text-sm theme-text-muted">
+                  Envia apenas a prova e suas instruções personalizadas.
+                </p>
+              </div>
+            </div>
+          </button>
+          {linkedTopicsCount > 0 && (
+            <div className="px-4 pb-4 pt-0">
+              <label
+                className="flex items-center gap-2 cursor-pointer text-xs theme-text-muted hover-label-text-green"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <input
+                  type="checkbox"
+                  checked={includeLinkedTopicsInFree}
+                  onChange={(e) => setIncludeLinkedTopicsInFree(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-green-600 theme-bg-secondary text-green-500 focus:ring-1 focus:ring-green-500 cursor-pointer"
+                />
+                <span>Incluir tópicos vinculados ({linkedTopicsCount} tóp.)</span>
+              </label>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </BaseModal>
   );
 });
 
 ProofAnalysisModal.displayName = 'ProofAnalysisModal';
 
+// v1.33.45: Migrado para BaseModal
 const LinkProofModal = React.memo(({
   isOpen,
   onClose,
@@ -10493,102 +10482,91 @@ const LinkProofModal = React.memo(({
   if (!isOpen || !proofToLink) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto">
-      <div className="theme-bg-primary rounded-lg shadow-2xl border border-purple-700 max-w-2xl w-full mb-8">
-        {/* Header fixo */}
-        <div className={CSS.modalHeader}>
-          <div className="flex items-center gap-3">
-            <Scale className="w-6 h-6 text-purple-400" />
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-purple-400">Vincular Prova a Tópicos</h3>
-              <p className="text-sm theme-text-muted mt-1">
-                {proofToLink.name}
-              </p>
-            </div>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Vincular Prova a Tópicos"
+      subtitle={proofToLink.name}
+      icon={<Scale />}
+      iconColor="purple"
+      size="lg"
+      footer={
+        <button
+          onClick={onClose}
+          className="px-6 py-2 rounded-lg font-medium bg-purple-600 text-white hover-purple-700-from-600"
+        >
+          Concluir
+        </button>
+      }
+    >
+      {/* Scroll com margens negativas para compensar padding do BaseModal */}
+      <div className="max-h-[50vh] overflow-y-auto -mx-5 px-5">
+        {extractedTopics.length === 0 ? (
+          <div className="text-center py-8 theme-text-muted">
+            <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>Nenhum tópico disponível</p>
+            <p className="text-sm mt-2">Primeiro analise os documentos na aba "Upload & Análise"</p>
           </div>
-        </div>
-
-        {/* Área com lista de tópicos */}
-        <div className="p-6 max-h-[50vh] overflow-y-auto">
-          {extractedTopics.length === 0 ? (
-            <div className="text-center py-8 theme-text-muted">
-              <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Nenhum tópico disponível</p>
-              <p className="text-sm mt-2">Primeiro analise os documentos na aba "Upload & Análise"</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <p className="text-sm theme-text-muted mb-4">
-                Selecione os tópicos aos quais esta prova se relaciona:
-              </p>
-              {extractedTopics.map((topic) => {
-                const isLinked = proofTopicLinks[proofToLink.id]?.includes(topic.title) || false;
-                return (
-                  <label
-                    key={topic.title}
-                    className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                      isLinked
-                        ? 'bg-purple-600/20 border border-purple-500/50'
-                        : 'theme-bg-secondary-50 border theme-border-input hover-border-purple-alpha-30'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isLinked}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          // Adicionar vínculo
-                          setProofTopicLinks(prev => ({
-                            ...prev,
-                            [proofToLink.id]: [...(prev[proofToLink.id] || []), topic.title]
-                          }));
-                        } else {
-                          // Remover vínculo
-                          setProofTopicLinks(prev => ({
-                            ...prev,
-                            [proofToLink.id]: (prev[proofToLink.id] || []).filter(t => t !== topic.title)
-                          }));
-                        }
-                      }}
-                      className="mt-1 w-4 h-4 rounded theme-border text-purple-600 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0 theme-bg-secondary"
-                    />
-                    <div className="flex-1">
-                      <div className={CSS.flexGap2}>
-                        <span className="font-medium theme-text-secondary">{topic.title}</span>
-                        <span className={`px-2 py-0.5 text-xs rounded ${
-                          topic.category === 'PRELIMINAR'
-                            ? 'bg-yellow-500/20 text-yellow-300'
-                            : topic.category === 'PREJUDICIAL'
-                            ? 'bg-orange-500/20 text-orange-300'
-                            : 'theme-bg-blue-accent theme-text-blue'
-                        }`}>
-                          {topic.category}
-                        </span>
-                      </div>
-                      {topic.relatorio && (
-                        <p className="text-xs theme-text-muted mt-1 line-clamp-2">
-                          {(topic.relatorio.replace(/<[^>]*>/g, '')).substring(0, 120)}...
-                        </p>
-                      )}
+        ) : (
+          <div className="space-y-2">
+            <p className="text-sm theme-text-muted mb-4">
+              Selecione os tópicos aos quais esta prova se relaciona:
+            </p>
+            {extractedTopics.map((topic) => {
+              const isLinked = proofTopicLinks[proofToLink.id]?.includes(topic.title) || false;
+              return (
+                <label
+                  key={topic.title}
+                  className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                    isLinked
+                      ? 'bg-purple-600/20 border border-purple-500/50'
+                      : 'theme-bg-secondary-50 border theme-border-input hover-border-purple-alpha-30'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isLinked}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setProofTopicLinks(prev => ({
+                          ...prev,
+                          [proofToLink.id]: [...(prev[proofToLink.id] || []), topic.title]
+                        }));
+                      } else {
+                        setProofTopicLinks(prev => ({
+                          ...prev,
+                          [proofToLink.id]: (prev[proofToLink.id] || []).filter(t => t !== topic.title)
+                        }));
+                      }
+                    }}
+                    className="mt-1 w-4 h-4 rounded theme-border text-purple-600 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0 theme-bg-secondary"
+                  />
+                  <div className="flex-1">
+                    <div className={CSS.flexGap2}>
+                      <span className="font-medium theme-text-secondary">{topic.title}</span>
+                      <span className={`px-2 py-0.5 text-xs rounded ${
+                        topic.category === 'PRELIMINAR'
+                          ? 'bg-yellow-500/20 text-yellow-300'
+                          : topic.category === 'PREJUDICIAL'
+                          ? 'bg-orange-500/20 text-orange-300'
+                          : 'theme-bg-blue-accent theme-text-blue'
+                      }`}>
+                        {topic.category}
+                      </span>
                     </div>
-                  </label>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Footer fixo */}
-        <div className={`${CSS.modalFooter} justify-end`}>
-          <button
-            onClick={onClose}
-            className="px-6 py-2 rounded-lg font-medium bg-purple-600 text-white hover-purple-700-from-600"
-          >
-            Concluir
-          </button>
-        </div>
+                    {topic.relatorio && (
+                      <p className="text-xs theme-text-muted mt-1 line-clamp-2">
+                        {(topic.relatorio.replace(/<[^>]*>/g, '')).substring(0, 120)}...
+                      </p>
+                    )}
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        )}
       </div>
-    </div>
+    </BaseModal>
   );
 });
 
