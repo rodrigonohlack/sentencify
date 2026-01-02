@@ -29301,10 +29301,23 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
       {/* v1.21.21: Modal de opções para revisão de sentença */}
       {modals.sentenceReview && (
         <div className={CSS.modalOverlay}>
-          <div className={`${CSS.modalContainer} max-w-lg`}>
+          <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-lg`}>
             <div className={CSS.modalHeader}>
-              <Scale className="w-6 h-6 text-amber-400" />
-              <h3 className="text-xl font-bold text-amber-400">Revisar Sentença</h3>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-xl bg-amber-500/20">
+                    <Scale className="w-6 h-6 text-amber-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold theme-text-primary">Revisar Sentença</h3>
+                </div>
+                <button
+                  onClick={() => closeModal('sentenceReview')}
+                  className="p-2 rounded-xl theme-bg-secondary-50 theme-hover-bg transition-colors"
+                  title="Fechar"
+                >
+                  <X className="w-5 h-5 theme-text-tertiary" />
+                </button>
+              </div>
             </div>
             <div className="p-6 space-y-4">
               <p className="text-sm theme-text-tertiary mb-4">
