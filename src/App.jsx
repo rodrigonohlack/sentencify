@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.47'; // v1.33.47: Glassmorphism + ESC em 7 modais
+const APP_VERSION = '1.33.48'; // v1.33.48: ESC handler no BaseModal (18 modais beneficiados)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.48', feature: 'ESC handler centralizado no BaseModal (18 modais beneficiados)' },
   { version: '1.33.47', feature: 'Glassmorphism + ESC em 7 modais (ExtractModel, AIAssistant, Analysis, Dispositivo, Similarity, Config)' },
   { version: '1.33.46', feature: 'Aplicar estilo Glassmorphism ao BulkUploadModal (consistência visual)' },
   { version: '1.33.45', feature: 'Migrar ProofAnalysisModal e LinkProofModal para BaseModal (padronização UI)' },
@@ -9786,7 +9787,7 @@ LegislacaoTab.displayName = 'LegislacaoTab';
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // 🔧 BaseModal: Componente base reutilizável para modais
-// v1.33.42: Glassmorphism style
+// v1.33.48: ESC handler centralizado (18 modais beneficiados)
 const BaseModal = React.memo(({
   isOpen,
   onClose,
@@ -9798,6 +9799,17 @@ const BaseModal = React.memo(({
   children,
   footer
 }) => {
+  // ESC handler - deve vir antes do early return para cleanup funcionar
+  React.useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleEsc);
+    }
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const sizes = {
