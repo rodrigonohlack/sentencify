@@ -30771,7 +30771,14 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     </span>
                   </label>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
+                      // Re-verificar IndexedDB diretamente (não usar cache)
+                      const legNeeded = await EmbeddingsCDNService.needsDataDownload('legislacao');
+                      const jurisNeeded = await EmbeddingsCDNService.needsDataDownload('jurisprudencia');
+                      setDataDownloadStatus({
+                        legislacao: { needed: legNeeded, downloading: false, progress: 0, error: null, completed: false },
+                        jurisprudencia: { needed: jurisNeeded, downloading: false, progress: 0, error: null, completed: false }
+                      });
                       localStorage.removeItem('dismissedDataPrompt');
                       setShowDataDownloadModal(true);
                     }}
