@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.45'; // v1.33.45: Migrar ProofAnalysisModal e LinkProofModal para BaseModal
+const APP_VERSION = '1.33.46'; // v1.33.46: Aplicar estilo Glassmorphism ao BulkUploadModal
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.46', feature: 'Aplicar estilo Glassmorphism ao BulkUploadModal (consistência visual)' },
   { version: '1.33.45', feature: 'Migrar ProofAnalysisModal e LinkProofModal para BaseModal (padronização UI)' },
   { version: '1.33.44', feature: 'Fix título e botão X dos modais no tema claro' },
   { version: '1.33.43', feature: 'Fix modais: tema claro respeitado, transparência adequada, glow adaptativo' },
@@ -12417,17 +12418,28 @@ const BulkUploadModal = React.memo(({
   // View 1: Upload/Selection (quando NÃO está processando E NÃO está na revisão)
   if (!isProcessing && !isReviewOpen) {
     return (
-      <div className="fixed inset-0 bg-black/80 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto">
-        <div className="theme-bg-primary rounded-lg shadow-2xl border theme-border-secondary max-w-3xl w-full mb-8">
+      <div className="theme-modal-overlay flex items-start justify-center pt-8 overflow-y-auto">
+        <div className="theme-modal-container theme-border-modal theme-modal-glow animate-modal max-w-3xl w-full mb-8">
           <div className={CSS.modalHeader}>
-            <div className="flex items-center gap-3">
-              <Sparkles className="w-8 h-8 text-purple-400" />
-              <div>
-                <h3 className="text-2xl font-bold text-purple-400">Criar Modelos de Arquivos com IA</h3>
-                <p className="text-sm theme-text-muted mt-1">
-                  Envie até 20 arquivos e deixe a IA criar modelos completos automaticamente
-                </p>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl bg-purple-500/20">
+                  <Sparkles className="w-6 h-6 text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold theme-text-primary">Criar Modelos de Arquivos com IA</h3>
+                  <p className="text-sm theme-text-muted">
+                    Envie até 20 arquivos e deixe a IA criar modelos completos automaticamente
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-lg theme-hover-bg transition-colors"
+                title="Fechar"
+              >
+                <X className="w-5 h-5 theme-text-tertiary" />
+              </button>
             </div>
           </div>
 
@@ -12560,13 +12572,15 @@ const BulkUploadModal = React.memo(({
   if (isProcessing) {
     return (
       <div className={CSS.modalOverlay}>
-        <div className={`${CSS.modalContainer} max-w-2xl w-full flex flex-col`} style={{ maxHeight: '90vh' }}>
+        <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-2xl w-full flex flex-col`} style={{ maxHeight: '90vh' }}>
           <div className={CSS.modalHeader}>
             <div className="flex items-center gap-3">
-              <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+              <div className="p-3 rounded-xl bg-purple-500/20">
+                <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+              </div>
               <div>
-                <h3 className="text-2xl font-bold text-purple-400">Processando Arquivos...</h3>
-                <p className="text-sm theme-text-muted mt-1">
+                <h3 className="text-lg font-semibold theme-text-primary">Processando Arquivos...</h3>
+                <p className="text-sm theme-text-muted">
                   Aguarde enquanto a IA analisa os documentos
                 </p>
               </div>
