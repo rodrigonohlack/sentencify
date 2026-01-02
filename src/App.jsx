@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.54'; // v1.33.54: Fix borda sumindo no hover do modo lista (ModelCard)
+const APP_VERSION = '1.33.55'; // v1.33.55: Fix borda superior cortada no hover do modo lista (remover translateY)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.55', feature: 'Fix borda superior cortada no hover do modo lista - remover card-hover-lift (translateY invadia card acima)' },
   { version: '1.33.54', feature: 'Fix borda sumindo no hover do modo lista (ModelCard) - border-2 para consistência com cards' },
   { version: '1.33.53', feature: 'Otimizar hover elevation - GPU acceleration (will-change, translateZ, transition específica)' },
   { version: '1.33.52', feature: 'Fix mensagens hardcoded no bulk upload - agora mostra valor real de parallelRequests' },
@@ -8376,10 +8377,10 @@ const ModelCard = React.memo(({
     );
   }
 
-  // MODO LIST - Visualização compacta inline
+  // MODO LIST - Visualização compacta inline (v1.33.55: sem card-hover-lift para não cortar borda superior)
   return (
     <div
-      className="theme-bg-secondary-30 p-4 rounded-lg border-2 transition-all hover-theme-border-from-600 card-hover-lift"
+      className="theme-bg-secondary-30 p-4 rounded-lg border-2 transition-all hover-theme-border-from-600"
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">

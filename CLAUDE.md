@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.54 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.33.55 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -63,6 +63,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.55 | Fix borda superior cortada no hover do modo lista (remover translateY) |
 | v1.33.54 | Fix borda sumindo no hover do modo lista (ModelCard) - border-2 |
 | v1.33.53 | Otimizar hover elevation - GPU acceleration (will-change, translateZ) |
 | v1.33.52 | Fix mensagens hardcoded no bulk upload (agora mostra parallelRequests) |
