@@ -326,7 +326,7 @@ const CSS = {
   // Buttons - v1.33.43: cores que funcionam em ambos os temas
   btnBase: "rounded-xl font-medium transition-all",
   btnPrimary: "px-4 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-lg shadow-purple-500/25",
-  btnSecondary: "px-4 py-2.5 rounded-xl font-medium theme-bg-secondary hover:theme-bg-tertiary border theme-border-modal theme-text-primary transition-all",
+  btnSecondary: "px-4 py-2.5 rounded-xl font-medium theme-bg-secondary theme-hover-bg border theme-border-modal theme-text-primary transition-all",
   btnDanger: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-lg shadow-red-500/25",
   btnSuccess: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25",
   btnBlue: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-lg shadow-blue-500/25",
@@ -9837,7 +9837,7 @@ const BaseModal = React.memo(({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full theme-bg-secondary hover:theme-bg-tertiary flex items-center justify-center theme-text-secondary hover:theme-text-primary transition-all border theme-border-modal"
+            className="w-8 h-8 rounded-full theme-bg-secondary theme-hover-bg flex items-center justify-center theme-text-secondary transition-all border theme-border-modal hover:border-current"
           >
             <X className="w-4 h-4" />
           </button>
