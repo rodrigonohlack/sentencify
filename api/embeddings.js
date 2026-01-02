@@ -1,5 +1,6 @@
 // Proxy para download de embeddings do GitHub Releases
 // v1.33.0: Resolve CORS ao baixar embeddings
+// v1.33.61: Adicionado suporte para arquivos de dados (legis-data.json, juris-data.json)
 
 export default async function handler(req, res) {
   // CORS headers
@@ -18,11 +19,20 @@ export default async function handler(req, res) {
 
   const { file } = req.query;
 
-  if (!file || !['legis-embeddings.json', 'juris-embeddings.json'].includes(file)) {
+  // Arquivos permitidos e suas releases correspondentes
+  const allowedFiles = {
+    'legis-embeddings.json': 'embeddings-v1',
+    'juris-embeddings.json': 'embeddings-v1',
+    'legis-data.json': 'data-v1',
+    'juris-data.json': 'data-v1'
+  };
+
+  if (!file || !allowedFiles[file]) {
     return res.status(400).json({ error: 'Invalid file parameter' });
   }
 
-  const githubUrl = `https://github.com/rodrigonohlack/sentencify/releases/download/embeddings-v1/${file}`;
+  const releaseTag = allowedFiles[file];
+  const githubUrl = `https://github.com/rodrigonohlack/sentencify/releases/download/${releaseTag}/${file}`;
 
   try {
     console.log(`[Embeddings] Fetching ${file}...`);

@@ -54,14 +54,24 @@ app.get('/api/health', (req, res) => {
 });
 
 // v1.33.32: Proxy para embeddings do GitHub Releases (streaming para evitar OOM)
+// v1.33.61: Adicionado suporte para arquivos de dados (legis-data.json, juris-data.json)
 app.get('/api/embeddings', async (req, res) => {
   const { file } = req.query;
 
-  if (!file || !['legis-embeddings.json', 'juris-embeddings.json'].includes(file)) {
+  // Arquivos permitidos e suas releases correspondentes
+  const allowedFiles = {
+    'legis-embeddings.json': 'embeddings-v1',
+    'juris-embeddings.json': 'embeddings-v1',
+    'legis-data.json': 'data-v1',
+    'juris-data.json': 'data-v1'
+  };
+
+  if (!file || !allowedFiles[file]) {
     return res.status(400).json({ error: 'Invalid file parameter' });
   }
 
-  const githubUrl = `https://github.com/rodrigonohlack/sentencify/releases/download/embeddings-v1/${file}`;
+  const releaseTag = allowedFiles[file];
+  const githubUrl = `https://github.com/rodrigonohlack/sentencify/releases/download/${releaseTag}/${file}`;
 
   try {
     console.log(`[Embeddings] Streaming ${file}...`);
