@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.49'; // v1.33.49: Spinner Neon + Ripple no AnalysisModal
+const APP_VERSION = '1.33.51'; // v1.33.51: Modal changelog com BaseModal (ESC + glassmorphism)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,8 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.51', feature: 'Modal changelog migrado para BaseModal (ESC para fechar + glassmorphism)' },
+  { version: '1.33.50', feature: 'Micro-interações visuais: cards com hover elevação, badges fade-in, estrela favorito colorida, empty states pulsando, drag&drop suave, focus rings, spinner neon no app loading' },
   { version: '1.33.49', feature: 'Spinner Neon + Ripple no AnalysisModal (anéis girando com ondas pulsantes)' },
   { version: '1.33.48', feature: 'ESC handler centralizado no BaseModal (18 modais beneficiados)' },
   { version: '1.33.47', feature: 'Glassmorphism + ESC em 7 modais (ExtractModel, AIAssistant, Analysis, Dispositivo, Similarity, Config)' },
@@ -313,8 +315,8 @@ const CSS = {
   modalHeader: "p-5 border-b theme-border-modal",
   modalFooter: "flex gap-3 p-4 border-t theme-border-modal",
   // Input
-  inputField: "w-full px-4 py-3 theme-input border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500",
-  inputBase: "w-full theme-bg-secondary border theme-border-input rounded-lg theme-text-primary theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500",
+  inputField: "w-full px-4 py-3 theme-input border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
+  inputBase: "w-full theme-bg-secondary border theme-border-input rounded-lg theme-text-primary theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
   // Info boxes
   infoBox: "theme-info-box",
   spinner: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin",
@@ -7222,7 +7224,7 @@ const VersionSelect = React.memo(({ topicTitle, versioning, currentContent, onRe
       <div ref={dropdownRef} className={`relative inline-block ${className}`}>
         <button
           onClick={handleToggle}
-          className="px-2 py-1 text-xs border rounded theme-bg-secondary theme-text-primary theme-border-input cursor-pointer hover-slate-600"
+          className="px-2 py-1 text-xs border rounded theme-bg-secondary theme-text-primary theme-border-input cursor-pointer hover-slate-600 focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all"
           title="Histórico de versões"
         >
           📜 {versions.length > 0 ? `(${versions.length})` : ''}
@@ -7300,7 +7302,7 @@ const SuggestionCard = React.memo(({
   // Removidos states previewHover/insertHover para evitar re-renders
 
   return (
-    <div className="theme-bg-secondary-50 p-4 rounded-lg border theme-border-input hover-theme-border transition-all">
+    <div className="theme-bg-secondary-50 p-4 rounded-lg border theme-border-input hover-theme-border transition-all card-hover-lift">
 
       {/* ─── Header: Título + Categoria + Favorito ─────────────────────────── */}
       <div className="flex items-start justify-between mb-2">
@@ -7322,7 +7324,7 @@ const SuggestionCard = React.memo(({
           )}
           {/* v1.33.20: Badge de similaridade (independente do ranking) */}
           {similarity && (
-            <span className="text-xs px-1.5 py-0.5 rounded bg-green-600 text-white inline-block mb-1">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-green-600 text-white inline-block mb-1 animate-badge">
               {Math.round(similarity * 100)}% similar
             </span>
           )}
@@ -7337,7 +7339,7 @@ const SuggestionCard = React.memo(({
 
         {/* Ícone de Favorito */}
         {model.favorite && (
-          <span className="text-yellow-400 ml-1" title="Modelo favorito">⭐</span>
+          <span className="text-yellow-400 ml-1" title="Modelo favorito">★</span>
         )}
       </div>
 
@@ -7898,16 +7900,16 @@ const TopicCard = React.memo(({
       onDragOver={(e) => handleDragOver(e, selectedIdx)}
       onDragLeave={handleDragLeave}
       onDrop={(e) => handleDrop(e, selectedIdx)}
-      className={`hover-topic-drag-area rounded-lg p-3 border-2 transition-all duration-200 ${
+      className={`hover-topic-drag-area rounded-lg p-3 border-2 transition-all duration-300 ${
         isRelatorioOrDispositivo ? 'cursor-default' : 'cursor-move'
       } ${
         lastEditedTopicTitle === topic.title
           ? 'border-green-500 shadow-lg shadow-green-500/20'
           : draggedIndex === selectedIdx
-            ? 'border-blue-500 shadow-lg shadow-blue-500/30 scale-105'
+            ? 'border-blue-500 shadow-2xl shadow-blue-500/40'
             : dragOverIndex === selectedIdx
-              ? 'border-purple-500 shadow-lg shadow-purple-500/30 scale-102'
-              : 'border-blue-500'
+              ? 'border-purple-500 shadow-xl shadow-purple-500/30'
+              : 'border-blue-500 card-hover-lift'
       }`}
       style={{ backgroundColor: 'rgba(37, 99, 235, 0.1)' }}
     >
@@ -7941,7 +7943,7 @@ const TopicCard = React.memo(({
             <button
               onClick={() => moveTopicUp(selectedIdx)}
               disabled={selectedIdx === 0}
-              className="p-1 rounded disabled:opacity-30 hover-slate-600 bg-transparent transition-colors duration-200"
+              className="p-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover-slate-600 bg-transparent transition-all duration-200"
             >
               <ChevronUp className="w-4 h-4" />
             </button>
@@ -7967,7 +7969,7 @@ const TopicCard = React.memo(({
             <button
               onClick={() => moveTopicDown(selectedIdx)}
               disabled={selectedIdx === selectedTopics.length - 1}
-              className="p-1 rounded disabled:opacity-30 hover-slate-600 bg-transparent transition-colors duration-200"
+              className="p-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover-slate-600 bg-transparent transition-all duration-200"
             >
               <ChevronDown className="w-4 h-4" />
             </button>
@@ -8274,17 +8276,17 @@ const ModelCard = React.memo(({
   if (validViewMode === 'cards') {
     return (
       <div
-        className="theme-bg-secondary-30 p-5 rounded-lg border-2 transition-all hover-theme-border-from-600"
+        className="theme-bg-secondary-30 p-5 rounded-lg border-2 transition-all hover-theme-border-from-600 card-hover-lift"
       >
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <button
                 onClick={() => onToggleFavorite(model.id)}
-                className="text-xl hover-scale-125 transition-transform duration-200"
+                className={`text-xl hover:scale-125 transition-all duration-200 ${model.favorite ? 'text-yellow-400' : 'text-slate-400 hover:text-yellow-300'}`}
                 title={model.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
               >
-                {model.favorite ? '⭐' : '☆'}
+                {model.favorite ? '★' : '☆'}
               </button>
               <h4 className="font-semibold text-lg theme-text-primary">{model.title}</h4>
             </div>
@@ -8296,7 +8298,7 @@ const ModelCard = React.memo(({
               )}
               {/* v1.33.4: Badge de similaridade para busca semântica */}
               {model.similarity !== undefined && (
-                <span className={`text-xs px-2 py-1 rounded font-medium ${
+                <span className={`text-xs px-2 py-1 rounded font-medium animate-badge ${
                   model.similarity >= 0.7 ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
                   model.similarity >= 0.5 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
                   'bg-gray-500/20 text-gray-400 border border-gray-500/30'
@@ -8374,16 +8376,16 @@ const ModelCard = React.memo(({
   // MODO LIST - Visualização compacta inline
   return (
     <div
-      className="theme-bg-secondary-30 p-4 rounded-lg border transition-all hover-theme-border-from-600"
+      className="theme-bg-secondary-30 p-4 rounded-lg border transition-all hover-theme-border-from-600 card-hover-lift"
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <button
             onClick={() => onToggleFavorite(model.id)}
-            className="text-lg flex-shrink-0 hover-scale-125 transition-transform duration-200"
+            className={`text-lg flex-shrink-0 hover:scale-125 transition-all duration-200 ${model.favorite ? 'text-yellow-400' : 'text-slate-400 hover:text-yellow-300'}`}
             title={model.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
           >
-            {model.favorite ? '⭐' : '☆'}
+            {model.favorite ? '★' : '☆'}
           </button>
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold theme-text-primary truncate">{model.title}</h4>
@@ -8395,7 +8397,7 @@ const ModelCard = React.memo(({
               )}
               {/* v1.33.4: Badge de similaridade para busca semântica */}
               {model.similarity !== undefined && (
-                <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                <span className={`text-xs px-2 py-0.5 rounded font-medium animate-badge ${
                   model.similarity >= 0.7 ? 'bg-green-500/20 text-green-400' :
                   model.similarity >= 0.5 ? 'bg-yellow-500/20 text-yellow-400' :
                   'bg-gray-500/20 text-gray-400'
@@ -9324,13 +9326,13 @@ const JurisprudenciaTab = React.memo(({
           ))
         ) : useSemanticSearch && semanticResults && semanticResults.length === 0 ? (
           <div className="text-center py-8 theme-text-muted">
-            <Search className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <Search className="w-12 h-12 mx-auto mb-3 opacity-40 animate-pulse" />
             <p className="text-sm">Nenhum resultado semântico encontrado</p>
             <p className="text-xs mt-1">Tente reduzir o threshold nas configurações</p>
           </div>
         ) : jurisprudencia.paginatedPrecedentes.length === 0 ? (
           <div className="text-center py-8 theme-text-muted">
-            <Scale className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <Scale className="w-12 h-12 mx-auto mb-3 opacity-40 animate-pulse" />
             <p className="text-sm">Nenhum precedente encontrado</p>
             <p className="text-xs mt-1">Importe um arquivo JSON para começar</p>
           </div>
@@ -10286,7 +10288,7 @@ const ExtractedModelPreviewModal = React.memo(({
               type="text"
               value={extractedModel.title}
               onChange={(e) => setExtractedModel({ ...extractedModel, title: e.target.value })}
-              className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
               placeholder="Ex: Adicional de Periculosidade - Modelo"
             />
           </div>
@@ -10299,7 +10301,7 @@ const ExtractedModelPreviewModal = React.memo(({
             <select
               value={extractedModel.category || ''}
               onChange={(e) => setExtractedModel({ ...extractedModel, category: e.target.value })}
-              className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
             >
               <option value="Preliminar">Preliminar</option>
               <option value="Mérito">Mérito</option>
@@ -10317,7 +10319,7 @@ const ExtractedModelPreviewModal = React.memo(({
               type="text"
               value={extractedModel.keywords || ''}
               onChange={(e) => setExtractedModel({ ...extractedModel, keywords: e.target.value })}
-              className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
               placeholder="palavras, separadas, por vírgulas"
             />
             <p className="text-xs theme-text-muted mt-1">Separe as palavras-chave com vírgulas</p>
@@ -16776,7 +16778,7 @@ const AIRegenerationSection = React.memo(({
         value={customInstruction}
         onChange={handleInstructionChange}
         placeholder="Instrução opcional (ex: 'Seja mais objetivo', 'Adicione detalhes sobre...')"
-        className="w-full px-3 py-2 theme-bg-primary border theme-border-input rounded theme-text-tertiary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500"
+        className="w-full px-3 py-2 theme-bg-primary border theme-border-input rounded theme-text-tertiary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
         rows="2"
       />
 
@@ -28802,7 +28804,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                               }
                             }}
                             placeholder={useSemanticManualSearch ? "Busca por significado..." : "Digite para buscar modelos por título, palavras-chave ou conteúdo..."}
-                            className="flex-1 px-3 py-2 theme-bg-primary border theme-border-input rounded-lg theme-text-primary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            className="flex-1 px-3 py-2 theme-bg-primary border theme-border-input rounded-lg theme-text-primary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
                           />
                           {modelLibrary.manualSearchTerm && (
                             <button
@@ -31153,25 +31155,24 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         </div>
       )}
 
-      {/* v1.32.24: Modal de Changelog */}
-      {showChangelogModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowChangelogModal(false)}>
-          <div className="theme-bg-primary rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center p-4 border-b theme-border-primary">
-              <h2 className="text-lg font-semibold theme-text-primary">Histórico de Alterações</h2>
-              <button onClick={() => setShowChangelogModal(false)} className="theme-text-secondary hover:theme-text-primary text-xl">✕</button>
+      {/* v1.32.24: Modal de Changelog - v1.33.51: migrado para BaseModal */}
+      <BaseModal
+        isOpen={showChangelogModal}
+        onClose={() => setShowChangelogModal(false)}
+        title="Histórico de Alterações"
+        icon={<Clock />}
+        iconColor="blue"
+        size="md"
+      >
+        <div className="p-4 overflow-y-auto max-h-[60vh]">
+          {CHANGELOG.map((item, i) => (
+            <div key={i} className="mb-3 pb-3 border-b theme-border-secondary last:border-0">
+              <span className="text-blue-400 font-mono text-sm font-semibold">v{item.version}</span>
+              <p className="theme-text-secondary text-sm mt-1">{item.feature}</p>
             </div>
-            <div className="p-4 overflow-y-auto max-h-[60vh]">
-              {CHANGELOG.map((item, i) => (
-                <div key={i} className="mb-3 pb-3 border-b theme-border-secondary last:border-0">
-                  <span className="text-blue-400 font-mono text-sm font-semibold">v{item.version}</span>
-                  <p className="theme-text-secondary text-sm mt-1">{item.feature}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
-      )}
+      </BaseModal>
 
       {/* 🌐 v1.33.0: Modal de Download de Embeddings do CDN */}
       {showEmbeddingsDownloadModal && (
@@ -33429,11 +33430,18 @@ const SentencifyAI = () => {
   // Mostrar loading enquanto verifica auth
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-slate-400">
-          <Loader2 className="w-6 h-6 animate-spin" />
-          <span>Carregando...</span>
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-6">
+        {/* Spinner Neon + Ripple - v1.33.50 */}
+        <div className="spinner-neon-ripple">
+          <div className="ripple"></div>
+          <div className="ripple"></div>
+          <div className="ripple"></div>
+          <div className="core">
+            <div className="outer"></div>
+            <div className="inner"></div>
+          </div>
         </div>
+        <span className="text-slate-400 animate-pulse">Carregando...</span>
       </div>
     );
   }
