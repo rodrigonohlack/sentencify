@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.61 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.33.62 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -65,6 +65,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.62 | Modal "Sessão Anterior Encontrada" não pode ser fechado (ESC, X, click fora) - preventClose no BaseModal |
 | v1.33.61 | Auto-download de dados: legislação e jurisprudência baixados automaticamente do GitHub Releases (~5 MB) |
 | v1.33.60 | Otimização drag: collision detection O(n) com Set pré-computado (antes O(n²) com find) |
 | v1.33.59 | Fix drag feedback visual: collision detection customizado ignora RELATÓRIO/DISPOSITIVO (não abre espaço em posições inválidas) |

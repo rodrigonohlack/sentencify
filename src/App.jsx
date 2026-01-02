@@ -126,7 +126,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.61'; // v1.33.61: Auto-download de dados (legislação e jurisprudência) via CDN
+const APP_VERSION = '1.33.62'; // v1.33.62: Modal "Sessão Anterior" não pode ser fechado (ESC, X, click fora)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -141,6 +141,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.62', feature: 'Modal "Sessão Anterior Encontrada" não pode ser fechado (ESC, X, click fora) - usuário deve escolher' },
   { version: '1.33.61', feature: 'Auto-download de dados: legislação e jurisprudência baixados automaticamente do GitHub Releases (~5 MB, download único)' },
   { version: '1.33.60', feature: 'Otimização drag: collision detection O(n) com Set pré-computado (antes O(n²) com find)' },
   { version: '1.33.59', feature: 'Fix drag feedback visual: collision detection customizado ignora RELATÓRIO/DISPOSITIVO' },
@@ -9919,10 +9920,12 @@ const BaseModal = React.memo(({
   iconColor = 'blue',
   size = 'md',
   children,
-  footer
+  footer,
+  preventClose = false // v1.33.62: Impedir fechamento (ESC, X, click fora)
 }) => {
   // ESC handler - deve vir antes do early return para cleanup funcionar
   React.useEffect(() => {
+    if (preventClose) return; // v1.33.62: Não registrar ESC se preventClose
     const handleEsc = (e) => {
       if (e.key === 'Escape') onClose();
     };
@@ -9930,7 +9933,7 @@ const BaseModal = React.memo(({
       window.addEventListener('keydown', handleEsc);
     }
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, preventClose]);
 
   if (!isOpen) return null;
 
@@ -9953,7 +9956,7 @@ const BaseModal = React.memo(({
   };
 
   return (
-    <div className={CSS.modalOverlay} onClick={onClose}>
+    <div className={CSS.modalOverlay} onClick={preventClose ? undefined : onClose}>
       <div
         className={`${CSS.modalContainer} ${sizes[size] || sizes.md} w-full animate-modal`}
         onClick={e => e.stopPropagation()}
@@ -9972,12 +9975,14 @@ const BaseModal = React.memo(({
               {subtitle && <p className="text-xs theme-text-secondary">{subtitle}</p>}
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full theme-bg-secondary theme-hover-bg flex items-center justify-center theme-text-secondary transition-all border theme-border-modal hover:border-current"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          {!preventClose && (
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full theme-bg-secondary theme-hover-bg flex items-center justify-center theme-text-secondary transition-all border theme-border-modal hover:border-current"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
         {/* Content */}
         <div className="p-5">
@@ -11698,8 +11703,9 @@ const ExportModal = React.memo(({ isOpen, onClose, exportedText, exportedHtml, c
 ExportModal.displayName = 'ExportModal';
 
 // Modal: Restaurar Sessão (migrado para BaseModal)
+// v1.33.62: preventClose - usuário deve escolher uma opção
 const RestoreSessionModal = React.memo(({ isOpen, onClose, sessionLastSaved, onRestoreSession, onStartNew }) => (
-  <BaseModal isOpen={isOpen} onClose={onClose} title="Sessão Anterior Encontrada" icon={<Save />} iconColor="blue" size="sm"
+  <BaseModal isOpen={isOpen} onClose={onClose} title="Sessão Anterior Encontrada" icon={<Save />} iconColor="blue" size="sm" preventClose
     footer={<><button onClick={onRestoreSession} className={CSS.btnGreen}>✅ Continuar Sessão</button><button onClick={onStartNew} className={CSS.btnRed}>🗑️ Começar do Zero</button></>}>
     <div className="space-y-4">
       <p className="text-xs theme-text-muted">Última atualização: {sessionLastSaved ? new Date(sessionLastSaved).toLocaleString('pt-BR') : ''}</p>
