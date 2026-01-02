@@ -6892,6 +6892,13 @@ const useJurisprudencia = () => {
     await clearPrecedentesFromIndexedDB();
   }, []);
 
+  // v1.33.61: Recarregar precedentes do IndexedDB (usado após download automático)
+  const reloadPrecedentes = React.useCallback(async () => {
+    const data = await loadPrecedentesFromIndexedDB();
+    setPrecedentes(data);
+    return data.length;
+  }, []);
+
   React.useEffect(() => {
     loadPrecedentesFromIndexedDB().then(setPrecedentes);
   }, []);
@@ -6918,7 +6925,8 @@ const useJurisprudencia = () => {
     handleSearchChange,
     handleImportJSON,
     handleCopyTese,
-    handleClearAll
+    handleClearAll,
+    reloadPrecedentes // v1.33.61: Para atualizar após download automático
   };
 };
 
@@ -7058,6 +7066,15 @@ const useLegislacao = () => {
     await clearArtigosFromIndexedDB();
   }, []);
 
+  // v1.33.61: Recarregar artigos do IndexedDB (usado após download automático)
+  const reloadArtigos = React.useCallback(async () => {
+    const data = await loadArtigosFromIndexedDB();
+    setArtigos(sortArtigosNatural(data));
+    const leis = [...new Set(data.map(a => a.lei || a.id?.split('-art-')[0] || a.id?.split('-')[0]))].filter(Boolean);
+    setLeisDisponiveis(leis.sort());
+    return data.length;
+  }, []);
+
   React.useEffect(() => {
     loadArtigosFromIndexedDB().then(data => {
       setArtigos(sortArtigosNatural(data));
@@ -7089,7 +7106,8 @@ const useLegislacao = () => {
     copiedId,
     handleImportJSON,
     handleCopyArtigo,
-    handleClearAll
+    handleClearAll,
+    reloadArtigos // v1.33.61: Para atualizar após download automático
   };
 };
 
@@ -20760,9 +20778,7 @@ const LegalDecisionEditor = ({ onLogout }) => {
         );
 
         // Atualizar artigos no hook de legislação
-        loadArtigosFromIndexedDB().then(data => {
-          legislacao.setArtigos?.(data);
-        });
+        await legislacao.reloadArtigos();
 
         setDataDownloadStatus(prev => ({
           ...prev,
@@ -20795,8 +20811,8 @@ const LegalDecisionEditor = ({ onLogout }) => {
           }
         );
 
-        // Atualizar precedentes no state
-        loadPrecedentesFromIndexedDB().then(setPrecedentes);
+        // Atualizar precedentes no state via hook
+        await jurisprudencia.reloadPrecedentes();
 
         setDataDownloadStatus(prev => ({
           ...prev,
