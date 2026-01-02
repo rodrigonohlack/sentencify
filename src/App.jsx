@@ -30761,6 +30761,27 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                 )}
               </div>
 
+              {/* v1.33.61: Base de Dados - Legislação e Jurisprudência */}
+              <div className="theme-bg-secondary-50 rounded-lg p-4 border theme-border-input">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-sm font-medium theme-text-tertiary">
+                    📚 Base de Dados
+                    <span className="text-xs theme-text-muted">
+                      ({legislacao.artigos?.length || 0} artigos, {jurisprudencia.precedentes?.length || 0} precedentes)
+                    </span>
+                  </label>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('dismissedDataPrompt');
+                      setShowDataDownloadModal(true);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                  >
+                    <Download className="w-3 h-3" /> Baixar/Atualizar
+                  </button>
+                </div>
+              </div>
+
               {/* v1.28.00: Busca Semântica - Toggle MASTER + Sub-toggles independentes */}
               <div className="space-y-4">
                 {/* Toggle Master - Controla carregamento do modelo E5 */}
