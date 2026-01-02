@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.46'; // v1.33.46: Aplicar estilo Glassmorphism ao BulkUploadModal
+const APP_VERSION = '1.33.47'; // v1.33.47: Glassmorphism + ESC em 7 modais
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.47', feature: 'Glassmorphism + ESC em 7 modais (ExtractModel, AIAssistant, Analysis, Dispositivo, Similarity, Config)' },
   { version: '1.33.46', feature: 'Aplicar estilo Glassmorphism ao BulkUploadModal (consistência visual)' },
   { version: '1.33.45', feature: 'Migrar ProofAnalysisModal e LinkProofModal para BaseModal (padronização UI)' },
   { version: '1.33.44', feature: 'Fix título e botão X dos modais no tema claro' },
@@ -10125,24 +10126,36 @@ const ExtractModelConfirmModal = React.memo(({
   editorRef,
   onConfirmExtract
 }) => {
+  // ESC handler
+  React.useEffect(() => {
+    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    if (isOpen) window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <div className={CSS.modalOverlay}>
-      <div className={`${CSS.modalContainer} max-w-lg w-full`}>
+      <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-lg w-full`}>
         <div className={CSS.modalHeader}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg">
-              <Zap className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-purple-500/20">
+                <Zap className="w-6 h-6 text-purple-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold theme-text-primary">Criar Modelo Genérico</h3>
+                <p className="text-sm theme-text-muted">Confirme a criação do modelo reutilizável</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                Criar Modelo Genérico
-              </h3>
-              <p className="text-xs theme-text-muted mt-1">
-                Confirme a criação do modelo reutilizável
-              </p>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl theme-bg-secondary-50 theme-hover-bg transition-colors"
+              title="Fechar"
+            >
+              <X className="w-5 h-5 theme-text-tertiary" />
+            </button>
           </div>
         </div>
 
@@ -10215,21 +10228,37 @@ const ExtractedModelPreviewModal = React.memo(({
   onCancel,
   sanitizeHTML = (html) => html || ''
 }) => {
+  // ESC handler
+  React.useEffect(() => {
+    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    if (isOpen) window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !extractedModel) return null;
 
   return (
     <div className={`${CSS.modalOverlay} overflow-y-auto`} style={{ alignItems: 'flex-start', paddingTop: '2rem' }}>
-      <div className={`${CSS.modalContainer} max-w-4xl w-full my-8`}>
+      <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-4xl w-full my-8`}>
         {/* Header */}
         <div className={CSS.modalHeader}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-lg">
-              <Edit className="w-6 h-6 text-pink-400" />
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-purple-500/20">
+                <Edit className="w-6 h-6 text-purple-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold theme-text-primary">Revisar e Editar Modelo Gerado</h3>
+                <p className="text-sm theme-text-muted">Revise o modelo extraído antes de salvá-lo na biblioteca</p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold theme-text">Revisar e Editar Modelo Gerado</h3>
-              <p className="text-sm theme-text-muted mt-1">Revise o modelo extraído antes de salvá-lo na biblioteca</p>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl theme-bg-secondary-50 theme-hover-bg transition-colors"
+              title="Fechar"
+            >
+              <X className="w-5 h-5 theme-text-tertiary" />
+            </button>
           </div>
         </div>
 
@@ -11007,6 +11036,13 @@ const AIAssistantBase = React.memo(({
     }
   }, [isOpen]);
 
+  // ESC handler
+  React.useEffect(() => {
+    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    if (isOpen) window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleInsert = (mode) => {
@@ -11015,19 +11051,26 @@ const AIAssistantBase = React.memo(({
 
   return (
     <div className={`${CSS.modalOverlay} overflow-auto`} style={{ zIndex }}>
-      <div className={`${CSS.modalContainer} max-w-4xl w-full my-auto`}>
+      <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-4xl w-full my-auto`}>
         {/* Header */}
         <div className={CSS.modalHeader}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg">
-              <Sparkles className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-purple-500/20">
+                <Sparkles className="w-6 h-6 text-purple-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold theme-text-primary">{title}</h3>
+                {subtitle && <p className="text-sm theme-text-muted">{subtitle}</p>}
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-                {title}
-              </h3>
-              {subtitle && <p className="text-xs theme-text-muted mt-1">{subtitle}</p>}
-            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl theme-bg-secondary-50 theme-hover-bg transition-colors"
+              title="Fechar"
+            >
+              <X className="w-5 h-5 theme-text-tertiary" />
+            </button>
           </div>
         </div>
 
@@ -11403,10 +11446,17 @@ const AnalysisModal = React.memo(({
 
   return (
     <div className={CSS.modalOverlay}>
-      <div className={`${CSS.modalContainer} max-w-lg w-full`}>
+      <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-lg w-full`}>
         <div className={CSS.modalHeader}>
-          <h3 className="text-xl font-bold text-blue-400">Análise em Andamento</h3>
-          <p className="text-xs theme-text-muted mt-1">Por favor, aguarde enquanto processamos os documentos</p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-blue-500/20">
+              <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold theme-text-primary">Análise em Andamento</h3>
+              <p className="text-sm theme-text-muted">Por favor, aguarde enquanto processamos os documentos</p>
+            </div>
+          </div>
         </div>
 
         <div className="p-8">
@@ -11658,6 +11708,13 @@ const DispositivoModal = React.memo(({
   const timeoutRef = React.useRef(null);
   React.useEffect(() => () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }, []);
 
+  // ESC handler
+  React.useEffect(() => {
+    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    if (isOpen) window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
+
   const handleAddToTopics = React.useCallback(() => {
     const dispositivoTopic = {
       title: 'DISPOSITIVO',
@@ -11747,19 +11804,25 @@ const DispositivoModal = React.memo(({
 
   return (
     <div className={`${CSS.modalOverlay} overflow-auto`}>
-      <div className={`${CSS.modalContainer} max-w-6xl w-full max-h-[95vh] flex flex-col my-auto`}>
+      <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-6xl w-full max-h-[95vh] flex flex-col my-auto`}>
         {/* Header - fixo */}
         <div className={`${CSS.modalHeader} flex-shrink-0`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-2xl font-bold text-purple-400 mb-1">✨ Dispositivo Gerado com IA</h3>
-              <p className="text-sm theme-text-muted">Revise e edite conforme necessário antes de copiar</p>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-purple-500/20">
+                <Sparkles className="w-6 h-6 text-purple-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold theme-text-primary">Dispositivo Gerado com IA</h3>
+                <p className="text-sm theme-text-muted">Revise e edite conforme necessário antes de copiar</p>
+              </div>
             </div>
             <button
               onClick={onClose}
-              className="hover-slate-700-from-transparent p-2 rounded-lg"
+              className="p-2 rounded-xl theme-bg-secondary-50 theme-hover-bg transition-colors"
+              title="Fechar"
             >
-              <span className="text-2xl theme-text-muted">×</span>
+              <X className="w-5 h-5 theme-text-tertiary" />
             </button>
           </div>
         </div>
@@ -12196,14 +12259,36 @@ LockedTabOverlay.displayName = 'LockedTabOverlay';
 // 🔍 Modal de Aviso de Similaridade (v1.13.3 - Comparação lado a lado)
 // v1.33.3: Feedback visual "Salvando..." durante geração de embedding
 const SimilarityWarningModal = React.memo(({ warning, saving, onCancel, onSaveNew, onReplace, sanitizeHTML = (html) => html || '' }) => {
+  // ESC handler
+  React.useEffect(() => {
+    const handleEsc = (e) => { if (e.key === 'Escape' && !saving) onCancel(); };
+    if (warning) window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [warning, saving, onCancel]);
+
   if (!warning) return null;
   const { newModel, similarModel, similarity } = warning;
   const pct = Math.round(similarity * 100);
   return (
     <div className={CSS.modalOverlay} style={{zIndex:60}}>
-      <div className={`${CSS.modalContainer} max-w-5xl w-full`}>
+      <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-5xl w-full`}>
         <div className={CSS.modalHeader}>
-          <h3 className="text-xl font-bold text-yellow-400">⚠️ Modelo Similar Encontrado ({pct}%)</h3>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-amber-500/20">
+                <AlertTriangle className="w-6 h-6 text-amber-400" />
+              </div>
+              <h3 className="text-lg font-semibold theme-text-primary">Modelo Similar Encontrado ({pct}%)</h3>
+            </div>
+            <button
+              onClick={onCancel}
+              disabled={saving}
+              className="p-2 rounded-xl theme-bg-secondary-50 theme-hover-bg transition-colors disabled:opacity-50"
+              title="Fechar"
+            >
+              <X className="w-5 h-5 theme-text-tertiary" />
+            </button>
+          </div>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-2 gap-4 mb-4">
@@ -29570,14 +29655,25 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 
       {modals.settings && (
         <div className={`${CSS.modalOverlay} overflow-auto`}>
-          <div className={`${CSS.modalContainer} max-w-2xl w-full my-auto`}>
+          <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-2xl w-full my-auto`}>
             <div className={CSS.modalHeader}>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">⚙️</span>
-                <div>
-                  <h3 className="text-xl font-bold text-blue-400">Configurações de IA</h3>
-                  <p className="text-xs theme-text-muted mt-1">Escolha o modelo e as configurações para análise de documentos</p>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-xl bg-blue-500/20">
+                    <Zap className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold theme-text-primary">Configurações de IA</h3>
+                    <p className="text-sm theme-text-muted">Escolha o modelo e as configurações para análise de documentos</p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => closeModal('settings')}
+                  className="p-2 rounded-xl theme-bg-secondary-50 theme-hover-bg transition-colors"
+                  title="Fechar"
+                >
+                  <X className="w-5 h-5 theme-text-tertiary" />
+                </button>
               </div>
             </div>
             
