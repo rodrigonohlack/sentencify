@@ -126,7 +126,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.60'; // v1.33.60: Otimização drag O(n) com Set pré-computado
+const APP_VERSION = '1.33.61'; // v1.33.61: Auto-download de dados (legislação e jurisprudência) via CDN
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -141,6 +141,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.61', feature: 'Auto-download de dados: legislação e jurisprudência baixados automaticamente do GitHub Releases (~5 MB, download único)' },
   { version: '1.33.60', feature: 'Otimização drag: collision detection O(n) com Set pré-computado (antes O(n²) com find)' },
   { version: '1.33.59', feature: 'Fix drag feedback visual: collision detection customizado ignora RELATÓRIO/DISPOSITIVO' },
   { version: '1.33.58', feature: 'dnd-kit para drag and drop de tópicos - suporte a wheel scroll durante arraste' },
@@ -1175,6 +1176,63 @@ const EmbeddingsCDNService = {
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);
       await JurisEmbeddingsService.saveEmbeddingsBatch(batch);
+      onBatchComplete?.(Math.min(i + batchSize, items.length), items.length);
+      await new Promise(r => setTimeout(r, 0));
+    }
+
+    return items.length;
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // v1.33.61: AUTO-DOWNLOAD DE DADOS (legislação e jurisprudência)
+  // ═══════════════════════════════════════════════════════════════
+
+  // Verifica se precisa baixar dados (não embeddings)
+  async needsDataDownload(type) {
+    try {
+      if (type === 'legislacao') {
+        const artigos = await loadArtigosFromIndexedDB();
+        return artigos.length === 0;
+      } else {
+        const precedentes = await loadPrecedentesFromIndexedDB();
+        return precedentes.length === 0;
+      }
+    } catch {
+      return true;
+    }
+  },
+
+  // Baixa e salva dados de legislação
+  async downloadLegislacaoData(onProgress, onBatchComplete) {
+    const url = this.getProxyUrl('legis-data.json');
+    const text = await this.downloadFile(url, onProgress);
+    const json = JSON.parse(text);
+    const items = json.data || json;
+
+    // Salvar em batches de 500 (artigos são menores que embeddings)
+    const batchSize = 500;
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      await saveArtigosToIndexedDB(batch);
+      onBatchComplete?.(Math.min(i + batchSize, items.length), items.length);
+      await new Promise(r => setTimeout(r, 0));
+    }
+
+    return items.length;
+  },
+
+  // Baixa e salva dados de jurisprudência
+  async downloadJurisprudenciaData(onProgress, onBatchComplete) {
+    const url = this.getProxyUrl('juris-data.json');
+    const text = await this.downloadFile(url, onProgress);
+    const json = JSON.parse(text);
+    const items = json.data || json;
+
+    // Salvar em batches de 200
+    const batchSize = 200;
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      await savePrecedentesToIndexedDB(batch);
       onBatchComplete?.(Math.min(i + batchSize, items.length), items.length);
       await new Promise(r => setTimeout(r, 0));
     }
@@ -19373,6 +19431,16 @@ const LegalDecisionEditor = ({ onLogout }) => {
     try { return JSON.parse(localStorage.getItem('dismissedEmbeddingsPrompt')) || false; } catch { return false; }
   });
 
+  // 📥 v1.33.61: Estados para download automático de DADOS (legislação e jurisprudência)
+  const [showDataDownloadModal, setShowDataDownloadModal] = useState(false);
+  const [dataDownloadStatus, setDataDownloadStatus] = useState({
+    legislacao: { needed: null, downloading: false, progress: 0, error: null, completed: false },
+    jurisprudencia: { needed: null, downloading: false, progress: 0, error: null, completed: false }
+  });
+  const [dismissedDataPrompt, setDismissedDataPrompt] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('dismissedDataPrompt')) || false; } catch { return false; }
+  });
+
   // 📦 v1.27.01: Estados para busca semântica de MODELOS (embeddings inline)
   const [modelSemanticEnabled, setModelSemanticEnabled] = useState(() => {
     try { return JSON.parse(localStorage.getItem('modelSemanticEnabled')) || false; } catch { return false; }
@@ -20639,6 +20707,118 @@ const LegalDecisionEditor = ({ onLogout }) => {
 
     checkEmbeddingsNeeded();
   }, [dismissedEmbeddingsPrompt]);
+
+  // 📥 v1.33.61: Verificar se dados (legislação/jurisprudência) precisam ser baixados do CDN
+  React.useEffect(() => {
+    const checkDataNeeded = async () => {
+      try {
+        const legNeeded = await EmbeddingsCDNService.needsDataDownload('legislacao');
+        const jurisNeeded = await EmbeddingsCDNService.needsDataDownload('jurisprudencia');
+
+        setDataDownloadStatus(prev => ({
+          legislacao: { ...prev.legislacao, needed: legNeeded },
+          jurisprudencia: { ...prev.jurisprudencia, needed: jurisNeeded }
+        }));
+
+        // Mostrar modal se algum dado estiver faltando e usuário não dismissou
+        if ((legNeeded || jurisNeeded) && !dismissedDataPrompt) {
+          // Delay para não bloquear renderização inicial
+          setTimeout(() => setShowDataDownloadModal(true), 1500);
+        }
+      } catch (err) {
+        console.warn('[CDN] Erro ao verificar dados:', err);
+      }
+    };
+
+    checkDataNeeded();
+  }, [dismissedDataPrompt]);
+
+  // 📥 v1.33.61: Handler para iniciar download de dados do CDN
+  const handleStartDataDownload = async () => {
+    if (!navigator.onLine) {
+      showToast('Sem conexão com a internet', 'error');
+      return;
+    }
+
+    const { legislacao, jurisprudencia } = dataDownloadStatus;
+
+    // Download legislação se necessário
+    if (legislacao.needed && !legislacao.downloading && !legislacao.completed) {
+      setDataDownloadStatus(prev => ({
+        ...prev,
+        legislacao: { ...prev.legislacao, downloading: true, error: null }
+      }));
+
+      try {
+        const count = await EmbeddingsCDNService.downloadLegislacaoData(
+          (progress) => {
+            setDataDownloadStatus(prev => ({
+              ...prev,
+              legislacao: { ...prev.legislacao, progress }
+            }));
+          }
+        );
+
+        // Atualizar artigos no hook de legislação
+        loadArtigosFromIndexedDB().then(data => {
+          legislacao.setArtigos?.(data);
+        });
+
+        setDataDownloadStatus(prev => ({
+          ...prev,
+          legislacao: { needed: false, downloading: false, progress: 1, error: null, completed: true }
+        }));
+        showToast(`${count} artigos de legislação baixados!`, 'success');
+      } catch (err) {
+        setDataDownloadStatus(prev => ({
+          ...prev,
+          legislacao: { ...prev.legislacao, downloading: false, error: err.message }
+        }));
+        showToast('Erro ao baixar legislação: ' + err.message, 'error');
+      }
+    }
+
+    // Download jurisprudência se necessário
+    if (jurisprudencia.needed && !jurisprudencia.downloading && !jurisprudencia.completed) {
+      setDataDownloadStatus(prev => ({
+        ...prev,
+        jurisprudencia: { ...prev.jurisprudencia, downloading: true, error: null }
+      }));
+
+      try {
+        const count = await EmbeddingsCDNService.downloadJurisprudenciaData(
+          (progress) => {
+            setDataDownloadStatus(prev => ({
+              ...prev,
+              jurisprudencia: { ...prev.jurisprudencia, progress }
+            }));
+          }
+        );
+
+        // Atualizar precedentes no state
+        loadPrecedentesFromIndexedDB().then(setPrecedentes);
+
+        setDataDownloadStatus(prev => ({
+          ...prev,
+          jurisprudencia: { needed: false, downloading: false, progress: 1, error: null, completed: true }
+        }));
+        showToast(`${count} precedentes baixados!`, 'success');
+      } catch (err) {
+        setDataDownloadStatus(prev => ({
+          ...prev,
+          jurisprudencia: { ...prev.jurisprudencia, downloading: false, error: err.message }
+        }));
+        showToast('Erro ao baixar jurisprudência: ' + err.message, 'error');
+      }
+    }
+  };
+
+  // 📥 v1.33.61: Dismiss data download modal
+  const handleDismissDataPrompt = () => {
+    setShowDataDownloadModal(false);
+    setDismissedDataPrompt(true);
+    localStorage.setItem('dismissedDataPrompt', 'true');
+  };
 
   // 🌐 v1.33.0: Handler para iniciar download de embeddings do CDN
   const handleStartEmbeddingsDownload = async () => {
@@ -31277,6 +31457,120 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           ))}
         </div>
       </BaseModal>
+
+      {/* 📥 v1.33.61: Modal de Download de Dados Essenciais (legislação e jurisprudência) */}
+      {showDataDownloadModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={handleDismissDataPrompt}>
+          <div className="theme-bg-primary rounded-lg shadow-xl max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-4 border-b theme-border-primary">
+              <h2 className="text-lg font-semibold theme-text-primary flex items-center gap-2">
+                <Download className="w-5 h-5 text-blue-400" />
+                Baixar Base de Dados
+              </h2>
+              <button
+                onClick={handleDismissDataPrompt}
+                disabled={dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading}
+                className="theme-text-secondary hover:theme-text-primary text-xl disabled:opacity-50"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              <p className="text-sm theme-text-secondary">
+                Para usar o Sentencify, é necessário baixar a base de dados de legislação e jurisprudência (~5 MB total, download único e rápido).
+              </p>
+
+              {/* Legislação */}
+              {dataDownloadStatus.legislacao.needed && (
+                <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium theme-text-primary">📜 Legislação (~3 MB)</span>
+                    {dataDownloadStatus.legislacao.downloading && (
+                      <span className="text-xs theme-text-muted">
+                        {Math.round(dataDownloadStatus.legislacao.progress * 100)}%
+                      </span>
+                    )}
+                    {dataDownloadStatus.legislacao.completed && (
+                      <span className="text-xs text-green-500">✓ Concluído</span>
+                    )}
+                  </div>
+                  {dataDownloadStatus.legislacao.downloading && (
+                    <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 transition-all duration-300"
+                        style={{ width: `${dataDownloadStatus.legislacao.progress * 100}%` }}
+                      />
+                    </div>
+                  )}
+                  {dataDownloadStatus.legislacao.error && (
+                    <p className="text-xs text-red-400 mt-1">{dataDownloadStatus.legislacao.error}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Jurisprudência */}
+              {dataDownloadStatus.jurisprudencia.needed && (
+                <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium theme-text-primary">⚖️ Jurisprudência (~2 MB)</span>
+                    {dataDownloadStatus.jurisprudencia.downloading && (
+                      <span className="text-xs theme-text-muted">
+                        {Math.round(dataDownloadStatus.jurisprudencia.progress * 100)}%
+                      </span>
+                    )}
+                    {dataDownloadStatus.jurisprudencia.completed && (
+                      <span className="text-xs text-green-500">✓ Concluído</span>
+                    )}
+                  </div>
+                  {dataDownloadStatus.jurisprudencia.downloading && (
+                    <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-green-500 transition-all duration-300"
+                        style={{ width: `${dataDownloadStatus.jurisprudencia.progress * 100}%` }}
+                      />
+                    </div>
+                  )}
+                  {dataDownloadStatus.jurisprudencia.error && (
+                    <p className="text-xs text-red-400 mt-1">{dataDownloadStatus.jurisprudencia.error}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Mensagem se ambos já foram baixados */}
+              {!dataDownloadStatus.legislacao.needed && !dataDownloadStatus.jurisprudencia.needed && (
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                  <p className="text-sm text-green-400 flex items-center gap-2">
+                    <Check className="w-4 h-4" /> Base de dados instalada!
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 p-4 border-t theme-border-primary">
+              <button
+                onClick={handleDismissDataPrompt}
+                disabled={dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading}
+                className="px-4 py-2 text-sm theme-text-secondary hover:theme-text-primary disabled:opacity-50"
+              >
+                Depois
+              </button>
+              <button
+                onClick={handleStartDataDownload}
+                disabled={dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading ||
+                         (!dataDownloadStatus.legislacao.needed && !dataDownloadStatus.jurisprudencia.needed)}
+                className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {(dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading) ? (
+                  <><RefreshCw className="w-4 h-4 animate-spin" /> Baixando...</>
+                ) : (
+                  <><Download className="w-4 h-4" /> Baixar Agora</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 🌐 v1.33.0: Modal de Download de Embeddings do CDN */}
       {showEmbeddingsDownloadModal && (

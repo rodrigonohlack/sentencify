@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.60 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.33.61 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -16,6 +16,8 @@
 - `SentencifyAI` (IndexedDB) → modelos
 - `sentencify-pdfs` (IndexedDB) → PDFs
 - `sentencify-versions` (IndexedDB) → versionamento do campo fundamentação
+- `sentencify-legislacao` (IndexedDB) → artigos de legislação (CLT, CPC, CF88...) - auto-download via CDN
+- `sentencify-jurisprudencia` (IndexedDB) → precedentes (súmulas, OJs, IRDRs...) - auto-download via CDN
 - `sentencify-legislacao-embeddings` (IndexedDB) → embeddings pré-computados da legislação
 - `sentencify-juris-embeddings` (IndexedDB) → embeddings pré-computados da jurisprudência
 - `sentencifySession` (localStorage) → metadados + textos
@@ -63,6 +65,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.61 | Auto-download de dados: legislação e jurisprudência baixados automaticamente do GitHub Releases (~5 MB) |
 | v1.33.60 | Otimização drag: collision detection O(n) com Set pré-computado (antes O(n²) com find) |
 | v1.33.59 | Fix drag feedback visual: collision detection customizado ignora RELATÓRIO/DISPOSITIVO (não abre espaço em posições inválidas) |
 | v1.33.58 | dnd-kit para drag and drop de tópicos - suporte a wheel scroll durante arraste |
