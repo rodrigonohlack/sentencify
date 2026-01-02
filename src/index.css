@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Glassmorphism Modal Styles - v1.33.42 */
+/* Modal Styles - v1.33.43: usa variável de tema para glow adaptativo */
 @keyframes modalFadeIn {
   from {
     opacity: 0;
@@ -19,8 +19,5 @@
 }
 
 .theme-modal-glow {
-  box-shadow:
-    0 0 40px rgba(139, 92, 246, 0.15),
-    0 0 80px rgba(59, 130, 246, 0.1),
-    0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--modal-glow), 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }

@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.42'; // v1.33.42: Modais com estilo Glassmorphism (blur, gradientes, glow)
+const APP_VERSION = '1.33.43'; // v1.33.43: Fix modais - tema claro respeitado, transparência adequada
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.43', feature: 'Fix modais: tema claro respeitado, transparência adequada, glow adaptativo' },
   { version: '1.33.42', feature: 'Modais com estilo Glassmorphism: blur, gradientes, ícones em círculos, botão X, animação suave' },
   { version: '1.33.41', feature: 'Autenticação simples: tela de login, senha hasheada (SHA-256), botão Sair no header' },
   { version: '1.33.40', feature: 'Validação de PDFs (33 testes): magic bytes, tamanho, tipo, estimativa de tempo de processamento' },
@@ -298,13 +299,13 @@ const extractPlainText = (html) => {
 };
 
 // 🎨 CSS CLASSES CENTRALIZADAS (v1.12.5 - Classes utilitárias consolidadas)
-// v1.33.42: Glassmorphism style para modais
+// v1.33.43: Fix tema claro - usa variáveis CSS de tema
 const CSS = {
-  // Modal system - Glassmorphism v1.33.42
-  modalOverlay: "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[90] p-4",
-  modalContainer: "bg-white/5 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 theme-modal-glow",
-  modalHeader: "flex items-center justify-between p-5 border-b border-white/10",
-  modalFooter: "flex gap-3 p-4 border-t border-white/10 bg-black/20",
+  // Modal system - v1.33.43: usa variáveis de tema para suportar tema claro/escuro
+  modalOverlay: "fixed inset-0 theme-modal-overlay backdrop-blur-sm flex items-center justify-center z-[90] p-4",
+  modalContainer: "theme-modal-container backdrop-blur-md rounded-2xl shadow-2xl theme-border-modal border theme-modal-glow",
+  modalHeader: "p-5 border-b theme-border-modal",
+  modalFooter: "flex gap-3 p-4 border-t theme-border-modal",
   // Input
   inputField: "w-full px-4 py-3 theme-input border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500",
   inputBase: "w-full theme-bg-secondary border theme-border-input rounded-lg theme-text-primary theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500",
@@ -321,10 +322,10 @@ const CSS = {
   flexGap3: "flex items-center gap-3",
   flexBetween: "flex items-center justify-between",
   flexCenterJustify: "flex items-center justify-center gap-2",
-  // Buttons - Glassmorphism v1.33.42
+  // Buttons - v1.33.43: cores que funcionam em ambos os temas
   btnBase: "rounded-xl font-medium transition-all",
   btnPrimary: "px-4 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-lg shadow-purple-500/25",
-  btnSecondary: "px-4 py-2.5 rounded-xl font-medium bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 transition-all",
+  btnSecondary: "px-4 py-2.5 rounded-xl font-medium theme-bg-secondary hover:theme-bg-tertiary border theme-border-modal theme-text-primary transition-all",
   btnDanger: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-lg shadow-red-500/25",
   btnSuccess: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25",
   btnBlue: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-lg shadow-blue-500/25",
@@ -32595,6 +32596,7 @@ const ThemeStyles = () => (
       --overlay-bg: rgba(0, 0, 0, 0.8);
       --modal-bg: #1e293b;
       --modal-border: #334155;
+      --modal-glow: 0 0 40px rgba(139, 92, 246, 0.15), 0 0 80px rgba(59, 130, 246, 0.1);
 
       /* Gradients */
       --gradient-app-from: #0f172a;
@@ -32671,6 +32673,7 @@ const ThemeStyles = () => (
       --overlay-bg: rgba(0, 0, 0, 0.5);
       --modal-bg: #fefcf3;
       --modal-border: #d4d2cd;
+      --modal-glow: 0 0 30px rgba(0, 0, 0, 0.1), 0 0 60px rgba(0, 0, 0, 0.05);
 
       /* Gradients */
       --gradient-app-from: #f5f3ef;
