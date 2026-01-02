@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.51 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.33.52 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -63,6 +63,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.33.52 | Fix mensagens hardcoded no bulk upload (agora mostra parallelRequests) |
 | v1.33.51 | Modal changelog migrado para BaseModal (ESC + glassmorphism) |
 | v1.33.50 | Micro-interações visuais: cards hover elevação, badges fade-in, favoritos coloridos, empty states pulsando, drag&drop suave, focus rings, spinner neon no app loading |
 | v1.33.49 | Spinner Neon + Ripple no AnalysisModal (anéis girando com ondas pulsantes) |

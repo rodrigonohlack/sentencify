@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.51'; // v1.33.51: Modal changelog com BaseModal (ESC + glassmorphism)
+const APP_VERSION = '1.33.52'; // v1.33.52: Fix mensagens hardcoded no bulk upload (usa parallelRequests)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.52', feature: 'Fix mensagens hardcoded no bulk upload - agora mostra valor real de parallelRequests' },
   { version: '1.33.51', feature: 'Modal changelog migrado para BaseModal (ESC para fechar + glassmorphism)' },
   { version: '1.33.50', feature: 'Micro-interações visuais: cards com hover elevação, badges fade-in, estrela favorito colorida, empty states pulsando, drag&drop suave, focus rings, spinner neon no app loading' },
   { version: '1.33.49', feature: 'Spinner Neon + Ripple no AnalysisModal (anéis girando com ondas pulsantes)' },
@@ -12641,13 +12642,13 @@ const BulkUploadModal = React.memo(({
                 onChange={(e) => setBulkStaggerDelay(Number(e.target.value))}
                 className="w-full px-3 py-2 theme-bg-primary border theme-border-input rounded theme-text-secondary text-sm"
               >
-                <option value={0}>Sem delay - Máxima velocidade (2 por lote)</option>
+                <option value={0}>Sem delay - Máxima velocidade ({bulkBatchSize} por lote)</option>
                 <option value={300}>300ms - Balanceado (delay dentro do lote)</option>
                 <option value={500}>500ms - Conservador (delay dentro do lote)</option>
                 <option value={1000}>1s - Muito conservador (delay dentro do lote)</option>
               </select>
               <p className="text-xs theme-text-muted mt-2">
-                💡 Sistema de lotes ativo (3 arquivos/lote + 1s entre lotes). Delay adicional entre iniciar os 3 arquivos do lote.
+                💡 Sistema de lotes ativo ({bulkBatchSize} arquivos/lote + 1s entre lotes). Delay adicional entre iniciar os {bulkBatchSize} arquivos do lote.
               </p>
             </div>
           </div>
@@ -12774,7 +12775,7 @@ const BulkUploadModal = React.memo(({
               Cancelar Processamento
             </button>
             <p className="text-center text-xs theme-text-disabled mt-3">
-              💡 Processamento em lotes: 3 arquivos por vez (evita rate limits)
+              💡 Processamento em lotes: {bulkBatchSize} arquivos por vez (evita rate limits)
             </p>
           </div>
         </div>
