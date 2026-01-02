@@ -12418,7 +12418,7 @@ const BulkUploadModal = React.memo(({
   // View 1: Upload/Selection (quando NÃO está processando E NÃO está na revisão)
   if (!isProcessing && !isReviewOpen) {
     return (
-      <div className="fixed inset-0 z-[90] p-4 theme-modal-overlay flex items-start justify-center pt-8 overflow-y-auto">
+      <div className="fixed inset-0 z-[90] p-4 theme-modal-overlay backdrop-blur-sm flex items-start justify-center pt-8 overflow-y-auto">
         <div className="theme-modal-container theme-border-modal theme-modal-glow animate-modal max-w-3xl w-full mb-8">
           <div className={CSS.modalHeader}>
             <div className="flex items-center justify-between w-full">
@@ -12435,7 +12435,7 @@ const BulkUploadModal = React.memo(({
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg theme-hover-bg transition-colors"
+                className="p-2 rounded-xl theme-bg-secondary-50 theme-hover-bg transition-colors"
                 title="Fechar"
               >
                 <X className="w-5 h-5 theme-text-tertiary" />
