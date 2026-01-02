@@ -58,12 +58,12 @@ router.post('/', (req, res) => {
 });
 
 /**
- * GET /api/auth/check
+ * GET /api/auth
  *
  * Verifica se autenticação está habilitada (se há hash configurado).
  * Usado pelo frontend para decidir se mostra tela de login.
  */
-router.get('/check', (req, res) => {
+router.get('/', (req, res) => {
   const hasAuth = !!process.env.ACCESS_PASSWORD_HASH;
   res.json({ authEnabled: hasAuth });
 });
