@@ -7,6 +7,7 @@ import { Readable } from 'stream';
 
 import claudeRoutes from './routes/claude.js';
 import geminiRoutes from './routes/gemini.js';
+import authRoutes from './routes/auth.js';
 
 config();
 
@@ -39,6 +40,9 @@ app.use(cors({
 // Parser JSON com limite aumentado para PDFs grandes (Render não tem limite de plataforma)
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+
+// Rota de autenticação (v1.33.41)
+app.use('/api/auth', authRoutes);
 
 // Rotas de proxy para APIs de IA
 app.use('/api/claude', claudeRoutes);
@@ -112,6 +116,7 @@ app.listen(PORT, () => {
   ║   Frontend: http://localhost:3000                    ║
   ║                                                       ║
   ║   APIs:                                              ║
+  ║   • Auth:    /api/auth                               ║
   ║   • Claude:  /api/claude/messages                    ║
   ║   • Gemini:  /api/gemini/generate                    ║
   ║   • Health:  /api/health                             ║

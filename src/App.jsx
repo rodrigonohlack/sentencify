@@ -117,10 +117,11 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2 } from 'lucide-react';
+import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2, LogOut } from 'lucide-react';
+import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.40'; // v1.33.40: Validação de PDFs (33 testes): magic bytes, tamanho, tipo, estimativa tempo
+const APP_VERSION = '1.33.41'; // v1.33.41: Autenticação simples com senha hasheada (SHA-256)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -135,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.41', feature: 'Autenticação simples: tela de login, senha hasheada (SHA-256), botão Sair no header' },
   { version: '1.33.40', feature: 'Validação de PDFs (33 testes): magic bytes, tamanho, tipo, estimativa de tempo de processamento' },
   { version: '1.33.39', feature: 'Testes de regressão de prompts (21 testes snapshot): validação de estrutura, Art. 337 CPC, ordem do mérito' },
   { version: '1.33.38', feature: 'Testes de integração (71 testes): topicOrdering, analyzeProof, generateSentence + utilitários extraídos em src/utils' },
@@ -18482,7 +18484,8 @@ Se NÃO encontrar vulnerabilidades significativas, atribua nota A e informe com 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // 📦 COMPONENTE PRINCIPAL: LegalDecisionEditor
-const LegalDecisionEditor = () => {
+// v1.33.41: Adicionado prop onLogout para autenticação
+const LegalDecisionEditor = ({ onLogout }) => {
 
   // 🎣 CUSTOM HOOKS
   const { modals, openModal, closeModal, closeAllModals, isAnyModalOpen, textPreview, setTextPreview } = useModalManager();
@@ -27297,6 +27300,22 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                   >
                     ⚙️ Configurações IA
                   </button>
+                  {/* 🔐 v1.33.41: Botão Sair (só aparece se auth está habilitada) */}
+                  {onLogout && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Deseja sair do sistema?')) {
+                          onLogout();
+                          window.location.reload();
+                        }
+                      }}
+                      className="px-3 py-1 rounded text-xs flex items-center gap-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 transition-colors duration-200"
+                      title="Sair do sistema"
+                    >
+                      <LogOut className="w-3 h-3" />
+                      Sair
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       const allStatesWithAI = {
@@ -33255,11 +33274,33 @@ class ErrorBoundary extends React.Component {
 }
 
 // 📤 EXPORT
-// Envolver LegalDecisionEditor com ErrorBoundary para proteção contra crashes
-const SentencifyAI = () => (
-  <ErrorBoundary>
-    <LegalDecisionEditor />
-  </ErrorBoundary>
-);
+// v1.33.41: Autenticação + ErrorBoundary
+const SentencifyAI = () => {
+  const { isAuthenticated, authEnabled, isLoading, login, logout } = useAuth();
+
+  // Mostrar loading enquanto verifica auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="flex items-center gap-3 text-slate-400">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span>Carregando...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar tela de login se auth está habilitada e não está autenticado
+  if (authEnabled && !isAuthenticated) {
+    return <LoginScreen onLogin={login} />;
+  }
+
+  // App normal com ErrorBoundary
+  return (
+    <ErrorBoundary>
+      <LegalDecisionEditor onLogout={authEnabled ? logout : null} />
+    </ErrorBoundary>
+  );
+};
 
 export default SentencifyAI;
