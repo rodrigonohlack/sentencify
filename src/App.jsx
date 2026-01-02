@@ -121,7 +121,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.55'; // v1.33.55: Fix borda superior cortada no hover do modo lista (remover translateY)
+const APP_VERSION = '1.33.56'; // v1.33.56: Reduzir espaçamento entre cards no modo lista (space-y-1, itemHeight 90)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -136,6 +136,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.56', feature: 'Reduzir espaçamento entre cards no modo lista (space-y-1, itemHeight 90)' },
   { version: '1.33.55', feature: 'Fix borda superior cortada no hover do modo lista - remover card-hover-lift (translateY invadia card acima)' },
   { version: '1.33.54', feature: 'Fix borda sumindo no hover do modo lista (ModelCard) - border-2 para consistência com cards' },
   { version: '1.33.53', feature: 'Otimizar hover elevation - GPU acceleration (will-change, translateZ, transition específica)' },
@@ -29222,7 +29223,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           ))}
                         </div>
                       ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                           {modelSemanticResults.map((model) => (
                             <ModelCard
                               key={model.id}
@@ -29347,7 +29348,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     /* 🚀 Visualização em LISTA - v1.7 FASE 1.4: Virtual Scrolling */
                     <VirtualList
                       items={filteredModels}
-                      itemHeight={150}
+                      itemHeight={90}
                       renderItem={(model) => (
                         <ModelCard
                           key={model.id}
@@ -29360,7 +29361,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           sanitizeHTML={sanitizeHTML}
                         />
                       )}
-                      className="space-y-2"
+                      className="space-y-1"
                     />
                   )}
                 </div>
