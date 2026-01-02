@@ -126,7 +126,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.62'; // v1.33.62: Modal "Sessão Anterior" não pode ser fechado (ESC, X, click fora)
+const APP_VERSION = '1.33.63'; // v1.33.63: Testes E2E expandidos (88 testes: auth, pdf-upload, generation, export, search)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -141,6 +141,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.33.63', feature: 'Testes E2E expandidos (88 testes): auth, pdf-upload, generation, export, search' },
   { version: '1.33.62', feature: 'Modal "Sessão Anterior Encontrada" não pode ser fechado (ESC, X, click fora) - usuário deve escolher' },
   { version: '1.33.61', feature: 'Auto-download de dados: legislação e jurisprudência baixados automaticamente do GitHub Releases (~5 MB, download único)' },
   { version: '1.33.60', feature: 'Otimização drag: collision detection O(n) com Set pré-computado (antes O(n²) com find)' },
