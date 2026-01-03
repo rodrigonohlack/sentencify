@@ -134,7 +134,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.34.6'; // v1.34.6: Sync compara contagem local vs servidor - força full sync se diferente
+const APP_VERSION = '1.34.7'; // v1.34.7: Sync salva IMEDIATAMENTE no IndexedDB após merge (não espera debounce)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -149,6 +149,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.34.7', feature: 'Fix sync: salva IMEDIATAMENTE no IndexedDB após merge (debounce de 1500ms causava perda de dados)' },
   { version: '1.34.6', feature: 'Sync inteligente: compara contagem local vs servidor, força full sync se diferente' },
   { version: '1.34.5', feature: 'Fix race condition: merge de sync agora espera IndexedDB carregar (evita perda de modelos)' },
   { version: '1.34.4', feature: 'Admin Panel: interface /admin para gerenciar emails autorizados via Magic Link (protegida por senha)' },
@@ -18772,34 +18773,46 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, clearReceive
   const storage = useLocalStorage();
   const modelLibrary = useModelLibrary();
 
-  // v1.34.5: Merge modelos recebidos do servidor (APÓS IndexedDB carregar)
+  // v1.34.7: Merge modelos recebidos do servidor (APÓS IndexedDB carregar)
+  // IMPORTANTE: Salva IMEDIATAMENTE após merge (não espera debounce de 1500ms)
   React.useEffect(() => {
     // Esperar IndexedDB terminar de carregar antes de fazer merge
-    // Isso evita race condition onde o pull termina antes do IndexedDB
-    if (modelLibrary.isLoadingModels) {
-      return; // Aguardar carregamento completar
+    if (modelLibrary.isLoadingModels || !indexedDB.isAvailable) {
+      return;
     }
 
     if (receivedModels && receivedModels.length > 0) {
       console.log(`[Sync] Merge: ${receivedModels.length} do servidor + ${modelLibrary.models.length} locais`);
-      modelLibrary.setModels(prev => {
-        const merged = new Map(prev.map(m => [m.id, m]));
-        for (const serverModel of receivedModels) {
-          if (serverModel.deletedAt) {
-            merged.delete(serverModel.id);
-          } else {
-            const local = merged.get(serverModel.id);
-            if (!local || new Date(serverModel.updatedAt) > new Date(local.updatedAt || 0)) {
-              merged.set(serverModel.id, serverModel);
-            }
+
+      // Calcular merge
+      const merged = new Map(modelLibrary.models.map(m => [m.id, m]));
+      for (const serverModel of receivedModels) {
+        if (serverModel.deletedAt) {
+          merged.delete(serverModel.id);
+        } else {
+          const local = merged.get(serverModel.id);
+          if (!local || new Date(serverModel.updatedAt) > new Date(local.updatedAt || 0)) {
+            merged.set(serverModel.id, serverModel);
           }
         }
-        console.log(`[Sync] Merge resultado: ${merged.size} modelos`);
-        return Array.from(merged.values());
+      }
+      const mergedModels = Array.from(merged.values());
+      console.log(`[Sync] Merge resultado: ${mergedModels.length} modelos`);
+
+      // Atualizar state
+      modelLibrary.setModels(mergedModels);
+
+      // v1.34.7: Salvar IMEDIATAMENTE no IndexedDB (não esperar debounce)
+      indexedDB.saveModels(mergedModels).then(() => {
+        localStorage.setItem('sentencify-models-count', String(mergedModels.length));
+        console.log(`[Sync] Salvo ${mergedModels.length} modelos no IndexedDB`);
+      }).catch(err => {
+        console.error('[Sync] Erro ao salvar no IndexedDB:', err);
       });
+
       clearReceivedModels();
     }
-  }, [receivedModels, clearReceivedModels, modelLibrary, modelLibrary.isLoadingModels]);
+  }, [receivedModels, clearReceivedModels, modelLibrary, modelLibrary.isLoadingModels, indexedDB]);
 
   // 🤖 v1.19.0: Chat interativo do assistente IA (Editor Individual)
   const chatAssistant = useChatAssistant(aiIntegration);
