@@ -230,9 +230,20 @@ export function useCloudSync({ onModelsReceived } = {}) {
       setSyncStatus('syncing');
       setSyncError(null);
 
+      // v1.34.6: Sempre verificar total do servidor primeiro
+      // Se local tiver menos que servidor, forçar full sync
+      const statusRes = await authFetch('/api/sync/status');
+      if (!statusRes.ok) throw new Error('Erro ao verificar status');
+      const serverStatus = await statusRes.json();
+
+      // Contar modelos locais no IndexedDB
+      const localModelsCount = parseInt(localStorage.getItem('sentencify-models-count') || '0', 10);
+
       // v1.34.2: Pull paginado para evitar crash de memória
-      // v1.34.3: Detectar se precisa forçar full sync (navegador novo sem modelos)
-      const needsFullSync = !localStorage.getItem('sentencify-initial-push-done');
+      // v1.34.6: Forçar full sync se local != servidor
+      const hasFlag = localStorage.getItem('sentencify-initial-push-done');
+      const localMatchesServer = localModelsCount >= serverStatus.activeModels;
+      const needsFullSync = !hasFlag || !localMatchesServer;
       const effectiveLastSyncAt = needsFullSync ? null : lastSyncAt;
 
       let allModels = [];
@@ -242,7 +253,9 @@ export function useCloudSync({ onModelsReceived } = {}) {
       let serverTime = null;
 
       if (needsFullSync) {
-        console.log('[CloudSync] Forçando full sync (navegador novo)');
+        console.log(`[CloudSync] Forçando full sync (local=${localModelsCount}, servidor=${serverStatus.activeModels})`);
+      } else {
+        console.log(`[CloudSync] Sync incremental (local=${localModelsCount} >= servidor=${serverStatus.activeModels})`);
       }
 
       while (hasMore) {
@@ -369,6 +382,7 @@ export function useCloudSync({ onModelsReceived } = {}) {
   // Sync inicial ao autenticar
   useEffect(() => {
     if (user && navigator.onLine) {
+      console.log('[CloudSync] Sync inicial - user autenticado, chamando pull()');
       pull();
     }
   }, [user]); // eslint-disable-line

@@ -134,7 +134,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.34.5'; // v1.34.5: Fix race condition no merge de sync (espera IndexedDB carregar)
+const APP_VERSION = '1.34.6'; // v1.34.6: Sync compara contagem local vs servidor - força full sync se diferente
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -149,6 +149,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.34.6', feature: 'Sync inteligente: compara contagem local vs servidor, força full sync se diferente' },
   { version: '1.34.5', feature: 'Fix race condition: merge de sync agora espera IndexedDB carregar (evita perda de modelos)' },
   { version: '1.34.4', feature: 'Admin Panel: interface /admin para gerenciar emails autorizados via Magic Link (protegida por senha)' },
   { version: '1.34.3', feature: 'Cloud Sync Full Sync + UPSERT: navegador novo baixa todos modelos, INSERT OR REPLACE evita conflitos' },
@@ -19131,6 +19132,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, clearReceive
     const timeoutId = setTimeout(async () => {
       try {
         await indexedDB.saveModels(modelLibrary.models);
+
+        // v1.34.6: Salvar contagem para sync comparar com servidor
+        localStorage.setItem('sentencify-models-count', String(modelLibrary.models.length));
 
         // Atualizar ref com hash atual
         modelsHashRef.current = currentModelsHash;
