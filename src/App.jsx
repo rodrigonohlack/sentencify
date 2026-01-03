@@ -120,13 +120,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2, LogOut } from 'lucide-react';
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
+// v1.34.0: Cloud Sync - Magic Link Authentication + SQLite Sync
+import useCloudSync from './hooks/useCloudSync';
+import LoginMagicModal from './components/LoginMagicModal';
+import SyncStatusIndicator from './components/SyncStatusIndicator';
+
 // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.33.63'; // v1.33.63: Testes E2E expandidos (88 testes: auth, pdf-upload, generation, export, search)
+const APP_VERSION = '1.34.0'; // v1.34.0: Cloud Sync - Magic Link Authentication + SQLite Sync (Render Persistent Disk)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -141,6 +146,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.34.0', feature: 'Cloud Sync: Magic Link Authentication + SQLite Sync - modelos salvos na nuvem (Render Persistent Disk)' },
   { version: '1.33.63', feature: 'Testes E2E expandidos (88 testes): auth, pdf-upload, generation, export, search' },
   { version: '1.33.62', feature: 'Modal "Sessão Anterior Encontrada" não pode ser fechado (ESC, X, click fora) - usuário deve escolher' },
   { version: '1.33.61', feature: 'Auto-download de dados: legislação e jurisprudência baixados automaticamente do GitHub Releases (~5 MB, download único)' },
@@ -18746,8 +18752,8 @@ Se NÃO encontrar vulnerabilidades significativas, atribua nota A e informe com 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // 📦 COMPONENTE PRINCIPAL: LegalDecisionEditor
-// v1.33.41: Adicionado prop onLogout para autenticação
-const LegalDecisionEditor = ({ onLogout }) => {
+// v1.34.1: Adicionado props receivedModels e clearReceivedModels para merge de sync
+const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, clearReceivedModels }) => {
 
   // 🎣 CUSTOM HOOKS
   const { modals, openModal, closeModal, closeAllModals, isAnyModalOpen, textPreview, setTextPreview } = useModalManager();
@@ -18756,6 +18762,27 @@ const LegalDecisionEditor = ({ onLogout }) => {
   const indexedDB = useIndexedDB();   const apiCache = useAPICache(50, 5 * 60 * 1000); // 🚀 v1.8.2: Cache de API (50 entradas, TTL 5min)
   const storage = useLocalStorage();
   const modelLibrary = useModelLibrary();
+
+  // v1.34.3: Merge modelos recebidos do servidor
+  React.useEffect(() => {
+    if (receivedModels && receivedModels.length > 0) {
+      modelLibrary.setModels(prev => {
+        const merged = new Map(prev.map(m => [m.id, m]));
+        for (const serverModel of receivedModels) {
+          if (serverModel.deletedAt) {
+            merged.delete(serverModel.id);
+          } else {
+            const local = merged.get(serverModel.id);
+            if (!local || new Date(serverModel.updatedAt) > new Date(local.updatedAt || 0)) {
+              merged.set(serverModel.id, serverModel);
+            }
+          }
+        }
+        return Array.from(merged.values());
+      });
+      clearReceivedModels();
+    }
+  }, [receivedModels, clearReceivedModels, modelLibrary]);
 
   // 🤖 v1.19.0: Chat interativo do assistente IA (Editor Individual)
   const chatAssistant = useChatAssistant(aiIntegration);
@@ -22006,12 +22033,17 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     }
 
     if (isReplace && replaceId) {
-      const updated = modelLibrary.models.map(m => m.id === replaceId ? { ...modelData, id: replaceId, updatedAt: new Date().toISOString() } : m);
+      const updatedModel = { ...modelData, id: replaceId, updatedAt: new Date().toISOString() };
+      const updated = modelLibrary.models.map(m => m.id === replaceId ? updatedModel : m);
       modelLibrary.setModels(updated);
+      // v1.34.0: Rastrear update para sync
+      if (cloudSync?.trackChange) cloudSync.trackChange('update', updatedModel);
       TFIDFSimilarity.invalidate();
       apiCache.invalidate('suggestions_');
     } else {
       modelLibrary.setModels(prev => [...prev, modelData]);
+      // v1.34.0: Rastrear create para sync
+      if (cloudSync?.trackChange) cloudSync.trackChange('create', modelData);
       TFIDFSimilarity.invalidate();
       apiCache.invalidate('suggestions_');
     }
@@ -22071,6 +22103,8 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 
         const updated = modelLibrary.models.map(m => m.id === modelLibrary.editingModel.id ? modelData : m);
         modelLibrary.setModels(updated);
+        // v1.34.0: Rastrear update para sync
+        if (cloudSync?.trackChange) cloudSync.trackChange('update', modelData);
         modelLibrary.setHasUnsavedChanges(true);
         TFIDFSimilarity.invalidate();
         apiCache.invalidate('suggestions_');
@@ -22139,6 +22173,8 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 
         const updated = modelLibrary.models.map(m => m.id === modelLibrary.editingModel.id ? modelData : m);
         modelLibrary.setModels(updated);
+        // v1.34.0: Rastrear update para sync
+        if (cloudSync?.trackChange) cloudSync.trackChange('update', modelData);
         modelLibrary.setHasUnsavedChanges(true);
                 modelLibrary.setEditingModel(modelData);
 
@@ -22154,6 +22190,8 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         };
 
         modelLibrary.setModels(prev => [...prev, modelData]);
+        // v1.34.0: Rastrear create para sync
+        if (cloudSync?.trackChange) cloudSync.trackChange('create', modelData);
         modelLibrary.setHasUnsavedChanges(true);
                 modelLibrary.setEditingModel(modelData);
 
@@ -22224,6 +22262,8 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       }
 
       modelLibrary.setModels(modelLibrary.models.map(m => m.id === modelId ? updatedModel : m));
+      // v1.34.0: Rastrear update para sync
+      if (cloudSync?.trackChange) cloudSync.trackChange('update', updatedModel);
       modelLibrary.setHasUnsavedChanges(true);
       TFIDFSimilarity.invalidate();
       apiCache.invalidate('suggestions_');
@@ -22311,6 +22351,8 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 
     // Salvar novo modelo
     modelLibrary.setModels(prev => [...prev, modelData]);
+    // v1.34.0: Rastrear create para sync
+    if (cloudSync?.trackChange) cloudSync.trackChange('create', modelData);
     modelLibrary.setHasUnsavedChanges(true);
     TFIDFSimilarity.invalidate();
     apiCache.invalidate('suggestions_');
@@ -22342,14 +22384,17 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     }
 
     if (isReplace && replaceId) {
+      const updatedModel = { ...modelData, id: replaceId, updatedAt: new Date().toISOString() };
       const updated = modelLibrary.models.map(m =>
-        m.id === replaceId
-          ? { ...modelData, id: replaceId, updatedAt: new Date().toISOString() }
-          : m
+        m.id === replaceId ? updatedModel : m
       );
       modelLibrary.setModels(updated);
+      // v1.34.0: Rastrear update para sync
+      if (cloudSync?.trackChange) cloudSync.trackChange('update', updatedModel);
     } else {
       modelLibrary.setModels(prev => [...prev, modelData]);
+      // v1.34.0: Rastrear create para sync
+      if (cloudSync?.trackChange) cloudSync.trackChange('create', modelData);
     }
     modelLibrary.setHasUnsavedChanges(true);
     TFIDFSimilarity.invalidate();
@@ -22522,6 +22567,10 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 
       if (newModels.length > 0) {
         modelLibrary.setModels(prev => [...prev, ...newModels]);
+        // v1.34.0: Rastrear cada modelo importado para sync
+        if (cloudSync?.trackChange) {
+          newModels.forEach(model => cloudSync.trackChange('create', model));
+        }
         modelLibrary.setHasUnsavedChanges(true);
       }
 
@@ -24000,7 +24049,10 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
 
     try {
       const modelId = modelLibrary.modelToDelete.id;
+      const modelToDelete = modelLibrary.modelToDelete;
       modelLibrary.setModels(modelLibrary.models.filter(m => m.id !== modelId));
+      // v1.34.0: Rastrear delete para sync
+      if (cloudSync?.trackChange) cloudSync.trackChange('delete', { ...modelToDelete, updatedAt: new Date().toISOString() });
       modelLibrary.setHasUnsavedChanges(true);
       // Remover das sugestões também
       if (modelLibrary.suggestions?.length > 0) {
@@ -24063,6 +24115,8 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
       }
 
       modelLibrary.setModels(prev => [...prev, duplicatedModel]);
+      // v1.34.0: Rastrear create para sync (duplicação cria novo modelo)
+      if (cloudSync?.trackChange) cloudSync.trackChange('create', duplicatedModel);
       modelLibrary.setHasUnsavedChanges(true);
 
       showToast('✅ Modelo duplicado com sucesso!', 'success');
@@ -24440,10 +24494,15 @@ ${decisionText}`;
     }
 
     if (isReplace && replaceId) {
-      const updated = modelLibrary.models.map(m => m.id === replaceId ? { ...modelData, id: replaceId, updatedAt: new Date().toISOString() } : m);
+      const updatedModel = { ...modelData, id: replaceId, updatedAt: new Date().toISOString() };
+      const updated = modelLibrary.models.map(m => m.id === replaceId ? updatedModel : m);
       modelLibrary.setModels(updated);
+      // v1.34.0: Rastrear update para sync
+      if (cloudSync?.trackChange) cloudSync.trackChange('update', updatedModel);
     } else {
       modelLibrary.setModels(prev => [...prev, modelData]);
+      // v1.34.0: Rastrear create para sync
+      if (cloudSync?.trackChange) cloudSync.trackChange('create', modelData);
     }
     modelLibrary.setHasUnsavedChanges(true);
     TFIDFSimilarity.invalidate();
@@ -24539,9 +24598,16 @@ ${decisionText}`;
 
         let updatedModels = [...modelLibrary.models];
         for (const { oldId, newModel } of replacements) {
-          updatedModels = updatedModels.map(m => m.id === oldId ? { ...newModel, id: oldId, updatedAt: new Date().toISOString() } : m);
+          const replacedModel = { ...newModel, id: oldId, updatedAt: new Date().toISOString() };
+          updatedModels = updatedModels.map(m => m.id === oldId ? replacedModel : m);
+          // v1.34.0: Rastrear update para sync
+          if (cloudSync?.trackChange) cloudSync.trackChange('update', replacedModel);
         }
         modelLibrary.setModels([...updatedModels, ...saved]);
+        // v1.34.0: Rastrear creates para sync
+        if (cloudSync?.trackChange) {
+          saved.forEach(model => cloudSync.trackChange('create', model));
+        }
         modelLibrary.setHasUnsavedChanges(true);
         TFIDFSimilarity.invalidate();
         apiCache.invalidate('suggestions_');
@@ -25188,6 +25254,8 @@ ${textToAnalyze}`;
         return m;
       });
       modelLibrary.setModels(updated);
+      // v1.34.0: Rastrear update para sync
+      if (cloudSync?.trackChange && updatedModel) cloudSync.trackChange('update', updatedModel);
       modelLibrary.setHasUnsavedChanges(true);
       // Atualizar sugestões se modelo estiver nelas
       if (updatedModel && modelLibrary.suggestions?.length > 0) {
@@ -27730,17 +27798,6 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                   >
                     ⚙️ Configurações IA
                   </button>
-                  {/* 🔐 v1.33.41: Botão Sair (só aparece se auth está habilitada) - v1.33.57: Modal estilizado */}
-                  {onLogout && (
-                    <button
-                      onClick={() => openModal('logout')}
-                      className="px-3 py-1 rounded text-xs flex items-center gap-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 transition-colors duration-200"
-                      title="Sair do sistema"
-                    >
-                      <LogOut className="w-3 h-3" />
-                      Sair
-                    </button>
-                  )}
                   <button
                     onClick={() => {
                       const allStatesWithAI = {
@@ -27837,6 +27894,46 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     Limpar
                   </button>
                 </div>
+                {/* 🔄 v1.34.0: Linha de sync/usuário/logout */}
+                {cloudSync?.isAuthenticated && (
+                  <div className="mt-2 flex gap-2 justify-end items-center">
+                    <SyncStatusIndicator
+                      status={cloudSync.syncStatus}
+                      pendingCount={cloudSync.pendingCount}
+                      lastSyncAt={cloudSync.lastSyncAt}
+                      onSync={() => {
+                        // Verificar se o push inicial já foi feito
+                        const initialPushDone = localStorage.getItem('sentencify-initial-push-done');
+                        if (!initialPushDone && modelLibrary.models.length > 0) {
+                          // Primeira vez: enviar todos os modelos locais
+                          cloudSync.pushAllModels(modelLibrary.models).then(result => {
+                            if (result.success) {
+                              localStorage.setItem('sentencify-initial-push-done', 'true');
+                            }
+                          });
+                        } else {
+                          // Já fez push inicial: sync normal
+                          cloudSync.sync();
+                        }
+                      }}
+                    />
+                    {cloudSync.user?.email && (
+                      <span className="text-slate-400 text-xs" title={cloudSync.user.email}>
+                        {cloudSync.user.email.length > 25 ? cloudSync.user.email.slice(0, 22) + '...' : cloudSync.user.email}
+                      </span>
+                    )}
+                    {onLogout && (
+                      <button
+                        onClick={() => openModal('logout')}
+                        className="px-3 py-1 rounded text-xs flex items-center gap-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 transition-colors duration-200"
+                        title="Sair do sistema"
+                      >
+                        <LogOut className="w-3 h-3" />
+                        Sair
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             
@@ -33885,12 +33982,20 @@ class ErrorBoundary extends React.Component {
 }
 
 // 📤 EXPORT
-// v1.33.41: Autenticação + ErrorBoundary
+// v1.34.1: Cloud Sync - Magic Link Authentication + SQLite Sync + Pull Merge
 const SentencifyAI = () => {
-  const { isAuthenticated, authEnabled, isLoading, login, logout } = useAuth();
+  // v1.34.1: Estado para modelos recebidos do servidor (para merge)
+  const [receivedModels, setReceivedModels] = React.useState(null);
+
+  const cloudSync = useCloudSync({
+    onModelsReceived: (models) => setReceivedModels(models)
+  });
+
+  // Fallback para auth legada durante transição
+  const legacyAuth = useAuth();
 
   // Mostrar loading enquanto verifica auth
-  if (isLoading) {
+  if (cloudSync.authLoading || legacyAuth.isLoading) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-6">
         {/* Spinner Neon + Ripple - v1.33.50 */}
@@ -33908,15 +34013,30 @@ const SentencifyAI = () => {
     );
   }
 
-  // Mostrar tela de login se auth está habilitada e não está autenticado
-  if (authEnabled && !isAuthenticated) {
-    return <LoginScreen onLogin={login} />;
+  // v1.34.0: Mostrar modal de login Magic Link se não autenticado
+  if (!cloudSync.isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-900">
+        <LoginMagicModal
+          isOpen={true}
+          onClose={() => {}} // Modal não pode ser fechado sem autenticar
+          onRequestLink={cloudSync.requestMagicLink}
+          onVerify={cloudSync.verifyToken}
+          devLink={cloudSync.devLink}
+        />
+      </div>
+    );
   }
 
   // App normal com ErrorBoundary
   return (
     <ErrorBoundary>
-      <LegalDecisionEditor onLogout={authEnabled ? logout : null} />
+      <LegalDecisionEditor
+        onLogout={cloudSync.logout}
+        cloudSync={cloudSync}
+        receivedModels={receivedModels}
+        clearReceivedModels={() => setReceivedModels(null)}
+      />
     </ErrorBoundary>
   );
 };

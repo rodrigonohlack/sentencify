@@ -46,3 +46,9 @@ __pycache__/
 
 playwright-report/
 test-results/
+
+# Local database
+data/
+server/db/*.db
+server/db/*.db-shm
+server/db/*.db-wal

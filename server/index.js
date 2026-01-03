@@ -1,15 +1,24 @@
-import express from 'express';
-import cors from 'cors';
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+
+// IMPORTANTE: Carregar .env ANTES de qualquer import que use process.env
+config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '.env') });
+
+import express from 'express';
+import cors from 'cors';
 import { Readable } from 'stream';
 
 import claudeRoutes from './routes/claude.js';
 import geminiRoutes from './routes/gemini.js';
 import authRoutes from './routes/auth.js';
+import authMagicRoutes from './routes/auth-magic.js';
+import modelsRoutes from './routes/models.js';
+import syncRoutes from './routes/sync.js';
+import { initDatabase } from './db/database.js';
 
-config();
+// Inicializar banco de dados SQLite
+initDatabase();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -41,8 +50,15 @@ app.use(cors({
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
-// Rota de autenticação (v1.33.41)
+// Rota de autenticação simples (v1.33.41)
 app.use('/api/auth', authRoutes);
+
+// Rotas de autenticação magic link (v1.34.0)
+app.use('/api/auth/magic', authMagicRoutes);
+
+// Rotas de modelos e sincronização (v1.34.0)
+app.use('/api/models', modelsRoutes);
+app.use('/api/sync', syncRoutes);
 
 // Rotas de proxy para APIs de IA
 app.use('/api/claude', claudeRoutes);
@@ -120,13 +136,15 @@ app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════════╗
   ║                                                       ║
-  ║   SentencifyAI Server                                ║
+  ║   SentencifyAI Server v1.34.0                        ║
   ║   ────────────────────────────────────────────────   ║
   ║   Backend:  http://localhost:${PORT}                   ║
   ║   Frontend: http://localhost:3000                    ║
   ║                                                       ║
   ║   APIs:                                              ║
-  ║   • Auth:    /api/auth                               ║
+  ║   • Auth:    /api/auth (simple) + /api/auth/magic    ║
+  ║   • Models:  /api/models (CRUD)                      ║
+  ║   • Sync:    /api/sync (push/pull)                   ║
   ║   • Claude:  /api/claude/messages                    ║
   ║   • Gemini:  /api/gemini/generate                    ║
   ║   • Health:  /api/health                             ║

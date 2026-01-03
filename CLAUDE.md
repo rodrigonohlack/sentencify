@@ -4,16 +4,17 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.33.63 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.34.3 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
-**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`
+**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`
 
-**Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`
+**Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`
 
 **Storage**:
-- `SentencifyAI` (IndexedDB) → modelos
+- `SQLite` (Render Persistent Disk) → modelos sincronizados na nuvem (v1.34.0)
+- `SentencifyAI` (IndexedDB) → modelos locais (fallback)
 - `sentencify-pdfs` (IndexedDB) → PDFs
 - `sentencify-versions` (IndexedDB) → versionamento do campo fundamentação
 - `sentencify-legislacao` (IndexedDB) → artigos de legislação (CLT, CPC, CF88...) - auto-download via CDN
@@ -65,6 +66,10 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.34.3 | Cloud Sync Full Sync: navegador novo ignora lastSyncAt e baixa todos os modelos do servidor |
+| v1.34.2 | Cloud Sync Pull Paginado: limite de 50 modelos por request evita crash de memória (456 modelos em 10 páginas) |
+| v1.34.1 | Cloud Sync Pull: modelos são carregados do servidor ao logar em novo navegador (merge com IndexedDB local) |
+| v1.34.0 | Cloud Sync: Magic Link Authentication + SQLite Sync - modelos salvos na nuvem (Render Persistent Disk, Resend para emails) |
 | v1.33.63 | Testes E2E expandidos (88 testes): auth, pdf-upload, generation, export, search - cobertura completa |
 | v1.33.62 | Modal "Sessão Anterior Encontrada" não pode ser fechado (ESC, X, click fora) - preventClose no BaseModal |
 | v1.33.61 | Auto-download de dados: legislação e jurisprudência baixados automaticamente do GitHub Releases (~5 MB) |
