@@ -134,7 +134,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.34.7'; // v1.34.7: Sync salva IMEDIATAMENTE no IndexedDB após merge (não espera debounce)
+const APP_VERSION = '1.34.9'; // v1.34.9: Fix validação aceita null em category/keywords
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -149,6 +149,8 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.34.9', feature: 'Fix validação: aceita null em category/keywords (antes rejeitava modelos com campos opcionais null)' },
+  { version: '1.34.8', feature: 'Fix cache IndexedDB: atualizado com modelos validados + log de modelos rejeitados para debug' },
   { version: '1.34.7', feature: 'Fix sync: salva IMEDIATAMENTE no IndexedDB após merge (debounce de 1500ms causava perda de dados)' },
   { version: '1.34.6', feature: 'Sync inteligente: compara contagem local vs servidor, força full sync se diferente' },
   { version: '1.34.5', feature: 'Fix race condition: merge de sync agora espera IndexedDB carregar (evita perda de modelos)' },
