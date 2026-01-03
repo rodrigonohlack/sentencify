@@ -3087,6 +3087,24 @@ const useIndexedDB = () => {
     setError(null);
 
     try {
+      // v1.34.8: Validar ANTES da transação para poder atualizar cache corretamente
+      const validatedModels = [];
+      const rejectedModels = [];
+      for (const model of newModels) {
+        const validation = validateModel(model);
+        if (!validation.valid) {
+          rejectedModels.push({ id: model.id, title: model.title, errors: validation.errors });
+          continue;
+        }
+        const sanitized = sanitizeModel(model);
+        validatedModels.push(sanitized);
+      }
+
+      // Log modelos rejeitados para debug
+      if (rejectedModels.length > 0) {
+        console.warn(`[IndexedDB] ${rejectedModels.length} modelos rejeitados pela validação:`, rejectedModels);
+      }
+
       await retryWithBackoff(async () => {
         return new Promise((resolve, reject) => {
           const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
@@ -3095,17 +3113,6 @@ const useIndexedDB = () => {
           // IMPORTANTE: Clear store primeiro para garantir sincronização total
           // Sem isso, modelos deletados permaneceriam no IndexedDB
           store.clear();
-
-          // Validate and sanitize each model before saving
-          const validatedModels = [];
-          for (const model of newModels) {
-            const validation = validateModel(model);
-            if (!validation.valid) {
-              continue;
-            }
-            const sanitized = sanitizeModel(model);
-            validatedModels.push(sanitized);
-          }
 
           // Save all validated models (após clear, para substituir completamente)
           validatedModels.forEach(model => {
@@ -3120,8 +3127,8 @@ const useIndexedDB = () => {
         });
       });
 
-      // Update cache
-      modelsCacheRef.current = newModels;
+      // v1.34.8: Update cache com modelos VALIDADOS (não os originais!)
+      modelsCacheRef.current = validatedModels;
       setLastSyncTime(new Date().toISOString());
       setIsLoading(false);
 
@@ -3134,7 +3141,7 @@ const useIndexedDB = () => {
             action: 'save',
             tabId: tabIdRef.current,
             timestamp,
-            modelsCount: newModels.length
+            modelsCount: validatedModels.length  // v1.34.8: Usar count correto
           };
 
           notifyOtherTabs(message); // 🚀 v1.8.1: Throttled (max 1/segundo)
