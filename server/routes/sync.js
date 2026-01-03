@@ -1,5 +1,5 @@
 // server/routes/sync.js - Sincronização Bidirecional
-// v1.0.2 - UPSERT no push para evitar UNIQUE constraint
+// v1.0.3 - Fix Buffer→Float32Array conversion para embeddings (768 floats, não 3072 bytes)
 
 import express from 'express';
 import { getDb } from '../db/database.js';
@@ -69,7 +69,7 @@ router.post('/pull', (req, res) => {
       category: m.category,
       keywords: m.keywords,
       isFavorite: Boolean(m.is_favorite),
-      embedding: m.embedding ? Array.from(new Float32Array(m.embedding)) : null,
+      embedding: m.embedding ? Array.from(new Float32Array(m.embedding.buffer, m.embedding.byteOffset, m.embedding.length / 4)) : null,
       createdAt: m.created_at,
       updatedAt: m.updated_at,
       deletedAt: m.deleted_at,
