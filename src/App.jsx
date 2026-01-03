@@ -5660,12 +5660,12 @@ const validateModel = (model) => {
     errors.push('ID deve ser uma string');
   }
 
-  // Optional fields type checking
-  if (model.category !== undefined && typeof model.category !== 'string') {
+  // Optional fields type checking (v1.34.9: aceitar null como valor válido)
+  if (model.category != null && typeof model.category !== 'string') {
     errors.push('Categoria deve ser uma string');
   }
 
-  if (model.keywords !== undefined && typeof model.keywords !== 'string') {
+  if (model.keywords != null && typeof model.keywords !== 'string') {
     errors.push('Keywords devem ser uma string');
   }
 

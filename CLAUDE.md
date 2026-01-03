@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.34.8 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.34.9 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -66,6 +66,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.34.9 | Fix validação: aceitar null em category/keywords (antes rejeitava modelos com campos opcionais null) |
 | v1.34.8 | Fix perda de modelos: cache IndexedDB atualizado com modelos VALIDADOS (antes usava originais, causando discrepância cache vs DB) + log de modelos rejeitados |
 | v1.34.7 | Fix sync: salvar IMEDIATAMENTE no IndexedDB após merge (não esperar debounce de 1500ms) |
 | v1.34.6 | Forçar full sync se count local != servidor (localStorage sentencify-models-count) |
