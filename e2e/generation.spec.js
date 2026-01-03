@@ -1,19 +1,13 @@
-// Testes E2E de Geração de Sentença - SentencifyAI v1.33.62
+// Testes E2E de Geração de Sentença - SentencifyAI v1.33.63
 import { test, expect } from '@playwright/test';
-
-// Helper para simular autenticação
-const setupAuth = async (page) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('sentencify-auth', 'true');
-    localStorage.removeItem('sentencifySession');
-  });
-};
+import { setupAuth, closeAnyModal } from './helpers.js';
 
 // Helper para navegar até aba de Tópicos
 const navigateToTopics = async (page) => {
   await page.goto('/');
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(2000);
+  await closeAnyModal(page);
 
   const topicsTab = page.locator('button:has-text("Tópicos")').first();
   if (await topicsTab.isVisible().catch(() => false)) {
@@ -32,6 +26,7 @@ test.describe('SentencifyAI - Aba de Tópicos', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     const topicsTab = page.locator('button:has-text("Tópicos")').first();
     await expect(topicsTab).toBeVisible();

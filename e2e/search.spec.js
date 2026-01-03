@@ -1,19 +1,13 @@
-// Testes E2E de Busca - SentencifyAI v1.33.62
+// Testes E2E de Busca - SentencifyAI v1.33.63
 import { test, expect } from '@playwright/test';
-
-// Helper para simular autenticação
-const setupAuth = async (page) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('sentencify-auth', 'true');
-    localStorage.removeItem('sentencifySession');
-  });
-};
+import { setupAuth, closeAnyModal } from './helpers.js';
 
 // Helper para navegar até aba de Legislação
 const navigateToLegislacao = async (page) => {
   await page.goto('/');
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(2000);
+  await closeAnyModal(page);
 
   const legisTab = page.locator('button:has-text("Legislação")').first();
   if (await legisTab.isVisible().catch(() => false)) {
@@ -27,6 +21,7 @@ const navigateToJurisprudencia = async (page) => {
   await page.goto('/');
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(2000);
+  await closeAnyModal(page);
 
   const jurisTab = page.locator('button:has-text("Jurisprudência")').first();
   if (await jurisTab.isVisible().catch(() => false)) {
@@ -45,6 +40,7 @@ test.describe('SentencifyAI - Busca na Legislação', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     const legisTab = page.locator('button:has-text("Legislação")').first();
     await expect(legisTab).toBeVisible();
@@ -68,7 +64,7 @@ test.describe('SentencifyAI - Busca na Legislação', () => {
       await page.waitForTimeout(1000);
 
       // Deve mostrar resultados ou mensagem
-      const results = page.locator('[class*="card"], [class*="result"], text=/Art\./i').first();
+      const results = page.locator('[class*="card"], [class*="result"], text=/Art\\./i').first();
       const noResults = page.locator('text=/nenhum|não encontrado/i').first();
 
       const hasResults = await results.isVisible().catch(() => false);
@@ -138,6 +134,7 @@ test.describe('SentencifyAI - Busca na Jurisprudência', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     const jurisTab = page.locator('button:has-text("Jurisprudência")').first();
     await expect(jurisTab).toBeVisible();
@@ -220,6 +217,7 @@ test.describe('SentencifyAI - Busca de Modelos', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     const modelosTab = page.locator('button:has-text("Modelos")').first();
     await expect(modelosTab).toBeVisible();
@@ -229,6 +227,7 @@ test.describe('SentencifyAI - Busca de Modelos', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     const modelosTab = page.locator('button:has-text("Modelos")').first();
     if (await modelosTab.isVisible().catch(() => false)) {

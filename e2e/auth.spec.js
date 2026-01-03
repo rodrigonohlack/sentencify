@@ -1,5 +1,6 @@
-// Testes E2E de Autenticação - SentencifyAI v1.33.62
+// Testes E2E de Autenticação - SentencifyAI v1.33.63
 import { test, expect } from '@playwright/test';
+import { closeAnyModal } from './helpers.js';
 
 const AUTH_STORAGE_KEY = 'sentencify-auth';
 
@@ -133,11 +134,15 @@ test.describe('SentencifyAI - Sessão e Logout', () => {
     // Simula sessão autenticada
     await page.addInitScript(() => {
       localStorage.setItem('sentencify-auth', 'true');
+      localStorage.setItem('dismissedDownloadPrompt', 'true');
+      localStorage.setItem('dismissedDataPrompt', 'true');
+      localStorage.removeItem('sentencifySession');
     });
 
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     // Verifica se está no app principal (não na tela de login)
     const buttons = page.locator('button');
@@ -150,11 +155,15 @@ test.describe('SentencifyAI - Sessão e Logout', () => {
   test('deve exibir botão de logout quando autenticado', async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('sentencify-auth', 'true');
+      localStorage.setItem('dismissedDownloadPrompt', 'true');
+      localStorage.setItem('dismissedDataPrompt', 'true');
+      localStorage.removeItem('sentencifySession');
     });
 
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     // Procura pelo botão de logout (ícone LogOut)
     const logoutButton = page.locator('button[title*="Sair"], button:has-text("Sair")');
@@ -176,6 +185,8 @@ test.describe('SentencifyAI - Modal Sessão Anterior', () => {
     // Simula sessão anterior com dados
     await page.addInitScript(() => {
       localStorage.setItem('sentencify-auth', 'true');
+      localStorage.setItem('dismissedDownloadPrompt', 'true');
+      localStorage.setItem('dismissedDataPrompt', 'true');
       localStorage.setItem('sentencifySession', JSON.stringify({
         lastSaved: new Date().toISOString(),
         hasData: true
@@ -201,6 +212,8 @@ test.describe('SentencifyAI - Modal Sessão Anterior', () => {
   test('modal de sessão anterior não deve fechar com ESC', async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('sentencify-auth', 'true');
+      localStorage.setItem('dismissedDownloadPrompt', 'true');
+      localStorage.setItem('dismissedDataPrompt', 'true');
       localStorage.setItem('sentencifySession', JSON.stringify({
         lastSaved: new Date().toISOString(),
         hasData: true
@@ -229,6 +242,8 @@ test.describe('SentencifyAI - Modal Sessão Anterior', () => {
   test('modal de sessão anterior não deve ter botão X', async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('sentencify-auth', 'true');
+      localStorage.setItem('dismissedDownloadPrompt', 'true');
+      localStorage.setItem('dismissedDataPrompt', 'true');
       localStorage.setItem('sentencifySession', JSON.stringify({
         lastSaved: new Date().toISOString(),
         hasData: true
@@ -255,11 +270,17 @@ test.describe('SentencifyAI - Modal Sessão Anterior', () => {
   });
 
   test('deve fechar modal ao clicar em "Continuar Sessão"', async ({ page }) => {
+    // Este teste requer dados de sessão reais para o modal aparecer
+    // Se o modal não aparecer, o teste é pulado
     await page.addInitScript(() => {
       localStorage.setItem('sentencify-auth', 'true');
+      localStorage.setItem('dismissedDownloadPrompt', 'true');
+      localStorage.setItem('dismissedDataPrompt', 'true');
+      // Simula sessão com dados que podem triggerar o modal
       localStorage.setItem('sentencifySession', JSON.stringify({
         lastSaved: new Date().toISOString(),
-        hasData: true
+        hasData: true,
+        topics: [{ id: 1, title: 'Test' }]
       }));
     });
 
@@ -267,26 +288,40 @@ test.describe('SentencifyAI - Modal Sessão Anterior', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 
+    // Fecha modal de download se aparecer (pode estar bloqueando)
+    const downloadModal = page.locator('button:has-text("Depois")').first();
+    if (await downloadModal.isVisible({ timeout: 500 }).catch(() => false)) {
+      await downloadModal.click({ force: true });
+      await page.waitForTimeout(500);
+    }
+
     const modal = page.locator('text=Sessão Anterior Encontrada');
     const isVisible = await modal.isVisible().catch(() => false);
 
-    if (isVisible) {
-      await page.click('text=Continuar Sessão');
-      await page.waitForTimeout(1000);
-
-      // Modal deve fechar
-      await expect(modal).not.toBeVisible();
-    } else {
+    if (!isVisible) {
+      // Se modal não aparecer, pula o teste (dados podem não ser suficientes)
       test.skip();
+      return;
     }
+
+    // Usa force: true para evitar problemas com overlays
+    await page.click('text=Continuar Sessão', { force: true });
+    await page.waitForTimeout(1000);
+
+    // Modal deve fechar
+    await expect(modal).not.toBeVisible();
   });
 
   test('deve fechar modal ao clicar em "Começar do Zero"', async ({ page }) => {
+    // Este teste requer dados de sessão reais para o modal aparecer
     await page.addInitScript(() => {
       localStorage.setItem('sentencify-auth', 'true');
+      localStorage.setItem('dismissedDownloadPrompt', 'true');
+      localStorage.setItem('dismissedDataPrompt', 'true');
       localStorage.setItem('sentencifySession', JSON.stringify({
         lastSaved: new Date().toISOString(),
-        hasData: true
+        hasData: true,
+        topics: [{ id: 1, title: 'Test' }]
       }));
     });
 
@@ -294,18 +329,28 @@ test.describe('SentencifyAI - Modal Sessão Anterior', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 
+    // Fecha modal de download se aparecer (pode estar bloqueando)
+    const downloadModal = page.locator('button:has-text("Depois")').first();
+    if (await downloadModal.isVisible({ timeout: 500 }).catch(() => false)) {
+      await downloadModal.click({ force: true });
+      await page.waitForTimeout(500);
+    }
+
     const modal = page.locator('text=Sessão Anterior Encontrada');
     const isVisible = await modal.isVisible().catch(() => false);
 
-    if (isVisible) {
-      await page.click('text=Começar do Zero');
-      await page.waitForTimeout(1000);
-
-      // Modal deve fechar
-      await expect(modal).not.toBeVisible();
-    } else {
+    if (!isVisible) {
+      // Se modal não aparecer, pula o teste (dados podem não ser suficientes)
       test.skip();
+      return;
     }
+
+    // Usa force: true para evitar problemas com overlays
+    await page.click('text=Começar do Zero', { force: true });
+    await page.waitForTimeout(1000);
+
+    // Modal deve fechar
+    await expect(modal).not.toBeVisible();
   });
 
 });

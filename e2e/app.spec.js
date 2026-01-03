@@ -1,5 +1,16 @@
-// Testes E2E para SentencifyAI
+// Testes E2E para SentencifyAI v1.33.63
 import { test, expect } from '@playwright/test';
+import { setupAuth, closeAnyModal } from './helpers.js';
+
+// Helper para configurar auth e fechar modais
+const setupTest = async (page) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('sentencify-auth', 'true');
+    localStorage.setItem('dismissedDownloadPrompt', 'true');
+    localStorage.setItem('dismissedDataPrompt', 'true');
+    localStorage.removeItem('sentencifySession');
+  });
+};
 
 test.describe('SentencifyAI - Testes Básicos', () => {
   
@@ -305,8 +316,11 @@ test.describe('SentencifyAI - Aba Configurações', () => {
     const errors = [];
     page.on('pageerror', err => errors.push(err.message));
 
+    await setupTest(page);
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     // Navega para configurações
     const configTab = page.locator('button').filter({

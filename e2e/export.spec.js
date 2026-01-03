@@ -1,13 +1,6 @@
-// Testes E2E de Exportação - SentencifyAI v1.33.62
+// Testes E2E de Exportação - SentencifyAI v1.33.63
 import { test, expect } from '@playwright/test';
-
-// Helper para simular autenticação
-const setupAuth = async (page) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('sentencify-auth', 'true');
-    localStorage.removeItem('sentencifySession');
-  });
-};
+import { setupAuth, closeAnyModal } from './helpers.js';
 
 test.describe('SentencifyAI - Exportação', () => {
 
@@ -19,6 +12,7 @@ test.describe('SentencifyAI - Exportação', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     // Procura botão de exportar
     const exportButton = page.locator('button:has-text("Exportar"), button:has-text("Minuta"), button[title*="exportar"]').first();
@@ -34,6 +28,7 @@ test.describe('SentencifyAI - Exportação', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     // Procura e clica no botão de exportar
     const exportButton = page.locator('button:has-text("Exportar"), button:has-text("Minuta")').first();
@@ -54,6 +49,7 @@ test.describe('SentencifyAI - Exportação', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     const exportButton = page.locator('button:has-text("Exportar"), button:has-text("Minuta")').first();
 
@@ -73,6 +69,7 @@ test.describe('SentencifyAI - Exportação', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     const exportButton = page.locator('button:has-text("Exportar")').first();
 
@@ -100,6 +97,7 @@ test.describe('SentencifyAI - Formatação da Minuta', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     // Verifica que a estrutura básica existe
     const structure = page.locator('text=/relatório|fundamentação|dispositivo/i').first();
@@ -113,6 +111,7 @@ test.describe('SentencifyAI - Formatação da Minuta', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     // Procura configuração de cabeçalho
     const headerOption = page.locator('text=/cabeçalho|header|tribunal/i, input[name*="header"]').first();
@@ -126,6 +125,7 @@ test.describe('SentencifyAI - Formatação da Minuta', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+    await closeAnyModal(page);
 
     // Procura configuração de rodapé
     const footerOption = page.locator('text=/rodapé|footer|assinatura/i').first();
