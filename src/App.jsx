@@ -125,13 +125,16 @@ import useCloudSync from './hooks/useCloudSync';
 import LoginMagicModal from './components/LoginMagicModal';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 
+// v1.34.4: Admin Panel - Gerenciamento de emails autorizados
+import AdminPanel from './components/AdminPanel';
+
 // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.34.3'; // v1.34.3: Cloud Sync completo - Pull paginado, Full sync, UPSERT
+const APP_VERSION = '1.34.4'; // v1.34.4: Admin Panel - Gerenciamento de emails autorizados via Magic Link
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -146,6 +149,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.34.4', feature: 'Admin Panel: interface /admin para gerenciar emails autorizados via Magic Link (protegida por senha)' },
   { version: '1.34.3', feature: 'Cloud Sync Full Sync + UPSERT: navegador novo baixa todos modelos, INSERT OR REPLACE evita conflitos' },
   { version: '1.34.2', feature: 'Cloud Sync Pull Paginado: 50 modelos por request evita crash de memória' },
   { version: '1.34.1', feature: 'Cloud Sync Pull Merge: modelos recebidos do servidor são mesclados com IndexedDB local' },
@@ -33985,8 +33989,13 @@ class ErrorBoundary extends React.Component {
 }
 
 // 📤 EXPORT
-// v1.34.1: Cloud Sync - Magic Link Authentication + SQLite Sync + Pull Merge
+// v1.34.4: Cloud Sync + Admin Panel
 const SentencifyAI = () => {
+  // v1.34.4: Rota /admin abre painel de administração
+  if (window.location.pathname === '/admin') {
+    return <AdminPanel />;
+  }
+
   // v1.34.1: Estado para modelos recebidos do servidor (para merge)
   const [receivedModels, setReceivedModels] = React.useState(null);
 

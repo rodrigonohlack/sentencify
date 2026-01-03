@@ -50,6 +50,7 @@ const runMigrations = () => {
   // Lista de migrations
   const migrations = [
     { name: '001_initial', fn: migration001Initial },
+    { name: '002_allowed_emails', fn: migration002AllowedEmails },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -147,6 +148,24 @@ function migration001Initial(db) {
     );
 
     CREATE INDEX IF NOT EXISTS idx_sync_log_user_timestamp ON sync_log(user_id, timestamp);
+  `);
+}
+
+// Migration 002: Tabela de emails autorizados
+function migration002AllowedEmails(db) {
+  db.exec(`
+    -- ═══════════════════════════════════════════════════════════════
+    -- TABELA: allowed_emails
+    -- Emails autorizados a fazer login via Magic Link
+    -- ═══════════════════════════════════════════════════════════════
+    CREATE TABLE IF NOT EXISTS allowed_emails (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      created_by TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_allowed_emails_email ON allowed_emails(email);
   `);
 }
 

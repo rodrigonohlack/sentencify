@@ -15,6 +15,7 @@ import authRoutes from './routes/auth.js';
 import authMagicRoutes from './routes/auth-magic.js';
 import modelsRoutes from './routes/models.js';
 import syncRoutes from './routes/sync.js';
+import adminRoutes from './routes/admin.js';
 import { initDatabase } from './db/database.js';
 
 // Inicializar banco de dados SQLite
@@ -59,6 +60,9 @@ app.use('/api/auth/magic', authMagicRoutes);
 // Rotas de modelos e sincronização (v1.34.0)
 app.use('/api/models', modelsRoutes);
 app.use('/api/sync', syncRoutes);
+
+// Rotas de administração (v1.34.4)
+app.use('/api/admin', adminRoutes);
 
 // Rotas de proxy para APIs de IA
 app.use('/api/claude', claudeRoutes);
@@ -136,13 +140,15 @@ app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════════╗
   ║                                                       ║
-  ║   SentencifyAI Server v1.34.0                        ║
+  ║   SentencifyAI Server v1.34.4                        ║
   ║   ────────────────────────────────────────────────   ║
   ║   Backend:  http://localhost:${PORT}                   ║
   ║   Frontend: http://localhost:3000                    ║
+  ║   Admin:    http://localhost:3000/admin              ║
   ║                                                       ║
   ║   APIs:                                              ║
-  ║   • Auth:    /api/auth (simple) + /api/auth/magic    ║
+  ║   • Auth:    /api/auth + /api/auth/magic             ║
+  ║   • Admin:   /api/admin (emails autorizados)         ║
   ║   • Models:  /api/models (CRUD)                      ║
   ║   • Sync:    /api/sync (push/pull)                   ║
   ║   • Claude:  /api/claude/messages                    ║

@@ -1,5 +1,5 @@
 // server/routes/auth-magic.js - Magic Link Authentication Routes
-// v1.0.0 - Autenticação passwordless via email
+// v1.0.1 - Validação de emails autorizados (allowed_emails)
 
 import express from 'express';
 import crypto from 'crypto';
@@ -28,6 +28,13 @@ router.post('/request-link', async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     const db = getDb();
+
+    // Verificar se email está na lista de autorizados
+    const isAllowed = db.prepare('SELECT 1 FROM allowed_emails WHERE email = ?').get(normalizedEmail);
+    if (!isAllowed) {
+      console.log(`[Auth] Email não autorizado: ${normalizedEmail}`);
+      return res.status(403).json({ error: 'Email não autorizado. Contate o administrador.' });
+    }
 
     // Criar ou buscar usuário
     let user = db.prepare('SELECT * FROM users WHERE email = ?').get(normalizedEmail);
