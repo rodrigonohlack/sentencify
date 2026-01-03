@@ -131,7 +131,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.34.0'; // v1.34.0: Cloud Sync - Magic Link Authentication + SQLite Sync (Render Persistent Disk)
+const APP_VERSION = '1.34.3'; // v1.34.3: Cloud Sync completo - Pull paginado, Full sync, UPSERT
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -146,6 +146,9 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.34.3', feature: 'Cloud Sync Full Sync + UPSERT: navegador novo baixa todos modelos, INSERT OR REPLACE evita conflitos' },
+  { version: '1.34.2', feature: 'Cloud Sync Pull Paginado: 50 modelos por request evita crash de memória' },
+  { version: '1.34.1', feature: 'Cloud Sync Pull Merge: modelos recebidos do servidor são mesclados com IndexedDB local' },
   { version: '1.34.0', feature: 'Cloud Sync: Magic Link Authentication + SQLite Sync - modelos salvos na nuvem (Render Persistent Disk)' },
   { version: '1.33.63', feature: 'Testes E2E expandidos (88 testes): auth, pdf-upload, generation, export, search' },
   { version: '1.33.62', feature: 'Modal "Sessão Anterior Encontrada" não pode ser fechado (ESC, X, click fora) - usuário deve escolher' },
