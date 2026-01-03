@@ -1,12 +1,13 @@
 // server/services/EmailService.js - Integração com Resend
-// v1.0.0 - Envio de magic links por email
+// v1.0.1 - Usar email de teste do Resend (não requer verificação de domínio)
 
 import { Resend } from 'resend';
 
 class EmailService {
   constructor() {
     this.resend = null;
-    this.fromEmail = 'SentencifyAI <noreply@sentencify.onrender.com>';
+    // Resend permite enviar de onboarding@resend.dev sem verificação de domínio
+    this.fromEmail = 'SentencifyAI <onboarding@resend.dev>';
   }
 
   init() {
