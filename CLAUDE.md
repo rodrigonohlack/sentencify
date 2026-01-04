@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.24 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.25 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -66,6 +66,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.25 | CHANGELOG movido para src/constants/changelog.js (reduz ~160 linhas do App.jsx) |
 | v1.35.24 | Fix B8b: sync remove modelos de owners sem acesso ativo (sharedLibraries filtra locais) |
 | v1.35.23 | Fix B8: remover share via UI limpa modelos + A7a: trackChangeBatch para importação eficiente |
 | v1.35.22 | Fix duplicar modelo compartilhado (cria cópia própria) + pull após conflito de versão + tratamento model_deleted e no_permission |
