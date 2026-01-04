@@ -37,6 +37,10 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
+// v1.35.17: Confiar no proxy Cloudflare/Render para rate limiting correto
+// Sem isso, todos os usuários parecem vir do mesmo IP (o IP do proxy)
+app.set('trust proxy', 1);
+
 // CORS para permitir requests do frontend (Render + Vercel + localhost + domínio próprio)
 const allowedOrigins = [
   'http://localhost:3000',
@@ -190,7 +194,7 @@ app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════════╗
   ║                                                       ║
-  ║   SentencifyAI Server v1.35.14                       ║
+  ║   SentencifyAI Server v1.35.17                       ║
   ║   ────────────────────────────────────────────────   ║
   ║   Backend:  http://localhost:${PORT}                   ║
   ║   Frontend: http://localhost:3000                    ║
