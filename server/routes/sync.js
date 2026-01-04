@@ -76,22 +76,45 @@ router.post('/pull', (req, res) => {
       ? modelsQuery.all(userId, lastSyncAt, limit, offset)
       : modelsQuery.all(userId, limit, offset);
 
-    // v1.35.1: Buscar modelos das bibliotecas compartilhadas (SEMPRE, independente do tipo de sync)
-    // Antes: só buscava em full sync (offset=0 && !lastSyncAt) - bug que impedia modelos compartilhados de aparecerem
+    // v1.35.11: Buscar modelos compartilhados COM filtro de lastSyncAt
+    // Antes (v1.35.1): buscava TODOS os shared, mesmo em sync incremental
+    // Agora: sync incremental inclui apenas shared atualizados desde lastSyncAt (inclui deletados)
     let sharedModels = [];
     if (offset === 0 && sharedOwnerIds.length > 0) {
       const placeholders = sharedOwnerIds.map(() => '?').join(',');
-      const sharedModelsQuery = db.prepare(`
-        SELECT m.id, m.title, m.content, m.category, m.keywords, m.is_favorite,
-               m.embedding, m.created_at, m.updated_at, m.deleted_at, m.sync_version,
-               m.user_id as owner_id, u.email as owner_email
-        FROM models m
-        JOIN users u ON m.user_id = u.id
-        WHERE m.user_id IN (${placeholders}) AND m.deleted_at IS NULL
-        ORDER BY m.updated_at ASC
-      `);
-      sharedModels = sharedModelsQuery.all(...sharedOwnerIds);
-      console.log(`[Sync] Pull: ${sharedModels.length} modelos compartilhados de ${sharedOwnerIds.length} bibliotecas`);
+
+      let sharedModelsQuery;
+      let queryParams;
+
+      if (lastSyncAt) {
+        // INCREMENTAL: apenas atualizados desde lastSyncAt (inclui deletados para remoção no cliente)
+        sharedModelsQuery = db.prepare(`
+          SELECT m.id, m.title, m.content, m.category, m.keywords, m.is_favorite,
+                 m.embedding, m.created_at, m.updated_at, m.deleted_at, m.sync_version,
+                 m.user_id as owner_id, u.email as owner_email
+          FROM models m
+          JOIN users u ON m.user_id = u.id
+          WHERE m.user_id IN (${placeholders}) AND m.updated_at > ?
+          ORDER BY m.updated_at ASC
+        `);
+        queryParams = [...sharedOwnerIds, lastSyncAt];
+        sharedModels = sharedModelsQuery.all(...queryParams);
+        console.log(`[Sync] Pull incremental: ${sharedModels.length} shared atualizados desde ${lastSyncAt}`);
+      } else {
+        // FULL: todos modelos compartilhados ativos
+        sharedModelsQuery = db.prepare(`
+          SELECT m.id, m.title, m.content, m.category, m.keywords, m.is_favorite,
+                 m.embedding, m.created_at, m.updated_at, m.deleted_at, m.sync_version,
+                 m.user_id as owner_id, u.email as owner_email
+          FROM models m
+          JOIN users u ON m.user_id = u.id
+          WHERE m.user_id IN (${placeholders}) AND m.deleted_at IS NULL
+          ORDER BY m.updated_at ASC
+        `);
+        queryParams = sharedOwnerIds;
+        sharedModels = sharedModelsQuery.all(...queryParams);
+        console.log(`[Sync] Pull full: ${sharedModels.length} shared de ${sharedOwnerIds.length} bibliotecas`);
+      }
     }
 
     // Converter campos para formato do cliente
@@ -270,8 +293,14 @@ router.post('/push', (req, res) => {
             logStmt.run(userId, 'update', model.id, (model.syncVersion || 0) + 1);
             results.updated.push(model.id);
           } else {
-            // Conflito de versão
-            results.conflicts.push({ id: model.id, reason: 'version_mismatch' });
+            // v1.35.11: Conflito de versão - incluir versão atual do servidor para diagnóstico
+            const currentModel = getModelStmt.get(model.id);
+            results.conflicts.push({
+              id: model.id,
+              reason: 'version_mismatch',
+              clientVersion: model.syncVersion || 0,
+              serverVersion: currentModel?.sync_version || 0
+            });
           }
         } else if (operation === 'delete') {
           const now = new Date().toISOString();

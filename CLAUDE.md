@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.10 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.11 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -66,6 +66,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.11 | Sync fixes: (1) Pull-then-push order (reduz conflitos), (2) Retry limit para conflitos de versão (MAX_RETRIES=3), (3) Shared models filtrados por lastSyncAt (evita sobrescrita), (4) Validação de email no accept share (segurança) |
 | v1.35.10 | Fix lag real: Estado Local Bufferizado - ModelFormModal e AIRegenerationSection usam estado local durante digitação, só propagam para pai no save/blur (evita re-render do LegalDecisionEditor ~15000 linhas) |
 | v1.35.9 | Fix lag em TODOS inputs: todos os 11 setters de useAIIntegration convertidos para useCallback + useCloudSync.return memoizado com useMemo |
 | v1.35.8 | Fix lag: findSuggestions e refineWithAI com useCallback (evita re-criação a cada render) |

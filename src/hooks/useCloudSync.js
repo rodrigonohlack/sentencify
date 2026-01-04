@@ -328,15 +328,56 @@ export function useCloudSync({ onModelsReceived } = {}) {
 
       const data = await res.json();
 
-      // Limpar pendentes processados
-      const processedIds = new Set([...data.results.created, ...data.results.updated, ...data.results.deleted]);
-      setPendingChanges(prev => prev.filter(c => !processedIds.has(c.model.id)));
+      // v1.35.11: Tratar conflitos de versão com retry limit
+      const successIds = new Set([
+        ...data.results.created,
+        ...data.results.updated,
+        ...data.results.deleted
+      ]);
+
+      // Conflitos de versão permanecem para retry após próximo pull
+      const conflictIds = new Set(
+        (data.results.conflicts || [])
+          .filter(c => c.reason === 'version_mismatch')
+          .map(c => c.id)
+      );
+
+      const MAX_RETRIES = 3;
+      setPendingChanges(prev => {
+        return prev.map(change => {
+          const id = change.model.id;
+
+          // Sucesso: remover do pending
+          if (successIds.has(id)) {
+            return null;
+          }
+
+          // Conflito: incrementar retry count
+          if (conflictIds.has(id)) {
+            const retryCount = (change.retryCount || 0) + 1;
+            if (retryCount >= MAX_RETRIES) {
+              console.warn(`[CloudSync] Abandonando modelo ${id} após ${MAX_RETRIES} tentativas`);
+              return null; // Desistir após MAX_RETRIES
+            }
+            console.log(`[CloudSync] Conflito em ${id}, tentativa ${retryCount}/${MAX_RETRIES}`);
+            return { ...change, retryCount };
+          }
+
+          // Outros (erros ou não processados): manter para retry
+          return change;
+        }).filter(Boolean);
+      });
+
+      // Log de conflitos para diagnóstico
+      if (data.results.conflicts?.length > 0) {
+        console.warn(`[CloudSync] ${data.results.conflicts.length} conflitos:`, data.results.conflicts);
+      }
 
       setLastSyncAt(data.serverTime);
       localStorage.setItem(LAST_SYNC_KEY, data.serverTime);
       setSyncStatus('idle');
 
-      return { success: true, results: data.results };
+      return { success: true, results: data.results, conflicts: data.results.conflicts || [] };
     } catch (err) {
       console.error('[CloudSync] Push error:', err);
       setSyncError(err.message);
@@ -347,10 +388,24 @@ export function useCloudSync({ onModelsReceived } = {}) {
     }
   }, [authFetch, pendingChanges, user]);
 
+  // v1.35.11: PULL PRIMEIRO para obter versões atualizadas antes de push
+  // Antes: push-then-pull causava conflitos desnecessários ao enviar com syncVersion obsoleta
   const sync = useCallback(async () => {
-    await push();
-    return await pull();
-  }, [push, pull]);
+    const pullResult = await pull();
+
+    if (!pullResult && navigator.onLine) {
+      // Pull falhou mas online - tentar push para não perder dados locais
+      console.warn('[CloudSync] Pull falhou - tentando push para preservar dados');
+      return await push();
+    }
+
+    if (!pullResult) {
+      return null; // Offline ou erro fatal
+    }
+
+    // Push com versões atualizadas pelo pull
+    return await push();
+  }, [pull, push]);
 
   // Rastrear mudança para sync
   const trackChange = useCallback((operation, model) => {

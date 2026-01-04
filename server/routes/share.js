@@ -238,6 +238,22 @@ router.post('/library/:token/accept', authMiddleware, (req, res) => {
       return res.status(400).json({ error: 'Você não pode aceitar seu próprio compartilhamento' });
     }
 
+    // v1.35.11: VALIDAR EMAIL DO DESTINATÁRIO
+    // Convite foi enviado para email específico - apenas esse email pode aceitar
+    if (share.recipient_email) {
+      const targetEmail = share.recipient_email.toLowerCase();
+      const recipientEmail = req.user.email?.toLowerCase();
+
+      if (recipientEmail !== targetEmail) {
+        console.warn(`[Share] Email mismatch: esperado=${targetEmail}, recebido=${recipientEmail}`);
+        return res.status(403).json({
+          error: 'Este convite foi enviado para outro endereço de email. Faça login com o email correto para aceitar.',
+          code: 'EMAIL_MISMATCH'
+        });
+      }
+    }
+    // Nota: recipient_email=NULL em convites antigos (pre-v1.35.1) → permite qualquer um (legado)
+
     // Verificar se já tem acesso
     const existingAccess = db.prepare(`
       SELECT * FROM library_access WHERE owner_id = ? AND recipient_id = ?

@@ -134,7 +134,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.10'; // v1.35.10: Fix lag real - estado local bufferizado em ModelFormModal e AIRegenerationSection (não propaga para pai a cada keystroke)
+const APP_VERSION = '1.35.11'; // v1.35.11: Fix sync: pull-then-push, conflitos com retry, shared filter por lastSyncAt, validação email no accept
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -149,6 +149,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.35.11', feature: 'Fix sync: pull-then-push evita conflitos, retry com limit para conflitos de versão, shared filter por lastSyncAt, validação email no accept' },
   { version: '1.35.10', feature: 'Fix lag REAL: estado local bufferizado em ModelFormModal e AIRegenerationSection - digitação não propaga para LegalDecisionEditor (Análise Gemini)' },
   { version: '1.35.9', feature: 'Fix lag em TODOS inputs: todos os 11 setters de useAIIntegration convertidos para useCallback + useCloudSync.return memoizado com useMemo' },
   { version: '1.35.8', feature: 'Fix lag final: findSuggestions e refineWithAI agora usam useCallback (evita re-criação a cada render que quebrava React.memo)' },
