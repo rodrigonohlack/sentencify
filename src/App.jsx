@@ -4,21 +4,20 @@
  * ╠════════════════════════════════════════════════════════════════════════════════════════╣
  * ║ SEÇÃO                                    │ LINHAS          │ DESCRIÇÃO                 ║
  * ╠══════════════════════════════════════════╪═════════════════╪═══════════════════════════╣
- * ║ 1. IMPORTS & CONFIG                      │ 1-220           │ React, Lucide, constantes ║
- * ║    └─ APP_VERSION                        │ ~115            │ Versão atual da app       ║
- * ║    └─ CHANGELOG                          │ 130-225         │ ~95 versões documentadas  ║
+ * ║ 1. IMPORTS & CONFIG                      │ 1-390           │ React, Lucide, constantes ║
+ * ║    └─ APP_VERSION                        │ ~141            │ Versão atual da app       ║
+ * ║    └─ CHANGELOG                          │ src/constants/  │ Movido para arquivo separ.║
  * ║    └─ CSS (classes utilitárias)          │ 285-330         │ Tailwind helpers          ║
  * ║                                          │                 │                           ║
- * ║ 2. UTILITÁRIOS & SERVIÇOS                │ 280-1250        │ IA Local, Embeddings      ║
+ * ║ 2. UTILITÁRIOS & SERVIÇOS                │ 390-1325        │ IA Local, Embeddings      ║
  * ║    └─ AIModelService                     │ 460-765         │ NER/E5 Web Worker         ║
  * ║    └─ EmbeddingsService                  │ 765-910         │ IndexedDB legislação      ║
  * ║    └─ JurisEmbeddingsService             │ 930-1050        │ IndexedDB jurisprudência  ║
  * ║    └─ EmbeddingsCDNService               │ 1050-1140       │ Download GitHub CDN       ║
  * ║                                          │                 │                           ║
- * ║ 3. HOOKS CUSTOMIZADOS                    │ 1300-8130       │ 21 hooks React            ║
- * ║    └─ AI_INSTRUCTIONS                    │ 1305            │ System prompt para LLM    ║
- * ║    └─ useModalManager                    │ 1390-1480       │ Controle de modais        ║
- * ║    └─ useAIIntegration                   │ 1480-2385       │ Claude/Gemini API (905L)  ║
+ * ║ 3. HOOKS CUSTOMIZADOS                    │ 1325-8170       │ 21 hooks React            ║
+ * ║    └─ useModalManager                    │ 1330-1390       │ Controle de modais        ║
+ * ║    └─ useAIIntegration                   │ 1424-2300       │ Claude/Gemini API         ║
  * ║    └─ useIndexedDB                       │ 2750-3165       │ Persistência modelos      ║
  * ║    └─ usePrimaryTabLock                  │ 3165-3525       │ Sincronização abas        ║
  * ║    └─ useFieldVersioning                 │ 3625-3700       │ Histórico de versões      ║
@@ -29,40 +28,39 @@
  * ║    └─ useTopicManager                    │ 6390-6575       │ CRUD tópicos              ║
  * ║    └─ useChatAssistant                   │ 6575-6690       │ Chat interativo           ║
  * ║    └─ useJurisprudencia                  │ 6690-6820       │ Busca precedentes         ║
- * ║    └─ useLegislacao                      │ 6820-8130       │ 7000+ artigos (1305L)     ║
+ * ║    └─ useLegislacao                      │ 6820-8170       │ 7000+ artigos             ║
  * ║                                          │                 │                           ║
- * ║ 4. COMPONENTES DE UI                     │ 8130-9755       │ VirtualList, Modais base  ║
- * ║    └─ VirtualList                        │ 8130-8220       │ Scroll virtualizado       ║
+ * ║ 4. COMPONENTES DE UI                     │ 8170-9835       │ VirtualList, Modais base  ║
+ * ║    └─ VirtualList                        │ 8178-8264       │ Scroll virtualizado       ║
  * ║    └─ JurisprudenciaModalContent         │ 8930-9355       │ Modal de jurisprudência   ║
  * ║    └─ LegislacaoModalContent             │ 9360-9640       │ Modal de legislação       ║
- * ║    └─ BaseModal                          │ 9750-9805       │ Template de modal         ║
+ * ║    └─ BaseModal                          │ 9838-9990       │ Template de modal         ║
  * ║                                          │                 │                           ║
- * ║ 5. MODAIS ESPECÍFICOS                    │ 9755-15705      │ ~50 modais da aplicação   ║
- * ║    └─ RenameTopicModal                   │ 9870            │ Renomear tópico           ║
- * ║    └─ DeleteTopicModal                   │ 9900            │ Excluir tópico            ║
+ * ║ 5. MODAIS ESPECÍFICOS                    │ 9835-16450      │ ~50 modais da aplicação   ║
+ * ║    └─ RenameTopicModal                   │ 9991            │ Renomear tópico           ║
+ * ║    └─ DeleteTopicModal                   │ 10021           │ Excluir tópico            ║
  * ║    └─ GlobalEditorModal                  │ ~12555          │ Editor em tela cheia      ║
  * ║    └─ ConfigModal                        │ ~14055          │ Configurações IA          ║
  * ║                                          │                 │                           ║
- * ║ 6. QUILL EDITOR                          │ 15705-16810     │ Rich text editor          ║
- * ║    └─ QuillEditorBase                    │ 15855           │ Editor base               ║
- * ║    └─ QuillModelEditor                   │ 16120           │ Editor de modelos         ║
- * ║    └─ QuillDecisionEditor                │ 16250           │ Editor de fundamentação   ║
- * ║    └─ QuillMiniRelatorioEditor           │ 16660           │ Editor mini-relatório     ║
+ * ║ 6. QUILL EDITOR                          │ 16450-17530     │ Rich text editor          ║
+ * ║    └─ QuillEditorBase                    │ 16609-16881     │ Editor base               ║
+ * ║    └─ QuillModelEditor                   │ 16884-17009     │ Editor de modelos         ║
+ * ║    └─ QuillDecisionEditor                │ 17013-17349     │ Editor de fundamentação   ║
+ * ║    └─ QuillMiniRelatorioEditor           │ 17448-17521     │ Editor mini-relatório     ║
  * ║                                          │                 │                           ║
- * ║ 7. AI_PROMPTS                            │ 17625-18440     │ 20+ prompts estruturados  ║
- * ║    └─ estiloRedacao                      │ ~17635          │ Estilo de escrita         ║
- * ║    └─ formatacaoHTML                     │ ~17675          │ Regras de HTML            ║
- * ║    └─ revisaoSentenca                    │ ~18155          │ Prompt de revisão         ║
+ * ║ 7. AI_PROMPTS                            │ src/prompts/    │ Movido para arquivo separ.║
+ * ║    └─ AI_INSTRUCTIONS                    │ system.js       │ System prompt para LLM    ║
+ * ║    └─ AI_PROMPTS (object)                │ ai-prompts.js   │ 20+ prompts estruturados  ║
  * ║                                          │                 │                           ║
- * ║ 8. LEGALDECISIONEDITOR                   │ 18440-31735     │ Componente principal      ║
- * ║    └─ reorderTopicsViaLLM                │ 22170-22275     │ Ordenação IA (Art.337)    ║
- * ║    └─ handleAnalyzeDocuments             │ 24735           │ Análise inicial           ║
- * ║    └─ analyzeProof                       │ 25500-25915     │ Análise de provas         ║
- * ║    └─ generateDispositivo                │ 26680-26925     │ Gerar dispositivo         ║
+ * ║ 8. LEGALDECISIONEDITOR                   │ 18425-33700     │ Componente principal      ║
+ * ║    └─ reorderTopicsViaLLM                │ 22449           │ Ordenação IA (Art.337)    ║
+ * ║    └─ handleAnalyzeDocuments             │ 25045           │ Análise inicial           ║
+ * ║    └─ analyzeProof                       │ 25828           │ Análise de provas         ║
+ * ║    └─ generateDispositivo                │ 26921           │ Gerar dispositivo         ║
  * ║                                          │                 │                           ║
- * ║ 9. ERROR BOUNDARY & EXPORT               │ 31735-33215     │ Tratamento de erros       ║
- * ║    └─ SentencifyAI (ErrorBoundary)       │ 31735           │ Wrapper com fallback      ║
- * ║    └─ export default                     │ 33215           │ Exportação do componente  ║
+ * ║ 9. ERROR BOUNDARY & EXPORT               │ 33700-33959     │ Tratamento de erros       ║
+ * ║    └─ SentencifyAI (ErrorBoundary)       │ 33700           │ Wrapper com fallback      ║
+ * ║    └─ export default                     │ 33959           │ Exportação do componente  ║
  * ╚════════════════════════════════════════════════════════════════════════════════════════╝
  *
  * ═══════════════════════════════════════════════════════════════════════════════════════════
