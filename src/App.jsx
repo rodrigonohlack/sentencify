@@ -134,7 +134,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.20'; // v1.35.20: Fix progresso de download (usa tamanhos estimados como fallback)
+const APP_VERSION = '1.35.21'; // v1.35.21: Fix modelos compartilhados sumiam após sync incremental
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -149,6 +149,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.35.21', feature: 'Fix modelos compartilhados sumiam após sync incremental: preservar locais quando servidor não retorna compartilhados' },
   { version: '1.35.20', feature: 'Fix progresso de download: usa tamanhos estimados como fallback quando Content-Length não disponível (streaming proxy)' },
   { version: '1.35.19', feature: 'Fix modelos compartilhados não apareciam após aceitar: comparar accepted_at com lastSyncAt para detectar shares recém-aceitos' },
   { version: '1.35.18', feature: 'Log de diagnóstico para rate limiting: IP, email e User-Agent em cada request de magic link' },
@@ -19500,9 +19501,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, clearReceive
       console.log(`[Sync] Merge: ${receivedModels.length} do servidor + ${currentLibraryModels.length} locais (${hasLocalSharedModels ? 'tem' : 'sem'} compartilhados locais)`);
 
       // v1.35.1: Separar modelos próprios dos compartilhados
-      // Modelos compartilhados são SUBSTITUÍDOS completamente (não mesclados)
-      // Isso garante que exclusões do proprietário sejam refletidas
+      // v1.35.21: Também separar compartilhados locais para preservar quando servidor não retorna
       const localOwnModels = currentLibraryModels.filter(m => !m.isShared);
+      const localSharedModels = currentLibraryModels.filter(m => m.isShared);
       const serverOwnModels = receivedModels.filter(m => !m.isShared);
       const serverSharedModels = receivedModels.filter(m => m.isShared);
 
@@ -19519,9 +19520,17 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, clearReceive
         }
       }
 
-      // Combinar: modelos próprios mesclados + modelos compartilhados do servidor (substituídos)
-      const mergedModels = [...Array.from(merged.values()), ...serverSharedModels];
-      console.log(`[Sync] Merge resultado: ${merged.size} próprios + ${serverSharedModels.length} compartilhados = ${mergedModels.length} total`);
+      // v1.35.21: Preservar compartilhados locais se servidor não retornou nenhum
+      // Isso evita perder modelos quando sync incremental não retorna compartilhados
+      // (porque nenhum foi atualizado desde lastSyncAt)
+      // Quando servidor retorna compartilhados, substituir completamente (para refletir exclusões)
+      const finalSharedModels = serverSharedModels.length > 0
+        ? serverSharedModels  // Servidor retornou compartilhados → substituir
+        : localSharedModels;  // Servidor não retornou → preservar locais
+
+      // Combinar: modelos próprios mesclados + compartilhados (servidor ou locais preservados)
+      const mergedModels = [...Array.from(merged.values()), ...finalSharedModels];
+      console.log(`[Sync] Merge resultado: ${merged.size} próprios + ${finalSharedModels.length} compartilhados (${serverSharedModels.length > 0 ? 'servidor' : 'local'}) = ${mergedModels.length} total`);
 
       // Atualizar state
       setLibraryModels(mergedModels);

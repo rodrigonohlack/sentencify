@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.20 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.21 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -66,6 +66,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.21 | Fix modelos compartilhados sumiam após sync incremental: preservar locais quando servidor não retorna compartilhados |
 | v1.35.20 | Fix progresso de download: usa tamanhos estimados como fallback quando Content-Length não disponível (streaming proxy não repassa header) |
 | v1.35.19 | Fix modelos compartilhados não apareciam após aceitar: comparar accepted_at com lastSyncAt para detectar shares recém-aceitos |
 | v1.35.18 | Log de diagnóstico para rate limiting: IP, email e User-Agent em cada request de magic link |
