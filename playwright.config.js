@@ -23,8 +23,10 @@ export default defineConfig({
   ],
 
   // Inicia o servidor antes dos testes
+  // No CI: apenas frontend (client) - testes são de UI, não precisam do backend
+  // Local: dev completo (server + client)
   webServer: {
-    command: 'npm run dev',
+    command: process.env.CI ? 'npm run client' : 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120000, // 2 minutos para iniciar
