@@ -259,6 +259,7 @@ export function useCloudSync({ onModelsReceived } = {}) {
       const limit = 50;
       let hasMore = true;
       let serverTime = null;
+      let activeSharedLibraries = []; // v1.35.24: Lista de bibliotecas compartilhadas ativas
 
       if (needsFullSync) {
         console.log(`[CloudSync] Forçando full sync (local=${localModelsCount}, servidor=${serverStatus.activeModels})`);
@@ -280,6 +281,10 @@ export function useCloudSync({ onModelsReceived } = {}) {
         hasMore = data.hasMore;
         serverTime = data.serverTime;
         offset += limit;
+        // v1.35.24: Capturar sharedLibraries (vem em todas as páginas, usar última)
+        if (data.sharedLibraries) {
+          activeSharedLibraries = data.sharedLibraries;
+        }
 
         console.log(`[CloudSync] Pull página: ${data.count} modelos (total acumulado: ${allModels.length}/${data.total})`);
       }
@@ -290,9 +295,10 @@ export function useCloudSync({ onModelsReceived } = {}) {
 
       // v1.35.1: SEMPRE chamar callback para merge, mesmo se 0 modelos
       // Isso garante que modelos compartilhados deletados pelo proprietário sejam removidos
+      // v1.35.24: Passar sharedLibraries para filtrar modelos de owners revogados
       if (onModelsReceived) {
-        console.log(`[CloudSync] Pull completo: ${allModels.length} modelos recebidos do servidor`);
-        onModelsReceived(allModels);
+        console.log(`[CloudSync] Pull completo: ${allModels.length} modelos, ${activeSharedLibraries.length} bibliotecas compartilhadas ativas`);
+        onModelsReceived(allModels, activeSharedLibraries);
         // v1.34.3: Marcar como sincronizado após receber modelos
         localStorage.setItem('sentencify-initial-push-done', 'true');
       }

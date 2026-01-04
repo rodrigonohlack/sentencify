@@ -134,7 +134,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.23'; // v1.35.23: B8 remover share limpa modelos + A7a batch import eficiente
+const APP_VERSION = '1.35.24'; // v1.35.24: B8b sync remove modelos de owners sem acesso
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -19531,13 +19531,22 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, clearReceive
         }
       }
 
-      // v1.35.21: Preservar compartilhados locais se servidor não retornou nenhum
+      // v1.35.24: Filtrar compartilhados locais por owners que ainda têm acesso ativo
+      // Isso resolve B8b: quando share é removido, modelos desse owner são excluídos no próximo sync
+      const activeOwnerIds = new Set((activeSharedLibraries || []).map(lib => lib.ownerId));
+      const validLocalSharedModels = localSharedModels.filter(m => activeOwnerIds.has(m.ownerId));
+
+      if (localSharedModels.length !== validLocalSharedModels.length) {
+        console.log(`[Sync] Removidos ${localSharedModels.length - validLocalSharedModels.length} modelos de owners sem acesso`);
+      }
+
+      // v1.35.21: Preservar compartilhados locais (validados) se servidor não retornou nenhum
       // Isso evita perder modelos quando sync incremental não retorna compartilhados
       // (porque nenhum foi atualizado desde lastSyncAt)
       // Quando servidor retorna compartilhados, substituir completamente (para refletir exclusões)
       const finalSharedModels = serverSharedModels.length > 0
         ? serverSharedModels  // Servidor retornou compartilhados → substituir
-        : localSharedModels;  // Servidor não retornou → preservar locais
+        : validLocalSharedModels;  // Servidor não retornou → preservar apenas de owners válidos
 
       // Combinar: modelos próprios mesclados + compartilhados (servidor ou locais preservados)
       const mergedModels = [...Array.from(merged.values()), ...finalSharedModels];
@@ -19556,8 +19565,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, clearReceive
 
       clearReceivedModels();
     }
-  }, [receivedModels, clearReceivedModels, setLibraryModels, isLoadingModels, indexedDBAvailable, saveToIndexedDB]);
+  }, [receivedModels, activeSharedLibraries, clearReceivedModels, setLibraryModels, isLoadingModels, indexedDBAvailable, saveToIndexedDB]);
   // ↑ v1.35.4: Removido libraryModels das deps - usamos libraryModelsRef para evitar loop
+  // ↑ v1.35.24: Adicionado activeSharedLibraries para filtrar owners revogados
 
   // 🤖 v1.19.0: Chat interativo do assistente IA (Editor Individual)
   const chatAssistant = useChatAssistant(aiIntegration);
@@ -34902,13 +34912,18 @@ const SentencifyAI = () => {
 
   // v1.34.1: Estado para modelos recebidos do servidor (para merge)
   const [receivedModels, setReceivedModels] = React.useState(null);
+  // v1.35.24: Lista de bibliotecas compartilhadas ativas (para filtrar modelos de owners revogados)
+  const [activeSharedLibraries, setActiveSharedLibraries] = React.useState(null);
 
   // v1.35.1: Memoizar callbacks para evitar re-criação de pull/sync a cada render
-  const handleModelsReceived = React.useCallback((models) => {
+  // v1.35.24: Receber sharedLibraries junto com models
+  const handleModelsReceived = React.useCallback((models, sharedLibraries) => {
     setReceivedModels(models);
+    setActiveSharedLibraries(sharedLibraries || []);
   }, []);
   const clearReceivedModels = React.useCallback(() => {
     setReceivedModels(null);
+    setActiveSharedLibraries(null);
   }, []);
 
   const cloudSync = useCloudSync({
