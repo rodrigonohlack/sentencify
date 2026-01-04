@@ -16,6 +16,7 @@ Sentry.init({
 
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { Readable } from 'stream';
 
 import claudeRoutes from './routes/claude.js';
@@ -60,6 +61,37 @@ app.use(cors({
 // Parser JSON com limite aumentado para PDFs grandes (Render não tem limite de plataforma)
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+
+// v1.35.13: Rate limiting para proteção contra abuso
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 10,
+  message: { error: 'Muitas tentativas. Aguarde 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minuto
+  max: 30,
+  message: { error: 'Limite de requisições IA atingido. Aguarde 1 minuto.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const generalLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minuto
+  max: 100,
+  message: { error: 'Muitas requisições. Aguarde 1 minuto.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Aplicar rate limiters (ordem importa - específicos antes do geral)
+app.use('/api/auth', authLimiter);
+app.use('/api/claude', aiLimiter);
+app.use('/api/gemini', aiLimiter);
+app.use('/api', generalLimiter);
 
 // Rota de autenticação simples (v1.33.41)
 app.use('/api/auth', authRoutes);
@@ -156,7 +188,7 @@ app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════════╗
   ║                                                       ║
-  ║   SentencifyAI Server v1.35.12                       ║
+  ║   SentencifyAI Server v1.35.13                       ║
   ║   ────────────────────────────────────────────────   ║
   ║   Backend:  http://localhost:${PORT}                   ║
   ║   Frontend: http://localhost:3000                    ║
