@@ -51,6 +51,8 @@ const runMigrations = () => {
   const migrations = [
     { name: '001_initial', fn: migration001Initial },
     { name: '002_allowed_emails', fn: migration002AllowedEmails },
+    { name: '003_library_sharing', fn: migration003LibrarySharing },
+    { name: '004_share_recipient_email', fn: migration004ShareRecipientEmail },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -166,6 +168,54 @@ function migration002AllowedEmails(db) {
     );
 
     CREATE INDEX IF NOT EXISTS idx_allowed_emails_email ON allowed_emails(email);
+  `);
+}
+
+// Migration 003: Compartilhamento de biblioteca
+function migration003LibrarySharing(db) {
+  db.exec(`
+    -- ═══════════════════════════════════════════════════════════════
+    -- TABELA: library_shares
+    -- Links de compartilhamento de biblioteca
+    -- ═══════════════════════════════════════════════════════════════
+    CREATE TABLE IF NOT EXISTS library_shares (
+      id TEXT PRIMARY KEY,
+      owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      share_token TEXT UNIQUE NOT NULL,
+      permission TEXT DEFAULT 'view',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      revoked_at TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_lib_shares_token ON library_shares(share_token);
+    CREATE INDEX IF NOT EXISTS idx_lib_shares_owner ON library_shares(owner_id);
+
+    -- ═══════════════════════════════════════════════════════════════
+    -- TABELA: library_access
+    -- Acessos concedidos a bibliotecas
+    -- ═══════════════════════════════════════════════════════════════
+    CREATE TABLE IF NOT EXISTS library_access (
+      id TEXT PRIMARY KEY,
+      share_id TEXT NOT NULL REFERENCES library_shares(id) ON DELETE CASCADE,
+      owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      recipient_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      permission TEXT DEFAULT 'view',
+      accepted_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(owner_id, recipient_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_lib_access_recipient ON library_access(recipient_id);
+    CREATE INDEX IF NOT EXISTS idx_lib_access_owner ON library_access(owner_id);
+  `);
+}
+
+// Migration 004: Email do destinatário no compartilhamento
+function migration004ShareRecipientEmail(db) {
+  db.exec(`
+    -- ═══════════════════════════════════════════════════════════════
+    -- v1.35.1: Adicionar email do destinatário para convite direto
+    -- ═══════════════════════════════════════════════════════════════
+    ALTER TABLE library_shares ADD COLUMN recipient_email TEXT;
   `);
 }
 

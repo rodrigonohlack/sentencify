@@ -117,7 +117,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2, LogOut } from 'lucide-react';
+import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2, LogOut, Share2, Link, Users, Mail } from 'lucide-react';
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // v1.34.0: Cloud Sync - Magic Link Authentication + SQLite Sync
@@ -134,7 +134,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.34.9'; // v1.34.9: Fix validação aceita null em category/keywords
+const APP_VERSION = '1.35.10'; // v1.35.10: Fix lag real - estado local bufferizado em ModelFormModal e AIRegenerationSection (não propaga para pai a cada keystroke)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -149,6 +149,17 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.35.10', feature: 'Fix lag REAL: estado local bufferizado em ModelFormModal e AIRegenerationSection - digitação não propaga para LegalDecisionEditor (Análise Gemini)' },
+  { version: '1.35.9', feature: 'Fix lag em TODOS inputs: todos os 11 setters de useAIIntegration convertidos para useCallback + useCloudSync.return memoizado com useMemo' },
+  { version: '1.35.8', feature: 'Fix lag final: findSuggestions e refineWithAI agora usam useCallback (evita re-criação a cada render que quebrava React.memo)' },
+  { version: '1.35.7', feature: 'Fix lag residual no "regenerar com IA": setRelatorioInstruction/setDispositivoInstruction agora usam useCallback (referência estável)' },
+  { version: '1.35.6', feature: 'Fix lag no campo "regenerar com IA": removidas arrow functions inline em onInstructionChange (passando função direta)' },
+  { version: '1.35.5', feature: 'Fix erro "Rendered more hooks" no ModelFormModal: hooks useCallback movidos para antes do return condicional' },
+  { version: '1.35.4', feature: 'Fix lag causado por dependência circular no Cloud Sync: libraryModels nas deps do useEffect causava loop infinito de re-renders ao digitar' },
+  { version: '1.35.3', feature: 'Fix lag de escrita nos editores: debounce 150ms no onChange/sanitização do Quill, memoização de getCategories, primitivos em isIndividualDirty' },
+  { version: '1.35.2', feature: 'Fix exclusão em massa: deleteAllModels() agora rastreia cada modelo para sync; delete salva apenas id (evita QuotaExceededError no localStorage)' },
+  { version: '1.35.1', feature: 'Compartilhamento por email: convite direto, edição colaborativa (edit permite editar/deletar originais), fix sync modelos deletados, fix typing lag' },
+  { version: '1.35.0', feature: 'Compartilhamento de biblioteca: gerar link para compartilhar modelos (view/edit), badge de proprietário, filtro Meus/Compartilhados' },
   { version: '1.34.9', feature: 'Fix validação: aceita null em category/keywords (antes rejeitava modelos com campos opcionais null)' },
   { version: '1.34.8', feature: 'Fix cache IndexedDB: atualizado com modelos validados + log de modelos rejeitados para debug' },
   { version: '1.34.7', feature: 'Fix sync: salva IMEDIATAMENTE no IndexedDB após merge (debounce de 1500ms causava perda de dados)' },
@@ -1550,7 +1561,8 @@ const useModalManager = () => {
     proofExtractionAnonymization: false,
     sentenceReview: false,
     sentenceReviewResult: false,
-    logout: false  // v1.33.57
+    logout: false,  // v1.33.57
+    shareLibrary: false  // v1.35.0
   });
 
   const [textPreview, setTextPreview] = useState({ isOpen: false, title: '', text: '' });
@@ -1695,48 +1707,93 @@ const useAIIntegration = () => {
   // 🔧 Estado consolidado de geração de IA (useReducer)
   const [aiGeneration, dispatchAI] = React.useReducer(aiGenerationReducer, aiGenerationInitialState);
 
-  // 🔧 Factory para criar setters de contexto
-  const createSetter = React.useCallback((type, context) => (value) => dispatchAI({ type, context, value }), []);
+  // v1.35.9: Todos os setters memoizados com useCallback para evitar re-renders
+  // (createSetter retornava nova função a cada render, causando lag em inputs)
 
   // Genérica
   const aiInstruction = aiGeneration.generic.instruction;
-  const setAiInstruction = createSetter('SET_INSTRUCTION', 'generic');
+  const setAiInstruction = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_INSTRUCTION', context: 'generic', value }),
+    []
+  );
   const aiGeneratedText = aiGeneration.generic.text;
-  const setAiGeneratedText = createSetter('SET_TEXT', 'generic');
+  const setAiGeneratedText = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_TEXT', context: 'generic', value }),
+    []
+  );
   const generatingAi = aiGeneration.generic.generating;
-  const setGeneratingAi = createSetter('SET_GENERATING', 'generic');
+  const setGeneratingAi = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_GENERATING', context: 'generic', value }),
+    []
+  );
 
   // Modelo
   const aiInstructionModel = aiGeneration.model.instruction;
-  const setAiInstructionModel = createSetter('SET_INSTRUCTION', 'model');
+  const setAiInstructionModel = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_INSTRUCTION', context: 'model', value }),
+    []
+  );
   const aiGeneratedTextModel = aiGeneration.model.text;
-  const setAiGeneratedTextModel = createSetter('SET_TEXT', 'model');
+  const setAiGeneratedTextModel = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_TEXT', context: 'model', value }),
+    []
+  );
   const generatingAiModel = aiGeneration.model.generating;
-  const setGeneratingAiModel = createSetter('SET_GENERATING', 'model');
+  const setGeneratingAiModel = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_GENERATING', context: 'model', value }),
+    []
+  );
 
   // Keywords e Title
   const generatingKeywords = aiGeneration.keywords.generating;
-  const setGeneratingKeywords = createSetter('SET_GENERATING', 'keywords');
+  const setGeneratingKeywords = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_GENERATING', context: 'keywords', value }),
+    []
+  );
   const generatingTitle = aiGeneration.title.generating;
-  const setGeneratingTitle = createSetter('SET_GENERATING', 'title');
+  const setGeneratingTitle = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_GENERATING', context: 'title', value }),
+    []
+  );
 
   // Relatório
   const relatorioInstruction = aiGeneration.relatorio.instruction;
-  const setRelatorioInstruction = createSetter('SET_INSTRUCTION', 'relatorio');
+  const setRelatorioInstruction = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_INSTRUCTION', context: 'relatorio', value }),
+    []
+  );
   const regeneratingRelatorio = aiGeneration.relatorio.regenerating;
-  const setRegeneratingRelatorio = createSetter('SET_REGENERATING', 'relatorio');
+  const setRegeneratingRelatorio = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_REGENERATING', context: 'relatorio', value }),
+    []
+  );
   const regenerating = aiGeneration.relatorio.regenerating;
-  const setRegenerating = createSetter('SET_REGENERATING', 'relatorio');
+  const setRegenerating = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_REGENERATING', context: 'relatorio', value }),
+    []
+  );
 
   // Dispositivo
   const dispositivoText = aiGeneration.dispositivo.text;
-  const setDispositivoText = createSetter('SET_TEXT', 'dispositivo');
+  const setDispositivoText = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_TEXT', context: 'dispositivo', value }),
+    []
+  );
   const generatingDispositivo = aiGeneration.dispositivo.generating;
-  const setGeneratingDispositivo = createSetter('SET_GENERATING', 'dispositivo');
+  const setGeneratingDispositivo = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_GENERATING', context: 'dispositivo', value }),
+    []
+  );
   const dispositivoInstruction = aiGeneration.dispositivo.instruction;
-  const setDispositivoInstruction = createSetter('SET_INSTRUCTION', 'dispositivo');
+  const setDispositivoInstruction = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_INSTRUCTION', context: 'dispositivo', value }),
+    []
+  );
   const regeneratingDispositivo = aiGeneration.dispositivo.regenerating;
-  const setRegeneratingDispositivo = createSetter('SET_REGENERATING', 'dispositivo');
+  const setRegeneratingDispositivo = React.useCallback(
+    (value) => dispatchAI({ type: 'SET_REGENERATING', context: 'dispositivo', value }),
+    []
+  );
 
   // Load AI Settings
   React.useEffect(() => {
@@ -4826,6 +4883,7 @@ const useModelLibrary = () => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = React.useState(false);
+  const [ownershipFilter, setOwnershipFilter] = React.useState('all'); // v1.35.0: 'all' | 'mine' | 'shared'
   const [currentModelPage, setCurrentModelPage] = React.useState(1);
   const [manualSearchTerm, setManualSearchTerm] = React.useState('');
   const [manualSearchResults, setManualSearchResults] = React.useState([]);
@@ -4948,6 +5006,7 @@ const useModelLibrary = () => {
     searchTerm, setSearchTerm,
     selectedCategory, setSelectedCategory,
     showFavoritesOnly, setShowFavoritesOnly,
+    ownershipFilter, setOwnershipFilter, // v1.35.0
     currentModelPage, setCurrentModelPage,
     manualSearchTerm, setManualSearchTerm,
     manualSearchResults, setManualSearchResults,
@@ -8402,6 +8461,7 @@ const VirtualList = React.memo(({ items, itemHeight, renderItem, className = '',
 VirtualList.displayName = 'VirtualList';
 
 // 📚 COMPONENTE: ModelCard (v1.2.7) - Card dual-view cards/list
+// v1.35.0: Suporte a modelos compartilhados com badge de proprietário
 const ModelCard = React.memo(({
   model,
   viewMode,
@@ -8410,7 +8470,10 @@ const ModelCard = React.memo(({
   onDuplicate,
   onDelete,
   onInsert,
-  sanitizeHTML
+  sanitizeHTML,
+  isShared = false,
+  ownerEmail = null,
+  sharedPermission = 'view'
 }) => {
   // Validação de viewMode
   let validViewMode = viewMode;
@@ -8452,6 +8515,13 @@ const ModelCard = React.memo(({
                   {Math.round(model.similarity * 100)}% similar
                 </span>
               )}
+              {/* v1.35.0: Badge de modelo compartilhado */}
+              {isShared && ownerEmail && (
+                <span className="text-xs px-2 py-1 rounded font-medium bg-purple-500/20 text-purple-400 border border-purple-500/30 animate-badge flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  De: {ownerEmail.split('@')[0]}
+                </span>
+              )}
               {model.createdAt && (
                 <span className="text-xs theme-text-disabled">
                   {new Date(model.createdAt).toLocaleDateString('pt-BR')}
@@ -8483,14 +8553,20 @@ const ModelCard = React.memo(({
           dangerouslySetInnerHTML={{ __html: sanitizeHTML(model.content) }}
         />
 
-        {/* Botões de ação */}
+        {/* Botões de ação - v1.35.0: desabilitados para compartilhados view-only */}
         <div className="flex gap-2">
           <button
             onClick={() => onEdit(model)}
-            className="hover-blue-500 flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded text-sm bg-blue-600 text-white transition-all duration-300 border-none"
+            disabled={isShared && sharedPermission === 'view'}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded text-sm transition-all duration-300 border-none ${
+              isShared && sharedPermission === 'view'
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                : 'hover-blue-500 bg-blue-600 text-white'
+            }`}
+            title={isShared && sharedPermission === 'view' ? 'Modelo compartilhado (somente leitura)' : 'Editar modelo'}
           >
             <Edit className="w-4 h-4" />
-            Editar
+            {isShared && sharedPermission === 'view' ? 'Visualizar' : 'Editar'}
           </button>
           <button
             onClick={() => onDuplicate(model)}
@@ -8499,21 +8575,24 @@ const ModelCard = React.memo(({
               color: '#ffffff',
               transform: 'scale(1)'
             }}
-            title="Duplicar modelo"
+            title="Duplicar para sua biblioteca"
           >
             📋
           </button>
-          <button
-            onClick={() => onDelete(model)}
-            className="hover-merge-cancel-btn px-3 py-2 rounded text-sm"
-            style={{
-              color: '#ffffff',
-              transform: 'scale(1)'
-            }}
-            title="Excluir modelo"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {/* v1.35.1: Mostrar excluir para modelos próprios OU compartilhados com permissão edit */}
+          {(!isShared || sharedPermission === 'edit') && (
+            <button
+              onClick={() => onDelete(model)}
+              className="hover-merge-cancel-btn px-3 py-2 rounded text-sm"
+              style={{
+                color: '#ffffff',
+                transform: 'scale(1)'
+              }}
+              title={isShared ? 'Excluir modelo compartilhado (afeta o proprietário)' : 'Excluir modelo'}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     );
@@ -8551,6 +8630,13 @@ const ModelCard = React.memo(({
                   {Math.round(model.similarity * 100)}%
                 </span>
               )}
+              {/* v1.35.0: Badge de modelo compartilhado */}
+              {isShared && ownerEmail && (
+                <span className="text-xs px-2 py-0.5 rounded font-medium bg-purple-500/20 text-purple-400 animate-badge flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  De: {ownerEmail.split('@')[0]}
+                </span>
+              )}
               {model.keywords && (() => {
                 const kwArr = model.keywords.split(',');
                 return (
@@ -8562,15 +8648,21 @@ const ModelCard = React.memo(({
             </div>
           </div>
         </div>
+        {/* v1.35.0: Botões adaptados para modelos compartilhados */}
         <div className="flex gap-2 flex-shrink-0">
           <button
             onClick={() => onEdit(model)}
-            className="hover-icon-blue-scale p-2 rounded"
+            disabled={isShared && sharedPermission === 'view'}
+            className={`p-2 rounded ${
+              isShared && sharedPermission === 'view'
+                ? 'cursor-not-allowed opacity-50'
+                : 'hover-icon-blue-scale'
+            }`}
             style={{
-              color: '#60a5fa',
+              color: isShared && sharedPermission === 'view' ? '#9ca3af' : '#60a5fa',
               transform: 'scale(1)'
             }}
-            title="Editar modelo"
+            title={isShared && sharedPermission === 'view' ? 'Modelo compartilhado (somente leitura)' : 'Editar modelo'}
           >
             <Edit className="w-4 h-4" />
           </button>
@@ -8581,21 +8673,24 @@ const ModelCard = React.memo(({
               color: '#4ade80',
               transform: 'scale(1)'
             }}
-            title="Duplicar modelo"
+            title="Duplicar para sua biblioteca"
           >
             📋
           </button>
-          <button
-            onClick={() => onDelete(model)}
-            className="hover-icon-red-scale p-2 rounded"
-            style={{
-              color: '#f87171',
-              transform: 'scale(1)'
-            }}
-            title="Excluir modelo"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {/* v1.35.1: Mostrar excluir para modelos próprios OU compartilhados com permissão edit */}
+          {(!isShared || sharedPermission === 'edit') && (
+            <button
+              onClick={() => onDelete(model)}
+              className="hover-icon-red-scale p-2 rounded"
+              style={{
+                color: '#f87171',
+                transform: 'scale(1)'
+              }}
+              title={isShared ? 'Excluir modelo compartilhado (afeta o proprietário)' : 'Excluir modelo'}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -11774,6 +11869,493 @@ const LogoutConfirmModal = React.memo(({ isOpen, onClose, onConfirm }) => (
 ));
 LogoutConfirmModal.displayName = 'LogoutConfirmModal';
 
+// v1.35.1: Modal para compartilhar biblioteca de modelos (convite por email)
+const ShareLibraryModal = React.memo(({ isOpen, onClose, user }) => {
+  const [permission, setPermission] = React.useState('view');
+  const [loading, setLoading] = React.useState(false);
+  const [recipientEmail, setRecipientEmail] = React.useState('');
+  const [successMessage, setSuccessMessage] = React.useState('');
+  const [errorMessage, setErrorMessage] = React.useState('');
+  const [shares, setShares] = React.useState([]);
+  const [sharedWithMe, setSharedWithMe] = React.useState([]);
+  const [activeTab, setActiveTab] = React.useState('share'); // 'share' | 'myShares' | 'sharedWithMe'
+
+  // Buscar compartilhamentos ao abrir
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const fetchShares = async () => {
+      try {
+        const token = localStorage.getItem('sentencify-auth-token');
+        const [mySharesRes, sharedWithMeRes] = await Promise.all([
+          fetch(`${API_BASE}/api/share/library/my-shares`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${API_BASE}/api/share/library/shared-with-me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
+        if (mySharesRes.ok) {
+          const data = await mySharesRes.json();
+          setShares(data.shares || []);
+        }
+        if (sharedWithMeRes.ok) {
+          const data = await sharedWithMeRes.json();
+          setSharedWithMe(data.libraries || []);
+        }
+      } catch (err) {
+        console.error('[Share] Fetch error:', err);
+      }
+    };
+    fetchShares();
+    setRecipientEmail('');
+    setSuccessMessage('');
+    setErrorMessage('');
+  }, [isOpen]);
+
+  // v1.35.1: Enviar convite por email
+  const handleSendInvite = async () => {
+    if (!recipientEmail || !recipientEmail.includes('@')) {
+      setErrorMessage('Por favor, informe um email válido.');
+      return;
+    }
+    setLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+    try {
+      const token = localStorage.getItem('sentencify-auth-token');
+      const res = await fetch(`${API_BASE}/api/share/library`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ permission, recipientEmail })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccessMessage(`Convite enviado para ${recipientEmail}!`);
+        setRecipientEmail('');
+        // Adicionar à lista de convites
+        setShares(prev => [{
+          id: data.shareId,
+          permission,
+          recipient_email: recipientEmail.toLowerCase(),
+          created_at: new Date().toISOString(),
+          recipients: []
+        }, ...prev]);
+      } else {
+        setErrorMessage(data.error || 'Erro ao enviar convite.');
+      }
+    } catch (err) {
+      console.error('[Share] Send invite error:', err);
+      setErrorMessage('Erro de conexão. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRevoke = async (shareId) => {
+    try {
+      const token = localStorage.getItem('sentencify-auth-token');
+      const res = await fetch(`${API_BASE}/api/share/library/${shareId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setShares(prev => prev.filter(s => s.id !== shareId));
+      }
+    } catch (err) {
+      console.error('[Share] Revoke error:', err);
+    }
+  };
+
+  const handleRemoveAccess = async (accessId) => {
+    try {
+      const token = localStorage.getItem('sentencify-auth-token');
+      const res = await fetch(`${API_BASE}/api/share/library/access/${accessId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setSharedWithMe(prev => prev.filter(s => s.accessId !== accessId));
+      }
+    } catch (err) {
+      console.error('[Share] Remove access error:', err);
+    }
+  };
+
+  return (
+    <BaseModal isOpen={isOpen} onClose={onClose} title="Compartilhar Biblioteca" icon={<Share2 />} iconColor="purple" size="lg">
+      <div className="space-y-4">
+        {/* Tabs */}
+        <div className="flex border-b theme-border-primary">
+          <button
+            onClick={() => setActiveTab('share')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'share' ? 'border-purple-500 text-purple-400' : 'border-transparent theme-text-tertiary hover:text-purple-400'
+            }`}
+          >
+            Compartilhar
+          </button>
+          <button
+            onClick={() => setActiveTab('myShares')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'myShares' ? 'border-purple-500 text-purple-400' : 'border-transparent theme-text-tertiary hover:text-purple-400'
+            }`}
+          >
+            Meus Convites ({shares.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('sharedWithMe')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'sharedWithMe' ? 'border-purple-500 text-purple-400' : 'border-transparent theme-text-tertiary hover:text-purple-400'
+            }`}
+          >
+            Recebidos ({sharedWithMe.length})
+          </button>
+        </div>
+
+        {/* Tab: Compartilhar */}
+        {activeTab === 'share' && (
+          <div className="space-y-4">
+            <ModalInfoBox>📧 Digite o email do destinatário para enviar um convite de compartilhamento da sua biblioteca de modelos.</ModalInfoBox>
+
+            {/* Campo de email */}
+            <div>
+              <label className={CSS.label}>Email do destinatário</label>
+              <input
+                type="email"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                placeholder="email@exemplo.com"
+                className={`${CSS.input} mt-2`}
+                onKeyDown={(e) => e.key === 'Enter' && !loading && handleSendInvite()}
+              />
+            </div>
+
+            {/* Permissão */}
+            <div>
+              <label className={CSS.label}>Permissão</label>
+              <div className="flex gap-3 mt-2">
+                <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer border transition-colors ${
+                  permission === 'view'
+                    ? 'border-purple-500 bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300'
+                    : 'theme-border-primary theme-bg-secondary theme-text-secondary'
+                }`}>
+                  <input type="radio" name="permission" value="view" checked={permission === 'view'} onChange={() => setPermission('view')} className="hidden" />
+                  <Eye className="w-4 h-4" />
+                  <span className="text-sm">Somente Leitura</span>
+                </label>
+                <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer border transition-colors ${
+                  permission === 'edit'
+                    ? 'border-purple-500 bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300'
+                    : 'theme-border-primary theme-bg-secondary theme-text-secondary'
+                }`}>
+                  <input type="radio" name="permission" value="edit" checked={permission === 'edit'} onChange={() => setPermission('edit')} className="hidden" />
+                  <Edit3 className="w-4 h-4" />
+                  <span className="text-sm">Leitura e Escrita</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Botão enviar */}
+            <button
+              onClick={handleSendInvite}
+              disabled={loading || !recipientEmail}
+              className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            >
+              {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+              {loading ? 'Enviando...' : 'Enviar Convite'}
+            </button>
+
+            {/* Mensagem de sucesso */}
+            {successMessage && (
+              <div className="p-3 bg-green-500/20 border border-green-500/50 rounded-lg">
+                <p className="text-green-400 text-sm flex items-center gap-2">
+                  <Check className="w-4 h-4" />
+                  {successMessage}
+                </p>
+              </div>
+            )}
+
+            {/* Mensagem de erro */}
+            {errorMessage && (
+              <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+                <p className="text-red-400 text-sm flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  {errorMessage}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab: Meus Convites */}
+        {activeTab === 'myShares' && (
+          <div className="space-y-3">
+            {shares.length === 0 ? (
+              <p className="text-center theme-text-tertiary py-8">Nenhum convite enviado.</p>
+            ) : (
+              shares.map(share => (
+                <div key={share.id} className="p-3 theme-bg-secondary rounded-lg border theme-border-primary">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      {/* Email do destinatário */}
+                      <p className="theme-text-secondary font-medium text-sm">
+                        {share.recipient_email || 'Link público'}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          share.permission === 'edit'
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
+                        }`}>
+                          {share.permission === 'edit' ? 'Leitura/Escrita' : 'Somente Leitura'}
+                        </span>
+                        {/* Status: pendente ou aceito */}
+                        {share.recipients?.length > 0 ? (
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400">
+                            Aceito
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400">
+                            Pendente
+                          </span>
+                        )}
+                        <span className="text-xs theme-text-tertiary">
+                          {new Date(share.created_at || share.createdAt).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRevoke(share.id)}
+                      className="text-red-400 hover:text-red-300 text-xs ml-2"
+                    >
+                      Revogar
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Tab: Compartilhados Comigo */}
+        {activeTab === 'sharedWithMe' && (
+          <div className="space-y-3">
+            {sharedWithMe.length === 0 ? (
+              <p className="text-center theme-text-tertiary py-8">Nenhuma biblioteca compartilhada com você.</p>
+            ) : (
+              sharedWithMe.map(lib => (
+                <div key={lib.accessId} className="p-3 theme-bg-secondary rounded-lg border theme-border-primary">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="theme-text-secondary font-medium">{lib.ownerEmail}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          lib.permission === 'edit'
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
+                        }`}>
+                          {lib.permission === 'edit' ? 'Leitura/Escrita' : 'Somente Leitura'}
+                        </span>
+                        <span className="text-xs theme-text-tertiary">{lib.modelsCount} modelos</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveAccess(lib.accessId)}
+                      className="text-red-400 hover:text-red-300 text-xs"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    </BaseModal>
+  );
+});
+ShareLibraryModal.displayName = 'ShareLibraryModal';
+
+// v1.35.0: Página para aceitar compartilhamento de biblioteca
+const AcceptSharePage = React.memo(({ token, onAccepted, onLogin }) => {
+  const [loading, setLoading] = React.useState(true);
+  const [shareInfo, setShareInfo] = React.useState(null);
+  const [error, setError] = React.useState('');
+  const [accepting, setAccepting] = React.useState(false);
+  const [accepted, setAccepted] = React.useState(false);
+
+  // Buscar informações do compartilhamento
+  React.useEffect(() => {
+    const fetchShareInfo = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/share/library/${token}`);
+        if (res.ok) {
+          const data = await res.json();
+          setShareInfo(data);
+        } else if (res.status === 404) {
+          setError('Link de compartilhamento inválido ou expirado.');
+        } else {
+          setError('Erro ao carregar informações do compartilhamento.');
+        }
+      } catch (err) {
+        console.error('[AcceptShare] Fetch error:', err);
+        setError('Erro de conexão. Tente novamente.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchShareInfo();
+  }, [token]);
+
+  const handleAccept = async () => {
+    setAccepting(true);
+    try {
+      const authToken = localStorage.getItem('sentencify-auth-token');
+      const res = await fetch(`${API_BASE}/api/share/library/${token}/accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+
+      if (res.ok) {
+        setAccepted(true);
+        setTimeout(() => {
+          onAccepted?.();
+          window.location.href = '/'; // Redirecionar para home
+        }, 2000);
+      } else if (res.status === 401) {
+        onLogin?.(); // Redirecionar para login
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Erro ao aceitar compartilhamento.');
+      }
+    } catch (err) {
+      console.error('[AcceptShare] Accept error:', err);
+      setError('Erro de conexão. Tente novamente.');
+    } finally {
+      setAccepting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-6">
+        <div className="spinner-neon-ripple">
+          <div className="ripple"></div>
+          <div className="ripple"></div>
+          <div className="ripple"></div>
+          <div className="core">
+            <div className="outer"></div>
+            <div className="inner"></div>
+          </div>
+        </div>
+        <span className="text-slate-400 animate-pulse">Carregando...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-slate-800 rounded-2xl p-8 shadow-2xl border border-slate-700 text-center">
+          <div className="w-16 h-16 mx-auto bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+            <X className="w-8 h-8 text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Link Inválido</h2>
+          <p className="text-slate-400 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+          >
+            Voltar ao Início
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (accepted) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-slate-800 rounded-2xl p-8 shadow-2xl border border-slate-700 text-center">
+          <div className="w-16 h-16 mx-auto bg-green-500/20 rounded-full flex items-center justify-center mb-4">
+            <Check className="w-8 h-8 text-green-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Compartilhamento Aceito!</h2>
+          <p className="text-slate-400 mb-4">
+            Os modelos de <span className="text-purple-400 font-medium">{shareInfo?.owner?.email}</span> agora aparecem na sua biblioteca.
+          </p>
+          <p className="text-slate-500 text-sm">Redirecionando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-slate-800 rounded-2xl p-8 shadow-2xl border border-slate-700">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 mx-auto bg-purple-500/20 rounded-full flex items-center justify-center mb-4">
+            <Users className="w-8 h-8 text-purple-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Convite de Compartilhamento</h2>
+          <p className="text-slate-400">
+            <span className="text-purple-400 font-medium">{shareInfo?.owner?.email}</span> quer compartilhar sua biblioteca de modelos com você.
+          </p>
+        </div>
+
+        <div className="bg-slate-700/50 rounded-xl p-4 mb-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400 text-sm">Proprietário</span>
+            <span className="text-white font-medium">{shareInfo?.owner?.email}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400 text-sm">Modelos</span>
+            <span className="text-white font-medium">{shareInfo?.modelsCount} modelos</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400 text-sm">Permissão</span>
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+              shareInfo?.permission === 'edit' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
+            }`}>
+              {shareInfo?.permission === 'edit' ? 'Leitura e Escrita' : 'Somente Leitura'}
+            </span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleAccept}
+          disabled={accepting}
+          className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+        >
+          {accepting ? (
+            <>
+              <RefreshCw className="w-5 h-5 animate-spin" />
+              Aceitando...
+            </>
+          ) : (
+            <>
+              <Check className="w-5 h-5" />
+              Aceitar Compartilhamento
+            </>
+          )}
+        </button>
+
+        <p className="text-center text-slate-500 text-xs mt-4">
+          Os modelos compartilhados aparecerão na sua aba Modelos com indicação do proprietário.
+        </p>
+      </div>
+    </div>
+  );
+});
+AcceptSharePage.displayName = 'AcceptSharePage';
+
 // Modal: Anonimização (migrado para BaseModal) - v1.25: + NER
 // v1.29.03: Adicionar overlay IA Local durante detecção
 const AnonymizationNamesModal = React.memo(({ isOpen, onClose, onConfirm, nomesTexto, setNomesTexto, nerEnabled, onDetectNames, detectingNames, onOpenAiSettings }) => {
@@ -13067,6 +13649,7 @@ ModelFormFields.displayName = 'ModelFormFields';
 // ModelRichEditor removido em v1.9.11 - use QuillModelEditor
 
 // ModelFormModal - Container para edição de modelos
+// v1.35.10: Estado local bufferizado para evitar re-render do LegalDecisionEditor a cada keystroke
 const ModelFormModal = React.forwardRef(({
   isOpen,
   editingModel,
@@ -13091,25 +13674,53 @@ const ModelFormModal = React.forwardRef(({
   savingModel = false
 }, containerRef) => {
 
-  if (!isOpen) return null;
+  // v1.35.10: Estado LOCAL para campos do formulário
+  // Digitação atualiza apenas este componente (leve), não o LegalDecisionEditor (pesado)
+  const [localModel, setLocalModel] = React.useState({ title: '', content: '', keywords: '', category: '' });
 
-  // Helper para obter categorias únicas dos modelos existentes
-  const getCategories = () => {
-    const categories = models
-      .map(m => m.category)
-      .filter(c => c && c.trim() !== '');
-    return [...new Set(categories)].sort();
-  };
+  // v1.35.10: Sincronizar estado local quando modal abre ou editingModel muda
+  React.useEffect(() => {
+    if (isOpen) {
+      setLocalModel({
+        title: newModel.title || '',
+        content: newModel.content || '',
+        keywords: newModel.keywords || '',
+        category: newModel.category || ''
+      });
+    }
+  }, [isOpen, editingModel]); // Sincroniza quando abre ou troca de modelo
 
-  // 🚀 v1.8.3: Handler para mudanças nos campos simples (MEMOIZADO)
+  // v1.35.3: Memoizar categorias para evitar recálculo a cada keystroke
+  const categories = React.useMemo(() => {
+    return [...new Set(models.map(m => m.category).filter(c => c && c.trim() !== ''))].sort();
+  }, [models]);
+
+  // v1.35.10: Handler para mudanças nos campos - atualiza estado LOCAL
   const handleFieldChange = React.useCallback((field, value) => {
-    setNewModel(prev => ({ ...prev, [field]: value }));
-  }, []); // 🚀 v1.8.3: Memoizado (GRUPO C)
+    setLocalModel(prev => ({ ...prev, [field]: value }));
+  }, []);
 
-  // 🚀 v1.8.3: Handler para mudanças no editor rico (MEMOIZADO)
+  // v1.35.10: Handler para mudanças no editor rico - atualiza estado LOCAL
   const handleContentChange = React.useCallback((html) => {
-    setNewModel(prev => ({ ...prev, content: html }));
-  }, []); // 🚀 v1.8.3: Memoizado (GRUPO C)
+    setLocalModel(prev => ({ ...prev, content: html }));
+  }, []);
+
+  // v1.35.10: Sincronizar com pai ANTES de salvar
+  const handleSave = React.useCallback(() => {
+    // Sincroniza estado local com o pai antes de salvar
+    setNewModel(localModel);
+    // Pequeno delay para garantir que o estado foi propagado
+    setTimeout(() => onSave(), 0);
+  }, [localModel, setNewModel, onSave]);
+
+  // v1.35.10: Sincronizar com pai ANTES de salvar sem fechar
+  const handleSaveWithoutClosing = React.useCallback(() => {
+    setNewModel(localModel);
+    setTimeout(() => onSaveWithoutClosing(), 0);
+  }, [localModel, setNewModel, onSaveWithoutClosing]);
+
+  // v1.35.5: Return condicional APÓS todos os hooks
+  if (!isOpen) return null;
 
   return (
     <div ref={containerRef} className="theme-bg-secondary-30 p-6 rounded-lg border theme-border-input space-y-4">
@@ -13118,23 +13729,23 @@ const ModelFormModal = React.forwardRef(({
         {editingModel ? 'Editar Modelo' : 'Novo Modelo'}
       </h4>
 
-      {/* Campos simples (título, categoria, keywords) */}
+      {/* Campos simples (título, categoria, keywords) - usam estado LOCAL */}
       <ModelFormFields
-        formData={newModel}
+        formData={localModel}
         onChange={handleFieldChange}
-        categories={getCategories()}
+        categories={categories}
         onGenerateKeywords={onGenerateKeywords}
         generatingKeywords={generatingKeywords}
         onGenerateTitle={onGenerateTitle}
         generatingTitle={generatingTitle}
       />
 
-      {/* Editor rico de conteúdo */}
+      {/* Editor rico de conteúdo - usa estado LOCAL */}
       <QuillModelEditor
         ref={modelEditorRef}
-        content={newModel.content || ''}
+        content={localModel.content || ''}
         onChange={handleContentChange}
-        onSaveWithoutClosing={onSaveWithoutClosing}
+        onSaveWithoutClosing={handleSaveWithoutClosing}
         onOpenAIAssistant={onOpenAIAssistant}
         quillReady={quillReady}
         quillError={quillError}
@@ -13151,7 +13762,7 @@ const ModelFormModal = React.forwardRef(({
           Cancelar
         </button>
         <button
-          onClick={onSave}
+          onClick={handleSave}
           disabled={modelSaved || savingModel}
           style={{
             backgroundImage: (modelSaved || savingModel) ? 'none' : 'linear-gradient(to right, #2563eb, #9333ea)',
@@ -13731,6 +14342,7 @@ const FieldEditor = React.memo(React.forwardRef(({
   const isInitializedRef = React.useRef(false);
   const lastContentRef = React.useRef('');
   const onSlashCommandRef = React.useRef(onSlashCommand);
+  const onChangeDebounceRef = React.useRef(null); // v1.35.3: Debounce para onChange
   // v1.25.18: Refs para cleanup de blur listener (memory leak fix)
   const blurHandlerRef = React.useRef(null);
   const blurTimeoutRef = React.useRef(null);
@@ -13763,14 +14375,9 @@ const FieldEditor = React.memo(React.forwardRef(({
       }
 
       // Event listener - mudanças de texto
+      // v1.35.3: Debounce para evitar lag durante digitação rápida
       quillInstanceRef.current.on('text-change', (delta, oldDelta, source) => {
-        const html = quillInstanceRef.current.root.innerHTML;
-        if (html !== lastContentRef.current) {
-          lastContentRef.current = html;
-          onChange?.(html);
-        }
-
-        // v1.15.3: Detectar "\" digitado pelo usuário para slash command
+        // v1.15.3: Detectar "\" digitado pelo usuário para slash command (SEM debounce)
         if (source === 'user' && onSlashCommandRef.current) {
           const ops = delta.ops || [];
           const lastOp = ops[ops.length - 1];
@@ -13793,6 +14400,19 @@ const FieldEditor = React.memo(React.forwardRef(({
             }
           }
         }
+
+        // v1.35.3: Debounce onChange (150ms) - evita re-renders excessivos
+        if (onChangeDebounceRef.current) {
+          clearTimeout(onChangeDebounceRef.current);
+        }
+        onChangeDebounceRef.current = setTimeout(() => {
+          const html = quillInstanceRef.current?.root?.innerHTML;
+          if (!html) return;
+          if (html !== lastContentRef.current) {
+            lastContentRef.current = html;
+            onChange?.(html);
+          }
+        }, 150);
       });
 
       // Event listener - foco (para sugestões contextuais)
@@ -16195,6 +16815,7 @@ const QuillEditorBase = React.forwardRef(({
   const copyHandlerRef = React.useRef(null);
   const copyListenerAddedRef = React.useRef(false); // v1.20.2: Guard contra listeners duplicados
   const onSlashCommandRef = React.useRef(onSlashCommand);
+  const onChangeDebounceRef = React.useRef(null); // v1.35.3: Debounce para onChange
 
   // v1.15.4: Manter ref atualizada para slash command
   React.useEffect(() => {
@@ -16252,19 +16873,9 @@ const QuillEditorBase = React.forwardRef(({
       }
 
       // Event listener - mudanças de texto
+      // v1.35.3: Debounce para evitar lag durante digitação rápida
       quillInstanceRef.current.on('text-change', (delta, oldDelta, source) => {
-        const html = quillInstanceRef.current.root.innerHTML;
-        const finalHTML = sanitizeQuillHTML(html);
-
-        // Evitar loops de onChange
-        if (finalHTML !== lastContentRef.current) {
-          lastContentRef.current = finalHTML;
-          if (onChange) {
-            onChange(finalHTML);
-          }
-        }
-
-        // v1.15.4: Detectar "\" para slash command
+        // v1.15.4: Detectar "\" para slash command (SEM debounce - precisa ser imediato)
         if (source === 'user' && onSlashCommandRef.current) {
           const ops = delta.ops || [];
           const lastOp = ops[ops.length - 1];
@@ -16287,6 +16898,25 @@ const QuillEditorBase = React.forwardRef(({
             }
           }
         }
+
+        // v1.35.3: Debounce onChange e sanitização (150ms)
+        // Isso evita re-renders excessivos e DOMPurify a cada keystroke
+        if (onChangeDebounceRef.current) {
+          clearTimeout(onChangeDebounceRef.current);
+        }
+        onChangeDebounceRef.current = setTimeout(() => {
+          const html = quillInstanceRef.current?.root?.innerHTML;
+          if (!html) return;
+          const finalHTML = sanitizeQuillHTML(html);
+
+          // Evitar loops de onChange
+          if (finalHTML !== lastContentRef.current) {
+            lastContentRef.current = finalHTML;
+            if (onChange) {
+              onChange(finalHTML);
+            }
+          }
+        }, 150);
       });
 
       // Event listener - mudança de seleção (v1.11.3: para detectar seção atual)
@@ -16907,6 +17537,7 @@ QuillDecisionEditor.displayName = 'QuillDecisionEditor';
 
 // 🔧 COMPONENTE COMPARTILHADO: AIRegenerationSection (v1.9.12)
 // Seção de regeneração com IA (textarea de instruções + botão gerar)
+// v1.35.10: Estado local bufferizado para evitar re-render do LegalDecisionEditor a cada keystroke
 const AIRegenerationSection = React.memo(({
   customInstruction = '',
   onInstructionChange,
@@ -16914,12 +17545,26 @@ const AIRegenerationSection = React.memo(({
   onRegenerate,
   contextLabel = 'texto' // "dispositivo" ou "mini-relatório"
 }) => {
-  // Handlers memoizados
+  // v1.35.10: Estado LOCAL para o textarea
+  // Digitação atualiza apenas este componente (leve), não o LegalDecisionEditor (pesado)
+  const [localInstruction, setLocalInstruction] = React.useState(customInstruction);
+
+  // v1.35.10: Sincronizar estado local quando customInstruction muda externamente
+  React.useEffect(() => {
+    setLocalInstruction(customInstruction);
+  }, [customInstruction]);
+
+  // v1.35.10: Handler para digitação - atualiza estado LOCAL
   const handleInstructionChange = React.useCallback((e) => {
-    if (onInstructionChange) {
-      onInstructionChange(e.target.value);
+    setLocalInstruction(e.target.value);
+  }, []);
+
+  // v1.35.10: Propagar para pai apenas no blur
+  const handleBlur = React.useCallback(() => {
+    if (onInstructionChange && localInstruction !== customInstruction) {
+      onInstructionChange(localInstruction);
     }
-  }, [onInstructionChange]);
+  }, [onInstructionChange, localInstruction, customInstruction]);
 
   const handleMouseEnterButton = React.useCallback((e) => {
     if (!regenerating) {
@@ -16931,6 +17576,15 @@ const AIRegenerationSection = React.memo(({
     e.currentTarget.style.backgroundColor = regenerating ? '#6b7280' : '#9333ea';
   }, [regenerating]);
 
+  // v1.35.10: Sincronizar antes de regenerar (caso usuário não tenha saído do campo)
+  const handleRegenerate = React.useCallback(() => {
+    if (onInstructionChange && localInstruction !== customInstruction) {
+      onInstructionChange(localInstruction);
+    }
+    // Pequeno delay para garantir que o estado foi propagado
+    setTimeout(() => onRegenerate(), 0);
+  }, [onInstructionChange, localInstruction, customInstruction, onRegenerate]);
+
   return (
     <div className="mt-4 pt-4 border-t theme-border-input">
       <p className="text-xs theme-text-muted mb-2">
@@ -16938,15 +17592,16 @@ const AIRegenerationSection = React.memo(({
       </p>
 
       <textarea
-        value={customInstruction}
+        value={localInstruction}
         onChange={handleInstructionChange}
+        onBlur={handleBlur}
         placeholder="Instrução opcional (ex: 'Seja mais objetivo', 'Adicione detalhes sobre...')"
         className="w-full px-3 py-2 theme-bg-primary border theme-border-input rounded theme-text-tertiary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
         rows="2"
       />
 
       <button
-        onClick={onRegenerate}
+        onClick={handleRegenerate}
         disabled={regenerating}
         onMouseEnter={handleMouseEnterButton}
         onMouseLeave={handleMouseLeaveButton}
@@ -18782,20 +19437,42 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, clearReceive
   const storage = useLocalStorage();
   const modelLibrary = useModelLibrary();
 
-  // v1.34.7: Merge modelos recebidos do servidor (APÓS IndexedDB carregar)
-  // IMPORTANTE: Salva IMEDIATAMENTE após merge (não espera debounce de 1500ms)
+  // v1.35.1: Merge modelos recebidos do servidor (APÓS IndexedDB carregar)
+  // IMPORTANTE: Modelos compartilhados são SUBSTITUÍDOS (não mesclados) para refletir exclusões do proprietário
+  // v1.35.1: Extrair apenas as propriedades necessárias para evitar re-renders desnecessários
+  const { models: libraryModels, setModels: setLibraryModels, isLoadingModels } = modelLibrary;
+  const { isAvailable: indexedDBAvailable, saveModels: saveToIndexedDB } = indexedDB;
+
+  // v1.35.4: Usar ref para libraryModels evitando dependência circular no useEffect abaixo
+  // Antes: libraryModels estava nas deps do effect, mas o effect chamava setLibraryModels(),
+  // causando loop infinito de re-renders que congelava a UI durante digitação
+  const libraryModelsRef = React.useRef(libraryModels);
+  libraryModelsRef.current = libraryModels;
+
   React.useEffect(() => {
     // Esperar IndexedDB terminar de carregar antes de fazer merge
-    if (modelLibrary.isLoadingModels || !indexedDB.isAvailable) {
+    if (isLoadingModels || !indexedDBAvailable) {
       return;
     }
 
-    if (receivedModels && receivedModels.length > 0) {
-      console.log(`[Sync] Merge: ${receivedModels.length} do servidor + ${modelLibrary.models.length} locais`);
+    // v1.35.4: Usar ref para evitar dependência circular
+    const currentLibraryModels = libraryModelsRef.current;
 
-      // Calcular merge
-      const merged = new Map(modelLibrary.models.map(m => [m.id, m]));
-      for (const serverModel of receivedModels) {
+    // v1.35.1: Executar merge se recebeu modelos OU se tem modelos compartilhados locais que podem ter sido deletados
+    const hasLocalSharedModels = currentLibraryModels.some(m => m.isShared);
+    if (receivedModels && (receivedModels.length > 0 || hasLocalSharedModels)) {
+      console.log(`[Sync] Merge: ${receivedModels.length} do servidor + ${currentLibraryModels.length} locais (${hasLocalSharedModels ? 'tem' : 'sem'} compartilhados locais)`);
+
+      // v1.35.1: Separar modelos próprios dos compartilhados
+      // Modelos compartilhados são SUBSTITUÍDOS completamente (não mesclados)
+      // Isso garante que exclusões do proprietário sejam refletidas
+      const localOwnModels = currentLibraryModels.filter(m => !m.isShared);
+      const serverOwnModels = receivedModels.filter(m => !m.isShared);
+      const serverSharedModels = receivedModels.filter(m => m.isShared);
+
+      // Merge apenas para modelos PRÓPRIOS
+      const merged = new Map(localOwnModels.map(m => [m.id, m]));
+      for (const serverModel of serverOwnModels) {
         if (serverModel.deletedAt) {
           merged.delete(serverModel.id);
         } else {
@@ -18805,14 +19482,16 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, clearReceive
           }
         }
       }
-      const mergedModels = Array.from(merged.values());
-      console.log(`[Sync] Merge resultado: ${mergedModels.length} modelos`);
+
+      // Combinar: modelos próprios mesclados + modelos compartilhados do servidor (substituídos)
+      const mergedModels = [...Array.from(merged.values()), ...serverSharedModels];
+      console.log(`[Sync] Merge resultado: ${merged.size} próprios + ${serverSharedModels.length} compartilhados = ${mergedModels.length} total`);
 
       // Atualizar state
-      modelLibrary.setModels(mergedModels);
+      setLibraryModels(mergedModels);
 
       // v1.34.7: Salvar IMEDIATAMENTE no IndexedDB (não esperar debounce)
-      indexedDB.saveModels(mergedModels).then(() => {
+      saveToIndexedDB(mergedModels).then(() => {
         localStorage.setItem('sentencify-models-count', String(mergedModels.length));
         console.log(`[Sync] Salvo ${mergedModels.length} modelos no IndexedDB`);
       }).catch(err => {
@@ -18821,7 +19500,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, clearReceive
 
       clearReceivedModels();
     }
-  }, [receivedModels, clearReceivedModels, modelLibrary, modelLibrary.isLoadingModels, indexedDB]);
+  }, [receivedModels, clearReceivedModels, setLibraryModels, isLoadingModels, indexedDBAvailable, saveToIndexedDB]);
+  // ↑ v1.35.4: Removido libraryModels das deps - usamos libraryModelsRef para evitar loop
 
   // 🤖 v1.19.0: Chat interativo do assistente IA (Editor Individual)
   const chatAssistant = useChatAssistant(aiIntegration);
@@ -18866,21 +19546,28 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, clearReceive
   }, [topicManager.editingTopic]);
 
   // v1.13.9: Detectar se há mudanças não salvas no Editor Individual
-  const isIndividualDirty = React.useMemo(() => {
-    const editingTopic = topicManager.editingTopic;
-    if (!editingTopic) return false;
+  // v1.35.3: Extrair valores primitivos para evitar recálculo desnecessário a cada keystroke
+  // Nota: não declarar editingTopic aqui pois já é destructured de topicManager mais abaixo (linha ~19820)
+  const editingTopicTitle = topicManager.editingTopic?.title;
+  const editingTopicFundamentacao = topicManager.editingTopic?.editedFundamentacao;
+  const editingTopicRelatorio = topicManager.editingTopic?.editedRelatorio;
+  const editingTopicContent = topicManager.editingTopic?.editedContent;
+  const editingTopicCategory = topicManager.editingTopic?.category;
 
-    const original = topicManager.selectedTopics.find(t => t.title === editingTopic.title);
+  const isIndividualDirty = React.useMemo(() => {
+    if (!editingTopicTitle) return false;
+
+    const original = topicManager.selectedTopics.find(t => t.title === editingTopicTitle);
     if (!original) return false;
 
     // Comparar campos editáveis
     return (
-      editingTopic.editedFundamentacao !== original.editedFundamentacao ||
-      editingTopic.editedRelatorio !== original.editedRelatorio ||
-      editingTopic.editedContent !== original.editedContent ||
-      editingTopic.category !== original.category
+      editingTopicFundamentacao !== original.editedFundamentacao ||
+      editingTopicRelatorio !== original.editedRelatorio ||
+      editingTopicContent !== original.editedContent ||
+      editingTopicCategory !== original.category
     );
-  }, [topicManager.editingTopic, topicManager.selectedTopics]);
+  }, [editingTopicTitle, editingTopicFundamentacao, editingTopicRelatorio, editingTopicContent, editingTopicCategory, topicManager.selectedTopics]);
 
   // 📏 v1.10.13: Hooks de configuração global de editor (para Quick Edit)
   const { spacing, setSpacing } = useSpacingControl();
@@ -22633,11 +23320,6 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     }
   };
 
-  const getCategories = () => {
-    const categories = new Set(modelLibrary.models.map(m => m.category).filter(c => c));
-    return Array.from(categories).sort();
-  };
-
   // ============================================================================
   // HELPERS PARA GERAÇÃO DE MINI-RELATÓRIOS (v1.15)
   // ============================================================================
@@ -24114,9 +24796,19 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
     }
 
     try {
+      // v1.35.2: Rastrear cada modelo como delete para sync com servidor
+      const modelsToDelete = [...modelLibrary.models];
+      const now = new Date().toISOString();
+
+      for (const model of modelsToDelete) {
+        if (cloudSync?.trackChange) {
+          cloudSync.trackChange('delete', { ...model, updatedAt: now });
+        }
+      }
+
       modelLibrary.setModels([]);
       modelLibrary.setHasUnsavedChanges(true);
-            closeModal('deleteAllModels');
+      closeModal('deleteAllModels');
       modelLibrary.setDeleteAllConfirmText('');
     } catch (err) {
       setError('Erro ao excluir todos os modelos: ' + err.message);
@@ -26579,7 +27271,8 @@ DECIDE-SE.`;
   };
 
   // Refinamento semântico com IA (para top candidatos)
-  const refineWithAI = async (topCandidates, topicTitle, topicCategory, topicRelatorio) => {
+  // v1.35.8: useCallback para evitar re-criação a cada render (causa lag no textarea)
+  const refineWithAI = React.useCallback(async (topCandidates, topicTitle, topicCategory, topicRelatorio) => {
     if (topCandidates.length === 0) return [];
 
     try {
@@ -26662,11 +27355,12 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
     } catch (error) {
       return topCandidates; // Retorna candidatos sem reordenar em caso de erro
     }
-  };
+  }, [aiIntegration.buildApiRequest, aiIntegration.callAI]);
 
   // 🚀 v1.8.2: Função principal de busca de sugestões (híbrida - COM CACHE)
   // v1.28.02: Suporte a IA Local via embeddings
-  const findSuggestions = async (topic) => {
+  // v1.35.8: useCallback para evitar re-criação a cada render (causa lag no textarea de "regenerar com IA")
+  const findSuggestions = React.useCallback(async (topic) => {
     // v1.29.05: Não gerar sugestões para tópicos especiais (RELATÓRIO e DISPOSITIVO)
     if (isSpecialTopic(topic)) return { suggestions: [], source: null };
     // v1.28.02: IA Local para sugestões (sem API Claude)
@@ -26735,7 +27429,7 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
     apiCache.set(cacheKey, JSON.stringify(result));
 
     return result;
-  };
+  }, [useLocalAIForSuggestions, searchModelReady, modelLibrary.models, modelSemanticThreshold, apiCache, refineWithAI]);
 
   const startEditing = async (topic) => {
     const topicCopy = {
@@ -27664,13 +28358,18 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
       });
     }
 
-    // Aplicar filtros adicionais (categoria e favoritos)
+    // Aplicar filtros adicionais (categoria, favoritos e propriedade)
     return results.filter(m => {
       const matchesCategory = modelLibrary.selectedCategory === 'all' || m.category === modelLibrary.selectedCategory;
       const matchesFavorite = !modelLibrary.showFavoritesOnly || m.favorite;
-      return matchesCategory && matchesFavorite;
+      // v1.35.0: Filtro de propriedade (todos/meus/compartilhados)
+      const matchesOwnership =
+        modelLibrary.ownershipFilter === 'all' ||
+        (modelLibrary.ownershipFilter === 'mine' && !m.isShared) ||
+        (modelLibrary.ownershipFilter === 'shared' && m.isShared);
+      return matchesCategory && matchesFavorite && matchesOwnership;
     });
-  }, [modelLibrary.models, modelLibrary.searchTerm, modelLibrary.selectedCategory, modelLibrary.showFavoritesOnly]);
+  }, [modelLibrary.models, modelLibrary.searchTerm, modelLibrary.selectedCategory, modelLibrary.showFavoritesOnly, modelLibrary.ownershipFilter]);
 
   // 🚀 OTIMIZAÇÃO v1.4.1: Memoizar paginação para evitar recálculo e slice desnecessários
   const { currentModels, totalModelPages, indexOfFirstModel, indexOfLastModel } = React.useMemo(() => {
@@ -29130,7 +29829,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         showExtractButton={modelLibrary.showExtractModelButton}
                         regeneratingRelatorio={aiIntegration.regeneratingRelatorio}
                         relatorioInstruction={aiIntegration.relatorioInstruction}
-                        onInstructionChange={(value) => aiIntegration.setRelatorioInstruction(value)}
+                        onInstructionChange={aiIntegration.setRelatorioInstruction}
                         sanitizeHTML={sanitizeHTML}
                         selectedTopics={selectedTopics}
                         setSelectedTopics={setSelectedTopics}
@@ -29141,7 +29840,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         quillError={quillError}
                                               onRegenerateDispositivo={regenerateDispositivoWithInstruction}
                         dispositivoInstruction={aiIntegration.dispositivoInstruction}
-                        onDispositivoInstructionChange={(value) => aiIntegration.setDispositivoInstruction(value)}
+                        onDispositivoInstructionChange={aiIntegration.setDispositivoInstruction}
                         regeneratingDispositivo={aiIntegration.regeneratingDispositivo}
                         editorTheme={editorTheme}
                         toggleEditorTheme={toggleEditorTheme}
@@ -29486,6 +30185,18 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       Novo Modelo
                     </button>
 
+                    {/* v1.35.0: Botão para compartilhar biblioteca */}
+                    {cloudSync.isAuthenticated && (
+                      <button
+                        onClick={() => openModal('shareLibrary')}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors duration-300"
+                        title="Compartilhar biblioteca de modelos"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        Compartilhar
+                      </button>
+                    )}
+
                     {/* Botão minimalista para excluir todos os modelos */}
                     {modelLibrary.models.length > 0 && (
                       <button
@@ -29607,7 +30318,45 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           {modelLibrary.showFavoritesOnly && ` (${categoryCounts.favorites})`}
                         </span>
                       </button>
-                      
+
+                      {/* v1.35.0: Filtro de propriedade (Meus/Compartilhados) */}
+                      <div className="flex items-center theme-bg-primary rounded-lg p-1">
+                        <button
+                          onClick={() => modelLibrary.setOwnershipFilter('all')}
+                          className={`px-3 py-1.5 rounded text-sm transition-colors ${
+                            modelLibrary.ownershipFilter === 'all'
+                              ? 'bg-purple-600 text-white'
+                              : 'theme-text-muted hover-theme-text-secondary'
+                          }`}
+                          title="Mostrar todos os modelos"
+                        >
+                          Todos
+                        </button>
+                        <button
+                          onClick={() => modelLibrary.setOwnershipFilter('mine')}
+                          className={`px-3 py-1.5 rounded text-sm transition-colors ${
+                            modelLibrary.ownershipFilter === 'mine'
+                              ? 'bg-purple-600 text-white'
+                              : 'theme-text-muted hover-theme-text-secondary'
+                          }`}
+                          title="Mostrar apenas meus modelos"
+                        >
+                          Meus
+                        </button>
+                        <button
+                          onClick={() => modelLibrary.setOwnershipFilter('shared')}
+                          className={`px-3 py-1.5 rounded text-sm transition-colors flex items-center gap-1 ${
+                            modelLibrary.ownershipFilter === 'shared'
+                              ? 'bg-purple-600 text-white'
+                              : 'theme-text-muted hover-theme-text-secondary'
+                          }`}
+                          title="Mostrar apenas modelos compartilhados"
+                        >
+                          <Users className="w-3 h-3" />
+                          Compartilhados
+                        </button>
+                      </div>
+
                       <span className={CSS.textMuted}>
                         {filteredModels.length} modelo{filteredModels.length !== 1 ? 's' : ''}
                       </span>
@@ -29660,6 +30409,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                               onDuplicate={duplicateModel}
                               onDelete={confirmDeleteModel}
                               sanitizeHTML={sanitizeHTML}
+                              isShared={model.isShared}
+                              ownerEmail={model.ownerEmail}
+                              sharedPermission={model.sharedPermission}
                             />
                           ))}
                         </div>
@@ -29675,6 +30427,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                               onDuplicate={duplicateModel}
                               onDelete={confirmDeleteModel}
                               sanitizeHTML={sanitizeHTML}
+                              isShared={model.isShared}
+                              ownerEmail={model.ownerEmail}
+                              sharedPermission={model.sharedPermission}
                             />
                           ))}
                         </div>
@@ -29706,6 +30461,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             onDuplicate={duplicateModel}
                             onDelete={confirmDeleteModel}
                             sanitizeHTML={sanitizeHTML}
+                            isShared={model.isShared}
+                            ownerEmail={model.ownerEmail}
+                            sharedPermission={model.sharedPermission}
                           />
                         ))}
                       </div>
@@ -29800,6 +30558,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           onDuplicate={duplicateModel}
                           onDelete={confirmDeleteModel}
                           sanitizeHTML={sanitizeHTML}
+                          isShared={model.isShared}
+                          ownerEmail={model.ownerEmail}
+                          sharedPermission={model.sharedPermission}
                         />
                       )}
                       className="space-y-1"
@@ -31987,6 +32748,13 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         />
       )}
 
+      {/* v1.35.0: Modal de Compartilhamento de Biblioteca */}
+      <ShareLibraryModal
+        isOpen={modals.shareLibrary}
+        onClose={() => closeModal('shareLibrary')}
+        user={cloudSync?.user}
+      />
+
       {/* Modal de Nomes para Anonimização - v1.17.0 (v1.25: + NER) */}
       <AnonymizationNamesModal
         isOpen={showAnonymizationModal}
@@ -34031,11 +34799,22 @@ const SentencifyAI = () => {
     return <AdminPanel />;
   }
 
+  // v1.35.0: Rota /share/:token abre página de aceite de compartilhamento
+  const shareMatch = window.location.pathname.match(/^\/share\/([a-f0-9]+)$/i);
+
   // v1.34.1: Estado para modelos recebidos do servidor (para merge)
   const [receivedModels, setReceivedModels] = React.useState(null);
 
+  // v1.35.1: Memoizar callbacks para evitar re-criação de pull/sync a cada render
+  const handleModelsReceived = React.useCallback((models) => {
+    setReceivedModels(models);
+  }, []);
+  const clearReceivedModels = React.useCallback(() => {
+    setReceivedModels(null);
+  }, []);
+
   const cloudSync = useCloudSync({
-    onModelsReceived: (models) => setReceivedModels(models)
+    onModelsReceived: handleModelsReceived
   });
 
   // Fallback para auth legada durante transição
@@ -34060,6 +34839,29 @@ const SentencifyAI = () => {
     );
   }
 
+  // v1.35.0: Se estiver em rota de compartilhamento
+  if (shareMatch) {
+    const shareToken = shareMatch[1];
+
+    // Se não autenticado, mostrar login primeiro (após login volta para a mesma URL)
+    if (!cloudSync.isAuthenticated) {
+      return (
+        <div className="min-h-screen bg-slate-900">
+          <LoginMagicModal
+            isOpen={true}
+            onClose={() => {}}
+            onRequestLink={cloudSync.requestMagicLink}
+            onVerify={cloudSync.verifyToken}
+            devLink={cloudSync.devLink}
+          />
+        </div>
+      );
+    }
+
+    // Usuário autenticado, mostrar página de aceite
+    return <AcceptSharePage token={shareToken} />;
+  }
+
   // v1.34.0: Mostrar modal de login Magic Link se não autenticado
   if (!cloudSync.isAuthenticated) {
     return (
@@ -34082,7 +34884,7 @@ const SentencifyAI = () => {
         onLogout={cloudSync.logout}
         cloudSync={cloudSync}
         receivedModels={receivedModels}
-        clearReceivedModels={() => setReceivedModels(null)}
+        clearReceivedModels={clearReceivedModels}
       />
     </ErrorBoundary>
   );

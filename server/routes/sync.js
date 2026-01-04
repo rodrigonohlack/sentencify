@@ -1,5 +1,5 @@
 // server/routes/sync.js - Sincronização Bidirecional
-// v1.0.3 - Fix Buffer→Float32Array conversion para embeddings (768 floats, não 3072 bytes)
+// v1.1.0 - Incluir modelos compartilhados no pull
 
 import express from 'express';
 import { getDb } from '../db/database.js';
@@ -12,12 +12,23 @@ router.use(authMiddleware);
 
 // POST /api/sync/pull
 // Retorna mudanças desde o último sync (com paginação)
+// v1.1.0: Inclui modelos de bibliotecas compartilhadas
 router.post('/pull', (req, res) => {
   try {
     const db = getDb();
     const userId = req.user.id;
+    const userEmail = req.user.email;
     const { lastSyncAt, limit = 50, offset = 0 } = req.body;
 
+    // v1.1.0: Buscar bibliotecas compartilhadas com este usuário
+    const sharedLibraries = db.prepare(`
+      SELECT la.owner_id, la.permission, u.email as owner_email
+      FROM library_access la
+      JOIN users u ON la.owner_id = u.id
+      WHERE la.recipient_id = ?
+    `).all(userId);
+
+    const sharedOwnerIds = sharedLibraries.map(lib => lib.owner_id);
 
     // Contar total de modelos para hasMore
     let totalQuery;
@@ -30,11 +41,13 @@ router.post('/pull', (req, res) => {
         WHERE user_id = ? AND updated_at > ?
       `);
       modelsQuery = db.prepare(`
-        SELECT id, title, content, category, keywords, is_favorite,
-               embedding, created_at, updated_at, deleted_at, sync_version
-        FROM models
-        WHERE user_id = ? AND updated_at > ?
-        ORDER BY updated_at ASC
+        SELECT m.id, m.title, m.content, m.category, m.keywords, m.is_favorite,
+               m.embedding, m.created_at, m.updated_at, m.deleted_at, m.sync_version,
+               m.user_id as owner_id, u.email as owner_email
+        FROM models m
+        JOIN users u ON m.user_id = u.id
+        WHERE m.user_id = ? AND m.updated_at > ?
+        ORDER BY m.updated_at ASC
         LIMIT ? OFFSET ?
       `);
     } else {
@@ -44,11 +57,13 @@ router.post('/pull', (req, res) => {
         WHERE user_id = ? AND deleted_at IS NULL
       `);
       modelsQuery = db.prepare(`
-        SELECT id, title, content, category, keywords, is_favorite,
-               embedding, created_at, updated_at, deleted_at, sync_version
-        FROM models
-        WHERE user_id = ? AND deleted_at IS NULL
-        ORDER BY updated_at ASC
+        SELECT m.id, m.title, m.content, m.category, m.keywords, m.is_favorite,
+               m.embedding, m.created_at, m.updated_at, m.deleted_at, m.sync_version,
+               m.user_id as owner_id, u.email as owner_email
+        FROM models m
+        JOIN users u ON m.user_id = u.id
+        WHERE m.user_id = ? AND m.deleted_at IS NULL
+        ORDER BY m.updated_at ASC
         LIMIT ? OFFSET ?
       `);
     }
@@ -61,8 +76,26 @@ router.post('/pull', (req, res) => {
       ? modelsQuery.all(userId, lastSyncAt, limit, offset)
       : modelsQuery.all(userId, limit, offset);
 
+    // v1.35.1: Buscar modelos das bibliotecas compartilhadas (SEMPRE, independente do tipo de sync)
+    // Antes: só buscava em full sync (offset=0 && !lastSyncAt) - bug que impedia modelos compartilhados de aparecerem
+    let sharedModels = [];
+    if (offset === 0 && sharedOwnerIds.length > 0) {
+      const placeholders = sharedOwnerIds.map(() => '?').join(',');
+      const sharedModelsQuery = db.prepare(`
+        SELECT m.id, m.title, m.content, m.category, m.keywords, m.is_favorite,
+               m.embedding, m.created_at, m.updated_at, m.deleted_at, m.sync_version,
+               m.user_id as owner_id, u.email as owner_email
+        FROM models m
+        JOIN users u ON m.user_id = u.id
+        WHERE m.user_id IN (${placeholders}) AND m.deleted_at IS NULL
+        ORDER BY m.updated_at ASC
+      `);
+      sharedModels = sharedModelsQuery.all(...sharedOwnerIds);
+      console.log(`[Sync] Pull: ${sharedModels.length} modelos compartilhados de ${sharedOwnerIds.length} bibliotecas`);
+    }
+
     // Converter campos para formato do cliente
-    const result = models.map(m => ({
+    const convertModel = (m, isShared) => ({
       id: m.id,
       title: m.title,
       content: m.content,
@@ -74,19 +107,39 @@ router.post('/pull', (req, res) => {
       updatedAt: m.updated_at,
       deletedAt: m.deleted_at,
       syncVersion: m.sync_version,
-    }));
+      // v1.1.0: Campos de compartilhamento
+      ownerId: m.owner_id,
+      ownerEmail: m.owner_email,
+      isShared,
+    });
 
+    const ownModels = models.map(m => convertModel(m, false));
+    const sharedModelsList = sharedModels.map(m => {
+      const lib = sharedLibraries.find(l => l.owner_id === m.owner_id);
+      return {
+        ...convertModel(m, true),
+        sharedPermission: lib?.permission || 'view'
+      };
+    });
+
+    const allModels = [...ownModels, ...sharedModelsList];
     const serverTime = new Date().toISOString();
-    const hasMore = offset + result.length < total;
+    const hasMore = offset + models.length < total;
 
-    console.log(`[Sync] Pull: ${result.length}/${total} modelos (offset=${offset}, hasMore=${hasMore})`);
+    console.log(`[Sync] Pull: ${models.length}/${total} próprios + ${sharedModelsList.length} compartilhados (offset=${offset}, hasMore=${hasMore})`);
 
     res.json({
-      models: result,
+      models: allModels,
       serverTime,
-      count: result.length,
-      total,
+      count: allModels.length,
+      total: total + sharedModelsList.length,
       hasMore,
+      // v1.1.0: Informações sobre bibliotecas compartilhadas
+      sharedLibraries: sharedLibraries.map(lib => ({
+        ownerId: lib.owner_id,
+        ownerEmail: lib.owner_email,
+        permission: lib.permission
+      }))
     });
   } catch (error) {
     console.error('[Sync] Pull error:', error);
@@ -96,6 +149,7 @@ router.post('/pull', (req, res) => {
 
 // POST /api/sync/push
 // Recebe mudanças do cliente
+// v1.35.1: Suporta edição/exclusão de modelos compartilhados (se permission = 'edit')
 router.post('/push', (req, res) => {
   try {
     const db = getDb();
@@ -112,6 +166,12 @@ router.post('/push', (req, res) => {
       deleted: [],
       conflicts: [],
     };
+
+    // v1.35.1: Buscar bibliotecas compartilhadas com permissão de edição
+    const editableOwners = db.prepare(`
+      SELECT owner_id FROM library_access
+      WHERE recipient_id = ? AND permission = 'edit'
+    `).all(userId).map(r => r.owner_id);
 
     // Prepared statements para performance
     // v1.0.2: INSERT OR REPLACE para evitar erro de UNIQUE constraint
@@ -138,6 +198,9 @@ router.post('/push', (req, res) => {
       VALUES (?, ?, ?, ?)
     `);
 
+    // v1.35.1: Buscar modelo existente para verificar propriedade
+    const getModelStmt = db.prepare(`SELECT user_id, sync_version FROM models WHERE id = ?`);
+
     // Processar cada mudança em uma transaction
     const processChanges = db.transaction(() => {
       for (const change of changes) {
@@ -149,11 +212,28 @@ router.post('/push', (req, res) => {
           ? Buffer.from(new Float32Array(model.embedding).buffer)
           : null;
 
+        // v1.35.1: Determinar o owner_id efetivo (próprio ou compartilhado com edit)
+        let effectiveOwnerId = userId;
+        if (operation === 'update' || operation === 'delete') {
+          const existingModel = getModelStmt.get(model.id);
+          if (existingModel) {
+            if (existingModel.user_id === userId) {
+              effectiveOwnerId = userId;
+            } else if (editableOwners.includes(existingModel.user_id)) {
+              effectiveOwnerId = existingModel.user_id;
+              console.log(`[Sync] Editando modelo compartilhado ${model.id} do owner ${effectiveOwnerId}`);
+            } else {
+              results.conflicts.push({ id: model.id, reason: 'no_permission' });
+              continue;
+            }
+          }
+        }
+
         if (operation === 'create') {
           try {
             insertStmt.run(
               model.id,
-              userId,
+              userId, // Modelos criados sempre pertencem ao usuário atual
               model.title,
               model.content,
               model.category || null,
@@ -182,7 +262,7 @@ router.post('/push', (req, res) => {
             embeddingBlob,
             model.updatedAt || new Date().toISOString(),
             model.id,
-            userId,
+            effectiveOwnerId, // v1.35.1: Usar owner efetivo
             model.syncVersion || 0
           );
 
@@ -195,7 +275,7 @@ router.post('/push', (req, res) => {
           }
         } else if (operation === 'delete') {
           const now = new Date().toISOString();
-          deleteStmt.run(now, now, model.id, userId);
+          deleteStmt.run(now, now, model.id, effectiveOwnerId); // v1.35.1: Usar owner efetivo
           logStmt.run(userId, 'delete', model.id, 0);
           results.deleted.push(model.id);
         }

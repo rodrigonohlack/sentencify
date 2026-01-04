@@ -4,13 +4,13 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.34.9 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.10 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
 **Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`
 
-**Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`
+**Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`
 
 **Storage**:
 - `SQLite` (Render Persistent Disk) → modelos sincronizados na nuvem (v1.34.0)
@@ -66,6 +66,17 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.10 | Fix lag real: Estado Local Bufferizado - ModelFormModal e AIRegenerationSection usam estado local durante digitação, só propagam para pai no save/blur (evita re-render do LegalDecisionEditor ~15000 linhas) |
+| v1.35.9 | Fix lag em TODOS inputs: todos os 11 setters de useAIIntegration convertidos para useCallback + useCloudSync.return memoizado com useMemo |
+| v1.35.8 | Fix lag: findSuggestions e refineWithAI com useCallback (evita re-criação a cada render) |
+| v1.35.7 | Fix lag: setRelatorioInstruction/setDispositivoInstruction com useCallback (referência estável) |
+| v1.35.6 | Fix lag: removidas arrow functions inline em onInstructionChange |
+| v1.35.5 | Fix erro "Rendered more hooks": hooks useCallback movidos para antes do return condicional |
+| v1.35.4 | Fix lag: dependência circular no Cloud Sync (libraryModels nas deps causava loop infinito) |
+| v1.35.3 | Fix lag de escrita nos editores: debounce 150ms no onChange/sanitização do Quill, memoização de getCategories, primitivos em isIndividualDirty |
+| v1.35.2 | Fix exclusão em massa: deleteAllModels() rastreia cada modelo para sync; delete salva apenas id (evita QuotaExceededError no localStorage com 456+ modelos) |
+| v1.35.1 | Compartilhamento por email: convite direto digitando email do destinatário, envio via Resend, edição colaborativa (edit permission permite editar/deletar originais), fix sync modelos compartilhados deletados, fix typing lag (memoização callbacks), fix contraste tema claro no ShareLibraryModal |
+| v1.35.0 | Compartilhamento de biblioteca: gerar link para compartilhar modelos (view/edit), badge de proprietário no ModelCard, filtro Meus/Compartilhados, página /share/:token para aceitar |
 | v1.34.9 | Fix validação: aceitar null em category/keywords (antes rejeitava modelos com campos opcionais null) |
 | v1.34.8 | Fix perda de modelos: cache IndexedDB atualizado com modelos VALIDADOS (antes usava originais, causando discrepância cache vs DB) + log de modelos rejeitados |
 | v1.34.7 | Fix sync: salvar IMEDIATAMENTE no IndexedDB após merge (não esperar debounce de 1500ms) |
@@ -263,5 +274,5 @@
 | v1.14.0 | Detecção TF-IDF de similaridade + Botão "Salvar como Modelo" + Comparação lado a lado |
 | v1.12.27 | Progresso de extração inline no ProofCard (não mais banner de erro) |
 
-**Last Updated**: 2026-01-01
+**Last Updated**: 2026-01-03
 - sempre atualize a versão nas alterações realizadas

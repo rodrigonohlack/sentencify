@@ -1,7 +1,7 @@
 // src/hooks/useCloudSync.js - Integração Simplificada de Sync
-// v1.34.3 - Full sync automático para navegador novo
+// v1.35.9 - Memoizar retorno para evitar re-renders desnecessários
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 const AUTH_KEY = 'sentencify-auth-token';
 const REFRESH_KEY = 'sentencify-refresh-token';
@@ -75,10 +75,18 @@ export function useCloudSync({ onModelsReceived } = {}) {
   }, []);
 
   // Persistir pendentes
+  // v1.35.2: try-catch para evitar crash se localStorage cheio
   useEffect(() => {
-    if (pendingChanges.length > 0) {
-      localStorage.setItem(PENDING_KEY, JSON.stringify(pendingChanges));
-    } else {
+    try {
+      if (pendingChanges.length > 0) {
+        localStorage.setItem(PENDING_KEY, JSON.stringify(pendingChanges));
+      } else {
+        localStorage.removeItem(PENDING_KEY);
+      }
+    } catch (err) {
+      // QuotaExceededError - localStorage cheio
+      console.error('[CloudSync] Erro ao persistir pendingChanges:', err.message);
+      // Limpar pendentes antigos para evitar loop de erro
       localStorage.removeItem(PENDING_KEY);
     }
   }, [pendingChanges]);
@@ -280,8 +288,9 @@ export function useCloudSync({ onModelsReceived } = {}) {
       localStorage.setItem(LAST_SYNC_KEY, serverTime);
       setSyncStatus('idle');
 
-      // v1.34.1: Chamar callback para merge dos modelos recebidos
-      if (allModels.length > 0 && onModelsReceived) {
+      // v1.35.1: SEMPRE chamar callback para merge, mesmo se 0 modelos
+      // Isso garante que modelos compartilhados deletados pelo proprietário sejam removidos
+      if (onModelsReceived) {
         console.log(`[CloudSync] Pull completo: ${allModels.length} modelos recebidos do servidor`);
         onModelsReceived(allModels);
         // v1.34.3: Marcar como sincronizado após receber modelos
@@ -361,7 +370,13 @@ export function useCloudSync({ onModelsReceived } = {}) {
         return filtered;
       }
 
-      return [...filtered, { operation, model }];
+      // v1.35.2: Para delete, salvar apenas id e updatedAt (evita QuotaExceededError no localStorage)
+      // O servidor só precisa do model.id para marcar como deletado
+      const modelToStore = operation === 'delete'
+        ? { id: model.id, updatedAt: model.updatedAt }
+        : model;
+
+      return [...filtered, { operation, model: modelToStore }];
     });
   }, [user]);
 
@@ -433,7 +448,9 @@ export function useCloudSync({ onModelsReceived } = {}) {
     }
   }, [authFetch, user]);
 
-  return {
+  // v1.35.9: Memoizar retorno para evitar re-renders desnecessários
+  // Antes: objeto literal era recriado a cada render, quebrando React.memo de componentes filhos
+  return useMemo(() => ({
     // Auth
     user,
     isAuthenticated: !!user,
@@ -454,7 +471,12 @@ export function useCloudSync({ onModelsReceived } = {}) {
     push,
     trackChange,
     pushAllModels,
-  };
+  }), [
+    user, authLoading, authError, devLink,
+    requestMagicLink, verifyToken, logout,
+    syncStatus, lastSyncAt, pendingChanges.length, syncError,
+    sync, pull, push, trackChange, pushAllModels
+  ]);
 }
 
 export default useCloudSync;
