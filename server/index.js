@@ -86,11 +86,6 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// v1.35.12: Rota de teste do Sentry (remover após confirmar funcionamento)
-app.get('/api/sentry-test', (req, res) => {
-  throw new Error('Teste Sentry - pode ignorar este erro');
-});
-
 // v1.33.32: Proxy para embeddings do GitHub Releases (streaming para evitar OOM)
 // v1.33.61: Adicionado suporte para arquivos de dados (legis-data.json, juris-data.json)
 app.get('/api/embeddings', async (req, res) => {
