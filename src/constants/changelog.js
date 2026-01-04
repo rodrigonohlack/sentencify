@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.26', feature: 'Prompts de IA (AI_INSTRUCTIONS, AI_PROMPTS) movidos para src/prompts/ (~900 linhas extraídas do App.jsx)' },
   { version: '1.35.25', feature: 'CHANGELOG movido para src/constants/changelog.js (reduz clutter no App.jsx)' },
   { version: '1.35.24', feature: 'Fix B8b: sync remove modelos de owners sem acesso ativo (sharedLibraries filtra modelos locais compartilhados)' },
   { version: '1.35.23', feature: 'Fix B8: remover share via UI limpa modelos da biblioteca + A7a: trackChangeBatch para importação em lote eficiente' },
