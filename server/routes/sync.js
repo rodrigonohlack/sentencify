@@ -21,14 +21,22 @@ router.post('/pull', (req, res) => {
     const { lastSyncAt, limit = 50, offset = 0 } = req.body;
 
     // v1.1.0: Buscar bibliotecas compartilhadas com este usuário
+    // v1.35.19: Incluir accepted_at para detectar shares recém-aceitos
     const sharedLibraries = db.prepare(`
-      SELECT la.owner_id, la.permission, u.email as owner_email
+      SELECT la.owner_id, la.permission, u.email as owner_email, la.accepted_at
       FROM library_access la
       JOIN users u ON la.owner_id = u.id
       WHERE la.recipient_id = ?
     `).all(userId);
 
     const sharedOwnerIds = sharedLibraries.map(lib => lib.owner_id);
+
+    // v1.35.19: Separar shares recém-aceitos (após lastSyncAt) dos já conhecidos
+    // Para recém-aceitos, precisamos buscar TODOS os modelos (não apenas atualizados)
+    const newlySharedOwnerIds = lastSyncAt
+      ? sharedLibraries.filter(lib => new Date(lib.accepted_at) > new Date(lastSyncAt)).map(lib => lib.owner_id)
+      : [];
+    const knownSharedOwnerIds = sharedOwnerIds.filter(id => !newlySharedOwnerIds.includes(id));
 
     // Contar total de modelos para hasMore
     let totalQuery;
@@ -76,44 +84,59 @@ router.post('/pull', (req, res) => {
       ? modelsQuery.all(userId, lastSyncAt, limit, offset)
       : modelsQuery.all(userId, limit, offset);
 
-    // v1.35.11: Buscar modelos compartilhados COM filtro de lastSyncAt
-    // Antes (v1.35.1): buscava TODOS os shared, mesmo em sync incremental
-    // Agora: sync incremental inclui apenas shared atualizados desde lastSyncAt (inclui deletados)
+    // v1.35.19: Buscar modelos compartilhados com lógica melhorada
+    // - Para shares RECÉM-ACEITOS (accepted_at > lastSyncAt): buscar TODOS os modelos
+    // - Para shares JÁ CONHECIDOS: usar filtro incremental (updated_at > lastSyncAt)
     let sharedModels = [];
     if (offset === 0 && sharedOwnerIds.length > 0) {
-      const placeholders = sharedOwnerIds.map(() => '?').join(',');
 
-      let sharedModelsQuery;
-      let queryParams;
-
-      if (lastSyncAt) {
-        // INCREMENTAL: apenas atualizados desde lastSyncAt (inclui deletados para remoção no cliente)
-        sharedModelsQuery = db.prepare(`
+      // 1. Shares recém-aceitos: buscar TODOS os modelos (sem filtro de updated_at)
+      if (newlySharedOwnerIds.length > 0) {
+        const newPlaceholders = newlySharedOwnerIds.map(() => '?').join(',');
+        const newlySharedModels = db.prepare(`
           SELECT m.id, m.title, m.content, m.category, m.keywords, m.is_favorite,
                  m.embedding, m.created_at, m.updated_at, m.deleted_at, m.sync_version,
                  m.user_id as owner_id, u.email as owner_email
           FROM models m
           JOIN users u ON m.user_id = u.id
-          WHERE m.user_id IN (${placeholders}) AND m.updated_at > ?
+          WHERE m.user_id IN (${newPlaceholders}) AND m.deleted_at IS NULL
           ORDER BY m.updated_at ASC
-        `);
-        queryParams = [...sharedOwnerIds, lastSyncAt];
-        sharedModels = sharedModelsQuery.all(...queryParams);
-        console.log(`[Sync] Pull incremental: ${sharedModels.length} shared atualizados desde ${lastSyncAt}`);
-      } else {
-        // FULL: todos modelos compartilhados ativos
-        sharedModelsQuery = db.prepare(`
-          SELECT m.id, m.title, m.content, m.category, m.keywords, m.is_favorite,
-                 m.embedding, m.created_at, m.updated_at, m.deleted_at, m.sync_version,
-                 m.user_id as owner_id, u.email as owner_email
-          FROM models m
-          JOIN users u ON m.user_id = u.id
-          WHERE m.user_id IN (${placeholders}) AND m.deleted_at IS NULL
-          ORDER BY m.updated_at ASC
-        `);
-        queryParams = sharedOwnerIds;
-        sharedModels = sharedModelsQuery.all(...queryParams);
-        console.log(`[Sync] Pull full: ${sharedModels.length} shared de ${sharedOwnerIds.length} bibliotecas`);
+        `).all(...newlySharedOwnerIds);
+        sharedModels.push(...newlySharedModels);
+        console.log(`[Sync] Pull: ${newlySharedModels.length} modelos de ${newlySharedOwnerIds.length} shares recém-aceitos`);
+      }
+
+      // 2. Shares já conhecidos: usar lógica incremental ou full conforme lastSyncAt
+      if (knownSharedOwnerIds.length > 0) {
+        const knownPlaceholders = knownSharedOwnerIds.map(() => '?').join(',');
+
+        if (lastSyncAt) {
+          // INCREMENTAL: apenas atualizados desde lastSyncAt (inclui deletados para remoção no cliente)
+          const knownSharedModels = db.prepare(`
+            SELECT m.id, m.title, m.content, m.category, m.keywords, m.is_favorite,
+                   m.embedding, m.created_at, m.updated_at, m.deleted_at, m.sync_version,
+                   m.user_id as owner_id, u.email as owner_email
+            FROM models m
+            JOIN users u ON m.user_id = u.id
+            WHERE m.user_id IN (${knownPlaceholders}) AND m.updated_at > ?
+            ORDER BY m.updated_at ASC
+          `).all(...knownSharedOwnerIds, lastSyncAt);
+          sharedModels.push(...knownSharedModels);
+          console.log(`[Sync] Pull incremental: ${knownSharedModels.length} shared atualizados desde ${lastSyncAt}`);
+        } else {
+          // FULL: todos modelos compartilhados ativos
+          const knownSharedModels = db.prepare(`
+            SELECT m.id, m.title, m.content, m.category, m.keywords, m.is_favorite,
+                   m.embedding, m.created_at, m.updated_at, m.deleted_at, m.sync_version,
+                   m.user_id as owner_id, u.email as owner_email
+            FROM models m
+            JOIN users u ON m.user_id = u.id
+            WHERE m.user_id IN (${knownPlaceholders}) AND m.deleted_at IS NULL
+            ORDER BY m.updated_at ASC
+          `).all(...knownSharedOwnerIds);
+          sharedModels.push(...knownSharedModels);
+          console.log(`[Sync] Pull full: ${knownSharedModels.length} shared de ${knownSharedOwnerIds.length} bibliotecas`);
+        }
       }
     }
 
