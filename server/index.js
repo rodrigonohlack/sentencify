@@ -37,13 +37,15 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// CORS para permitir requests do frontend (Render + Vercel + localhost)
+// CORS para permitir requests do frontend (Render + Vercel + localhost + domínio próprio)
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
   'http://127.0.0.1:3000',
   'https://sentencify.onrender.com',
-  'https://sentencifyai.vercel.app'
+  'https://sentencifyai.vercel.app',
+  'https://sentencify.ia.br',
+  'https://www.sentencify.ia.br'
 ];
 
 app.use(cors({
