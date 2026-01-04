@@ -134,7 +134,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.11'; // v1.35.11: Fix sync: pull-then-push, conflitos com retry, shared filter por lastSyncAt, validação email no accept
+const APP_VERSION = '1.35.20'; // v1.35.20: Fix progresso de download (usa tamanhos estimados como fallback)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -149,6 +149,15 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.35.20', feature: 'Fix progresso de download: usa tamanhos estimados como fallback quando Content-Length não disponível (streaming proxy)' },
+  { version: '1.35.19', feature: 'Fix modelos compartilhados não apareciam após aceitar: comparar accepted_at com lastSyncAt para detectar shares recém-aceitos' },
+  { version: '1.35.18', feature: 'Log de diagnóstico para rate limiting: IP, email e User-Agent em cada request de magic link' },
+  { version: '1.35.17', feature: 'Fix rate limiter: trust proxy para Cloudflare/Render (antes todos IPs eram iguais)' },
+  { version: '1.35.16', feature: 'Email com domínio verificado: sentencify.ia.br em vez de resend.dev' },
+  { version: '1.35.15', feature: 'Fix E2E tests: remover setupAuth órfão (fixture já faz autenticação)' },
+  { version: '1.35.14', feature: 'Labels explícitos para PDFs binários: antes de cada PDF, adiciona texto identificador para IA saber qual documento é qual' },
+  { version: '1.35.13', feature: 'Rate limiting: proteção contra abuso (auth 10/15min, IA 30/min, geral 100/min)' },
+  { version: '1.35.12', feature: 'Sentry error tracking: captura erros em produção (frontend + backend), alertas por email, stack traces completos' },
   { version: '1.35.11', feature: 'Fix sync: pull-then-push evita conflitos, retry com limit para conflitos de versão, shared filter por lastSyncAt, validação email no accept' },
   { version: '1.35.10', feature: 'Fix lag REAL: estado local bufferizado em ModelFormModal e AIRegenerationSection - digitação não propaga para LegalDecisionEditor (Análise Gemini)' },
   { version: '1.35.9', feature: 'Fix lag em TODOS inputs: todos os 11 setters de useAIIntegration convertidos para useCallback + useCloudSync.return memoizado com useMemo' },
@@ -1129,6 +1138,14 @@ const JurisEmbeddingsService = {
 const EmbeddingsCDNService = {
   VERSION: '1.0.0',
 
+  // v1.35.20: Tamanhos estimados para fallback quando Content-Length não disponível
+  ESTIMATED_SIZES: {
+    'legis-embeddings.json': 211_000_000,  // ~211MB
+    'juris-embeddings.json': 50_000_000,   // ~50MB
+    'legis-data.json': 5_000_000,          // ~5MB
+    'juris-data.json': 2_000_000,          // ~2MB
+  },
+
   // Retorna URL do proxy (funciona local e Vercel, resolve CORS)
   getProxyUrl(file) {
     return `${API_BASE}/api/embeddings?file=${file}`;
@@ -1147,14 +1164,25 @@ const EmbeddingsCDNService = {
   },
 
   // Download com progresso e retry
+  // v1.35.20: Usa tamanhos estimados como fallback quando Content-Length não disponível
   async downloadFile(url, onProgress, maxRetries = 3) {
+    // Extrair nome do arquivo da URL (ex: ?file=legis-embeddings.json)
+    const fileMatch = url.match(/[?&]file=([^&]+)/);
+    const filename = fileMatch ? fileMatch[1] : null;
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const contentLength = res.headers.get('Content-Length');
-        const total = contentLength ? parseInt(contentLength, 10) : 0;
+        let total = contentLength ? parseInt(contentLength, 10) : 0;
+
+        // v1.35.20: Fallback para tamanho estimado quando Content-Length não disponível
+        if (!total && filename && this.ESTIMATED_SIZES[filename]) {
+          total = this.ESTIMATED_SIZES[filename];
+          console.log(`[CDN] Usando tamanho estimado para ${filename}: ${(total / 1_000_000).toFixed(1)}MB`);
+        }
 
         const reader = res.body.getReader();
         const chunks = [];
@@ -1165,8 +1193,15 @@ const EmbeddingsCDNService = {
           if (done) break;
           chunks.push(value);
           received += value.length;
-          if (onProgress && total) onProgress(received / total);
+          // v1.35.20: Reportar progresso mesmo com tamanho estimado (cap em 99% até done)
+          if (onProgress && total) {
+            const progress = Math.min(received / total, 0.99);
+            onProgress(progress);
+          }
         }
+
+        // v1.35.20: Garantir 100% ao finalizar
+        if (onProgress) onProgress(1);
 
         const blob = new Blob(chunks);
         return blob.text();

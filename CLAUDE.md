@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.14 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.20 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -66,6 +66,12 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.20 | Fix progresso de download: usa tamanhos estimados como fallback quando Content-Length não disponível (streaming proxy não repassa header) |
+| v1.35.19 | Fix modelos compartilhados não apareciam após aceitar: comparar accepted_at com lastSyncAt para detectar shares recém-aceitos |
+| v1.35.18 | Log de diagnóstico para rate limiting: IP, email e User-Agent em cada request de magic link |
+| v1.35.17 | Fix rate limiter: trust proxy para Cloudflare/Render (antes todos IPs eram iguais) |
+| v1.35.16 | Email com domínio verificado: sentencify.ia.br em vez de resend.dev |
+| v1.35.15 | Fix E2E tests: remover setupAuth órfão (fixture já faz autenticação) |
 | v1.35.14 | Labels explícitos para PDFs binários: antes de cada PDF, adiciona texto identificador ("PETIÇÃO INICIAL (documento PDF a seguir):") para IA saber qual documento é qual |
 | v1.35.13 | Rate limiting: proteção contra abuso (auth 10/15min, IA 30/min, geral 100/min) |
 | v1.35.12 | Sentry error tracking: captura erros em produção (frontend + backend), alertas por email, stack traces completos |
