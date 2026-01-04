@@ -149,6 +149,8 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.35.24', feature: 'Fix B8b: sync remove modelos de owners sem acesso ativo (sharedLibraries filtra modelos locais compartilhados)' },
+  { version: '1.35.23', feature: 'Fix B8: remover share via UI limpa modelos da biblioteca + A7a: trackChangeBatch para importação em lote eficiente' },
   { version: '1.35.22', feature: 'Fix duplicar modelo compartilhado (agora cria cópia própria) + tratamento de conflitos de sync (pull após conflito, model_deleted, no_permission)' },
   { version: '1.35.21', feature: 'Fix modelos compartilhados sumiam após sync incremental: preservar locais quando servidor não retorna compartilhados' },
   { version: '1.35.20', feature: 'Fix progresso de download: usa tamanhos estimados como fallback quando Content-Length não disponível (streaming proxy)' },
