@@ -5,6 +5,15 @@ import { dirname, join } from 'path';
 // IMPORTANTE: Carregar .env ANTES de qualquer import que use process.env
 config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
+// v1.35.12: Sentry error tracking (deve ser inicializado cedo)
+import * as Sentry from '@sentry/node';
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN_BACKEND,
+  environment: process.env.NODE_ENV || 'development',
+  enabled: process.env.NODE_ENV === 'production',
+});
+
 import express from 'express';
 import cors from 'cors';
 import { Readable } from 'stream';
@@ -138,13 +147,16 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// v1.35.12: Sentry error handler (deve ser o último middleware)
+Sentry.setupExpressErrorHandler(app);
+
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════════╗
   ║                                                       ║
-  ║   SentencifyAI Server v1.35.11                       ║
+  ║   SentencifyAI Server v1.35.12                       ║
   ║   ────────────────────────────────────────────────   ║
   ║   Backend:  http://localhost:${PORT}                   ║
   ║   Frontend: http://localhost:3000                    ║
