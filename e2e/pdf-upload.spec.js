@@ -17,10 +17,6 @@ const navigateToUploads = async (page) => {
 
 test.describe('SentencifyAI - Upload de PDFs', () => {
 
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
-
   test('deve exibir área de upload', async ({ page }) => {
     await navigateToUploads(page);
 
@@ -80,10 +76,6 @@ test.describe('SentencifyAI - Upload de PDFs', () => {
 
 test.describe('SentencifyAI - Validação de PDFs', () => {
 
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
-
   test('deve exibir feedback ao fazer upload', async ({ page }) => {
     await navigateToUploads(page);
 
@@ -116,10 +108,6 @@ test.describe('SentencifyAI - Validação de PDFs', () => {
 
 test.describe('SentencifyAI - Lista de Documentos', () => {
 
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
-
   test('deve exibir lista de documentos vazia inicialmente', async ({ page }) => {
     await navigateToUploads(page);
 
@@ -147,7 +135,6 @@ test.describe('SentencifyAI - Lista de Documentos', () => {
   });
 
   test('deve permitir navegação entre tipos de documento', async ({ page }) => {
-    await setupAuth(page);
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
@@ -164,10 +151,6 @@ test.describe('SentencifyAI - Lista de Documentos', () => {
 });
 
 test.describe('SentencifyAI - Processamento de PDFs', () => {
-
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
 
   test('deve exibir opções de processamento', async ({ page }) => {
     await navigateToUploads(page);

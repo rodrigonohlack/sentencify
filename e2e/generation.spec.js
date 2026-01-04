@@ -19,10 +19,6 @@ const navigateToTopics = async (page) => {
 
 test.describe('SentencifyAI - Aba de Tópicos', () => {
 
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
-
   test('deve exibir aba de tópicos', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
@@ -78,10 +74,6 @@ test.describe('SentencifyAI - Aba de Tópicos', () => {
 
 test.describe('SentencifyAI - Geração de Sentença', () => {
 
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
-
   test('deve validar campos antes de gerar', async ({ page }) => {
     await navigateToTopics(page);
 
@@ -128,10 +120,6 @@ test.describe('SentencifyAI - Geração de Sentença', () => {
 });
 
 test.describe('SentencifyAI - Editor Global', () => {
-
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
 
   test('deve ter botão para abrir editor global', async ({ page }) => {
     await navigateToTopics(page);
@@ -207,10 +195,6 @@ test.describe('SentencifyAI - Editor Global', () => {
 });
 
 test.describe('SentencifyAI - Micro-relatórios', () => {
-
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
 
   test('deve exibir opção de gerar micro-relatório', async ({ page }) => {
     await navigateToTopics(page);

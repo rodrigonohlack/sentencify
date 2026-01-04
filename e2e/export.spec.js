@@ -5,10 +5,6 @@ import { closeAnyModal } from './helpers.js';
 
 test.describe('SentencifyAI - Exportação', () => {
 
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
-
   test('deve ter botão de exportar', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
@@ -89,10 +85,6 @@ test.describe('SentencifyAI - Exportação', () => {
 });
 
 test.describe('SentencifyAI - Formatação da Minuta', () => {
-
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
 
   test('deve preservar estrutura da sentença', async ({ page }) => {
     await page.goto('/');

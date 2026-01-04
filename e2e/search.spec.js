@@ -33,10 +33,6 @@ const navigateToJurisprudencia = async (page) => {
 
 test.describe('SentencifyAI - Busca na Legislação', () => {
 
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
-
   test('deve exibir aba de legislação', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
@@ -127,10 +123,6 @@ test.describe('SentencifyAI - Busca na Legislação', () => {
 
 test.describe('SentencifyAI - Busca na Jurisprudência', () => {
 
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
-
   test('deve exibir aba de jurisprudência', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
@@ -209,10 +201,6 @@ test.describe('SentencifyAI - Busca na Jurisprudência', () => {
 });
 
 test.describe('SentencifyAI - Busca de Modelos', () => {
-
-  test.beforeEach(async ({ page }) => {
-    await setupAuth(page);
-  });
 
   test('deve exibir aba de modelos', async ({ page }) => {
     await page.goto('/');
