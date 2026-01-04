@@ -136,7 +136,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.26'; // v1.35.26: Prompts de IA movidos para src/prompts/
+const APP_VERSION = '1.35.27'; // v1.35.27: Testes usam AI_PROMPTS real (remove MOCK_PROMPTS)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
