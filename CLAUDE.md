@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.13 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.14 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -66,6 +66,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.14 | Labels explícitos para PDFs binários: antes de cada PDF, adiciona texto identificador ("PETIÇÃO INICIAL (documento PDF a seguir):") para IA saber qual documento é qual |
 | v1.35.13 | Rate limiting: proteção contra abuso (auth 10/15min, IA 30/min, geral 100/min) |
 | v1.35.12 | Sentry error tracking: captura erros em produção (frontend + backend), alertas por email, stack traces completos |
 | v1.35.11 | Sync fixes: (1) Pull-then-push order (reduz conflitos), (2) Retry limit para conflitos de versão (MAX_RETRIES=3), (3) Shared models filtrados por lastSyncAt (evita sobrescrita), (4) Validação de email no accept share (segurança) |

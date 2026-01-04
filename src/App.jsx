@@ -23353,8 +23353,12 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         });
       }
       // Depois: PDFs binários (modo pdf-puro ou fallback)
+      // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
       if (docs.peticoes?.length > 0) {
-        docs.peticoes.forEach((base64) => {
+        const textCount = docs.peticoesText?.length || 0;
+        docs.peticoes.forEach((base64, index) => {
+          const label = index === 0 && textCount === 0 ? 'PETIÇÃO INICIAL' : `PETIÇÃO ${textCount + index + 1}`;
+          contentArray.push({ type: 'text', text: `${label} (documento PDF a seguir):` });
           contentArray.push({
             type: 'document',
             source: { type: 'base64', media_type: 'application/pdf', data: base64 },
@@ -23378,9 +23382,11 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         });
       }
       // Depois: PDFs não extraídos (modo PDF Puro ou fallback)
+      // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
       if (docs.contestacoes?.length > 0) {
         const textCount = docs.contestacoesText?.length || 0;
         docs.contestacoes.forEach((base64, index) => {
+          contentArray.push({ type: 'text', text: `CONTESTAÇÃO ${textCount + index + 1} (documento PDF a seguir):` });
           contentArray.push({
             type: 'document',
             source: { type: 'base64', media_type: 'application/pdf', data: base64 },
@@ -23404,9 +23410,11 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         });
       }
       // Depois: PDFs não extraídos (modo PDF Puro ou fallback)
+      // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
       if (docs.complementares?.length > 0) {
         const textCount = docs.complementaresText?.length || 0;
         docs.complementares.forEach((base64, index) => {
+          contentArray.push({ type: 'text', text: `DOCUMENTO COMPLEMENTAR ${textCount + index + 1} (documento PDF a seguir):` });
           contentArray.push({
             type: 'document',
             source: { type: 'base64', media_type: 'application/pdf', data: base64 },
@@ -26088,6 +26096,8 @@ ${textToAnalyze}`;
           if (peticaoMode === 'pdf-puro') {
             const base64 = await storage.fileToBase64(fileObj);
             peticoesBase64.push(base64);
+            // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
+            contentArray.push({ type: 'text', text: `${label.toUpperCase()} (documento PDF a seguir):` });
             contentArray.push({
               type: 'document',
               source: { type: 'base64', media_type: 'application/pdf', data: base64 },
@@ -26134,6 +26144,8 @@ ${textToAnalyze}`;
                   console.warn(`[analyzeDocuments] Extração falhou em ${label}, usando PDF puro`);
                   const base64 = await storage.fileToBase64(fileObj);
                   peticoesBase64.push(base64);
+                  // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
+                  contentArray.push({ type: 'text', text: `${label.toUpperCase()} (documento PDF a seguir):` });
                   contentArray.push({
                     type: 'document',
                     source: { type: 'base64', media_type: 'application/pdf', data: base64 }
@@ -26146,6 +26158,8 @@ ${textToAnalyze}`;
               } else {
                 const base64 = await storage.fileToBase64(fileObj);
                 peticoesBase64.push(base64);
+                // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
+                contentArray.push({ type: 'text', text: `${label.toUpperCase()} (documento PDF a seguir):` });
                 contentArray.push({
                   type: 'document',
                   source: { type: 'base64', media_type: 'application/pdf', data: base64 }
@@ -26184,6 +26198,8 @@ ${textToAnalyze}`;
           if (mode === 'pdf-puro') {
             const base64 = await storage.fileToBase64(fileObj);
             contestacoesBase64.push(base64);
+            // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
+            contentArray.push({ type: 'text', text: `CONTESTAÇÃO ${i + 1} (documento PDF a seguir):` });
             contentArray.push({
               type: 'document',
               source: { type: 'base64', media_type: 'application/pdf', data: base64 }
@@ -26227,6 +26243,8 @@ ${textToAnalyze}`;
                   showToast(`⚠️ Texto insuficiente na contestação ${i + 1}. Usando documento original.`, 'warning');
                   const base64 = await storage.fileToBase64(fileObj);
                   contestacoesBase64.push(base64);
+                  // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
+                  contentArray.push({ type: 'text', text: `CONTESTAÇÃO ${i + 1} (documento PDF a seguir):` });
                   contentArray.push({
                     type: 'document',
                     source: { type: 'base64', media_type: 'application/pdf', data: base64 }
@@ -26239,6 +26257,8 @@ ${textToAnalyze}`;
               } else {
                 const base64 = await storage.fileToBase64(fileObj);
                 contestacoesBase64.push(base64);
+                // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
+                contentArray.push({ type: 'text', text: `CONTESTAÇÃO ${i + 1} (documento PDF a seguir):` });
                 contentArray.push({
                   type: 'document',
                   source: { type: 'base64', media_type: 'application/pdf', data: base64 }
@@ -26276,6 +26296,8 @@ ${textToAnalyze}`;
           if (mode === 'pdf-puro') {
             const base64 = await storage.fileToBase64(fileObj);
             complementaryBase64.push(base64);
+            // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
+            contentArray.push({ type: 'text', text: `DOCUMENTO COMPLEMENTAR ${i + 1} (documento PDF a seguir):` });
             contentArray.push({
               type: 'document',
               source: { type: 'base64', media_type: 'application/pdf', data: base64 }
@@ -26319,6 +26341,8 @@ ${textToAnalyze}`;
                   showToast(`⚠️ Texto insuficiente no documento complementar ${i + 1}. Usando original.`, 'warning');
                   const base64 = await storage.fileToBase64(fileObj);
                   complementaryBase64.push(base64);
+                  // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
+                  contentArray.push({ type: 'text', text: `DOCUMENTO COMPLEMENTAR ${i + 1} (documento PDF a seguir):` });
                   contentArray.push({
                     type: 'document',
                     source: { type: 'base64', media_type: 'application/pdf', data: base64 }
@@ -26331,6 +26355,8 @@ ${textToAnalyze}`;
               } else {
                 const base64 = await storage.fileToBase64(fileObj);
                 complementaryBase64.push(base64);
+                // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
+                contentArray.push({ type: 'text', text: `DOCUMENTO COMPLEMENTAR ${i + 1} (documento PDF a seguir):` });
                 contentArray.push({
                   type: 'document',
                   source: { type: 'base64', media_type: 'application/pdf', data: base64 }
