@@ -1,65 +1,11 @@
 /**
  * Testes de regressão de prompts via snapshot
  * Garante que mudanças nos prompts são intencionais
- * v1.33.39
+ * v1.35.27: Corrigido para usar AI_PROMPTS real (não mais mocks)
  */
 import { describe, it, expect } from 'vitest';
 import { buildReorderPrompt } from '../utils/topicOrdering';
-
-// Mock dos prompts que seriam extraídos de AI_PROMPTS
-// Em produção, estes seriam importados do módulo de prompts
-const MOCK_PROMPTS = {
-  estiloRedacao: `Use linguagem jurídica formal, objetiva e precisa.
-Evite repetições e redundâncias.
-Seja direto e conciso, sem perder a clareza.
-Utilize voz ativa sempre que possível.
-Mantenha coerência terminológica ao longo do texto.`,
-
-  formatacaoHTML: (exemplo) => `Formate a resposta em HTML válido.
-Use tags <p> para parágrafos, <strong> para negrito, <em> para itálico.
-Use <ul>/<ol> e <li> para listas.
-Exemplo: ${exemplo}`,
-
-  formatacaoParagrafos: (exemplo) => `Cada parágrafo deve estar em uma tag <p> separada.
-Não use <br> para separar parágrafos.
-Exemplo: ${exemplo}`,
-
-  numeracaoReclamadas: `Se houver mais de uma reclamada:
-- Use "primeira ré", "segunda ré", etc.
-- Na fundamentação, identifique claramente a qual ré se refere cada obrigação.`,
-
-  preservarAnonimizacao: `IMPORTANTE: O texto pode conter placeholders de anonimização como [RECLAMANTE], [RECLAMADA], [VALOR], etc.
-PRESERVE estes placeholders exatamente como aparecem.
-NÃO substitua por nomes reais ou valores fictícios.`,
-
-  revisaoSentenca: (incluiDocumentos) => `Você é um revisor jurídico especializado em sentenças trabalhistas.
-Sua tarefa é identificar:
-1. Omissões - pedidos ou teses não apreciados
-2. Contradições - entre fundamentação e dispositivo
-3. Obscuridades - trechos confusos ou ambíguos
-4. Erros formais - citações incorretas, inconsistências numéricas
-${incluiDocumentos ? 'Você tem acesso à petição inicial e contestação para verificar omissões.' : ''}`,
-
-  gerarRelatorio: `Gere o RELATÓRIO da sentença trabalhista.
-Estrutura:
-1. Identificação das partes (reclamante e reclamada(s))
-2. Síntese dos pedidos da petição inicial
-3. Resumo da defesa (se houver)
-4. Tramitação processual relevante
-
-Seja objetivo e conciso. Use voz passiva quando apropriado.`,
-
-  gerarDispositivo: `Gere o DISPOSITIVO da sentença trabalhista.
-Estrutura:
-1. Frase inicial (Ante o exposto / Diante do exposto)
-2. Decisão sobre cada pedido (procedente/improcedente)
-3. Condenações específicas com valores/critérios
-4. Justiça gratuita
-5. Honorários advocatícios
-6. Custas processuais
-
-Use verbos no JULGO, CONDENO, DEFIRO, INDEFIRO.`
-};
+import { AI_PROMPTS } from './ai-prompts.js';
 
 describe('Prompts - Snapshot Tests', () => {
   describe('Prompt de Ordenação (reorderTopicsViaLLM)', () => {
@@ -104,100 +50,90 @@ describe('Prompts - Snapshot Tests', () => {
 
   describe('Prompts de Estilo e Formatação', () => {
     it('snapshot: estiloRedacao', () => {
-      expect(MOCK_PROMPTS.estiloRedacao).toMatchSnapshot();
+      expect(AI_PROMPTS.estiloRedacao).toMatchSnapshot();
     });
 
     it('snapshot: formatacaoHTML', () => {
-      const prompt = MOCK_PROMPTS.formatacaoHTML('Exemplo de <strong>texto</strong>');
+      const prompt = AI_PROMPTS.formatacaoHTML('Exemplo de <strong>texto</strong>');
       expect(prompt).toMatchSnapshot();
     });
 
     it('snapshot: formatacaoParagrafos', () => {
-      const prompt = MOCK_PROMPTS.formatacaoParagrafos('<p>Parágrafo 1</p><p>Parágrafo 2</p>');
+      const prompt = AI_PROMPTS.formatacaoParagrafos('<p>Parágrafo 1</p><p>Parágrafo 2</p>');
       expect(prompt).toMatchSnapshot();
     });
 
     it('snapshot: numeracaoReclamadas', () => {
-      expect(MOCK_PROMPTS.numeracaoReclamadas).toMatchSnapshot();
+      expect(AI_PROMPTS.numeracaoReclamadas).toMatchSnapshot();
     });
 
     it('snapshot: preservarAnonimizacao', () => {
-      expect(MOCK_PROMPTS.preservarAnonimizacao).toMatchSnapshot();
+      expect(AI_PROMPTS.preservarAnonimizacao).toMatchSnapshot();
     });
   });
 
   describe('Prompts de Geração', () => {
     it('snapshot: revisaoSentenca sem documentos', () => {
-      const prompt = MOCK_PROMPTS.revisaoSentenca(false);
+      const prompt = AI_PROMPTS.revisaoSentenca(false);
       expect(prompt).toMatchSnapshot();
     });
 
     it('snapshot: revisaoSentenca com documentos', () => {
-      const prompt = MOCK_PROMPTS.revisaoSentenca(true);
+      const prompt = AI_PROMPTS.revisaoSentenca(true);
       expect(prompt).toMatchSnapshot();
     });
 
-    it('snapshot: gerarRelatorio', () => {
-      expect(MOCK_PROMPTS.gerarRelatorio).toMatchSnapshot();
+    it('snapshot: instrucoesRelatorioPadrao', () => {
+      expect(AI_PROMPTS.instrucoesRelatorioPadrao).toMatchSnapshot();
     });
 
-    it('snapshot: gerarDispositivo', () => {
-      expect(MOCK_PROMPTS.gerarDispositivo).toMatchSnapshot();
+    it('snapshot: instrucoesDispositivoPadrao', () => {
+      expect(AI_PROMPTS.instrucoesDispositivoPadrao).toMatchSnapshot();
     });
   });
 
   describe('Consistência de Instruções', () => {
-    it('estiloRedacao deve conter instruções de clareza', () => {
-      const prompt = MOCK_PROMPTS.estiloRedacao;
-      expect(prompt).toContain('objetiva');
-      expect(prompt).toContain('precisa');
-      expect(prompt).toContain('conciso');
+    it('estiloRedacao deve conter instruções de qualidade', () => {
+      const prompt = AI_PROMPTS.estiloRedacao;
+      expect(prompt).toContain('ESTILO DE REDAÇÃO');
+      expect(prompt).toContain('QUALIDADE');
     });
 
     it('formatacaoHTML deve mencionar tags válidas', () => {
-      const prompt = MOCK_PROMPTS.formatacaoHTML('exemplo');
+      const prompt = AI_PROMPTS.formatacaoHTML('exemplo');
       expect(prompt).toContain('<p>');
       expect(prompt).toContain('<strong>');
-      expect(prompt).toContain('<em>');
     });
 
-    it('preservarAnonimizacao deve listar placeholders comuns', () => {
-      const prompt = MOCK_PROMPTS.preservarAnonimizacao;
-      expect(prompt).toContain('[RECLAMANTE]');
-      expect(prompt).toContain('[RECLAMADA]');
-      expect(prompt).toContain('[VALOR]');
+    it('preservarAnonimizacao deve mencionar placeholders', () => {
+      const prompt = AI_PROMPTS.preservarAnonimizacao;
+      expect(prompt).toContain('ANONIMIZAÇÃO');
+      expect(prompt).toContain('placeholder');
     });
 
-    it('numeracaoReclamadas deve usar terminologia feminina', () => {
-      const prompt = MOCK_PROMPTS.numeracaoReclamadas;
-      expect(prompt).toContain('primeira ré');
-      expect(prompt).toContain('segunda ré');
+    it('numeracaoReclamadas deve usar terminologia correta', () => {
+      const prompt = AI_PROMPTS.numeracaoReclamadas;
+      expect(prompt).toContain('RECLAMADAS');
+      expect(prompt).toContain('primeira');
     });
 
-    it('gerarRelatorio deve ter estrutura de 4 partes', () => {
-      const prompt = MOCK_PROMPTS.gerarRelatorio;
-      expect(prompt).toContain('1.');
-      expect(prompt).toContain('2.');
-      expect(prompt).toContain('3.');
-      expect(prompt).toContain('4.');
+    it('instrucoesRelatorioPadrao deve ter estrutura de relatório', () => {
+      const prompt = AI_PROMPTS.instrucoesRelatorioPadrao;
+      expect(prompt).toContain('RELATÓRIO');
+      expect(prompt).toContain('sentença');
     });
 
-    it('gerarDispositivo deve ter estrutura de 6 partes', () => {
-      const prompt = MOCK_PROMPTS.gerarDispositivo;
-      expect(prompt).toContain('1.');
-      expect(prompt).toContain('2.');
-      expect(prompt).toContain('3.');
-      expect(prompt).toContain('4.');
-      expect(prompt).toContain('5.');
-      expect(prompt).toContain('6.');
+    it('instrucoesDispositivoPadrao deve ter estrutura de dispositivo', () => {
+      const prompt = AI_PROMPTS.instrucoesDispositivoPadrao;
+      expect(prompt).toContain('DISPOSITIVO');
+      expect(prompt).toContain('sentença');
     });
 
-    it('revisaoSentenca deve listar 4 tipos de problemas', () => {
-      const prompt = MOCK_PROMPTS.revisaoSentenca(true);
-      expect(prompt).toContain('Omissões');
-      expect(prompt).toContain('Contradições');
-      expect(prompt).toContain('Obscuridades');
-      expect(prompt).toContain('Erros formais');
+    it('revisaoSentenca deve listar tipos de problemas', () => {
+      const prompt = AI_PROMPTS.revisaoSentenca(true);
+      expect(prompt).toContain('OMISSÃO');
+      expect(prompt).toContain('CONTRADIÇÃO');
+      expect(prompt).toContain('OBSCURIDADE');
     });
   });
 
