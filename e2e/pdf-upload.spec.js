@@ -1,6 +1,7 @@
 // Testes E2E de Upload de PDFs - SentencifyAI v1.33.63
-import { test, expect } from '@playwright/test';
-import { setupAuth, closeAnyModal, navigateToTab } from './helpers.js';
+// v1.35.15: Usar fixture com autenticação automática
+import { test, expect } from './fixtures.js';
+import { closeAnyModal, navigateToTab } from './helpers.js';
 
 // Helper para navegar até área de uploads (pode estar na aba principal)
 const navigateToUploads = async (page) => {

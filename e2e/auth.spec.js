@@ -1,5 +1,6 @@
 // Testes E2E de Autenticação - SentencifyAI v1.33.63
-import { test, expect } from '@playwright/test';
+// v1.35.15: Usar fixture com autenticação automática
+import { test, expect } from './fixtures.js';
 import { closeAnyModal } from './helpers.js';
 
 const AUTH_STORAGE_KEY = 'sentencify-auth';

@@ -1,6 +1,7 @@
 // Testes E2E de Exportação - SentencifyAI v1.33.63
-import { test, expect } from '@playwright/test';
-import { setupAuth, closeAnyModal } from './helpers.js';
+// v1.35.15: Usar fixture com autenticação automática
+import { test, expect } from './fixtures.js';
+import { closeAnyModal } from './helpers.js';
 
 test.describe('SentencifyAI - Exportação', () => {
 

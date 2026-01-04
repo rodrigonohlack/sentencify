@@ -3,9 +3,18 @@
 
 /**
  * Configura autenticação no localStorage
+ * v1.35.15: Atualizado para Magic Link auth
  */
 export const setupAuth = async (page) => {
   await page.addInitScript(() => {
+    // Magic Link auth (v1.34.0+)
+    localStorage.setItem('sentencify-auth-token', 'test-token-for-e2e');
+    localStorage.setItem('sentencify-user', JSON.stringify({
+      id: 'test-user-e2e',
+      email: 'test@e2e.local',
+      name: 'Test User E2E'
+    }));
+    // Compatibilidade com auth antiga
     localStorage.setItem('sentencify-auth', 'true');
     // Marcar que já viu o prompt de download para não aparecer
     localStorage.setItem('dismissedDownloadPrompt', 'true');
