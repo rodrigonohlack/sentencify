@@ -19475,7 +19475,7 @@ Se NÃO encontrar vulnerabilidades significativas, atribua nota A e informe com 
 
 // 📦 COMPONENTE PRINCIPAL: LegalDecisionEditor
 // v1.34.1: Adicionado props receivedModels e clearReceivedModels para merge de sync
-const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, clearReceivedModels }) => {
+const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeSharedLibraries, clearReceivedModels }) => {
 
   // 🎣 CUSTOM HOOKS
   const { modals, openModal, closeModal, closeAllModals, isAnyModalOpen, textPreview, setTextPreview } = useModalManager();
@@ -34997,6 +34997,7 @@ const SentencifyAI = () => {
         onLogout={cloudSync.logout}
         cloudSync={cloudSync}
         receivedModels={receivedModels}
+        activeSharedLibraries={activeSharedLibraries}
         clearReceivedModels={clearReceivedModels}
       />
     </ErrorBoundary>
