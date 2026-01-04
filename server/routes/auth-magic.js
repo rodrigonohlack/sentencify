@@ -22,6 +22,9 @@ router.post('/request-link', async (req, res) => {
   try {
     const { email } = req.body;
 
+    // v1.35.18: Log para diagnóstico de rate limiting
+    console.log(`[Auth] Magic link request - IP: ${req.ip}, Email: ${email || '(vazio)'}, UA: ${req.get('User-Agent')?.substring(0, 60) || '(sem UA)'}`);
+
     if (!email || !email.includes('@')) {
       return res.status(400).json({ error: 'Email inválido' });
     }
