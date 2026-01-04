@@ -6,8 +6,8 @@ import { Resend } from 'resend';
 class EmailService {
   constructor() {
     this.resend = null;
-    // Resend permite enviar de onboarding@resend.dev sem verificação de domínio
-    this.fromEmail = 'SentencifyAI <onboarding@resend.dev>';
+    // v1.35.16: Usar domínio verificado sentencify.ia.br
+    this.fromEmail = 'SentencifyAI <noreply@sentencify.ia.br>';
   }
 
   init() {
