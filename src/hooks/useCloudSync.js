@@ -459,6 +459,42 @@ export function useCloudSync({ onModelsReceived } = {}) {
     });
   }, [user]);
 
+  // v1.35.23: Batch tracking para importação em lote (evita múltiplos localStorage.setItem)
+  const trackChangeBatch = useCallback((changes) => {
+    if (!user || !changes?.length) return;
+
+    setPendingChanges(prev => {
+      let result = [...prev];
+
+      for (const { operation, model } of changes) {
+        // Remover existente com mesmo id
+        result = result.filter(c => c.model.id !== model.id);
+
+        // Se era create e agora é update, manter create
+        const existingCreate = prev.find(c => c.model.id === model.id && c.operation === 'create');
+        if (existingCreate && operation === 'update') {
+          result.push({ operation: 'create', model });
+          continue;
+        }
+
+        // Se é delete de algo que nunca foi synced, só remover (já filtrado acima)
+        if (operation === 'delete' && existingCreate) {
+          continue;
+        }
+
+        // Para delete, salvar apenas id e updatedAt
+        const modelToStore = operation === 'delete'
+          ? { id: model.id, updatedAt: model.updatedAt }
+          : model;
+
+        result.push({ operation, model: modelToStore });
+      }
+
+      console.log(`[CloudSync] Batch tracked: ${changes.length} changes`);
+      return result;
+    });
+  }, [user]);
+
   // Auto-sync a cada 30s
   useEffect(() => {
     if (!user) return;
@@ -549,12 +585,13 @@ export function useCloudSync({ onModelsReceived } = {}) {
     pull,
     push,
     trackChange,
+    trackChangeBatch, // v1.35.23: Batch tracking para importações
     pushAllModels,
   }), [
     user, authLoading, authError, devLink,
     requestMagicLink, verifyToken, logout,
     syncStatus, lastSyncAt, pendingChanges.length, syncError,
-    sync, pull, push, trackChange, pushAllModels
+    sync, pull, push, trackChange, trackChangeBatch, pushAllModels
   ]);
 }
 

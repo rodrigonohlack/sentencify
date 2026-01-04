@@ -134,7 +134,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.22'; // v1.35.22: Fix duplicar compartilhado + conflitos de sync
+const APP_VERSION = '1.35.23'; // v1.35.23: B8 remover share limpa modelos + A7a batch import eficiente
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -11908,7 +11908,8 @@ const LogoutConfirmModal = React.memo(({ isOpen, onClose, onConfirm }) => (
 LogoutConfirmModal.displayName = 'LogoutConfirmModal';
 
 // v1.35.1: Modal para compartilhar biblioteca de modelos (convite por email)
-const ShareLibraryModal = React.memo(({ isOpen, onClose, user }) => {
+// v1.35.23: Adicionado onRemoveSharedModels para limpar modelos ao remover acesso
+const ShareLibraryModal = React.memo(({ isOpen, onClose, user, onRemoveSharedModels }) => {
   const [permission, setPermission] = React.useState('view');
   const [loading, setLoading] = React.useState(false);
   const [recipientEmail, setRecipientEmail] = React.useState('');
@@ -12009,6 +12010,10 @@ const ShareLibraryModal = React.memo(({ isOpen, onClose, user }) => {
 
   const handleRemoveAccess = async (accessId) => {
     try {
+      // v1.35.23: Encontrar ownerId antes de remover
+      const accessToRemove = sharedWithMe.find(s => s.accessId === accessId);
+      const ownerIdToRemove = accessToRemove?.ownerId;
+
       const token = localStorage.getItem('sentencify-auth-token');
       const res = await fetch(`${API_BASE}/api/share/library/access/${accessId}`, {
         method: 'DELETE',
@@ -12016,6 +12021,11 @@ const ShareLibraryModal = React.memo(({ isOpen, onClose, user }) => {
       });
       if (res.ok) {
         setSharedWithMe(prev => prev.filter(s => s.accessId !== accessId));
+
+        // v1.35.23: Remover modelos compartilhados desse owner da biblioteca
+        if (ownerIdToRemove && onRemoveSharedModels) {
+          onRemoveSharedModels(ownerIdToRemove);
+        }
       }
     } catch (err) {
       console.error('[Share] Remove access error:', err);
@@ -23342,9 +23352,9 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 
       if (newModels.length > 0) {
         modelLibrary.setModels(prev => [...prev, ...newModels]);
-        // v1.34.0: Rastrear cada modelo importado para sync
-        if (cloudSync?.trackChange) {
-          newModels.forEach(model => cloudSync.trackChange('create', model));
+        // v1.35.23: Usar trackChangeBatch para importação eficiente (não 100 chamadas individuais)
+        if (cloudSync?.trackChangeBatch) {
+          cloudSync.trackChangeBatch(newModels.map(model => ({ operation: 'create', model })));
         }
         modelLibrary.setHasUnsavedChanges(true);
       }
@@ -25390,16 +25400,18 @@ ${decisionText}`;
         }
 
         let updatedModels = [...modelLibrary.models];
+        const batchChanges = [];
         for (const { oldId, newModel } of replacements) {
           const replacedModel = { ...newModel, id: oldId, updatedAt: new Date().toISOString() };
           updatedModels = updatedModels.map(m => m.id === oldId ? replacedModel : m);
-          // v1.34.0: Rastrear update para sync
-          if (cloudSync?.trackChange) cloudSync.trackChange('update', replacedModel);
+          // v1.35.23: Acumular para batch
+          batchChanges.push({ operation: 'update', model: replacedModel });
         }
         modelLibrary.setModels([...updatedModels, ...saved]);
-        // v1.34.0: Rastrear creates para sync
-        if (cloudSync?.trackChange) {
-          saved.forEach(model => cloudSync.trackChange('create', model));
+        // v1.35.23: Usar trackChangeBatch para bulk upload eficiente
+        saved.forEach(model => batchChanges.push({ operation: 'create', model }));
+        if (cloudSync?.trackChangeBatch && batchChanges.length > 0) {
+          cloudSync.trackChangeBatch(batchChanges);
         }
         modelLibrary.setHasUnsavedChanges(true);
         TFIDFSimilarity.invalidate();
@@ -32830,6 +32842,15 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         isOpen={modals.shareLibrary}
         onClose={() => closeModal('shareLibrary')}
         user={cloudSync?.user}
+        onRemoveSharedModels={(ownerId) => {
+          // v1.35.23: Remover modelos compartilhados desse owner ao remover acesso
+          modelLibrary.setModels(prev => {
+            const filtered = prev.filter(m => !(m.isShared && m.ownerId === ownerId));
+            console.log(`[Share] Removidos ${prev.length - filtered.length} modelos do owner ${ownerId}`);
+            saveToIndexedDB(filtered);
+            return filtered;
+          });
+        }}
       />
 
       {/* Modal de Nomes para Anonimização - v1.17.0 (v1.25: + NER) */}
