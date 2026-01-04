@@ -134,7 +134,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.21'; // v1.35.21: Fix modelos compartilhados sumiam após sync incremental
+const APP_VERSION = '1.35.22'; // v1.35.22: Fix duplicar compartilhado + conflitos de sync
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -149,6 +149,7 @@ const API_BASE = getApiBase();
 
 // v1.32.24: Changelog para modal
 const CHANGELOG = [
+  { version: '1.35.22', feature: 'Fix duplicar modelo compartilhado (agora cria cópia própria) + tratamento de conflitos de sync (pull após conflito, model_deleted, no_permission)' },
   { version: '1.35.21', feature: 'Fix modelos compartilhados sumiam após sync incremental: preservar locais quando servidor não retorna compartilhados' },
   { version: '1.35.20', feature: 'Fix progresso de download: usa tamanhos estimados como fallback quando Content-Length não disponível (streaming proxy)' },
   { version: '1.35.19', feature: 'Fix modelos compartilhados não apareciam após aceitar: comparar accepted_at com lastSyncAt para detectar shares recém-aceitos' },
@@ -24882,7 +24883,12 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
         title: `${model.title} (Cópia)`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        embedding: undefined // Limpar para regenerar com novo título
+        embedding: undefined, // Limpar para regenerar com novo título
+        // v1.35.22: Cópia é modelo próprio, não compartilhado
+        isShared: false,
+        ownerId: undefined,
+        ownerEmail: undefined,
+        sharedPermission: undefined,
       };
 
       // v1.27.02: Gerar novo embedding se IA local estiver ativa

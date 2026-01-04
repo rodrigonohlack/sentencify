@@ -245,7 +245,8 @@ router.post('/push', (req, res) => {
     `);
 
     // v1.35.1: Buscar modelo existente para verificar propriedade
-    const getModelStmt = db.prepare(`SELECT user_id, sync_version FROM models WHERE id = ?`);
+    // v1.35.22: Incluir deleted_at para rejeitar update em modelo deletado
+    const getModelStmt = db.prepare(`SELECT user_id, sync_version, deleted_at FROM models WHERE id = ?`);
 
     // Processar cada mudança em uma transaction
     const processChanges = db.transaction(() => {
@@ -263,6 +264,12 @@ router.post('/push', (req, res) => {
         if (operation === 'update' || operation === 'delete') {
           const existingModel = getModelStmt.get(model.id);
           if (existingModel) {
+            // v1.35.22: Rejeitar update em modelo já deletado (evita loop de retry)
+            if (operation === 'update' && existingModel.deleted_at) {
+              results.conflicts.push({ id: model.id, reason: 'model_deleted' });
+              continue;
+            }
+
             if (existingModel.user_id === userId) {
               effectiveOwnerId = userId;
             } else if (editableOwners.includes(existingModel.user_id)) {

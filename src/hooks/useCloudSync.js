@@ -335,10 +335,17 @@ export function useCloudSync({ onModelsReceived } = {}) {
         ...data.results.deleted
       ]);
 
-      // Conflitos de versão permanecem para retry após próximo pull
-      const conflictIds = new Set(
+      // v1.35.22: Separar tipos de conflito
+      // - version_mismatch: retry após pull (modelo atualizado no servidor)
+      // - model_deleted/no_permission: remover imediatamente (sem retry)
+      const versionConflictIds = new Set(
         (data.results.conflicts || [])
           .filter(c => c.reason === 'version_mismatch')
+          .map(c => c.id)
+      );
+      const fatalConflictIds = new Set(
+        (data.results.conflicts || [])
+          .filter(c => c.reason === 'model_deleted' || c.reason === 'no_permission')
           .map(c => c.id)
       );
 
@@ -352,14 +359,21 @@ export function useCloudSync({ onModelsReceived } = {}) {
             return null;
           }
 
-          // Conflito: incrementar retry count
-          if (conflictIds.has(id)) {
+          // v1.35.22: Conflitos fatais (modelo deletado ou sem permissão): remover imediatamente
+          if (fatalConflictIds.has(id)) {
+            const conflict = data.results.conflicts.find(c => c.id === id);
+            console.warn(`[CloudSync] Removendo ${id} do pending: ${conflict?.reason}`);
+            return null;
+          }
+
+          // Conflito de versão: incrementar retry count
+          if (versionConflictIds.has(id)) {
             const retryCount = (change.retryCount || 0) + 1;
             if (retryCount >= MAX_RETRIES) {
               console.warn(`[CloudSync] Abandonando modelo ${id} após ${MAX_RETRIES} tentativas`);
               return null; // Desistir após MAX_RETRIES
             }
-            console.log(`[CloudSync] Conflito em ${id}, tentativa ${retryCount}/${MAX_RETRIES}`);
+            console.log(`[CloudSync] Conflito de versão em ${id}, tentativa ${retryCount}/${MAX_RETRIES}`);
             return { ...change, retryCount };
           }
 
@@ -371,6 +385,16 @@ export function useCloudSync({ onModelsReceived } = {}) {
       // Log de conflitos para diagnóstico
       if (data.results.conflicts?.length > 0) {
         console.warn(`[CloudSync] ${data.results.conflicts.length} conflitos:`, data.results.conflicts);
+
+        // v1.35.22: Se houve conflito de versão, fazer pull para obter versões atualizadas
+        // Isso evita loop infinito de retry com syncVersion obsoleta
+        const hasVersionConflict = data.results.conflicts.some(c => c.reason === 'version_mismatch');
+        if (hasVersionConflict) {
+          console.log('[CloudSync] Conflitos de versão detectados - fazendo pull para atualizar');
+          // Pull assíncrono para não bloquear retorno do push
+          // Os modelos serão atualizados e o próximo sync terá versões corretas
+          setTimeout(() => pull(), 100);
+        }
       }
 
       setLastSyncAt(data.serverTime);
