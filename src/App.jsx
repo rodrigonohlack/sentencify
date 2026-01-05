@@ -30223,7 +30223,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         initialTopics={pendingCurationData?.topics || []}
         model={aiIntegration.aiSettings?.model || 'claude-sonnet-4-20250514'}
         parallelRequests={aiIntegration.aiSettings?.parallelRequests || 5}
-        isDarkMode={theme === 'dark'}
+        isDarkMode={appTheme === 'dark'}
       />
 
       {modals.settings && (
