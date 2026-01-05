@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.54'; // v1.35.54: Foto do perfil Google no status de conexão
+const APP_VERSION = '1.35.55'; // v1.35.55: Bloco de sync (indicador + email + Sair) movido para aba Modelos
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -27954,46 +27954,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     isDarkMode={appTheme === 'dark'}
                   />
                 </div>
-                {/* 🔄 v1.34.0: Linha de sync/usuário/logout */}
-                {cloudSync?.isAuthenticated && (
-                  <div className="mt-2 flex gap-2 justify-end items-center">
-                    <SyncStatusIndicator
-                      status={cloudSync.syncStatus}
-                      pendingCount={cloudSync.pendingCount}
-                      lastSyncAt={cloudSync.lastSyncAt}
-                      onSync={() => {
-                        // Verificar se o push inicial já foi feito
-                        const initialPushDone = localStorage.getItem('sentencify-initial-push-done');
-                        if (!initialPushDone && modelLibrary.models.length > 0) {
-                          // Primeira vez: enviar todos os modelos locais
-                          cloudSync.pushAllModels(modelLibrary.models).then(result => {
-                            if (result.success) {
-                              localStorage.setItem('sentencify-initial-push-done', 'true');
-                            }
-                          });
-                        } else {
-                          // Já fez push inicial: sync normal
-                          cloudSync.sync();
-                        }
-                      }}
-                    />
-                    {cloudSync.user?.email && (
-                      <span className="text-slate-400 text-xs" title={cloudSync.user.email}>
-                        {cloudSync.user.email.length > 25 ? cloudSync.user.email.slice(0, 22) + '...' : cloudSync.user.email}
-                      </span>
-                    )}
-                    {onLogout && (
-                      <button
-                        onClick={() => openModal('logout')}
-                        className="px-3 py-1 rounded text-xs flex items-center gap-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 transition-colors duration-200"
-                        title="Sair do sistema"
-                      >
-                        <LogOut className="w-3 h-3" />
-                        Sair
-                      </button>
-                    )}
-                  </div>
-                )}
+                {/* 🔄 v1.35.55: Bloco de sync movido para aba Modelos */}
               </div>
             </div>
             
@@ -29443,7 +29404,46 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                 )}
 
                 <div className="flex items-center justify-between flex-wrap gap-4">
-                  <h3 className="text-xl font-bold text-purple-400">Banco de Modelos</h3>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h3 className="text-xl font-bold text-purple-400">Banco de Modelos</h3>
+                    {/* 🔄 v1.35.55: Bloco de sync movido do header */}
+                    {cloudSync?.isAuthenticated && (
+                      <div className="flex items-center gap-2">
+                        <SyncStatusIndicator
+                          status={cloudSync.syncStatus}
+                          pendingCount={cloudSync.pendingCount}
+                          lastSyncAt={cloudSync.lastSyncAt}
+                          onSync={() => {
+                            const initialPushDone = localStorage.getItem('sentencify-initial-push-done');
+                            if (!initialPushDone && modelLibrary.models.length > 0) {
+                              cloudSync.pushAllModels(modelLibrary.models).then(result => {
+                                if (result.success) {
+                                  localStorage.setItem('sentencify-initial-push-done', 'true');
+                                }
+                              });
+                            } else {
+                              cloudSync.sync();
+                            }
+                          }}
+                        />
+                        {cloudSync.user?.email && (
+                          <span className="text-slate-400 text-xs" title={cloudSync.user.email}>
+                            {cloudSync.user.email.length > 25 ? cloudSync.user.email.slice(0, 22) + '...' : cloudSync.user.email}
+                          </span>
+                        )}
+                        {onLogout && (
+                          <button
+                            onClick={() => openModal('logout')}
+                            className="px-3 py-1 rounded text-xs flex items-center gap-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 transition-colors duration-200"
+                            title="Sair do sistema"
+                          >
+                            <LogOut className="w-3 h-3" />
+                            Sair
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <div className="flex gap-2 flex-wrap">
                     <button
                       onClick={() => openModal('bulkModal')}
