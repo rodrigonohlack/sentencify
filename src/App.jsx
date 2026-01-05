@@ -25941,7 +25941,6 @@ Extraia e classifique todos os tópicos/pedidos em:
     try {
       setShowTopicCurationModal(false);
       setAnalyzing(true);
-      setAnalyzing(true);
       openModal('analysis');
 
       const { relatorioContentArray, documents, partes } = pendingCurationData;
@@ -26088,7 +26087,6 @@ Extraia e classifique todos os tópicos/pedidos em:
       setError('Erro ao processar tópicos: ' + err.message);
       closeModal('analysis');
     } finally {
-      setAnalyzing(false);
       setAnalyzing(false);
     }
   };
