@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.51', feature: 'UI consolidada: botões Salvar/Carregar Projeto movidos para dropdown "Projeto" (seções Google Drive + Local em um único lugar)' },
   { version: '1.35.50', feature: 'Google Drive migrado para TypeScript: useGoogleDrive.ts e GoogleDriveButton.tsx com interfaces tipadas (convenção de novos arquivos)' },
   { version: '1.35.49', feature: 'UX Polish: remover opção de permissão no compartilhamento Drive (sempre cópia), texto "Modelos sincronizados" mais claro, fix contraste tags categoria no tema claro' },
   { version: '1.35.48', feature: 'Google Drive: fix compartilhamento - arquivos compartilhados agora aparecem (sharedWithMe), botão para remover acesso no modal de permissões' },

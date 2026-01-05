@@ -1,12 +1,12 @@
 /**
- * Botão de integração com Google Drive
- * Dropdown com opções: Conectar, Salvar, Carregar, Desconectar
+ * Botão de integração com Google Drive + Salvar/Carregar Local
+ * Dropdown unificado para gerenciamento de projetos (nuvem e local)
  *
- * @version 1.35.50 - Migrado para TypeScript
+ * @version 1.35.51 - Consolidação dos botões Salvar/Carregar
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Cloud, CloudOff, Upload, Download, LogOut, Loader2, ChevronDown, Trash2, RefreshCw, Share2, X, Users } from 'lucide-react';
+import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
+import { Cloud, CloudOff, Upload, Download, LogOut, Loader2, ChevronDown, Trash2, RefreshCw, Share2, X, Users, FileDown, FileUp, FolderOpen } from 'lucide-react';
 import { GoogleDriveFile, GoogleDrivePermission } from '../hooks/useGoogleDrive';
 
 // ============================================================================
@@ -21,6 +21,9 @@ interface GoogleDriveButtonProps {
   onDisconnect: () => void;
   onSave: () => void;
   onLoadClick: () => void;
+  // v1.35.51: Props para salvar/carregar local
+  onSaveLocal: () => void;
+  onLoadLocal: (e: ChangeEvent<HTMLInputElement>) => void;
   isDarkMode: boolean;
 }
 
@@ -51,10 +54,13 @@ export function GoogleDriveButton({
   onDisconnect,
   onSave,
   onLoadClick,
+  onSaveLocal,
+  onLoadLocal,
   isDarkMode
 }: GoogleDriveButtonProps): React.ReactElement {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -100,7 +106,7 @@ export function GoogleDriveButton({
         ) : (
           <CloudOff className="w-4 h-4 text-slate-400" />
         )}
-        <span className="hidden sm:inline">Drive</span>
+        <span className="hidden sm:inline">Projeto</span>
         <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -179,9 +185,52 @@ export function GoogleDriveButton({
                 </button>
               </>
             )}
+
+            {/* v1.35.51: Seção Local */}
+            <div className={`border-t mt-1 pt-1 ${isDarkMode ? 'border-slate-600' : 'border-slate-200'}`}>
+              <div className={`px-3 py-1 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                <FolderOpen className="w-3 h-3 inline mr-1" />
+                Local
+              </div>
+              <button
+                onClick={() => {
+                  onSaveLocal();
+                  setIsOpen(false);
+                }}
+                className={itemClass}
+              >
+                <FileDown className="w-4 h-4 text-green-500" />
+                <span>Salvar Arquivo</span>
+              </button>
+              <button
+                onClick={() => {
+                  fileInputRef.current?.click();
+                }}
+                className={itemClass}
+              >
+                <FileUp className="w-4 h-4 text-blue-500" />
+                <span>Carregar Arquivo</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
+
+      {/* v1.35.51: Input hidden para carregar arquivo local */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={(e) => {
+          onLoadLocal(e);
+          setIsOpen(false);
+          // Limpar o input para permitir carregar o mesmo arquivo novamente
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }}
+        className="hidden"
+      />
     </div>
   );
 }

@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.50'; // v1.35.50: Google Drive migrado para TypeScript (convenção de novos arquivos)
+const APP_VERSION = '1.35.51'; // v1.35.51: UI consolidada - Salvar/Carregar movidos para dropdown Projeto
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -27882,10 +27882,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         setError({ type: 'error', message: `Erro ao listar arquivos: ${err.message}` });
                       }
                     }}
-                    isDarkMode={appTheme === 'dark'}
-                  />
-                  <button
-                    onClick={() => {
+                    // v1.35.51: Props para salvar/carregar local (consolidado no dropdown)
+                    onSaveLocal={() => {
                       const allStatesWithAI = {
                         processoNumero,
                         pastedPeticaoTexts,
@@ -27905,72 +27903,53 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         proofAnalysisResults: proofManager.proofAnalysisResults,
                         proofConclusions: proofManager.proofConclusions,
                         aiSettings: aiIntegration.aiSettings,
-                        // v1.12.14: PDFs de Upload (múltiplos)
                         peticaoFiles,
                         contestacaoFiles,
                         complementaryFiles,
                         extractedTexts,
-                        // v1.12.18: Modos de processamento por documento
                         documentProcessingModes,
-                        tokenMetrics: aiIntegration.tokenMetrics // v1.20.3: Contador de tokens
+                        tokenMetrics: aiIntegration.tokenMetrics
                       };
                       storage.exportProject(allStatesWithAI, setError);
                     }}
-                    className="px-3 py-1 rounded text-xs flex items-center gap-1 hover-green-600-from-700 bg-green-700 text-white transition-colors duration-200"
-                    title="Exportar projeto atual"
-                  >
-                    <Download className="w-3 h-3" />
-                    Salvar Projeto
-                  </button>
-                  <label
-                    className="px-3 py-1 rounded text-xs flex items-center gap-1 cursor-pointer hover-blue-600-from-700 bg-blue-700 text-white transition-colors duration-200"
-                  >
-                    <Upload className="w-3 h-3" />
-                    Carregar Projeto
-                    <input
-                      type="file"
-                      accept=".json"
-                      onChange={(e) => {
-                        const callbacks = {
-                          setPastedPeticaoTexts,
-                          setPastedContestacaoTexts,
-                          setPastedComplementaryTexts,
-                          setExtractedTopics,
-                          setSelectedTopics,
-                          setPartesProcesso,
-                          setAnalyzedDocuments,
-                          setProofFiles: proofManager.setProofFiles,
-                          setProofTexts: proofManager.setProofTexts,
-                          setProofUsePdfMode: proofManager.setProofUsePdfMode,
-                          setExtractedProofTexts: proofManager.setExtractedProofTexts,
-                          setProofExtractionFailed: proofManager.setProofExtractionFailed,
-                          setProofTopicLinks: proofManager.setProofTopicLinks,
-                          setProofAnalysisResults: proofManager.setProofAnalysisResults,
-                          setProofConclusions: proofManager.setProofConclusions,
-                          setProofSendFullContent: proofManager.setProofSendFullContent,  // v1.19.2
-                          setActiveTab,
-                          setAiSettings: aiIntegration.setAiSettings,
-                          setError,
-                          setProcessoNumero,
-                          // v1.12.14: Callbacks para Upload files (múltiplos)
-                          setPeticaoFiles,
-                          setContestacaoFiles,
-                          setComplementaryFiles,
-                          setExtractedTexts,
-                          // v1.12.18: Callback para modos de processamento
-                          setDocumentProcessingModes,
-                          setTokenMetrics: aiIntegration.setTokenMetrics // v1.20.3: Contador de tokens
-                        };
+                    onLoadLocal={(e) => {
+                      const callbacks = {
+                        setPastedPeticaoTexts,
+                        setPastedContestacaoTexts,
+                        setPastedComplementaryTexts,
+                        setExtractedTopics,
+                        setSelectedTopics,
+                        setPartesProcesso,
+                        setAnalyzedDocuments,
+                        setProofFiles: proofManager.setProofFiles,
+                        setProofTexts: proofManager.setProofTexts,
+                        setProofUsePdfMode: proofManager.setProofUsePdfMode,
+                        setExtractedProofTexts: proofManager.setExtractedProofTexts,
+                        setProofExtractionFailed: proofManager.setProofExtractionFailed,
+                        setProofTopicLinks: proofManager.setProofTopicLinks,
+                        setProofAnalysisResults: proofManager.setProofAnalysisResults,
+                        setProofConclusions: proofManager.setProofConclusions,
+                        setProofSendFullContent: proofManager.setProofSendFullContent,
+                        setActiveTab,
+                        setAiSettings: aiIntegration.setAiSettings,
+                        setError,
+                        setProcessoNumero,
+                        setPeticaoFiles,
+                        setContestacaoFiles,
+                        setComplementaryFiles,
+                        setExtractedTexts,
+                        setDocumentProcessingModes,
+                        setTokenMetrics: aiIntegration.setTokenMetrics
+                      };
 
-                        const autoSaveFn = (allStates, setError) => {
-                          storage.autoSaveSession(allStates, setError, true); // v1.12.28: Save imediato
-                        };
+                      const autoSaveFn = (allStates, setError) => {
+                        storage.autoSaveSession(allStates, setError, true);
+                      };
 
-                        storage.importProject(e, callbacks, autoSaveFn);
-                      }}
-                      className="hidden"
-                    />
-                  </label>
+                      storage.importProject(e, callbacks, autoSaveFn);
+                    }}
+                    isDarkMode={appTheme === 'dark'}
+                  />
                   <button
                     onClick={() => openModal('clearProject')}
                     className="px-3 py-1 rounded text-xs flex items-center gap-1 hover-red-600-from-700 bg-red-700 text-white transition-colors duration-200"
