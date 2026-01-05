@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.51'; // v1.35.51: UI consolidada - Salvar/Carregar movidos para dropdown Projeto
+const APP_VERSION = '1.35.52'; // v1.35.52: Botão Limpar incorporado ao dropdown Projeto
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -27948,16 +27948,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 
                       storage.importProject(e, callbacks, autoSaveFn);
                     }}
+                    // v1.35.52: Limpar projeto consolidado no dropdown
+                    onClear={() => openModal('clearProject')}
                     isDarkMode={appTheme === 'dark'}
                   />
-                  <button
-                    onClick={() => openModal('clearProject')}
-                    className="px-3 py-1 rounded text-xs flex items-center gap-1 hover-red-600-from-700 bg-red-700 text-white transition-colors duration-200"
-                    title="Limpar sessão atual e começar do zero"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    Limpar
-                  </button>
                 </div>
                 {/* 🔄 v1.34.0: Linha de sync/usuário/logout */}
                 {cloudSync?.isAuthenticated && (

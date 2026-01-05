@@ -2,7 +2,7 @@
  * Botão de integração com Google Drive + Salvar/Carregar Local
  * Dropdown unificado para gerenciamento de projetos (nuvem e local)
  *
- * @version 1.35.51 - Consolidação dos botões Salvar/Carregar
+ * @version 1.35.52 - Botão Limpar incorporado ao dropdown
  */
 
 import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
@@ -24,6 +24,8 @@ interface GoogleDriveButtonProps {
   // v1.35.51: Props para salvar/carregar local
   onSaveLocal: () => void;
   onLoadLocal: (e: ChangeEvent<HTMLInputElement>) => void;
+  // v1.35.52: Limpar projeto
+  onClear: () => void;
   isDarkMode: boolean;
 }
 
@@ -56,6 +58,7 @@ export function GoogleDriveButton({
   onLoadClick,
   onSaveLocal,
   onLoadLocal,
+  onClear,
   isDarkMode
 }: GoogleDriveButtonProps): React.ReactElement {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -211,6 +214,20 @@ export function GoogleDriveButton({
                 <FileUp className="w-4 h-4 text-blue-500" />
                 <span>Carregar Arquivo</span>
               </button>
+
+              {/* v1.35.52: Botão Limpar Projeto */}
+              <div className={`border-t mt-1 pt-1 ${isDarkMode ? 'border-slate-600' : 'border-slate-200'}`}>
+                <button
+                  onClick={() => {
+                    onClear();
+                    setIsOpen(false);
+                  }}
+                  className={`${itemClass} text-red-500`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Limpar Projeto</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
