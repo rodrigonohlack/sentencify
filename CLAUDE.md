@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.49 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.50 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -27,9 +27,10 @@
 ## Critical Guidelines
 
 1. **Modals com Scroll**: Use `overflow-auto` no overlay + `my-auto` no container (ver DispositivoModal)
-2. **File Rename (Windows)**: Use `powershell -Command "Rename-Item..."`
+2. **File Rename (Windows)**: Use `powershell -Command "Rename-Item..."` (APENAS para renomear)
 3. **API**: Use `buildApiRequest()` helper. Model: `claude-sonnet-4-20250514`
 4. **z-index**: Base `z-50`, nested `+10` por nível
+5. **NUNCA usar PowerShell para editar conteúdo de arquivos**: Corrompe encoding UTF-8 (acentuação quebrada). Use `sed`, `Edit` tool, ou `Write` tool.
 
 > **Nota**: Este projeto agora roda como aplicação standalone (fora do sandbox Claude.ai). Não há mais limite de tamanho de arquivo nem necessidade de minificação.
 
