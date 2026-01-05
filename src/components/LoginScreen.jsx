@@ -29,13 +29,17 @@ export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Verificar se auth está habilitada e se já está logado
+  // v1.35.28: Retorna early se localStorage já tem sessão (evita timeout no CI sem backend)
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Verificar se já tem sessão salva
+        // Verificar se já tem sessão salva - retornar IMEDIATAMENTE se sim
         const savedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
         if (savedAuth === 'true') {
           setIsAuthenticated(true);
+          setAuthEnabled(true); // Assume habilitado se tinha sessão salva
+          setIsLoading(false);
+          return; // Não esperar fetch ao servidor
         }
 
         // Verificar se auth está habilitada no servidor

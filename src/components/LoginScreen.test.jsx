@@ -10,13 +10,14 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 // Mock do localStorage
+// v1.35.28: Usar objeto fixo e limpar chaves (não reatribuir) para closures funcionarem
 const localStorageMock = (() => {
-  let store = {};
+  const store = {};
   return {
-    getItem: vi.fn((key) => store[key] || null),
+    getItem: vi.fn((key) => store[key] ?? null),
     setItem: vi.fn((key, value) => { store[key] = value; }),
     removeItem: vi.fn((key) => { delete store[key]; }),
-    clear: () => { store = {}; }
+    clear: () => { Object.keys(store).forEach(key => delete store[key]); }
   };
 })();
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
@@ -27,6 +28,7 @@ import { useAuth } from './LoginScreen';
 describe('useAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetch.mockReset(); // v1.35.28: Limpar mocks pendentes de testes anteriores
     localStorageMock.clear();
   });
 
