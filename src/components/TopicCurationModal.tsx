@@ -155,10 +155,10 @@ const isSpecialTopic = (topic: Topic | null): boolean => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMPONENTE: TopicPreviewCard
+// COMPONENTE: TopicPreviewCard (com React.memo para evitar re-renders)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const TopicPreviewCard: React.FC<TopicPreviewCardProps> = ({
+const TopicPreviewCard = React.memo<TopicPreviewCardProps>(({
   topic,
   index,
   editingTitle,
@@ -192,7 +192,8 @@ const TopicPreviewCard: React.FC<TopicPreviewCardProps> = ({
     transform: DndCSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1000 : 'auto'
+    zIndex: isDragging ? 1000 : 0,
+    willChange: isDragging ? 'transform, opacity' : 'auto'
   };
 
   useEffect(() => {
@@ -365,7 +366,7 @@ const TopicPreviewCard: React.FC<TopicPreviewCardProps> = ({
       )}
     </div>
   );
-};
+});
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE: SplitModal
@@ -698,7 +699,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 }
+      activationConstraint: { distance: 10 }  // v1.35.35: aumentado para melhor UX
     })
   );
 
@@ -727,15 +728,17 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = topics.findIndex(t => (t.id || t.title) === active.id);
-    const newIndex = topics.findIndex(t => (t.id || t.title) === over.id);
+    setTopics(prevTopics => {
+      const oldIndex = prevTopics.findIndex(t => (t.id || t.title) === active.id);
+      const newIndex = prevTopics.findIndex(t => (t.id || t.title) === over.id);
 
-    if (isSpecialTopic(topics[oldIndex]) || isSpecialTopic(topics[newIndex])) {
-      return;
-    }
+      if (isSpecialTopic(prevTopics[oldIndex]) || isSpecialTopic(prevTopics[newIndex])) {
+        return prevTopics;
+      }
 
-    setTopics(arrayMove(topics, oldIndex, newIndex));
-  }, [topics]);
+      return arrayMove(prevTopics, oldIndex, newIndex);
+    });
+  }, []);
 
   const handleStartEdit = useCallback((title: string) => {
     setEditingTitle(title);
@@ -743,47 +746,54 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
 
   const handleSaveTitle = useCallback((oldTitle: string, newTitle: string, newCategory: TopicCategory) => {
     if (newTitle && newTitle !== oldTitle) {
-      setTopics(topics.map(t =>
+      setTopics(prevTopics => prevTopics.map(t =>
         t.title === oldTitle
           ? { ...t, title: newTitle, category: newCategory || t.category }
           : t
       ));
     } else if (newCategory) {
-      setTopics(topics.map(t =>
+      setTopics(prevTopics => prevTopics.map(t =>
         t.title === oldTitle
           ? { ...t, category: newCategory }
           : t
       ));
     }
     setEditingTitle(null);
-  }, [topics]);
+  }, []);
 
   const handleDelete = useCallback((topic: Topic) => {
-    const index = topics.findIndex(t => t.title === topic.title);
-    setDeletedTopics([...deletedTopics, { topic, index }]);
-    setTopics(topics.filter(t => t.title !== topic.title));
-    setSelectedForMerge(selectedForMerge.filter(t => t.title !== topic.title));
-  }, [topics, deletedTopics, selectedForMerge]);
+    setTopics(prevTopics => {
+      const index = prevTopics.findIndex(t => t.title === topic.title);
+      setDeletedTopics(prev => [...prev, { topic, index }]);
+      return prevTopics.filter(t => t.title !== topic.title);
+    });
+    setSelectedForMerge(prev => prev.filter(t => t.title !== topic.title));
+  }, []);
 
   const handleUndoDelete = useCallback(() => {
-    if (deletedTopics.length > 0) {
-      const { topic, index } = deletedTopics[deletedTopics.length - 1];
-      const newTopics = [...topics];
-      newTopics.splice(Math.min(index, newTopics.length), 0, topic);
-      setTopics(newTopics);
-      setDeletedTopics(deletedTopics.slice(0, -1));
-    }
-  }, [topics, deletedTopics]);
+    setDeletedTopics(prevDeleted => {
+      if (prevDeleted.length > 0) {
+        const { topic, index } = prevDeleted[prevDeleted.length - 1];
+        setTopics(prevTopics => {
+          const newTopics = [...prevTopics];
+          newTopics.splice(Math.min(index, newTopics.length), 0, topic);
+          return newTopics;
+        });
+        return prevDeleted.slice(0, -1);
+      }
+      return prevDeleted;
+    });
+  }, []);
 
   const handleToggleMergeSelect = useCallback((topic: Topic) => {
-    const isSelected = selectedForMerge.some(t => t.title === topic.title);
-    if (isSelected) {
-      setSelectedForMerge(selectedForMerge.filter(t => t.title !== topic.title));
-    } else {
-      setSelectedForMerge([...selectedForMerge, topic]);
-    }
+    setSelectedForMerge(prev => {
+      const isSelected = prev.some(t => t.title === topic.title);
+      return isSelected
+        ? prev.filter(t => t.title !== topic.title)
+        : [...prev, topic];
+    });
     setShowMergeConfirm(false);
-  }, [selectedForMerge]);
+  }, []);
 
   const handleConfirmMerge = useCallback((mergedTitle: string, category: TopicCategory) => {
     if (selectedForMerge.length < 2) return;
