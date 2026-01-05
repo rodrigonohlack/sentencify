@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.40'; // v1.35.40: Google Drive - Salvar/Carregar projetos na nuvem pessoal do usuário
+const APP_VERSION = '1.35.41'; // v1.35.41: Refatoração - exportProject e importProject usam funções compartilhadas (elimina ~200 linhas duplicadas)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -4140,154 +4140,8 @@ const useLocalStorage = () => {
     }
   }, [setSessionLastSaved]);
 
-  // Exporta projeto completo em JSON (PDFs em base64)
-  const exportProject = React.useCallback(async (allStates, setError) => {
-    try {
-      const {
-        processoNumero,
-        pastedPeticaoTexts,
-        pastedContestacaoTexts,
-        pastedComplementaryTexts,
-        extractedTopics,
-        selectedTopics,
-        partesProcesso,
-        aiSettings,
-        analyzedDocuments,
-        proofFiles,
-        proofTexts,
-        proofUsePdfMode,
-        extractedProofTexts,
-        proofExtractionFailed,
-        proofTopicLinks,
-        proofAnalysisResults,
-        proofConclusions,
-        peticaoFiles,
-        contestacaoFiles,
-        complementaryFiles,
-        extractedTexts,
-        documentProcessingModes,
-        tokenMetrics // v1.20.3: Contador de tokens persistente
-      } = allStates;
-
-      const uploadPdfs = {
-        peticoes: [],
-        contestacoes: [],
-        complementares: []
-      };
-
-      if (peticaoFiles && peticaoFiles.length > 0) {
-        uploadPdfs.peticoes = await Promise.all(
-          peticaoFiles.map(async (f) => {
-            const fileObj = f.file || f;
-            return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
-          })
-        );
-      }
-
-      if (contestacaoFiles && contestacaoFiles.length > 0) {
-        uploadPdfs.contestacoes = await Promise.all(
-          contestacaoFiles.map(async (f) => {
-            const fileObj = f.file || f;
-            return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
-          })
-        );
-      }
-
-      if (complementaryFiles && complementaryFiles.length > 0) {
-        uploadPdfs.complementares = await Promise.all(
-          complementaryFiles.map(async (f) => {
-            const fileObj = f.file || f;
-            return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
-          })
-        );
-      }
-
-      // Converter proofFiles (com File objects) para formato serializável
-      const proofFilesSerializable = await Promise.all(
-        proofFiles.map(async (proof) => {
-          if (!proof.file) {
-            return {
-              id: proof.id,
-              name: proof.name,
-              type: proof.type,
-              size: proof.size,
-              uploadDate: proof.uploadDate,
-              fileData: null
-            };
-          }
-          const base64 = await fileToBase64(proof.file);
-          return {
-            id: proof.id,
-            name: proof.name,
-            type: proof.type,
-            size: proof.size,
-            uploadDate: proof.uploadDate,
-            fileData: base64 // Armazenar o conteúdo do arquivo em base64
-          };
-        })
-      );
-
-      const project = {
-        version: APP_VERSION,
-        exportedAt: new Date().toISOString(),
-        processoNumero,
-        pastedPeticaoTexts,
-        pastedContestacaoTexts,
-        pastedComplementaryTexts,
-        extractedTopics,
-        selectedTopics,
-        partesProcesso,
-        aiSettings,
-        analyzedDocuments,
-        extractedTexts: extractedTexts || { peticoes: [], contestacoes: [], complementares: [] },
-        uploadPdfs,
-        // Dados do sistema de provas
-        proofFiles: proofFilesSerializable,
-        proofTexts: proofTexts,
-        proofUsePdfMode: proofUsePdfMode,
-        extractedProofTexts: extractedProofTexts,
-        proofExtractionFailed: proofExtractionFailed,
-        proofTopicLinks: proofTopicLinks,
-        proofAnalysisResults: proofAnalysisResults,
-        proofConclusions: proofConclusions,
-        proofSendFullContent: allStates.proofSendFullContent || {},  // 🆕 v1.19.2
-        documentProcessingModes: documentProcessingModes || { peticao: 'pdfjs', contestacoes: [], complementares: [] },
-        // v1.20.3: Contador de tokens persistente
-        tokenMetrics: tokenMetrics || { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0, requestCount: 0, lastUpdated: null }
-      };
-
-      const dataStr = JSON.stringify(project, null, 2);
-
-      // Copiar para clipboard
-      await navigator.clipboard.writeText(dataStr);
-
-      // Download do arquivo
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-
-      // Gerar nome do arquivo baseado no número do processo (se disponível)
-      const processoPart = processoNumero
-        ? processoNumero.replace(/\s+/g, '-').replace(/\//g, '-')
-        : '';
-      const datePart = new Date().toISOString().split('T')[0];
-      a.download = processoPart
-        ? `sentencify-${processoPart}-${datePart}.json`
-        : `sentencify-projeto-${datePart}.json`;
-
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      // Mensagem de sucesso será visível no download do navegador
-    } catch (err) {
-      setError('Erro ao exportar projeto: ' + err.message);
-    }
-  }, [fileToBase64]);
-
   // v1.35.40: Constrói JSON do projeto para salvar no Google Drive (sem download)
+  // v1.35.41: Movido para antes de exportProject (usado por ambos)
   const buildProjectJson = React.useCallback(async (allStates) => {
     const {
       processoNumero,
@@ -4400,7 +4254,42 @@ const useLocalStorage = () => {
     };
   }, [fileToBase64]);
 
+  // Exporta projeto completo em JSON (PDFs em base64)
+  // v1.35.41: Refatorado para usar buildProjectJson (elimina duplicação)
+  const exportProject = React.useCallback(async (allStates, setError) => {
+    try {
+      const project = await buildProjectJson(allStates);
+      const dataStr = JSON.stringify(project, null, 2);
+
+      // Copiar para clipboard
+      await navigator.clipboard.writeText(dataStr);
+
+      // Download do arquivo
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+
+      // Gerar nome do arquivo baseado no número do processo (se disponível)
+      const processoPart = project.processoNumero
+        ? project.processoNumero.replace(/\s+/g, '-').replace(/\//g, '-')
+        : '';
+      const datePart = new Date().toISOString().split('T')[0];
+      a.download = processoPart
+        ? `sentencify-${processoPart}-${datePart}.json`
+        : `sentencify-projeto-${datePart}.json`;
+
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Erro ao exportar projeto: ' + err.message);
+    }
+  }, [buildProjectJson]);
+
   // v1.35.40: Importa projeto a partir de JSON (para Google Drive)
+  // v1.35.41: Adicionadas migrações de projetos antigos (formato singular)
   const importProjectFromJson = React.useCallback(async (project, callbacks, autoSaveSessionFn) => {
     if (!project || !project.version) {
       throw new Error('Arquivo inválido ou incompatível.');
@@ -4441,9 +4330,15 @@ const useLocalStorage = () => {
       // Ignore
     }
 
-    // Migração de projetos antigos
+    // Migração de projetos antigos (formato singular → plural)
     if (project.pastedPeticaoText && !project.pastedPeticaoTexts) {
       project.pastedPeticaoTexts = [{ text: project.pastedPeticaoText, name: 'Petição Inicial' }];
+    }
+    if (project.analyzedDocuments?.peticao && !project.analyzedDocuments?.peticoes) {
+      project.analyzedDocuments.peticoes = project.analyzedDocuments.peticaoType === 'pdf'
+        ? [project.analyzedDocuments.peticao] : [];
+      project.analyzedDocuments.peticoesText = project.analyzedDocuments.peticaoType === 'text'
+        ? [{ text: project.analyzedDocuments.peticao, name: 'Petição Inicial' }] : [];
     }
 
     // Restaurar dados
@@ -4477,6 +4372,7 @@ const useLocalStorage = () => {
 
     // Restaurar PDFs
     if (project.uploadPdfs) {
+      // Petições (novo formato com UUID)
       if (project.uploadPdfs.peticoes && setPeticaoFiles) {
         const petFiles = [];
         for (const pData of project.uploadPdfs.peticoes) {
@@ -4486,6 +4382,14 @@ const useLocalStorage = () => {
           await savePdfToIndexedDB(`upload-peticao-${id}`, pFile, 'upload');
         }
         setPeticaoFiles(petFiles);
+      }
+      // Petição (formato antigo singular - migração)
+      else if (project.uploadPdfs.peticao && setPeticaoFiles) {
+        const pData = project.uploadPdfs.peticao;
+        const pFile = base64ToFile(pData.fileData, pData.name, 'application/pdf');
+        const id = crypto.randomUUID();
+        setPeticaoFiles([{ file: pFile, id }]);
+        await savePdfToIndexedDB(`upload-peticao-${id}`, pFile, 'upload');
       }
       if (project.uploadPdfs.contestacoes && setContestacaoFiles) {
         const contestFiles = [];
@@ -4582,6 +4486,7 @@ const useLocalStorage = () => {
   }, [base64ToFile, clearAllPdfsFromIndexedDB, savePdfToIndexedDB]);
 
   // Importa projeto de arquivo JSON
+  // v1.35.41: Refatorado para usar importProjectFromJson (elimina duplicação)
   const importProject = React.useCallback(async (event, callbacks, autoSaveSessionFn) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -4596,269 +4501,15 @@ const useLocalStorage = () => {
         return;
       }
 
-      const {
-        setPastedPeticaoTexts,
-        setPastedContestacaoTexts,
-        setPastedComplementaryTexts,
-        setExtractedTopics,
-        setSelectedTopics,
-        setPartesProcesso,
-        setAnalyzedDocuments,
-        setProofFiles,
-        setProofTexts,
-        setProofUsePdfMode,
-        setExtractedProofTexts,
-        setProofExtractionFailed,
-        setProofTopicLinks,
-        setProofAnalysisResults,
-        setProofConclusions,
-        setProofSendFullContent,  // v1.19.2
-        setAiSettings,
-        setActiveTab,
-        setError,
-        setProcessoNumero,
-        setPeticaoFiles,
-        setContestacaoFiles,
-        setComplementaryFiles,
-        setExtractedTexts,
-        setDocumentProcessingModes,
-        setTokenMetrics // v1.20.3: Contador de tokens persistente
-      } = callbacks;
+      await importProjectFromJson(project, callbacks, autoSaveSessionFn);
 
-      try {
-        await clearAllPdfsFromIndexedDB();
-      } catch (err) {
-      }
-
-      // 🆕 v1.21: Migração de projetos antigos (peticao singular → peticoes array)
-      if (project.pastedPeticaoText && !project.pastedPeticaoTexts) {
-        project.pastedPeticaoTexts = [{ text: project.pastedPeticaoText, name: 'Petição Inicial' }];
-      }
-      if (project.analyzedDocuments?.peticao && !project.analyzedDocuments?.peticoes) {
-        project.analyzedDocuments.peticoes = project.analyzedDocuments.peticaoType === 'pdf'
-          ? [project.analyzedDocuments.peticao] : [];
-        project.analyzedDocuments.peticoesText = project.analyzedDocuments.peticaoType === 'text'
-          ? [{ text: project.analyzedDocuments.peticao, name: 'Petição Inicial' }] : [];
-      }
-
-      // Restaurar dados
-      setProcessoNumero(project.processoNumero || '');
-      setPastedPeticaoTexts(project.pastedPeticaoTexts || []);
-      setPastedContestacaoTexts(project.pastedContestacaoTexts || []);
-      setPastedComplementaryTexts(project.pastedComplementaryTexts || []);
-      setExtractedTopics(project.extractedTopics || []);
-      setSelectedTopics(project.selectedTopics || []);
-      setPartesProcesso(project.partesProcesso || { reclamante: '', reclamadas: [] });
-      setAnalyzedDocuments(project.analyzedDocuments || {
-        peticoes: [],
-        peticoesText: [],
-        contestacoes: [],
-        contestacoesText: [],
-        complementares: [],
-        complementaresText: []
-      });
-
-      if (setExtractedTexts) {
-        setExtractedTexts(project.extractedTexts || { peticoes: [], contestacoes: [], complementares: [] });
-      }
-
-      if (setDocumentProcessingModes) {
-        // Migrar modos legados (ex: 'gemini-vision') para 'pdfjs'
-        const validModes = ['pdfjs', 'tesseract', 'pdf-puro', 'claude-vision'];
-        const migrateMode = (mode) => validModes.includes(mode) ? mode : 'pdfjs';
-        const migrateModes = (modes) => (modes || []).map(migrateMode);
-        const rawModes = project.documentProcessingModes || { peticoes: [], contestacoes: [], complementares: [] };
-        setDocumentProcessingModes({
-          peticoes: migrateModes(rawModes.peticoes),
-          contestacoes: migrateModes(rawModes.contestacoes),
-          complementares: migrateModes(rawModes.complementares)
-        });
-      }
-
-      if (project.uploadPdfs) {
-        // Petições (novo formato com UUID)
-        if (project.uploadPdfs.peticoes && setPeticaoFiles) {
-          const petFiles = [];
-          for (const pData of project.uploadPdfs.peticoes) {
-            const pFile = base64ToFile(pData.fileData, pData.name, 'application/pdf');
-            const id = pData.id || crypto.randomUUID();
-            petFiles.push({ file: pFile, id });
-            await savePdfToIndexedDB(`upload-peticao-${id}`, pFile, 'upload');
-          }
-          setPeticaoFiles(petFiles);
-        }
-        // Petição (formato antigo - migração)
-        else if (project.uploadPdfs.peticao && setPeticaoFiles) {
-          const pData = project.uploadPdfs.peticao;
-          const pFile = base64ToFile(pData.fileData, pData.name, 'application/pdf');
-          const id = crypto.randomUUID();
-          setPeticaoFiles([{ file: pFile, id }]);
-          await savePdfToIndexedDB(`upload-peticao-${id}`, pFile, 'upload');
-        }
-        // Contestações
-        if (project.uploadPdfs.contestacoes && setContestacaoFiles) {
-          const contestFiles = [];
-          for (const cData of project.uploadPdfs.contestacoes) {
-            const cFile = base64ToFile(cData.fileData, cData.name, 'application/pdf');
-            const id = cData.id || crypto.randomUUID();
-            contestFiles.push({ file: cFile, id });
-            await savePdfToIndexedDB(`upload-contestacao-${id}`, cFile, 'upload');
-          }
-          setContestacaoFiles(contestFiles);
-        }
-        // Complementares
-        if (project.uploadPdfs.complementares && setComplementaryFiles) {
-          const compFiles = [];
-          for (const cpData of project.uploadPdfs.complementares) {
-            const cpFile = base64ToFile(cpData.fileData, cpData.name, 'application/pdf');
-            const id = cpData.id || crypto.randomUUID();
-            compFiles.push({ file: cpFile, id });
-            await savePdfToIndexedDB(`upload-complementar-${id}`, cpFile, 'upload');
-          }
-          setComplementaryFiles(compFiles);
-        }
-      }
-
-      // Restaurar dados do sistema de provas
-      let restoredProofFiles = [];
-      if (project.proofFiles && Array.isArray(project.proofFiles)) {
-        // Converter base64 de volta para File objects e salvar no IndexedDB
-        restoredProofFiles = await Promise.all(
-          project.proofFiles.map(async (proof) => {
-            // Verificar se tem fileData (base64)
-            if (!proof.fileData) {
-              // Apenas metadados, sem PDF
-              return {
-                id: proof.id,
-                file: null,
-                name: proof.name,
-                type: proof.type,
-                size: proof.size,
-                uploadDate: proof.uploadDate
-              };
-            }
-            const byteCharacters = atob(proof.fileData);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-              byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: 'application/pdf' });
-            const restoredFile = new File([blob], proof.name, { type: 'application/pdf' });
-
-            // v1.12.14: Salvar no IndexedDB
-            await savePdfToIndexedDB(`proof-${proof.id}`, restoredFile, 'proof');
-
-            return {
-              id: proof.id,
-              file: restoredFile,
-              name: proof.name,
-              type: proof.type,
-              size: proof.size,
-              uploadDate: proof.uploadDate
-            };
-          })
-        );
-        setProofFiles(restoredProofFiles);
-      } else {
-        setProofFiles([]);
-      }
-
-      setProofTexts(project.proofTexts || []);
-      setProofUsePdfMode(project.proofUsePdfMode || {});
-      setExtractedProofTexts(project.extractedProofTexts || {});
-      setProofExtractionFailed(project.proofExtractionFailed || {});
-      setProofTopicLinks(project.proofTopicLinks || {});
-      setProofAnalysisResults(project.proofAnalysisResults || {});
-      setProofConclusions(project.proofConclusions || {});
-      setProofSendFullContent(project.proofSendFullContent || {});  // 🆕 v1.19.2
-
-      // v1.20.3: Restaurar contador de tokens
-      if (setTokenMetrics && project.tokenMetrics) {
-        setTokenMetrics(project.tokenMetrics);
-      }
-
-      if (project.aiSettings) {
-        setAiSettings(project.aiSettings);
-      }
-
-      setActiveTab('upload');
-
-      // Auto-save da sessão importada
-      // Nota: autoSaveSessionFn precisa ser passado como referência
-      if (autoSaveSessionFn) {
-        // Construir allStates a partir dos dados importados
-        const allStates = {
-          processoNumero: project.processoNumero || '',
-          pastedPeticaoTexts: project.pastedPeticaoTexts || [],
-          pastedContestacaoTexts: project.pastedContestacaoTexts || [],
-          pastedComplementaryTexts: project.pastedComplementaryTexts || [],
-          extractedTopics: project.extractedTopics || [],
-          selectedTopics: project.selectedTopics || [],
-          partesProcesso: project.partesProcesso || { reclamante: '', reclamadas: [] },
-          activeTab: 'upload',
-          analyzedDocuments: project.analyzedDocuments || {},
-          // v1.12.14: Incluir extractedTexts de Upload
-          extractedTexts: project.extractedTexts || { peticoes: [], contestacoes: [], complementares: [] },
-          proofFiles: restoredProofFiles || [],
-          proofTexts: project.proofTexts || [],
-          proofUsePdfMode: project.proofUsePdfMode || {},
-          extractedProofTexts: project.extractedProofTexts || {},
-          proofExtractionFailed: project.proofExtractionFailed || {},
-          proofTopicLinks: project.proofTopicLinks || {},
-          proofAnalysisResults: project.proofAnalysisResults || {},
-          proofConclusions: project.proofConclusions || {},
-          proofSendFullContent: project.proofSendFullContent || {},  // 🆕 v1.19.2
-          // v1.12.18: Incluir modos de processamento
-          documentProcessingModes: project.documentProcessingModes || { peticao: 'pdfjs', contestacoes: [], complementares: [] },
-          // v1.20.3: Contador de tokens persistente
-          tokenMetrics: project.tokenMetrics || { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0, requestCount: 0, lastUpdated: null }
-        };
-        autoSaveSessionFn(allStates, setError, true); // v1.12.28: Save imediato (não async)
-      }
-
-      // Mensagem detalhada sobre o que foi importado
-      let importDetails = '✅ Projeto importado com sucesso!\n\n';
-
-      const totalPeticoes = (project.analyzedDocuments?.peticoes?.length || 0) +
-                            (project.analyzedDocuments?.peticoesText?.length || 0) +
-                            (project.pastedPeticaoTexts?.length || 0);
-      if (totalPeticoes > 0) {
-        importDetails += `📄 Petições/Docs Autor: ${totalPeticoes}\n`;
-      }
-
-      const totalContestacoes = (project.analyzedDocuments?.contestacoes?.length || 0) +
-                                (project.analyzedDocuments?.contestacoesText?.length || 0) +
-                                (project.pastedContestacaoTexts?.length || 0);
-      if (totalContestacoes > 0) {
-        importDetails += `📑 Contestações: ${totalContestacoes}\n`;
-      }
-
-      const totalComplementares = (project.analyzedDocuments?.complementares?.length || 0) +
-                                  (project.analyzedDocuments?.complementaresText?.length || 0) +
-                                  (project.pastedComplementaryTexts?.length || 0);
-      if (totalComplementares > 0) {
-        importDetails += `📎 Documentos complementares: ${totalComplementares}\n`;
-      }
-
-      const totalProofs = (project.proofFiles?.length || 0) + (project.proofTexts?.length || 0);
-      if (totalProofs > 0) {
-        importDetails += `⚖️ Provas: ${totalProofs}\n`;
-        const totalLinkedProofs = Object.keys(project.proofTopicLinks || {}).length;
-        if (totalLinkedProofs > 0) {
-          importDetails += `  └─ ${totalLinkedProofs} vinculada(s) a tópicos\n`;
-        }
-      }
-
-      importDetails += `\nVerifique a aba "Upload" para detalhes dos documentos.`;
-
-      // Sucesso - usuário verá na aba Upload
+      // Limpar input para permitir reimportar o mesmo arquivo
       event.target.value = '';
     } catch (err) {
-      setError('Erro ao importar projeto: ' + err.message);
+      callbacks.setError('Erro ao importar projeto: ' + err.message);
       event.target.value = '';
     }
-  }, [base64ToFile]);
+  }, [importProjectFromJson]);
 
   // Limpa todos os dados do projeto
   const clearProject = React.useCallback((callbacks) => {
