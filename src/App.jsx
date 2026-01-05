@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.47'; // v1.35.47: Google Drive: salva em pasta "Sentencify" (organização)
+const APP_VERSION = '1.35.48'; // v1.35.48: Google Drive: fix compartilhamento (sharedWithMe + remover permissão)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -30327,6 +30327,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           }
         }}
         onGetPermissions={googleDrive.getPermissions}
+        onRemovePermission={googleDrive.removePermission}
         userEmail={googleDrive.userEmail}
         isDarkMode={appTheme === 'dark'}
       />

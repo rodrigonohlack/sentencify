@@ -2,7 +2,7 @@
  * Botão de integração com Google Drive
  * Dropdown com opções: Conectar, Salvar, Carregar, Desconectar
  *
- * @version 1.35.45
+ * @version 1.35.48
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -167,6 +167,7 @@ export function DriveFilesModal({
   onDelete,
   onShare,
   onGetPermissions,
+  onRemovePermission,
   onRefresh,
   userEmail,
   isDarkMode
@@ -199,6 +200,23 @@ export function DriveFilesModal({
       setPermissions(perms);
     } catch (e) {
       setPermissions([]);
+    } finally {
+      setPermissionsLoading(false);
+    }
+  };
+
+  // v1.35.48: Remover permissão (revogar acesso)
+  const handleRemovePermission = async (permissionId) => {
+    if (!permissionsFile || !onRemovePermission) return;
+
+    setPermissionsLoading(true);
+    try {
+      await onRemovePermission(permissionsFile.id, permissionId);
+      // Atualizar lista de permissões
+      const perms = await onGetPermissions(permissionsFile.id);
+      setPermissions(perms);
+    } catch (e) {
+      console.error('Erro ao remover permissão:', e);
     } finally {
       setPermissionsLoading(false);
     }
@@ -567,15 +585,32 @@ export function DriveFilesModal({
                         </p>
                       )}
                     </div>
-                    <span className={`px-2 py-0.5 rounded text-xs ${
-                      perm.role === 'owner'
-                        ? isDarkMode ? 'bg-amber-900/50 text-amber-300' : 'bg-amber-100 text-amber-700'
-                        : perm.role === 'writer'
-                          ? isDarkMode ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700'
-                          : isDarkMode ? 'bg-slate-600 text-slate-300' : 'bg-slate-200 text-slate-600'
-                    }`}>
-                      {perm.role === 'owner' ? 'Proprietário' : perm.role === 'writer' ? 'Editor' : 'Leitor'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded text-xs ${
+                        perm.role === 'owner'
+                          ? isDarkMode ? 'bg-amber-900/50 text-amber-300' : 'bg-amber-100 text-amber-700'
+                          : perm.role === 'writer'
+                            ? isDarkMode ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700'
+                            : isDarkMode ? 'bg-slate-600 text-slate-300' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {perm.role === 'owner' ? 'Proprietário' : perm.role === 'writer' ? 'Editor' : 'Leitor'}
+                      </span>
+                      {/* v1.35.48: Botão remover (só para não-owners) */}
+                      {perm.role !== 'owner' && (
+                        <button
+                          onClick={() => handleRemovePermission(perm.id)}
+                          disabled={permissionsLoading}
+                          className={`p-1 rounded transition-colors ${
+                            isDarkMode
+                              ? 'hover:bg-red-900/30 text-red-400'
+                              : 'hover:bg-red-50 text-red-500'
+                          } disabled:opacity-50`}
+                          title="Remover acesso"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

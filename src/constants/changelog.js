@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.48', feature: 'Google Drive: fix compartilhamento - arquivos compartilhados agora aparecem (sharedWithMe), botão para remover acesso no modal de permissões' },
   { version: '1.35.47', feature: 'Google Drive: arquivos salvos na pasta "Sentencify" (criada automaticamente) para melhor organização' },
   { version: '1.35.46', feature: 'Google Drive: filtrar por appProperties - mostra apenas arquivos criados pelo Sentencify (ignora compartilhamentos externos)' },
   { version: '1.35.45', feature: 'Google Drive compartilhamento corrigido: escopo drive.readonly permite ver arquivos de outros, badges "De: fulano" e "Compartilhado", modal de permissões' },

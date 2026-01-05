@@ -2,7 +2,7 @@
  * Hook para integração com Google Drive
  * Permite salvar/restaurar projetos Sentencify no Drive do usuário
  *
- * @version 1.35.47
+ * @version 1.35.48
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -243,7 +243,11 @@ export function useGoogleDrive() {
 
       // v1.35.46: Filtrar por appProperties para mostrar APENAS arquivos do Sentencify
       // v1.35.47: Filtrar também pela pasta
-      const query = encodeURIComponent(`'${folderId}' in parents and appProperties has { key='sentencify' and value='true' } and trashed=false`);
+      // v1.35.48: Incluir arquivos compartilhados comigo (sharedWithMe)
+      const query = encodeURIComponent(
+        `('${folderId}' in parents and appProperties has { key='sentencify' and value='true' } and trashed=false) or ` +
+        `(sharedWithMe=true and appProperties has { key='sentencify' and value='true' } and trashed=false)`
+      );
       // v1.35.45: Incluir owners e shared para identificar arquivos compartilhados
       const fields = encodeURIComponent('files(id,name,size,modifiedTime,createdTime,owners,shared)');
 
@@ -418,6 +422,36 @@ export function useGoogleDrive() {
     }
   }, [accessToken]);
 
+  // v1.35.48: Remover permissão de um arquivo (revogar acesso)
+  const removePermission = useCallback(async (fileId, permissionId) => {
+    if (!accessToken) {
+      throw new Error('Não conectado ao Google Drive');
+    }
+
+    try {
+      const response = await fetch(
+        `${DRIVE_API_BASE}/files/${fileId}/permissions/${permissionId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      );
+
+      if (!response.ok && response.status !== 204) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Erro ao remover permissão');
+      }
+
+      console.log('[GoogleDrive] Permissão removida:', permissionId);
+      return true;
+    } catch (e) {
+      console.error('[GoogleDrive] Erro ao remover permissão:', e);
+      throw e;
+    }
+  }, [accessToken]);
+
   return {
     isConnected,
     isLoading,
@@ -431,6 +465,7 @@ export function useGoogleDrive() {
     deleteFile,
     shareFile,
     getPermissions,
+    removePermission,
     clientId: GOOGLE_CLIENT_ID
   };
 }
