@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.37', feature: 'Estimativa de custo melhorada: considera thinking tokens (Claude/Gemini), batch size (topicsPerRequest), tooltip com breakdown detalhado' },
   { version: '1.35.36', feature: 'Fix drag lag: remover willChange dinâmico (causava repaints contínuos), distance 8px (igual App.jsx)' },
   { version: '1.35.35', feature: 'Otimização drag FPS: React.memo no TopicPreviewCard, callbacks com setter funcional (sem dependências)' },
   { version: '1.35.34', feature: 'TopicCurationModal UX: modal não pode ser fechado (sem X, ESC, backdrop), largura 80vw, undo restaura no índice correto, custo exibe modelo (ex: R$ 1.04 Gemini 3 Flash)' },

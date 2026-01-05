@@ -139,7 +139,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.36'; // v1.35.36: Fix drag lag: remover willChange (causava repaints), distance 8px
+const APP_VERSION = '1.35.37'; // v1.35.37: Estimativa de custo melhorada: considera thinking tokens, batch size, tooltip com breakdown
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -30224,6 +30224,11 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           : (aiIntegration.aiSettings?.model || 'claude-sonnet-4-20250514')}
         parallelRequests={aiIntegration.aiSettings?.parallelRequests || 5}
         isDarkMode={appTheme === 'dark'}
+        provider={aiIntegration.aiSettings?.provider || 'anthropic'}
+        thinkingBudget={aiIntegration.aiSettings?.thinkingBudget || '10000'}
+        useExtendedThinking={aiIntegration.aiSettings?.useExtendedThinking ?? true}
+        geminiThinkingLevel={aiIntegration.aiSettings?.geminiThinkingLevel || 'high'}
+        topicsPerRequest={aiIntegration.aiSettings?.topicsPerRequest || 1}
       />
 
       {modals.settings && (

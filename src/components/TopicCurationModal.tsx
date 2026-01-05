@@ -45,6 +45,16 @@ interface CostEstimate {
   costUSD: string;
   timeMinutes: number;
   timeSeconds: number;
+  // Breakdown para tooltip
+  breakdown: {
+    inputTokens: number;
+    outputTokens: number;
+    thinkingTokens: number;
+    inputCostBRL: string;
+    outputCostBRL: string;
+    thinkingCostBRL: string;
+  };
+  thinkingLabel: string;  // ex: "thinking high" ou "10K tokens"
 }
 
 interface TopicCurationModalProps {
@@ -55,6 +65,12 @@ interface TopicCurationModalProps {
   model?: string;
   parallelRequests?: number;
   isDarkMode?: boolean;
+  // Configurações de custo
+  provider?: 'anthropic' | 'gemini';
+  thinkingBudget?: string;
+  useExtendedThinking?: boolean;
+  geminiThinkingLevel?: 'minimal' | 'low' | 'medium' | 'high';
+  topicsPerRequest?: number | 'all';
 }
 
 interface TopicPreviewCardProps {
@@ -120,33 +136,109 @@ const MODEL_NAMES: Record<string, string> = {
   'gemini-3-pro-preview': 'Gemini 3 Pro'
 };
 
-const TOKENS_PER_TOPIC = 4000;
+// Estimativas de tokens para cálculo de custo
+const BASE_CONTEXT_TOKENS = 8000;    // petição + contestação média
+const TOKENS_PER_TOPIC_PROMPT = 500; // prompt do tópico
+const TOKENS_PER_TOPIC_OUTPUT = 3500; // mini-relatório gerado
+
+// Tokens de thinking por nível (Gemini)
+const GEMINI_THINKING_TOKENS: Record<string, number> = {
+  'minimal': 1000,
+  'low': 2000,
+  'medium': 5000,
+  'high': 10000
+};
+
 const USD_TO_BRL = 5.50;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // FUNÇÕES UTILITÁRIAS
 // ═══════════════════════════════════════════════════════════════════════════════
 
+interface EstimateOptions {
+  provider?: 'anthropic' | 'gemini';
+  thinkingBudget?: string;
+  useExtendedThinking?: boolean;
+  geminiThinkingLevel?: string;
+  topicsPerRequest?: number | 'all';
+}
+
 const estimateCostAndTime = (
   topicCount: number,
   model: string = 'claude-sonnet-4-20250514',
-  parallelRequests: number = 5
+  parallelRequests: number = 5,
+  options: EstimateOptions = {}
 ): CostEstimate => {
-  const totalTokens = topicCount * TOKENS_PER_TOPIC;
+  const {
+    provider = 'anthropic',
+    thinkingBudget = '10000',
+    useExtendedThinking = true,
+    geminiThinkingLevel = 'high',
+    topicsPerRequest = 1
+  } = options;
+
   const prices = MODEL_PRICES[model] || MODEL_PRICES['claude-sonnet-4-20250514'];
 
-  const costUSD = (totalTokens / 1000000) * (prices.input * 0.7 + prices.output * 0.3);
-  const costBRL = costUSD * USD_TO_BRL;
+  // Calcular tokens de input considerando batch size
+  const batchSize = topicsPerRequest === 'all'
+    ? topicCount
+    : (typeof topicsPerRequest === 'number' ? topicsPerRequest : 1);
 
+  // Contexto é dividido pelo batch (enviado 1x por batch, não por tópico)
+  const numberOfBatches = Math.ceil(topicCount / batchSize);
+  const contextTokensTotal = BASE_CONTEXT_TOKENS * numberOfBatches;
+  const promptTokensTotal = TOKENS_PER_TOPIC_PROMPT * topicCount;
+  const inputTokens = contextTokensTotal + promptTokensTotal;
+
+  // Tokens de output (mini-relatórios)
+  const outputTokens = TOKENS_PER_TOPIC_OUTPUT * topicCount;
+
+  // Tokens de thinking
+  let thinkingTokens = 0;
+  let thinkingLabel = '';
+
+  if (provider === 'gemini') {
+    thinkingTokens = GEMINI_THINKING_TOKENS[geminiThinkingLevel] || 0;
+    thinkingLabel = thinkingTokens > 0 ? `thinking ${geminiThinkingLevel}` : '';
+  } else {
+    // Claude
+    thinkingTokens = useExtendedThinking ? parseInt(thinkingBudget || '0', 10) : 0;
+    if (thinkingTokens > 0) {
+      thinkingLabel = `${Math.round(thinkingTokens / 1000)}K tokens thinking`;
+    }
+  }
+
+  // Thinking tokens são multiplicados pelo número de requests (batches)
+  const thinkingTokensTotal = thinkingTokens * numberOfBatches;
+
+  // Calcular custos (USD)
+  const inputCostUSD = (inputTokens / 1000000) * prices.input;
+  const outputCostUSD = (outputTokens / 1000000) * prices.output;
+  // Thinking é cobrado como output tokens
+  const thinkingCostUSD = (thinkingTokensTotal / 1000000) * prices.output;
+
+  const totalCostUSD = inputCostUSD + outputCostUSD + thinkingCostUSD;
+  const totalCostBRL = totalCostUSD * USD_TO_BRL;
+
+  // Tempo estimado
   const timeSeconds = Math.ceil((topicCount * 15) / Math.min(parallelRequests, topicCount || 1));
   const timeMinutes = Math.ceil(timeSeconds / 60);
 
   return {
-    tokens: totalTokens,
-    costBRL: costBRL.toFixed(2),
-    costUSD: costUSD.toFixed(3),
+    tokens: inputTokens + outputTokens + thinkingTokensTotal,
+    costBRL: totalCostBRL.toFixed(2),
+    costUSD: totalCostUSD.toFixed(3),
     timeMinutes,
-    timeSeconds
+    timeSeconds,
+    breakdown: {
+      inputTokens,
+      outputTokens,
+      thinkingTokens: thinkingTokensTotal,
+      inputCostBRL: (inputCostUSD * USD_TO_BRL).toFixed(2),
+      outputCostBRL: (outputCostUSD * USD_TO_BRL).toFixed(2),
+      thinkingCostBRL: (thinkingCostUSD * USD_TO_BRL).toFixed(2)
+    },
+    thinkingLabel
   };
 };
 
@@ -671,7 +763,13 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
   initialTopics = [],
   model = 'claude-sonnet-4-20250514',
   parallelRequests = 5,
-  isDarkMode = true
+  isDarkMode = true,
+  // Novas props de custo
+  provider = 'anthropic',
+  thinkingBudget = '10000',
+  useExtendedThinking = true,
+  geminiThinkingLevel = 'high',
+  topicsPerRequest = 1
 }) => {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [editingTitle, setEditingTitle] = useState<string | null>(null);
@@ -704,8 +802,14 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
 
   const estimate = useMemo(() => {
     const topicsToGenerate = topics.filter(t => !isSpecialTopic(t)).length;
-    return estimateCostAndTime(topicsToGenerate, model, parallelRequests);
-  }, [topics, model, parallelRequests]);
+    return estimateCostAndTime(topicsToGenerate, model, parallelRequests, {
+      provider,
+      thinkingBudget,
+      useExtendedThinking,
+      geminiThinkingLevel,
+      topicsPerRequest
+    });
+  }, [topics, model, parallelRequests, provider, thinkingBudget, useExtendedThinking, geminiThinkingLevel, topicsPerRequest]);
 
   const specialTopicIds = useMemo(() => {
     return new Set(
@@ -1013,10 +1117,17 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
                 {topicsToGenerateCount} tópicos
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div
+              className="flex items-center gap-2 cursor-help"
+              title={`Estimativa detalhada:
+• Documentos + prompts (${Math.round(estimate.breakdown.inputTokens / 1000)}K tokens): R$ ${estimate.breakdown.inputCostBRL}
+• Mini-relatórios (${Math.round(estimate.breakdown.outputTokens / 1000)}K tokens): R$ ${estimate.breakdown.outputCostBRL}${estimate.breakdown.thinkingTokens > 0 ? `
+• Thinking (${Math.round(estimate.breakdown.thinkingTokens / 1000)}K tokens): R$ ${estimate.breakdown.thinkingCostBRL}` : ''}
+• Batch: ${topicsPerRequest === 'all' ? 'todos em 1 request' : `${topicsPerRequest} tópico(s)/request`}`}
+            >
               <DollarSign className="w-4 h-4 text-green-500" />
               <span className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
-                ~R$ {estimate.costBRL} ({MODEL_NAMES[model] || model})
+                ~R$ {estimate.costBRL} ({MODEL_NAMES[model] || model}{estimate.thinkingLabel ? ` + ${estimate.thinkingLabel}` : ''})
               </span>
             </div>
             <div className="flex items-center gap-2">

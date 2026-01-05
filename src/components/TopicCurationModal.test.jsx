@@ -838,12 +838,13 @@ describe('TopicCurationModal - Props e Defaults', () => {
     render(
       <TopicCurationModal
         {...defaultProps}
-        model="gemini-2.0-flash-001"
+        model="gemini-3-flash-preview"
+        provider="gemini"
       />
     );
 
-    // Custo deve ser diferente (Gemini é mais barato)
-    expect(screen.getByText(/~R\$/)).toBeInTheDocument();
+    // Custo deve mostrar Gemini 3 Flash
+    expect(screen.getByText(/Gemini 3 Flash/)).toBeInTheDocument();
   });
 
   it('deve aceitar diferentes valores de parallelRequests', () => {
@@ -856,5 +857,172 @@ describe('TopicCurationModal - Props e Defaults', () => {
 
     // Tempo deve ser menor com mais paralelismo
     expect(screen.getByText(/~\d+ min/)).toBeInTheDocument();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TESTES DE ESTIMATIVA AVANÇADA DE CUSTO (v1.35.37)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('TopicCurationModal - Estimativa Avançada de Custo', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('deve mostrar thinking label para Claude com thinking ativo', () => {
+    render(
+      <TopicCurationModal
+        {...defaultProps}
+        provider="anthropic"
+        useExtendedThinking={true}
+        thinkingBudget="20000"
+      />
+    );
+
+    // Deve mostrar o budget de thinking no display
+    expect(screen.getByText(/20K tokens thinking/)).toBeInTheDocument();
+  });
+
+  it('deve NÃO mostrar thinking label quando thinking desativado', () => {
+    render(
+      <TopicCurationModal
+        {...defaultProps}
+        provider="anthropic"
+        useExtendedThinking={false}
+        thinkingBudget="10000"
+      />
+    );
+
+    // Não deve mencionar thinking
+    expect(screen.queryByText(/thinking/)).not.toBeInTheDocument();
+  });
+
+  it('deve mostrar thinking level para Gemini', () => {
+    render(
+      <TopicCurationModal
+        {...defaultProps}
+        model="gemini-3-flash-preview"
+        provider="gemini"
+        geminiThinkingLevel="high"
+      />
+    );
+
+    // Deve mostrar thinking level do Gemini
+    expect(screen.getByText(/thinking high/)).toBeInTheDocument();
+  });
+
+  it('deve ter tooltip com breakdown detalhado', () => {
+    render(
+      <TopicCurationModal
+        {...defaultProps}
+        provider="anthropic"
+        useExtendedThinking={true}
+        thinkingBudget="10000"
+        topicsPerRequest={1}
+      />
+    );
+
+    // Encontrar o elemento de custo que tem o tooltip (title)
+    const costElement = screen.getByText(/~R\$/).closest('div[title]');
+    const tooltip = costElement?.getAttribute('title');
+
+    // Tooltip deve conter breakdown
+    expect(tooltip).toContain('Documentos + prompts');
+    expect(tooltip).toContain('Mini-relatórios');
+    expect(tooltip).toContain('Thinking');
+    expect(tooltip).toContain('Batch');
+  });
+
+  it('deve considerar batch size no tooltip', () => {
+    render(
+      <TopicCurationModal
+        {...defaultProps}
+        topicsPerRequest={3}
+      />
+    );
+
+    const costElement = screen.getByText(/~R\$/).closest('div[title]');
+    const tooltip = costElement?.getAttribute('title');
+
+    // Deve mostrar batch size no tooltip
+    expect(tooltip).toContain('3 tópico(s)/request');
+  });
+
+  it('deve mostrar "todos em 1 request" quando topicsPerRequest=all', () => {
+    render(
+      <TopicCurationModal
+        {...defaultProps}
+        topicsPerRequest="all"
+      />
+    );
+
+    const costElement = screen.getByText(/~R\$/).closest('div[title]');
+    const tooltip = costElement?.getAttribute('title');
+
+    expect(tooltip).toContain('todos em 1 request');
+  });
+
+  it('custo deve ser maior com thinking ativo vs desativado', () => {
+    // Render com thinking ativo
+    const { container: container1, unmount: unmount1 } = render(
+      <TopicCurationModal
+        {...defaultProps}
+        provider="anthropic"
+        useExtendedThinking={true}
+        thinkingBudget="10000"
+      />
+    );
+    const costText1 = screen.getByText(/~R\$/).textContent;
+    const cost1 = parseFloat(costText1.match(/~R\$ ([\d.]+)/)?.[1] || '0');
+    unmount1();
+
+    // Render sem thinking
+    render(
+      <TopicCurationModal
+        {...defaultProps}
+        provider="anthropic"
+        useExtendedThinking={false}
+      />
+    );
+    const costText2 = screen.getByText(/~R\$/).textContent;
+    const cost2 = parseFloat(costText2.match(/~R\$ ([\d.]+)/)?.[1] || '0');
+
+    // Custo com thinking deve ser maior
+    expect(cost1).toBeGreaterThan(cost2);
+  });
+
+  it('custo deve ser menor com batch size maior', () => {
+    // Render com batch size 1
+    const { unmount: unmount1 } = render(
+      <TopicCurationModal
+        {...defaultProps}
+        topicsPerRequest={1}
+        useExtendedThinking={false}
+      />
+    );
+    const costText1 = screen.getByText(/~R\$/).textContent;
+    const cost1 = parseFloat(costText1.match(/~R\$ ([\d.]+)/)?.[1] || '0');
+    unmount1();
+
+    // Render com batch size "all"
+    render(
+      <TopicCurationModal
+        {...defaultProps}
+        topicsPerRequest="all"
+        useExtendedThinking={false}
+      />
+    );
+    const costText2 = screen.getByText(/~R\$/).textContent;
+    const cost2 = parseFloat(costText2.match(/~R\$ ([\d.]+)/)?.[1] || '0');
+
+    // Custo com batch maior deve ser menor (contexto compartilhado)
+    expect(cost2).toBeLessThan(cost1);
+  });
+
+  it('deve ter cursor help no elemento de custo', () => {
+    render(<TopicCurationModal {...defaultProps} />);
+
+    const costElement = screen.getByText(/~R\$/).closest('div.cursor-help');
+    expect(costElement).toBeInTheDocument();
   });
 });
