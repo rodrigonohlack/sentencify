@@ -127,6 +127,9 @@ import SyncStatusIndicator from './components/SyncStatusIndicator';
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
 import AdminPanel from './components/AdminPanel';
 
+// v1.35.30: Modal de curadoria de tópicos pré-geração
+import TopicCurationModal from './components/TopicCurationModal';
+
 // v1.35.26: Prompts de IA movidos para src/prompts/
 import { AI_INSTRUCTIONS, AI_PROMPTS } from './prompts';
 
@@ -136,7 +139,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.29'; // v1.35.29: Fix meta-comentários de revisão nos mini-relatórios (prompt + pós-processamento)
+const APP_VERSION = '1.35.30'; // v1.35.30: Modal de Curadoria de Tópicos - revisar/reordenar/mesclar/separar tópicos ANTES de gerar mini-relatórios (economia de tokens)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -18918,6 +18921,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [showAnonymizationModal, setShowAnonymizationModal] = useState(false);
   const [anonymizationNamesText, setAnonymizationNamesText] = useState('');
 
+  // v1.35.30: Estados para modal de curadoria de tópicos (pré-geração de mini-relatórios)
+  const [showTopicCurationModal, setShowTopicCurationModal] = useState(false);
+  const [pendingCurationData, setPendingCurationData] = useState(null);
+
   // v1.21.14: Sincronizar nomes do modal com aiSettings persistido
   useEffect(() => {
     const nomesUsuario = aiIntegration?.aiSettings?.anonymization?.nomesUsuario;
@@ -25635,14 +25642,16 @@ Extraia e classifique todos os tópicos/pedidos em:
       await new Promise(resolve => setTimeout(resolve, 300));
       topics = await reorderTopicsViaLLM(topics);
 
-      setAnalysisProgress(`✅ Análise concluída! ${topics.length} tópico${topics.length !== 1 ? 's' : ''} identificado${topics.length !== 1 ? 's' : ''}!`);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Gerar relatório processual
-      setAnalysisProgress('📋 Gerando relatório processual...');
+      setAnalysisProgress(`✅ ${topics.length} tópico${topics.length !== 1 ? 's' : ''} identificado${topics.length !== 1 ? 's' : ''}! Revisando...`);
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      // Criar contentArray para o relatório (sem o prompt de análise de tópicos)
+      // ═══════════════════════════════════════════════════════════════════════════
+      // v1.35.30: PAUSA PARA CURADORIA DE TÓPICOS
+      // Permite ao usuário revisar, reordenar, mesclar, separar e apagar tópicos
+      // ANTES de gastar tokens com a geração de mini-relatórios
+      // ═══════════════════════════════════════════════════════════════════════════
+
+      // Criar contentArray para o relatório (será usado após confirmação)
       const relatorioContentArray = [];
 
       // Usar textos extraídos de petições se disponíveis, senão usar PDFs
@@ -25693,7 +25702,67 @@ Extraia e classifique todos os tópicos/pedidos em:
         });
       });
 
-      const relatorioProcessual = await generateRelatorioProcessual(relatorioContentArray);
+      // Separar textos extraídos de PDFs (novos) dos textos já colados (existentes)
+      const contestacoesExtraidasDePDF_pre = contestacoesTextFinal.filter(c =>
+        !pastedContestacaoTexts.some(p => p.text === c.text)
+      );
+      const contestacoesJaColadas_pre = contestacoesTextFinal.filter(c =>
+        pastedContestacaoTexts.some(p => p.text === c.text)
+      );
+
+      const complementaresExtraidasDePDF_pre = complementaresTextFinal.filter(c =>
+        !pastedComplementaryTexts.some(p => p.text === c.text)
+      );
+      const complementaresJaColadas_pre = complementaresTextFinal.filter(c =>
+        pastedComplementaryTexts.some(p => p.text === c.text)
+      );
+
+      // Separar petições extraídas de PDF vs coladas
+      const peticoesExtraidasDePDF_pre = peticoesTextFinal.filter(p =>
+        !pastedPeticaoTexts.some(pt => pt.text === p.text)
+      );
+      const peticoesJaColadas_pre = peticoesTextFinal.filter(p =>
+        pastedPeticaoTexts.some(pt => pt.text === p.text)
+      );
+
+      // Preparar dados para o modal de curadoria
+      const curationData = {
+        topics: topics,
+        partes: parsed.partes || { reclamante: '', reclamadas: [] },
+        relatorioContentArray: relatorioContentArray,
+        documents: {
+          peticoesText: peticoesTextFinal,
+          contestacoesText: contestacoesTextFinal,
+          complementaresText: complementaresTextFinal,
+          peticoesBase64,
+          contestacoesBase64,
+          complementaryBase64,
+          // Textos separados por origem
+          contestacoesExtraidasDePDF: contestacoesExtraidasDePDF_pre,
+          contestacoesJaColadas: contestacoesJaColadas_pre,
+          complementaresExtraidasDePDF: complementaresExtraidasDePDF_pre,
+          complementaresJaColadas: complementaresJaColadas_pre,
+          peticoesExtraidasDePDF: peticoesExtraidasDePDF_pre,
+          peticoesJaColadas: peticoesJaColadas_pre
+        }
+      };
+
+      // Salvar dados e abrir modal de curadoria
+      setPendingCurationData(curationData);
+      setShowTopicCurationModal(true);
+      setAnalysisInProgress(false);
+      setAnalysisProgress('');
+
+      // PAUSA: O fluxo continua em handleCurationConfirm() após o usuário confirmar
+      return;
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // CÓDIGO ABAIXO NÃO É MAIS EXECUTADO DIRETAMENTE
+      // Foi movido para handleCurationConfirm()
+      // Mantido aqui apenas como referência (será removido após testes)
+      // ═══════════════════════════════════════════════════════════════════════════
+
+      const relatorioProcessual = await generateRelatorioProcessual(relatorioContentArray)
 
       // Normalizar espaçamento para remover linhas em branco entre tags HTML
       const relatorioHtml = normalizeHTMLSpacing(relatorioProcessual.trim());
@@ -25853,6 +25922,185 @@ Extraia e classifique todos os tópicos/pedidos em:
     } finally {
       setAnalyzing(false);
     }
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.35.30: HANDLERS DE CURADORIA DE TÓPICOS
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Continua o fluxo de análise após o usuário confirmar a curadoria de tópicos
+   * @param {Array} curatedTopics - Tópicos após edição do usuário (reordenados, mesclados, etc.)
+   */
+  const handleCurationConfirm = async (curatedTopics) => {
+    if (!pendingCurationData) {
+      console.error('[handleCurationConfirm] pendingCurationData is null');
+      return;
+    }
+
+    try {
+      setShowTopicCurationModal(false);
+      setAnalysisInProgress(true);
+      setAnalyzing(true);
+      openModal('analysis');
+
+      const { relatorioContentArray, documents, partes } = pendingCurationData;
+
+      // Gerar relatório processual
+      setAnalysisProgress('📋 Gerando relatório processual...');
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const relatorioProcessual = await generateRelatorioProcessual(relatorioContentArray);
+      const relatorioHtml = normalizeHTMLSpacing(relatorioProcessual.trim());
+
+      // Buscar tópicos complementares configurados pelo usuário
+      const topicosComplementaresConfig = aiIntegration.aiSettings?.topicosComplementares || [];
+      const topicosComplementaresAtivos = topicosComplementaresConfig
+        .filter(t => t.enabled)
+        .sort((a, b) => a.ordem - b.ordem);
+
+      // Gerar tópicos complementares baseados na configuração
+      const topicosComplementares = topicosComplementaresAtivos.map((config, idx) => ({
+        title: config.title,
+        category: config.category,
+        relatorio: config.descricao || '',
+        editedContent: '',
+        order: curatedTopics.length + idx + 1,
+        isComplementar: true
+      }));
+
+      // Filtrar tópicos para remover qualquer "RELATÓRIO" que possa ter sido incluído
+      const topicsSemRelatorio = curatedTopics.filter(topic =>
+        !topic.title || topic.title.toUpperCase() !== 'RELATÓRIO'
+      );
+
+      // Construir objeto de documentos
+      const documentsForBatch = {
+        peticoes: documents.peticoesBase64,
+        peticoesText: [...documents.peticoesExtraidasDePDF, ...documents.peticoesJaColadas],
+        contestacoes: documents.contestacoesBase64,
+        contestacoesText: [...documents.contestacoesExtraidasDePDF, ...documents.contestacoesJaColadas],
+        complementares: documents.complementaryBase64,
+        complementaresText: [...documents.complementaresExtraidasDePDF, ...documents.complementaresJaColadas]
+      };
+
+      // Salvar no estado
+      setAnalyzedDocuments(documentsForBatch);
+
+      // Gerar mini-relatórios em batches
+      let topicsComRelatorios = topicsSemRelatorio;
+
+      if (topicsSemRelatorio.length > 0) {
+        setAnalysisProgress(`📝 Gerando mini-relatórios... 0/${topicsSemRelatorio.length}`);
+
+        const { results, errors } = await generateMiniReportsBatch(
+          topicsSemRelatorio.map(t => ({
+            title: t.title,
+            category: t.category,
+            isInitialGeneration: true,
+            includeComplementares: false,
+            documentsOverride: documentsForBatch
+          })),
+          {
+            batchSize: aiIntegration.aiSettings.parallelRequests || 5,
+            delayBetweenBatches: 1000,
+            onProgress: (current, total, batchNum, totalBatches) => {
+              setAnalysisProgress(`📝 Gerando mini-relatórios... ${current}/${total} (Lote ${batchNum}/${totalBatches})`);
+            }
+          }
+        );
+
+        // Mesclar resultados com os tópicos
+        topicsComRelatorios = topicsSemRelatorio.map(topic => {
+          const resultado = results.find(r => r.title === topic.title);
+          if (resultado) {
+            return { ...topic, relatorio: resultado.relatorio };
+          }
+          const erro = errors.find(e => e.title === topic.title);
+          return {
+            ...topic,
+            relatorio: `<p>Erro ao gerar mini-relatório${erro ? `: ${erro.error}` : ''}. Use "Gerar com IA" para tentar novamente.</p>`
+          };
+        });
+
+        if (errors.length > 0) {
+          showToast(`${errors.length} tópico(s) falharam na geração. Você pode regenerá-los individualmente.`, 'warning');
+        }
+
+        setAnalysisProgress(`✅ Mini-relatórios gerados! ${results.length}/${topicsSemRelatorio.length} com sucesso`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      // Filtrar complementares que já existem nos tópicos gerados
+      const titulosGeradosUpper = new Set(
+        topicsComRelatorios.map(t => (t.title || '').toUpperCase().trim())
+      );
+      const topicosComplementaresUnicos = topicosComplementares.filter(
+        t => !titulosGeradosUpper.has((t.title || '').toUpperCase().trim())
+      );
+
+      // Montar lista final de tópicos
+      const allTopics = [
+        {
+          title: 'RELATÓRIO',
+          category: 'RELATÓRIO',
+          relatorio: relatorioHtml,
+          editedFundamentacao: relatorioHtml,
+          order: 0
+        },
+        ...topicsComRelatorios.map((topic, index) => ({ ...topic, order: index + 1 })),
+        ...topicosComplementaresUnicos
+      ];
+
+      setExtractedTopics(allTopics);
+
+      // Selecionar apenas RELATÓRIO e os tópicos analisados
+      const topicosInicialmenteSelecionados = allTopics.filter((_, index) => index < topicsComRelatorios.length + 1);
+      setSelectedTopics(topicosInicialmenteSelecionados);
+
+      // Atualizar partes do processo se disponíveis
+      if (partes) {
+        setPartesProcesso({
+          reclamante: partes.reclamante || '',
+          reclamadas: partes.reclamadas || []
+        });
+      }
+
+      // Limpar PDFs originais após extração
+      if (documents.peticoesText?.length > 0 && peticaoFiles.length > 0) {
+        setPeticaoFiles([]);
+      }
+      if (documents.contestacoesExtraidasDePDF?.length > 0) {
+        setContestacaoFiles([]);
+      }
+      if (documents.complementaresExtraidasDePDF?.length > 0) {
+        setComplementaryFiles([]);
+      }
+
+      // Limpar dados pendentes
+      setPendingCurationData(null);
+
+      closeModal('analysis');
+      setActiveTab('topics');
+      showToast('✅ Análise concluída com sucesso!', 'success');
+
+    } catch (err) {
+      setError('Erro ao processar tópicos: ' + err.message);
+      closeModal('analysis');
+    } finally {
+      setAnalyzing(false);
+      setAnalysisInProgress(false);
+    }
+  };
+
+  /**
+   * Cancela a curadoria e volta ao estado inicial
+   */
+  const handleCurationCancel = () => {
+    setShowTopicCurationModal(false);
+    setPendingCurationData(null);
+    setAnalysisProgress('');
+    showToast('Análise cancelada. Você pode reiniciar quando quiser.', 'info');
   };
 
   // v1.20.1: Usar storage.fileToBase64 com cache LRU (economia de memória)
@@ -29965,6 +30213,17 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         pastedContestacaoTexts={pastedContestacaoTexts}
         complementaryFiles={complementaryFiles}
         pastedComplementaryTexts={pastedComplementaryTexts}
+      />
+
+      {/* v1.35.30: Modal de Curadoria de Tópicos */}
+      <TopicCurationModal
+        isOpen={showTopicCurationModal}
+        onConfirm={handleCurationConfirm}
+        onCancel={handleCurationCancel}
+        initialTopics={pendingCurationData?.topics || []}
+        model={aiIntegration.aiSettings?.model || 'claude-sonnet-4-20250514'}
+        parallelRequests={aiIntegration.aiSettings?.parallelRequests || 5}
+        isDarkMode={theme === 'dark'}
       />
 
       {modals.settings && (

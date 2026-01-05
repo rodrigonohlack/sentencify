@@ -4,13 +4,13 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.28 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.30 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
 **Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`
 
-**Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`
+**Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`
 
 **Storage**:
 - `SQLite` (Render Persistent Disk) → modelos sincronizados na nuvem (v1.34.0)
@@ -66,6 +66,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.30 | Modal de Curadoria de Tópicos: revisar, reordenar, mesclar, separar e apagar tópicos ANTES de gerar mini-relatórios (economia de tokens, estimativa de custo R$/tempo) |
 | v1.35.26 | Prompts de IA (AI_INSTRUCTIONS, AI_PROMPTS) movidos para src/prompts/ (~900 linhas extraídas) |
 | v1.35.25 | CHANGELOG movido para src/constants/changelog.js (reduz ~160 linhas do App.jsx) |
 | v1.35.24 | Fix B8b: sync remove modelos de owners sem acesso ativo (sharedLibraries filtra locais) |
