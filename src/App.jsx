@@ -130,6 +130,11 @@ import AdminPanel from './components/AdminPanel';
 // v1.35.30: Modal de curadoria de tópicos pré-geração
 import TopicCurationModal from './components/TopicCurationModal';
 
+// v1.35.40: Google Drive - Salvar/Carregar projetos na nuvem
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import { useGoogleDrive, GOOGLE_CLIENT_ID } from './hooks/useGoogleDrive';
+import { GoogleDriveButton, DriveFilesModal } from './components/GoogleDriveButton';
+
 // v1.35.26: Prompts de IA movidos para src/prompts/
 import { AI_INSTRUCTIONS, AI_PROMPTS } from './prompts';
 
@@ -139,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.39'; // v1.35.39: Calibra estimativa de custo: constantes de tokens ajustadas com dados reais (~4x mais preciso)
+const APP_VERSION = '1.35.40'; // v1.35.40: Google Drive - Salvar/Carregar projetos na nuvem pessoal do usuário
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -4282,6 +4287,300 @@ const useLocalStorage = () => {
     }
   }, [fileToBase64]);
 
+  // v1.35.40: Constrói JSON do projeto para salvar no Google Drive (sem download)
+  const buildProjectJson = React.useCallback(async (allStates) => {
+    const {
+      processoNumero,
+      pastedPeticaoTexts,
+      pastedContestacaoTexts,
+      pastedComplementaryTexts,
+      extractedTopics,
+      selectedTopics,
+      partesProcesso,
+      aiSettings,
+      analyzedDocuments,
+      proofFiles,
+      proofTexts,
+      proofUsePdfMode,
+      extractedProofTexts,
+      proofExtractionFailed,
+      proofTopicLinks,
+      proofAnalysisResults,
+      proofConclusions,
+      peticaoFiles,
+      contestacaoFiles,
+      complementaryFiles,
+      extractedTexts,
+      documentProcessingModes,
+      tokenMetrics
+    } = allStates;
+
+    const uploadPdfs = {
+      peticoes: [],
+      contestacoes: [],
+      complementares: []
+    };
+
+    if (peticaoFiles && peticaoFiles.length > 0) {
+      uploadPdfs.peticoes = await Promise.all(
+        peticaoFiles.map(async (f) => {
+          const fileObj = f.file || f;
+          return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
+        })
+      );
+    }
+
+    if (contestacaoFiles && contestacaoFiles.length > 0) {
+      uploadPdfs.contestacoes = await Promise.all(
+        contestacaoFiles.map(async (f) => {
+          const fileObj = f.file || f;
+          return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
+        })
+      );
+    }
+
+    if (complementaryFiles && complementaryFiles.length > 0) {
+      uploadPdfs.complementares = await Promise.all(
+        complementaryFiles.map(async (f) => {
+          const fileObj = f.file || f;
+          return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
+        })
+      );
+    }
+
+    const proofFilesSerializable = await Promise.all(
+      (proofFiles || []).map(async (proof) => {
+        if (!proof.file) {
+          return {
+            id: proof.id,
+            name: proof.name,
+            type: proof.type,
+            size: proof.size,
+            uploadDate: proof.uploadDate,
+            fileData: null
+          };
+        }
+        const base64 = await fileToBase64(proof.file);
+        return {
+          id: proof.id,
+          name: proof.name,
+          type: proof.type,
+          size: proof.size,
+          uploadDate: proof.uploadDate,
+          fileData: base64
+        };
+      })
+    );
+
+    return {
+      version: APP_VERSION,
+      exportedAt: new Date().toISOString(),
+      processoNumero,
+      pastedPeticaoTexts,
+      pastedContestacaoTexts,
+      pastedComplementaryTexts,
+      extractedTopics,
+      selectedTopics,
+      partesProcesso,
+      aiSettings,
+      analyzedDocuments,
+      extractedTexts: extractedTexts || { peticoes: [], contestacoes: [], complementares: [] },
+      uploadPdfs,
+      proofFiles: proofFilesSerializable,
+      proofTexts: proofTexts || {},
+      proofUsePdfMode: proofUsePdfMode || {},
+      extractedProofTexts: extractedProofTexts || {},
+      proofExtractionFailed: proofExtractionFailed || {},
+      proofTopicLinks: proofTopicLinks || {},
+      proofAnalysisResults: proofAnalysisResults || {},
+      proofConclusions: proofConclusions || {},
+      proofSendFullContent: allStates.proofSendFullContent || {},
+      documentProcessingModes: documentProcessingModes || { peticao: 'pdfjs', contestacoes: [], complementares: [] },
+      tokenMetrics: tokenMetrics || { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0, requestCount: 0, lastUpdated: null }
+    };
+  }, [fileToBase64]);
+
+  // v1.35.40: Importa projeto a partir de JSON (para Google Drive)
+  const importProjectFromJson = React.useCallback(async (project, callbacks, autoSaveSessionFn) => {
+    if (!project || !project.version) {
+      throw new Error('Arquivo inválido ou incompatível.');
+    }
+
+    const {
+      setPastedPeticaoTexts,
+      setPastedContestacaoTexts,
+      setPastedComplementaryTexts,
+      setExtractedTopics,
+      setSelectedTopics,
+      setPartesProcesso,
+      setAnalyzedDocuments,
+      setProofFiles,
+      setProofTexts,
+      setProofUsePdfMode,
+      setExtractedProofTexts,
+      setProofExtractionFailed,
+      setProofTopicLinks,
+      setProofAnalysisResults,
+      setProofConclusions,
+      setProofSendFullContent,
+      setAiSettings,
+      setActiveTab,
+      setError,
+      setProcessoNumero,
+      setPeticaoFiles,
+      setContestacaoFiles,
+      setComplementaryFiles,
+      setExtractedTexts,
+      setDocumentProcessingModes,
+      setTokenMetrics
+    } = callbacks;
+
+    try {
+      await clearAllPdfsFromIndexedDB();
+    } catch (err) {
+      // Ignore
+    }
+
+    // Migração de projetos antigos
+    if (project.pastedPeticaoText && !project.pastedPeticaoTexts) {
+      project.pastedPeticaoTexts = [{ text: project.pastedPeticaoText, name: 'Petição Inicial' }];
+    }
+
+    // Restaurar dados
+    setProcessoNumero(project.processoNumero || '');
+    setPastedPeticaoTexts(project.pastedPeticaoTexts || []);
+    setPastedContestacaoTexts(project.pastedContestacaoTexts || []);
+    setPastedComplementaryTexts(project.pastedComplementaryTexts || []);
+    setExtractedTopics(project.extractedTopics || []);
+    setSelectedTopics(project.selectedTopics || []);
+    setPartesProcesso(project.partesProcesso || { reclamante: '', reclamadas: [] });
+    setAnalyzedDocuments(project.analyzedDocuments || {
+      peticoes: [], peticoesText: [], contestacoes: [], contestacoesText: [],
+      complementares: [], complementaresText: []
+    });
+
+    if (setExtractedTexts) {
+      setExtractedTexts(project.extractedTexts || { peticoes: [], contestacoes: [], complementares: [] });
+    }
+
+    if (setDocumentProcessingModes) {
+      const validModes = ['pdfjs', 'tesseract', 'pdf-puro', 'claude-vision'];
+      const migrateMode = (mode) => validModes.includes(mode) ? mode : 'pdfjs';
+      const migrateModes = (modes) => (modes || []).map(migrateMode);
+      const rawModes = project.documentProcessingModes || { peticoes: [], contestacoes: [], complementares: [] };
+      setDocumentProcessingModes({
+        peticoes: migrateModes(rawModes.peticoes),
+        contestacoes: migrateModes(rawModes.contestacoes),
+        complementares: migrateModes(rawModes.complementares)
+      });
+    }
+
+    // Restaurar PDFs
+    if (project.uploadPdfs) {
+      if (project.uploadPdfs.peticoes && setPeticaoFiles) {
+        const petFiles = [];
+        for (const pData of project.uploadPdfs.peticoes) {
+          const pFile = base64ToFile(pData.fileData, pData.name, 'application/pdf');
+          const id = pData.id || crypto.randomUUID();
+          petFiles.push({ file: pFile, id });
+          await savePdfToIndexedDB(`upload-peticao-${id}`, pFile, 'upload');
+        }
+        setPeticaoFiles(petFiles);
+      }
+      if (project.uploadPdfs.contestacoes && setContestacaoFiles) {
+        const contestFiles = [];
+        for (const cData of project.uploadPdfs.contestacoes) {
+          const cFile = base64ToFile(cData.fileData, cData.name, 'application/pdf');
+          const id = cData.id || crypto.randomUUID();
+          contestFiles.push({ file: cFile, id });
+          await savePdfToIndexedDB(`upload-contestacao-${id}`, cFile, 'upload');
+        }
+        setContestacaoFiles(contestFiles);
+      }
+      if (project.uploadPdfs.complementares && setComplementaryFiles) {
+        const compFiles = [];
+        for (const cpData of project.uploadPdfs.complementares) {
+          const cpFile = base64ToFile(cpData.fileData, cpData.name, 'application/pdf');
+          const id = cpData.id || crypto.randomUUID();
+          compFiles.push({ file: cpFile, id });
+          await savePdfToIndexedDB(`upload-complementar-${id}`, cpFile, 'upload');
+        }
+        setComplementaryFiles(compFiles);
+      }
+    }
+
+    // Restaurar provas
+    let restoredProofFiles = [];
+    if (project.proofFiles && Array.isArray(project.proofFiles)) {
+      restoredProofFiles = await Promise.all(
+        project.proofFiles.map(async (proof) => {
+          if (!proof.fileData) {
+            return { id: proof.id, file: null, name: proof.name, type: proof.type, size: proof.size, uploadDate: proof.uploadDate };
+          }
+          const byteCharacters = atob(proof.fileData);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'application/pdf' });
+          const restoredFile = new File([blob], proof.name, { type: 'application/pdf' });
+          await savePdfToIndexedDB(`proof-${proof.id}`, restoredFile, 'proof');
+          return { id: proof.id, file: restoredFile, name: proof.name, type: proof.type, size: proof.size, uploadDate: proof.uploadDate };
+        })
+      );
+      setProofFiles(restoredProofFiles);
+    } else {
+      setProofFiles([]);
+    }
+
+    setProofTexts(project.proofTexts || []);
+    setProofUsePdfMode(project.proofUsePdfMode || {});
+    setExtractedProofTexts(project.extractedProofTexts || {});
+    setProofExtractionFailed(project.proofExtractionFailed || {});
+    setProofTopicLinks(project.proofTopicLinks || {});
+    setProofAnalysisResults(project.proofAnalysisResults || {});
+    setProofConclusions(project.proofConclusions || {});
+    setProofSendFullContent(project.proofSendFullContent || {});
+
+    if (setTokenMetrics && project.tokenMetrics) {
+      setTokenMetrics(project.tokenMetrics);
+    }
+
+    if (project.aiSettings) {
+      setAiSettings(project.aiSettings);
+    }
+
+    setActiveTab('upload');
+
+    if (autoSaveSessionFn) {
+      const allStates = {
+        processoNumero: project.processoNumero || '',
+        pastedPeticaoTexts: project.pastedPeticaoTexts || [],
+        pastedContestacaoTexts: project.pastedContestacaoTexts || [],
+        pastedComplementaryTexts: project.pastedComplementaryTexts || [],
+        extractedTopics: project.extractedTopics || [],
+        selectedTopics: project.selectedTopics || [],
+        partesProcesso: project.partesProcesso || { reclamante: '', reclamadas: [] },
+        activeTab: 'upload',
+        analyzedDocuments: project.analyzedDocuments || {},
+        extractedTexts: project.extractedTexts || { peticoes: [], contestacoes: [], complementares: [] },
+        proofFiles: restoredProofFiles || [],
+        proofTexts: project.proofTexts || [],
+        proofUsePdfMode: project.proofUsePdfMode || {},
+        extractedProofTexts: project.extractedProofTexts || {},
+        proofExtractionFailed: project.proofExtractionFailed || {},
+        proofTopicLinks: project.proofTopicLinks || {},
+        proofAnalysisResults: project.proofAnalysisResults || {},
+        proofConclusions: project.proofConclusions || {},
+        proofSendFullContent: project.proofSendFullContent || {},
+        documentProcessingModes: project.documentProcessingModes || { peticao: 'pdfjs', contestacoes: [], complementares: [] },
+        tokenMetrics: project.tokenMetrics || { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0, requestCount: 0, lastUpdated: null }
+      };
+      autoSaveSessionFn(allStates, setError, true);
+    }
+  }, [base64ToFile, clearAllPdfsFromIndexedDB, savePdfToIndexedDB]);
+
   // Importa projeto de arquivo JSON
   const importProject = React.useCallback(async (event, callbacks, autoSaveSessionFn) => {
     const file = event.target.files[0];
@@ -4693,7 +4992,9 @@ const useLocalStorage = () => {
     restoreSession,
     exportProject,
     importProject,
-    clearProject
+    importProjectFromJson,  // v1.35.40: Para carregar do Google Drive
+    clearProject,
+    buildProjectJson  // v1.35.40: Para salvar no Google Drive
   };
 };
 
@@ -18559,6 +18860,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 📜 v1.24: Versionamento de campos (Editor Individual)
   const fieldVersioning = useFieldVersioning();
 
+  // ☁️ v1.35.40: Google Drive - Salvar/Carregar projetos
+  const googleDrive = useGoogleDrive();
+  const [driveFilesModalOpen, setDriveFilesModalOpen] = React.useState(false);
+  const [driveFiles, setDriveFiles] = React.useState([]);
+
   // 📄 v1.9.12: Serviços de Processamento de Documentos ────────────────────
   const documentServices = useDocumentServices(aiIntegration);
 
@@ -27872,6 +28178,61 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                   >
                     ⚙️ Configurações IA
                   </button>
+                  {/* ☁️ v1.35.40: Google Drive */}
+                  <GoogleDriveButton
+                    isConnected={googleDrive.isConnected}
+                    isLoading={googleDrive.isLoading}
+                    userEmail={googleDrive.userEmail}
+                    onConnect={googleDrive.connect}
+                    onDisconnect={googleDrive.disconnect}
+                    onSave={async () => {
+                      try {
+                        const allStatesWithAI = {
+                          processoNumero,
+                          pastedPeticaoTexts,
+                          pastedContestacaoTexts,
+                          pastedComplementaryTexts,
+                          extractedTopics,
+                          selectedTopics,
+                          partesProcesso,
+                          activeTab,
+                          analyzedDocuments,
+                          proofFiles: proofManager.proofFiles,
+                          proofTexts: proofManager.proofTexts,
+                          proofUsePdfMode: proofManager.proofUsePdfMode,
+                          extractedProofTexts: proofManager.extractedProofTexts,
+                          proofExtractionFailed: proofManager.proofExtractionFailed,
+                          proofTopicLinks: proofManager.proofTopicLinks,
+                          proofAnalysisResults: proofManager.proofAnalysisResults,
+                          proofConclusions: proofManager.proofConclusions,
+                          aiSettings: aiIntegration.aiSettings,
+                          peticaoFiles,
+                          contestacaoFiles,
+                          complementaryFiles,
+                          extractedTexts,
+                          documentProcessingModes,
+                          tokenMetrics: aiIntegration.tokenMetrics
+                        };
+                        // Converter PDFs para base64 para salvar no Drive
+                        const projectJson = await storage.buildProjectJson(allStatesWithAI);
+                        const fileName = `sentencify-${processoNumero || 'projeto'}-${new Date().toISOString().split('T')[0]}.json`;
+                        await googleDrive.saveFile(fileName, projectJson);
+                        setError({ type: 'success', message: `Projeto salvo no Google Drive: ${fileName}` });
+                      } catch (err) {
+                        setError({ type: 'error', message: `Erro ao salvar no Drive: ${err.message}` });
+                      }
+                    }}
+                    onLoadClick={async () => {
+                      try {
+                        const files = await googleDrive.listFiles();
+                        setDriveFiles(files);
+                        setDriveFilesModalOpen(true);
+                      } catch (err) {
+                        setError({ type: 'error', message: `Erro ao listar arquivos: ${err.message}` });
+                      }
+                    }}
+                    isDarkMode={appTheme === 'dark'}
+                  />
                   <button
                     onClick={() => {
                       const allStatesWithAI = {
@@ -30229,6 +30590,73 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         useExtendedThinking={aiIntegration.aiSettings?.useExtendedThinking ?? true}
         geminiThinkingLevel={aiIntegration.aiSettings?.geminiThinkingLevel || 'high'}
         topicsPerRequest={aiIntegration.aiSettings?.topicsPerRequest || 1}
+      />
+
+      {/* v1.35.40: Modal de arquivos do Google Drive */}
+      <DriveFilesModal
+        isOpen={driveFilesModalOpen}
+        onClose={() => setDriveFilesModalOpen(false)}
+        files={driveFiles}
+        isLoading={googleDrive.isLoading}
+        onLoad={async (file) => {
+          try {
+            const projectData = await googleDrive.loadFile(file.id);
+            // Simular evento de importação de arquivo
+            const callbacks = {
+              setPastedPeticaoTexts,
+              setPastedContestacaoTexts,
+              setPastedComplementaryTexts,
+              setExtractedTopics,
+              setSelectedTopics,
+              setPartesProcesso,
+              setAnalyzedDocuments,
+              setProofFiles: proofManager.setProofFiles,
+              setProofTexts: proofManager.setProofTexts,
+              setProofUsePdfMode: proofManager.setProofUsePdfMode,
+              setExtractedProofTexts: proofManager.setExtractedProofTexts,
+              setProofExtractionFailed: proofManager.setProofExtractionFailed,
+              setProofTopicLinks: proofManager.setProofTopicLinks,
+              setProofAnalysisResults: proofManager.setProofAnalysisResults,
+              setProofConclusions: proofManager.setProofConclusions,
+              setProofSendFullContent: proofManager.setProofSendFullContent,
+              setActiveTab,
+              setAiSettings: aiIntegration.setAiSettings,
+              setError,
+              setProcessoNumero,
+              setPeticaoFiles,
+              setContestacaoFiles,
+              setComplementaryFiles,
+              setExtractedTexts,
+              setDocumentProcessingModes,
+              setTokenMetrics: aiIntegration.setTokenMetrics
+            };
+            await storage.importProjectFromJson(projectData, callbacks, (allStates) => {
+              storage.autoSaveSession(allStates, setError, true);
+            });
+            setDriveFilesModalOpen(false);
+            setError({ type: 'success', message: `Projeto carregado do Google Drive: ${file.name}` });
+          } catch (err) {
+            setError({ type: 'error', message: `Erro ao carregar projeto: ${err.message}` });
+          }
+        }}
+        onDelete={async (file) => {
+          try {
+            await googleDrive.deleteFile(file.id);
+            setDriveFiles(prev => prev.filter(f => f.id !== file.id));
+            setError({ type: 'success', message: `Arquivo excluído: ${file.name}` });
+          } catch (err) {
+            setError({ type: 'error', message: `Erro ao excluir: ${err.message}` });
+          }
+        }}
+        onRefresh={async () => {
+          try {
+            const files = await googleDrive.listFiles();
+            setDriveFiles(files);
+          } catch (err) {
+            setError({ type: 'error', message: `Erro ao atualizar: ${err.message}` });
+          }
+        }}
+        isDarkMode={appTheme === 'dark'}
       />
 
       {modals.settings && (
@@ -34256,4 +34684,11 @@ const SentencifyAI = () => {
   );
 };
 
-export default SentencifyAI;
+// v1.35.40: Wrapper com GoogleOAuthProvider para integração com Google Drive
+const SentencifyAIWithGoogleDrive = () => (
+  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+    <SentencifyAI />
+  </GoogleOAuthProvider>
+);
+
+export default SentencifyAIWithGoogleDrive;
