@@ -274,6 +274,49 @@ export function useGoogleDrive() {
     }
   }, [accessToken]);
 
+  // Compartilhar arquivo com outro usuário
+  const shareFile = useCallback(async (fileId, email, role = 'reader') => {
+    if (!accessToken) {
+      throw new Error('Não conectado ao Google Drive');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `${DRIVE_API_BASE}/files/${fileId}/permissions`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            type: 'user',
+            role: role, // 'reader' ou 'writer'
+            emailAddress: email
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Erro ao compartilhar arquivo');
+      }
+
+      const result = await response.json();
+      console.log('[GoogleDrive] Arquivo compartilhado com:', email, 'role:', role);
+      return result;
+    } catch (e) {
+      console.error('[GoogleDrive] Erro ao compartilhar:', e);
+      setError(e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken]);
+
   return {
     isConnected,
     isLoading,
@@ -285,6 +328,7 @@ export function useGoogleDrive() {
     listFiles,
     loadFile,
     deleteFile,
+    shareFile,
     clientId: GOOGLE_CLIENT_ID
   };
 }

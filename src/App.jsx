@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.42'; // v1.35.42: Fix erro React #31 - notificações do Google Drive suportam objeto {type, message}
+const APP_VERSION = '1.35.43'; // v1.35.43: Compartilhar arquivos do Google Drive por email (reader/writer)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -30307,6 +30307,15 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
             setError({ type: 'success', message: `Arquivo excluído: ${file.name}` });
           } catch (err) {
             setError({ type: 'error', message: `Erro ao excluir: ${err.message}` });
+          }
+        }}
+        onShare={async (fileId, email, role) => {
+          try {
+            await googleDrive.shareFile(fileId, email, role);
+            const roleText = role === 'writer' ? 'edição' : 'visualização';
+            setError({ type: 'success', message: `Compartilhado com ${email} (${roleText})` });
+          } catch (err) {
+            setError({ type: 'error', message: `Erro ao compartilhar: ${err.message}` });
           }
         }}
         onRefresh={async () => {

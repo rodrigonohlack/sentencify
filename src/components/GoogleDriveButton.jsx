@@ -2,11 +2,11 @@
  * Botão de integração com Google Drive
  * Dropdown com opções: Conectar, Salvar, Carregar, Desconectar
  *
- * @version 1.35.40
+ * @version 1.35.43
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Cloud, CloudOff, Upload, Download, LogOut, Loader2, ChevronDown, Trash2, RefreshCw } from 'lucide-react';
+import { Cloud, CloudOff, Upload, Download, LogOut, Loader2, ChevronDown, Trash2, RefreshCw, Share2, X } from 'lucide-react';
 
 export function GoogleDriveButton({
   isConnected,
@@ -165,10 +165,33 @@ export function DriveFilesModal({
   isLoading,
   onLoad,
   onDelete,
+  onShare,
   onRefresh,
   isDarkMode
 }) {
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareFile, setShareFile] = useState(null);
+  const [shareEmail, setShareEmail] = useState('');
+  const [shareRole, setShareRole] = useState('reader');
+  const [shareLoading, setShareLoading] = useState(false);
+
   if (!isOpen) return null;
+
+  const handleShare = async () => {
+    if (!shareEmail.trim() || !shareFile) return;
+
+    setShareLoading(true);
+    try {
+      await onShare(shareFile.id, shareEmail.trim(), shareRole);
+      setShareModalOpen(false);
+      setShareEmail('');
+      setShareFile(null);
+    } catch (err) {
+      // Erro já tratado no hook
+    } finally {
+      setShareLoading(false);
+    }
+  };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -278,6 +301,22 @@ export function DriveFilesModal({
                     </button>
                     <button
                       onClick={() => {
+                        setShareFile(file);
+                        setShareEmail('');
+                        setShareRole('reader');
+                        setShareModalOpen(true);
+                      }}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        isDarkMode
+                          ? 'hover:bg-blue-900/30 text-blue-400'
+                          : 'hover:bg-blue-50 text-blue-500'
+                      }`}
+                      title="Compartilhar"
+                    >
+                      <Share2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
                         if (window.confirm(`Excluir "${file.name}" do Google Drive?`)) {
                           onDelete(file);
                         }
@@ -307,6 +346,102 @@ export function DriveFilesModal({
           </p>
         </div>
       </div>
+
+      {/* Modal de Compartilhamento */}
+      {shareModalOpen && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShareModalOpen(false)}
+          />
+          <div className={`relative w-full max-w-md mx-4 rounded-xl shadow-2xl p-6 ${
+            isDarkMode ? 'bg-slate-800' : 'bg-white'
+          }`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Share2 className="w-5 h-5 text-blue-500" />
+                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+                  Compartilhar
+                </h3>
+              </div>
+              <button
+                onClick={() => setShareModalOpen(false)}
+                className={`p-1 rounded-lg transition-colors ${
+                  isDarkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-100 text-slate-500'
+                }`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className={`text-sm mb-4 truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              {shareFile?.name}
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                  Email do destinatário
+                </label>
+                <input
+                  type="email"
+                  value={shareEmail}
+                  onChange={(e) => setShareEmail(e.target.value)}
+                  placeholder="email@exemplo.com"
+                  className={`w-full px-3 py-2 rounded-lg border text-sm ${
+                    isDarkMode
+                      ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400'
+                      : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                  Permissão
+                </label>
+                <select
+                  value={shareRole}
+                  onChange={(e) => setShareRole(e.target.value)}
+                  className={`w-full px-3 py-2 rounded-lg border text-sm ${
+                    isDarkMode
+                      ? 'bg-slate-700 border-slate-600 text-white'
+                      : 'bg-white border-slate-300 text-slate-800'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                >
+                  <option value="reader">Visualizar</option>
+                  <option value="writer">Editar</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  onClick={() => setShareModalOpen(false)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isDarkMode
+                      ? 'bg-slate-700 hover:bg-slate-600 text-white'
+                      : 'bg-slate-200 hover:bg-slate-300 text-slate-800'
+                  }`}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleShare}
+                  disabled={!shareEmail.trim() || shareLoading}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {shareLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Share2 className="w-4 h-4" />
+                  )}
+                  Compartilhar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
