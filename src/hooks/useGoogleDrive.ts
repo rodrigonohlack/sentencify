@@ -2,7 +2,7 @@
  * Hook para integração com Google Drive
  * Permite salvar/restaurar projetos Sentencify no Drive do usuário
  *
- * @version 1.35.50 - Migrado para TypeScript
+ * @version 1.35.54 - Foto do perfil Google no status de conexão
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -33,6 +33,7 @@ export interface GoogleDrivePermission {
 interface StoredToken {
   token: string;
   email: string;
+  photo?: string;  // v1.35.54: URL da foto do perfil
   expiresAt: number;
 }
 
@@ -47,6 +48,7 @@ export interface UseGoogleDriveReturn {
   isLoading: boolean;
   error: string | null;
   userEmail: string | null;
+  userPhoto: string | null;  // v1.35.54: URL da foto do perfil
   connect: () => void;
   disconnect: () => void;
   saveFile: (fileName: string, content: unknown) => Promise<GoogleDriveFile>;
@@ -66,7 +68,8 @@ export interface UseGoogleDriveReturn {
 // Client ID do Google Cloud (público, não é segredo)
 const GOOGLE_CLIENT_ID = '435520999136-6kqer9astvll9d5qpe2liac5de3ucqka.apps.googleusercontent.com';
 // v1.35.45: Adicionado drive.readonly para ver arquivos compartilhados por outros
-const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly';
+// v1.35.54: Adicionado profile para obter foto do usuário
+const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly profile';
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
 
@@ -91,6 +94,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userPhoto, setUserPhoto] = useState<string | null>(null);  // v1.35.54
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,11 +103,12 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        const { token, email, expiresAt }: StoredToken = JSON.parse(stored);
+        const { token, email, photo, expiresAt }: StoredToken = JSON.parse(stored);
         // Verificar se o token ainda é válido (com margem de 5 min)
         if (expiresAt && Date.now() < expiresAt - 5 * 60 * 1000) {
           setAccessToken(token);
           setUserEmail(email);
+          if (photo) setUserPhoto(photo);  // v1.35.54
           setIsConnected(true);
         } else {
           // Token expirado, limpar
@@ -131,11 +136,13 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       });
       const user = await userInfo.json();
       setUserEmail(user.email);
+      setUserPhoto(user.picture || null);  // v1.35.54
 
       // Persistir token com expiração
       const storedData: StoredToken = {
         token,
         email: user.email,
+        photo: user.picture,  // v1.35.54
         expiresAt: Date.now() + expiresIn * 1000
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedData));
@@ -164,6 +171,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
   const disconnect = useCallback(() => {
     setAccessToken(null);
     setUserEmail(null);
+    setUserPhoto(null);  // v1.35.54
     setIsConnected(false);
     localStorage.removeItem(STORAGE_KEY);
   }, []);
@@ -522,6 +530,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     isLoading,
     error,
     userEmail,
+    userPhoto,  // v1.35.54
     connect,
     disconnect,
     saveFile,

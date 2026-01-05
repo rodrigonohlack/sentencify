@@ -2,7 +2,7 @@
  * Botão de integração com Google Drive + Salvar/Carregar Local
  * Dropdown unificado para gerenciamento de projetos (nuvem e local)
  *
- * @version 1.35.53 - Ícone Cloud preenchido quando conectado
+ * @version 1.35.54 - Foto do perfil Google no status de conexão
  */
 
 import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
@@ -17,6 +17,7 @@ interface GoogleDriveButtonProps {
   isConnected: boolean;
   isLoading: boolean;
   userEmail: string | null;
+  userPhoto?: string | null;  // v1.35.54
   onConnect: () => void;
   onDisconnect: () => void;
   onSave: () => void;
@@ -52,6 +53,7 @@ export function GoogleDriveButton({
   isConnected,
   isLoading,
   userEmail,
+  userPhoto,
   onConnect,
   onDisconnect,
   onSave,
@@ -119,7 +121,17 @@ export function GoogleDriveButton({
           <div className={`px-3 py-2 border-b ${isDarkMode ? 'border-slate-600' : 'border-slate-200'}`}>
             {isConnected ? (
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                {/* v1.35.54: Avatar do usuário ou bolinha verde */}
+                {userPhoto ? (
+                  <img
+                    src={userPhoto}
+                    alt=""
+                    className="w-5 h-5 rounded-full"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                )}
                 <span className={`text-xs truncate ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
                   {userEmail || 'Conectado'}
                 </span>

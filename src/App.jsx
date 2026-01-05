@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.53'; // v1.35.53: Ícone Cloud preenchido quando conectado
+const APP_VERSION = '1.35.54'; // v1.35.54: Foto do perfil Google no status de conexão
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -27834,6 +27834,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     isConnected={googleDrive.isConnected}
                     isLoading={googleDrive.isLoading}
                     userEmail={googleDrive.userEmail}
+                    userPhoto={googleDrive.userPhoto}
                     onConnect={googleDrive.connect}
                     onDisconnect={googleDrive.disconnect}
                     onSave={async () => {

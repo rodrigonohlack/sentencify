@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.54', feature: 'Foto do perfil Google exibida no status de conexão Drive (ao lado do email)' },
   { version: '1.35.53', feature: 'UX: ícone Cloud preenchido (sólido) quando conectado ao Google Drive - contraste visual claro' },
   { version: '1.35.52', feature: 'UI consolidada: botão "Limpar Projeto" também incorporado ao dropdown (único botão "Projeto" no header)' },
   { version: '1.35.51', feature: 'UI consolidada: botões Salvar/Carregar Projeto movidos para dropdown "Projeto" (seções Google Drive + Local em um único lugar)' },
