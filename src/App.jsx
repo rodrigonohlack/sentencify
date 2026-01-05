@@ -25750,7 +25750,7 @@ Extraia e classifique todos os tópicos/pedidos em:
       // Salvar dados e abrir modal de curadoria
       setPendingCurationData(curationData);
       setShowTopicCurationModal(true);
-      setAnalysisInProgress(false);
+      setAnalyzing(false);
       setAnalysisProgress('');
 
       // PAUSA: O fluxo continua em handleCurationConfirm() após o usuário confirmar
@@ -25940,7 +25940,7 @@ Extraia e classifique todos os tópicos/pedidos em:
 
     try {
       setShowTopicCurationModal(false);
-      setAnalysisInProgress(true);
+      setAnalyzing(true);
       setAnalyzing(true);
       openModal('analysis');
 
@@ -26089,7 +26089,7 @@ Extraia e classifique todos os tópicos/pedidos em:
       closeModal('analysis');
     } finally {
       setAnalyzing(false);
-      setAnalysisInProgress(false);
+      setAnalyzing(false);
     }
   };
 
