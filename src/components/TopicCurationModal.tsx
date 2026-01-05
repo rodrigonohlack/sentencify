@@ -137,17 +137,17 @@ const MODEL_NAMES: Record<string, string> = {
   'gemini-3-pro-preview': 'Gemini 3 Pro'
 };
 
-// Estimativas de tokens para cálculo de custo
-const BASE_CONTEXT_TOKENS = 8000;    // petição + contestação média
-const TOKENS_PER_TOPIC_PROMPT = 500; // prompt do tópico
-const TOKENS_PER_TOPIC_OUTPUT = 3500; // mini-relatório gerado
+// Estimativas de tokens para cálculo de custo (calibrado com dados reais)
+const BASE_CONTEXT_TOKENS = 3500;    // petição + contestação típicas
+const TOKENS_PER_TOPIC_PROMPT = 300; // prompt do tópico
+const TOKENS_PER_TOPIC_OUTPUT = 1800; // mini-relatório gerado
 
-// Tokens de thinking por nível (Gemini)
+// Tokens de thinking por nível (Gemini) - calibrado com custos reais
 const GEMINI_THINKING_TOKENS: Record<string, number> = {
-  'minimal': 1000,
-  'low': 2000,
-  'medium': 5000,
-  'high': 10000
+  'minimal': 500,
+  'low': 1000,
+  'medium': 2500,
+  'high': 5000
 };
 
 const USD_TO_BRL = 5.50;
