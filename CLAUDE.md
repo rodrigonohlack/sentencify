@@ -4,11 +4,11 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.52 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.57 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
-**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`
+**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`
 
 **Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`, `GoogleDriveButton`
 
@@ -67,6 +67,11 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.57 | UX: botão Sair na mesma linha do Projeto (layout compacto) |
+| v1.35.56 | Fix: botão Sair volta para o header (logout geral do sistema) |
+| v1.35.55 | Bloco de sync (indicador + email) movido para aba Modelos |
+| v1.35.54 | Foto do perfil Google no status de conexão Drive |
+| v1.35.53 | UX: ícone Cloud preenchido quando conectado ao Drive |
 | v1.35.52 | UI consolidada: botão "Limpar Projeto" incorporado ao dropdown (único botão "Projeto" no header) |
 | v1.35.51 | UI consolidada: botões Salvar/Carregar Projeto movidos para dropdown "Projeto" |
 | v1.35.50 | Google Drive migrado para TypeScript: useGoogleDrive.ts e GoogleDriveButton.tsx |
