@@ -30219,7 +30219,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         onConfirm={handleCurationConfirm}
         onCancel={handleCurationCancel}
         initialTopics={pendingCurationData?.topics || []}
-        model={aiIntegration.aiSettings?.model || 'claude-sonnet-4-20250514'}
+        model={aiIntegration.aiSettings?.provider === 'gemini'
+          ? (aiIntegration.aiSettings?.geminiModel || 'gemini-3-flash-preview')
+          : (aiIntegration.aiSettings?.model || 'claude-sonnet-4-20250514')}
         parallelRequests={aiIntegration.aiSettings?.parallelRequests || 5}
         isDarkMode={appTheme === 'dark'}
       />
