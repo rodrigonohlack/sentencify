@@ -2,7 +2,7 @@
  * Hook para integração com Google Drive
  * Permite salvar/restaurar projetos Sentencify no Drive do usuário
  *
- * @version 1.35.46
+ * @version 1.35.47
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -108,6 +108,51 @@ export function useGoogleDrive() {
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
+  // v1.35.47: Obter ou criar pasta "Sentencify" no Drive
+  const getOrCreateFolder = useCallback(async () => {
+    if (!accessToken) {
+      throw new Error('Não conectado ao Google Drive');
+    }
+
+    try {
+      // Buscar pasta existente
+      const query = encodeURIComponent("name='Sentencify' and mimeType='application/vnd.google-apps.folder' and trashed=false");
+      const response = await fetch(
+        `${DRIVE_API_BASE}/files?q=${query}&fields=files(id,name)`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.files?.length > 0) {
+        console.log('[GoogleDrive] Pasta Sentencify encontrada:', data.files[0].id);
+        return data.files[0].id;
+      }
+
+      // Criar pasta se não existir
+      const createResponse = await fetch(`${DRIVE_API_BASE}/files`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: 'Sentencify',
+          mimeType: 'application/vnd.google-apps.folder'
+        })
+      });
+
+      const folder = await createResponse.json();
+      console.log('[GoogleDrive] Pasta Sentencify criada:', folder.id);
+      return folder.id;
+    } catch (e) {
+      console.error('[GoogleDrive] Erro ao obter/criar pasta:', e);
+      throw e;
+    }
+  }, [accessToken]);
+
   // Salvar arquivo no Drive
   const saveFile = useCallback(async (fileName, content) => {
     if (!accessToken) {
@@ -118,14 +163,19 @@ export function useGoogleDrive() {
     setError(null);
 
     try {
+      // v1.35.47: Obter pasta Sentencify
+      const folderId = await getOrCreateFolder();
+
       // Primeiro, verificar se já existe um arquivo com esse nome
       const existingFiles = await listFiles();
       const existing = existingFiles.find(f => f.name === fileName);
 
       // v1.35.46: appProperties identifica arquivos criados pelo Sentencify
+      // v1.35.47: parents coloca o arquivo na pasta Sentencify
       const metadata = {
         name: fileName,
         mimeType: 'application/json',
+        parents: [folderId],
         appProperties: {
           sentencify: 'true',
           version: '1'
@@ -176,7 +226,7 @@ export function useGoogleDrive() {
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, getOrCreateFolder]);
 
   // Listar arquivos Sentencify no Drive
   const listFiles = useCallback(async () => {
@@ -188,9 +238,12 @@ export function useGoogleDrive() {
     setError(null);
 
     try {
+      // v1.35.47: Obter pasta Sentencify
+      const folderId = await getOrCreateFolder();
+
       // v1.35.46: Filtrar por appProperties para mostrar APENAS arquivos do Sentencify
-      // (ignora arquivos compartilhados por outros meios que têm "sentencify" no nome)
-      const query = encodeURIComponent("appProperties has { key='sentencify' and value='true' } and trashed=false");
+      // v1.35.47: Filtrar também pela pasta
+      const query = encodeURIComponent(`'${folderId}' in parents and appProperties has { key='sentencify' and value='true' } and trashed=false`);
       // v1.35.45: Incluir owners e shared para identificar arquivos compartilhados
       const fields = encodeURIComponent('files(id,name,size,modifiedTime,createdTime,owners,shared)');
 
@@ -218,7 +271,7 @@ export function useGoogleDrive() {
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, getOrCreateFolder]);
 
   // Carregar arquivo do Drive
   const loadFile = useCallback(async (fileId) => {

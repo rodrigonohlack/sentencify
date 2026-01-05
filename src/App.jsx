@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.46'; // v1.35.46: Google Drive: filtrar por appProperties (ignora arquivos compartilhados fora do app)
+const APP_VERSION = '1.35.47'; // v1.35.47: Google Drive: salva em pasta "Sentencify" (organização)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
