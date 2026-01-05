@@ -139,7 +139,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.37'; // v1.35.37: Estimativa de custo melhorada: considera thinking tokens, batch size, tooltip com breakdown
+const APP_VERSION = '1.35.38'; // v1.35.38: Fix lag drag: DragOverlay via createPortal(body), CSS.Translate, TopicCardVisual puro
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {

@@ -5,7 +5,8 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { createPortal } from 'react-dom';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 import {
@@ -247,6 +248,75 @@ const isSpecialTopic = (topic: Topic | null): boolean => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// COMPONENTE: TopicCardVisual (visual puro, sem lógica de drag)
+// Usado tanto na lista quanto no DragOverlay
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface TopicCardVisualProps {
+  topic: Topic;
+  index: number;
+  isDarkMode: boolean;
+  isOverlay?: boolean;
+  isDragging?: boolean;
+  isSelectedForMerge?: boolean;
+}
+
+const TopicCardVisual: React.FC<TopicCardVisualProps> = ({
+  topic,
+  index,
+  isDarkMode,
+  isOverlay = false,
+  isDragging = false,
+  isSelectedForMerge = false
+}) => {
+  const isSpecial = isSpecialTopic(topic);
+  const categoryColor = CATEGORY_COLORS[topic.category] || CATEGORY_COLORS['MÉRITO'];
+
+  return (
+    <div
+      className={`
+        flex items-center gap-2 p-3 rounded-lg border transition-all
+        ${isDragging && !isOverlay ? 'ring-2 ring-blue-500' : ''}
+        ${isOverlay ? 'ring-2 ring-blue-500 shadow-2xl' : ''}
+        ${isSelectedForMerge ? 'ring-2 ring-green-500 bg-green-900/20' : ''}
+        ${isSpecial ? 'bg-emerald-900/20 border-emerald-700/50' : 'bg-slate-800/50 border-slate-700'}
+        ${isDarkMode ? '' : 'bg-white/90 border-slate-300'}
+      `}
+      style={isOverlay ? {
+        cursor: 'grabbing',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+      } : undefined}
+    >
+      {isSpecial ? (
+        <Pin className="w-4 h-4 text-emerald-500 flex-shrink-0" title="Posição fixa" />
+      ) : (
+        <div className={isOverlay ? 'cursor-grabbing' : 'cursor-grab'}>
+          <GripVertical className="w-4 h-4 text-slate-500" />
+        </div>
+      )}
+
+      <span className={`text-xs w-6 flex-shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+        {index + 1}.
+      </span>
+
+      <span className={`flex-1 truncate ${isSpecial ? 'text-emerald-400' : isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+        {topic.title}
+      </span>
+
+      <span className={`text-xs px-2 py-0.5 rounded flex-shrink-0 ${categoryColor}`}>
+        {topic.category}
+      </span>
+
+      {isSpecial && (
+        <span className="text-xs text-emerald-400 flex-shrink-0">
+          Fixo
+        </span>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE: TopicPreviewCard (com React.memo para evitar re-renders)
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -280,11 +350,12 @@ const TopicPreviewCard = React.memo<TopicPreviewCardProps>(({
     disabled: isSpecial
   });
 
+  // Usar Translate em vez de Transform para melhor performance
+  // Opacity baixa porque o DragOverlay mostra o "ghost" real
   const style: React.CSSProperties = {
-    transform: DndCSS.Transform.toString(transform),
+    transform: DndCSS.Translate.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1000 : 'auto'
+    opacity: isDragging ? 0.3 : 1
   };
 
   useEffect(() => {
@@ -778,6 +849,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
   const [showMergeConfirm, setShowMergeConfirm] = useState(false);
   const [isAddingTopic, setIsAddingTopic] = useState(false);
   const [deletedTopics, setDeletedTopics] = useState<{topic: Topic, index: number}[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && initialTopics.length > 0) {
@@ -819,6 +891,17 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
     );
   }, [topics]);
 
+  // Encontrar tópico ativo para o DragOverlay
+  const activeTopic = useMemo(() => {
+    if (!activeId) return null;
+    return topics.find(t => (t.id || t.title) === activeId) || null;
+  }, [activeId, topics]);
+
+  const activeIndex = useMemo(() => {
+    if (!activeId) return -1;
+    return topics.findIndex(t => (t.id || t.title) === activeId);
+  }, [activeId, topics]);
+
   const customCollisionDetection = useCallback((args: Parameters<typeof closestCenter>[0]) => {
     const { droppableContainers, ...rest } = args;
     const filteredContainers = droppableContainers.filter(
@@ -827,8 +910,16 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
     return closestCenter({ ...rest, droppableContainers: filteredContainers });
   }, [specialTopicIds]);
 
+  // Handler para início do drag - salva o ID do item ativo
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  }, []);
+
+  // Handler para fim do drag - reordena e limpa o ID ativo
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveId(null);  // Limpar sempre ao terminar
+
     if (!over || active.id === over.id) return;
 
     setTopics(prevTopics => {
@@ -1021,6 +1112,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
           <DndContext
             sensors={sensors}
             collisionDetection={customCollisionDetection}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
             <SortableContext
@@ -1053,6 +1145,22 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
                 </div>
               ))}
             </SortableContext>
+
+            {/* DragOverlay renderizado via portal no body - escapa do modal para evitar lag */}
+            {createPortal(
+              <DragOverlay dropAnimation={null}>
+                {activeTopic && (
+                  <TopicCardVisual
+                    topic={activeTopic}
+                    index={activeIndex}
+                    isDarkMode={isDarkMode}
+                    isOverlay={true}
+                    isSelectedForMerge={selectedForMerge.some(t => t.title === activeTopic.title)}
+                  />
+                )}
+              </DragOverlay>,
+              document.body
+            )}
           </DndContext>
 
           {isAddingTopic ? (

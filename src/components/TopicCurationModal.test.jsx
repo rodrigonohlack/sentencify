@@ -14,6 +14,7 @@ import React from 'react';
 // Mock do dnd-kit (complexo de testar diretamente)
 vi.mock('@dnd-kit/core', () => ({
   DndContext: ({ children }) => <div data-testid="dnd-context">{children}</div>,
+  DragOverlay: ({ children }) => <div data-testid="drag-overlay">{children}</div>,
   closestCenter: vi.fn(),
   PointerSensor: vi.fn(),
   useSensor: vi.fn(() => ({})),
@@ -42,6 +43,9 @@ vi.mock('@dnd-kit/sortable', () => ({
 vi.mock('@dnd-kit/utilities', () => ({
   CSS: {
     Transform: {
+      toString: vi.fn(() => '')
+    },
+    Translate: {
       toString: vi.fn(() => '')
     }
   }

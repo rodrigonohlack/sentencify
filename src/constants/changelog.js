@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.38', feature: 'Fix lag drag no modal: DragOverlay via createPortal(body) escapa CSS do modal, CSS.Translate para melhor performance, TopicCardVisual componente visual puro' },
   { version: '1.35.37', feature: 'Estimativa de custo melhorada: considera thinking tokens (Claude/Gemini), batch size (topicsPerRequest), tooltip com breakdown detalhado' },
   { version: '1.35.36', feature: 'Fix drag lag: remover willChange dinâmico (causava repaints contínuos), distance 8px (igual App.jsx)' },
   { version: '1.35.35', feature: 'Otimização drag FPS: React.memo no TopicPreviewCard, callbacks com setter funcional (sem dependências)' },
