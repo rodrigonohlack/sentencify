@@ -2,11 +2,46 @@
  * Botão de integração com Google Drive
  * Dropdown com opções: Conectar, Salvar, Carregar, Desconectar
  *
- * @version 1.35.49
+ * @version 1.35.50 - Migrado para TypeScript
  */
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Cloud, CloudOff, Upload, Download, LogOut, Loader2, ChevronDown, Trash2, RefreshCw, Share2, X, Users } from 'lucide-react';
+import { GoogleDriveFile, GoogleDrivePermission } from '../hooks/useGoogleDrive';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface GoogleDriveButtonProps {
+  isConnected: boolean;
+  isLoading: boolean;
+  userEmail: string | null;
+  onConnect: () => void;
+  onDisconnect: () => void;
+  onSave: () => void;
+  onLoadClick: () => void;
+  isDarkMode: boolean;
+}
+
+interface DriveFilesModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  files: GoogleDriveFile[];
+  isLoading: boolean;
+  onLoad: (file: GoogleDriveFile) => void;
+  onDelete: (file: GoogleDriveFile) => void;
+  onShare: (fileId: string, email: string, role: string) => Promise<void>;
+  onGetPermissions: (fileId: string) => Promise<GoogleDrivePermission[]>;
+  onRemovePermission: (fileId: string, permissionId: string) => Promise<boolean>;
+  onRefresh: () => void;
+  userEmail: string | null;
+  isDarkMode: boolean;
+}
+
+// ============================================================================
+// COMPONENTS
+// ============================================================================
 
 export function GoogleDriveButton({
   isConnected,
@@ -17,14 +52,14 @@ export function GoogleDriveButton({
   onSave,
   onLoadClick,
   isDarkMode
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
+}: GoogleDriveButtonProps): React.ReactElement {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    function handleClickOutside(event: MouseEvent): void {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
@@ -48,10 +83,6 @@ export function GoogleDriveButton({
     isDarkMode
       ? 'hover:bg-slate-700 text-slate-200'
       : 'hover:bg-slate-100 text-slate-700'
-  }`;
-
-  const disabledClass = `flex items-center gap-2 w-full px-3 py-2 text-sm opacity-50 cursor-not-allowed ${
-    isDarkMode ? 'text-slate-400' : 'text-slate-500'
   }`;
 
   return (
@@ -171,33 +202,33 @@ export function DriveFilesModal({
   onRefresh,
   userEmail,
   isDarkMode
-}) {
-  const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [shareFile, setShareFile] = useState(null);
-  const [shareEmail, setShareEmail] = useState('');
-  const [shareLoading, setShareLoading] = useState(false);
+}: DriveFilesModalProps): React.ReactElement | null {
+  const [shareModalOpen, setShareModalOpen] = useState<boolean>(false);
+  const [shareFile, setShareFile] = useState<GoogleDriveFile | null>(null);
+  const [shareEmail, setShareEmail] = useState<string>('');
+  const [shareLoading, setShareLoading] = useState<boolean>(false);
 
   // v1.35.45: Modal para ver permissões
-  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
-  const [permissionsFile, setPermissionsFile] = useState(null);
-  const [permissions, setPermissions] = useState([]);
-  const [permissionsLoading, setPermissionsLoading] = useState(false);
+  const [permissionsModalOpen, setPermissionsModalOpen] = useState<boolean>(false);
+  const [permissionsFile, setPermissionsFile] = useState<GoogleDriveFile | null>(null);
+  const [permissions, setPermissions] = useState<GoogleDrivePermission[]>([]);
+  const [permissionsLoading, setPermissionsLoading] = useState<boolean>(false);
 
   // Verifica se o arquivo é de outro usuário
-  const isFromOther = (file) => {
+  const isFromOther = (file: GoogleDriveFile): boolean => {
     if (!file.owners || file.owners.length === 0) return false;
     return file.owners[0].emailAddress !== userEmail;
   };
 
   // Buscar permissões de um arquivo
-  const handleViewPermissions = async (file) => {
+  const handleViewPermissions = async (file: GoogleDriveFile): Promise<void> => {
     setPermissionsFile(file);
     setPermissionsModalOpen(true);
     setPermissionsLoading(true);
     try {
       const perms = await onGetPermissions(file.id);
       setPermissions(perms);
-    } catch (e) {
+    } catch {
       setPermissions([]);
     } finally {
       setPermissionsLoading(false);
@@ -205,7 +236,7 @@ export function DriveFilesModal({
   };
 
   // v1.35.48: Remover permissão (revogar acesso)
-  const handleRemovePermission = async (permissionId) => {
+  const handleRemovePermission = async (permissionId: string): Promise<void> => {
     if (!permissionsFile || !onRemovePermission) return;
 
     setPermissionsLoading(true);
@@ -225,7 +256,7 @@ export function DriveFilesModal({
 
   // v1.35.49: Sempre usa 'reader' pois permissão de escrita é irrelevante
   // (ao salvar, o usuário cria uma cópia no próprio Drive)
-  const handleShare = async () => {
+  const handleShare = async (): Promise<void> => {
     if (!shareEmail.trim() || !shareFile) return;
 
     setShareLoading(true);
@@ -234,14 +265,14 @@ export function DriveFilesModal({
       setShareModalOpen(false);
       setShareEmail('');
       setShareFile(null);
-    } catch (err) {
+    } catch {
       // Erro já tratado no hook
     } finally {
       setShareLoading(false);
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -252,7 +283,7 @@ export function DriveFilesModal({
     });
   };
 
-  const formatSize = (bytes) => {
+  const formatSize = (bytes: string | undefined): string => {
     if (!bytes) return '-';
     const kb = parseInt(bytes) / 1024;
     if (kb < 1024) return `${kb.toFixed(1)} KB`;
@@ -334,7 +365,7 @@ export function DriveFilesModal({
                         {file.name}
                       </p>
                       {/* v1.35.45: Badges de compartilhamento */}
-                      {isFromOther(file) && (
+                      {isFromOther(file) && file.owners && (
                         <span className={`px-1.5 py-0.5 rounded text-xs ${
                           isDarkMode ? 'bg-purple-900/50 text-purple-300' : 'bg-purple-100 text-purple-700'
                         }`}>

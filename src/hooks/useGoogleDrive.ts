@@ -2,11 +2,66 @@
  * Hook para integração com Google Drive
  * Permite salvar/restaurar projetos Sentencify no Drive do usuário
  *
- * @version 1.35.49
+ * @version 1.35.50 - Migrado para TypeScript
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { useGoogleLogin } from '@react-oauth/google';
+import { useGoogleLogin, TokenResponse } from '@react-oauth/google';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export interface GoogleDriveFile {
+  id: string;
+  name: string;
+  size?: string;
+  modifiedTime: string;
+  createdTime?: string;
+  owners?: { emailAddress: string }[];
+  shared?: boolean;
+}
+
+export interface GoogleDrivePermission {
+  id: string;
+  emailAddress?: string;
+  displayName?: string;
+  role: 'owner' | 'writer' | 'reader';
+  type: 'user' | 'anyone';
+}
+
+interface StoredToken {
+  token: string;
+  email: string;
+  expiresAt: number;
+}
+
+interface DriveApiError {
+  error?: {
+    message?: string;
+  };
+}
+
+export interface UseGoogleDriveReturn {
+  isConnected: boolean;
+  isLoading: boolean;
+  error: string | null;
+  userEmail: string | null;
+  connect: () => void;
+  disconnect: () => void;
+  saveFile: (fileName: string, content: unknown) => Promise<GoogleDriveFile>;
+  listFiles: () => Promise<GoogleDriveFile[]>;
+  loadFile: (fileId: string) => Promise<unknown>;
+  deleteFile: (fileId: string) => Promise<boolean>;
+  shareFile: (fileId: string, email: string, role?: 'reader' | 'writer') => Promise<GoogleDrivePermission>;
+  getPermissions: (fileId: string) => Promise<GoogleDrivePermission[]>;
+  removePermission: (fileId: string, permissionId: string) => Promise<boolean>;
+  clientId: string;
+}
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 // Client ID do Google Cloud (público, não é segredo)
 const GOOGLE_CLIENT_ID = '435520999136-6kqer9astvll9d5qpe2liac5de3ucqka.apps.googleusercontent.com';
@@ -28,19 +83,23 @@ if (typeof window !== 'undefined') {
   }
 }
 
-export function useGoogleDrive() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [accessToken, setAccessToken] = useState(null);
-  const [userEmail, setUserEmail] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+// ============================================================================
+// HOOK
+// ============================================================================
+
+export function useGoogleDrive(): UseGoogleDriveReturn {
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Restaurar token do localStorage ao inicializar
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        const { token, email, expiresAt } = JSON.parse(stored);
+        const { token, email, expiresAt }: StoredToken = JSON.parse(stored);
         // Verificar se o token ainda é válido (com margem de 5 min)
         if (expiresAt && Date.now() < expiresAt - 5 * 60 * 1000) {
           setAccessToken(token);
@@ -50,14 +109,14 @@ export function useGoogleDrive() {
           // Token expirado, limpar
           localStorage.removeItem(STORAGE_KEY);
         }
-      } catch (e) {
+      } catch {
         localStorage.removeItem(STORAGE_KEY);
       }
     }
   }, []);
 
   // Callback de sucesso do OAuth
-  const handleLoginSuccess = useCallback(async (tokenResponse) => {
+  const handleLoginSuccess = useCallback(async (tokenResponse: TokenResponse) => {
     const token = tokenResponse.access_token;
     const expiresIn = tokenResponse.expires_in || 3600; // padrão 1 hora
 
@@ -74,11 +133,12 @@ export function useGoogleDrive() {
       setUserEmail(user.email);
 
       // Persistir token com expiração
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      const storedData: StoredToken = {
         token,
         email: user.email,
         expiresAt: Date.now() + expiresIn * 1000
-      }));
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedData));
     } catch (e) {
       console.error('[GoogleDrive] Erro ao buscar info do usuário:', e);
     }
@@ -109,7 +169,7 @@ export function useGoogleDrive() {
   }, []);
 
   // v1.35.47: Obter ou criar pasta "Sentencify" no Drive
-  const getOrCreateFolder = useCallback(async () => {
+  const getOrCreateFolder = useCallback(async (): Promise<string> => {
     if (!accessToken) {
       throw new Error('Não conectado ao Google Drive');
     }
@@ -153,8 +213,58 @@ export function useGoogleDrive() {
     }
   }, [accessToken]);
 
+  // Listar arquivos Sentencify no Drive
+  const listFiles = useCallback(async (): Promise<GoogleDriveFile[]> => {
+    if (!accessToken) {
+      throw new Error('Não conectado ao Google Drive');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // v1.35.47: Obter pasta Sentencify
+      const folderId = await getOrCreateFolder();
+
+      // v1.35.46: Filtrar por appProperties para mostrar APENAS arquivos do Sentencify
+      // v1.35.47: Filtrar também pela pasta
+      // v1.35.48: Incluir arquivos compartilhados comigo (sharedWithMe)
+      const query = encodeURIComponent(
+        `('${folderId}' in parents and appProperties has { key='sentencify' and value='true' } and trashed=false) or ` +
+        `(sharedWithMe=true and appProperties has { key='sentencify' and value='true' } and trashed=false)`
+      );
+      // v1.35.45: Incluir owners e shared para identificar arquivos compartilhados
+      const fields = encodeURIComponent('files(id,name,size,modifiedTime,createdTime,owners,shared)');
+
+      const response = await fetch(
+        `${DRIVE_API_BASE}/files?q=${query}&fields=${fields}&orderBy=modifiedTime desc&pageSize=50`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const errorData: DriveApiError = await response.json();
+        throw new Error(errorData.error?.message || 'Erro ao listar arquivos');
+      }
+
+      const data = await response.json();
+      console.log('[GoogleDrive] Arquivos encontrados:', data.files?.length || 0);
+      return data.files || [];
+    } catch (e) {
+      console.error('[GoogleDrive] Erro ao listar:', e);
+      const errorMessage = e instanceof Error ? e.message : 'Erro desconhecido';
+      setError(errorMessage);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken, getOrCreateFolder]);
+
   // Salvar arquivo no Drive
-  const saveFile = useCallback(async (fileName, content) => {
+  const saveFile = useCallback(async (fileName: string, content: unknown): Promise<GoogleDriveFile> => {
     if (!accessToken) {
       throw new Error('Não conectado ao Google Drive');
     }
@@ -189,7 +299,7 @@ export function useGoogleDrive() {
       formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
       formData.append('file', blob);
 
-      let response;
+      let response: Response;
 
       if (existing) {
         // Atualizar arquivo existente (PATCH)
@@ -212,7 +322,7 @@ export function useGoogleDrive() {
       }
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData: DriveApiError = await response.json();
         throw new Error(errorData.error?.message || 'Erro ao salvar no Drive');
       }
 
@@ -221,64 +331,16 @@ export function useGoogleDrive() {
       return result;
     } catch (e) {
       console.error('[GoogleDrive] Erro ao salvar:', e);
-      setError(e.message);
+      const errorMessage = e instanceof Error ? e.message : 'Erro desconhecido';
+      setError(errorMessage);
       throw e;
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken, getOrCreateFolder]);
-
-  // Listar arquivos Sentencify no Drive
-  const listFiles = useCallback(async () => {
-    if (!accessToken) {
-      throw new Error('Não conectado ao Google Drive');
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // v1.35.47: Obter pasta Sentencify
-      const folderId = await getOrCreateFolder();
-
-      // v1.35.46: Filtrar por appProperties para mostrar APENAS arquivos do Sentencify
-      // v1.35.47: Filtrar também pela pasta
-      // v1.35.48: Incluir arquivos compartilhados comigo (sharedWithMe)
-      const query = encodeURIComponent(
-        `('${folderId}' in parents and appProperties has { key='sentencify' and value='true' } and trashed=false) or ` +
-        `(sharedWithMe=true and appProperties has { key='sentencify' and value='true' } and trashed=false)`
-      );
-      // v1.35.45: Incluir owners e shared para identificar arquivos compartilhados
-      const fields = encodeURIComponent('files(id,name,size,modifiedTime,createdTime,owners,shared)');
-
-      const response = await fetch(
-        `${DRIVE_API_BASE}/files?q=${query}&fields=${fields}&orderBy=modifiedTime desc&pageSize=50`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Erro ao listar arquivos');
-      }
-
-      const data = await response.json();
-      console.log('[GoogleDrive] Arquivos encontrados:', data.files?.length || 0);
-      return data.files || [];
-    } catch (e) {
-      console.error('[GoogleDrive] Erro ao listar:', e);
-      setError(e.message);
-      throw e;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [accessToken, getOrCreateFolder]);
+  }, [accessToken, getOrCreateFolder, listFiles]);
 
   // Carregar arquivo do Drive
-  const loadFile = useCallback(async (fileId) => {
+  const loadFile = useCallback(async (fileId: string): Promise<unknown> => {
     if (!accessToken) {
       throw new Error('Não conectado ao Google Drive');
     }
@@ -297,7 +359,7 @@ export function useGoogleDrive() {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData: DriveApiError = await response.json();
         throw new Error(errorData.error?.message || 'Erro ao carregar arquivo');
       }
 
@@ -306,7 +368,8 @@ export function useGoogleDrive() {
       return JSON.parse(content);
     } catch (e) {
       console.error('[GoogleDrive] Erro ao carregar:', e);
-      setError(e.message);
+      const errorMessage = e instanceof Error ? e.message : 'Erro desconhecido';
+      setError(errorMessage);
       throw e;
     } finally {
       setIsLoading(false);
@@ -314,7 +377,7 @@ export function useGoogleDrive() {
   }, [accessToken]);
 
   // Deletar arquivo do Drive
-  const deleteFile = useCallback(async (fileId) => {
+  const deleteFile = useCallback(async (fileId: string): Promise<boolean> => {
     if (!accessToken) {
       throw new Error('Não conectado ao Google Drive');
     }
@@ -334,7 +397,7 @@ export function useGoogleDrive() {
       );
 
       if (!response.ok && response.status !== 204) {
-        const errorData = await response.json();
+        const errorData: DriveApiError = await response.json();
         throw new Error(errorData.error?.message || 'Erro ao deletar arquivo');
       }
 
@@ -342,7 +405,8 @@ export function useGoogleDrive() {
       return true;
     } catch (e) {
       console.error('[GoogleDrive] Erro ao deletar:', e);
-      setError(e.message);
+      const errorMessage = e instanceof Error ? e.message : 'Erro desconhecido';
+      setError(errorMessage);
       throw e;
     } finally {
       setIsLoading(false);
@@ -350,7 +414,7 @@ export function useGoogleDrive() {
   }, [accessToken]);
 
   // Compartilhar arquivo com outro usuário
-  const shareFile = useCallback(async (fileId, email, role = 'reader') => {
+  const shareFile = useCallback(async (fileId: string, email: string, role: 'reader' | 'writer' = 'reader'): Promise<GoogleDrivePermission> => {
     if (!accessToken) {
       throw new Error('Não conectado ao Google Drive');
     }
@@ -376,7 +440,7 @@ export function useGoogleDrive() {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData: DriveApiError = await response.json();
         throw new Error(errorData.error?.message || 'Erro ao compartilhar arquivo');
       }
 
@@ -385,7 +449,8 @@ export function useGoogleDrive() {
       return result;
     } catch (e) {
       console.error('[GoogleDrive] Erro ao compartilhar:', e);
-      setError(e.message);
+      const errorMessage = e instanceof Error ? e.message : 'Erro desconhecido';
+      setError(errorMessage);
       throw e;
     } finally {
       setIsLoading(false);
@@ -393,7 +458,7 @@ export function useGoogleDrive() {
   }, [accessToken]);
 
   // v1.35.45: Buscar permissões de um arquivo (quem tem acesso)
-  const getPermissions = useCallback(async (fileId) => {
+  const getPermissions = useCallback(async (fileId: string): Promise<GoogleDrivePermission[]> => {
     if (!accessToken) {
       throw new Error('Não conectado ao Google Drive');
     }
@@ -409,7 +474,7 @@ export function useGoogleDrive() {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData: DriveApiError = await response.json();
         throw new Error(errorData.error?.message || 'Erro ao buscar permissões');
       }
 
@@ -423,7 +488,7 @@ export function useGoogleDrive() {
   }, [accessToken]);
 
   // v1.35.48: Remover permissão de um arquivo (revogar acesso)
-  const removePermission = useCallback(async (fileId, permissionId) => {
+  const removePermission = useCallback(async (fileId: string, permissionId: string): Promise<boolean> => {
     if (!accessToken) {
       throw new Error('Não conectado ao Google Drive');
     }
@@ -440,7 +505,7 @@ export function useGoogleDrive() {
       );
 
       if (!response.ok && response.status !== 204) {
-        const errorData = await response.json();
+        const errorData: DriveApiError = await response.json();
         throw new Error(errorData.error?.message || 'Erro ao remover permissão');
       }
 
