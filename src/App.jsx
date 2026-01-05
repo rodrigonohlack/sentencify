@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.45'; // v1.35.45: Google Drive: ver arquivos compartilhados + badges + permissões
+const APP_VERSION = '1.35.46'; // v1.35.46: Google Drive: filtrar por appProperties (ignora arquivos compartilhados fora do app)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {

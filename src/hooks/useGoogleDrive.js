@@ -2,7 +2,7 @@
  * Hook para integração com Google Drive
  * Permite salvar/restaurar projetos Sentencify no Drive do usuário
  *
- * @version 1.35.45
+ * @version 1.35.46
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -122,9 +122,14 @@ export function useGoogleDrive() {
       const existingFiles = await listFiles();
       const existing = existingFiles.find(f => f.name === fileName);
 
+      // v1.35.46: appProperties identifica arquivos criados pelo Sentencify
       const metadata = {
         name: fileName,
-        mimeType: 'application/json'
+        mimeType: 'application/json',
+        appProperties: {
+          sentencify: 'true',
+          version: '1'
+        }
       };
 
       const jsonContent = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
@@ -183,8 +188,9 @@ export function useGoogleDrive() {
     setError(null);
 
     try {
-      // Buscar arquivos JSON que contenham "sentencify" no nome
-      const query = encodeURIComponent("name contains 'sentencify' and mimeType='application/json' and trashed=false");
+      // v1.35.46: Filtrar por appProperties para mostrar APENAS arquivos do Sentencify
+      // (ignora arquivos compartilhados por outros meios que têm "sentencify" no nome)
+      const query = encodeURIComponent("appProperties has { key='sentencify' and value='true' } and trashed=false");
       // v1.35.45: Incluir owners e shared para identificar arquivos compartilhados
       const fields = encodeURIComponent('files(id,name,size,modifiedTime,createdTime,owners,shared)');
 
