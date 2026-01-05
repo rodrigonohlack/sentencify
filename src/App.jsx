@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.41'; // v1.35.41: Refatoração - exportProject e importProject usam funções compartilhadas (elimina ~200 linhas duplicadas)
+const APP_VERSION = '1.35.42'; // v1.35.42: Fix erro React #31 - notificações do Google Drive suportam objeto {type, message}
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -28038,10 +28038,20 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           </div>
 
           {error && (
-            <div className="mx-6 mt-4 p-4 bg-red-500/10 border border-red-500/50 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="theme-text-primary flex-1">{error}</p>
-              <button onClick={() => setError('')} className="text-red-400 p-1 rounded transition-colors error-close-btn">
+            <div className={`mx-6 mt-4 p-4 rounded-lg flex items-start gap-3 ${
+              typeof error === 'object' && error.type === 'success'
+                ? 'bg-green-500/10 border border-green-500/50'
+                : 'bg-red-500/10 border border-red-500/50'
+            }`}>
+              <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                typeof error === 'object' && error.type === 'success' ? 'text-green-400' : 'text-red-400'
+              }`} />
+              <p className="theme-text-primary flex-1">
+                {typeof error === 'object' ? error.message : error}
+              </p>
+              <button onClick={() => setError('')} className={`p-1 rounded transition-colors error-close-btn ${
+                typeof error === 'object' && error.type === 'success' ? 'text-green-400' : 'text-red-400'
+              }`}>
                 <X className="w-4 h-4" />
               </button>
             </div>

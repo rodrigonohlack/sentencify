@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.42', feature: 'Fix erro React #31: notificações do Google Drive agora suportam objeto {type, message} (sucesso em verde, erro em vermelho)' },
   { version: '1.35.41', feature: 'Refatoração: exportProject e importProject usam buildProjectJson/importProjectFromJson (elimina ~200 linhas duplicadas)' },
   { version: '1.35.40', feature: 'Google Drive: salvar e carregar projetos na nuvem pessoal do usuário (OAuth2, sem custo adicional, até 750GB/dia)' },
   { version: '1.35.39', feature: 'Calibra estimativa de custo: constantes de tokens ajustadas com dados reais (BASE_CONTEXT 8K→3.5K, OUTPUT 3.5K→1.8K, GEMINI_THINKING ~50%)' },
