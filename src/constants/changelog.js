@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.58', feature: 'Worker Error Handling: onerror handler para rejeitar promises pendentes, timeout de 60s nas chamadas, método cleanup() para reset do AIModelService' },
   { version: '1.35.57', feature: 'UX: botão Sair movido para a mesma linha do botão Projeto (layout mais compacto)' },
   { version: '1.35.56', feature: 'Fix: botão Sair volta para o header (logout geral do sistema), apenas indicador + email ficam na aba Modelos' },
   { version: '1.35.55', feature: 'Bloco de sync de modelos (indicador + email) movido do header para a aba Modelos' },

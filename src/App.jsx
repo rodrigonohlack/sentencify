@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.57'; // v1.35.57: Botão Sair na mesma linha do Projeto
+const APP_VERSION = '1.35.58'; // v1.35.58: Worker Error Handling - onerror, timeout, cleanup()
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -438,15 +438,44 @@ const AIModelService = {
           pending.resolve(result);
         }
       };
+
+      // v1.35.58: Handler de erro do worker - rejeita promises pendentes
+      this.worker.onerror = (err) => {
+        console.error('[AI Worker] Error:', err);
+        // Rejeitar todas as promises pendentes
+        this.pending.forEach(({ reject }) => {
+          reject(new Error('Worker error: ' + (err.message || 'Unknown error')));
+        });
+        this.pending.clear();
+        // Reset status para error
+        Object.keys(this.status).forEach(key => {
+          this.status[key] = 'error';
+        });
+        this._notify();
+      };
     }
     return this.worker;
   },
 
   // Chamar worker
-  _call(type, text = null, options = null) {
+  // v1.35.58: Adicionado timeout para evitar promises pendentes eternamente
+  _call(type, text = null, options = null, timeoutMs = 60000) {
     return new Promise((resolve, reject) => {
       const id = crypto.randomUUID();
-      this.pending.set(id, { resolve, reject });
+
+      // Timeout para não travar indefinidamente
+      const timeout = setTimeout(() => {
+        if (this.pending.has(id)) {
+          this.pending.delete(id);
+          reject(new Error(`Worker timeout: ${type}`));
+        }
+      }, timeoutMs);
+
+      this.pending.set(id, {
+        resolve: (result) => { clearTimeout(timeout); resolve(result); },
+        reject: (err) => { clearTimeout(timeout); reject(err); }
+      });
+
       this.getWorker().postMessage({ id, type, text, options });
     });
   },
@@ -467,6 +496,30 @@ const AIModelService = {
     const wrappedFn = ({ status, progress }) => fn(status, progress);
     this.listeners.add(wrappedFn);
     return () => this.listeners.delete(wrappedFn);
+  },
+
+  // v1.35.58: Limpar recursos e pending promises
+  cleanup() {
+    // Rejeitar todas as promises pendentes
+    this.pending.forEach(({ reject }) => {
+      reject(new Error('AIModelService cleanup'));
+    });
+    this.pending.clear();
+
+    // Terminar worker
+    if (this.worker) {
+      this.worker.terminate();
+      this.worker = null;
+    }
+
+    // Reset status
+    Object.keys(this.status).forEach(key => {
+      this.status[key] = 'idle';
+      this.progress[key] = 0;
+    });
+
+    this._notify();
+    console.log('[AI] Cleanup completo');
   },
 
   // Inicializar modelo
