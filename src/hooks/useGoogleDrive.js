@@ -2,7 +2,7 @@
  * Hook para integração com Google Drive
  * Permite salvar/restaurar projetos Sentencify no Drive do usuário
  *
- * @version 1.35.40
+ * @version 1.35.45
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -10,12 +10,23 @@ import { useGoogleLogin } from '@react-oauth/google';
 
 // Client ID do Google Cloud (público, não é segredo)
 const GOOGLE_CLIENT_ID = '435520999136-6kqer9astvll9d5qpe2liac5de3ucqka.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+// v1.35.45: Adicionado drive.readonly para ver arquivos compartilhados por outros
+const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly';
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
 
 // Chave para persistir token no localStorage
-const STORAGE_KEY = 'sentencify-google-drive-token';
+// v1.35.45: Versão 2 para forçar re-auth com novo escopo (drive.readonly)
+const STORAGE_KEY = 'sentencify-google-drive-token-v2';
+
+// Limpar token antigo (v1) se existir
+if (typeof window !== 'undefined') {
+  const oldKey = 'sentencify-google-drive-token';
+  if (localStorage.getItem(oldKey)) {
+    localStorage.removeItem(oldKey);
+    console.log('[GoogleDrive] Token antigo removido (v1 → v2)');
+  }
+}
 
 export function useGoogleDrive() {
   const [isConnected, setIsConnected] = useState(false);
@@ -174,7 +185,8 @@ export function useGoogleDrive() {
     try {
       // Buscar arquivos JSON que contenham "sentencify" no nome
       const query = encodeURIComponent("name contains 'sentencify' and mimeType='application/json' and trashed=false");
-      const fields = encodeURIComponent('files(id,name,size,modifiedTime,createdTime)');
+      // v1.35.45: Incluir owners e shared para identificar arquivos compartilhados
+      const fields = encodeURIComponent('files(id,name,size,modifiedTime,createdTime,owners,shared)');
 
       const response = await fetch(
         `${DRIVE_API_BASE}/files?q=${query}&fields=${fields}&orderBy=modifiedTime desc&pageSize=50`,
@@ -317,6 +329,36 @@ export function useGoogleDrive() {
     }
   }, [accessToken]);
 
+  // v1.35.45: Buscar permissões de um arquivo (quem tem acesso)
+  const getPermissions = useCallback(async (fileId) => {
+    if (!accessToken) {
+      throw new Error('Não conectado ao Google Drive');
+    }
+
+    try {
+      const response = await fetch(
+        `${DRIVE_API_BASE}/files/${fileId}/permissions?fields=permissions(id,emailAddress,role,displayName,type)`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Erro ao buscar permissões');
+      }
+
+      const data = await response.json();
+      console.log('[GoogleDrive] Permissões do arquivo:', data.permissions?.length || 0);
+      return data.permissions || [];
+    } catch (e) {
+      console.error('[GoogleDrive] Erro ao buscar permissões:', e);
+      return []; // Retornar array vazio em caso de erro (não bloquear UI)
+    }
+  }, [accessToken]);
+
   return {
     isConnected,
     isLoading,
@@ -329,6 +371,7 @@ export function useGoogleDrive() {
     loadFile,
     deleteFile,
     shareFile,
+    getPermissions,
     clientId: GOOGLE_CLIENT_ID
   };
 }

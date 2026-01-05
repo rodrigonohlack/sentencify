@@ -2,11 +2,11 @@
  * Botão de integração com Google Drive
  * Dropdown com opções: Conectar, Salvar, Carregar, Desconectar
  *
- * @version 1.35.43
+ * @version 1.35.45
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Cloud, CloudOff, Upload, Download, LogOut, Loader2, ChevronDown, Trash2, RefreshCw, Share2, X } from 'lucide-react';
+import { Cloud, CloudOff, Upload, Download, LogOut, Loader2, ChevronDown, Trash2, RefreshCw, Share2, X, Users } from 'lucide-react';
 
 export function GoogleDriveButton({
   isConnected,
@@ -166,7 +166,9 @@ export function DriveFilesModal({
   onLoad,
   onDelete,
   onShare,
+  onGetPermissions,
   onRefresh,
+  userEmail,
   isDarkMode
 }) {
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -174,6 +176,33 @@ export function DriveFilesModal({
   const [shareEmail, setShareEmail] = useState('');
   const [shareRole, setShareRole] = useState('reader');
   const [shareLoading, setShareLoading] = useState(false);
+
+  // v1.35.45: Modal para ver permissões
+  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
+  const [permissionsFile, setPermissionsFile] = useState(null);
+  const [permissions, setPermissions] = useState([]);
+  const [permissionsLoading, setPermissionsLoading] = useState(false);
+
+  // Verifica se o arquivo é de outro usuário
+  const isFromOther = (file) => {
+    if (!file.owners || file.owners.length === 0) return false;
+    return file.owners[0].emailAddress !== userEmail;
+  };
+
+  // Buscar permissões de um arquivo
+  const handleViewPermissions = async (file) => {
+    setPermissionsFile(file);
+    setPermissionsModalOpen(true);
+    setPermissionsLoading(true);
+    try {
+      const perms = await onGetPermissions(file.id);
+      setPermissions(perms);
+    } catch (e) {
+      setPermissions([]);
+    } finally {
+      setPermissionsLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -281,9 +310,26 @@ export function DriveFilesModal({
                   }`}
                 >
                   <div className="flex-1 min-w-0 mr-4">
-                    <p className={`font-medium truncate ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                      {file.name}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className={`font-medium truncate ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+                        {file.name}
+                      </p>
+                      {/* v1.35.45: Badges de compartilhamento */}
+                      {isFromOther(file) && (
+                        <span className={`px-1.5 py-0.5 rounded text-xs ${
+                          isDarkMode ? 'bg-purple-900/50 text-purple-300' : 'bg-purple-100 text-purple-700'
+                        }`}>
+                          De: {file.owners[0].emailAddress.split('@')[0]}
+                        </span>
+                      )}
+                      {!isFromOther(file) && file.shared && (
+                        <span className={`px-1.5 py-0.5 rounded text-xs ${
+                          isDarkMode ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          Compartilhado
+                        </span>
+                      )}
+                    </div>
                     <div className={`flex items-center gap-3 text-xs mt-1 ${
                       isDarkMode ? 'text-slate-400' : 'text-slate-500'
                     }`}>
@@ -299,37 +345,57 @@ export function DriveFilesModal({
                       <Download className="w-3.5 h-3.5" />
                       Carregar
                     </button>
-                    <button
-                      onClick={() => {
-                        setShareFile(file);
-                        setShareEmail('');
-                        setShareRole('reader');
-                        setShareModalOpen(true);
-                      }}
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        isDarkMode
-                          ? 'hover:bg-blue-900/30 text-blue-400'
-                          : 'hover:bg-blue-50 text-blue-500'
-                      }`}
-                      title="Compartilhar"
-                    >
-                      <Share2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`Excluir "${file.name}" do Google Drive?`)) {
-                          onDelete(file);
-                        }
-                      }}
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        isDarkMode
-                          ? 'hover:bg-red-900/30 text-red-400'
-                          : 'hover:bg-red-50 text-red-500'
-                      }`}
-                      title="Excluir do Drive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {/* v1.35.45: Botão ver permissões (só para dono) */}
+                    {!isFromOther(file) && file.shared && (
+                      <button
+                        onClick={() => handleViewPermissions(file)}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          isDarkMode
+                            ? 'hover:bg-green-900/30 text-green-400'
+                            : 'hover:bg-green-50 text-green-600'
+                        }`}
+                        title="Ver quem tem acesso"
+                      >
+                        <Users className="w-4 h-4" />
+                      </button>
+                    )}
+                    {/* Compartilhar (só para dono) */}
+                    {!isFromOther(file) && (
+                      <button
+                        onClick={() => {
+                          setShareFile(file);
+                          setShareEmail('');
+                          setShareRole('reader');
+                          setShareModalOpen(true);
+                        }}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          isDarkMode
+                            ? 'hover:bg-blue-900/30 text-blue-400'
+                            : 'hover:bg-blue-50 text-blue-500'
+                        }`}
+                        title="Compartilhar"
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
+                    )}
+                    {/* Excluir (só para dono) */}
+                    {!isFromOther(file) && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Excluir "${file.name}" do Google Drive?`)) {
+                            onDelete(file);
+                          }
+                        }}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          isDarkMode
+                            ? 'hover:bg-red-900/30 text-red-400'
+                            : 'hover:bg-red-50 text-red-500'
+                        }`}
+                        title="Excluir do Drive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -438,6 +504,94 @@ export function DriveFilesModal({
                   Compartilhar
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* v1.35.45: Modal de Permissões */}
+      {permissionsModalOpen && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setPermissionsModalOpen(false)}
+          />
+          <div className={`relative w-full max-w-md mx-4 rounded-xl shadow-2xl p-6 ${
+            isDarkMode ? 'bg-slate-800' : 'bg-white'
+          }`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-green-500" />
+                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+                  Quem tem acesso
+                </h3>
+              </div>
+              <button
+                onClick={() => setPermissionsModalOpen(false)}
+                className={`p-1 rounded-lg transition-colors ${
+                  isDarkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-100 text-slate-500'
+                }`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className={`text-sm mb-4 truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              {permissionsFile?.name}
+            </p>
+
+            {permissionsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className={`w-6 h-6 animate-spin ${isDarkMode ? 'text-blue-400' : 'text-blue-500'}`} />
+              </div>
+            ) : permissions.length === 0 ? (
+              <p className={`text-sm text-center py-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                Nenhuma permissão encontrada
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {permissions.map((perm) => (
+                  <div
+                    key={perm.id}
+                    className={`flex items-center justify-between p-2 rounded-lg ${
+                      isDarkMode ? 'bg-slate-700/50' : 'bg-slate-100'
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm truncate ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+                        {perm.emailAddress || perm.displayName || 'Usuário desconhecido'}
+                      </p>
+                      {perm.type === 'anyone' && (
+                        <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                          Qualquer pessoa com o link
+                        </p>
+                      )}
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-xs ${
+                      perm.role === 'owner'
+                        ? isDarkMode ? 'bg-amber-900/50 text-amber-300' : 'bg-amber-100 text-amber-700'
+                        : perm.role === 'writer'
+                          ? isDarkMode ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700'
+                          : isDarkMode ? 'bg-slate-600 text-slate-300' : 'bg-slate-200 text-slate-600'
+                    }`}>
+                      {perm.role === 'owner' ? 'Proprietário' : perm.role === 'writer' ? 'Editor' : 'Leitor'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setPermissionsModalOpen(false)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isDarkMode
+                    ? 'bg-slate-700 hover:bg-slate-600 text-white'
+                    : 'bg-slate-200 hover:bg-slate-300 text-slate-800'
+                }`}
+              >
+                Fechar
+              </button>
             </div>
           </div>
         </div>

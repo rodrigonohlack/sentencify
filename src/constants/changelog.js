@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.45', feature: 'Google Drive compartilhamento corrigido: escopo drive.readonly permite ver arquivos de outros, badges "De: fulano" e "Compartilhado", modal de permissões' },
   { version: '1.35.44', feature: 'Header COOP (Cross-Origin-Opener-Policy) no servidor: elimina warning do Google OAuth popup no console' },
   { version: '1.35.43', feature: 'Compartilhar arquivos do Google Drive: botão para enviar por email com permissão de visualização ou edição' },
   { version: '1.35.42', feature: 'Fix erro React #31: notificações do Google Drive agora suportam objeto {type, message} (sucesso em verde, erro em vermelho)' },

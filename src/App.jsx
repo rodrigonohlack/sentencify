@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.44'; // v1.35.44: Header COOP para Google OAuth popup (elimina warning no console)
+const APP_VERSION = '1.35.45'; // v1.35.45: Google Drive: ver arquivos compartilhados + badges + permissões
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -30326,6 +30326,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
             setError({ type: 'error', message: `Erro ao atualizar: ${err.message}` });
           }
         }}
+        onGetPermissions={googleDrive.getPermissions}
+        userEmail={googleDrive.userEmail}
         isDarkMode={appTheme === 'dark'}
       />
 
