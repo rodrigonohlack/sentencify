@@ -139,7 +139,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.30'; // v1.35.30: Modal de Curadoria de Tópicos - revisar/reordenar/mesclar/separar tópicos ANTES de gerar mini-relatórios (economia de tokens)
+const APP_VERSION = '1.35.32'; // v1.35.32: Fix z-index TopicCurationModal (aparece acima do AnalysisModal)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
