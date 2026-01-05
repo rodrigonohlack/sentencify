@@ -35,7 +35,8 @@
 
 ## Deploy (Render)
 
-**URL Produção**: https://sentencify.onrender.com
+**URL Produção**: https://sentencify.ia.br
+**URL Render**: https://sentencify.onrender.com (domínio interno)
 **URL Backup**: https://sentencifyai.vercel.app (Vercel ainda funciona como fallback)
 **Repositório**: https://github.com/rodrigonohlack/sentencify
 
@@ -46,8 +47,7 @@
 - Timeout de 100 minutos (vs 1 minuto no Vercel)
 - WebSockets suportados
 - Servidor persistente (não serverless)
-
-**Free Tier**: Servidor dorme após 15 min de inatividade. Heartbeat no frontend (a cada 10 min) mantém servidor ativo durante uso.
+- Plano pago: servidor sempre ativo (sem sleep)
 
 **Arquivos estáticos**: Colocar na pasta `public/` (ex: `MANUAL_USUARIO_AVANCADO.html`)
 

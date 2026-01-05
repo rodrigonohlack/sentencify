@@ -4,6 +4,8 @@
 export const CHANGELOG = [
   { version: '1.35.33', feature: 'TypeScript incremental: TopicCurationModal.tsx como primeiro arquivo .tsx (tsconfig.json com allowJs: true)' },
   { version: '1.35.32', feature: 'Fix z-index TopicCurationModal: aparece acima do AnalysisModal (z-[100] vs z-[90])' },
+  { version: '1.35.31', feature: 'Testes TopicCurationModal (49 testes): renderização, callbacks, edição inline, exclusão, mesclagem, separação, adição, estimativa de custo, tópicos especiais' },
+  { version: '1.35.30', feature: 'Modal de Curadoria de Tópicos: revisar, reordenar, mesclar, separar e apagar tópicos ANTES de gerar mini-relatórios (economia de tokens, estimativa de custo R$/tempo)' },
   { version: '1.35.29', feature: 'Fix meta-comentários de revisão nos mini-relatórios: prompt proíbe textos como "Revisei esta resposta..." + pós-processamento remove automaticamente (com log no console)' },
   { version: '1.35.28', feature: 'Fix testes E2E no CI: useAuth retorna early se localStorage tem sessão (evita timeout esperando servidor)' },
   { version: '1.35.27', feature: 'Testes de prompts agora usam AI_PROMPTS real (corrige MOCK_PROMPTS perigoso que não detectava mudanças)' },
