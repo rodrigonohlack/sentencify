@@ -192,8 +192,7 @@ const TopicPreviewCard = React.memo<TopicPreviewCardProps>(({
     transform: DndCSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1000 : 0,
-    willChange: isDragging ? 'transform, opacity' : 'auto'
+    zIndex: isDragging ? 1000 : 'auto'
   };
 
   useEffect(() => {
@@ -699,7 +698,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 10 }  // v1.35.35: aumentado para melhor UX
+      activationConstraint: { distance: 8 }
     })
   );
 

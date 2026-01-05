@@ -139,7 +139,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.35'; // v1.35.35: Otimização drag FPS: React.memo, callbacks funcionais, will-change GPU
+const APP_VERSION = '1.35.36'; // v1.35.36: Fix drag lag: remover willChange (causava repaints), distance 8px
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
