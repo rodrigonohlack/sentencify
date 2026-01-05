@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.43'; // v1.35.43: Compartilhar arquivos do Google Drive por email (reader/writer)
+const APP_VERSION = '1.35.44'; // v1.35.44: Header COOP para Google OAuth popup (elimina warning no console)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {

@@ -52,6 +52,12 @@ const allowedOrigins = [
   'https://www.sentencify.ia.br'
 ];
 
+// v1.35.44: COOP header para permitir comunicação com popup do Google OAuth
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  next();
+});
+
 app.use(cors({
   origin: function(origin, callback) {
     // Permitir requests sem origin (ex: curl, Postman, health checks)
