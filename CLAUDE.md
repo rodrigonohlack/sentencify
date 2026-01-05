@@ -4,13 +4,13 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.50 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.52 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
 **Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`
 
-**Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`
+**Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`, `GoogleDriveButton`
 
 **Storage**:
 - `SQLite` (Render Persistent Disk) → modelos sincronizados na nuvem (v1.34.0)
@@ -67,17 +67,26 @@
 
 | Version | Feature |
 |---------|---------|
-| v1.35.35 | Otimização drag FPS: React.memo, callbacks funcionais, will-change GPU, distance 10px (~55-60 fps) |
-| v1.35.34 | TopicCurationModal UX: modal não fecha (sem X/ESC/backdrop), 80vw, undo no índice correto, custo mostra modelo |
-| v1.35.33 | TypeScript incremental: TopicCurationModal.tsx como primeiro arquivo .tsx (tsconfig.json com allowJs: true) |
-| v1.35.32 | Fix z-index TopicCurationModal: z-[100] para aparecer acima do AnalysisModal (z-[90]) |
-| v1.35.31 | Testes TopicCurationModal (49 testes): renderização, callbacks, edição inline, exclusão, mesclagem, separação, adição, estimativa de custo, tópicos especiais |
-| v1.35.30 | Modal de Curadoria de Tópicos: revisar, reordenar, mesclar, separar e apagar tópicos ANTES de gerar mini-relatórios (economia de tokens, estimativa de custo R$/tempo) |
-| v1.35.26 | Prompts de IA (AI_INSTRUCTIONS, AI_PROMPTS) movidos para src/prompts/ (~900 linhas extraídas) |
-| v1.35.25 | CHANGELOG movido para src/constants/changelog.js (reduz ~160 linhas do App.jsx) |
-| v1.35.24 | Fix B8b: sync remove modelos de owners sem acesso ativo (sharedLibraries filtra locais) |
-| v1.35.23 | Fix B8: remover share via UI limpa modelos + A7a: trackChangeBatch para importação eficiente |
-| v1.35.22 | Fix duplicar modelo compartilhado (cria cópia própria) + pull após conflito de versão + tratamento model_deleted e no_permission |
+| v1.35.52 | UI consolidada: botão "Limpar Projeto" incorporado ao dropdown (único botão "Projeto" no header) |
+| v1.35.51 | UI consolidada: botões Salvar/Carregar Projeto movidos para dropdown "Projeto" |
+| v1.35.50 | Google Drive migrado para TypeScript: useGoogleDrive.ts e GoogleDriveButton.tsx |
+| v1.35.49 | UX Polish: compartilhamento Drive sempre cópia, texto sync mais claro, fix contraste tags |
+| v1.35.48 | Google Drive: fix compartilhamento (sharedWithMe), botão remover acesso |
+| v1.35.47 | Google Drive: arquivos salvos na pasta "Sentencify" |
+| v1.35.46 | Google Drive: filtrar por appProperties (apenas arquivos do Sentencify) |
+| v1.35.45 | Google Drive: compartilhamento corrigido, badges "De: fulano", modal permissões |
+| v1.35.44 | Header COOP no servidor: elimina warning OAuth popup |
+| v1.35.43 | Compartilhar arquivos do Google Drive por email |
+| v1.35.42 | Fix erro React #31: notificações Drive suportam {type, message} |
+| v1.35.41 | Refatoração: buildProjectJson/importProjectFromJson (elimina ~200 linhas) |
+| v1.35.40 | Google Drive: salvar e carregar projetos na nuvem pessoal (OAuth2) |
+| v1.35.39 | Calibra estimativa de custo com dados reais |
+| v1.35.38 | Fix lag drag: DragOverlay via createPortal, CSS.Translate |
+| v1.35.37 | Estimativa de custo: thinking tokens, batch size, tooltip detalhado |
+| v1.35.36 | Fix drag lag: remover willChange dinâmico |
+| v1.35.35 | Otimização drag FPS: React.memo, callbacks funcionais |
+| v1.35.30 | Modal de Curadoria de Tópicos pré-geração |
+| v1.35.26 | Prompts de IA movidos para src/prompts/ (~900 linhas extraídas) |
 | v1.35.21 | Fix modelos compartilhados sumiam após sync incremental: preservar locais quando servidor não retorna compartilhados |
 | v1.35.20 | Fix progresso de download: usa tamanhos estimados como fallback quando Content-Length não disponível (streaming proxy não repassa header) |
 | v1.35.19 | Fix modelos compartilhados não apareciam após aceitar: comparar accepted_at com lastSyncAt para detectar shares recém-aceitos |
@@ -297,5 +306,5 @@
 | v1.14.0 | Detecção TF-IDF de similaridade + Botão "Salvar como Modelo" + Comparação lado a lado |
 | v1.12.27 | Progresso de extração inline no ProofCard (não mais banner de erro) |
 
-**Last Updated**: 2026-01-04
+**Last Updated**: 2026-01-05
 - sempre atualize a versão nas alterações realizadas
