@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.52'; // v1.35.52: Botão Limpar incorporado ao dropdown Projeto
+const APP_VERSION = '1.35.53'; // v1.35.53: Ícone Cloud preenchido quando conectado
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {

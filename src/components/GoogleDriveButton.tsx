@@ -2,7 +2,7 @@
  * Botão de integração com Google Drive + Salvar/Carregar Local
  * Dropdown unificado para gerenciamento de projetos (nuvem e local)
  *
- * @version 1.35.52 - Botão Limpar incorporado ao dropdown
+ * @version 1.35.53 - Ícone Cloud preenchido quando conectado
  */
 
 import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
@@ -105,7 +105,7 @@ export function GoogleDriveButton({
         {isLoading ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : isConnected ? (
-          <Cloud className="w-4 h-4 text-green-500" />
+          <Cloud className="w-4 h-4 text-green-500" fill="currentColor" />
         ) : (
           <CloudOff className="w-4 h-4 text-slate-400" />
         )}
