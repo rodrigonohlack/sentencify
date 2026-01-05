@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.55'; // v1.35.55: Bloco de sync (indicador + email + Sair) movido para aba Modelos
+const APP_VERSION = '1.35.56'; // v1.35.56: Fix - botão Sair volta para o header (logout geral)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -27954,7 +27954,19 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     isDarkMode={appTheme === 'dark'}
                   />
                 </div>
-                {/* 🔄 v1.35.55: Bloco de sync movido para aba Modelos */}
+                {/* 🔄 v1.35.56: Botão Sair permanece no header (logout geral) */}
+                {cloudSync?.isAuthenticated && onLogout && (
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      onClick={() => openModal('logout')}
+                      className="px-3 py-1 rounded text-xs flex items-center gap-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 transition-colors duration-200"
+                      title="Sair do sistema"
+                    >
+                      <LogOut className="w-3 h-3" />
+                      Sair
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -29430,16 +29442,6 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           <span className="text-slate-400 text-xs" title={cloudSync.user.email}>
                             {cloudSync.user.email.length > 25 ? cloudSync.user.email.slice(0, 22) + '...' : cloudSync.user.email}
                           </span>
-                        )}
-                        {onLogout && (
-                          <button
-                            onClick={() => openModal('logout')}
-                            className="px-3 py-1 rounded text-xs flex items-center gap-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 transition-colors duration-200"
-                            title="Sair do sistema"
-                          >
-                            <LogOut className="w-3 h-3" />
-                            Sair
-                          </button>
                         )}
                       </div>
                     )}
