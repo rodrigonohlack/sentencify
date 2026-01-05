@@ -70,6 +70,10 @@ describe('Prompts - Snapshot Tests', () => {
     it('snapshot: preservarAnonimizacao', () => {
       expect(AI_PROMPTS.preservarAnonimizacao).toMatchSnapshot();
     });
+
+    it('snapshot: proibicaoMetaComentarios', () => {
+      expect(AI_PROMPTS.proibicaoMetaComentarios).toMatchSnapshot();
+    });
   });
 
   describe('Prompts de Geração', () => {

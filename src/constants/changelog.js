@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.29', feature: 'Fix meta-comentários de revisão nos mini-relatórios: prompt proíbe textos como "Revisei esta resposta..." + pós-processamento remove automaticamente (com log no console)' },
   { version: '1.35.28', feature: 'Fix testes E2E no CI: useAuth retorna early se localStorage tem sessão (evita timeout esperando servidor)' },
   { version: '1.35.27', feature: 'Testes de prompts agora usam AI_PROMPTS real (corrige MOCK_PROMPTS perigoso que não detectava mudanças)' },
   { version: '1.35.26', feature: 'Prompts de IA (AI_INSTRUCTIONS, AI_PROMPTS) movidos para src/prompts/ (~900 linhas extraídas do App.jsx)' },

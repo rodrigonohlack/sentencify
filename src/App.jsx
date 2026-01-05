@@ -136,7 +136,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.28'; // v1.35.28: Fix testes E2E no CI - useAuth retorna early se localStorage tem sessão
+const APP_VERSION = '1.35.29'; // v1.35.29: Fix meta-comentários de revisão nos mini-relatórios (prompt + pós-processamento)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -1308,6 +1308,37 @@ const normalizeHTMLSpacing = (html) => {
     .replace(/>\s*\n\s*\n+\s*</g, '><')
     .replace(/>\s*\n\s*</g, '><')
     .trim();
+};
+
+// 🔧 v1.35.29: Remove meta-comentários de revisão que a IA pode adicionar ao final do texto
+const removeMetaComments = (text) => {
+  if (!text) return text;
+
+  // Padrões de meta-comentários que a IA pode adicionar
+  const patterns = [
+    /\n*\**\s*Revis(ão|ei)[^<]*$/i,
+    /\n*\**\s*Identifica(ção|do)[^<]*alucinaç[^<]*$/i,
+    /\n*\**\s*Confirmo que não houve[^<]*$/i,
+    /\n*\**\s*Não houve alucinação[^<]*$/i,
+    /\n*\**\s*REVISÃO[:\s][^<]*$/i,
+    /\n*\*{3,}[^<]*$/,  // *** linha final
+  ];
+
+  let cleaned = text;
+  let removed = false;
+  for (const pattern of patterns) {
+    if (pattern.test(cleaned)) {
+      cleaned = cleaned.replace(pattern, '');
+      removed = true;
+    }
+  }
+
+  // Log quando fallback é ativado (meta-comentário detectado e removido)
+  if (removed) {
+    console.warn('[Mini-Relatório] Meta-comentário de revisão removido automaticamente');
+  }
+
+  return cleaned.trim();
 };
 
 // 🔧 HELPERS: Verificação de tópicos especiais
@@ -22596,7 +22627,8 @@ Gere com alto nível de detalhe em relação aos FATOS alegados pelas partes.
 A descrição fática (postulatória e defensiva) deve ter alto nível de detalhe.
 ` : '',
       estiloRedacao: AI_PROMPTS.estiloRedacao,
-      preservarAnonimizacao: AI_PROMPTS.preservarAnonimizacao
+      preservarAnonimizacao: AI_PROMPTS.preservarAnonimizacao,
+      proibicaoMetaComentarios: AI_PROMPTS.proibicaoMetaComentarios // v1.35.29
     };
   };
 
@@ -22634,6 +22666,8 @@ ${core.estiloRedacao}
 
 ${core.preservarAnonimizacao}
 
+${core.proibicaoMetaComentarios}
+
 Responda APENAS com o texto do mini-relatório formatado em HTML, sem JSON, sem markdown, sem prefixo.`;
   };
 
@@ -22662,6 +22696,8 @@ ${core.nivelDetalhe}
 ${core.estiloRedacao}
 
 ${core.preservarAnonimizacao}
+
+${core.proibicaoMetaComentarios}
 
 IMPORTANTE: Responda APENAS com um JSON válido no formato:
 {
@@ -22719,8 +22755,8 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
       topK: 60
     });
 
-    // 4. Normalizar e retornar
-    return normalizeHTMLSpacing(result);
+    // 4. Normalizar e retornar (v1.35.29: remove meta-comentários de revisão)
+    return removeMetaComments(normalizeHTMLSpacing(result));
   };
 
   // v1.14.1: Função para gerar múltiplos mini-relatórios em UMA requisição
@@ -22769,9 +22805,10 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
     try {
       const parsed = JSON.parse(cleanText);
       if (parsed.reports && Array.isArray(parsed.reports)) {
+        // v1.35.29: remove meta-comentários de revisão
         return parsed.reports.map(r => ({
           title: r.title,
-          relatorio: normalizeHTMLSpacing(r.relatorio || '')
+          relatorio: removeMetaComments(normalizeHTMLSpacing(r.relatorio || ''))
         }));
       }
       throw new Error('Formato de resposta inválido');
@@ -22782,9 +22819,10 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
         try {
           const parsed = JSON.parse(jsonMatch[0]);
           if (parsed.reports && Array.isArray(parsed.reports)) {
+            // v1.35.29: remove meta-comentários de revisão
             return parsed.reports.map(r => ({
               title: r.title,
-              relatorio: normalizeHTMLSpacing(r.relatorio || '')
+              relatorio: removeMetaComments(normalizeHTMLSpacing(r.relatorio || ''))
             }));
           }
         } catch (innerParseError) {

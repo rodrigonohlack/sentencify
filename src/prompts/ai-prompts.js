@@ -135,6 +135,14 @@ Se o texto contiver placeholders como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [C
 Exemplo correto: "O reclamante [PESSOA 1] percebia salário de [VALOR]"
 Exemplo ERRADO: "O reclamante João da Silva percebia salário de R$ 2.000,00"`,
 
+  // Bloco 5b: Proibição de Meta-Comentários (v1.35.29)
+  proibicaoMetaComentarios: `❌ NÃO INCLUA ao final do texto:
+- Comentários sobre seu processo de revisão ou verificação
+- Menções sobre alucinações ou invenção de dados
+- Notas ou observações sobre a análise realizada
+- Frases como "Revisei esta resposta", "Revisão de dados", "Confirmo que não houve alucinação", etc.
+O texto deve terminar com o último parágrafo do mini-relatório, sem qualquer meta-comentário.`,
+
   // Bloco 6: Regra Fundamental do Dispositivo (10 linhas) - Aparece em 2 funções
   regraFundamentalDispositivo: `⚠️ REGRA FUNDAMENTAL - SIGA RIGOROSAMENTE:
 O usuário SELECIONOU EXPLICITAMENTE o resultado de cada pedido no campo "RESULTADO SELECIONADO PELO USUÁRIO".

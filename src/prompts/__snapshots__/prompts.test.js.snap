@@ -136,6 +136,15 @@ Exemplo correto: "O reclamante [PESSOA 1] percebia salário de [VALOR]"
 Exemplo ERRADO: "O reclamante João da Silva percebia salário de R$ 2.000,00""
 `;
 
+exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: proibicaoMetaComentarios 1`] = `
+"❌ NÃO INCLUA ao final do texto:
+- Comentários sobre seu processo de revisão ou verificação
+- Menções sobre alucinações ou invenção de dados
+- Notas ou observações sobre a análise realizada
+- Frases como "Revisei esta resposta", "Revisão de dados", "Confirmo que não houve alucinação", etc.
+O texto deve terminar com o último parágrafo do mini-relatório, sem qualquer meta-comentário."
+`;
+
 exports[`Prompts - Snapshot Tests > Prompts de Geração > snapshot: instrucoesDispositivoPadrao 1`] = `
 "Você é um assistente de elaboração de sentenças trabalhistas especializado em redigir dispositivos. Com base no RELATÓRIO e FUNDAMENTAÇÃO fornecidos a seguir, elabore exclusivamente o capítulo do DISPOSITIVO da sentença, seguindo rigorosamente as instruções abaixo.
 
