@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.32 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.33 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -66,6 +66,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.33 | TypeScript incremental: TopicCurationModal.tsx como primeiro arquivo .tsx (tsconfig.json com allowJs: true) |
 | v1.35.32 | Fix z-index TopicCurationModal: z-[100] para aparecer acima do AnalysisModal (z-[90]) |
 | v1.35.31 | Testes TopicCurationModal (49 testes): renderização, callbacks, edição inline, exclusão, mesclagem, separação, adição, estimativa de custo, tópicos especiais |
 | v1.35.30 | Modal de Curadoria de Tópicos: revisar, reordenar, mesclar, separar e apagar tópicos ANTES de gerar mini-relatórios (economia de tokens, estimativa de custo R$/tempo) |

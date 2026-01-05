@@ -1,12 +1,11 @@
 /**
- * TopicCurationModal.jsx
+ * TopicCurationModal.tsx
  * Modal de curadoria de tópicos pré-geração de mini-relatórios
- * v1.35.30 - Permite ao usuário revisar, reordenar, mesclar, separar e apagar tópicos
- *            ANTES de gastar tokens com a geração dos mini-relatórios
+ * v1.35.33 - Convertido para TypeScript
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 import {
@@ -17,7 +16,6 @@ import {
   Plus,
   X,
   Check,
-  AlertCircle,
   Clock,
   DollarSign,
   FileText,
@@ -26,10 +24,77 @@ import {
 } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// TIPOS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export type TopicCategory = 'PRELIMINAR' | 'PREJUDICIAL' | 'MÉRITO' | 'PROCESSUAL' | 'RELATÓRIO';
+
+export interface Topic {
+  id?: string;
+  title: string;
+  category: TopicCategory;
+  content?: string;
+  mergedFrom?: string[];
+  splitFrom?: string;
+  isNew?: boolean;
+}
+
+interface CostEstimate {
+  tokens: number;
+  costBRL: string;
+  costUSD: string;
+  timeMinutes: number;
+  timeSeconds: number;
+}
+
+interface TopicCurationModalProps {
+  isOpen: boolean;
+  onConfirm: (topics: Topic[]) => void;
+  onCancel: () => void;
+  initialTopics?: Topic[];
+  model?: string;
+  parallelRequests?: number;
+  isDarkMode?: boolean;
+}
+
+interface TopicPreviewCardProps {
+  topic: Topic;
+  index: number;
+  editingTitle: string | null;
+  onStartEdit: (title: string) => void;
+  onSaveTitle: (oldTitle: string, newTitle: string, newCategory: TopicCategory) => void;
+  onDelete: (topic: Topic) => void;
+  onToggleMergeSelect: (topic: Topic) => void;
+  isSelectedForMerge: boolean;
+  onStartSplit: (topic: Topic) => void;
+  isDarkMode: boolean;
+}
+
+interface SplitModalProps {
+  topic: Topic | null;
+  onConfirm: (titles: string[], category: TopicCategory) => void;
+  onCancel: () => void;
+  isDarkMode: boolean;
+}
+
+interface MergeConfirmProps {
+  topics: Topic[];
+  onConfirm: (title: string, category: TopicCategory) => void;
+  onCancel: () => void;
+  isDarkMode: boolean;
+}
+
+interface AddTopicInlineProps {
+  onAdd: (title: string, category: TopicCategory) => void;
+  onCancel: () => void;
+  isDarkMode: boolean;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const CATEGORY_COLORS = {
+const CATEGORY_COLORS: Record<TopicCategory, string> = {
   'PRELIMINAR': 'bg-amber-600/30 text-amber-300 border border-amber-500/30',
   'PREJUDICIAL': 'bg-purple-600/30 text-purple-300 border border-purple-500/30',
   'MÉRITO': 'bg-blue-600/30 text-blue-300 border border-blue-500/30',
@@ -37,36 +102,35 @@ const CATEGORY_COLORS = {
   'RELATÓRIO': 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/30'
 };
 
-const CATEGORIES = ['PRELIMINAR', 'PREJUDICIAL', 'MÉRITO', 'PROCESSUAL'];
+const CATEGORIES: TopicCategory[] = ['PRELIMINAR', 'PREJUDICIAL', 'MÉRITO', 'PROCESSUAL'];
 
 // Preços por 1M tokens (USD)
-const MODEL_PRICES = {
+const MODEL_PRICES: Record<string, { input: number; output: number }> = {
   'claude-sonnet-4-20250514': { input: 3, output: 15 },
   'claude-opus-4-20250514': { input: 15, output: 75 },
   'gemini-2.0-flash-001': { input: 0.10, output: 0.40 },
   'gemini-2.5-pro-preview-06-05': { input: 1.25, output: 10 }
 };
 
-const TOKENS_PER_TOPIC = 4000; // Estimativa média de tokens por tópico
+const TOKENS_PER_TOPIC = 4000;
 const USD_TO_BRL = 5.50;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // FUNÇÕES UTILITÁRIAS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/**
- * Estima custo e tempo para geração de mini-relatórios
- */
-const estimateCostAndTime = (topicCount, model = 'claude-sonnet-4-20250514', parallelRequests = 5) => {
+const estimateCostAndTime = (
+  topicCount: number,
+  model: string = 'claude-sonnet-4-20250514',
+  parallelRequests: number = 5
+): CostEstimate => {
   const totalTokens = topicCount * TOKENS_PER_TOPIC;
   const prices = MODEL_PRICES[model] || MODEL_PRICES['claude-sonnet-4-20250514'];
 
-  // Custo: 70% input, 30% output (estimativa)
   const costUSD = (totalTokens / 1000000) * (prices.input * 0.7 + prices.output * 0.3);
   const costBRL = costUSD * USD_TO_BRL;
 
-  // Tempo: ~15s por tópico, dividido pelo paralelismo
-  const timeSeconds = Math.ceil((topicCount * 15) / Math.min(parallelRequests, topicCount));
+  const timeSeconds = Math.ceil((topicCount * 15) / Math.min(parallelRequests, topicCount || 1));
   const timeMinutes = Math.ceil(timeSeconds / 60);
 
   return {
@@ -78,18 +142,15 @@ const estimateCostAndTime = (topicCount, model = 'claude-sonnet-4-20250514', par
   };
 };
 
-/**
- * Verifica se é tópico especial (RELATÓRIO)
- */
-const isSpecialTopic = (topic) => {
+const isSpecialTopic = (topic: Topic | null): boolean => {
   return topic?.title?.toUpperCase() === 'RELATÓRIO';
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMPONENTE: TopicPreviewCard (Card sortável com edição inline)
+// COMPONENTE: TopicPreviewCard
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const TopicPreviewCard = ({
+const TopicPreviewCard: React.FC<TopicPreviewCardProps> = ({
   topic,
   index,
   editingTitle,
@@ -102,9 +163,9 @@ const TopicPreviewCard = ({
   isDarkMode
 }) => {
   const [localTitle, setLocalTitle] = useState(topic.title);
-  const [localCategory, setLocalCategory] = useState(topic.category);
+  const [localCategory, setLocalCategory] = useState<TopicCategory>(topic.category);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const isSpecial = isSpecialTopic(topic);
 
   const {
@@ -119,14 +180,13 @@ const TopicPreviewCard = ({
     disabled: isSpecial
   });
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: DndCSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 1000 : 'auto'
   };
 
-  // Focus no input quando entra em modo de edição
   useEffect(() => {
     if (editingTitle === topic.title && inputRef.current) {
       inputRef.current.focus();
@@ -134,25 +194,23 @@ const TopicPreviewCard = ({
     }
   }, [editingTitle, topic.title]);
 
-  // Reset local state quando topic muda
   useEffect(() => {
     setLocalTitle(topic.title);
     setLocalCategory(topic.category);
   }, [topic.title, topic.category]);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       onSaveTitle(topic.title, localTitle.trim().toUpperCase(), localCategory);
     } else if (e.key === 'Escape') {
       setLocalTitle(topic.title);
       setLocalCategory(topic.category);
-      onSaveTitle(topic.title, topic.title, topic.category); // Cancela mantendo original
+      onSaveTitle(topic.title, topic.title, topic.category);
     }
   };
 
   const handleBlur = () => {
-    // Pequeno delay para permitir clique no dropdown de categoria
     setTimeout(() => {
       if (editingTitle === topic.title && !showCategoryDropdown) {
         onSaveTitle(topic.title, localTitle.trim().toUpperCase() || topic.title, localCategory);
@@ -160,7 +218,7 @@ const TopicPreviewCard = ({
     }, 150);
   };
 
-  const handleCategorySelect = (cat) => {
+  const handleCategorySelect = (cat: TopicCategory) => {
     setLocalCategory(cat);
     setShowCategoryDropdown(false);
   };
@@ -179,7 +237,6 @@ const TopicPreviewCard = ({
         ${isDarkMode ? '' : 'bg-white/90 border-slate-300 hover:border-slate-400'}
       `}
     >
-      {/* Drag Handle */}
       {isSpecial ? (
         <Pin className="w-4 h-4 text-emerald-500 flex-shrink-0" title="Posição fixa" />
       ) : (
@@ -188,12 +245,10 @@ const TopicPreviewCard = ({
         </div>
       )}
 
-      {/* Posição */}
       <span className={`text-xs w-6 flex-shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
         {index + 1}.
       </span>
 
-      {/* Título (editável) */}
       {editingTitle === topic.title ? (
         <div className="flex-1 flex gap-2">
           <input
@@ -209,14 +264,10 @@ const TopicPreviewCard = ({
             `}
             placeholder="Título do tópico"
           />
-          {/* Dropdown de categoria inline */}
           <div className="relative">
             <button
               onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-              className={`
-                flex items-center gap-1 px-2 py-1 rounded text-xs
-                ${CATEGORY_COLORS[localCategory]}
-              `}
+              className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${CATEGORY_COLORS[localCategory]}`}
             >
               {localCategory}
               <ChevronDown className="w-3 h-3" />
@@ -259,17 +310,14 @@ const TopicPreviewCard = ({
         </span>
       )}
 
-      {/* Categoria Badge (quando não editando) */}
       {editingTitle !== topic.title && (
         <span className={`text-xs px-2 py-0.5 rounded flex-shrink-0 ${categoryColor}`}>
           {topic.category}
         </span>
       )}
 
-      {/* Ações */}
       {!isSpecial && editingTitle !== topic.title && (
         <div className="flex gap-1 flex-shrink-0">
-          {/* Merge Select */}
           <button
             onClick={() => onToggleMergeSelect(topic)}
             className={`
@@ -284,7 +332,6 @@ const TopicPreviewCard = ({
             <GitMerge className="w-4 h-4" />
           </button>
 
-          {/* Split */}
           <button
             onClick={() => onStartSplit(topic)}
             className={`p-1.5 rounded transition-colors ${isDarkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
@@ -293,7 +340,6 @@ const TopicPreviewCard = ({
             <Scissors className="w-4 h-4" />
           </button>
 
-          {/* Delete */}
           <button
             onClick={() => onDelete(topic)}
             className={`p-1.5 rounded transition-colors text-red-400 ${isDarkMode ? 'hover:bg-red-900/50' : 'hover:bg-red-100'}`}
@@ -304,7 +350,6 @@ const TopicPreviewCard = ({
         </div>
       )}
 
-      {/* Badge de posição fixa */}
       {isSpecial && (
         <span className="text-xs text-emerald-400 flex-shrink-0">
           Fixo
@@ -315,12 +360,12 @@ const TopicPreviewCard = ({
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMPONENTE: SplitModal (Mini-modal inline para separar tópico)
+// COMPONENTE: SplitModal
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const SplitModal = ({ topic, onConfirm, onCancel, isDarkMode }) => {
-  const [splitNames, setSplitNames] = useState(['', '']);
-  const [category, setCategory] = useState(topic?.category || 'MÉRITO');
+const SplitModal: React.FC<SplitModalProps> = ({ topic, onConfirm, onCancel, isDarkMode }) => {
+  const [splitNames, setSplitNames] = useState<string[]>(['', '']);
+  const [category, setCategory] = useState<TopicCategory>(topic?.category || 'MÉRITO');
 
   const addField = () => {
     if (splitNames.length < 5) {
@@ -328,13 +373,13 @@ const SplitModal = ({ topic, onConfirm, onCancel, isDarkMode }) => {
     }
   };
 
-  const updateField = (index, value) => {
+  const updateField = (index: number, value: string) => {
     const newNames = [...splitNames];
     newNames[index] = value.toUpperCase();
     setSplitNames(newNames);
   };
 
-  const removeField = (index) => {
+  const removeField = (index: number) => {
     if (splitNames.length > 2) {
       setSplitNames(splitNames.filter((_, i) => i !== index));
     }
@@ -429,14 +474,12 @@ const SplitModal = ({ topic, onConfirm, onCancel, isDarkMode }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMPONENTE: MergeConfirm (Confirmação de merge)
+// COMPONENTE: MergeConfirm
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const MergeConfirm = ({ topics, onConfirm, onCancel, isDarkMode }) => {
-  const [mergedTitle, setMergedTitle] = useState(
-    topics.map(t => t.title).join(' + ')
-  );
-  const [category, setCategory] = useState(topics[0]?.category || 'MÉRITO');
+const MergeConfirm: React.FC<MergeConfirmProps> = ({ topics, onConfirm, onCancel, isDarkMode }) => {
+  const [mergedTitle, setMergedTitle] = useState(topics.map(t => t.title).join(' + '));
+  const [category, setCategory] = useState<TopicCategory>(topics[0]?.category || 'MÉRITO');
 
   return (
     <div className={`
@@ -478,7 +521,7 @@ const MergeConfirm = ({ topics, onConfirm, onCancel, isDarkMode }) => {
         </span>
         <select
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          onChange={(e) => setCategory(e.target.value as TopicCategory)}
           className={`
             px-3 py-1.5 rounded border text-sm
             ${isDarkMode
@@ -520,13 +563,13 @@ const MergeConfirm = ({ topics, onConfirm, onCancel, isDarkMode }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMPONENTE: AddTopicInline (Adicionar novo tópico)
+// COMPONENTE: AddTopicInline
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const AddTopicInline = ({ onAdd, onCancel, isDarkMode }) => {
+const AddTopicInline: React.FC<AddTopicInlineProps> = ({ onAdd, onCancel, isDarkMode }) => {
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('MÉRITO');
-  const inputRef = useRef(null);
+  const [category, setCategory] = useState<TopicCategory>('MÉRITO');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -538,7 +581,7 @@ const AddTopicInline = ({ onAdd, onCancel, isDarkMode }) => {
     }
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       handleAdd();
@@ -571,7 +614,7 @@ const AddTopicInline = ({ onAdd, onCancel, isDarkMode }) => {
 
       <select
         value={category}
-        onChange={(e) => setCategory(e.target.value)}
+        onChange={(e) => setCategory(e.target.value as TopicCategory)}
         className={`
           px-3 py-2 rounded border text-sm
           ${isDarkMode
@@ -613,7 +656,7 @@ const AddTopicInline = ({ onAdd, onCancel, isDarkMode }) => {
 // COMPONENTE PRINCIPAL: TopicCurationModal
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const TopicCurationModal = ({
+const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
   isOpen,
   onConfirm,
   onCancel,
@@ -622,19 +665,16 @@ const TopicCurationModal = ({
   parallelRequests = 5,
   isDarkMode = true
 }) => {
-  // Estados
-  const [topics, setTopics] = useState([]);
-  const [editingTitle, setEditingTitle] = useState(null);
-  const [selectedForMerge, setSelectedForMerge] = useState([]);
-  const [splittingTopic, setSplittingTopic] = useState(null);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [editingTitle, setEditingTitle] = useState<string | null>(null);
+  const [selectedForMerge, setSelectedForMerge] = useState<Topic[]>([]);
+  const [splittingTopic, setSplittingTopic] = useState<Topic | null>(null);
   const [showMergeConfirm, setShowMergeConfirm] = useState(false);
   const [isAddingTopic, setIsAddingTopic] = useState(false);
-  const [deletedTopics, setDeletedTopics] = useState([]); // Para undo
+  const [deletedTopics, setDeletedTopics] = useState<Topic[]>([]);
 
-  // Inicializar tópicos
   useEffect(() => {
     if (isOpen && initialTopics.length > 0) {
-      // Garantir que cada tópico tem um ID único
       const topicsWithIds = initialTopics.map((t, idx) => ({
         ...t,
         id: t.id || `topic-${idx}-${t.title}`
@@ -648,23 +688,17 @@ const TopicCurationModal = ({
     }
   }, [isOpen, initialTopics]);
 
-  // Sensores para dnd-kit
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8
-      }
+      activationConstraint: { distance: 8 }
     })
   );
 
-  // Estimativa de custo
   const estimate = useMemo(() => {
-    // Contar tópicos que precisam de mini-relatório (excluir RELATÓRIO)
     const topicsToGenerate = topics.filter(t => !isSpecialTopic(t)).length;
     return estimateCostAndTime(topicsToGenerate, model, parallelRequests);
   }, [topics, model, parallelRequests]);
 
-  // IDs dos tópicos especiais para collision detection
   const specialTopicIds = useMemo(() => {
     return new Set(
       topics
@@ -673,24 +707,21 @@ const TopicCurationModal = ({
     );
   }, [topics]);
 
-  // Collision detection customizado (ignora RELATÓRIO)
-  const customCollisionDetection = useCallback((args) => {
+  const customCollisionDetection = useCallback((args: Parameters<typeof closestCenter>[0]) => {
     const { droppableContainers, ...rest } = args;
     const filteredContainers = droppableContainers.filter(
-      container => !specialTopicIds.has(container.id)
+      container => !specialTopicIds.has(container.id as string)
     );
     return closestCenter({ ...rest, droppableContainers: filteredContainers });
   }, [specialTopicIds]);
 
-  // Handler de drag end
-  const handleDragEnd = useCallback((event) => {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
     const oldIndex = topics.findIndex(t => (t.id || t.title) === active.id);
     const newIndex = topics.findIndex(t => (t.id || t.title) === over.id);
 
-    // Proteger tópicos especiais
     if (isSpecialTopic(topics[oldIndex]) || isSpecialTopic(topics[newIndex])) {
       return;
     }
@@ -698,12 +729,11 @@ const TopicCurationModal = ({
     setTopics(arrayMove(topics, oldIndex, newIndex));
   }, [topics]);
 
-  // Handler de edição de título
-  const handleStartEdit = useCallback((title) => {
+  const handleStartEdit = useCallback((title: string) => {
     setEditingTitle(title);
   }, []);
 
-  const handleSaveTitle = useCallback((oldTitle, newTitle, newCategory) => {
+  const handleSaveTitle = useCallback((oldTitle: string, newTitle: string, newCategory: TopicCategory) => {
     if (newTitle && newTitle !== oldTitle) {
       setTopics(topics.map(t =>
         t.title === oldTitle
@@ -720,14 +750,12 @@ const TopicCurationModal = ({
     setEditingTitle(null);
   }, [topics]);
 
-  // Handler de delete
-  const handleDelete = useCallback((topic) => {
+  const handleDelete = useCallback((topic: Topic) => {
     setDeletedTopics([...deletedTopics, topic]);
     setTopics(topics.filter(t => t.title !== topic.title));
     setSelectedForMerge(selectedForMerge.filter(t => t.title !== topic.title));
   }, [topics, deletedTopics, selectedForMerge]);
 
-  // Handler de undo delete
   const handleUndoDelete = useCallback(() => {
     if (deletedTopics.length > 0) {
       const lastDeleted = deletedTopics[deletedTopics.length - 1];
@@ -736,8 +764,7 @@ const TopicCurationModal = ({
     }
   }, [topics, deletedTopics]);
 
-  // Handler de toggle merge select
-  const handleToggleMergeSelect = useCallback((topic) => {
+  const handleToggleMergeSelect = useCallback((topic: Topic) => {
     const isSelected = selectedForMerge.some(t => t.title === topic.title);
     if (isSelected) {
       setSelectedForMerge(selectedForMerge.filter(t => t.title !== topic.title));
@@ -747,24 +774,20 @@ const TopicCurationModal = ({
     setShowMergeConfirm(false);
   }, [selectedForMerge]);
 
-  // Handler de confirmar merge
-  const handleConfirmMerge = useCallback((mergedTitle, category) => {
+  const handleConfirmMerge = useCallback((mergedTitle: string, category: TopicCategory) => {
     if (selectedForMerge.length < 2) return;
 
-    // Encontrar posição do primeiro tópico selecionado
     const firstIndex = topics.findIndex(t =>
       selectedForMerge.some(st => st.title === t.title)
     );
 
-    // Criar novo tópico mesclado
-    const mergedTopic = {
+    const mergedTopic: Topic = {
       id: `merged-${Date.now()}`,
       title: mergedTitle,
       category: category,
       mergedFrom: selectedForMerge.map(t => t.title)
     };
 
-    // Remover tópicos originais e inserir mesclado
     const remainingTopics = topics.filter(t =>
       !selectedForMerge.some(st => st.title === t.title)
     );
@@ -775,26 +798,22 @@ const TopicCurationModal = ({
     setShowMergeConfirm(false);
   }, [topics, selectedForMerge]);
 
-  // Handler de split
-  const handleStartSplit = useCallback((topic) => {
+  const handleStartSplit = useCallback((topic: Topic) => {
     setSplittingTopic(topic);
   }, []);
 
-  const handleConfirmSplit = useCallback((newTitles, category) => {
+  const handleConfirmSplit = useCallback((newTitles: string[], category: TopicCategory) => {
     if (!splittingTopic || newTitles.length < 2) return;
 
-    // Encontrar posição do tópico original
     const originalIndex = topics.findIndex(t => t.title === splittingTopic.title);
 
-    // Criar novos tópicos
-    const newTopics = newTitles.map((title, idx) => ({
+    const newTopics: Topic[] = newTitles.map((title, idx) => ({
       id: `split-${Date.now()}-${idx}`,
       title: title,
       category: category,
       splitFrom: splittingTopic.title
     }));
 
-    // Substituir tópico original pelos novos
     const updatedTopics = [...topics];
     updatedTopics.splice(originalIndex, 1, ...newTopics);
 
@@ -802,9 +821,8 @@ const TopicCurationModal = ({
     setSplittingTopic(null);
   }, [topics, splittingTopic]);
 
-  // Handler de adicionar novo tópico
-  const handleAddTopic = useCallback((title, category) => {
-    const newTopic = {
+  const handleAddTopic = useCallback((title: string, category: TopicCategory) => {
+    const newTopic: Topic = {
       id: `new-${Date.now()}`,
       title: title,
       category: category,
@@ -814,16 +832,13 @@ const TopicCurationModal = ({
     setIsAddingTopic(false);
   }, [topics]);
 
-  // Handler de confirmar curadoria
   const handleConfirm = useCallback(() => {
-    // Limpar flags temporárias antes de enviar
-    const cleanedTopics = topics.map(({ id, mergedFrom, splitFrom, isNew, ...rest }) => rest);
+    const cleanedTopics = topics.map(({ id, mergedFrom, splitFrom, isNew, ...rest }) => rest as Topic);
     onConfirm(cleanedTopics);
   }, [topics, onConfirm]);
 
-  // ESC para fechar
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !editingTitle && !splittingTopic && !showMergeConfirm && !isAddingTopic) {
         onCancel();
       }
@@ -840,13 +855,11 @@ const TopicCurationModal = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onCancel}
       />
 
-      {/* Modal */}
       <div className={`
         relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl shadow-2xl
         ${isDarkMode
@@ -854,16 +867,12 @@ const TopicCurationModal = ({
           : 'bg-white border border-slate-200'
         }
       `}>
-        {/* Header */}
         <div className={`
           flex items-center justify-between p-4 border-b
           ${isDarkMode ? 'border-slate-700/50' : 'border-slate-200'}
         `}>
           <div className="flex items-center gap-3">
-            <div className={`
-              p-2 rounded-lg
-              ${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'}
-            `}>
+            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'}`}>
               <FileText className="w-5 h-5 text-blue-500" />
             </div>
             <div>
@@ -883,7 +892,6 @@ const TopicCurationModal = ({
           </button>
         </div>
 
-        {/* Instruções */}
         <div className={`
           px-4 py-3 text-sm flex items-center gap-4 border-b
           ${isDarkMode ? 'bg-slate-800/50 border-slate-700/50 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'}
@@ -893,9 +901,7 @@ const TopicCurationModal = ({
           <span>🗑️ Apague desnecessários</span>
         </div>
 
-        {/* Lista de Tópicos */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {/* Merge Confirm */}
           {showMergeConfirm && selectedForMerge.length >= 2 && (
             <MergeConfirm
               topics={selectedForMerge}
@@ -905,7 +911,6 @@ const TopicCurationModal = ({
             />
           )}
 
-          {/* DnD Context */}
           <DndContext
             sensors={sensors}
             collisionDetection={customCollisionDetection}
@@ -930,7 +935,6 @@ const TopicCurationModal = ({
                     isDarkMode={isDarkMode}
                   />
 
-                  {/* Split Modal inline */}
                   {splittingTopic?.title === topic.title && (
                     <SplitModal
                       topic={topic}
@@ -944,7 +948,6 @@ const TopicCurationModal = ({
             </SortableContext>
           </DndContext>
 
-          {/* Add Topic Inline */}
           {isAddingTopic ? (
             <AddTopicInline
               onAdd={handleAddTopic}
@@ -968,12 +971,10 @@ const TopicCurationModal = ({
           )}
         </div>
 
-        {/* Footer com ações */}
         <div className={`
           p-4 border-t
           ${isDarkMode ? 'border-slate-700/50 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}
         `}>
-          {/* Merge button (quando selecionados) */}
           {selectedForMerge.length >= 2 && !showMergeConfirm && (
             <button
               onClick={() => setShowMergeConfirm(true)}
@@ -984,7 +985,6 @@ const TopicCurationModal = ({
             </button>
           )}
 
-          {/* Undo delete */}
           {deletedTopics.length > 0 && (
             <button
               onClick={handleUndoDelete}
@@ -1000,7 +1000,6 @@ const TopicCurationModal = ({
             </button>
           )}
 
-          {/* Estimativa de custo */}
           <div className={`
             flex items-center justify-center gap-6 mb-4 py-2 px-4 rounded-lg
             ${isDarkMode ? 'bg-slate-900/50' : 'bg-slate-100'}
@@ -1025,7 +1024,6 @@ const TopicCurationModal = ({
             </div>
           </div>
 
-          {/* Botões de ação */}
           <div className="flex gap-3">
             <button
               onClick={onCancel}
