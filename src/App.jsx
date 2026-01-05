@@ -139,7 +139,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.33'; // v1.35.33: TypeScript incremental - TopicCurationModal.tsx como primeiro arquivo .tsx
+const APP_VERSION = '1.35.34'; // v1.35.34: TopicCurationModal: modal não fecha, 80vw, undo no índice, custo mostra modelo
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {

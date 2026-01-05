@@ -108,8 +108,16 @@ const CATEGORIES: TopicCategory[] = ['PRELIMINAR', 'PREJUDICIAL', 'MÉRITO', 'PR
 const MODEL_PRICES: Record<string, { input: number; output: number }> = {
   'claude-sonnet-4-20250514': { input: 3, output: 15 },
   'claude-opus-4-20250514': { input: 15, output: 75 },
-  'gemini-2.0-flash-001': { input: 0.10, output: 0.40 },
-  'gemini-2.5-pro-preview-06-05': { input: 1.25, output: 10 }
+  'gemini-3-flash-preview': { input: 0.50, output: 3.00 },
+  'gemini-3-pro-preview': { input: 2.00, output: 12.00 }
+};
+
+// Nomes amigáveis dos modelos
+const MODEL_NAMES: Record<string, string> = {
+  'claude-sonnet-4-20250514': 'Claude Sonnet 4',
+  'claude-opus-4-20250514': 'Claude Opus 4',
+  'gemini-3-flash-preview': 'Gemini 3 Flash',
+  'gemini-3-pro-preview': 'Gemini 3 Pro'
 };
 
 const TOKENS_PER_TOPIC = 4000;
@@ -671,7 +679,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
   const [splittingTopic, setSplittingTopic] = useState<Topic | null>(null);
   const [showMergeConfirm, setShowMergeConfirm] = useState(false);
   const [isAddingTopic, setIsAddingTopic] = useState(false);
-  const [deletedTopics, setDeletedTopics] = useState<Topic[]>([]);
+  const [deletedTopics, setDeletedTopics] = useState<{topic: Topic, index: number}[]>([]);
 
   useEffect(() => {
     if (isOpen && initialTopics.length > 0) {
@@ -751,15 +759,18 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
   }, [topics]);
 
   const handleDelete = useCallback((topic: Topic) => {
-    setDeletedTopics([...deletedTopics, topic]);
+    const index = topics.findIndex(t => t.title === topic.title);
+    setDeletedTopics([...deletedTopics, { topic, index }]);
     setTopics(topics.filter(t => t.title !== topic.title));
     setSelectedForMerge(selectedForMerge.filter(t => t.title !== topic.title));
   }, [topics, deletedTopics, selectedForMerge]);
 
   const handleUndoDelete = useCallback(() => {
     if (deletedTopics.length > 0) {
-      const lastDeleted = deletedTopics[deletedTopics.length - 1];
-      setTopics([...topics, lastDeleted]);
+      const { topic, index } = deletedTopics[deletedTopics.length - 1];
+      const newTopics = [...topics];
+      newTopics.splice(Math.min(index, newTopics.length), 0, topic);
+      setTopics(newTopics);
       setDeletedTopics(deletedTopics.slice(0, -1));
     }
   }, [topics, deletedTopics]);
@@ -837,17 +848,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
     onConfirm(cleanedTopics);
   }, [topics, onConfirm]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !editingTitle && !splittingTopic && !showMergeConfirm && !isAddingTopic) {
-        onCancel();
-      }
-    };
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-    }
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, editingTitle, splittingTopic, showMergeConfirm, isAddingTopic, onCancel]);
+  // ESC handler removido - modal não pode ser fechado acidentalmente
 
   if (!isOpen) return null;
 
@@ -855,13 +856,11 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onCancel}
-      />
+      {/* Backdrop sem onClick - modal não pode ser fechado acidentalmente */}
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
       <div className={`
-        relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl shadow-2xl
+        relative w-full max-w-[80vw] max-h-[85vh] flex flex-col rounded-2xl shadow-2xl
         ${isDarkMode
           ? 'bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 border border-slate-700/50'
           : 'bg-white border border-slate-200'
@@ -884,12 +883,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onCancel}
-            className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {/* Botão X removido - modal não pode ser fechado acidentalmente */}
         </div>
 
         <div className={`
@@ -996,7 +990,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
                 }
               `}
             >
-              ↩️ Desfazer exclusão de "{deletedTopics[deletedTopics.length - 1]?.title}"
+              ↩️ Desfazer exclusão de "{deletedTopics[deletedTopics.length - 1]?.topic.title}"
             </button>
           )}
 
@@ -1013,7 +1007,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-green-500" />
               <span className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
-                ~R$ {estimate.costBRL}
+                ~R$ {estimate.costBRL} ({MODEL_NAMES[model] || model})
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -1024,19 +1018,8 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
             </div>
           </div>
 
+          {/* Botão Cancelar removido - apenas Confirmar disponível */}
           <div className="flex gap-3">
-            <button
-              onClick={onCancel}
-              className={`
-                flex-1 py-3 px-4 rounded-lg font-medium transition-colors
-                ${isDarkMode
-                  ? 'bg-slate-700 hover:bg-slate-600 text-white'
-                  : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
-                }
-              `}
-            >
-              Cancelar
-            </button>
             <button
               onClick={handleConfirm}
               disabled={topicsToGenerateCount === 0}

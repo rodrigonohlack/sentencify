@@ -133,10 +133,11 @@ describe('TopicCurationModal - Renderização', () => {
     expect(screen.getByText(/~\d+ min/)).toBeInTheDocument();
   });
 
-  it('deve renderizar botões de ação', () => {
+  it('deve renderizar botão Confirmar (sem Cancelar - modal não pode ser fechado)', () => {
     render(<TopicCurationModal {...defaultProps} />);
 
-    expect(screen.getByText('Cancelar')).toBeInTheDocument();
+    // v1.35.34: Modal não pode ser fechado - apenas botão Confirmar
+    expect(screen.queryByText('Cancelar')).not.toBeInTheDocument();
     expect(screen.getByText('Confirmar e Gerar')).toBeInTheDocument();
   });
 
@@ -168,16 +169,15 @@ describe('TopicCurationModal - Callbacks', () => {
     vi.clearAllMocks();
   });
 
-  it('deve chamar onCancel ao clicar em Cancelar', async () => {
-    const onCancel = vi.fn();
-    render(<TopicCurationModal {...defaultProps} onCancel={onCancel} />);
+  // v1.35.34: Modal não pode ser fechado - botão Cancelar removido
+  it('não deve ter botão Cancelar (modal não pode ser fechado)', async () => {
+    render(<TopicCurationModal {...defaultProps} />);
 
-    fireEvent.click(screen.getByText('Cancelar'));
-
-    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Cancelar')).not.toBeInTheDocument();
   });
 
-  it('deve chamar onCancel ao clicar no backdrop', async () => {
+  // v1.35.34: Modal não pode ser fechado - backdrop não responde a click
+  it('backdrop não deve fechar o modal ao clicar', async () => {
     const onCancel = vi.fn();
     render(<TopicCurationModal {...defaultProps} onCancel={onCancel} />);
 
@@ -185,21 +185,19 @@ describe('TopicCurationModal - Callbacks', () => {
     const backdrop = document.querySelector('.bg-black\\/70');
     fireEvent.click(backdrop);
 
-    expect(onCancel).toHaveBeenCalledTimes(1);
+    // Não deve chamar onCancel
+    expect(onCancel).not.toHaveBeenCalled();
   });
 
-  it('deve chamar onCancel ao clicar no X', async () => {
-    const onCancel = vi.fn();
-    render(<TopicCurationModal {...defaultProps} onCancel={onCancel} />);
+  // v1.35.34: Botão X removido - modal não pode ser fechado
+  it('não deve ter botão X no header', async () => {
+    render(<TopicCurationModal {...defaultProps} />);
 
-    // Encontrar o botão X no header
-    const closeButtons = screen.getAllByRole('button');
-    const xButton = closeButtons.find(btn => btn.querySelector('svg.lucide-x'));
+    // Verificar que não existe botão X no header (apenas ícones X em sub-modais)
+    const header = screen.getByText('Revisão de Tópicos').closest('div').parentElement;
+    const xButtonInHeader = header?.querySelector('button svg.lucide-x');
 
-    if (xButton) {
-      fireEvent.click(xButton);
-      expect(onCancel).toHaveBeenCalled();
-    }
+    expect(xButtonInHeader).toBeNull();
   });
 
   it('deve chamar onConfirm ao clicar em Confirmar e Gerar', async () => {
@@ -219,27 +217,15 @@ describe('TopicCurationModal - Callbacks', () => {
     );
   });
 
-  it('deve chamar onCancel ao pressionar ESC', async () => {
+  // v1.35.34: Modal não pode ser fechado - ESC não funciona
+  it('ESC não deve fechar o modal', async () => {
     const onCancel = vi.fn();
     render(<TopicCurationModal {...defaultProps} onCancel={onCancel} />);
 
     fireEvent.keyDown(document, { key: 'Escape' });
 
-    expect(onCancel).toHaveBeenCalledTimes(1);
-  });
-
-  it('não deve chamar onCancel ao pressionar ESC durante edição', async () => {
-    const onCancel = vi.fn();
-    render(<TopicCurationModal {...defaultProps} onCancel={onCancel} />);
-
-    // Clicar para editar um tópico
-    fireEvent.click(screen.getByText('HORAS EXTRAS'));
-
-    // ESC não deve fechar o modal durante edição
-    fireEvent.keyDown(document, { key: 'Escape' });
-
-    // onCancel pode ou não ser chamado dependendo da implementação
-    // O importante é que o modal não feche abruptamente
+    // Não deve chamar onCancel
+    expect(onCancel).not.toHaveBeenCalled();
   });
 });
 
