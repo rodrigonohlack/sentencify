@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.56'; // v1.35.56: Fix - botão Sair volta para o header (logout geral)
+const APP_VERSION = '1.35.57'; // v1.35.57: Botão Sair na mesma linha do Projeto
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -27953,10 +27953,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     onClear={() => openModal('clearProject')}
                     isDarkMode={appTheme === 'dark'}
                   />
-                </div>
-                {/* 🔄 v1.35.56: Botão Sair permanece no header (logout geral) */}
-                {cloudSync?.isAuthenticated && onLogout && (
-                  <div className="mt-2 flex justify-end">
+                  {/* 🔄 v1.35.57: Botão Sair na mesma linha */}
+                  {cloudSync?.isAuthenticated && onLogout && (
                     <button
                       onClick={() => openModal('logout')}
                       className="px-3 py-1 rounded text-xs flex items-center gap-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 transition-colors duration-200"
@@ -27965,8 +27963,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       <LogOut className="w-3 h-3" />
                       Sair
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
             

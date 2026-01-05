@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.57', feature: 'UX: botão Sair movido para a mesma linha do botão Projeto (layout mais compacto)' },
   { version: '1.35.56', feature: 'Fix: botão Sair volta para o header (logout geral do sistema), apenas indicador + email ficam na aba Modelos' },
   { version: '1.35.55', feature: 'Bloco de sync de modelos (indicador + email) movido do header para a aba Modelos' },
   { version: '1.35.54', feature: 'Foto do perfil Google exibida no status de conexão Drive (ao lado do email)' },
