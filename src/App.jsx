@@ -144,7 +144,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.48'; // v1.35.48: Google Drive: fix compartilhamento (sharedWithMe + remover permissão)
+const APP_VERSION = '1.35.49'; // v1.35.49: UX Polish - remover permissão compartilhamento, texto sync, contraste tags
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {

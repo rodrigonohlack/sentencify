@@ -200,7 +200,7 @@ app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════════╗
   ║                                                       ║
-  ║   SentencifyAI Server v1.35.29                       ║
+  ║   SentencifyAI Server v1.35.49                       ║
   ║   ────────────────────────────────────────────────   ║
   ║   Backend:  http://localhost:${PORT}                   ║
   ║   Frontend: http://localhost:3000                    ║

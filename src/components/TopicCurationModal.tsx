@@ -1,7 +1,7 @@
 /**
  * TopicCurationModal.tsx
  * Modal de curadoria de tópicos pré-geração de mini-relatórios
- * v1.35.33 - Convertido para TypeScript
+ * v1.35.49 - Fix contraste das tags de categoria no tema claro
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -111,13 +111,24 @@ interface AddTopicInlineProps {
 // CONSTANTES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const CATEGORY_COLORS: Record<TopicCategory, string> = {
-  'PRELIMINAR': 'bg-amber-600/30 text-amber-300 border border-amber-500/30',
-  'PREJUDICIAL': 'bg-purple-600/30 text-purple-300 border border-purple-500/30',
-  'MÉRITO': 'bg-blue-600/30 text-blue-300 border border-blue-500/30',
-  'PROCESSUAL': 'bg-slate-600/30 text-slate-300 border border-slate-500/30',
-  'RELATÓRIO': 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/30'
-};
+// v1.35.49: Função para cores adaptativas ao tema (antes constante com baixo contraste no tema claro)
+const getCategoryColors = (isDarkMode: boolean): Record<TopicCategory, string> => ({
+  'PRELIMINAR': isDarkMode
+    ? 'bg-amber-600/30 text-amber-300 border border-amber-500/30'
+    : 'bg-amber-100 text-amber-800 border border-amber-300',
+  'PREJUDICIAL': isDarkMode
+    ? 'bg-purple-600/30 text-purple-300 border border-purple-500/30'
+    : 'bg-purple-100 text-purple-800 border border-purple-300',
+  'MÉRITO': isDarkMode
+    ? 'bg-blue-600/30 text-blue-300 border border-blue-500/30'
+    : 'bg-blue-100 text-blue-800 border border-blue-300',
+  'PROCESSUAL': isDarkMode
+    ? 'bg-slate-600/30 text-slate-300 border border-slate-500/30'
+    : 'bg-slate-200 text-slate-700 border border-slate-300',
+  'RELATÓRIO': isDarkMode
+    ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/30'
+    : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+});
 
 const CATEGORIES: TopicCategory[] = ['PRELIMINAR', 'PREJUDICIAL', 'MÉRITO', 'PROCESSUAL'];
 
@@ -270,7 +281,8 @@ const TopicCardVisual: React.FC<TopicCardVisualProps> = ({
   isSelectedForMerge = false
 }) => {
   const isSpecial = isSpecialTopic(topic);
-  const categoryColor = CATEGORY_COLORS[topic.category] || CATEGORY_COLORS['MÉRITO'];
+  const categoryColors = getCategoryColors(isDarkMode);
+  const categoryColor = categoryColors[topic.category] || categoryColors['MÉRITO'];
 
   return (
     <div
@@ -394,7 +406,8 @@ const TopicPreviewCard = React.memo<TopicPreviewCardProps>(({
     setShowCategoryDropdown(false);
   };
 
-  const categoryColor = CATEGORY_COLORS[topic.category] || CATEGORY_COLORS['MÉRITO'];
+  const categoryColors = getCategoryColors(isDarkMode);
+  const categoryColor = categoryColors[topic.category] || categoryColors['MÉRITO'];
 
   return (
     <div
@@ -438,7 +451,7 @@ const TopicPreviewCard = React.memo<TopicPreviewCardProps>(({
           <div className="relative">
             <button
               onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-              className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${CATEGORY_COLORS[localCategory]}`}
+              className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${categoryColors[localCategory]}`}
             >
               {localCategory}
               <ChevronDown className="w-3 h-3" />

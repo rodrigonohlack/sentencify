@@ -2,7 +2,7 @@
  * Botão de integração com Google Drive
  * Dropdown com opções: Conectar, Salvar, Carregar, Desconectar
  *
- * @version 1.35.48
+ * @version 1.35.49
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -175,7 +175,6 @@ export function DriveFilesModal({
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareFile, setShareFile] = useState(null);
   const [shareEmail, setShareEmail] = useState('');
-  const [shareRole, setShareRole] = useState('reader');
   const [shareLoading, setShareLoading] = useState(false);
 
   // v1.35.45: Modal para ver permissões
@@ -224,12 +223,14 @@ export function DriveFilesModal({
 
   if (!isOpen) return null;
 
+  // v1.35.49: Sempre usa 'reader' pois permissão de escrita é irrelevante
+  // (ao salvar, o usuário cria uma cópia no próprio Drive)
   const handleShare = async () => {
     if (!shareEmail.trim() || !shareFile) return;
 
     setShareLoading(true);
     try {
-      await onShare(shareFile.id, shareEmail.trim(), shareRole);
+      await onShare(shareFile.id, shareEmail.trim(), 'reader');
       setShareModalOpen(false);
       setShareEmail('');
       setShareFile(null);
@@ -383,7 +384,6 @@ export function DriveFilesModal({
                         onClick={() => {
                           setShareFile(file);
                           setShareEmail('');
-                          setShareRole('reader');
                           setShareModalOpen(true);
                         }}
                         className={`p-1.5 rounded-lg transition-colors ${
@@ -478,24 +478,10 @@ export function DriveFilesModal({
                       : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
                   } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                  Permissão
-                </label>
-                <select
-                  value={shareRole}
-                  onChange={(e) => setShareRole(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border text-sm ${
-                    isDarkMode
-                      ? 'bg-slate-700 border-slate-600 text-white'
-                      : 'bg-white border-slate-300 text-slate-800'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                >
-                  <option value="reader">Visualizar</option>
-                  <option value="writer">Editar</option>
-                </select>
+                {/* v1.35.49: Nota explicativa sobre comportamento do compartilhamento */}
+                <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  O destinatário poderá visualizar e carregar uma cópia do projeto.
+                </p>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">

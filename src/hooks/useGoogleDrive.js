@@ -2,7 +2,7 @@
  * Hook para integração com Google Drive
  * Permite salvar/restaurar projetos Sentencify no Drive do usuário
  *
- * @version 1.35.48
+ * @version 1.35.49
  */
 
 import { useState, useCallback, useEffect } from 'react';

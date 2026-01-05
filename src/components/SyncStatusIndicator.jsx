@@ -1,6 +1,6 @@
 /**
  * SyncStatusIndicator - Indicador de Status de Sincronização
- * v1.34.0
+ * v1.35.49
  *
  * Badge compacto que mostra o status atual de sync:
  * - idle (verde): sincronizado
@@ -33,13 +33,15 @@ const SyncStatusIndicator = ({
     return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Configuração visual por status
+  // v1.35.49: Configuração visual por status (textos mais descritivos)
   const statusConfig = {
     idle: {
       icon: pendingCount > 0 ? RefreshCw : Check,
       iconClass: pendingCount > 0 ? 'text-yellow-400' : 'text-green-400',
       bgClass: pendingCount > 0 ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-green-500/10 border-green-500/30',
-      label: pendingCount > 0 ? `${pendingCount} pendente${pendingCount > 1 ? 's' : ''}` : 'Sincronizado',
+      label: pendingCount > 0
+        ? `${pendingCount} modelo${pendingCount > 1 ? 's' : ''} pendente${pendingCount > 1 ? 's' : ''}`
+        : 'Modelos sincronizados',
       labelClass: pendingCount > 0 ? 'text-yellow-400' : 'text-green-400',
     },
     syncing: {
@@ -73,7 +75,7 @@ const SyncStatusIndicator = ({
     <button
       onClick={canSync ? onSync : undefined}
       disabled={!canSync}
-      title={`Último sync: ${formatTime(lastSyncAt)}${canSync ? ' (clique para sincronizar)' : ''}`}
+      title={`Biblioteca de modelos\nÚltimo sync: ${formatTime(lastSyncAt)}${canSync ? '\nClique para sincronizar' : ''}`}
       className={`
         flex items-center gap-2 px-3 py-1.5 rounded-lg border
         transition-all duration-200
