@@ -145,7 +145,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.61'; // v1.35.61: VoiceButton em editor de modelos e Quick Edit
+const APP_VERSION = '1.35.62'; // v1.35.62: VoiceButton no editor global e assistente IA de modelos
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -10969,6 +10969,11 @@ const AIAssistantBaseLegacy = React.memo(({
       .catch(() => {});
   }, [aiGeneratedText]);
 
+  // v1.35.62: Handler para Voice-to-Text no campo de instruções
+  const handleVoiceInstruction = React.useCallback((text) => {
+    setAiInstruction(prev => (prev ? prev + ' ' : '') + text);
+  }, [setAiInstruction]);
+
   if (!isOpen) return null;
 
   // Exemplos padrão
@@ -11020,7 +11025,16 @@ const AIAssistantBaseLegacy = React.memo(({
 
           {/* Campo de Instruções */}
           <div>
-            <label className={CSS.label}>Sua Instrução para a IA</label>
+            {/* v1.35.62: Label + VoiceButton */}
+            <div className="flex items-center justify-between mb-2">
+              <label className={CSS.label}>Sua Instrução para a IA</label>
+              <VoiceButton
+                onTranscript={handleVoiceInstruction}
+                size="sm"
+                idleText="Ditar"
+                onError={(err) => console.warn('[VoiceToText]', err)}
+              />
+            </div>
             <textarea
               value={aiInstruction}
               onChange={(e) => setAiInstruction(e.target.value)}
@@ -13395,7 +13409,6 @@ const BulkUploadModal = React.memo(({
 BulkUploadModal.displayName = 'BulkUploadModal';
 
 // 📋 FASE 3.1: ModelFormFields - Campos do formulário de modelos
-// v1.35.61: Adicionado suporte a Voice-to-Text nos campos título e keywords
 const ModelFormFields = React.memo(({
   formData,
   onChange,
@@ -13403,9 +13416,7 @@ const ModelFormFields = React.memo(({
   onGenerateKeywords,
   generatingKeywords,
   onGenerateTitle,
-  generatingTitle,
-  onVoiceTitle,
-  onVoiceKeywords
+  generatingTitle
 }) => {
 
   const handleFieldChange = React.useCallback((field, value) => {
@@ -13442,22 +13453,13 @@ const ModelFormFields = React.memo(({
             )}
           </button>
         </div>
-        {/* v1.35.61: Input + VoiceButton */}
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={formData.title}
-            onChange={(e) => handleFieldChange('title', e.target.value)}
-            className="flex-1 theme-bg-primary border theme-border-input rounded-lg p-3 theme-text-primary focus:border-blue-500 focus:outline-none transition-colors"
-            placeholder="Ex: HORAS EXTRAS - SOBREJORNADA - PROCEDENTE"
-          />
-          {onVoiceTitle && (
-            <VoiceButton
-              onTranscript={onVoiceTitle}
-              size="sm"
-            />
-          )}
-        </div>
+        <input
+          type="text"
+          value={formData.title}
+          onChange={(e) => handleFieldChange('title', e.target.value)}
+          className="w-full theme-bg-primary border theme-border-input rounded-lg p-3 theme-text-primary focus:border-blue-500 focus:outline-none transition-colors"
+          placeholder="Ex: HORAS EXTRAS - SOBREJORNADA - PROCEDENTE"
+        />
       </div>
 
       {/* Campo Categoria com autocomplete */}
@@ -13506,22 +13508,13 @@ const ModelFormFields = React.memo(({
             )}
           </button>
         </div>
-        {/* v1.35.61: Input + VoiceButton */}
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={formData.keywords}
-            onChange={(e) => handleFieldChange('keywords', e.target.value)}
-            className="flex-1 theme-bg-primary border theme-border-input rounded-lg p-3 theme-text-primary focus:border-blue-500 focus:outline-none transition-colors"
-            placeholder="horas extras, sobrejornada, adicional"
-          />
-          {onVoiceKeywords && (
-            <VoiceButton
-              onTranscript={onVoiceKeywords}
-              size="sm"
-            />
-          )}
-        </div>
+        <input
+          type="text"
+          value={formData.keywords}
+          onChange={(e) => handleFieldChange('keywords', e.target.value)}
+          className="w-full theme-bg-primary border theme-border-input rounded-lg p-3 theme-text-primary focus:border-blue-500 focus:outline-none transition-colors"
+          placeholder="horas extras, sobrejornada, adicional"
+        />
       </div>
     </div>
   );
@@ -13602,15 +13595,6 @@ const ModelFormModal = React.forwardRef(({
     setTimeout(() => onSaveWithoutClosing(), 0);
   }, [localModel, setNewModel, onSaveWithoutClosing]);
 
-  // v1.35.61: Handlers para Voice-to-Text nos campos título e keywords
-  const handleVoiceTitle = React.useCallback((text) => {
-    handleFieldChange('title', (localModel.title || '').trim() + (localModel.title ? ' ' : '') + text);
-  }, [localModel.title, handleFieldChange]);
-
-  const handleVoiceKeywords = React.useCallback((text) => {
-    handleFieldChange('keywords', (localModel.keywords || '').trim() + (localModel.keywords ? ', ' : '') + text);
-  }, [localModel.keywords, handleFieldChange]);
-
   // v1.35.5: Return condicional APÓS todos os hooks
   if (!isOpen) return null;
 
@@ -13630,8 +13614,6 @@ const ModelFormModal = React.forwardRef(({
         generatingKeywords={generatingKeywords}
         onGenerateTitle={onGenerateTitle}
         generatingTitle={generatingTitle}
-        onVoiceTitle={handleVoiceTitle}
-        onVoiceKeywords={handleVoiceKeywords}
       />
 
       {/* Editor rico de conteúdo - usa estado LOCAL */}
@@ -14391,6 +14373,18 @@ const FieldEditor = React.memo(React.forwardRef(({
     };
   }, []);
 
+  // v1.35.62: Handler para Voice-to-Text - insere texto na posição do cursor
+  const handleVoiceTranscript = React.useCallback((text) => {
+    const quill = quillInstanceRef.current;
+    if (quill) {
+      requestAnimationFrame(() => {
+        const range = quill.getSelection() || { index: quill.getLength() - 1 };
+        quill.insertText(range.index, text + ' ');
+        quill.setSelection(range.index + text.length + 1);
+      });
+    }
+  }, []);
+
   // Renderização
   if (!quillReady) {
     return (
@@ -14416,7 +14410,15 @@ const FieldEditor = React.memo(React.forwardRef(({
 
   return (
     <div className="field-editor">
-      <label className="block text-xs font-semibold theme-text-muted mb-1">{label}</label>
+      {/* v1.35.62: Label + VoiceButton */}
+      <div className="flex items-center justify-between mb-1">
+        <label className="block text-xs font-semibold theme-text-muted">{label}</label>
+        <VoiceButton
+          onTranscript={handleVoiceTranscript}
+          size="sm"
+          onError={(err) => console.warn('[VoiceToText]', err)}
+        />
+      </div>
       <div
         ref={editorRef}
         className={`${editorTheme === 'light' ? 'quill-light-theme bg-white' : 'theme-bg-primary'} border theme-border-input rounded field-editor-content`}
