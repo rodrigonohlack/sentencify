@@ -103,22 +103,23 @@ export const VoiceButton: React.FC<VoiceButtonProps> = memo(({
   return (
     <div className="relative">
       {/* v1.35.60: Preview flutuante com texto interim */}
+      {/* v1.35.62: z-[200] para ficar acima de modais, posição top-full (abaixo do botão) */}
       {voice.isRecording && interimText && (
         <div
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2
+          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2
                      bg-slate-800 text-slate-200 text-sm rounded-lg
                      shadow-xl border border-slate-600
-                     max-w-xs whitespace-pre-wrap z-50
-                     animate-in fade-in slide-in-from-bottom-1 duration-150"
+                     max-w-xs whitespace-pre-wrap z-[200]
+                     animate-in fade-in slide-in-from-top-1 duration-150"
           style={{ minWidth: '120px' }}
         >
+          {/* Seta apontando para o botão (acima) */}
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-px">
+            <div className="border-8 border-transparent border-b-slate-800" />
+          </div>
           <div className="flex items-start gap-1">
             <span>{interimText}</span>
             <span className="animate-pulse text-indigo-400">▋</span>
-          </div>
-          {/* Seta apontando para o botão */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
-            <div className="border-8 border-transparent border-t-slate-800" />
           </div>
         </div>
       )}

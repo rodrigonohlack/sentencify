@@ -10971,8 +10971,9 @@ const AIAssistantBaseLegacy = React.memo(({
 
   // v1.35.62: Handler para Voice-to-Text no campo de instruções
   const handleVoiceInstruction = React.useCallback((text) => {
-    setAiInstruction(prev => (prev ? prev + ' ' : '') + text);
-  }, [setAiInstruction]);
+    const current = aiInstruction || '';
+    setAiInstruction(current + (current ? ' ' : '') + text);
+  }, [aiInstruction, setAiInstruction]);
 
   if (!isOpen) return null;
 
