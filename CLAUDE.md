@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.57 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.66 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -67,6 +67,10 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.66 | UX: Modal "Excluir Toda Legislação" migrado para BaseModal (ESC, X, scroll lock, glassmorphism) |
+| v1.35.65 | UX: VoiceButton movido para linha dos botões Jurisprudência/Assistente IA no editor global |
+| v1.35.64 | UX: JurisprudenciaModal, AIAssistantBaseLegacy e ConfigModal seguem padrão BaseModal (ESC, X, scroll lock, glassmorphism) |
+| v1.35.63 | UX: BaseModal bloqueia scroll do body quando aberto |
 | v1.35.57 | UX: botão Sair na mesma linha do Projeto (layout compacto) |
 | v1.35.56 | Fix: botão Sair volta para o header (logout geral do sistema) |
 | v1.35.55 | Bloco de sync (indicador + email) movido para aba Modelos |

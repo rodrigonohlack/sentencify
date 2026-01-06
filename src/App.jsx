@@ -145,7 +145,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.62'; // v1.35.62: VoiceButton no editor global e assistente IA de modelos
+const APP_VERSION = '1.35.68'; // v1.35.68: Fix botão X nos modais TextPreviewModal e ModelPreviewModal
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -9810,57 +9810,55 @@ const LegislacaoTab = React.memo(({
         </div>
       )}
 
-      {modals?.deleteAllLegislacao && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={() => closeModal('deleteAllLegislacao')}>
-          <div className="theme-bg-secondary rounded-xl shadow-2xl max-w-md w-full mx-4 p-6" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-500/20 rounded-lg">
-                <AlertCircle className="w-6 h-6 text-red-400" />
-              </div>
-              <h3 className="text-xl font-bold text-red-400">Excluir Toda Legislação</h3>
-            </div>
-            <p className="theme-text-secondary mb-4">
-              Você está prestes a <strong className="text-red-400">excluir TODOS os {legislacao.artigos.length} artigo(s)</strong> da sua base de legislação.
-            </p>
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
-              <p className="text-sm theme-text-red">⚠️ Esta ação não pode ser desfeita!</p>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium theme-text-secondary mb-2">
-                Digite <strong className="text-red-400">EXCLUIR</strong> para confirmar:
-              </label>
-              <input
-                type="text"
-                value={legislacao.deleteConfirmText}
-                onChange={(e) => legislacao.setDeleteConfirmText(e.target.value)}
-                className="w-full theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary"
-                placeholder="Digite EXCLUIR"
-                autoFocus
-              />
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => { closeModal('deleteAllLegislacao'); legislacao.setDeleteConfirmText(''); }}
-                className="flex-1 px-4 py-2 rounded-lg theme-bg-tertiary theme-text-secondary"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={async () => {
-                  if (legislacao.deleteConfirmText === 'EXCLUIR') {
-                    await legislacao.handleClearAll();
-                    closeModal('deleteAllLegislacao');
-                  }
-                }}
-                disabled={legislacao.deleteConfirmText !== 'EXCLUIR'}
-                className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                🗑️ Excluir Tudo
-              </button>
-            </div>
-          </div>
+      {/* v1.35.66: Migrado para BaseModal */}
+      <BaseModal
+        isOpen={modals?.deleteAllLegislacao}
+        onClose={() => { closeModal('deleteAllLegislacao'); legislacao.setDeleteConfirmText(''); }}
+        title="Excluir Toda Legislação"
+        icon={<AlertCircle />}
+        iconColor="red"
+        size="md"
+      >
+        <p className="theme-text-secondary mb-4">
+          Você está prestes a <strong className="text-red-400">excluir TODOS os {legislacao.artigos.length} artigo(s)</strong> da sua base de legislação.
+        </p>
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
+          <p className="text-sm theme-text-red">⚠️ Esta ação não pode ser desfeita!</p>
         </div>
-      )}
+        <div className="mb-4">
+          <label className="block text-sm font-medium theme-text-secondary mb-2">
+            Digite <strong className="text-red-400">EXCLUIR</strong> para confirmar:
+          </label>
+          <input
+            type="text"
+            value={legislacao.deleteConfirmText}
+            onChange={(e) => legislacao.setDeleteConfirmText(e.target.value)}
+            className="w-full theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary"
+            placeholder="Digite EXCLUIR"
+            autoFocus
+          />
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => { closeModal('deleteAllLegislacao'); legislacao.setDeleteConfirmText(''); }}
+            className="flex-1 px-4 py-2 rounded-lg theme-bg-tertiary theme-text-secondary"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={async () => {
+              if (legislacao.deleteConfirmText === 'EXCLUIR') {
+                await legislacao.handleClearAll();
+                closeModal('deleteAllLegislacao');
+              }
+            }}
+            disabled={legislacao.deleteConfirmText !== 'EXCLUIR'}
+            className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            🗑️ Excluir Tudo
+          </button>
+        </div>
+      </BaseModal>
     </div>
   );
 });
@@ -9896,6 +9894,17 @@ const BaseModal = React.memo(({
     }
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose, preventClose]);
+
+  // v1.35.63: Bloquear scroll do body quando modal aberto
+  React.useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -10975,6 +10984,28 @@ const AIAssistantBaseLegacy = React.memo(({
     setAiInstruction(current + (current ? ' ' : '') + text);
   }, [aiInstruction, setAiInstruction]);
 
+  // v1.35.64: ESC handler
+  React.useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleEsc);
+    }
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
+
+  // v1.35.64: Bloquear scroll do body quando modal aberto
+  React.useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   // Exemplos padrão
@@ -10992,7 +11023,7 @@ const AIAssistantBaseLegacy = React.memo(({
     <div className={`${CSS.modalOverlay} overflow-auto`} style={{ zIndex }}>
       <div className={`${CSS.modalContainer} max-w-4xl w-full my-auto`}>
         {/* Header */}
-        <div className={CSS.modalHeader}>
+        <div className={`${CSS.modalHeader} flex items-center justify-between`}>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg">
               <Sparkles className="w-5 h-5 text-white" />
@@ -11006,6 +11037,13 @@ const AIAssistantBaseLegacy = React.memo(({
               )}
             </div>
           </div>
+          {/* v1.35.64: Botão X */}
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full theme-bg-secondary theme-hover-bg flex items-center justify-center theme-text-secondary transition-all border theme-border-modal hover:border-current"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Aviso CNJ */}
@@ -12294,6 +12332,7 @@ AnonymizationNamesModal.displayName = 'AnonymizationNamesModal';
 
 // v1.21.16: Modal de preview de texto extraído
 const TextPreviewModal = React.memo(({ isOpen, onClose, title, text }) => {
+  // v1.35.67: ESC handler
   React.useEffect(() => {
     if (!isOpen) return;
     const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
@@ -12301,25 +12340,35 @@ const TextPreviewModal = React.memo(({ isOpen, onClose, title, text }) => {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
 
+  // v1.35.67: Scroll lock
+  React.useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = originalOverflow; };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
-      <div className="fixed inset-0 bg-black/70" />
+    <div className={`${CSS.modalOverlay} overflow-y-auto`} style={{ alignItems: 'flex-start' }} onClick={onClose}>
       <div
-        className="relative theme-bg-primary rounded-xl shadow-2xl w-full max-w-4xl my-8 border theme-border"
+        className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal w-full max-w-4xl my-8`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b theme-border">
-          <div>
-            <h3 className="text-lg font-semibold theme-text-primary flex items-center gap-2">
-              <Eye className="w-5 h-5 text-blue-400" />
-              Preview: {title}
-            </h3>
-            <p className="text-xs theme-text-muted mt-1">{text?.length?.toLocaleString() || 0} caracteres</p>
+        <div className={`${CSS.modalHeader} flex items-start justify-between`}>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-blue-500/20">
+              <Eye className="w-6 h-6 text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold theme-text-primary">Preview: {title}</h3>
+              <p className="text-xs theme-text-muted">{text?.length?.toLocaleString() || 0} caracteres</p>
+            </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-700/50 theme-text-muted">
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="p-2 rounded-xl theme-bg-secondary-50 theme-hover-bg transition-colors" title="Fechar">
+            <X className="w-5 h-5 theme-text-tertiary" />
           </button>
         </div>
         <div className="p-4 max-h-[70vh] overflow-y-auto">
@@ -13730,6 +13779,23 @@ const ModelPreviewModal = React.memo(({
     }
   }, []);
 
+  // v1.35.67: ESC handler
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
+
+  // v1.35.67: Scroll lock
+  React.useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = originalOverflow; };
+    }
+  }, [isOpen]);
+
   // Early Return se Modal Fechado
   if (!isOpen) {
     return null;
@@ -13738,9 +13804,8 @@ const ModelPreviewModal = React.memo(({
   // Error State se Modelo Inválido
   if (!model) {
     return (
-      <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-        <div className="relative theme-bg-primary p-6 rounded-lg shadow-2xl border border-red-500/50">
+      <div className={CSS.modalOverlay} onClick={onClose}>
+        <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal p-6`} onClick={e => e.stopPropagation()}>
           <p className="text-red-400 mb-4 flex items-center gap-2">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -13758,27 +13823,18 @@ const ModelPreviewModal = React.memo(({
     );
   }
 
-  // Nota: Não bloqueamos o scroll da página principal para melhor UX
-  // O modal tem seu próprio scroll interno, então não há necessidade
-
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6 md:p-8"
+      className={CSS.modalOverlay}
       role="dialog"
       aria-modal="true"
       aria-labelledby="preview-modal-title"
+      onClick={onClose}
     >
-      {/* ─── Backdrop ────────────────────────────────────────────────────────  */}
-      <div
-        className="absolute inset-0 bg-black/70"
-        style={{ transition: 'none' }}
-        onClick={onClose}
-        aria-label="Fechar modal"
-      />
 
       {/* ─── Modal Container ─────────────────────────────────────────────────  */}
       <div
-        className="relative theme-bg-primary rounded-lg shadow-xl border theme-border-input flex flex-col"
+        className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal flex flex-col`}
         style={{
           width: '90%',
           maxWidth: '1000px',
@@ -13786,6 +13842,7 @@ const ModelPreviewModal = React.memo(({
           maxHeight: '85vh',
           contain: 'content'
         }}
+        onClick={e => e.stopPropagation()}
       >
 
         {/* ─── Header ──────────────────────────────────────────────────────────  */}
@@ -13825,16 +13882,14 @@ const ModelPreviewModal = React.memo(({
               </div>
             </div>
 
-            {/* Botão Fechar (X) */}
+            {/* Botão Fechar (X) - v1.35.68: padronizado */}
             <button
               onClick={onClose}
-              className="hover-text-white-from-slate"
+              className="p-2 rounded-xl theme-bg-secondary-50 theme-hover-bg transition-colors"
               aria-label="Fechar modal"
+              title="Fechar"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="w-5 h-5 theme-text-tertiary" />
             </button>
           </div>
         </div>
@@ -14228,7 +14283,8 @@ const FieldEditor = React.memo(React.forwardRef(({
   quillReady,
   quillError,
   minHeight = '120px',
-  editorTheme = 'dark'
+  editorTheme = 'dark',
+  hideVoiceButton = false // v1.35.65: Esconder VoiceButton quando gerenciado externamente
 }, ref) => {
   const editorRef = React.useRef(null);
   const quillInstanceRef = React.useRef(null);
@@ -14411,14 +14467,16 @@ const FieldEditor = React.memo(React.forwardRef(({
 
   return (
     <div className="field-editor">
-      {/* v1.35.62: Label + VoiceButton */}
+      {/* v1.35.62: Label + VoiceButton | v1.35.65: hideVoiceButton para gerenciamento externo */}
       <div className="flex items-center justify-between mb-1">
         <label className="block text-xs font-semibold theme-text-muted">{label}</label>
-        <VoiceButton
-          onTranscript={handleVoiceTranscript}
-          size="sm"
-          onError={(err) => console.warn('[VoiceToText]', err)}
-        />
+        {!hideVoiceButton && (
+          <VoiceButton
+            onTranscript={handleVoiceTranscript}
+            size="sm"
+            onError={(err) => console.warn('[VoiceToText]', err)}
+          />
+        )}
       </div>
       <div
         ref={editorRef}
@@ -14616,6 +14674,28 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
     }
   }, [isOpen]);
 
+  // v1.35.64: ESC handler
+  React.useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleEsc);
+    }
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
+
+  // v1.35.64: Bloquear scroll do body quando modal aberto
+  React.useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleCopy = async (p) => {
@@ -14637,8 +14717,8 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-start justify-center pt-10 bg-black/50 overflow-y-auto" onClick={onClose}>
-      <div className="theme-bg-primary rounded-xl shadow-2xl flex flex-col" style={{ width: '80vw', maxHeight: '90vh' }} onClick={(e) => e.stopPropagation()}>
+    <div className={`${CSS.modalOverlay} overflow-auto`} onClick={onClose}>
+      <div className={`${CSS.modalContainer} flex flex-col my-auto`} style={{ width: '80vw', maxHeight: '90vh' }} onClick={(e) => e.stopPropagation()}>
         <div className="p-4 border-b theme-border flex justify-between items-center flex-shrink-0">
           <h3 className="font-semibold theme-text-primary flex items-center gap-2">
             <Scale className="w-4 h-4" />
@@ -14999,6 +15079,18 @@ const GlobalEditorSection = React.memo(({
                         Assistente IA
                       </button>
                     )}
+                    {/* v1.35.65: VoiceButton ao lado do Assistente IA */}
+                    <VoiceButton
+                      onTranscript={(text) => {
+                        // Inserir texto no editor de fundamentação via ref
+                        if (fundamentacaoEditorRef.current) {
+                          const current = topic.editedFundamentacao || topic.fundamentacao || '';
+                          onFieldChange(topicIndex, 'editedFundamentacao', current + (current ? ' ' : '') + text);
+                        }
+                      }}
+                      size="sm"
+                      onError={(err) => console.warn('[VoiceToText]', err)}
+                    />
                   </div>
                 </div>
                 <FieldEditor
@@ -15014,6 +15106,7 @@ const GlobalEditorSection = React.memo(({
                   quillError={quillError}
                   minHeight="150px"
                   editorTheme={editorTheme}
+                  hideVoiceButton={true}
                 />
               </div>
             </>
@@ -20082,6 +20175,17 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
     return () => window.removeEventListener('keydown', handleEscape);
   }, [modals.settings, closeModal]);
+
+  // v1.35.64: Bloquear scroll do body quando modal de configurações aberto
+  React.useEffect(() => {
+    if (modals.settings) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [modals.settings]);
 
   // 🚀 OTIMIZAÇÃO v1.7: Observer para marcar dirty (FASE 1.1) - DEPS REDUZIDAS
   // 🔄 v1.9.1: Agora usa HASHES para detectar edições de campos (não apenas add/remove)
@@ -32010,233 +32114,213 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         </div>
       </BaseModal>
 
-      {/* 📥 v1.33.61: Modal de Download de Dados Essenciais (legislação e jurisprudência) */}
-      {showDataDownloadModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={handleDismissDataPrompt}>
-          <div className="theme-bg-primary rounded-lg shadow-xl max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center p-4 border-b theme-border-primary">
-              <h2 className="text-lg font-semibold theme-text-primary flex items-center gap-2">
-                <Download className="w-5 h-5 text-blue-400" />
-                Baixar Base de Dados
-              </h2>
-              <button
-                onClick={handleDismissDataPrompt}
-                disabled={dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading}
-                className="theme-text-secondary hover:theme-text-primary text-xl disabled:opacity-50"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-4 space-y-4">
-              <p className="text-sm theme-text-secondary">
-                Para usar o Sentencify, é necessário baixar a base de dados de legislação e jurisprudência (~5 MB total, download único e rápido).
-              </p>
-
-              {/* Legislação */}
-              {dataDownloadStatus.legislacao.needed && (
-                <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium theme-text-primary">📜 Legislação (~3 MB)</span>
-                    {dataDownloadStatus.legislacao.downloading && (
-                      <span className="text-xs theme-text-muted">
-                        {Math.round(dataDownloadStatus.legislacao.progress * 100)}%
-                      </span>
-                    )}
-                    {dataDownloadStatus.legislacao.completed && (
-                      <span className="text-xs text-green-500">✓ Concluído</span>
-                    )}
-                  </div>
-                  {dataDownloadStatus.legislacao.downloading && (
-                    <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-500 transition-all duration-300"
-                        style={{ width: `${dataDownloadStatus.legislacao.progress * 100}%` }}
-                      />
-                    </div>
-                  )}
-                  {dataDownloadStatus.legislacao.error && (
-                    <p className="text-xs text-red-400 mt-1">{dataDownloadStatus.legislacao.error}</p>
-                  )}
-                </div>
+      {/* 📥 v1.33.61: Modal de Download de Dados Essenciais (legislação e jurisprudência) - v1.35.67: migrado para BaseModal */}
+      <BaseModal
+        isOpen={showDataDownloadModal}
+        onClose={handleDismissDataPrompt}
+        title="Baixar Base de Dados"
+        icon={<Download />}
+        iconColor="blue"
+        size="md"
+        footer={
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={handleDismissDataPrompt}
+              disabled={dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading}
+              className="px-4 py-2 text-sm theme-text-secondary hover:theme-text-primary disabled:opacity-50"
+            >
+              Depois
+            </button>
+            <button
+              onClick={handleStartDataDownload}
+              disabled={dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading ||
+                       (!dataDownloadStatus.legislacao.needed && !dataDownloadStatus.jurisprudencia.needed)}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              {(dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading) ? (
+                <><RefreshCw className="w-4 h-4 animate-spin" /> Baixando...</>
+              ) : (
+                <><Download className="w-4 h-4" /> Baixar Agora</>
               )}
-
-              {/* Jurisprudência */}
-              {dataDownloadStatus.jurisprudencia.needed && (
-                <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium theme-text-primary">⚖️ Jurisprudência (~2 MB)</span>
-                    {dataDownloadStatus.jurisprudencia.downloading && (
-                      <span className="text-xs theme-text-muted">
-                        {Math.round(dataDownloadStatus.jurisprudencia.progress * 100)}%
-                      </span>
-                    )}
-                    {dataDownloadStatus.jurisprudencia.completed && (
-                      <span className="text-xs text-green-500">✓ Concluído</span>
-                    )}
-                  </div>
-                  {dataDownloadStatus.jurisprudencia.downloading && (
-                    <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-green-500 transition-all duration-300"
-                        style={{ width: `${dataDownloadStatus.jurisprudencia.progress * 100}%` }}
-                      />
-                    </div>
-                  )}
-                  {dataDownloadStatus.jurisprudencia.error && (
-                    <p className="text-xs text-red-400 mt-1">{dataDownloadStatus.jurisprudencia.error}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Mensagem se ambos já foram baixados */}
-              {!dataDownloadStatus.legislacao.needed && !dataDownloadStatus.jurisprudencia.needed && (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                  <p className="text-sm text-green-400 flex items-center gap-2">
-                    <Check className="w-4 h-4" /> Base de dados instalada!
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-2 p-4 border-t theme-border-primary">
-              <button
-                onClick={handleDismissDataPrompt}
-                disabled={dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading}
-                className="px-4 py-2 text-sm theme-text-secondary hover:theme-text-primary disabled:opacity-50"
-              >
-                Depois
-              </button>
-              <button
-                onClick={handleStartDataDownload}
-                disabled={dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading ||
-                         (!dataDownloadStatus.legislacao.needed && !dataDownloadStatus.jurisprudencia.needed)}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-              >
-                {(dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading) ? (
-                  <><RefreshCw className="w-4 h-4 animate-spin" /> Baixando...</>
-                ) : (
-                  <><Download className="w-4 h-4" /> Baixar Agora</>
-                )}
-              </button>
-            </div>
+            </button>
           </div>
-        </div>
-      )}
+        }
+      >
+        <div className="p-4 space-y-4">
+          <p className="text-sm theme-text-secondary">
+            Para usar o Sentencify, é necessário baixar a base de dados de legislação e jurisprudência (~5 MB total, download único e rápido).
+          </p>
 
-      {/* 🌐 v1.33.0: Modal de Download de Embeddings do CDN */}
-      {showEmbeddingsDownloadModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={handleDismissEmbeddingsPrompt}>
-          <div className="theme-bg-primary rounded-lg shadow-xl max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center p-4 border-b theme-border-primary">
-              <h2 className="text-lg font-semibold theme-text-primary flex items-center gap-2">
-                <Download className="w-5 h-5" />
-                Baixar Dados para Busca Semântica
-              </h2>
-              <button
-                onClick={handleDismissEmbeddingsPrompt}
-                disabled={embeddingsDownloadStatus.legislacao.downloading || embeddingsDownloadStatus.jurisprudencia.downloading}
-                className="theme-text-secondary hover:theme-text-primary text-xl disabled:opacity-50"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-4 space-y-4">
-              <p className="text-sm theme-text-secondary">
-                Para usar a busca semântica de legislação e jurisprudência, é necessário baixar os dados de embeddings (~250 MB total, download único).
-              </p>
-
-              {/* Legislação */}
-              {embeddingsDownloadStatus.legislacao.needed && (
-                <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium theme-text-primary">📜 Legislação (~211 MB)</span>
-                    {embeddingsDownloadStatus.legislacao.downloading && (
-                      <span className="text-xs theme-text-muted">
-                        {Math.round(embeddingsDownloadStatus.legislacao.progress * 100)}%
-                      </span>
-                    )}
-                    {!embeddingsDownloadStatus.legislacao.needed && embeddingsDownloadStatus.legislacao.progress === 1 && (
-                      <span className="text-xs text-green-500">✓ Concluído</span>
-                    )}
-                  </div>
-                  {embeddingsDownloadStatus.legislacao.downloading && (
-                    <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-500 transition-all duration-300"
-                        style={{ width: `${embeddingsDownloadStatus.legislacao.progress * 100}%` }}
-                      />
-                    </div>
-                  )}
-                  {embeddingsDownloadStatus.legislacao.error && (
-                    <p className="text-xs text-red-400 mt-1">{embeddingsDownloadStatus.legislacao.error}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Jurisprudência */}
-              {embeddingsDownloadStatus.jurisprudencia.needed && (
-                <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium theme-text-primary">📚 Jurisprudência (~38 MB)</span>
-                    {embeddingsDownloadStatus.jurisprudencia.downloading && (
-                      <span className="text-xs theme-text-muted">
-                        {Math.round(embeddingsDownloadStatus.jurisprudencia.progress * 100)}%
-                      </span>
-                    )}
-                    {!embeddingsDownloadStatus.jurisprudencia.needed && embeddingsDownloadStatus.jurisprudencia.progress === 1 && (
-                      <span className="text-xs text-green-500">✓ Concluído</span>
-                    )}
-                  </div>
-                  {embeddingsDownloadStatus.jurisprudencia.downloading && (
-                    <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-green-500 transition-all duration-300"
-                        style={{ width: `${embeddingsDownloadStatus.jurisprudencia.progress * 100}%` }}
-                      />
-                    </div>
-                  )}
-                  {embeddingsDownloadStatus.jurisprudencia.error && (
-                    <p className="text-xs text-red-400 mt-1">{embeddingsDownloadStatus.jurisprudencia.error}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Mensagem se ambos já foram baixados */}
-              {!embeddingsDownloadStatus.legislacao.needed && !embeddingsDownloadStatus.jurisprudencia.needed && (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                  <p className="text-sm text-green-400 flex items-center gap-2">
-                    <Check className="w-4 h-4" /> Todos os embeddings já estão instalados!
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-2 p-4 border-t theme-border-primary">
-              <button
-                onClick={handleDismissEmbeddingsPrompt}
-                disabled={embeddingsDownloadStatus.legislacao.downloading || embeddingsDownloadStatus.jurisprudencia.downloading}
-                className="px-4 py-2 text-sm theme-text-secondary hover:theme-text-primary disabled:opacity-50"
-              >
-                Depois
-              </button>
-              <button
-                onClick={handleStartEmbeddingsDownload}
-                disabled={embeddingsDownloadStatus.legislacao.downloading || embeddingsDownloadStatus.jurisprudencia.downloading ||
-                         (!embeddingsDownloadStatus.legislacao.needed && !embeddingsDownloadStatus.jurisprudencia.needed)}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-              >
-                {(embeddingsDownloadStatus.legislacao.downloading || embeddingsDownloadStatus.jurisprudencia.downloading) ? (
-                  <><RefreshCw className="w-4 h-4 animate-spin" /> Baixando...</>
-                ) : (
-                  <><Download className="w-4 h-4" /> Baixar Agora</>
+          {/* Legislação */}
+          {dataDownloadStatus.legislacao.needed && (
+            <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium theme-text-primary">📜 Legislação (~3 MB)</span>
+                {dataDownloadStatus.legislacao.downloading && (
+                  <span className="text-xs theme-text-muted">
+                    {Math.round(dataDownloadStatus.legislacao.progress * 100)}%
+                  </span>
                 )}
-              </button>
+                {dataDownloadStatus.legislacao.completed && (
+                  <span className="text-xs text-green-500">✓ Concluído</span>
+                )}
+              </div>
+              {dataDownloadStatus.legislacao.downloading && (
+                <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 transition-all duration-300"
+                    style={{ width: `${dataDownloadStatus.legislacao.progress * 100}%` }}
+                  />
+                </div>
+              )}
+              {dataDownloadStatus.legislacao.error && (
+                <p className="text-xs text-red-400 mt-1">{dataDownloadStatus.legislacao.error}</p>
+              )}
             </div>
-          </div>
+          )}
+
+          {/* Jurisprudência */}
+          {dataDownloadStatus.jurisprudencia.needed && (
+            <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium theme-text-primary">⚖️ Jurisprudência (~2 MB)</span>
+                {dataDownloadStatus.jurisprudencia.downloading && (
+                  <span className="text-xs theme-text-muted">
+                    {Math.round(dataDownloadStatus.jurisprudencia.progress * 100)}%
+                  </span>
+                )}
+                {dataDownloadStatus.jurisprudencia.completed && (
+                  <span className="text-xs text-green-500">✓ Concluído</span>
+                )}
+              </div>
+              {dataDownloadStatus.jurisprudencia.downloading && (
+                <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-green-500 transition-all duration-300"
+                    style={{ width: `${dataDownloadStatus.jurisprudencia.progress * 100}%` }}
+                  />
+                </div>
+              )}
+              {dataDownloadStatus.jurisprudencia.error && (
+                <p className="text-xs text-red-400 mt-1">{dataDownloadStatus.jurisprudencia.error}</p>
+              )}
+            </div>
+          )}
+
+          {/* Mensagem se ambos já foram baixados */}
+          {!dataDownloadStatus.legislacao.needed && !dataDownloadStatus.jurisprudencia.needed && (
+            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+              <p className="text-sm text-green-400 flex items-center gap-2">
+                <Check className="w-4 h-4" /> Base de dados instalada!
+              </p>
+            </div>
+          )}
         </div>
-      )}
+      </BaseModal>
+
+      {/* 🌐 v1.33.0: Modal de Download de Embeddings do CDN - v1.35.67: migrado para BaseModal */}
+      <BaseModal
+        isOpen={showEmbeddingsDownloadModal}
+        onClose={handleDismissEmbeddingsPrompt}
+        title="Baixar Dados para Busca Semântica"
+        icon={<Download />}
+        iconColor="blue"
+        size="md"
+        footer={
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={handleDismissEmbeddingsPrompt}
+              disabled={embeddingsDownloadStatus.legislacao.downloading || embeddingsDownloadStatus.jurisprudencia.downloading}
+              className="px-4 py-2 text-sm theme-text-secondary hover:theme-text-primary disabled:opacity-50"
+            >
+              Depois
+            </button>
+            <button
+              onClick={handleStartEmbeddingsDownload}
+              disabled={embeddingsDownloadStatus.legislacao.downloading || embeddingsDownloadStatus.jurisprudencia.downloading ||
+                       (!embeddingsDownloadStatus.legislacao.needed && !embeddingsDownloadStatus.jurisprudencia.needed)}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              {(embeddingsDownloadStatus.legislacao.downloading || embeddingsDownloadStatus.jurisprudencia.downloading) ? (
+                <><RefreshCw className="w-4 h-4 animate-spin" /> Baixando...</>
+              ) : (
+                <><Download className="w-4 h-4" /> Baixar Agora</>
+              )}
+            </button>
+          </div>
+        }
+      >
+        <div className="p-4 space-y-4">
+          <p className="text-sm theme-text-secondary">
+            Para usar a busca semântica de legislação e jurisprudência, é necessário baixar os dados de embeddings (~250 MB total, download único).
+          </p>
+
+          {/* Legislação */}
+          {embeddingsDownloadStatus.legislacao.needed && (
+            <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium theme-text-primary">📜 Legislação (~211 MB)</span>
+                {embeddingsDownloadStatus.legislacao.downloading && (
+                  <span className="text-xs theme-text-muted">
+                    {Math.round(embeddingsDownloadStatus.legislacao.progress * 100)}%
+                  </span>
+                )}
+                {!embeddingsDownloadStatus.legislacao.needed && embeddingsDownloadStatus.legislacao.progress === 1 && (
+                  <span className="text-xs text-green-500">✓ Concluído</span>
+                )}
+              </div>
+              {embeddingsDownloadStatus.legislacao.downloading && (
+                <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 transition-all duration-300"
+                    style={{ width: `${embeddingsDownloadStatus.legislacao.progress * 100}%` }}
+                  />
+                </div>
+              )}
+              {embeddingsDownloadStatus.legislacao.error && (
+                <p className="text-xs text-red-400 mt-1">{embeddingsDownloadStatus.legislacao.error}</p>
+              )}
+            </div>
+          )}
+
+          {/* Jurisprudência */}
+          {embeddingsDownloadStatus.jurisprudencia.needed && (
+            <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium theme-text-primary">📚 Jurisprudência (~38 MB)</span>
+                {embeddingsDownloadStatus.jurisprudencia.downloading && (
+                  <span className="text-xs theme-text-muted">
+                    {Math.round(embeddingsDownloadStatus.jurisprudencia.progress * 100)}%
+                  </span>
+                )}
+                {!embeddingsDownloadStatus.jurisprudencia.needed && embeddingsDownloadStatus.jurisprudencia.progress === 1 && (
+                  <span className="text-xs text-green-500">✓ Concluído</span>
+                )}
+              </div>
+              {embeddingsDownloadStatus.jurisprudencia.downloading && (
+                <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-green-500 transition-all duration-300"
+                    style={{ width: `${embeddingsDownloadStatus.jurisprudencia.progress * 100}%` }}
+                  />
+                </div>
+              )}
+              {embeddingsDownloadStatus.jurisprudencia.error && (
+                <p className="text-xs text-red-400 mt-1">{embeddingsDownloadStatus.jurisprudencia.error}</p>
+              )}
+            </div>
+          )}
+
+          {/* Mensagem se ambos já foram baixados */}
+          {!embeddingsDownloadStatus.legislacao.needed && !embeddingsDownloadStatus.jurisprudencia.needed && (
+            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+              <p className="text-sm text-green-400 flex items-center gap-2">
+                <Check className="w-4 h-4" /> Todos os embeddings já estão instalados!
+              </p>
+            </div>
+          )}
+        </div>
+      </BaseModal>
 
       {/* Modal de Restaurar Sessão */}
       <RestoreSessionModal
