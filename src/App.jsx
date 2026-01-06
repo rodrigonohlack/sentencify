@@ -134,6 +134,7 @@ import TopicCurationModal from './components/TopicCurationModal';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useGoogleDrive, GOOGLE_CLIENT_ID } from './hooks/useGoogleDrive';
 import { GoogleDriveButton, DriveFilesModal } from './components/GoogleDriveButton';
+import { VoiceButton } from './components/VoiceButton';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
 import { AI_INSTRUCTIONS, AI_PROMPTS } from './prompts';
@@ -144,7 +145,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.58'; // v1.35.58: Worker Error Handling - onerror, timeout, cleanup()
+const APP_VERSION = '1.35.59'; // v1.35.59: Voice-to-Text - ditado por voz nos editores e chat
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -10837,6 +10838,11 @@ const ChatInput = React.memo(({ onSend, disabled, placeholder }) => {
     }
   };
 
+  // v1.35.59: Handler para Voice-to-Text - adiciona texto ao valor
+  const handleVoiceTranscript = React.useCallback((text) => {
+    setValue(prev => (prev ? prev + ' ' : '') + text);
+  }, []);
+
   return (
     <div className="flex gap-2">
       <textarea
@@ -10846,6 +10852,12 @@ const ChatInput = React.memo(({ onSend, disabled, placeholder }) => {
         disabled={disabled}
         className="flex-1 h-20 theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary resize-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
         placeholder={placeholder}
+      />
+      {/* v1.35.59: VoiceButton para ditado */}
+      <VoiceButton
+        onTranscript={handleVoiceTranscript}
+        size="sm"
+        className="self-end mb-1"
       />
       <button
         onClick={handleSend}
@@ -17148,6 +17160,19 @@ const QuillDecisionEditor = React.forwardRef(({
     onPreviewModel?.(model);
   }, [onPreviewModel]);
 
+  // v1.35.59: Handler para Voice-to-Text - insere texto na posição do cursor
+  const handleVoiceTranscript = React.useCallback((text) => {
+    const quill = quillInstanceRef.current;
+    if (quill) {
+      // Usar requestAnimationFrame para não bloquear UI
+      requestAnimationFrame(() => {
+        const range = quill.getSelection() || { index: quill.getLength() - 1 };
+        quill.insertText(range.index, text + ' ');
+        quill.setSelection(range.index + text.length + 1);
+      });
+    }
+  }, []);
+
   const editorPaneStyle = React.useMemo(() =>
     isSplitMode ? { width: `${splitPosition}%` } : undefined
   , [isSplitMode, splitPosition]);
@@ -17194,6 +17219,13 @@ const QuillDecisionEditor = React.forwardRef(({
             <Save className="w-3.5 h-3.5" />
             Salvar
           </button>
+
+          {/* v1.35.59: Botão Voice-to-Text */}
+          <VoiceButton
+            onTranscript={handleVoiceTranscript}
+            size="md"
+            onError={(err) => console.warn('[VoiceToText]', err)}
+          />
 
           {/* Botão Assistente IA */}
           {onOpenAIAssistant && (
@@ -17435,20 +17467,33 @@ const AIRegenerationSection = React.memo(({
     setTimeout(() => onRegenerate(), 0);
   }, [onInstructionChange, localInstruction, customInstruction, onRegenerate]);
 
+  // v1.35.59: Handler para Voice-to-Text - adiciona texto ao final da instrução
+  const handleVoiceTranscript = React.useCallback((text) => {
+    setLocalInstruction(prev => (prev ? prev + ' ' : '') + text);
+  }, []);
+
   return (
     <div className="mt-4 pt-4 border-t theme-border-input">
       <p className="text-xs theme-text-muted mb-2">
         ✨ <strong>Regenerar com IA:</strong> Adicione uma instrução opcional abaixo e clique em "Gerar" para que a IA recrie este {contextLabel}
       </p>
 
-      <textarea
-        value={localInstruction}
-        onChange={handleInstructionChange}
-        onBlur={handleBlur}
-        placeholder="Instrução opcional (ex: 'Seja mais objetivo', 'Adicione detalhes sobre...')"
-        className="w-full px-3 py-2 theme-bg-primary border theme-border-input rounded theme-text-tertiary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
-        rows="2"
-      />
+      {/* v1.35.59: Container flex para textarea + VoiceButton */}
+      <div className="flex gap-2">
+        <textarea
+          value={localInstruction}
+          onChange={handleInstructionChange}
+          onBlur={handleBlur}
+          placeholder="Instrução opcional (ex: 'Seja mais objetivo', 'Adicione detalhes sobre...')"
+          className="flex-1 px-3 py-2 theme-bg-primary border theme-border-input rounded theme-text-tertiary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
+          rows="2"
+        />
+        <VoiceButton
+          onTranscript={handleVoiceTranscript}
+          size="sm"
+          className="self-start mt-1"
+        />
+      </div>
 
       <button
         onClick={handleRegenerate}

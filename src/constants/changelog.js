@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.59', feature: 'Voice-to-Text: ditado por voz via Web Speech API nos editores de decisão, instruções para IA e chat do assistente (useVoiceToText hook + VoiceButton componente)' },
   { version: '1.35.58', feature: 'Worker Error Handling: onerror handler para rejeitar promises pendentes, timeout de 60s nas chamadas, método cleanup() para reset do AIModelService' },
   { version: '1.35.57', feature: 'UX: botão Sair movido para a mesma linha do botão Projeto (layout mais compacto)' },
   { version: '1.35.56', feature: 'Fix: botão Sair volta para o header (logout geral do sistema), apenas indicador + email ficam na aba Modelos' },
