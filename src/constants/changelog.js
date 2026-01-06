@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.61', feature: 'VoiceButton expandido: editor de modelos (QuillModelEditor), campos título/keywords (ModelFormFields), e Quick Edit (ModelPreviewModal)' },
   { version: '1.35.60', feature: 'Voice-to-Text Preview Flutuante: tooltip mostra texto em tempo real enquanto fala, só insere no editor quando resultado é final (feedback instantâneo)' },
   { version: '1.35.59', feature: 'Voice-to-Text: ditado por voz via Web Speech API nos editores de decisão, instruções para IA e chat do assistente (useVoiceToText hook + VoiceButton componente)' },
   { version: '1.35.58', feature: 'Worker Error Handling: onerror handler para rejeitar promises pendentes, timeout de 60s nas chamadas, método cleanup() para reset do AIModelService' },
