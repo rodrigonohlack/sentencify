@@ -145,7 +145,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.59'; // v1.35.59: Voice-to-Text - ditado por voz nos editores e chat
+const APP_VERSION = '1.35.60'; // v1.35.60: Voice-to-Text Preview Flutuante - feedback em tempo real
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {

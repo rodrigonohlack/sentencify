@@ -1,9 +1,14 @@
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPONENTE: VoiceButton - Botão de ditado por voz
-// v1.35.59
+// v1.35.60
 //
 // Botão reutilizável para ativar/desativar reconhecimento de voz.
 // Usa Web Speech API via useVoiceToText hook.
+//
+// Features:
+// - Preview flutuante mostra texto em tempo real enquanto fala
+// - Só insere no editor quando resultado é final
+// - Feedback visual com cursor piscando
 //
 // Props:
 // - onTranscript: callback com texto final transcrito
@@ -11,7 +16,7 @@
 // - className: classes CSS adicionais
 // ═══════════════════════════════════════════════════════════════════════════
 
-import React, { useCallback, memo } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import { useVoiceToText } from '../hooks/useVoiceToText';
 
@@ -32,8 +37,6 @@ export interface VoiceButtonProps {
   idleText?: string;
   /** Texto do botão quando gravando (default: 'Ouvindo...') */
   recordingText?: string;
-  /** Se deve mostrar texto interim enquanto fala */
-  showInterim?: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -46,13 +49,18 @@ export const VoiceButton: React.FC<VoiceButtonProps> = memo(({
   className = '',
   onError,
   idleText = 'Voz',
-  recordingText = 'Ouvindo...',
-  showInterim = false
+  recordingText = 'Ouvindo...'
 }) => {
-  // Handler de transcrição - só envia resultado final
+  // v1.35.60: Estado para texto interim (preview flutuante)
+  const [interimText, setInterimText] = useState('');
+
+  // Handler de transcrição - mostra interim, insere apenas final
   const handleTranscript = useCallback((text: string, isFinal: boolean) => {
     if (isFinal) {
-      onTranscript(text);
+      setInterimText(''); // Limpar preview
+      onTranscript(text);  // Inserir no editor
+    } else {
+      setInterimText(text); // Mostrar preview
     }
   }, [onTranscript]);
 
@@ -61,8 +69,9 @@ export const VoiceButton: React.FC<VoiceButtonProps> = memo(({
     onTranscript: handleTranscript,
     lang: 'pt-BR',
     continuous: true,
-    interimResults: showInterim,
-    onError
+    interimResults: true, // v1.35.60: Habilitar interim para preview
+    onError,
+    onEnd: () => setInterimText('') // Limpar ao parar
   });
 
   // Não renderizar se browser não suporta
@@ -92,17 +101,41 @@ export const VoiceButton: React.FC<VoiceButtonProps> = memo(({
     : 'Clique para ditar por voz';
 
   return (
-    <button
-      type="button"
-      onClick={voice.toggle}
-      className={`${baseClasses} ${sizeClasses} ${stateClasses} ${className}`}
-      title={title}
-      aria-label={title}
-      aria-pressed={voice.isRecording}
-    >
-      <Icon className={iconSize} />
-      {size === 'md' && <span>{buttonText}</span>}
-    </button>
+    <div className="relative">
+      {/* v1.35.60: Preview flutuante com texto interim */}
+      {voice.isRecording && interimText && (
+        <div
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2
+                     bg-slate-800 text-slate-200 text-sm rounded-lg
+                     shadow-xl border border-slate-600
+                     max-w-xs whitespace-pre-wrap z-50
+                     animate-in fade-in slide-in-from-bottom-1 duration-150"
+          style={{ minWidth: '120px' }}
+        >
+          <div className="flex items-start gap-1">
+            <span>{interimText}</span>
+            <span className="animate-pulse text-indigo-400">▋</span>
+          </div>
+          {/* Seta apontando para o botão */}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+            <div className="border-8 border-transparent border-t-slate-800" />
+          </div>
+        </div>
+      )}
+
+      {/* Botão */}
+      <button
+        type="button"
+        onClick={voice.toggle}
+        className={`${baseClasses} ${sizeClasses} ${stateClasses} ${className}`}
+        title={title}
+        aria-label={title}
+        aria-pressed={voice.isRecording}
+      >
+        <Icon className={iconSize} />
+        {size === 'md' && <span>{buttonText}</span>}
+      </button>
+    </div>
   );
 });
 
