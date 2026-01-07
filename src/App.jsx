@@ -135,6 +135,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useGoogleDrive, GOOGLE_CLIENT_ID } from './hooks/useGoogleDrive';
 import { GoogleDriveButton, DriveFilesModal } from './components/GoogleDriveButton';
 import { VoiceButton } from './components/VoiceButton';
+import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
 import { AI_INSTRUCTIONS, AI_PROMPTS } from './prompts';
@@ -145,7 +146,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.68'; // v1.35.68: Fix botão X nos modais TextPreviewModal e ModelPreviewModal
+const APP_VERSION = '1.35.71'; // v1.35.71: Fix z-index ModelGeneratorModal (z-100 > CSS.modalOverlay z-90)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -18784,6 +18785,40 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [driveFilesModalOpen, setDriveFilesModalOpen] = React.useState(false);
   const [driveFiles, setDriveFiles] = React.useState([]);
 
+  // 🪄 v1.35.69: Gerador de Modelo a partir de Exemplos
+  const [modelGeneratorModal, setModelGeneratorModal] = React.useState({
+    isOpen: false,
+    targetField: null // 'modeloRelatorio' | 'modeloDispositivo' | 'modeloTopicoRelatorio'
+  });
+
+  const openModelGenerator = React.useCallback((targetField) => {
+    setModelGeneratorModal({ isOpen: true, targetField });
+  }, []);
+
+  const closeModelGenerator = React.useCallback(() => {
+    setModelGeneratorModal({ isOpen: false, targetField: null });
+  }, []);
+
+  const handleModelGenerated = React.useCallback((generatedPrompt) => {
+    const { targetField } = modelGeneratorModal;
+    if (targetField) {
+      aiIntegration.setAiSettings(prev => ({
+        ...prev,
+        [targetField]: generatedPrompt
+      }));
+    }
+    setModelGeneratorModal({ isOpen: false, targetField: null });
+  }, [modelGeneratorModal.targetField, aiIntegration.setAiSettings]);
+
+  const getHardcodedPrompt = React.useCallback((targetField) => {
+    const prompts = {
+      modeloRelatorio: AI_PROMPTS.instrucoesRelatorioMiniPadrao || '',
+      modeloDispositivo: AI_PROMPTS.instrucoesDispositivoPadrao || '',
+      modeloTopicoRelatorio: AI_PROMPTS.instrucoesRelatorioPadrao || ''
+    };
+    return prompts[targetField] || '';
+  }, []);
+
   // 📄 v1.9.12: Serviços de Processamento de Documentos ────────────────────
   const documentServices = useDocumentServices(aiIntegration);
 
@@ -30585,6 +30620,16 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         isDarkMode={appTheme === 'dark'}
       />
 
+      {/* v1.35.69: Modal de Geração de Modelo a partir de Exemplos */}
+      <ModelGeneratorModal
+        isOpen={modelGeneratorModal.isOpen}
+        onClose={closeModelGenerator}
+        targetField={modelGeneratorModal.targetField}
+        onSave={handleModelGenerated}
+        callAI={aiIntegration.callAI}
+        hardcodedPrompt={getHardcodedPrompt(modelGeneratorModal.targetField)}
+      />
+
       {modals.settings && (
         <div className={`${CSS.modalOverlay} overflow-auto`}>
           <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-2xl w-full my-auto`}>
@@ -31609,6 +31654,14 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     placeholder="Ex: O reclamante sustenta que [fatos]. Alega [argumentos]. Requer [pedido]. A reclamada, por sua vez, defende que [argumentos da defesa]."
                     className="w-full h-32 theme-bg-secondary-50 border-2 theme-border-input rounded-lg p-3 theme-text-primary text-sm focus:border-blue-500 focus:outline-none resize-none"
                   />
+                  {/* v1.35.69: Botão Gerar a partir de exemplos */}
+                  <button
+                    onClick={() => openModelGenerator('modeloRelatorio')}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg transition-colors"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    Gerar a partir de exemplos
+                  </button>
                   <p className="text-xs theme-text-muted flex items-start gap-2">
                     <FileText className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-400" />
                     <span>
@@ -31645,6 +31698,14 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     placeholder="Ex: Ante o exposto, DECIDO: a) Julgar [resultado] o pedido de [tópico]; b) Deferir/Indeferir [especificação]..."
                     className="w-full h-32 theme-bg-secondary-50 border-2 theme-border-input rounded-lg p-3 theme-text-primary text-sm focus:border-blue-500 focus:outline-none resize-none"
                   />
+                  {/* v1.35.69: Botão Gerar a partir de exemplos */}
+                  <button
+                    onClick={() => openModelGenerator('modeloDispositivo')}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg transition-colors"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    Gerar a partir de exemplos
+                  </button>
                   <p className="text-xs theme-text-muted flex items-start gap-2">
                     <Scale className="w-4 h-4 flex-shrink-0 mt-0.5 text-purple-400" />
                     <span>
@@ -31681,6 +31742,14 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     placeholder='Ex: A presente reclamação foi ajuizada em [data]. Realizou-se audiência em [data]. Foram juntados [documentos]. O processo encontra-se [situação].'
                     className="w-full h-32 theme-bg-secondary-50 border-2 theme-border-input rounded-lg p-3 theme-text-primary text-sm focus:border-blue-500 focus:outline-none resize-none"
                   />
+                  {/* v1.35.69: Botão Gerar a partir de exemplos */}
+                  <button
+                    onClick={() => openModelGenerator('modeloTopicoRelatorio')}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg transition-colors"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    Gerar a partir de exemplos
+                  </button>
                   <p className="text-xs theme-text-muted flex items-start gap-2">
                     <BookOpen className="w-4 h-4 flex-shrink-0 mt-0.5 text-green-400" />
                     <span>

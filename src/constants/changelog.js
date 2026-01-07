@@ -2,6 +2,9 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.71', feature: 'Fix z-index ModelGeneratorModal (z-100 > CSS.modalOverlay z-90) - modal abre acima do ConfigModal' },
+  { version: '1.35.70', feature: '(tentativa anterior z-70 insuficiente)' },
+  { version: '1.35.69', feature: 'Gerador Automático de Prompts: juiz cola exemplos → IA gera prompt profissional que reproduz seu estilo (meta-prompts.ts, ModelGeneratorModal.tsx)' },
   { version: '1.35.68', feature: 'Fix: botão X posicionado corretamente no TextPreviewModal (flex no header) e ModelPreviewModal (classe padronizada para tema claro)' },
   { version: '1.35.67', feature: 'UX: 4 modais migrados para padrão BaseModal (TextPreviewModal, ModelPreviewModal, Download de Dados, Download de Embeddings) - ESC handler, scroll lock, glassmorphism' },
   { version: '1.35.66', feature: 'UX: Modal "Excluir Toda Legislação" migrado para BaseModal (ESC handler, botão X, scroll lock, glassmorphism)' },
