@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.77 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.78 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -67,6 +67,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.78 | TypeScript Migration: 11 hooks migrados (useModalManager, useFieldVersioning, useLocalStorage, useModelPreview, useTopicManager, useModelLibrary, useAIIntegration, useProofManager, useAuthMagicLink, useSyncManager, useCloudSync) + src/types/index.ts com tipos core |
 | v1.35.77 | Gerar Estilo de Redação a partir de exemplos: botão no campo customPrompt, buildStyleMetaPrompt extrai TOM/VOCABULÁRIO/RITMO |
 | v1.35.76 | Estilo Personalizado Substitutivo: AI_INSTRUCTIONS refatorado em CORE/STYLE/SAFETY - customPrompt do juiz substitui (não complementa) o estilo default |
 | v1.35.75 | UX: Feedback inline no botão Testar API Key (✓ verde / ✗ vermelho ao invés de toast popup) |
