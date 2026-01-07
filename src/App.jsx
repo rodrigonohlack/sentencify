@@ -138,7 +138,7 @@ import { VoiceButton } from './components/VoiceButton';
 import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
-import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS } from './prompts';
+import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS } from './prompts';
 
 // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -146,7 +146,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.76'; // v1.35.76: Estilo Personalizado Substitutivo (customPrompt substitui STYLE default)
+const APP_VERSION = '1.35.77'; // v1.35.77: Gerar Estilo de Redação a partir de exemplos (buildStyleMetaPrompt)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -18850,10 +18850,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [driveFilesModalOpen, setDriveFilesModalOpen] = React.useState(false);
   const [driveFiles, setDriveFiles] = React.useState([]);
 
-  // 🪄 v1.35.69: Gerador de Modelo a partir de Exemplos
+  // 🪄 v1.35.69: Gerador de Modelo a partir de Exemplos (v1.35.77: +estiloRedacao)
   const [modelGeneratorModal, setModelGeneratorModal] = React.useState({
     isOpen: false,
-    targetField: null // 'modeloRelatorio' | 'modeloDispositivo' | 'modeloTopicoRelatorio'
+    targetField: null // 'modeloRelatorio' | 'modeloDispositivo' | 'modeloTopicoRelatorio' | 'estiloRedacao'
   });
 
   const openModelGenerator = React.useCallback((targetField) => {
@@ -18867,9 +18867,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const handleModelGenerated = React.useCallback((generatedPrompt) => {
     const { targetField } = modelGeneratorModal;
     if (targetField) {
+      // v1.35.77: estiloRedacao salva em customPrompt (não em estiloRedacao)
+      const settingKey = targetField === 'estiloRedacao' ? 'customPrompt' : targetField;
       aiIntegration.setAiSettings(prev => ({
         ...prev,
-        [targetField]: generatedPrompt
+        [settingKey]: generatedPrompt
       }));
     }
     setModelGeneratorModal({ isOpen: false, targetField: null });
@@ -18879,7 +18881,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     const prompts = {
       modeloRelatorio: AI_PROMPTS.instrucoesRelatorioMiniPadrao || '',
       modeloDispositivo: AI_PROMPTS.instrucoesDispositivoPadrao || '',
-      modeloTopicoRelatorio: AI_PROMPTS.instrucoesRelatorioPadrao || ''
+      modeloTopicoRelatorio: AI_PROMPTS.instrucoesRelatorioPadrao || '',
+      estiloRedacao: AI_INSTRUCTIONS_STYLE // v1.35.77: Estilo de redação usa AI_INSTRUCTIONS_STYLE como referência
     };
     return prompts[targetField] || '';
   }, []);
@@ -31854,11 +31857,19 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     placeholder="Ex: Use linguagem mais coloquial, evite termos técnicos em excesso, seja mais direto e objetivo, etc."
                     className="w-full h-32 theme-bg-secondary-50 border-2 theme-border-input rounded-lg p-3 theme-text-primary text-sm focus:border-blue-500 focus:outline-none resize-none"
                   />
+                  {/* v1.35.77: Botão Gerar a partir de exemplos para Estilo de Redação */}
+                  <button
+                    onClick={() => openModelGenerator('estiloRedacao')}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg transition-colors"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    Gerar a partir de exemplos
+                  </button>
                   <p className="text-xs theme-text-muted flex items-start gap-2">
                     <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5 text-purple-400" />
                     <span>
                       Defina instruções adicionais para personalizar o estilo de redação da IA.
-                      Estas instruções serão aplicadas em mini-relatórios, no assistente de texto do editor e nos modelos.
+                      Estas instruções SUBSTITUEM o estilo padrão do sistema, permitindo personalização completa.
                     </span>
                   </p>
                   {aiIntegration.aiSettings.customPrompt && (

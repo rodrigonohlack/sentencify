@@ -2,18 +2,19 @@
  * ModelGeneratorModal - Gera prompts personalizados a partir de exemplos do juiz
  *
  * FLUXO:
- * 1. Juiz cola 1-5 exemplos de texto (relatório/dispositivo/mini-relatório)
+ * 1. Juiz cola 1-5 exemplos de texto (relatório/dispositivo/mini-relatório/sentenças)
  * 2. Sistema envia para LLM com meta-prompt + prompt hardcoded como referência
  * 3. LLM analisa estilo e gera prompt personalizado
  * 4. Juiz revisa/edita antes de salvar
  * 5. Prompt salvo substitui o hardcoded nas gerações futuras
  *
- * @version 1.35.73
+ * @version 1.35.77
+ * - Suporta estiloRedacao: usa buildStyleMetaPrompt (foco em tom/vocabulário/ritmo)
  */
 
 import React, { useState, useCallback } from 'react';
 import { Wand2, Plus, Trash2, Loader2, ArrowLeft, Save, X } from 'lucide-react';
-import { buildMetaPrompt, FIELD_LABELS, type TargetField } from '../prompts/meta-prompts';
+import { buildMetaPrompt, buildStyleMetaPrompt, FIELD_LABELS, type TargetField } from '../prompts/meta-prompts';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -359,8 +360,12 @@ async function generateModelFromExamples(
   hardcodedPrompt: string,
   callAI: (messages: any[], options: any) => Promise<string>
 ): Promise<string> {
-  // buildMetaPrompt importado de ../prompts/meta-prompts
-  const metaPrompt = buildMetaPrompt(targetField, examples, hardcodedPrompt);
+  // Escolhe meta-prompt apropriado:
+  // - estiloRedacao: foco em TOM/VOCABULÁRIO/RITMO (buildStyleMetaPrompt)
+  // - outros: foco em ESTRUTURA/FORMATO (buildMetaPrompt)
+  const metaPrompt = targetField === 'estiloRedacao'
+    ? buildStyleMetaPrompt(examples, hardcodedPrompt)
+    : buildMetaPrompt(targetField, examples, hardcodedPrompt);
 
   const response = await callAI([{
     role: 'user',

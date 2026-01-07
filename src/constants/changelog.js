@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.77', feature: 'Gerar Estilo de Redação a partir de exemplos: botão "Gerar a partir de exemplos" no campo Estilo de Redação Personalizado - IA analisa sentenças do juiz e extrai TOM/VOCABULÁRIO/RITMO (buildStyleMetaPrompt)' },
   { version: '1.35.76', feature: 'Estilo Personalizado Substitutivo: AI_INSTRUCTIONS refatorado em CORE/STYLE/SAFETY - customPrompt do juiz SUBSTITUI (não complementa) o estilo default, evitando conflitos como "Use latinismos" vs "Evite latinismos"' },
   { version: '1.35.75', feature: 'UX: Feedback inline no botão Testar API Key - mostra ✓ (verde) ou ✗ (vermelho) por 2s ao invés de toast popup' },
   { version: '1.35.74', feature: 'Config IA Local exportada no projeto + apiKeys excluída do export (segurança): 8 campos movidos de localStorage para aiSettings, migração automática, preserva apiKeys do usuário no import' },
