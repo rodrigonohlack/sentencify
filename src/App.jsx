@@ -138,7 +138,7 @@ import { VoiceButton } from './components/VoiceButton';
 import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
-import { AI_INSTRUCTIONS, AI_PROMPTS } from './prompts';
+import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS } from './prompts';
 
 // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -146,7 +146,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.75'; // v1.35.75: Feedback inline no botão Testar API Key (✓/✗ ao invés de toast)
+const APP_VERSION = '1.35.76'; // v1.35.76: Estilo Personalizado Substitutivo (customPrompt substitui STYLE default)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -1808,25 +1808,29 @@ const useAIIntegration = () => {
   }, []);
 
   // Retorna array com cache_control para Prompt Caching
+  // v1.35.76: Estilo personalizado SUBSTITUI (não complementa) o estilo default
   const getAiInstructions = React.useCallback(() => {
     const customPrompt = aiSettings?.customPrompt?.trim();
 
     if (customPrompt) {
-      // Retorna array: base (cacheada) + custom (não cacheada)
+      // SUBSTITUTIVO: customPrompt substitui STYLE, mas CORE e SAFETY permanecem
+      const customInstructions = `${AI_INSTRUCTIONS_CORE}
+
+📝 ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO:
+${customPrompt}
+
+${AI_INSTRUCTIONS_SAFETY}`;
+
       return [
         {
           type: "text",
-          text: AI_INSTRUCTIONS,
+          text: customInstructions,
           cache_control: { type: "ephemeral" }
-        },
-        {
-          type: "text",
-          text: `\n\n**INSTRUÇÕES PERSONALIZADAS DO USUÁRIO:**\n${customPrompt}`
         }
       ];
     }
 
-    // Retorna array com base cacheada
+    // Sem customização: usa AI_INSTRUCTIONS completo (inclui STYLE default)
     return [
       {
         type: "text",

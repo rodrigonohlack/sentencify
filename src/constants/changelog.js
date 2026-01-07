@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.76', feature: 'Estilo Personalizado Substitutivo: AI_INSTRUCTIONS refatorado em CORE/STYLE/SAFETY - customPrompt do juiz SUBSTITUI (não complementa) o estilo default, evitando conflitos como "Use latinismos" vs "Evite latinismos"' },
   { version: '1.35.75', feature: 'UX: Feedback inline no botão Testar API Key - mostra ✓ (verde) ou ✗ (vermelho) por 2s ao invés de toast popup' },
   { version: '1.35.74', feature: 'Config IA Local exportada no projeto + apiKeys excluída do export (segurança): 8 campos movidos de localStorage para aiSettings, migração automática, preserva apiKeys do usuário no import' },
   { version: '1.35.73', feature: 'Fix header opaco no ModelGeneratorModal: conteúdo não vaza por baixo ao fazer scroll (theme-bg-primary 100% + backdrop-blur)' },

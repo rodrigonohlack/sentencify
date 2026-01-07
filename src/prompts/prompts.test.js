@@ -2,10 +2,17 @@
  * Testes de regressão de prompts via snapshot
  * Garante que mudanças nos prompts são intencionais
  * v1.35.27: Corrigido para usar AI_PROMPTS real (não mais mocks)
+ * v1.35.76: Adiciona testes para AI_INSTRUCTIONS modular (CORE, STYLE, SAFETY)
  */
 import { describe, it, expect } from 'vitest';
 import { buildReorderPrompt } from '../utils/topicOrdering';
 import { AI_PROMPTS } from './ai-prompts.js';
+import {
+  AI_INSTRUCTIONS,
+  AI_INSTRUCTIONS_CORE,
+  AI_INSTRUCTIONS_STYLE,
+  AI_INSTRUCTIONS_SAFETY
+} from './system.js';
 
 describe('Prompts - Snapshot Tests', () => {
   describe('Prompt de Ordenação (reorderTopicsViaLLM)', () => {
@@ -193,6 +200,69 @@ describe('Prompts - Snapshot Tests', () => {
       expect(prompt).toContain('{"order":');
       expect(prompt).toContain('APENAS com JSON');
       expect(prompt).toContain('números originais');
+    });
+  });
+
+  // v1.35.76: Testes para AI_INSTRUCTIONS modular
+  describe('AI_INSTRUCTIONS Modular', () => {
+    it('concatenação das 3 partes deve ser EXATAMENTE igual ao AI_INSTRUCTIONS', () => {
+      const reconstructed = `${AI_INSTRUCTIONS_CORE}
+
+${AI_INSTRUCTIONS_STYLE}
+
+${AI_INSTRUCTIONS_SAFETY}`;
+
+      expect(reconstructed).toBe(AI_INSTRUCTIONS);
+    });
+
+    it('CORE não deve conter instruções de estilo substituíveis', () => {
+      expect(AI_INSTRUCTIONS_CORE).not.toContain('Evite latinismos');
+      expect(AI_INSTRUCTIONS_CORE).not.toContain('FLUIDEZ E COESÃO');
+      expect(AI_INSTRUCTIONS_CORE).not.toContain('PROSA CORRIDA');
+      expect(AI_INSTRUCTIONS_CORE).not.toContain('Evite adjetivações');
+    });
+
+    it('CORE deve conter persona, metodologia e princípios', () => {
+      expect(AI_INSTRUCTIONS_CORE).toContain('assistente de juiz do trabalho');
+      expect(AI_INSTRUCTIONS_CORE).toContain('Formação e Expertise');
+      expect(AI_INSTRUCTIONS_CORE).toContain('Metodologia de Análise');
+      expect(AI_INSTRUCTIONS_CORE).toContain('Princípios de Atuação');
+      expect(AI_INSTRUCTIONS_CORE).toContain('Formato das Respostas');
+    });
+
+    it('STYLE deve conter todas as instruções de redação', () => {
+      expect(AI_INSTRUCTIONS_STYLE).toContain('Estilo de Comunicação');
+      expect(AI_INSTRUCTIONS_STYLE).toContain('EXIGÊNCIAS DE QUALIDADE TEXTUAL');
+      expect(AI_INSTRUCTIONS_STYLE).toContain('FLUIDEZ E COESÃO');
+      expect(AI_INSTRUCTIONS_STYLE).toContain('RITMO E CONTINUIDADE');
+      expect(AI_INSTRUCTIONS_STYLE).toContain('COERÊNCIA');
+      expect(AI_INSTRUCTIONS_STYLE).toContain('FORMATO NARRATIVO CONTÍNUO');
+      expect(AI_INSTRUCTIONS_STYLE).toContain('DIDÁTICA E CLAREZA');
+    });
+
+    it('SAFETY deve conter proibições e anonimização', () => {
+      expect(AI_INSTRUCTIONS_SAFETY).toContain('PROIBIÇÕES ABSOLUTAS');
+      expect(AI_INSTRUCTIONS_SAFETY).toContain('ANONIMIZAÇÃO DE DADOS');
+      expect(AI_INSTRUCTIONS_SAFETY).toContain('[PESSOA 1]');
+      expect(AI_INSTRUCTIONS_SAFETY).toContain('[PESSOA 2]');
+      expect(AI_INSTRUCTIONS_SAFETY).toContain('[VALOR]');
+      expect(AI_INSTRUCTIONS_SAFETY).toContain('revise-a e identifique se houve alucinação');
+    });
+
+    it('snapshot: AI_INSTRUCTIONS completo (detectar mudanças acidentais)', () => {
+      expect(AI_INSTRUCTIONS).toMatchSnapshot();
+    });
+
+    it('snapshot: AI_INSTRUCTIONS_CORE', () => {
+      expect(AI_INSTRUCTIONS_CORE).toMatchSnapshot();
+    });
+
+    it('snapshot: AI_INSTRUCTIONS_STYLE', () => {
+      expect(AI_INSTRUCTIONS_STYLE).toMatchSnapshot();
+    });
+
+    it('snapshot: AI_INSTRUCTIONS_SAFETY', () => {
+      expect(AI_INSTRUCTIONS_SAFETY).toMatchSnapshot();
     });
   });
 });

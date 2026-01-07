@@ -1,0 +1,91 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Meta-Prompts > buildMetaPrompt > snapshot: estrutura completa do meta-prompt para modeloDispositivo 1`] = `
+"Você é um especialista em engenharia de prompts jurídicos.
+
+═══════════════════════════════════════════════════════════════════════════════
+TAREFA
+═══════════════════════════════════════════════════════════════════════════════
+
+Analise os exemplos de DISPOSITIVO DE SENTENÇA fornecidos pelo magistrado e gere um PROMPT DE INSTRUÇÃO
+completo que permita a uma IA reproduzir fielmente o estilo de redação deste juiz.
+
+═══════════════════════════════════════════════════════════════════════════════
+EXEMPLOS DO MAGISTRADO
+═══════════════════════════════════════════════════════════════════════════════
+
+══ EXEMPLO 1 ══
+Exemplo de dispositivo do juiz
+
+═══════════════════════════════════════════════════════════════════════════════
+PROMPT DE REFERÊNCIA (Use esta ESTRUTURA, adapte o CONTEÚDO aos exemplos)
+═══════════════════════════════════════════════════════════════════════════════
+
+Prompt de referência do sistema
+
+═══════════════════════════════════════════════════════════════════════════════
+ANÁLISE REQUERIDA
+═══════════════════════════════════════════════════════════════════════════════
+
+1. ESTRUTURA: Quantos parágrafos, ordem das informações, divisões
+2. VOCABULÁRIO: Termos preferidos, conectivos, expressões recorrentes
+3. TOM: Formal/informal, técnico/acessível, detalhado/conciso
+4. PADRÕES: Como inicia, como conclui, como referencia partes
+
+═══════════════════════════════════════════════════════════════════════════════
+FORMATO DA RESPOSTA
+═══════════════════════════════════════════════════════════════════════════════
+
+Gere um prompt de instrução que:
+- Siga a ESTRUTURA do prompt de referência
+- Adapte o CONTEÚDO para refletir o estilo detectado nos exemplos
+- Inclua exemplos de frases modelo com placeholders [INFO]
+- Seja autocontido (qualquer LLM deve poder usá-lo)
+
+⚠️ Responda APENAS com o prompt de instrução, sem explicações."
+`;
+
+exports[`Meta-Prompts > buildMetaPrompt > snapshot: estrutura completa do meta-prompt para modeloRelatorio 1`] = `
+"Você é um especialista em engenharia de prompts jurídicos.
+
+═══════════════════════════════════════════════════════════════════════════════
+TAREFA
+═══════════════════════════════════════════════════════════════════════════════
+
+Analise os exemplos de MINI-RELATÓRIO fornecidos pelo magistrado e gere um PROMPT DE INSTRUÇÃO
+completo que permita a uma IA reproduzir fielmente o estilo de redação deste juiz.
+
+═══════════════════════════════════════════════════════════════════════════════
+EXEMPLOS DO MAGISTRADO
+═══════════════════════════════════════════════════════════════════════════════
+
+══ EXEMPLO 1 ══
+Exemplo de mini-relatório
+
+═══════════════════════════════════════════════════════════════════════════════
+PROMPT DE REFERÊNCIA (Use esta ESTRUTURA, adapte o CONTEÚDO aos exemplos)
+═══════════════════════════════════════════════════════════════════════════════
+
+Prompt de referência do sistema
+
+═══════════════════════════════════════════════════════════════════════════════
+ANÁLISE REQUERIDA
+═══════════════════════════════════════════════════════════════════════════════
+
+1. ESTRUTURA: Quantos parágrafos, ordem das informações, divisões
+2. VOCABULÁRIO: Termos preferidos, conectivos, expressões recorrentes
+3. TOM: Formal/informal, técnico/acessível, detalhado/conciso
+4. PADRÕES: Como inicia, como conclui, como referencia partes
+
+═══════════════════════════════════════════════════════════════════════════════
+FORMATO DA RESPOSTA
+═══════════════════════════════════════════════════════════════════════════════
+
+Gere um prompt de instrução que:
+- Siga a ESTRUTURA do prompt de referência
+- Adapte o CONTEÚDO para refletir o estilo detectado nos exemplos
+- Inclua exemplos de frases modelo com placeholders [INFO]
+- Seja autocontido (qualquer LLM deve poder usá-lo)
+
+⚠️ Responda APENAS com o prompt de instrução, sem explicações."
+`;
