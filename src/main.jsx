@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from '@sentry/react';
 import './index.css'; // Tailwind CSS
-import App from './App.jsx';
+import App from './App';
 
 // v1.35.12: Sentry error tracking
 Sentry.init({
