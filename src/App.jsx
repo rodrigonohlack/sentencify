@@ -146,7 +146,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.73'; // v1.35.73: Fix header opaco no ModelGeneratorModal (conteúdo não vaza ao scroll)
+const APP_VERSION = '1.35.74'; // v1.35.74: Config IA Local exportada no projeto + apiKeys excluída do export por segurança
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -1559,6 +1559,15 @@ const useAIIntegration = () => {
       nomes: true,
       nomesUsuario: []
     },
+    // v1.35.74: IA Local settings (antes em localStorage separado)
+    semanticSearchEnabled: false,
+    semanticThreshold: 50,
+    jurisSemanticEnabled: false,
+    jurisSemanticThreshold: 50,
+    modelSemanticEnabled: false,
+    modelSemanticThreshold: 40,
+    useLocalAIForSuggestions: false,
+    useLocalAIForJuris: false,
     // v1.20.0: Prompts rápidos para o Assistente IA
     quickPrompts: [
       {
@@ -1717,6 +1726,25 @@ const useAIIntegration = () => {
               ...parsed.anonymization
             };
           }
+
+          // v1.35.74: Adicionar defaults para campos novos de IA Local
+          const iaLocalDefaults = {
+            semanticSearchEnabled: false,
+            semanticThreshold: 50,
+            jurisSemanticEnabled: false,
+            jurisSemanticThreshold: 50,
+            modelSemanticEnabled: false,
+            modelSemanticThreshold: 40,
+            useLocalAIForSuggestions: false,
+            useLocalAIForJuris: false
+          };
+          // Merge: defaults primeiro, depois valores salvos sobrescrevem
+          Object.keys(iaLocalDefaults).forEach(key => {
+            if (parsed[key] === undefined) {
+              parsed[key] = iaLocalDefaults[key];
+            }
+          });
+
           // v1.21.2: Merge inteligente de quickPrompts
           // - Preserva quick prompts customizados do usuário (IDs que não são qp-1 a qp-4)
           // - Atualiza quick prompts padrão com versões mais recentes do código
@@ -4281,6 +4309,10 @@ const useLocalStorage = () => {
       })
     );
 
+    // v1.35.74: Não exportar apiKeys por segurança
+    // eslint-disable-next-line no-unused-vars
+    const { apiKeys: _excluded, ...aiSettingsWithoutKeys } = aiSettings;
+
     return {
       version: APP_VERSION,
       exportedAt: new Date().toISOString(),
@@ -4291,7 +4323,7 @@ const useLocalStorage = () => {
       extractedTopics,
       selectedTopics,
       partesProcesso,
-      aiSettings,
+      aiSettings: aiSettingsWithoutKeys,
       analyzedDocuments,
       extractedTexts: extractedTexts || { peticoes: [], contestacoes: [], complementares: [] },
       uploadPdfs,
@@ -4506,8 +4538,37 @@ const useLocalStorage = () => {
       setTokenMetrics(project.tokenMetrics);
     }
 
+    // v1.35.74: Migrar projetos antigos + preservar apiKeys do localStorage
     if (project.aiSettings) {
-      setAiSettings(project.aiSettings);
+      // Defaults para campos novos de IA Local
+      const iaLocalDefaults = {
+        semanticSearchEnabled: false,
+        semanticThreshold: 50,
+        jurisSemanticEnabled: false,
+        jurisSemanticThreshold: 50,
+        modelSemanticEnabled: false,
+        modelSemanticThreshold: 40,
+        useLocalAIForSuggestions: false,
+        useLocalAIForJuris: false
+      };
+
+      // Obter apiKeys ATUAIS do localStorage (nunca sobrescrever!)
+      let currentApiKeys = { claude: '', gemini: '' };
+      try {
+        const saved = localStorage.getItem('sentencify-ai-settings');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          currentApiKeys = parsed.apiKeys || currentApiKeys;
+        }
+      } catch (e) { /* ignore */ }
+
+      // Merge: defaults → projeto → apiKeys atuais (nunca sobrescreve chaves)
+      const mergedAiSettings = {
+        ...iaLocalDefaults,
+        ...project.aiSettings,
+        apiKeys: currentApiKeys  // Sempre preserva as chaves do usuário
+      };
+      setAiSettings(mergedAiSettings);
     }
 
     setActiveTab('upload');
@@ -19498,20 +19559,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       return JSON.parse(localStorage.getItem('semanticSearchEnabled')) || false;
     } catch { return false; }
   });
-  const [semanticSearchEnabled, setSemanticSearchEnabled] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('semanticSearchEnabled')) || false; } catch { return false; }
-  });
-  const [semanticThreshold, setSemanticThreshold] = useState(() => {
-    try { return parseInt(localStorage.getItem('semanticThreshold')) || 50; } catch { return 50; }
-  });
-
-  // 📚 v1.27.00: Estados para busca semântica de JURISPRUDÊNCIA
-  const [jurisSemanticEnabled, setJurisSemanticEnabled] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('jurisSemanticEnabled')) || false; } catch { return false; }
-  });
-  const [jurisSemanticThreshold, setJurisSemanticThreshold] = useState(() => {
-    try { return parseInt(localStorage.getItem('jurisSemanticThreshold')) || 50; } catch { return 50; }
-  });
+  // v1.35.74: semanticSearchEnabled, semanticThreshold, jurisSemanticEnabled, jurisSemanticThreshold
+  // movidos para aiSettings (agora em aiIntegration.aiSettings.X)
   const [jurisEmbeddingsCount, setJurisEmbeddingsCount] = useState(0);
   const [jurisEmbeddingsProgress, setJurisEmbeddingsProgress] = useState({ current: 0, total: 0 });
   const jurisEmbeddingsFileInputRef = useRef(null);
@@ -19537,25 +19586,17 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   });
 
   // 📦 v1.27.01: Estados para busca semântica de MODELOS (embeddings inline)
-  const [modelSemanticEnabled, setModelSemanticEnabled] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('modelSemanticEnabled')) || false; } catch { return false; }
-  });
-  const [modelSemanticThreshold, setModelSemanticThreshold] = useState(() => {
-    try { return parseInt(localStorage.getItem('modelSemanticThreshold')) || 40; } catch { return 40; }
-  });
+  // v1.35.74: modelSemanticEnabled, modelSemanticThreshold, useLocalAIForSuggestions
+  // movidos para aiSettings (agora em aiIntegration.aiSettings.X)
   const [generatingModelEmbeddings, setGeneratingModelEmbeddings] = useState(false);
   const [modelEmbeddingsProgress, setModelEmbeddingsProgress] = useState({ current: 0, total: 0 });
-  const [useLocalAIForSuggestions, setUseLocalAIForSuggestions] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('useLocalAIForSuggestions')) || false; } catch { return false; }
-  });
   // v1.32.18: Jurisprudência via IA Local nos editores
-  const [useLocalAIForJuris, setUseLocalAIForJuris] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('useLocalAIForJuris')) || false; } catch { return false; }
-  });
+  // v1.35.74: useLocalAIForJuris movido para aiSettings
 
   // v1.33.19: Toggle para busca semântica na busca manual de modelos (editores individual e global)
   // v1.33.20: Inicializa com modelSemanticEnabled (respeitando config IA)
-  const [useSemanticManualSearch, setUseSemanticManualSearch] = useState(() => modelSemanticEnabled);
+  // v1.35.74: Agora usa aiIntegration.aiSettings.modelSemanticEnabled
+  const [useSemanticManualSearch, setUseSemanticManualSearch] = useState(() => aiIntegration.aiSettings.modelSemanticEnabled);
   const [semanticManualSearchResults, setSemanticManualSearchResults] = useState(null);
   const [semanticManualSearching, setSemanticManualSearching] = useState(false);
 
@@ -20582,23 +20623,23 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // v1.28.00: Toggle individual de legislação (não afeta modelo E5)
   // v1.28.01: Ao habilitar, também seta modo semântico como padrão na aba
+  // v1.35.74: Agora usa aiIntegration.setAiSettings (persiste automaticamente)
   const handleLegislacaoToggle = (newEnabled) => {
-    setSemanticSearchEnabled(newEnabled);
-    localStorage.setItem('semanticSearchEnabled', JSON.stringify(newEnabled));
+    aiIntegration.setAiSettings(prev => ({ ...prev, semanticSearchEnabled: newEnabled }));
     if (newEnabled) localStorage.setItem('legislacaoSemanticMode', 'true');
   };
 
   // v1.28.01: Handler para toggle de Jurisprudência
+  // v1.35.74: Agora usa aiIntegration.setAiSettings
   const handleJurisToggle = (newEnabled) => {
-    setJurisSemanticEnabled(newEnabled);
-    localStorage.setItem('jurisSemanticEnabled', JSON.stringify(newEnabled));
+    aiIntegration.setAiSettings(prev => ({ ...prev, jurisSemanticEnabled: newEnabled }));
     if (newEnabled) localStorage.setItem('jurisSemanticMode', 'true');
   };
 
   // v1.28.01: Handler para toggle de Modelos
+  // v1.35.74: Agora usa aiIntegration.setAiSettings
   const handleModelToggle = (newEnabled) => {
-    setModelSemanticEnabled(newEnabled);
-    localStorage.setItem('modelSemanticEnabled', JSON.stringify(newEnabled));
+    aiIntegration.setAiSettings(prev => ({ ...prev, modelSemanticEnabled: newEnabled }));
     if (newEnabled) localStorage.setItem('modelSemanticMode', 'true');
   };
 
@@ -22069,7 +22110,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
   // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
   const executeSaveModel = async (modelData, isReplace = false, replaceId = null) => {
     // Gerar embedding se modelo de busca estiver pronto E opção ativada
-    if (modelSemanticEnabled && searchModelReady && !modelData.embedding) {
+    if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
       await new Promise(resolve => setTimeout(resolve, 50));
       try {
         const stripHTML = (html) => {
@@ -22082,7 +22123,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       } catch (err) {
         console.warn('[MODEL-EMBED] Erro ao gerar embedding:', err);
       }
-    } else if (!modelSemanticEnabled && modelData.embedding) {
+    } else if (!aiIntegration.aiSettings.modelSemanticEnabled && modelData.embedding) {
       delete modelData.embedding;
     }
 
@@ -22138,7 +22179,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         };
 
         // v1.27.02: Regenerar embedding se IA local estiver ativa
-        if (modelSemanticEnabled && searchModelReady) {
+        if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
           try {
             const stripHTML = (html) => {
               const div = document.createElement('div');
@@ -22298,7 +22339,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       };
 
       // v1.27.02: Regenerar embedding se IA local estiver ativa
-      if (modelSemanticEnabled && searchModelReady) {
+      if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
         await new Promise(resolve => setTimeout(resolve, 50));
         try {
           const stripHTML = (html) => {
@@ -22388,7 +22429,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     }
 
     // v1.27.02: Gerar embedding se IA local estiver ativa
-    if (modelSemanticEnabled && searchModelReady) {
+    if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
       await new Promise(resolve => setTimeout(resolve, 50));
       try {
         const stripHTML = (html) => {
@@ -22420,7 +22461,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
   // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
   const executeSaveAsNew = async (modelData, isReplace = false, replaceId = null) => {
     // Gerar embedding se modelo de busca estiver pronto E opção ativada
-    if (modelSemanticEnabled && searchModelReady && !modelData.embedding) {
+    if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
       await new Promise(resolve => setTimeout(resolve, 50));
       try {
         const stripHTML = (html) => {
@@ -22433,7 +22474,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       } catch (err) {
         console.warn('[MODEL-EMBED] Erro ao gerar embedding:', err);
       }
-    } else if (!modelSemanticEnabled && modelData.embedding) {
+    } else if (!aiIntegration.aiSettings.modelSemanticEnabled && modelData.embedding) {
       delete modelData.embedding;
     }
 
@@ -22598,7 +22639,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       }
 
       // v1.27.02: Gerar embeddings para modelos sem embedding se IA local estiver ativa E opção ativada
-      if (modelSemanticEnabled && searchModelReady && newModels.length > 0) {
+      if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && newModels.length > 0) {
         const modelsWithoutEmbedding = newModels.filter(m => !m.embedding || m.embedding.length !== 768);
         if (modelsWithoutEmbedding.length > 0) {
           const stripHTML = (html) => {
@@ -24178,7 +24219,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
       };
 
       // v1.27.02: Gerar novo embedding se IA local estiver ativa
-      if (modelSemanticEnabled && searchModelReady) {
+      if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
         await new Promise(resolve => setTimeout(resolve, 50));
         try {
           const stripHTML = (html) => {
@@ -24555,7 +24596,7 @@ ${decisionText}`;
   // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
   const executeExtractedModelSave = async (modelData, isReplace = false, replaceId = null) => {
     // Gerar embedding se modelo de busca estiver pronto E opção ativada
-    if (modelSemanticEnabled && searchModelReady && !modelData.embedding) {
+    if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
       await new Promise(resolve => setTimeout(resolve, 50));
       try {
         const stripHTML = (html) => {
@@ -24568,7 +24609,7 @@ ${decisionText}`;
       } catch (err) {
         console.warn('[MODEL-EMBED] Erro ao gerar embedding:', err);
       }
-    } else if (!modelSemanticEnabled && modelData.embedding) {
+    } else if (!aiIntegration.aiSettings.modelSemanticEnabled && modelData.embedding) {
       delete modelData.embedding;
     }
 
@@ -24651,7 +24692,7 @@ ${decisionText}`;
     if (queue.length === 0) {
       if (saved.length > 0 || replacements.length > 0) {
         // v1.27.02: Gerar embeddings para todos os modelos novos se IA local ativa E opção ativada
-        if (modelSemanticEnabled && searchModelReady) {
+        if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
           const stripHTML = (html) => {
             const div = document.createElement('div');
             div.innerHTML = html || '';
@@ -26968,7 +27009,8 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
     // v1.29.05: Não gerar sugestões para tópicos especiais (RELATÓRIO e DISPOSITIVO)
     if (isSpecialTopic(topic)) return { suggestions: [], source: null };
     // v1.28.02: IA Local para sugestões (sem API Claude)
-    if (useLocalAIForSuggestions && searchModelReady && modelLibrary.models.some(m => m.embedding?.length === 768)) {
+    // v1.35.74: Usa aiSettings unificado
+    if (aiIntegration.aiSettings.useLocalAIForSuggestions && searchModelReady && modelLibrary.models.some(m => m.embedding?.length === 768)) {
       if (!topic?.title || topic.title.length < 3) return { suggestions: [], source: null }; // v1.28.05
       // v1.32.22: Usar apenas título para query mais focada (categoria e relatório diluem relevância)
       const topicText = topic.title;
@@ -26979,7 +27021,7 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
         await new Promise(r => setTimeout(r, 0)); // v1.28.03: Yield para UI não congelar
         // v1.32.20: toLowerCase para E5 case-sensitive
         const qEmb = await AIModelService.getEmbedding(topicText.toLowerCase(), 'query');
-        const threshold = modelSemanticThreshold / 100;
+        const threshold = aiIntegration.aiSettings.modelSemanticThreshold / 100;
         const results = modelLibrary.models
           .filter(m => m.embedding?.length === 768)
           .map(m => ({ ...m, similarity: AIModelService.cosineSimilarity(qEmb, m.embedding) }))
@@ -27033,7 +27075,7 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
     apiCache.set(cacheKey, JSON.stringify(result));
 
     return result;
-  }, [useLocalAIForSuggestions, searchModelReady, modelLibrary.models, modelSemanticThreshold, apiCache, refineWithAI]);
+  }, [aiIntegration.aiSettings.useLocalAIForSuggestions, searchModelReady, modelLibrary.models, aiIntegration.aiSettings.modelSemanticThreshold, apiCache, refineWithAI]);
 
   const startEditing = async (topic) => {
     const topicCopy = {
@@ -28009,20 +28051,22 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
     [modelLibrary.models]
   );
   // v1.28.01: Usa toggle global como padrão se não houver valor no localStorage
+  // v1.35.74: Usa aiSettings unificado
   const [useModelSemanticSearch, setUseModelSemanticSearch] = React.useState(() => {
     try {
       const stored = localStorage.getItem('modelSemanticMode');
       if (stored !== null) return stored === 'true';
-      return modelSemanticEnabled; // Usa toggle global como fallback
+      return aiIntegration.aiSettings.modelSemanticEnabled; // Usa toggle global como fallback
     } catch { return false; }
   });
   const [modelSemanticResults, setModelSemanticResults] = React.useState(null);
   const [searchingModelSemantics, setSearchingModelSemantics] = React.useState(false);
 
   // Busca semântica de modelos disponível se: toggle global ativo + modelo pronto + modelos com embedding
-  const modelSemanticAvailable = modelSemanticEnabled && searchModelReady && modelEmbeddingsCount > 0;
+  const modelSemanticAvailable = aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && modelEmbeddingsCount > 0;
 
   // Handler para busca semântica de modelos
+  // v1.35.74: Usa aiSettings unificado
   const performModelSemanticSearch = React.useCallback(async (query) => {
     if (!query || query.length < 3 || !modelSemanticAvailable) {
       setModelSemanticResults(null);
@@ -28030,7 +28074,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
     }
     setSearchingModelSemantics(true);
     try {
-      const threshold = modelSemanticThreshold / 100;
+      const threshold = aiIntegration.aiSettings.modelSemanticThreshold / 100;
       const results = await searchModelsBySimilarity(modelLibrary.models, query, { threshold, limit: 30 });
       setModelSemanticResults(results);
     } catch (err) {
@@ -28039,7 +28083,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
     } finally {
       setSearchingModelSemantics(false);
     }
-  }, [modelSemanticAvailable, modelSemanticThreshold, modelLibrary.models]);
+  }, [modelSemanticAvailable, aiIntegration.aiSettings.modelSemanticThreshold, modelLibrary.models]);
 
   // Debounce para busca semântica de modelos
   const modelSemanticSearchTimeoutRef = React.useRef(null);
@@ -29679,10 +29723,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                 closeModal={closeModal}
                 modals={modals}
                 isReadOnly={!primaryTabLock.isPrimaryTab}
-                jurisSemanticEnabled={jurisSemanticEnabled}
+                jurisSemanticEnabled={aiIntegration.aiSettings.jurisSemanticEnabled}
                 searchModelReady={searchModelReady}
                 jurisEmbeddingsCount={jurisEmbeddingsCount}
-                jurisSemanticThreshold={jurisSemanticThreshold}
+                jurisSemanticThreshold={aiIntegration.aiSettings.jurisSemanticThreshold}
               />
             )}
 
@@ -29692,10 +29736,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                 closeModal={closeModal}
                 modals={modals}
                 isReadOnly={!primaryTabLock.isPrimaryTab}
-                semanticSearchEnabled={semanticSearchEnabled}
+                semanticSearchEnabled={aiIntegration.aiSettings.semanticSearchEnabled}
                 searchModelReady={searchModelReady}
                 embeddingsCount={embeddingsCount}
-                semanticThreshold={semanticThreshold}
+                semanticThreshold={aiIntegration.aiSettings.semanticThreshold}
               />
             )}
 
@@ -30490,8 +30534,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         topicTitle={editingTopic?.title}
         topicRelatorio={editingTopic?.relatorio || editingTopic?.editedRelatorio}
         callAI={aiIntegration?.callAI}
-        useLocalAI={useLocalAIForJuris && searchModelReady && jurisEmbeddingsCount > 0}
-        jurisSemanticThreshold={jurisSemanticThreshold}
+        useLocalAI={aiIntegration.aiSettings.useLocalAIForJuris && searchModelReady && jurisEmbeddingsCount > 0}
+        jurisSemanticThreshold={aiIntegration.aiSettings.jurisSemanticThreshold}
         jurisSemanticEnabled={searchModelReady && jurisEmbeddingsCount > 0}
       />
 
@@ -31524,12 +31568,12 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           📜 Legislação
                           <span className="text-xs theme-text-muted">({embeddingsCount} embeddings)</span>
                         </label>
-                        <div className={`toggle-switch ${semanticSearchEnabled ? 'active' : ''}`} onClick={() => handleLegislacaoToggle(!semanticSearchEnabled)}>
+                        <div className={`toggle-switch ${aiIntegration.aiSettings.semanticSearchEnabled ? 'active' : ''}`} onClick={() => handleLegislacaoToggle(!aiIntegration.aiSettings.semanticSearchEnabled)}>
                           <div className="toggle-knob"></div>
                         </div>
                       </div>
 
-                      {semanticSearchEnabled && (
+                      {aiIntegration.aiSettings.semanticSearchEnabled && (
                         <div className="space-y-3 pt-2 border-t theme-border-subtle">
                           <div className="flex items-center gap-2 flex-wrap">
                             {embeddingsCount === 0 ? (
@@ -31544,8 +31588,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="text-xs theme-text-muted">Threshold:</span>
-                            <input type="range" min="20" max="80" value={semanticThreshold} onChange={(e) => { setSemanticThreshold(Number(e.target.value)); localStorage.setItem('semanticThreshold', e.target.value); }} className="flex-1 h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer" />
-                            <span className="text-xs theme-text-primary w-10 text-right">{semanticThreshold}%</span>
+                            <input type="range" min="20" max="80" value={aiIntegration.aiSettings.semanticThreshold} onChange={(e) => aiIntegration.setAiSettings(prev => ({ ...prev, semanticThreshold: Number(e.target.value) }))} className="flex-1 h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer" />
+                            <span className="text-xs theme-text-primary w-10 text-right">{aiIntegration.aiSettings.semanticThreshold}%</span>
                           </div>
                         </div>
                       )}
@@ -31558,12 +31602,12 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           📚 Jurisprudência
                           <span className="text-xs theme-text-muted">({jurisEmbeddingsCount} embeddings)</span>
                         </label>
-                        <div className={`toggle-switch ${jurisSemanticEnabled ? 'active' : ''}`} onClick={() => handleJurisToggle(!jurisSemanticEnabled)}>
+                        <div className={`toggle-switch ${aiIntegration.aiSettings.jurisSemanticEnabled ? 'active' : ''}`} onClick={() => handleJurisToggle(!aiIntegration.aiSettings.jurisSemanticEnabled)}>
                           <div className="toggle-knob"></div>
                         </div>
                       </div>
 
-                      {jurisSemanticEnabled && (
+                      {aiIntegration.aiSettings.jurisSemanticEnabled && (
                         <div className="space-y-3 pt-2 border-t theme-border-subtle">
                           <div className="flex items-center gap-2 flex-wrap">
                             {jurisEmbeddingsCount === 0 ? (
@@ -31578,15 +31622,15 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="text-xs theme-text-muted">Threshold:</span>
-                            <input type="range" min="20" max="80" value={jurisSemanticThreshold} onChange={(e) => { setJurisSemanticThreshold(Number(e.target.value)); localStorage.setItem('jurisSemanticThreshold', e.target.value); }} className="flex-1 h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer" />
-                            <span className="text-xs theme-text-primary w-10 text-right">{jurisSemanticThreshold}%</span>
+                            <input type="range" min="20" max="80" value={aiIntegration.aiSettings.jurisSemanticThreshold} onChange={(e) => aiIntegration.setAiSettings(prev => ({ ...prev, jurisSemanticThreshold: Number(e.target.value) }))} className="flex-1 h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer" />
+                            <span className="text-xs theme-text-primary w-10 text-right">{aiIntegration.aiSettings.jurisSemanticThreshold}%</span>
                           </div>
                           {/* v1.32.18: Toggle para usar IA Local nos editores */}
                           {jurisEmbeddingsCount > 0 && searchModelReady && (
                             <div className="flex items-center justify-between mt-3 pt-3 border-t theme-border-subtle">
                               <label className="text-xs theme-text-muted">🤖 Jurisprudência via IA Local<span className="block opacity-70">Busca semântica nos editores</span></label>
-                              <div className={`toggle-switch ${useLocalAIForJuris ? 'active' : ''}`}
-                                   onClick={() => { setUseLocalAIForJuris(!useLocalAIForJuris); localStorage.setItem('useLocalAIForJuris', JSON.stringify(!useLocalAIForJuris)); }}>
+                              <div className={`toggle-switch ${aiIntegration.aiSettings.useLocalAIForJuris ? 'active' : ''}`}
+                                   onClick={() => aiIntegration.setAiSettings(prev => ({ ...prev, useLocalAIForJuris: !prev.useLocalAIForJuris }))}>
                                 <div className="toggle-knob"></div>
                               </div>
                             </div>
@@ -31602,12 +31646,12 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           📦 Modelos
                           <span className="text-xs theme-text-muted">({modelEmbeddingsCount}/{modelLibrary.models.length})</span>
                         </label>
-                        <div className={`toggle-switch ${modelSemanticEnabled ? 'active' : ''}`} onClick={() => handleModelToggle(!modelSemanticEnabled)}>
+                        <div className={`toggle-switch ${aiIntegration.aiSettings.modelSemanticEnabled ? 'active' : ''}`} onClick={() => handleModelToggle(!aiIntegration.aiSettings.modelSemanticEnabled)}>
                           <div className="toggle-knob"></div>
                         </div>
                       </div>
 
-                      {modelSemanticEnabled && (
+                      {aiIntegration.aiSettings.modelSemanticEnabled && (
                         <div className="space-y-3 pt-2 border-t theme-border-subtle">
                           <div className="flex items-center gap-2 flex-wrap">
                             <button onClick={generateModelEmbeddings} disabled={generatingModelEmbeddings}
@@ -31623,14 +31667,14 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           )}
                           <div className="flex items-center gap-3">
                             <span className="text-xs theme-text-muted">Threshold:</span>
-                            <input type="range" min="20" max="80" value={modelSemanticThreshold} onChange={(e) => { setModelSemanticThreshold(Number(e.target.value)); localStorage.setItem('modelSemanticThreshold', e.target.value); }} className="flex-1 h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer" />
-                            <span className="text-xs theme-text-primary w-10 text-right">{modelSemanticThreshold}%</span>
+                            <input type="range" min="20" max="80" value={aiIntegration.aiSettings.modelSemanticThreshold} onChange={(e) => aiIntegration.setAiSettings(prev => ({ ...prev, modelSemanticThreshold: Number(e.target.value) }))} className="flex-1 h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer" />
+                            <span className="text-xs theme-text-primary w-10 text-right">{aiIntegration.aiSettings.modelSemanticThreshold}%</span>
                           </div>
                           {modelEmbeddingsCount > 0 && searchModelReady && (
                             <div className="flex items-center justify-between mt-3 pt-3 border-t theme-border-subtle">
                               <label className="text-xs theme-text-muted">🤖 Sugestões via IA Local<span className="block opacity-70">Busca semântica instantânea</span></label>
-                              <div className={`toggle-switch ${useLocalAIForSuggestions ? 'active' : ''}`}
-                                   onClick={() => { setUseLocalAIForSuggestions(!useLocalAIForSuggestions); localStorage.setItem('useLocalAIForSuggestions', JSON.stringify(!useLocalAIForSuggestions)); }}>
+                              <div className={`toggle-switch ${aiIntegration.aiSettings.useLocalAIForSuggestions ? 'active' : ''}`}
+                                   onClick={() => aiIntegration.setAiSettings(prev => ({ ...prev, useLocalAIForSuggestions: !prev.useLocalAIForSuggestions }))}>
                                 <div className="toggle-knob"></div>
                               </div>
                             </div>
@@ -32690,13 +32734,13 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         fileToBase64={storage.fileToBase64}
         openModal={openModal}
         closeModal={closeModal}
-        useLocalAIForSuggestions={useLocalAIForSuggestions}
-        useLocalAIForJuris={useLocalAIForJuris}
-        jurisSemanticThreshold={jurisSemanticThreshold}
+        useLocalAIForSuggestions={aiIntegration.aiSettings.useLocalAIForSuggestions}
+        useLocalAIForJuris={aiIntegration.aiSettings.useLocalAIForJuris}
+        jurisSemanticThreshold={aiIntegration.aiSettings.jurisSemanticThreshold}
         searchModelReady={searchModelReady}
         jurisEmbeddingsCount={jurisEmbeddingsCount}
         searchModelsBySimilarity={searchModelsBySimilarity}
-        modelSemanticEnabled={modelSemanticEnabled}
+        modelSemanticEnabled={aiIntegration.aiSettings.modelSemanticEnabled}
       />
 
       {/* Modal de Preview de Modelo (Sugestões) - GLOBAL (v1.12.2: movido para depois do GlobalEditorModal) */}
