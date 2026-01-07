@@ -146,7 +146,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.74'; // v1.35.74: Config IA Local exportada no projeto + apiKeys excluída do export por segurança
+const APP_VERSION = '1.35.75'; // v1.35.75: Feedback inline no botão Testar API Key (✓/✗ ao invés de toast)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -19597,6 +19597,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.33.20: Inicializa com modelSemanticEnabled (respeitando config IA)
   // v1.35.74: Agora usa aiIntegration.aiSettings.modelSemanticEnabled
   const [useSemanticManualSearch, setUseSemanticManualSearch] = useState(() => aiIntegration.aiSettings.modelSemanticEnabled);
+
+  // v1.35.75: Feedback inline nos botões de teste de API Key
+  const [claudeTestStatus, setClaudeTestStatus] = useState(null); // null | 'testing' | 'ok' | 'error'
+  const [geminiTestStatus, setGeminiTestStatus] = useState(null);
   const [semanticManualSearchResults, setSemanticManualSearchResults] = useState(null);
   const [semanticManualSearching, setSemanticManualSearching] = useState(false);
 
@@ -30787,19 +30791,27 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       />
                       <button
                         onClick={async () => {
+                          setClaudeTestStatus('testing');
                           try {
                             const resp = await fetch(`${API_BASE}/api/claude/messages`, {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json', 'x-api-key': aiIntegration.aiSettings.apiKeys?.claude || '' },
                               body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 10, messages: [{ role: 'user', content: 'Olá' }] })
                             });
-                            if (resp.ok) showToast('Chave Claude válida!', 'success');
-                            else showToast('Chave Claude inválida', 'error');
-                          } catch { showToast('Erro ao testar chave', 'error'); }
+                            setClaudeTestStatus(resp.ok ? 'ok' : 'error');
+                          } catch { setClaudeTestStatus('error'); }
+                          setTimeout(() => setClaudeTestStatus(null), 2000);
                         }}
-                        className="px-3 py-2 bg-purple-600 text-white rounded text-sm hover-purple-700"
+                        disabled={claudeTestStatus === 'testing'}
+                        className={`px-3 py-2 text-white rounded text-sm min-w-[60px] transition-colors ${
+                          claudeTestStatus === 'ok' ? 'bg-green-600' :
+                          claudeTestStatus === 'error' ? 'bg-red-600' :
+                          'bg-purple-600 hover:bg-purple-700'
+                        }`}
                       >
-                        Testar
+                        {claudeTestStatus === 'testing' ? '...' :
+                         claudeTestStatus === 'ok' ? '✓' :
+                         claudeTestStatus === 'error' ? '✗' : 'Testar'}
                       </button>
                     </div>
                   </div>
@@ -30819,6 +30831,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       />
                       <button
                         onClick={async () => {
+                          setGeminiTestStatus('testing');
                           try {
                             const resp = await fetch(`${API_BASE}/api/gemini/generate`, {
                               method: 'POST',
@@ -30829,13 +30842,20 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                                 request: { contents: [{ role: 'user', parts: [{ text: 'Olá' }] }], generationConfig: { maxOutputTokens: 100, thinking_config: { thinking_level: 'minimal' } } }
                               })
                             });
-                            if (resp.ok) showToast('Chave Gemini válida!', 'success');
-                            else showToast('Chave Gemini inválida', 'error');
-                          } catch { showToast('Erro ao testar chave', 'error'); }
+                            setGeminiTestStatus(resp.ok ? 'ok' : 'error');
+                          } catch { setGeminiTestStatus('error'); }
+                          setTimeout(() => setGeminiTestStatus(null), 2000);
                         }}
-                        className="px-3 py-2 bg-blue-600 text-white rounded text-sm hover-blue-700"
+                        disabled={geminiTestStatus === 'testing'}
+                        className={`px-3 py-2 text-white rounded text-sm min-w-[60px] transition-colors ${
+                          geminiTestStatus === 'ok' ? 'bg-green-600' :
+                          geminiTestStatus === 'error' ? 'bg-red-600' :
+                          'bg-blue-600 hover:bg-blue-700'
+                        }`}
                       >
-                        Testar
+                        {geminiTestStatus === 'testing' ? '...' :
+                         geminiTestStatus === 'ok' ? '✓' :
+                         geminiTestStatus === 'error' ? '✗' : 'Testar'}
                       </button>
                     </div>
                   </div>
