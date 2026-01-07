@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.74', feature: 'Config IA Local exportada no projeto + apiKeys excluída do export (segurança): 8 campos movidos de localStorage para aiSettings, migração automática, preserva apiKeys do usuário no import' },
   { version: '1.35.73', feature: 'Fix header opaco no ModelGeneratorModal: conteúdo não vaza por baixo ao fazer scroll (theme-bg-primary 100% + backdrop-blur)' },
   { version: '1.35.72', feature: 'ModelGeneratorModal segue padrão BaseModal: ESC handler com stopPropagation (fecha modal correto), scroll lock' },
   { version: '1.35.71', feature: 'Fix z-index ModelGeneratorModal (z-100 > CSS.modalOverlay z-90) - modal abre acima do ConfigModal' },
