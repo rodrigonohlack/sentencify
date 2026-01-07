@@ -2,6 +2,8 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.73', feature: 'Fix header opaco no ModelGeneratorModal: conteúdo não vaza por baixo ao fazer scroll (theme-bg-primary 100% + backdrop-blur)' },
+  { version: '1.35.72', feature: 'ModelGeneratorModal segue padrão BaseModal: ESC handler com stopPropagation (fecha modal correto), scroll lock' },
   { version: '1.35.71', feature: 'Fix z-index ModelGeneratorModal (z-100 > CSS.modalOverlay z-90) - modal abre acima do ConfigModal' },
   { version: '1.35.70', feature: '(tentativa anterior z-70 insuficiente)' },
   { version: '1.35.69', feature: 'Gerador Automático de Prompts: juiz cola exemplos → IA gera prompt profissional que reproduz seu estilo (meta-prompts.ts, ModelGeneratorModal.tsx)' },

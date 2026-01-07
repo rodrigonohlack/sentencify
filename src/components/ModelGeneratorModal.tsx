@@ -8,7 +8,7 @@
  * 4. Juiz revisa/edita antes de salvar
  * 5. Prompt salvo substitui o hardcoded nas gerações futuras
  *
- * @version 1.35.71
+ * @version 1.35.73
  */
 
 import React, { useState, useCallback } from 'react';
@@ -55,6 +55,40 @@ export const ModelGeneratorModal: React.FC<ModelGeneratorModalProps> = ({
   const [generating, setGenerating] = useState(false);
   const [step, setStep] = useState<Step>('input');
   const [error, setError] = useState('');
+
+  // --- Reset e Close (definido antes dos useEffects) ---
+  const resetAndClose = useCallback(() => {
+    setExamples(['']);
+    setGeneratedPrompt('');
+    setStep('input');
+    setError('');
+    onClose();
+  }, [onClose]);
+
+  // --- ESC handler (padrão BaseModal) ---
+  React.useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation(); // Impede que chegue ao modal de baixo
+        resetAndClose();
+      }
+    };
+    if (isOpen && targetField) {
+      window.addEventListener('keydown', handleEsc);
+    }
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, targetField, resetAndClose]);
+
+  // --- Bloquear scroll do body (padrão BaseModal) ---
+  React.useEffect(() => {
+    if (isOpen && targetField) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen, targetField]);
 
   // --- Handlers ---
   const handleAddExample = useCallback(() => {
@@ -105,15 +139,7 @@ export const ModelGeneratorModal: React.FC<ModelGeneratorModalProps> = ({
   const handleSave = useCallback(() => {
     onSave(generatedPrompt);
     resetAndClose();
-  }, [generatedPrompt, onSave]);
-
-  const resetAndClose = useCallback(() => {
-    setExamples(['']);
-    setGeneratedPrompt('');
-    setStep('input');
-    setError('');
-    onClose();
-  }, [onClose]);
+  }, [generatedPrompt, onSave, resetAndClose]);
 
   const handleBack = useCallback(() => {
     setStep('input');
@@ -138,7 +164,7 @@ export const ModelGeneratorModal: React.FC<ModelGeneratorModalProps> = ({
 
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between p-4
-                        theme-bg-primary/95 border-b theme-border">
+                        theme-bg-primary backdrop-blur-sm border-b theme-border">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-500/20 rounded-lg">
               <Wand2 className="w-5 h-5 text-purple-400" />

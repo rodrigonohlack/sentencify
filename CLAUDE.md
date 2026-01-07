@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.71 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.73 | **File**: `src/App.jsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -67,6 +67,8 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.73 | Fix header opaco no ModelGeneratorModal (conteúdo não vaza ao scroll) |
+| v1.35.72 | ModelGeneratorModal segue padrão BaseModal (ESC handler + scroll lock) |
 | v1.35.71 | Fix z-index ModelGeneratorModal (z-100 > CSS.modalOverlay z-90) |
 | v1.35.70 | (tentativa anterior z-70 insuficiente) |
 | v1.35.69 | Gerador Automático de Prompts: juiz cola exemplos → IA gera prompt profissional (meta-prompts.ts, ModelGeneratorModal.tsx) |
