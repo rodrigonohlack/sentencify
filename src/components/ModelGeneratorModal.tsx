@@ -15,6 +15,7 @@
 import React, { useState, useCallback } from 'react';
 import { Wand2, Plus, Trash2, Loader2, ArrowLeft, Save, X } from 'lucide-react';
 import { buildMetaPrompt, buildStyleMetaPrompt, FIELD_LABELS, type TargetField } from '../prompts/meta-prompts';
+import type { AIMessage, AICallOptions } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -27,7 +28,7 @@ interface ModelGeneratorModalProps {
   onClose: () => void;
   targetField: TargetField | null;
   onSave: (generatedPrompt: string) => void;
-  callAI: (messages: any[], options: any) => Promise<string>;
+  callAI: (messages: AIMessage[], options?: AICallOptions) => Promise<string>;
   hardcodedPrompt: string;
 }
 
@@ -358,7 +359,7 @@ async function generateModelFromExamples(
   examples: string[],
   targetField: TargetField,
   hardcodedPrompt: string,
-  callAI: (messages: any[], options: any) => Promise<string>
+  callAI: (messages: AIMessage[], options?: AICallOptions) => Promise<string>
 ): Promise<string> {
   // Escolhe meta-prompt apropriado:
   // - estiloRedacao: foco em TOM/VOCABULÁRIO/RITMO (buildStyleMetaPrompt)

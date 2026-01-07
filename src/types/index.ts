@@ -303,6 +303,65 @@ export interface DrivePermission {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// AI MESSAGE TYPES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Papel da mensagem na conversa com IA */
+export type AIMessageRole = 'user' | 'assistant' | 'system';
+
+/** Conteúdo de texto simples */
+export interface AITextContent {
+  type: 'text';
+  text: string;
+}
+
+/** Conteúdo de imagem (base64) */
+export interface AIImageContent {
+  type: 'image';
+  source: {
+    type: 'base64';
+    media_type: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
+    data: string;
+  };
+}
+
+/** Conteúdo de documento (PDF) */
+export interface AIDocumentContent {
+  type: 'document';
+  source: {
+    type: 'base64';
+    media_type: 'application/pdf';
+    data: string;
+  };
+}
+
+/** Tipos de conteúdo possíveis */
+export type AIMessageContent = string | AITextContent | AIImageContent | AIDocumentContent;
+
+/** Mensagem para a API de IA */
+export interface AIMessage {
+  role: AIMessageRole;
+  content: AIMessageContent | AIMessageContent[];
+}
+
+/** Opções para chamada de IA */
+export interface AICallOptions {
+  useInstructions?: boolean;
+  maxTokens?: number;
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+  cacheControl?: boolean;
+  signal?: AbortSignal;
+}
+
+/** Tipo para função callAI */
+export type CallAIFunction = (
+  messages: AIMessage[],
+  options?: AICallOptions
+) => Promise<string>;
+
+// ═══════════════════════════════════════════════════════════════════════════
 // UTILITY TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
