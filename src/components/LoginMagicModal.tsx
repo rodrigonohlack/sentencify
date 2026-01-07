@@ -4,16 +4,57 @@
  *
  * Modal glassmorphism para autenticação passwordless via email.
  * Permite solicitar magic link e verificar token da URL.
+ *
+ * @version 1.35.80 - Migrado para TypeScript
  */
 
 import React, { useState, useEffect } from 'react';
 import { Mail, Loader2, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 
-const LoginMagicModal = ({ isOpen, onClose, onRequestLink, onVerify, devLink }) => {
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState('idle'); // idle | sending | sent | verifying | error
-  const [error, setError] = useState('');
-  const [sentEmail, setSentEmail] = useState('');
+// ═══════════════════════════════════════════════════════════════════════════
+// TIPOS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Status do modal */
+type ModalStatus = 'idle' | 'sending' | 'sent' | 'verifying' | 'error';
+
+/** Resultado do request de magic link */
+export interface MagicLinkRequestResult {
+  success: boolean;
+  error?: string;
+  devLink?: string;
+}
+
+/** Resultado da verificação do token */
+export interface VerifyTokenResult {
+  success: boolean;
+  error?: string;
+}
+
+/** Props do LoginMagicModal */
+interface LoginMagicModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onRequestLink: (email: string) => Promise<MagicLinkRequestResult>;
+  onVerify: (token: string) => Promise<VerifyTokenResult>;
+  devLink?: string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPONENTE
+// ═══════════════════════════════════════════════════════════════════════════
+
+const LoginMagicModal: React.FC<LoginMagicModalProps> = ({
+  isOpen,
+  onClose,
+  onRequestLink,
+  onVerify,
+  devLink
+}) => {
+  const [email, setEmail] = useState<string>('');
+  const [status, setStatus] = useState<ModalStatus>('idle');
+  const [error, setError] = useState<string>('');
+  const [sentEmail, setSentEmail] = useState<string>('');
 
   // Reset ao abrir/fechar
   useEffect(() => {
@@ -49,7 +90,7 @@ const LoginMagicModal = ({ isOpen, onClose, onRequestLink, onVerify, devLink }) 
     }
   }, [isOpen, onVerify, onClose]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     console.log('[LoginModal] handleSubmit called, email:', email);
 
@@ -78,11 +119,12 @@ const LoginMagicModal = ({ isOpen, onClose, onRequestLink, onVerify, devLink }) 
     } catch (err) {
       console.error('[LoginModal] Exception:', err);
       setStatus('error');
-      setError('Erro inesperado: ' + err.message);
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError('Erro inesperado: ' + message);
     }
   };
 
-  const handleTryAgain = () => {
+  const handleTryAgain = (): void => {
     setStatus('idle');
     setError('');
     setEmail('');

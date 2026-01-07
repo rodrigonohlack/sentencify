@@ -4,22 +4,60 @@
  *
  * Interface protegida por senha para gerenciar lista de emails
  * autorizados a fazer login via Magic Link.
+ *
+ * @version 1.35.80 - Migrado para TypeScript
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Lock, Loader2, AlertCircle, Scale, Mail, Plus, Trash2, Users, Database, FileText, ArrowLeft, Check, X } from 'lucide-react';
+import { Lock, Loader2, AlertCircle, Mail, Plus, Trash2, Users, FileText, ArrowLeft, X } from 'lucide-react';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTES
+// ═══════════════════════════════════════════════════════════════════════════
 
 const API_BASE = typeof import.meta !== 'undefined' && !import.meta.env.PROD
   ? 'http://localhost:3001'
   : '';
 
-/**
- * Tela de Login Admin
- */
-const AdminLogin = ({ onLogin, error, loading }) => {
-  const [password, setPassword] = useState('');
+// ═══════════════════════════════════════════════════════════════════════════
+// TIPOS
+// ═══════════════════════════════════════════════════════════════════════════
 
-  const handleSubmit = (e) => {
+/** Email autorizado */
+interface AllowedEmail {
+  id: number;
+  email: string;
+  created_at: string;
+}
+
+/** Estatísticas do admin */
+interface AdminStats {
+  allowedEmails: number;
+  users: number;
+  models: number;
+}
+
+/** Props do AdminLogin */
+interface AdminLoginProps {
+  onLogin: (password: string) => void;
+  error: string;
+  loading: boolean;
+}
+
+/** Props do AdminDashboard */
+interface AdminDashboardProps {
+  password: string;
+  onLogout: () => void;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPONENTE: LOGIN ADMIN
+// ═══════════════════════════════════════════════════════════════════════════
+
+const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, error, loading }) => {
+  const [password, setPassword] = useState<string>('');
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     onLogin(password);
   };
@@ -84,24 +122,25 @@ const AdminLogin = ({ onLogin, error, loading }) => {
   );
 };
 
-/**
- * Dashboard Admin
- */
-const AdminDashboard = ({ password, onLogout }) => {
-  const [emails, setEmails] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [newEmail, setNewEmail] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [deleting, setDeleting] = useState(null);
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPONENTE: DASHBOARD ADMIN
+// ═══════════════════════════════════════════════════════════════════════════
 
-  const headers = {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ password, onLogout }) => {
+  const [emails, setEmails] = useState<AllowedEmail[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [newEmail, setNewEmail] = useState<string>('');
+  const [adding, setAdding] = useState<boolean>(false);
+  const [deleting, setDeleting] = useState<number | null>(null);
+
+  const headers: HeadersInit = {
     'Content-Type': 'application/json',
     'X-Admin-Password': password,
   };
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
@@ -115,13 +154,14 @@ const AdminDashboard = ({ password, onLogout }) => {
         throw new Error('Erro ao carregar dados');
       }
 
-      const emailsData = await emailsRes.json();
-      const statsData = await statsRes.json();
+      const emailsData = (await emailsRes.json()) as { emails: AllowedEmail[] };
+      const statsData = (await statsRes.json()) as AdminStats;
 
       setEmails(emailsData.emails || []);
       setStats(statsData);
     } catch (err) {
-      setError(err.message);
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -131,7 +171,7 @@ const AdminDashboard = ({ password, onLogout }) => {
     loadData();
   }, [loadData]);
 
-  const handleAddEmail = async (e) => {
+  const handleAddEmail = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!newEmail.trim()) return;
 
@@ -145,23 +185,26 @@ const AdminDashboard = ({ password, onLogout }) => {
         body: JSON.stringify({ email: newEmail.trim() }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as { email?: AllowedEmail; error?: string };
 
       if (!res.ok) {
         throw new Error(data.error || 'Erro ao adicionar email');
       }
 
-      setEmails(prev => [data.email, ...prev]);
-      setNewEmail('');
-      setStats(prev => prev ? { ...prev, allowedEmails: prev.allowedEmails + 1 } : prev);
+      if (data.email) {
+        setEmails(prev => [data.email!, ...prev]);
+        setNewEmail('');
+        setStats(prev => prev ? { ...prev, allowedEmails: prev.allowedEmails + 1 } : prev);
+      }
     } catch (err) {
-      setError(err.message);
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(message);
     } finally {
       setAdding(false);
     }
   };
 
-  const handleDeleteEmail = async (id) => {
+  const handleDeleteEmail = async (id: number): Promise<void> => {
     try {
       setDeleting(id);
       setError(null);
@@ -172,14 +215,15 @@ const AdminDashboard = ({ password, onLogout }) => {
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as { error?: string };
         throw new Error(data.error || 'Erro ao remover email');
       }
 
       setEmails(prev => prev.filter(e => e.id !== id));
       setStats(prev => prev ? { ...prev, allowedEmails: prev.allowedEmails - 1 } : prev);
     } catch (err) {
-      setError(err.message);
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(message);
     } finally {
       setDeleting(null);
     }
@@ -355,16 +399,17 @@ const AdminDashboard = ({ password, onLogout }) => {
   );
 };
 
-/**
- * Componente Principal Admin
- */
-const AdminPanel = () => {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPONENTE PRINCIPAL
+// ═══════════════════════════════════════════════════════════════════════════
 
-  const handleLogin = async (pwd) => {
+const AdminPanel: React.FC = () => {
+  const [authenticated, setAuthenticated] = useState<boolean>(false);
+  const [password, setPassword] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+
+  const handleLogin = async (pwd: string): Promise<void> => {
     setLoading(true);
     setError('');
 
@@ -382,14 +427,14 @@ const AdminPanel = () => {
       } else {
         setError('Senha incorreta');
       }
-    } catch (err) {
+    } catch {
       setError('Erro de conexão');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = (): void => {
     setAuthenticated(false);
     setPassword('');
   };

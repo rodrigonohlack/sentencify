@@ -1,6 +1,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // 📝 BARREL EXPORT: PROMPTS DE IA
 // v1.35.76: Adiciona exports modulares (CORE, STYLE, SAFETY) para estilo substitutivo
+//
+// @version 1.35.80 - Migrado para TypeScript
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 export {
@@ -8,5 +10,5 @@ export {
   AI_INSTRUCTIONS_CORE,
   AI_INSTRUCTIONS_STYLE,
   AI_INSTRUCTIONS_SAFETY
-} from './system.js';
-export { AI_PROMPTS } from './ai-prompts.js';
+} from './system';
+export { AI_PROMPTS } from './ai-prompts';

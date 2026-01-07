@@ -1,9 +1,66 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // 📝 PROMPTS E TEMPLATES PARA GERAÇÃO DE CONTEÚDO JURÍDICO
 // Extraído de App.jsx v1.35.26
+//
+// @version 1.35.80 - Migrado para TypeScript
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
-export const AI_PROMPTS = {
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// TIPOS
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+/** Tópico processado para dispositivo */
+interface TopicoDispositivo {
+  titulo: string;
+  categoria: string;
+  resultado: string;
+  relatorio: string;
+  decisao: string;
+}
+
+/** Tópico sem decisão */
+interface TopicoSemDecisao {
+  titulo: string;
+  categoria: string;
+  relatorio: string;
+}
+
+/** Interface para AI_PROMPTS */
+interface AIPromptsType {
+  roles: {
+    analiseDoc: string;
+    classificacao: string;
+    relevancia: string;
+    redacao: string;
+    modelo: string;
+  };
+  output: {
+    jsonOnly: string;
+    singleWord: string;
+    singleLine: string;
+    noMarkdown: string;
+  };
+  formatacaoHTML: (exemplo: string) => string;
+  formatacaoParagrafos: (exemplo: string) => string;
+  estiloRedacao: string;
+  numeracaoReclamadas: string;
+  numeracaoReclamadasInicial: string;
+  preservarAnonimizacao: string;
+  proibicaoMetaComentarios: string;
+  regraFundamentalDispositivo: string;
+  instrucoesDispositivoPadrao: string;
+  instrucoesRelatorioPadrao: string;
+  mapeamentoPlaceholders: string;
+  buildPartesDoProcesso: (primeiroParagrafo: string | null | undefined) => string;
+  buildTopicosSection: (topicosComDecisao: TopicoDispositivo[], topicosSemDecisao: TopicoSemDecisao[]) => string;
+  revisaoSentenca: (incluiDocumentos: boolean) => string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// CONSTANTES
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+export const AI_PROMPTS: AIPromptsType = {
   // System Prompts Centralizados (v1.18.0)
   roles: {
     analiseDoc: 'Você é um assistente especializado em análise de documentos jurídicos trabalhistas.',
@@ -20,7 +77,7 @@ export const AI_PROMPTS = {
     noMarkdown: '❌ NÃO use Markdown. Use apenas HTML ou texto puro.'
   },
   // Bloco 1: Formatação HTML (9 linhas) - Aparece em 5 funções
-  formatacaoHTML: (exemplo) => `⚠️ FORMATAÇÃO HTML (CRÍTICO):
+  formatacaoHTML: (exemplo: string): string => `⚠️ FORMATAÇÃO HTML (CRÍTICO):
 - **NÃO USE MARKDOWN** (❌ **texto**, ❌ *texto*, ❌ ##título)
 - **USE HTML** para formatação:
   - Negrito: <strong>texto</strong> ou <b>texto</b>
@@ -31,7 +88,7 @@ export const AI_PROMPTS = {
 - Exemplo ERRADO: "${exemplo.replace(/<\/?[^>]+(>|$)/g, '').replace(/([A-ZÀÁÂÃÄÉÊËÍÏÓÔÕÖÚÜÇ]+)/g, '**$1**')}"`,
 
   // Bloco 2: Formatação de Parágrafos (5 linhas) - Aparece em 8+ funções
-  formatacaoParagrafos: (exemplo) => `⚠️ IMPORTANTE - FORMATAÇÃO DE PARÁGRAFOS:
+  formatacaoParagrafos: (exemplo: string): string => `⚠️ IMPORTANTE - FORMATAÇÃO DE PARÁGRAFOS:
 - Cada parágrafo deve estar em tags <p>: <p>conteúdo do parágrafo</p>
 - NÃO use quebras de linha texto (\\n\\n), use tags HTML
 - Exemplo correto: "${exemplo}"
@@ -559,7 +616,7 @@ Exemplo de substituição:
 - E: [RECLAMADA] = Empresa XYZ Ltda`,
 
   // Função: Constrói seção PARTES DO PROCESSO (reutilizada em generateDispositivo e regenerateDispositivoWithInstruction)
-  buildPartesDoProcesso: function(primeiroParagrafo) {
+  buildPartesDoProcesso: function(primeiroParagrafo: string | null | undefined): string {
     return primeiroParagrafo ? `
 ═══════════════════════════════════════════════════════════════
 📋 PARTES DO PROCESSO (extraído do RELATÓRIO):
@@ -576,7 +633,7 @@ ${this.mapeamentoPlaceholders}
   },
 
   // Função: Constrói seção TÓPICOS (reutilizada em generateDispositivo e regenerateDispositivoWithInstruction)
-  buildTopicosSection: (topicosComDecisao, topicosSemDecisao) => `
+  buildTopicosSection: (topicosComDecisao: TopicoDispositivo[], topicosSemDecisao: TopicoSemDecisao[]): string => `
 TÓPICOS COM DECISÃO PREENCHIDA:
 ${topicosComDecisao.map((t, i) => `
 ${i + 1}. ${t.titulo.toUpperCase()} (${t.categoria})
@@ -600,7 +657,7 @@ ${t.relatorio}
 ` : ''}`,
 
   // v1.21.24: Prompt revisão crítica completo - versão Opus 4.5 expandida
-  revisaoSentenca: function(incluiDocumentos) {
+  revisaoSentenca: function(incluiDocumentos: boolean): string {
     return `Você é um REVISOR CRÍTICO ESPECIALIZADO em análise de decisões judiciais trabalhistas, atuando como "advogado do diabo" com a missão específica de identificar vulnerabilidades processuais que possam ensejar embargos de declaração nos termos do art. 897-A da CLT e art. 1.022 do CPC.
 
 Sua função NÃO é concordar com a decisão, mas ATACÁ-LA metodicamente em busca de falhas técnicas. Você deve pensar como o advogado da parte sucumbente que busca brechas para embargar.

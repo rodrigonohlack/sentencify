@@ -2,15 +2,38 @@
  * Utilitário para ordenação de tópicos via IA
  * Extração da lógica de reorderTopicsViaLLM para permitir testes unitários
  * v1.33.38
+ *
+ * @version 1.35.80 - Migrado para TypeScript
  */
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TIPOS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Tópico com título e categoria */
+export interface TopicForOrdering {
+  title: string;
+  category: string;
+  [key: string]: unknown;
+}
+
+/** Resultado de ordenação por índices */
+export interface OrderByIndicesResult {
+  order?: number[];
+  orderedTitles?: string[];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FUNÇÕES
+// ═══════════════════════════════════════════════════════════════════════════
 
 /**
  * Extrai JSON de ordem da resposta da IA
  * Suporta: JSON puro, markdown ```json```, formatos variados
- * @param {string} result - Resposta da IA (pode conter thinking tokens, markdown, etc.)
- * @returns {object|null} - Objeto com { order: [...] } ou null se não encontrado
+ * @param result - Resposta da IA (pode conter thinking tokens, markdown, etc.)
+ * @returns Objeto com { order: [...] } ou null se não encontrado
  */
-export const extractOrderFromResponse = (result) => {
+export const extractOrderFromResponse = (result: string | null | undefined): OrderByIndicesResult | null => {
   if (!result) return null;
 
   // v1.32.34: Regex mais robusto para extrair JSON (suporta newlines, markdown, etc.)
@@ -33,7 +56,7 @@ export const extractOrderFromResponse = (result) => {
   if (!jsonMatch) return null;
 
   try {
-    return JSON.parse(jsonMatch[0]);
+    return JSON.parse(jsonMatch[0]) as OrderByIndicesResult;
   } catch {
     return null;
   }
@@ -41,16 +64,19 @@ export const extractOrderFromResponse = (result) => {
 
 /**
  * Reordena tópicos baseado nos índices retornados pela IA
- * @param {Array} topics - Array de tópicos com {title, category, ...}
- * @param {object} parsed - Objeto com { order: [1, 3, 2, ...] }
- * @returns {Array} - Tópicos reordenados
+ * @param topics - Array de tópicos com {title, category, ...}
+ * @param parsed - Objeto com { order: [1, 3, 2, ...] }
+ * @returns Tópicos reordenados
  */
-export const reorderByIndices = (topics, parsed) => {
+export const reorderByIndices = <T extends TopicForOrdering>(
+  topics: T[] | null | undefined,
+  parsed: OrderByIndicesResult | null | undefined
+): T[] => {
   if (!parsed || !topics || !Array.isArray(topics)) return topics || [];
 
   // Formato com índices
   if (parsed.order && Array.isArray(parsed.order)) {
-    const orderedTopics = [];
+    const orderedTopics: T[] = [];
     for (const idx of parsed.order) {
       const topic = topics[idx - 1]; // índices são 1-based
       if (topic) orderedTopics.push(topic);
@@ -66,7 +92,7 @@ export const reorderByIndices = (topics, parsed) => {
 
   // Fallback: formato antigo com títulos (retrocompatibilidade)
   if (parsed.orderedTitles && Array.isArray(parsed.orderedTitles)) {
-    const orderedTopics = [];
+    const orderedTopics: T[] = [];
     for (const title of parsed.orderedTitles) {
       const topic = topics.find(t => t.title.toUpperCase() === title.toUpperCase());
       if (topic) orderedTopics.push(topic);
@@ -84,10 +110,10 @@ export const reorderByIndices = (topics, parsed) => {
 
 /**
  * Gera o prompt de ordenação para a IA
- * @param {Array} topics - Array de tópicos com {title, category}
- * @returns {string} - Prompt formatado
+ * @param topics - Array de tópicos com {title, category}
+ * @returns Prompt formatado
  */
-export const buildReorderPrompt = (topics) => {
+export const buildReorderPrompt = (topics: TopicForOrdering[]): string => {
   const topicsList = topics.map((t, i) => `${i + 1}. "${t.title}" (${t.category})`).join('\n');
 
   return `Reordene os seguintes tópicos de uma ação trabalhista na ordem processual correta:

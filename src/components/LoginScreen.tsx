@@ -4,15 +4,21 @@
  *
  * Exibe tela de login quando ACCESS_PASSWORD_HASH está configurado no servidor.
  * Valida senha via POST /api/auth e armazena sessão em localStorage.
+ *
+ * @version 1.35.80 - Migrado para TypeScript
  */
 
 import React, { useState, useEffect } from 'react';
 import { Lock, Loader2, AlertCircle, Scale } from 'lucide-react';
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTES
+// ═══════════════════════════════════════════════════════════════════════════
+
 const AUTH_STORAGE_KEY = 'sentencify-auth';
 
-// API base (mesmo padrão do App.jsx)
-const getApiBase = () => {
+// API base (mesmo padrão do App.tsx)
+const getApiBase = (): string => {
   if (typeof import.meta !== 'undefined' && !import.meta.env.PROD) {
     return 'http://localhost:3001';
   }
@@ -20,18 +26,57 @@ const getApiBase = () => {
 };
 const API_BASE = getApiBase();
 
+// ═══════════════════════════════════════════════════════════════════════════
+// TIPOS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Resultado do login */
+export interface LoginResult {
+  success: boolean;
+  error?: string;
+}
+
+/** Resposta da API de auth */
+interface AuthCheckResponse {
+  authEnabled: boolean;
+}
+
+/** Resposta da API de login */
+interface AuthLoginResponse {
+  success: boolean;
+  error?: string;
+}
+
+/** Retorno do hook useAuth */
+export interface UseAuthReturn {
+  isAuthenticated: boolean;
+  authEnabled: boolean | null;
+  isLoading: boolean;
+  login: (password: string) => Promise<LoginResult>;
+  logout: () => void;
+}
+
+/** Props do LoginScreen */
+interface LoginScreenProps {
+  onLogin: (password: string) => Promise<LoginResult>;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HOOK
+// ═══════════════════════════════════════════════════════════════════════════
+
 /**
  * Hook para gerenciar autenticação
  */
-export const useAuth = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authEnabled, setAuthEnabled] = useState(null); // null = carregando
-  const [isLoading, setIsLoading] = useState(true);
+export const useAuth = (): UseAuthReturn => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [authEnabled, setAuthEnabled] = useState<boolean | null>(null); // null = carregando
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Verificar se auth está habilitada e se já está logado
   // v1.35.28: Retorna early se localStorage já tem sessão (evita timeout no CI sem backend)
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = async (): Promise<void> => {
       try {
         // Verificar se já tem sessão salva - retornar IMEDIATAMENTE se sim
         const savedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
@@ -44,7 +89,7 @@ export const useAuth = () => {
 
         // Verificar se auth está habilitada no servidor
         const response = await fetch(`${API_BASE}/api/auth`);
-        const data = await response.json();
+        const data = (await response.json()) as AuthCheckResponse;
         setAuthEnabled(data.authEnabled);
 
         // Se auth não está habilitada, liberar acesso
@@ -64,7 +109,7 @@ export const useAuth = () => {
     checkAuth();
   }, []);
 
-  const login = async (password) => {
+  const login = async (password: string): Promise<LoginResult> => {
     try {
       const response = await fetch(`${API_BASE}/api/auth`, {
         method: 'POST',
@@ -72,7 +117,7 @@ export const useAuth = () => {
         body: JSON.stringify({ password })
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as AuthLoginResponse;
 
       if (data.success) {
         localStorage.setItem(AUTH_STORAGE_KEY, 'true');
@@ -87,7 +132,7 @@ export const useAuth = () => {
     }
   };
 
-  const logout = () => {
+  const logout = (): void => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
     setIsAuthenticated(false);
   };
@@ -101,15 +146,19 @@ export const useAuth = () => {
   };
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPONENTE
+// ═══════════════════════════════════════════════════════════════════════════
+
 /**
  * Componente de tela de login
  */
-const LoginScreen = ({ onLogin }) => {
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -117,7 +166,7 @@ const LoginScreen = ({ onLogin }) => {
     const result = await onLogin(password);
 
     if (!result.success) {
-      setError(result.error);
+      setError(result.error || 'Erro desconhecido');
       setPassword('');
     }
 
