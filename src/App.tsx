@@ -168,7 +168,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.88'; // v1.35.88: TypeScript FASE 8.7 - Tipar funções API (callAI/callLLM/callGemini) e callbacks
+const APP_VERSION = '1.35.89'; // v1.35.89: TypeScript FASE 8.7 - Tipar event handlers (KeyboardEvent, StorageEvent, CustomEvent)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -2589,7 +2589,7 @@ const useFullscreen = () => {
 
   // Atalhos de teclado: Ctrl+F para ativar, ESC para sair, Ctrl+M para split
   React.useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl+F: ativa fullscreen quando foco está no container do editor
       if (e.ctrlKey && e.key === 'f') {
         const container = containerRef.current;
@@ -2653,7 +2653,7 @@ const useSpacingControl = () => {
   }, [spacing]);
 
   React.useEffect(() => {
-    const handleSpacingChange = (e) => {
+    const handleSpacingChange = (e: CustomEvent<{ spacing: string }>) => {
       // Evitar loop infinito: só atualizar se for diferente
       if (e.detail.spacing !== spacing) {
         setSpacingState(e.detail.spacing);
@@ -2712,7 +2712,7 @@ const useFontSizeControl = () => {
   }, [fontSize]);
 
   React.useEffect(() => {
-    const handleFontSizeChange = (e) => {
+    const handleFontSizeChange = (e: CustomEvent<{ fontSize: string }>) => {
       if (e.detail.fontSize !== fontSize) {
         setFontSizeState(e.detail.fontSize);
       }
@@ -3446,7 +3446,7 @@ const usePrimaryTabLock = () => {
 
   // Detect Lock Changes from Other Tabs
   React.useEffect(() => {
-    const handleStorageChange = (e) => {
+    const handleStorageChange = (e: StorageEvent) => {
       // Only respond to changes in our lock key
       if (e.key !== LOCK_KEY) return;
 
@@ -5608,7 +5608,7 @@ const useModelPreview = () => {
 
   // Atalho Esc para fechar/cancelar edição
   React.useEffect(() => {
-    const handleEscape = (e) => {
+    const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isPreviewOpen) {
         if (isEditing) {
           // Em modo edição: cancelar edição (volta para visualização)
@@ -10030,7 +10030,7 @@ const BaseModal = React.memo(({
   // ESC handler - deve vir antes do early return para cleanup funcionar
   React.useEffect(() => {
     if (preventClose) return; // v1.33.62: Não registrar ESC se preventClose
-    const handleEsc = (e) => {
+    const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     if (isOpen) {
@@ -10382,7 +10382,7 @@ const ExtractModelConfirmModal = React.memo(({
 }) => {
   // ESC handler
   React.useEffect(() => {
-    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     if (isOpen) window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
@@ -10484,7 +10484,7 @@ const ExtractedModelPreviewModal = React.memo(({
 }) => {
   // ESC handler
   React.useEffect(() => {
-    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     if (isOpen) window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
@@ -11130,7 +11130,7 @@ const AIAssistantBaseLegacy = React.memo(({
 
   // v1.35.64: ESC handler
   React.useEffect(() => {
-    const handleEsc = (e) => {
+    const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     if (isOpen) {
@@ -11347,7 +11347,7 @@ const AIAssistantBase = React.memo(({
 
   // ESC handler
   React.useEffect(() => {
-    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     if (isOpen) window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
@@ -12479,7 +12479,7 @@ const TextPreviewModal = React.memo(({ isOpen, onClose, title, text }) => {
   // v1.35.67: ESC handler
   React.useEffect(() => {
     if (!isOpen) return;
-    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
@@ -12545,7 +12545,7 @@ const DispositivoModal = React.memo(({
 
   // ESC handler
   React.useEffect(() => {
-    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     if (isOpen) window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
@@ -13096,7 +13096,7 @@ LockedTabOverlay.displayName = 'LockedTabOverlay';
 const SimilarityWarningModal = React.memo(({ warning, saving, onCancel, onSaveNew, onReplace, sanitizeHTML = (html) => html || '' }) => {
   // ESC handler
   React.useEffect(() => {
-    const handleEsc = (e) => { if (e.key === 'Escape' && !saving) onCancel(); };
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape' && !saving) onCancel(); };
     if (warning) window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [warning, saving, onCancel]);
@@ -13926,7 +13926,7 @@ const ModelPreviewModal = React.memo(({
   // v1.35.67: ESC handler
   React.useEffect(() => {
     if (!isOpen) return;
-    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
@@ -14820,7 +14820,7 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
 
   // v1.35.64: ESC handler
   React.useEffect(() => {
-    const handleEsc = (e) => {
+    const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     if (isOpen) {
