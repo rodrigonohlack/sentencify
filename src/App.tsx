@@ -161,7 +161,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.85'; // v1.35.85: TypeScript - Fix erros FASE 8.1-8.4 (lastSyncTime, sessionLastSaved, ProofText, PastedText, ModalState)
+const APP_VERSION = '1.35.86'; // v1.35.86: TypeScript FASE 8.6 - Tipar useRef (84 instâncias: DOM, Timer, Callback, Data)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -2510,7 +2510,7 @@ const useFullscreen = () => {
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const [isSplitMode, setIsSplitMode] = React.useState(false);
   const [splitPosition, setSplitPosition] = React.useState(70); // percentual do editor (70/30)
-  const containerRef = React.useRef(null);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
 
   const toggleFullscreen = React.useCallback(() => {
     setIsFullscreen(prev => {
@@ -2751,10 +2751,10 @@ const setFlag = React.useCallback((flagName, value) => {
 // 🎣 CUSTOM HOOK: useIndexedDB (v1.7)
 // 🚀 v1.8.1: Hook useThrottledBroadcast
 
-const useThrottledBroadcast = (channelRef, throttleMs = 1000) => {
-  const lastBroadcastRef = React.useRef(0);
-  const pendingMessageRef = React.useRef(null);
-  const trailingTimerRef = React.useRef(null);
+const useThrottledBroadcast = (channelRef: React.RefObject<BroadcastChannel | null>, throttleMs = 1000) => {
+  const lastBroadcastRef = React.useRef<number>(0);
+  const pendingMessageRef = React.useRef<unknown>(null);
+  const trailingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const broadcast = React.useCallback((message) => {
     const channel = channelRef?.current;
@@ -2803,8 +2803,8 @@ const useThrottledBroadcast = (channelRef, throttleMs = 1000) => {
 
 // 🚀 v1.8.2: Hook useAPICache - Cache LRU com TTL para API Claude
 const useAPICache = (maxSize = 50, ttlMs = 5 * 60 * 1000) => {
-  const cacheRef = React.useRef(new Map());
-  const statsRef = React.useRef({ hits: 0, misses: 0, evictions: 0 });
+  const cacheRef = React.useRef<Map<string, CacheEntry>>(new Map());
+  const statsRef = React.useRef<CacheStats>({ hits: 0, misses: 0, evictions: 0 });
 
   const hashKey = React.useCallback((input) => {
     let hash = 0;
@@ -2889,13 +2889,13 @@ const useIndexedDB = () => {
   const [lastSyncTime, setLastSyncTime] = React.useState<string | null>(null);
 
   // Ref para cache de modelos
-  const modelsCacheRef = React.useRef(null);
+  const modelsCacheRef = React.useRef<Model[] | null>(null);
 
   // Multi-tab Sync (v1.7 FASE 1.4)
-  const broadcastChannelRef = React.useRef(null);
-  const tabIdRef = React.useRef(`tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  const lastBroadcastTimestampRef = React.useRef(null);
-  const syncCallbackRef = React.useRef(null); // Callback para notificar componente pai
+  const broadcastChannelRef = React.useRef<BroadcastChannel | null>(null);
+  const tabIdRef = React.useRef<string>(`tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  const lastBroadcastTimestampRef = React.useRef<number | null>(null);
+  const syncCallbackRef = React.useRef<((models: Model[]) => void) | null>(null); // Callback para notificar componente pai
 
   // 🚀 v1.8.1: Throttled broadcast via hook
   const notifyOtherTabs = useThrottledBroadcast(broadcastChannelRef, 1000);
@@ -3837,8 +3837,8 @@ const useLocalStorage = () => {
   // Evita re-converter mesmos PDFs (key: fileName-size-lastModified)
   // v1.20.2: Adicionado limite LRU para evitar memory leak
   const PDF_CACHE_MAX_SIZE = 5; // Máximo 5 PDFs em cache (~50MB worst case)
-  const pdfCacheRef = React.useRef(new Map());
-  const pdfCacheOrderRef = React.useRef([]); // Track insertion order para LRU
+  const pdfCacheRef = React.useRef<Map<string, string>>(new Map());
+  const pdfCacheOrderRef = React.useRef<string[]>([]); // Track insertion order para LRU
 
   // Adiciona ao cache com eviction LRU
   const addToPdfCache = (key, value) => {
@@ -4824,7 +4824,7 @@ const useModelLibrary = () => {
   }, [models]);
 
   // --- Busca com debounce 300ms ---
-  const debouncedSearchTimeoutRef = React.useRef(null);
+  const debouncedSearchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const debouncedManualSearch = React.useCallback((term) => {
     clearTimeout(debouncedSearchTimeoutRef.current);
     debouncedSearchTimeoutRef.current = setTimeout(() => performManualSearch(term), 300);
@@ -5508,14 +5508,14 @@ const useModelPreview = () => {
   const [editedContent, setEditedContent] = React.useState('');
   // v1.15.2: Função de inserção contextual (para GlobalEditorModal)
   // v1.33.25: Usar ref em vez de state para não causar recriação do objeto modelPreview
-  const contextualInsertFnRef = React.useRef(null);
-  const setContextualInsertFn = React.useCallback((fn) => {
+  const contextualInsertFnRef = React.useRef<((content: string) => void) | null>(null);
+  const setContextualInsertFn = React.useCallback((fn: ((content: string) => void) | null) => {
     contextualInsertFnRef.current = fn;
   }, []);
   // v1.15.3: Estado para "Salvar como Novo Modelo"
   const [saveAsNewData, setSaveAsNewData] = React.useState<{ title: string; content: string; keywords?: string; category?: string } | null>(null);
   // v1.19.2: Callback para notificar quando modelo é atualizado (sincroniza sugestões do GlobalEditor)
-  const onModelUpdatedRef = React.useRef(null);
+  const onModelUpdatedRef = React.useRef<(() => void) | null>(null);
 
   const openPreview = React.useCallback((model) => {
     if (!model || !model.content) {
@@ -6824,7 +6824,7 @@ const useJurisprudencia = () => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [deleteAllConfirmText, setDeleteAllConfirmText] = React.useState('');
   const itemsPerPage = 10;
-  const searchTimeoutRef = React.useRef(null);
+  const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const removeAccents = React.useCallback((str) =>
     str.normalize('NFD').replace(/[\u0300-\u036f]/g, ''), []);
@@ -7287,7 +7287,7 @@ const VersionSelect = React.memo(({ topicTitle, versioning, currentContent, onRe
   const [isOpen, setIsOpen] = React.useState(false);
   const [versions, setVersions] = React.useState<FieldVersion[]>([]);
   const [compareVersion, setCompareVersion] = React.useState<FieldVersion | null>(null);
-  const dropdownRef = React.useRef(null);
+  const dropdownRef = React.useRef<HTMLDivElement | null>(null);
 
   const loadVersions = React.useCallback(async () => {
     if (!versioning || !topicTitle) return;
@@ -7641,7 +7641,7 @@ const FullscreenModelPanel = React.memo(({
   }, [models, topicTitle, topicCategory, topicRelatorio, onFindSuggestions, scoreModelLocal]);
 
   // Busca manual com debounce
-  const searchTimeoutRef = React.useRef(null);
+  const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleSearchChange = React.useCallback((e) => {
     const term = e.target.value;
@@ -8313,7 +8313,7 @@ SortableTopicCard.displayName = 'SortableTopicCard';
 // v1.19.2: Adicionado suporte a expandedIds para items com altura dinâmica
 const VirtualList = React.memo(({ items, itemHeight, renderItem, className = '', overscan = 5, expandedIds = new Set() }) => {
   const [scrollTop, setScrollTop] = React.useState(0);
-  const containerRef = React.useRef(null);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
 
   // Calcular viewport height dinamicamente
   const viewportHeight = React.useMemo(() => {
@@ -9243,7 +9243,7 @@ const JurisprudenciaTab = React.memo(({
   const jurisprudencia = useJurisprudencia();
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
   const [importStatus, setImportStatus] = React.useState<string | null>(null);
-  const fileInputRef = React.useRef(null);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   // v1.27.00: Estados para busca semântica (usa scroll, não paginação)
   // v1.28.01: Usa toggle global como padrão se não houver valor no localStorage
@@ -9285,10 +9285,10 @@ const JurisprudenciaTab = React.memo(({
   }, [semanticAvailable, jurisSemanticThreshold, jurisprudencia.filtros]);
 
   // v1.27.00: Debounce para busca semântica
-  const semanticSearchTimeoutRef = React.useRef(null);
+  const semanticSearchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   React.useEffect(() => {
     if (useSemanticSearch && semanticAvailable && jurisprudencia.searchTerm) {
-      clearTimeout(semanticSearchTimeoutRef.current);
+      if (semanticSearchTimeoutRef.current) clearTimeout(semanticSearchTimeoutRef.current);
       semanticSearchTimeoutRef.current = setTimeout(() => {
         performSemanticSearch(jurisprudencia.searchTerm);
       }, 500);
@@ -9587,7 +9587,7 @@ const LegislacaoTab = React.memo(({
   const legislacao = useLegislacao();
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
   const [importStatus, setImportStatus] = React.useState<string | null>(null);
-  const fileInputRef = React.useRef(null);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   // v1.26.00: Toggle local de busca semântica (modo de busca)
   // v1.28.01: Usa toggle global como padrão se não houver valor no localStorage
   const [useSemanticSearch, setUseSemanticSearch] = React.useState(() => {
@@ -9626,10 +9626,10 @@ const LegislacaoTab = React.memo(({
   }, [semanticAvailable, semanticThreshold]);
 
   // v1.26.00: Debounce para busca semântica
-  const semanticSearchTimeoutRef = React.useRef(null);
+  const semanticSearchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   React.useEffect(() => {
     if (useSemanticSearch && semanticAvailable && legislacao.searchTerm) {
-      clearTimeout(semanticSearchTimeoutRef.current);
+      if (semanticSearchTimeoutRef.current) clearTimeout(semanticSearchTimeoutRef.current);
       semanticSearchTimeoutRef.current = setTimeout(() => {
         performSemanticSearch(legislacao.searchTerm);
       }, 500);
@@ -10885,7 +10885,7 @@ ChatBubble.displayName = 'ChatBubble';
 
 // 💬 v1.19.0: ChatHistoryArea - Área de histórico do chat
 const ChatHistoryArea = React.memo(({ history, generating, onUseMessage, showUseButtons, sanitizeHTML }) => {
-  const ref = React.useRef(null);
+  const ref = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
     if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
@@ -11794,7 +11794,7 @@ AnalysisModal.displayName = 'AnalysisModal';
 
 // Modal: Exportar Minuta (migrado para BaseModal v1.18.3)
 const ExportModal = React.memo(({ isOpen, onClose, exportedText, exportedHtml, copySuccess, setCopySuccess, setError }) => {
-  const timeoutRef = React.useRef(null);
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   React.useEffect(() => () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }, []);
   const handleCopy = async () => {
     try {
@@ -12494,7 +12494,7 @@ const DispositivoModal = React.memo(({
   setSelectedTopics,
   sanitizeHTML = (html) => html || ''
 }) => {
-  const timeoutRef = React.useRef(null);
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   React.useEffect(() => () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }, []);
 
   // ESC handler
@@ -13834,7 +13834,7 @@ const ModelPreviewModal = React.memo(({
 }) => {
   // Hooks DEVEM vir antes de qualquer early return
   // Ref para o editor Quill em modo edição
-  const quickEditRef = React.useRef(null);
+  const quickEditRef = React.useRef<HTMLDivElement | null>(null);
 
   // Conteúdo Sanitizado (Memoizado para Performance)
   const sanitizedContent = React.useMemo(
@@ -14146,9 +14146,9 @@ const SlashCommandMenu = React.memo(({
   semanticAvailable,      // v1.33.8: indica se busca semântica está disponível
   searchModelsBySimilarity // v1.33.8: função para busca semântica
 }) => {
-  const inputRef = React.useRef(null);
-  const listRef = React.useRef(null);
-  const menuRef = React.useRef(null);
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const listRef = React.useRef<HTMLUListElement | null>(null);
+  const menuRef = React.useRef<HTMLDivElement | null>(null);
 
   // v1.33.8: Estado para toggle busca semântica
   const [useSemanticSearch, setUseSemanticSearch] = React.useState(false);
@@ -14384,22 +14384,22 @@ const FieldEditor = React.memo(React.forwardRef(({
   editorTheme = 'dark',
   hideVoiceButton = false // v1.35.65: Esconder VoiceButton quando gerenciado externamente
 }, ref) => {
-  const editorRef = React.useRef(null);
-  const quillInstanceRef = React.useRef(null);
+  const editorRef = React.useRef<HTMLDivElement | null>(null);
+  const quillInstanceRef = React.useRef<QuillInstance | null>(null);
 
   // v1.20.4: Expor métodos de formatação para componente pai (toolbar inline)
   React.useImperativeHandle(ref, () => ({
-    format: (name, value) => quillInstanceRef.current?.format(name, value),
+    format: (name: string, value: unknown) => quillInstanceRef.current?.format(name, value),
     getFormat: () => quillInstanceRef.current?.getFormat() || {},
     focus: () => quillInstanceRef.current?.focus()
   }), []);
-  const isInitializedRef = React.useRef(false);
-  const lastContentRef = React.useRef('');
+  const isInitializedRef = React.useRef<boolean>(false);
+  const lastContentRef = React.useRef<string>('');
   const onSlashCommandRef = React.useRef(onSlashCommand);
-  const onChangeDebounceRef = React.useRef(null); // v1.35.3: Debounce para onChange
+  const onChangeDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null); // v1.35.3: Debounce para onChange
   // v1.25.18: Refs para cleanup de blur listener (memory leak fix)
-  const blurHandlerRef = React.useRef(null);
-  const blurTimeoutRef = React.useRef(null);
+  const blurHandlerRef = React.useRef<(() => void) | null>(null);
+  const blurTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Manter ref atualizada
   React.useEffect(() => {
@@ -15063,7 +15063,7 @@ const GlobalEditorSection = React.memo(({
   const isDispositivo = titleUpper === 'DISPOSITIVO';
 
   // v1.20.4: Ref para toolbar inline no campo Decisão
-  const fundamentacaoEditorRef = React.useRef(null);
+  const fundamentacaoEditorRef = React.useRef<HTMLDivElement | null>(null);
 
   return (
     <div className="global-editor-section mb-6 border theme-border-secondary rounded-lg overflow-hidden">
@@ -15313,13 +15313,13 @@ const GlobalEditorModal = React.memo(({
   const [jurisTopicIndex, setJurisTopicIndex] = React.useState<number | null>(null);
 
   // Ref para o container (drag do divisor)
-  const containerRef = React.useRef(null);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = React.useState(false);
 
-  const prevIsSplitModeRef = React.useRef(isSplitMode);
-  const isSplitModeRef = React.useRef(isSplitMode);
+  const prevIsSplitModeRef = React.useRef<boolean>(isSplitMode);
+  const isSplitModeRef = React.useRef<boolean>(isSplitMode);
   // v1.13.8: Ref para auto-save debounced no Editor Global
-  const globalAutoSaveTimerRef = React.useRef(null);
+  const globalAutoSaveTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
     isSplitModeRef.current = isSplitMode;
@@ -16836,8 +16836,8 @@ const useQuillEditor = (options = {}) => {
     enableTopicChangeDetection = false
   } = options;
 
-  const quillInstanceRef = React.useRef(null);
-  const lastTopicTitle = React.useRef(null);
+  const quillInstanceRef = React.useRef<QuillInstance | null>(null);
+  const lastTopicTitle = React.useRef<string | null>(null);
 
   // Keyboard bindings: Ctrl+S para salvar
   const customModules = React.useMemo(() => {
@@ -16919,14 +16919,14 @@ const QuillEditorBase = React.forwardRef(({
   quillReady = false,
   quillError = null
 }, quillRef) => {
-  const containerRef = React.useRef(null);
-  const quillInstanceRef = React.useRef(null);
-  const isInitializedRef = React.useRef(false);
-  const lastContentRef = React.useRef('');
-  const copyHandlerRef = React.useRef(null);
-  const copyListenerAddedRef = React.useRef(false); // v1.20.2: Guard contra listeners duplicados
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const quillInstanceRef = React.useRef<QuillInstance | null>(null);
+  const isInitializedRef = React.useRef<boolean>(false);
+  const lastContentRef = React.useRef<string>('');
+  const copyHandlerRef = React.useRef<((e: ClipboardEvent) => void) | null>(null);
+  const copyListenerAddedRef = React.useRef<boolean>(false); // v1.20.2: Guard contra listeners duplicados
   const onSlashCommandRef = React.useRef(onSlashCommand);
-  const onChangeDebounceRef = React.useRef(null); // v1.35.3: Debounce para onChange
+  const onChangeDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null); // v1.35.3: Debounce para onChange
 
   // v1.15.4: Manter ref atualizada para slash command
   React.useEffect(() => {
@@ -18925,7 +18925,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const proofManager = useProofManager(documentServices);   const documentManager = useDocumentManager();   const topicManager = useTopicManager();   const modelPreview = useModelPreview(); // Preview de modelos sugeridos
 
   // v1.13.9: Ref para auto-save debounced no Editor Individual
-  const individualAutoSaveTimerRef = React.useRef(null);
+  const individualAutoSaveTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // v1.13.9: Auto-save com debounce no Editor Individual
   React.useEffect(() => {
@@ -19040,11 +19040,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const hasLoadedModelsRef = React.useRef(false);
 
   // Ref para rastrear último array de models salvo (otimização de performance)
-  const lastSavedModelsRef = React.useRef(null);
+  const lastSavedModelsRef = React.useRef<Model[] | null>(null);
 
   // 🚀 OTIMIZAÇÃO v1.7: Fast hash ao invés de JSON.stringify (FASE 1.2) ──────
   // Hash rápido baseado apenas em IDs e timestamps (~1ms vs 50-200ms stringify)
-  const modelsHashRef = React.useRef(null);
+  const modelsHashRef = React.useRef<string | null>(null);
 
   const fastHash = React.useCallback((str) => {
     let hash = 0;
@@ -19070,11 +19070,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // 🚀 OTIMIZAÇÃO v1.7: Auto-save com dirty tracking (FASE 1.1) ──────────────
   const [autoSaveDirty, setAutoSaveDirty] = React.useState(false);
-  const lastAutoSaveSnapshotRef = React.useRef(null);
-  const autoSaveTimerRef = React.useRef(null);
+  const lastAutoSaveSnapshotRef = React.useRef<string | null>(null);
+  const autoSaveTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // v1.12.28: Ref para snapshot atualizado (evita stale closure no auto-save)
-  const currentSessionSnapshotRef = React.useRef(null);
+  const currentSessionSnapshotRef = React.useRef<string | null>(null);
 
   // Helper: marcar sessão como dirty (needs save)
   const markSessionDirty = React.useCallback(() => {
@@ -19272,7 +19272,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' }); // 'success', 'error', 'info'
   const [error, setError] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
-  const copyTimeoutRef = React.useRef(null);
+  const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const [modelSaved, setModelSaved] = useState(false);
   const [savingModel, setSavingModel] = useState(false); // v1.27.02: Feedback visual durante geração de embedding
   const [savingFromSimilarity, setSavingFromSimilarity] = useState(false); // v1.33.3: Feedback no modal de similaridade
@@ -19602,7 +19602,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // movidos para aiSettings (agora em aiIntegration.aiSettings.X)
   const [jurisEmbeddingsCount, setJurisEmbeddingsCount] = useState(0);
   const [jurisEmbeddingsProgress, setJurisEmbeddingsProgress] = useState<ProgressState>({ current: 0, total: 0 });
-  const jurisEmbeddingsFileInputRef = useRef(null);
+  const jurisEmbeddingsFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // 🌐 v1.33.0: Estados para download automático de embeddings via CDN
   const [showEmbeddingsDownloadModal, setShowEmbeddingsDownloadModal] = useState(false);
@@ -19647,15 +19647,15 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const legislacao = useLegislacao();
 
   // 🎯 REFS
-  const bulkFileInputRef = useRef(null);
-  const bulkEditorRef = useRef(null);
-  const editorRef = useRef(null);
-  const modelEditorRef = useRef(null);
-  const modelFormRef = useRef(null);
-  const relatorioRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const topicRefs = useRef({});
-  const editorContainerRef = useRef(null);
+  const bulkFileInputRef = useRef<HTMLInputElement | null>(null);
+  const bulkEditorRef = useRef<HTMLDivElement | null>(null);
+  const editorRef = useRef<HTMLDivElement | null>(null);
+  const modelEditorRef = useRef<HTMLDivElement | null>(null);
+  const modelFormRef = useRef<HTMLFormElement | null>(null);
+  const relatorioRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const topicRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const editorContainerRef = useRef<HTMLDivElement | null>(null);
 
   // v1.20.2: Cleanup de refs de tópicos removidos para evitar memory leak
   const cleanupTopicRefs = React.useCallback((currentTitles) => {
@@ -20698,7 +20698,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   };
 
   // v1.26.04: Importar embeddings de arquivo JSON (gerado pelo script Python)
-  const embeddingsFileInputRef = useRef(null);
+  const embeddingsFileInputRef = useRef<HTMLInputElement | null>(null);
   const [importingEmbeddings, setImportingEmbeddings] = useState(false);
 
   const handleImportEmbeddings = async (event) => {
@@ -28129,10 +28129,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
   }, [modelSemanticAvailable, aiIntegration.aiSettings.modelSemanticThreshold, modelLibrary.models]);
 
   // Debounce para busca semântica de modelos
-  const modelSemanticSearchTimeoutRef = React.useRef(null);
+  const modelSemanticSearchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   React.useEffect(() => {
     if (useModelSemanticSearch && modelSemanticAvailable && modelLibrary.searchTerm) {
-      clearTimeout(modelSemanticSearchTimeoutRef.current);
+      if (modelSemanticSearchTimeoutRef.current) clearTimeout(modelSemanticSearchTimeoutRef.current);
       modelSemanticSearchTimeoutRef.current = setTimeout(() => {
         performModelSemanticSearch(modelLibrary.searchTerm);
       }, 500);
