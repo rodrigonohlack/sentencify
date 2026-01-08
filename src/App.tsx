@@ -2408,7 +2408,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         // v1.32.39: Log thinking no console do browser (v1.32.40: toggle)
         if (aiSettings.logThinking) {
           const parts = data.candidates?.[0]?.content?.parts || [];
-          const thinkingPart = parts.find(p => p.thought === true);
+          const thinkingPart = parts.find((p: { thought?: boolean; text?: string }) => p.thought === true);
           if (thinkingPart?.text) {
             console.group('[Gemini] Thinking');
             console.log(thinkingPart.text);
@@ -8420,7 +8420,7 @@ const VirtualList = React.memo(({ items, itemHeight, renderItem, className = '',
           left: 0,
           right: 0
         }}>
-          {visibleItems.map((item, idx) => {
+          {visibleItems.map((item: { id: string | number }, idx: number) => {
             const absoluteIndex = visibleStart + idx;
             const isExpanded = expandedIds.has(item.id);
             return (
@@ -9404,7 +9404,7 @@ const JurisprudenciaTab = React.memo(({
         {/* v1.33.8: Adicionado hover:bg-purple-700 ao estado semântico */}
         {semanticAvailable && (
           <button
-            onClick={() => setUseSemanticSearch(prev => !prev)}
+            onClick={() => setUseSemanticSearch((prev: boolean) => !prev)}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
               useSemanticSearch
                 ? 'bg-purple-600 text-white hover:bg-purple-700'
@@ -9742,7 +9742,7 @@ const LegislacaoTab = React.memo(({
         {/* v1.33.8: Adicionado hover:bg-purple-700 ao estado semântico */}
         {semanticAvailable && (
           <button
-            onClick={() => setUseSemanticSearch(prev => !prev)}
+            onClick={() => setUseSemanticSearch((prev: boolean) => !prev)}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
               useSemanticSearch
                 ? 'bg-purple-600 text-white hover:bg-purple-700'
@@ -9835,10 +9835,10 @@ const LegislacaoTab = React.memo(({
               const artigo = legislacao.artigos.find(a => a.id === item.artigoId);
               if (!artigo) return null;
               const hasDetails = (artigo.paragrafos?.length > 0) || (artigo.incisos?.length > 0) || (artigo.alineas?.length > 0);
-              const isMatchedType = (type) => item.type === type;
-              const isMatchedParagrafo = (p: Precedente) => item.type === 'paragrafo' && item.text.includes(p.texto?.slice(0, 50));
-              const isMatchedInciso = (inc) => item.type === 'inciso' && item.text.includes(inc.texto?.slice(0, 50));
-              const isMatchedAlinea = (al) => item.type === 'alinea' && item.text.includes(al.texto?.slice(0, 50));
+              const isMatchedType = (type: string) => item.type === type;
+              const isMatchedParagrafo = (p: { texto?: string }) => item.type === 'paragrafo' && item.text.includes(p.texto?.slice(0, 50) || '');
+              const isMatchedInciso = (inc: { numero: string; texto: string }) => item.type === 'inciso' && item.text.includes(inc.texto?.slice(0, 50));
+              const isMatchedAlinea = (al: { letra: string; texto: string }) => item.type === 'alinea' && item.text.includes(al.texto?.slice(0, 50));
               return (
                 <div key={`${item.id}-${idx}`} className="theme-bg-secondary-50 rounded-lg p-3 border theme-border-input">
                   <div className="flex items-start justify-between gap-2 mb-2">
@@ -11080,8 +11080,8 @@ const hasOralProofsForTopic = (proofManager, topicTitle) => {
     proofManager.proofTopicLinks[proofId]?.includes(topicTitle)
   );
   const allLinkedProofs = [
-    ...(proofManager.proofFiles || []).filter(p => linkedProofIds.includes(String(p.id))),
-    ...(proofManager.proofTexts || []).filter(p => linkedProofIds.includes(String(p.id)))
+    ...(proofManager.proofFiles || []).filter((p: ProofFile) => linkedProofIds.includes(String(p.id))),
+    ...(proofManager.proofTexts || []).filter((p: ProofText) => linkedProofIds.includes(String(p.id)))
   ];
   return allLinkedProofs.some(p => isOralProof(p.name));
 };
@@ -13513,7 +13513,7 @@ const BulkUploadModal = React.memo(({
           <div className="p-6 space-y-4 flex-1 overflow-y-auto">
             {/* Grid de status por arquivo */}
             <div className="space-y-3">
-              {bulkFiles.map((file, index) => {
+              {bulkFiles.map((file: File, index: number) => {
                 const result = processedFiles.find(f => f.file === file.name);
                 const isComplete = result?.status === 'success';
                 const isError = result?.status === 'error';
@@ -14338,7 +14338,7 @@ const SlashCommandMenu = React.memo(({
         {semanticAvailable && (
           <button
             onClick={() => {
-              setUseSemanticSearch(prev => !prev);
+              setUseSemanticSearch((prev: boolean) => !prev);
               setSemanticResults(null);
             }}
             className={`p-1.5 rounded text-sm transition-colors ${
@@ -16699,8 +16699,8 @@ const prepareOralProofsContext = async (proofManager, topicTitle, fileToBase64Fn
   );
 
   const allLinkedProofs = [
-    ...(proofManager.proofFiles || []).filter(p => linkedProofIds.includes(String(p.id))),
-    ...(proofManager.proofTexts || []).filter(p => linkedProofIds.includes(String(p.id)))
+    ...(proofManager.proofFiles || []).filter((p: ProofFile) => linkedProofIds.includes(String(p.id))),
+    ...(proofManager.proofTexts || []).filter((p: ProofText) => linkedProofIds.includes(String(p.id)))
   ];
 
   // Filtrar apenas provas orais
@@ -18729,7 +18729,7 @@ INSTRUÇÕES IMPORTANTES:
         setAnalysisProgress(`📄 Extraindo texto da petição inicial${engineLabel}...`);
 
         try {
-          const text = await extractTextFromPDF(files.peticao, (page, total) => {
+          const text = await extractTextFromPDF(files.peticao, (page: number, total: number) => {
             setAnalysisProgress(`🔍 Petição inicial: página ${page}/${total}${engineLabel}...`);
           });
 
@@ -18747,7 +18747,7 @@ INSTRUÇÕES IMPORTANTES:
         for (let i = 0; i < files.contestacoes.length; i++) {
           try {
             setAnalysisProgress(`📑 Extraindo texto da contestação ${i + 1}/${files.contestacoes.length}${engineLabel}...`);
-            const text = await extractTextFromPDF(files.contestacoes[i], (page, total) => {
+            const text = await extractTextFromPDF(files.contestacoes[i], (page: number, total: number) => {
               setAnalysisProgress(`🔍 Contestação ${i + 1}: página ${page}/${total}${engineLabel}...`);
             });
 
@@ -18768,7 +18768,7 @@ INSTRUÇÕES IMPORTANTES:
         for (let i = 0; i < files.complementares.length; i++) {
           try {
             setAnalysisProgress(`📎 Extraindo texto do documento complementar ${i + 1}/${files.complementares.length}${engineLabel}...`);
-            const text = await extractTextFromPDF(files.complementares[i], (page, total) => {
+            const text = await extractTextFromPDF(files.complementares[i], (page: number, total: number) => {
               setAnalysisProgress(`🔍 Documento ${i + 1}: página ${page}/${total}${engineLabel}...`);
             });
 
@@ -23562,7 +23562,7 @@ Se não houver informações específicas nos documentos, indique de forma clara
       const { results, errors } = await generateMiniReportsBatch(topicsToGenerate, {
         batchSize: aiIntegration.aiSettings.parallelRequests || 5,
         delayBetweenBatches: 1000,
-        onProgress: (current, total, batchNum, totalBatches) => {
+        onProgress: (current: number, total: number, batchNum: number, totalBatches: number) => {
           setAnalysisProgress(`🚀 Gerando subtópicos... ${current}/${total} (Lote ${batchNum}/${totalBatches})`);
         }
       });
@@ -25578,11 +25578,11 @@ ${textToAnalyze}`;
               let extractedText = null;
 
               if (peticaoMode === 'pdfjs') {
-                extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current, total) => {
+                extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current: number, total: number) => {
                   setAnalysisProgress(`📄 ${label} (PDF.js) - página ${current}/${total}...`);
                 });
               } else if (peticaoMode === 'claude-vision') {
-                extractedText = await documentServices.extractTextFromPDFWithClaudeVision(fileObj, (current, total) => {
+                extractedText = await documentServices.extractTextFromPDFWithClaudeVision(fileObj, (current: number, total: number) => {
                   setAnalysisProgress(`📄 ${label} (Claude Vision) - página ${current}/${total}...`);
                 });
               } else if (peticaoMode === 'tesseract') {
@@ -25592,7 +25592,7 @@ ${textToAnalyze}`;
               } else {
                 // Modo desconhecido (legado como 'gemini-vision'), usar pdfjs como fallback
                 console.warn(`[analyzeDocuments] Modo desconhecido '${peticaoMode}', usando PDF.js`);
-                extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current, total) => {
+                extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current: number, total: number) => {
                   setAnalysisProgress(`📄 ${label} (PDF.js) - página ${current}/${total}...`);
                 });
               }
@@ -25679,11 +25679,11 @@ ${textToAnalyze}`;
               let extractedText = null;
 
               if (mode === 'pdfjs') {
-                extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current, total) => {
+                extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current: number, total: number) => {
                   setAnalysisProgress(`📑 Contestação ${i + 1} (PDF.js) - página ${current}/${total}...`);
                 });
               } else if (mode === 'claude-vision') {
-                extractedText = await documentServices.extractTextFromPDFWithClaudeVision(fileObj, (current, total) => {
+                extractedText = await documentServices.extractTextFromPDFWithClaudeVision(fileObj, (current: number, total: number) => {
                   setAnalysisProgress(`📑 Contestação ${i + 1} (Claude Vision) - página ${current}/${total}...`);
                 });
               } else if (mode === 'tesseract') {
@@ -25693,7 +25693,7 @@ ${textToAnalyze}`;
               } else {
                 // Modo desconhecido (legado), usar pdfjs como fallback
                 console.warn(`[analyzeDocuments] Contestação - modo desconhecido '${mode}', usando PDF.js`);
-                extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current, total) => {
+                extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current: number, total: number) => {
                   setAnalysisProgress(`📑 Contestação ${i + 1} (PDF.js) - página ${current}/${total}...`);
                 });
               }
@@ -25777,11 +25777,11 @@ ${textToAnalyze}`;
               let extractedText = null;
 
               if (mode === 'pdfjs') {
-                extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current, total) => {
+                extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current: number, total: number) => {
                   setAnalysisProgress(`📎 Complementar ${i + 1} (PDF.js) - página ${current}/${total}...`);
                 });
               } else if (mode === 'claude-vision') {
-                extractedText = await documentServices.extractTextFromPDFWithClaudeVision(fileObj, (current, total) => {
+                extractedText = await documentServices.extractTextFromPDFWithClaudeVision(fileObj, (current: number, total: number) => {
                   setAnalysisProgress(`📎 Complementar ${i + 1} (Claude Vision) - página ${current}/${total}...`);
                 });
               } else if (mode === 'tesseract') {
@@ -25791,7 +25791,7 @@ ${textToAnalyze}`;
               } else {
                 // Modo desconhecido (legado), usar pdfjs como fallback
                 console.warn(`[analyzeDocuments] Complementar - modo desconhecido '${mode}', usando PDF.js`);
-                extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current, total) => {
+                extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current: number, total: number) => {
                   setAnalysisProgress(`📎 Complementar ${i + 1} (PDF.js) - página ${current}/${total}...`);
                 });
               }
@@ -26248,7 +26248,7 @@ Extraia e classifique todos os tópicos/pedidos em:
           {
             batchSize: aiIntegration.aiSettings.parallelRequests || 5,
             delayBetweenBatches: 1000,
-            onProgress: (current, total, batchNum, totalBatches) => {
+            onProgress: (current: number, total: number, batchNum: number, totalBatches: number) => {
               setAnalysisProgress(`📝 Gerando mini-relatórios... ${current}/${total} (Lote ${batchNum}/${totalBatches})`);
             }
           }
@@ -26406,7 +26406,7 @@ Extraia e classifique todos os tópicos/pedidos em:
           {
             batchSize: aiIntegration.aiSettings.parallelRequests || 5,
             delayBetweenBatches: 1000,
-            onProgress: (current, total, batchNum, totalBatches) => {
+            onProgress: (current: number, total: number, batchNum: number, totalBatches: number) => {
               setAnalysisProgress(`📝 Gerando mini-relatórios... ${current}/${total} (Lote ${batchNum}/${totalBatches})`);
             }
           }
@@ -28131,8 +28131,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
     );
 
     return [
-      ...proofManager.proofFiles.filter(p => linkedProofIds.includes(String(p.id))).map(p => ({ ...p, isPdf: true })),
-      ...proofManager.proofTexts.filter(p => linkedProofIds.includes(String(p.id))).map(p => ({ ...p, isPdf: false }))
+      ...proofManager.proofFiles.filter((p: ProofFile) => linkedProofIds.includes(String(p.id))).map((p: ProofFile) => ({ ...p, isPdf: true })),
+      ...proofManager.proofTexts.filter((p: ProofText) => linkedProofIds.includes(String(p.id))).map((p: ProofText) => ({ ...p, isPdf: false }))
     ];
   }, [editingTopic?.title, proofManager.proofTopicLinks]);
 
@@ -30249,7 +30249,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       {/* Paginação apenas no modo CARDS */}
                       {filteredModels.length > modelLibrary.modelsPerPage && (() => {
                         // Helper: Gera array de páginas truncado com elipse (null = "...")
-                        const getPaginationRange = (current, total) => {
+                        const getPaginationRange = (current: number, total: number) => {
                           if (total <= 7) {
                             return Array.from({ length: total }, (_, i: number) => i + 1);
                           }
