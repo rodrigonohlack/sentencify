@@ -158,7 +158,8 @@ import type {
   NERRawEntity, NERProcessedEntity, AIModelStatusCallback, AIWorkerMessage, PendingWorkerPromise,
   LegislacaoEmbeddingItem, JurisEmbeddingItem, JurisEmbeddingWithSimilarity, SimilaritySearchResult, JurisFiltros,
   CDNDownloadType, DownloadProgressCallback, BatchCompleteCallback, CDNFileName, EstimatedSizes,
-  AIGenContextItem, AIGenContext, AIGenState, AIGenAction, AnonymizationSettings
+  AIGenContextItem, AIGenContext, AIGenState, AIGenAction, AnonymizationSettings,
+  QuickPrompt, AIMessage, AIMessageContent, AICallOptions, AIProvider
 } from './types';
 
 // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
@@ -167,7 +168,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.87'; // v1.35.87: TypeScript FASE 8.7 parcial - Tipar services (AIModel, Embeddings, CDN) e callbacks
+const APP_VERSION = '1.35.88'; // v1.35.88: TypeScript FASE 8.7 - Tipar funções API (callAI/callLLM/callGemini) e callbacks
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -1150,7 +1151,7 @@ const EmbeddingsCDNService = {
         // v1.35.20: Garantir 100% ao finalizar
         if (onProgress) onProgress(1);
 
-        const blob = new Blob(chunks);
+        const blob = new Blob(chunks as BlobPart[]);
         return blob.text();
       } catch (err) {
         if (attempt === maxRetries) throw err;
@@ -1789,7 +1790,7 @@ const useAIIntegration = () => {
           // Merge: defaults primeiro, depois valores salvos sobrescrevem
           Object.keys(iaLocalDefaults).forEach(key => {
             if (parsed[key] === undefined) {
-              parsed[key] = iaLocalDefaults[key];
+              parsed[key] = (iaLocalDefaults as Record<string, unknown>)[key];
             }
           });
 
@@ -1797,19 +1798,19 @@ const useAIIntegration = () => {
           // - Preserva quick prompts customizados do usuário (IDs que não são qp-1 a qp-4)
           // - Atualiza quick prompts padrão com versões mais recentes do código
           const defaultQpIds = ['qp-1', 'qp-2', 'qp-3', 'qp-4'];
-          const userCustomQps = (parsed.quickPrompts || []).filter(qp => !defaultQpIds.includes(qp.id));
+          const userCustomQps = (parsed.quickPrompts || []).filter((qp: QuickPrompt) => !defaultQpIds.includes(qp.id));
           const { quickPrompts: _ignoredQp, ...parsedWithoutQp } = parsed;
           setAiSettingsState(prev => ({
             ...prev,
             ...parsedWithoutQp,
             quickPrompts: [
-              ...prev.quickPrompts.filter(qp => defaultQpIds.includes(qp.id)), // defaults do código
+              ...prev.quickPrompts.filter((qp: QuickPrompt) => defaultQpIds.includes(qp.id)), // defaults do código
               ...userCustomQps // customizados do usuário
             ]
           }));
         }
       } catch (err) {
-        console.warn('[loadAiSettings] Erro ao carregar configurações:', err.message);
+        console.warn('[loadAiSettings] Erro ao carregar configurações:', err instanceof Error ? err.message : err);
       }
     };
 
@@ -1889,7 +1890,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   }, [aiSettings]);
 
   // Build API Request
-  const buildApiRequest = React.useCallback((messages, optionsOrMaxTokens = {}) => {
+  const buildApiRequest = React.useCallback((messages: AIMessage[], optionsOrMaxTokens: AICallOptions | number = {}) => {
     const options = typeof optionsOrMaxTokens === 'number'
       ? { maxTokens: optionsOrMaxTokens }
       : optionsOrMaxTokens;
@@ -1914,7 +1915,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
     const useThinking = !disableThinking && (aiSettings?.useExtendedThinking || false);
 
-    const MODEL_MAX_TOKENS = {
+    const MODEL_MAX_TOKENS: Record<string, number> = {
       'claude-sonnet-4-20250514': 64000,
       'claude-opus-4-5-20251101': 32000
     };
@@ -1929,12 +1930,12 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     const rawAdjustedTokens = useThinking ? Math.max(maxTokens + thinkingBudget, thinkingBudget + 2000) : maxTokens;
     const adjustedMaxTokens = Math.min(rawAdjustedTokens, modelMaxTokens);
 
-    const processedMessages = messages.map(message => {
+    const processedMessages = messages.map((message: AIMessage) => {
       if (message.content && Array.isArray(message.content)) {
         let cacheBlocksCount = 0;
         const MAX_CACHE_BLOCKS = 3; // 3 nas messages + 1 no system = 4 total (limite da API)
 
-        const processedContent = message.content.map((block, index, array) => {
+        const processedContent = message.content.map((block: AIMessageContent, index: number, array: AIMessageContent[]) => {
           const isLastBlock = index === array.length - 1;
 
           if (isLastBlock) {
@@ -1945,11 +1946,16 @@ ${AI_INSTRUCTIONS_SAFETY}`;
             return block;
           }
 
+          // Type guard: strings don't have .type property
+          if (typeof block === 'string') {
+            return block;
+          }
+
           if (block.type === 'document') {
             cacheBlocksCount++;
             return {
               ...block,
-              cache_control: { type: "ephemeral" }
+              cache_control: { type: "ephemeral" as const }
             };
           }
 
@@ -1957,7 +1963,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
             cacheBlocksCount++;
             return {
               ...block,
-              cache_control: { type: "ephemeral" }
+              cache_control: { type: "ephemeral" as const }
             };
           }
 
@@ -1973,7 +1979,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       return message;
     });
 
-    const requestBody = {
+    const requestBody: Record<string, unknown> = {
       model: modelToUse,
       max_tokens: adjustedMaxTokens,
       messages: processedMessages
@@ -1985,7 +1991,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     if (topK !== null) requestBody.top_k = topK;
 
     // System prompt com Prompt Caching
-    let finalSystemPrompt = null;
+    let finalSystemPrompt: unknown = null;
     if (systemPrompt) {
       // systemPrompt customizado: wrap em array com cache
       finalSystemPrompt = [
@@ -2028,7 +2034,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   const RETRY_INITIAL_DELAY = 5000; // 5 segundos
   const RETRY_BACKOFF_MULTIPLIER = 2; // 5s, 10s, 20s
 
-  const callLLM = React.useCallback(async (messages, options = {}) => {
+  const callLLM = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
     const {
       maxTokens = 4000,
       useInstructions = true,
@@ -2049,7 +2055,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
     // Criar AbortController interno se timeout especificado
     const internalController = effectiveTimeout ? new AbortController() : null;
-    const timeoutId = effectiveTimeout ? setTimeout(() => internalController.abort(), effectiveTimeout) : null;
+    const timeoutId = effectiveTimeout && internalController ? setTimeout(() => internalController.abort(), effectiveTimeout) : null;
 
     // Combinar signals: externo tem prioridade, senão interno
     const signal = abortSignal || internalController?.signal;
@@ -2059,10 +2065,8 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     // Loop de retry para erros 429
     for (let attempt = 0; attempt < RETRY_MAX_ATTEMPTS; attempt++) {
       try {
-        const contentSummary = messages[0]?.content?.map(c =>
-          c.type === 'document' ? `📄 PDF (${Math.round((c.source?.data?.length || 0)/1024)}KB)` :
-          c.type === 'text' ? `📝 Texto (${(c.text?.length || 0)} chars)` : c.type
-        ) || [];
+        // Log summary (debug only)
+        const _contentSummary: string[] = [];
 
         // Fazer requisição à API (v1.30: via proxy local)
         const response = await fetch(`${API_BASE}/api/claude/messages`, {
@@ -2074,7 +2078,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           body: JSON.stringify(buildApiRequest(messages, {
             maxTokens,
             useInstructions,
-            systemPrompt,
+            systemPrompt: systemPrompt ?? undefined,
             model,
             disableThinking
           })),
@@ -2102,7 +2106,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
         // v1.32.39: Log thinking no console do browser (v1.32.40: toggle)
         if (aiSettings.logThinking) {
-          const thinkingBlock = data.content?.find(c => c.type === 'thinking');
+          const thinkingBlock = data.content?.find((c: Record<string, unknown>) => c.type === 'thinking');
           if (thinkingBlock?.thinking) {
             console.group('[Claude] Thinking');
             console.log(thinkingBlock.thinking);
@@ -2134,7 +2138,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         }
 
         // Extrair texto da resposta
-        const textContent = data.content?.find(c => c.type === 'text')?.text || '';
+        const textContent = data.content?.find((c: Record<string, unknown>) => c.type === 'text')?.text || '';
 
         // Validar se encontrou conteúdo
         if (validateResponse && !textContent) {
@@ -2150,16 +2154,18 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         if (timeoutId) clearTimeout(timeoutId);
 
         // Tratar erros de abort (não retentar)
-        if (err.name === 'AbortError') {
+        const errObj = err as Error;
+        if (errObj.name === 'AbortError') {
           if (abortSignal?.aborted) {
             throw new Error('Operação cancelada pelo usuário');
           } else {
-            throw new Error(`Timeout: operação demorou mais de ${effectiveTimeout / 1000}s`);
+            throw new Error(`Timeout: operação demorou mais de ${(effectiveTimeout || 0) / 1000}s`);
           }
         }
 
         // Se não é última tentativa e erro parece ser de rate limit, overload, conexão ou JSON malformado da API
-        if (attempt < RETRY_MAX_ATTEMPTS - 1 && (err.message?.includes('429') || err.message?.includes('529') || err.message?.includes('520') || err.message?.includes('502') || err.message?.includes('Overloaded') || err.message?.includes('Failed to fetch') || err.message?.includes('parsear resposta'))) {
+        const errMsg = errObj.message || '';
+        if (attempt < RETRY_MAX_ATTEMPTS - 1 && (errMsg.includes('429') || errMsg.includes('529') || errMsg.includes('520') || errMsg.includes('502') || errMsg.includes('Overloaded') || errMsg.includes('Failed to fetch') || errMsg.includes('parsear resposta'))) {
           const delay = RETRY_INITIAL_DELAY * Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
@@ -2179,38 +2185,39 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   // ========================================
 
   // Converter formato de mensagens Claude → Gemini
-  const convertToGeminiFormat = React.useCallback((claudeMessages, systemPrompt = null) => {
-    const contents = claudeMessages.map(msg => ({
+  const convertToGeminiFormat = React.useCallback((claudeMessages: AIMessage[], systemPrompt: string | null | Record<string, unknown>[] = null) => {
+    const contents = claudeMessages.map((msg: AIMessage) => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: Array.isArray(msg.content)
-        ? msg.content.map(c => {
+        ? msg.content.map((c: Record<string, unknown>) => {
             // Texto simples
-            if (c.type === 'text') return { text: c.text };
+            if (c.type === 'text') return { text: c.text as string };
             // Imagem (base64)
             if (c.type === 'image') return {
-              inlineData: { mimeType: c.source?.media_type || 'image/png', data: c.source?.data }
+              inlineData: { mimeType: (c.source as Record<string, unknown>)?.media_type || 'image/png', data: (c.source as Record<string, unknown>)?.data }
             };
             // PDF/Documento
-            if (c.type === 'document' && c.source?.type === 'base64') {
+            const source = c.source as Record<string, unknown> | undefined;
+            if (c.type === 'document' && source?.type === 'base64') {
               return {
                 inlineData: {
-                  mimeType: c.source.media_type || 'application/pdf',
-                  data: c.source.data
+                  mimeType: source.media_type || 'application/pdf',
+                  data: source.data
                 }
               };
             }
             // Fallback
             return { text: JSON.stringify(c) };
           })
-        : [{ text: msg.content }]
+        : [{ text: msg.content as string }]
     }));
 
-    const result = { contents };
+    const result: Record<string, unknown> = { contents };
 
     // System prompt → systemInstruction
     if (systemPrompt) {
       const systemText = Array.isArray(systemPrompt)
-        ? systemPrompt.map(s => s.text || s).join('\n\n')
+        ? systemPrompt.map((s: Record<string, unknown>) => s.text || s).join('\n\n')
         : systemPrompt;
       result.systemInstruction = { parts: [{ text: systemText }] };
     }
@@ -2219,9 +2226,9 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   }, []);
 
   // Extrair métricas de tokens da resposta (provider-aware)
-  const extractTokenMetrics = React.useCallback((data, provider) => {
+  const extractTokenMetrics = React.useCallback((data: Record<string, unknown>, provider: AIProvider) => {
     if (provider === 'gemini') {
-      const usage = data.usageMetadata || {};
+      const usage = (data.usageMetadata || {}) as Record<string, number>;
       return {
         input: usage.promptTokenCount || 0,
         output: usage.candidatesTokenCount || 0,
@@ -2230,7 +2237,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       };
     }
     // Claude (default)
-    const usage = data.usage || {};
+    const usage = (data.usage || {}) as Record<string, number>;
     return {
       input: usage.input_tokens || 0,
       output: usage.output_tokens || 0,
@@ -2240,9 +2247,10 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   }, []);
 
   // Extrair texto da resposta (provider-aware)
-  const extractResponseText = React.useCallback((data, provider) => {
+  const extractResponseText = React.useCallback((data: Record<string, unknown>, provider: AIProvider) => {
     if (provider === 'gemini') {
-      const candidate = data.candidates?.[0];
+      const candidates = data.candidates as Record<string, unknown>[] | undefined;
+      const candidate = candidates?.[0];
       const finishReason = candidate?.finishReason;
 
       // Verificar bloqueio de segurança
@@ -2252,18 +2260,21 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       if (finishReason === 'RECITATION') {
         throw new Error('Resposta bloqueada por direitos autorais.');
       }
-      if (data.promptFeedback?.blockReason) {
-        throw new Error(`Prompt bloqueado: ${data.promptFeedback.blockReason}`);
+      const promptFeedback = data.promptFeedback as Record<string, unknown> | undefined;
+      if (promptFeedback?.blockReason) {
+        throw new Error(`Prompt bloqueado: ${promptFeedback.blockReason}`);
       }
 
       // v1.32.35: Com thinking habilitado, parts[0] é o thinking block
       // Buscar o primeiro part que NÃO seja thinking (thought !== true)
-      const parts = candidate?.content?.parts || [];
-      const textPart = parts.find(p => !p.thought && p.text);
-      return textPart?.text || '';
+      const content = candidate?.content as Record<string, unknown> | undefined;
+      const parts = (content?.parts || []) as Record<string, unknown>[];
+      const textPart = parts.find((p: Record<string, unknown>) => !p.thought && p.text);
+      return (textPart?.text as string) || '';
     }
     // Claude (default)
-    return data.content?.find(c => c.type === 'text')?.text || '';
+    const content = data.content as Record<string, unknown>[] | undefined;
+    return (content?.find((c: Record<string, unknown>) => c.type === 'text')?.text as string) || '';
   }, []);
 
   // v1.32.37: Configurar thinking para Gemini 3 (removido suporte a 2.5)
@@ -2271,7 +2282,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   // Gemini 3: usa thinking_level enum (não pode desativar)
   // - Flash: minimal, low, medium, high
   // - Pro: low, high (não tem minimal nem medium)
-  const getGeminiThinkingConfig = React.useCallback((model) => {
+  const getGeminiThinkingConfig = React.useCallback((model: string) => {
     let level = aiSettings.geminiThinkingLevel || 'high';
 
     // v1.32.37: Pro só suporta low/high - converter valores inválidos
@@ -2287,7 +2298,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   const GEMINI_RETRY_CODES = [429, 500, 502, 503, 529];
 
   // Chamada à API Gemini
-  const callGeminiAPI = React.useCallback(async (messages, options = {}) => {
+  const callGeminiAPI = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
     const {
       maxTokens = 4000,
       systemPrompt = null,
@@ -2449,7 +2460,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   }, [aiSettings, convertToGeminiFormat, extractTokenMetrics, extractResponseText, getGeminiThinkingConfig, setTokenMetrics, getAiInstructions]);
 
   // Função unificada que escolhe Claude ou Gemini baseado no provider
-  const callAI = React.useCallback(async (messages, options = {}) => {
+  const callAI = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
     const provider = aiSettings.provider || 'claude';
 
     if (provider === 'gemini') {
@@ -2470,7 +2481,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   // END MULTI-PROVIDER SUPPORT
   // ========================================
 
-  const getModelDisplayName = React.useCallback((modelId) => {
+  const getModelDisplayName = React.useCallback((modelId: string) => {
     const models = {
       // Claude
       'claude-sonnet-4-20250514': 'Claude Sonnet 4.5',
@@ -2936,7 +2947,7 @@ const useIndexedDB = () => {
   const notifyOtherTabs = useThrottledBroadcast(broadcastChannelRef, 1000);
 
   // Helper: Exponential Backoff Retry
-  const retryWithBackoff = React.useCallback(async (fn, retries = MAX_RETRIES) => {
+  const retryWithBackoff = React.useCallback(async (fn: () => Promise<unknown>, retries: number = MAX_RETRIES): Promise<unknown> => {
     for (let i = 0; i < retries; i++) {
       try {
         return await fn();
@@ -3112,7 +3123,7 @@ const useIndexedDB = () => {
   }, [isAvailable, dbInstance, retryWithBackoff]);
 
   // Save Models (Diff-based) + Multi-tab Sync
-  const saveModels = React.useCallback(async (newModels) => {
+  const saveModels = React.useCallback(async (newModels: Model[]) => {
     if (!isAvailable || !dbInstance) {
       throw new Error('IndexedDB não disponível');
     }
@@ -3191,7 +3202,7 @@ const useIndexedDB = () => {
   }, [isAvailable, dbInstance, retryWithBackoff, notifyOtherTabs]);
 
   // Delete Model + Multi-tab Sync
-  const deleteModel = React.useCallback(async (modelId) => {
+  const deleteModel = React.useCallback(async (modelId: string) => {
     if (!isAvailable || !dbInstance) {
       throw new Error('IndexedDB não disponível');
     }
@@ -3789,9 +3800,9 @@ const openVersionDB = () => new Promise((resolve, reject) => {
 });
 
 const useFieldVersioning = () => {
-  const stripHtml = (html) => (html || '').replace(/<[^>]*>/g, '').substring(0, 100);
+  const stripHtml = (html: string | null | undefined): string => (html || '').replace(/<[^>]*>/g, '').substring(0, 100);
 
-  const saveVersion = React.useCallback(async (topicTitle, content) => {
+  const saveVersion = React.useCallback(async (topicTitle: string, content: string): Promise<void> => {
     if (!topicTitle || !content) return;
     try {
       const db = await openVersionDB();
@@ -3813,7 +3824,7 @@ const useFieldVersioning = () => {
     } catch (e) { console.warn('Erro ao salvar versão:', e); }
   }, []);
 
-  const getVersions = React.useCallback(async (topicTitle) => {
+  const getVersions = React.useCallback(async (topicTitle: string): Promise<FieldVersion[]> => {
     if (!topicTitle) return [];
     try {
       const db = await openVersionDB();
@@ -3827,7 +3838,7 @@ const useFieldVersioning = () => {
     } catch { return []; }
   }, []);
 
-  const restoreVersion = React.useCallback(async (id, currentContent, topicTitle) => {
+  const restoreVersion = React.useCallback(async (id: number, currentContent: string, topicTitle: string): Promise<string | null> => {
     await saveVersion(topicTitle, currentContent);
     try {
       const db = await openVersionDB();
@@ -3954,7 +3965,7 @@ const useLocalStorage = () => {
     }
   }, []);
 
-  const autoSaveSession = React.useCallback(async (allStates, setError, immediate = false) => {
+  const autoSaveSession = React.useCallback(async (allStates: Record<string, unknown>, setError: (err: string | null) => void, immediate = false) => {
     try {
       const {
         processoNumero,
@@ -4071,7 +4082,7 @@ const useLocalStorage = () => {
   }, [setShowAutoSaveIndicator, setSessionLastSaved]);
 
   // Restaura sessão (PDFs do IndexedDB, metadados do localStorage)
-  const restoreSession = React.useCallback(async (callbacks) => {
+  const restoreSession = React.useCallback(async (callbacks: Record<string, unknown>) => {
     try {
       const saved = localStorage.getItem('sentencifySession');
       if (!saved) return;
@@ -4277,7 +4288,7 @@ const useLocalStorage = () => {
 
   // v1.35.40: Constrói JSON do projeto para salvar no Google Drive (sem download)
   // v1.35.41: Movido para antes de exportProject (usado por ambos)
-  const buildProjectJson = React.useCallback(async (allStates) => {
+  const buildProjectJson = React.useCallback(async (allStates: Record<string, unknown>) => {
     const {
       processoNumero,
       pastedPeticaoTexts,
@@ -4395,7 +4406,7 @@ const useLocalStorage = () => {
 
   // Exporta projeto completo em JSON (PDFs em base64)
   // v1.35.41: Refatorado para usar buildProjectJson (elimina duplicação)
-  const exportProject = React.useCallback(async (allStates, setError) => {
+  const exportProject = React.useCallback(async (allStates: Record<string, unknown>, setError: (err: string | null) => void) => {
     try {
       const project = await buildProjectJson(allStates);
       const dataStr = JSON.stringify(project, null, 2);
@@ -4429,7 +4440,7 @@ const useLocalStorage = () => {
 
   // v1.35.40: Importa projeto a partir de JSON (para Google Drive)
   // v1.35.41: Adicionadas migrações de projetos antigos (formato singular)
-  const importProjectFromJson = React.useCallback(async (project, callbacks, autoSaveSessionFn) => {
+  const importProjectFromJson = React.useCallback(async (project: Record<string, unknown>, callbacks: Record<string, unknown>, autoSaveSessionFn: (states: Record<string, unknown>, setError: (err: string | null) => void, immediate: boolean) => Promise<void>) => {
     if (!project || !project.version) {
       throw new Error('Arquivo inválido ou incompatível.');
     }
@@ -4655,7 +4666,7 @@ const useLocalStorage = () => {
 
   // Importa projeto de arquivo JSON
   // v1.35.41: Refatorado para usar importProjectFromJson (elimina duplicação)
-  const importProject = React.useCallback(async (event, callbacks, autoSaveSessionFn) => {
+  const importProject = React.useCallback(async (event: React.ChangeEvent<HTMLInputElement>, callbacks: Record<string, unknown>, autoSaveSessionFn: (states: Record<string, unknown>, setError: (err: string | null) => void, immediate: boolean) => Promise<void>) => {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -4680,7 +4691,7 @@ const useLocalStorage = () => {
   }, [importProjectFromJson]);
 
   // Limpa todos os dados do projeto
-  const clearProject = React.useCallback((callbacks) => {
+  const clearProject = React.useCallback((callbacks: Record<string, unknown>) => {
     try {
       const {
         closeModal,

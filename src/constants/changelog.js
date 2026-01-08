@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.88', feature: 'TypeScript Migration FASE 8.7: Tipagem de callAI/callLLM/callGemini, buildApiRequest, convertToGeminiFormat, extractTokenMetrics, extractResponseText + propriedades adicionais em AICallOptions + AIMessageContent import' },
   { version: '1.35.87', feature: 'TypeScript Migration FASE 8.7 (parcial): Tipagem completa de AIModelService, EmbeddingsService, JurisEmbeddingsService, EmbeddingsCDNService + callbacks do useAIIntegration (930→775 erros TS7006)' },
   { version: '1.35.86', feature: 'TypeScript Migration FASE 8.6: Tipagem de 84 useRef<T> - timers (ReturnType<typeof setTimeout>), DOM refs (HTMLDivElement, HTMLInputElement), Quill instances, callbacks, caches (Map<K,V>)' },
   { version: '1.35.85', feature: 'TypeScript Migration FASE 8.1-8.5: +20 tipos em src/types/index.ts (TextPreviewState, ToastState, SlashMenuState, ProgressState, PastedText, ChatMessage, Precedente, Artigo, etc.) + useState com objetos/arrays/null tipados' },

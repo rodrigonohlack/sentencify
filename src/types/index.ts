@@ -420,6 +420,14 @@ export interface AICallOptions {
   topK?: number;
   cacheControl?: boolean;
   signal?: AbortSignal;
+  systemPrompt?: string | null;
+  model?: string;
+  disableThinking?: boolean;
+  timeout?: number;
+  abortSignal?: AbortSignal;
+  logMetrics?: boolean;
+  extractText?: boolean;
+  validateResponse?: boolean;
 }
 
 /** Tipo para função callAI */
