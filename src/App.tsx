@@ -4026,9 +4026,9 @@ const useLocalStorage = () => {
         extractedTexts: extractedTexts || { peticoes: [], contestacoes: [], complementares: [] },
         documentProcessingModes: documentProcessingModes || { peticoes: [], contestacoes: [], complementares: [] },
         // IDs dos arquivos para restauração do IndexedDB
-        peticaoFileIds: (peticaoFiles || []).map(f => f.id).filter(Boolean),
-        contestacaoFileIds: (contestacaoFiles || []).map(f => f.id).filter(Boolean),
-        complementaryFileIds: (complementaryFiles || []).map(f => f.id).filter(Boolean),
+        peticaoFileIds: (peticaoFiles || []).map((f: { id?: string }) => f.id).filter(Boolean),
+        contestacaoFileIds: (contestacaoFiles || []).map((f: { id?: string }) => f.id).filter(Boolean),
+        complementaryFileIds: (complementaryFiles || []).map((f: { id?: string }) => f.id).filter(Boolean),
         // Dados de provas (apenas metadados, PDFs no IndexedDB)
         proofFiles: proofFilesSerializable,
         proofTexts: proofTexts,
@@ -5228,12 +5228,12 @@ const findJurisprudenciaHelper = async (topicTitle: string, miniRelatorio: strin
     // Match em keywords (mais importante)
     for (const term of allSearchTerms) {
       const termNorm = removeAccents(term);
-      if (keywords.some(k => k.includes(termNorm) || termNorm.includes(k))) score += 20;
+      if (keywords.some((k: string) => k.includes(termNorm) || termNorm.includes(k))) score += 20;
     }
 
     // Match por stem em keywords (captura variações morfológicas)
     for (const stem of allSearchStems) {
-      if (stem.length > 3 && keywordStems.some(ks => ks.includes(stem) || stem.includes(ks))) score += 15;
+      if (stem.length > 3 && keywordStems.some((ks: string) => ks.includes(stem) || stem.includes(ks))) score += 15;
     }
 
     // Match em título do precedente
@@ -5250,7 +5250,7 @@ const findJurisprudenciaHelper = async (topicTitle: string, miniRelatorio: strin
 
     // Match por stemming em tese (mais flexível)
     for (const stem of allSearchStems) {
-      if (stem.length > 3 && teseStems.some(ts => ts.includes(stem) || stem.includes(ts))) score += 8;
+      if (stem.length > 3 && teseStems.some((ts: string) => ts.includes(stem) || stem.includes(ts))) score += 8;
     }
 
     // Match com termos do relatório (contexto)
@@ -5383,7 +5383,7 @@ const stemJuridico = (word: string) => {
 };
 
 // Expande termos com sinônimos jurídicos
-const expandWithSynonyms = (words) => {
+const expandWithSynonyms = (words: string[]) => {
   const expanded = new Set(words);
   for (const word of words) {
     const wordNorm = removeAccents(word.toLowerCase());
@@ -5393,14 +5393,14 @@ const expandWithSynonyms = (words) => {
       if (termoNorm.includes(wordNorm) || wordNorm.includes(termoNorm) ||
           termoNorm.split(' ').some(t => t === wordNorm)) {
         expanded.add(termoNorm);
-        sinonimos.forEach(s => expanded.add(removeAccents(s.toLowerCase())));
+        sinonimos.forEach((s: string) => expanded.add(removeAccents(s.toLowerCase())));
       }
       // Se a palavra está em algum sinônimo
       for (const sin of sinonimos) {
         const sinNorm = removeAccents(sin.toLowerCase());
         if (sinNorm.includes(wordNorm) || wordNorm.includes(sinNorm)) {
           expanded.add(termoNorm);
-          sinonimos.forEach(s => expanded.add(removeAccents(s.toLowerCase())));
+          sinonimos.forEach((s: string) => expanded.add(removeAccents(s.toLowerCase())));
           break;
         }
       }
@@ -5409,7 +5409,7 @@ const expandWithSynonyms = (words) => {
   return Array.from(expanded);
 };
 
-const fuzzyMatch = (term, text, threshold = 0.7) => {
+const fuzzyMatch = (term: string, text: string, threshold = 0.7) => {
   if (!term || !text) return false;
   const t = removeAccents(term.toLowerCase());
   const s = removeAccents(text.toLowerCase());
@@ -5426,7 +5426,7 @@ const fuzzyMatch = (term, text, threshold = 0.7) => {
   return false;
 };
 
-const searchModelsInLibrary = (models, term, options = {}) => {
+const searchModelsInLibrary = (models: Model[], term: string, options: Record<string, unknown> = {}) => {
   if (!term || !term.trim()) return [];
 
   const {
@@ -5455,7 +5455,7 @@ const searchModelsInLibrary = (models, term, options = {}) => {
   // Expandir sinônimos apenas para termos fuzzy
   const expandedFuzzy = new Set(fuzzyTerms);
   if (useSynonyms) {
-    fuzzyTerms.forEach(word => {
+    fuzzyTerms.forEach((word: string) => {
       Object.entries(SINONIMOS_JURIDICOS).forEach(([key, synonyms]) => {
         if (key.includes(word) || word.includes(key)) {
           synonyms.forEach(s => expandedFuzzy.add(s));
@@ -5521,20 +5521,20 @@ const searchModelsInLibrary = (models, term, options = {}) => {
 };
 
 // v1.27.01: Busca semântica de modelos (usa embeddings inline)
-const searchModelsBySimilarity = async (models, query, options = {}) => {
+const searchModelsBySimilarity = async (models: Model[], query: string, options: Record<string, unknown> = {}) => {
   const { threshold = 0.4, limit = 20 } = options;
 
   if (!query || query.length < 3) return [];
 
   // Filtrar apenas modelos com embedding
-  const modelsWithEmbedding = models.filter(m => m.embedding?.length === 768);
+  const modelsWithEmbedding = models.filter((m: Model) => m.embedding?.length === 768);
   if (modelsWithEmbedding.length === 0) return [];
 
   // Gerar embedding da query (v1.32.20: toLowerCase para E5 case-sensitive)
   const queryEmbedding = await AIModelService.getEmbedding(query.toLowerCase(), 'query');
 
   // Calcular similaridade
-  const scored = modelsWithEmbedding.map(model => ({
+  const scored = modelsWithEmbedding.map((model: Model) => ({
     ...model,
     similarity: AIModelService.cosineSimilarity(queryEmbedding, model.embedding)
   }));
@@ -5593,7 +5593,7 @@ const useModelPreview = () => {
   }, []);
 
   // v1.15.3: Funções para "Salvar como Novo Modelo"
-  const openSaveAsNew = React.useCallback((content, originalModel) => {
+  const openSaveAsNew = React.useCallback((content: string, originalModel: Model | null) => {
     setSaveAsNewData({
       title: '',
       content: content,
@@ -5884,20 +5884,20 @@ const useProofManager = (documentServices = null) => {
   const hasProofs = totalProofs > 0;
 
   // 🔧 v1.14.1: Helpers utilitários para redução de código duplicado
-  const removeObjectKey = React.useCallback((setter, keyToRemove) => {
-    setter(prev => {
+  const removeObjectKey = React.useCallback((setter: (fn: (prev: Record<string, unknown>) => Record<string, unknown>) => void, keyToRemove: string | number) => {
+    setter((prev: Record<string, unknown>) => {
       const { [keyToRemove]: _, ...rest } = prev;
       return rest;
     });
   }, []);
-  const removeById = React.useCallback((arr, id) => arr.filter(item => item.id !== id), []);
-  const isValidString = React.useCallback((str, minLength = 1) => str && typeof str === 'string' && str.trim().length >= minLength, []);
-  const toFilesArray = React.useCallback((value) => Array.isArray(value) ? value : Array.from(value || []), []);
+  const removeById = React.useCallback((arr: { id: string | number }[], id: string | number) => arr.filter((item: { id: string | number }) => item.id !== id), []);
+  const isValidString = React.useCallback((str: unknown, minLength = 1) => str && typeof str === 'string' && str.trim().length >= minLength, []);
+  const toFilesArray = React.useCallback((value: FileList | File[] | null) => Array.isArray(value) ? value : Array.from(value || []), []);
 
   // 🔧 HANDLERS SIMPLES (ETAPA 6c)
 
   // Handler: Upload de provas em PDF
-  const handleUploadProofPdf = React.useCallback(async (files) => {
+  const handleUploadProofPdf = React.useCallback(async (files: FileList | File[]) => {
     const filesArray = toFilesArray(files);
 
     for (const file of filesArray) {
@@ -5963,21 +5963,21 @@ const useProofManager = (documentServices = null) => {
     removeObjectKey(setProofProcessingModes, proof.id);
   }, [removeObjectKey, removeById]); // 🚀 v1.8.1: Memoizado (renderizado em 2 loops - crítico!)
 
-  const handleToggleProofMode = React.useCallback((proofId, usePdf) => {
+  const handleToggleProofMode = React.useCallback((proofId: string | number, usePdf: boolean) => {
     setProofUsePdfMode(prev => ({
       ...prev,
       [proofId]: usePdf
     }));
   }, []); // 🚀 v1.8.1: Memoizado (cada prova PDF)
 
-  const handleLinkProof = React.useCallback((proofId, topicTitles) => {
+  const handleLinkProof = React.useCallback((proofId: string | number, topicTitles: string[]) => {
     setProofTopicLinks(prev => ({
       ...prev,
       [proofId]: topicTitles
     }));
   }, []); // 🚀 v1.8.1: Memoizado (modal vincular)
 
-  const handleUnlinkProof = React.useCallback((proofId, topicTitle) => {
+  const handleUnlinkProof = React.useCallback((proofId: string | number, topicTitle: string) => {
     setProofTopicLinks(prev => {
       const currentLinks = prev[proofId] || [];
       const newLinks = currentLinks.filter(t => t !== topicTitle);
@@ -5995,7 +5995,7 @@ const useProofManager = (documentServices = null) => {
     });
   }, []); // 🚀 v1.8.1: Memoizado (badges vínculo)
 
-  const handleSaveProofConclusion = React.useCallback((proofId, conclusion) => {
+  const handleSaveProofConclusion = React.useCallback((proofId: string | number, conclusion: string) => {
     if (conclusion && conclusion.trim()) {
       setProofConclusions(prev => ({
         ...prev,
@@ -6025,7 +6025,7 @@ const useProofManager = (documentServices = null) => {
     };
   };
 
-  const restoreFromPersistence = (data) => {
+  const restoreFromPersistence = (data: Record<string, unknown> | null) => {
     if (!data) return;
 
     // Restaurar arrays de provas
@@ -6235,7 +6235,7 @@ const useDocumentManager = () => {
   // Controla exibição de modal de preview de texto extraído
 
   // 🆕 v1.12.18: Helpers para definir modo de processamento por índice
-  const setPeticaoMode = React.useCallback((index, mode) => {
+  const setPeticaoMode = React.useCallback((index: number, mode: ProcessingMode) => {
     setDocumentProcessingModes(prev => {
       const newPeticoes = [...(prev.peticoes || [])];
       newPeticoes[index] = mode;
@@ -6243,7 +6243,7 @@ const useDocumentManager = () => {
     });
   }, []);
 
-  const setContestacaoMode = React.useCallback((index, mode) => {
+  const setContestacaoMode = React.useCallback((index: number, mode: ProcessingMode) => {
     setDocumentProcessingModes(prev => {
       const newContestacoes = [...prev.contestacoes];
       newContestacoes[index] = mode;
@@ -6251,7 +6251,7 @@ const useDocumentManager = () => {
     });
   }, []);
 
-  const setComplementarMode = React.useCallback((index, mode) => {
+  const setComplementarMode = React.useCallback((index: number, mode: ProcessingMode) => {
     setDocumentProcessingModes(prev => {
       const newComplementares = [...prev.complementares];
       newComplementares[index] = mode;
@@ -6262,10 +6262,10 @@ const useDocumentManager = () => {
   // 🛠️ HANDLERS SIMPLES (5) - ETAPA 7b
 
   // Helper para garantir array (usado por handleUploadContestacao e handleUploadComplementary)
-  const toUploadFilesArray = (value) => Array.isArray(value) ? value : Array.from(value || []);
+  const toUploadFilesArray = (value: FileList | File[] | null) => Array.isArray(value) ? value : Array.from(value || []);
 
   // Handler: Processa texto colado (petição, contestação ou complementar)
-  const handlePastedText = React.useCallback((text, type, setError = null) => {
+  const handlePastedText = React.useCallback((text: string, type: string, setError: ((msg: string) => void) | null = null) => {
     if (!text.trim()) {
       if (setError) setError('O texto colado está vazio');
       return;
@@ -6411,7 +6411,7 @@ const useDocumentManager = () => {
   };
 
   // Restaura dados do localStorage
-  const restoreFromPersistence = (data) => {
+  const restoreFromPersistence = (data: Record<string, unknown> | null) => {
     if (!data) return;
 
     // Restaurar arquivos (File objects reconstruídos pelo useLocalStorage)
@@ -6661,7 +6661,7 @@ const useTopicManager = () => {
     };
   };
 
-  const restoreFromPersistence = (data) => {
+  const restoreFromPersistence = (data: Record<string, unknown> | null) => {
     if (!data) return;
 
     if (data.extractedTopics) setExtractedTopics(data.extractedTopics);
@@ -7042,7 +7042,7 @@ const useLegislacao = () => {
       }
 
       for (const t of terms) {
-        if (keywordsNorm.some(k => k.includes(t))) score += 15;
+        if (keywordsNorm.some((k: string) => k.includes(t))) score += 15;
         if (caputNorm.includes(t)) score += 10;
         if (subTextoNorm.includes(t)) score += 8; // parágrafos, incisos, alíneas
         if (numeroNorm === t) score += 30;
@@ -21350,7 +21350,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       if (longer.includes(shorter)) return shorter.length / longer.length;
       const wordsA = a.split(/\s+/);
       const wordsB = b.split(/\s+/);
-      const common = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb)));
+      const common = wordsA.filter(w => wordsB.some((wb: string) => wb.includes(w) || w.includes(wb)));
       return common.length / Math.max(wordsA.length, wordsB.length);
     };
 
@@ -26994,7 +26994,7 @@ DECIDE-SE.`;
     // 4. Palavras do título do modelo aparecem no mini-relatório (peso 2)
     if (topicRelatorio) {
       const relatorioLower = topicRelatorio.toLowerCase();
-      modelWords.forEach(word => {
+      modelWords.forEach((word: string) => {
         if (relatorioLower.includes(word)) {
           score += 2;
         }
