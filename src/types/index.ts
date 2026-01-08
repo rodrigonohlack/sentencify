@@ -605,3 +605,49 @@ export interface CacheStats {
   misses: number;
   evictions: number;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// APP.TSX SPECIFIC TYPES (FASE 8.2)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Local model form state (ModelFormModal) */
+export interface LocalModelForm {
+  title: string;
+  content: string;
+  keywords: string;
+  category: string;
+}
+
+/** Slash menu extended state with position and quill instance */
+export interface SlashMenuStateExtended {
+  isOpen: boolean;
+  position: { top: number; left: number };
+  searchTerm: string;
+  selectedIndex: number;
+  quillInstance: QuillInstance | null;
+  triggerPosition: number;
+}
+
+/** Download item status (detailed) */
+export interface DownloadItemStatus {
+  needed: boolean | null;
+  downloading: boolean;
+  progress: number;
+  error: string | null;
+  completed?: boolean;
+}
+
+/** Embeddings download status (detailed) */
+export interface EmbeddingsDownloadStatusExtended {
+  legislacao: DownloadItemStatus;
+  jurisprudencia: DownloadItemStatus;
+}
+
+/** Data download status (detailed) */
+export interface DataDownloadStatusExtended {
+  legislacao: DownloadItemStatus;
+  jurisprudencia: DownloadItemStatus;
+}
+
+/** Format state for inline formatting toolbar */
+export type ActiveFormatsState = Record<string, boolean | string | undefined>

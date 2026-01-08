@@ -149,7 +149,10 @@ import type {
   FiltrosJuris, FiltrosLegislacao, PastedText, ChatMessage, Precedente, Artigo,
   JurisSuggestion, ShareInfo, DownloadStatus, EmbeddingsDownloadStatus, DataDownloadStatus,
   DocumentAnalysis, PartesProcesso, QuillInstance, NewProofTextData, CacheEntry, CacheStats,
-  TargetField
+  TargetField,
+  // FASE 8.2: Tipos adicionais para useState com objetos
+  LocalModelForm, SlashMenuStateExtended, DownloadItemStatus,
+  EmbeddingsDownloadStatusExtended, DataDownloadStatusExtended, ActiveFormatsState
 } from './types';
 
 // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
@@ -158,7 +161,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.82'; // v1.35.82: TypeScript interno - FASE 8.2 useState com objetos tipados
+const APP_VERSION = '1.35.83'; // v1.35.83: TypeScript interno - FASE 8.2-8.3 useState com objetos e arrays tipados
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -4789,7 +4792,7 @@ const useModelLibrary = () => {
   // ===========================================================================
   // SEÇÃO 1: DADOS CORE
   // ===========================================================================
-  const [models, setModels] = React.useState([]);
+  const [models, setModels] = React.useState<Model[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
   const [isLoadingModels, setIsLoadingModels] = React.useState(false);
   const [persistenceError, setPersistenceError] = React.useState(null);
@@ -4803,8 +4806,8 @@ const useModelLibrary = () => {
   const [ownershipFilter, setOwnershipFilter] = React.useState('all'); // v1.35.0: 'all' | 'mine' | 'shared'
   const [currentModelPage, setCurrentModelPage] = React.useState(1);
   const [manualSearchTerm, setManualSearchTerm] = React.useState('');
-  const [manualSearchResults, setManualSearchResults] = React.useState([]);
-  const [suggestions, setSuggestions] = React.useState([]);
+  const [manualSearchResults, setManualSearchResults] = React.useState<Model[]>([]);
+  const [suggestions, setSuggestions] = React.useState<Model[]>([]);
   const [suggestionsSource, setSuggestionsSource] = React.useState(null); // v1.28.04: 'local' ou 'api'
   const [loadingSuggestions, setLoadingSuggestions] = React.useState(false);
   const [modelViewMode, setModelViewMode] = React.useState('cards');
@@ -6514,8 +6517,8 @@ const useTopicManager = () => {
   // 📊 ESTADOS (12) - ETAPA 7d
 
   // Tópicos Principais (2)
-  const [extractedTopics, setExtractedTopics] = React.useState([]);
-  const [selectedTopics, setSelectedTopics] = React.useState([]);
+  const [extractedTopics, setExtractedTopics] = React.useState<Topic[]>([]);
+  const [selectedTopics, setSelectedTopics] = React.useState<Topic[]>([]);
 
   // Estado de Edição (3)
   const [editingTopic, setEditingTopic] = React.useState(null);
@@ -6534,7 +6537,7 @@ const useTopicManager = () => {
   const [newTopicName, setNewTopicName] = React.useState('');
 
   // Merge (mesclagem)
-  const [topicsToMerge, setTopicsToMerge] = React.useState([]);
+  const [topicsToMerge, setTopicsToMerge] = React.useState<string[]>([]);
 
   // Split (divisão)
   const [topicToSplit, setTopicToSplit] = React.useState(null);
@@ -6697,7 +6700,7 @@ const useTopicManager = () => {
 
 // 💬 HOOK: useChatAssistant (v1.19.0) - Gerenciador de chat interativo para assistente IA
 const useChatAssistant = (aiIntegration) => {
-  const [history, setHistory] = React.useState([]);
+  const [history, setHistory] = React.useState<ChatMessage[]>([]);
   const [generating, setGenerating] = React.useState(false);
 
   // Limpa histórico
@@ -6810,9 +6813,9 @@ const useChatAssistant = (aiIntegration) => {
 };
 
 const useJurisprudencia = () => {
-  const [precedentes, setPrecedentes] = React.useState([]);
+  const [precedentes, setPrecedentes] = React.useState<Precedente[]>([]);
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [filtros, setFiltros] = React.useState({ fonte: [], tipo: [] });
+  const [filtros, setFiltros] = React.useState<FiltrosJuris>({ fonte: [], tipo: [] });
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isLoading, setIsLoading] = React.useState(false);
   const [deleteAllConfirmText, setDeleteAllConfirmText] = React.useState('');
@@ -6952,8 +6955,8 @@ const useJurisprudencia = () => {
 // 📜 HOOK: useLegislacao - Gestão de artigos de leis
 // ═══════════════════════════════════════════════════════════════
 const useLegislacao = () => {
-  const [artigos, setArtigos] = React.useState([]);
-  const [leisDisponiveis, setLeisDisponiveis] = React.useState([]);
+  const [artigos, setArtigos] = React.useState<Artigo[]>([]);
+  const [leisDisponiveis, setLeisDisponiveis] = React.useState<string[]>([]);
   const [leiAtiva, setLeiAtiva] = React.useState(null);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -7278,7 +7281,7 @@ VersionCompareModal.displayName = 'VersionCompareModal';
 // 💡 COMPONENTE: VersionSelect - Botão compacto com dropdown de versões
 const VersionSelect = React.memo(({ topicTitle, versioning, currentContent, onRestore, className = '' }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [versions, setVersions] = React.useState([]);
+  const [versions, setVersions] = React.useState<FieldVersion[]>([]);
   const [compareVersion, setCompareVersion] = React.useState(null);
   const dropdownRef = React.useRef(null);
 
@@ -7533,9 +7536,9 @@ const FullscreenModelPanel = React.memo(({
   onFindSuggestions
 }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [searchResults, setSearchResults] = React.useState([]);
-  const [suggestions, setSuggestions] = React.useState([]);
-  const [suggestionsSource, setSuggestionsSource] = React.useState(null); // v1.28.04
+  const [searchResults, setSearchResults] = React.useState<Model[]>([]);
+  const [suggestions, setSuggestions] = React.useState<Model[]>([]);
+  const [suggestionsSource, setSuggestionsSource] = React.useState<string | null>(null); // v1.28.04
   const [loading, setLoading] = React.useState(false);
 
   // Stopwords para scoring local (fallback se IA não disponível)
@@ -11873,8 +11876,8 @@ const ShareLibraryModal = React.memo(({ isOpen, onClose, user, onRemoveSharedMod
   const [recipientEmail, setRecipientEmail] = React.useState('');
   const [successMessage, setSuccessMessage] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
-  const [shares, setShares] = React.useState([]);
-  const [sharedWithMe, setSharedWithMe] = React.useState([]);
+  const [shares, setShares] = React.useState<ShareInfo[]>([]);
+  const [sharedWithMe, setSharedWithMe] = React.useState<ShareInfo[]>([]);
   const [activeTab, setActiveTab] = React.useState('share'); // 'share' | 'myShares' | 'sharedWithMe'
 
   // Buscar compartilhamentos ao abrir
@@ -13693,7 +13696,7 @@ const ModelFormModal = React.forwardRef(({
 
   // v1.35.10: Estado LOCAL para campos do formulário
   // Digitação atualiza apenas este componente (leve), não o LegalDecisionEditor (pesado)
-  const [localModel, setLocalModel] = React.useState({ title: '', content: '', keywords: '', category: '' });
+  const [localModel, setLocalModel] = React.useState<LocalModelForm>({ title: '', content: '', keywords: '', category: '' });
 
   // v1.35.10: Sincronizar estado local quando modal abre ou editingModel muda
   React.useEffect(() => {
@@ -14697,10 +14700,10 @@ const JURIS_TRIBUNAIS_DISPONIVEIS = ['TST', 'STF', 'STJ', 'TRT8'];
 // v1.32.18: Adicionado useLocalAI e jurisSemanticThreshold para busca semântica
 // v1.33.16: Adicionado jurisSemanticEnabled para toggle interno + badge IA Local
 const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRelatorio, callAI, useLocalAI = false, jurisSemanticThreshold = 50, jurisSemanticEnabled = false }) => {
-  const [suggestions, setSuggestions] = React.useState([]);
+  const [suggestions, setSuggestions] = React.useState<JurisSuggestion[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [copiedId, setCopiedId] = React.useState(null);
-  const [filtros, setFiltros] = React.useState({ tipo: [], tribunal: [] });
+  const [filtros, setFiltros] = React.useState<FiltrosLegislacao>({ tipo: [], tribunal: [] });
   const [searchTerm, setSearchTerm] = React.useState('');
   const [searchApplied, setSearchApplied] = React.useState('');
   const [searchSource, setSearchSource] = React.useState(null); // 'local' ou 'text'
@@ -14955,7 +14958,7 @@ JurisprudenciaModal.displayName = 'JurisprudenciaModal';
 
 // 📝 INLINE FORMATTING TOOLBAR (v1.20.4) - Toolbar de formatação para FieldEditor
 const InlineFormattingToolbar = React.memo(({ editorRef }) => {
-  const [activeFormats, setActiveFormats] = React.useState({});
+  const [activeFormats, setActiveFormats] = React.useState<ActiveFormatsState>({});
 
   const updateFormats = React.useCallback(() => {
     if (editorRef?.current) {
@@ -15250,9 +15253,9 @@ const GlobalEditorModal = React.memo(({
   modelSemanticEnabled = false
 }) => {
   // Estado local para os tópicos (cópia para edição)
-  const [localTopics, setLocalTopics] = React.useState([]);
+  const [localTopics, setLocalTopics] = React.useState<Topic[]>([]);
   const [isDirty, setIsDirty] = React.useState(false);
-  const [originalTopics, setOriginalTopics] = React.useState([]);
+  const [originalTopics, setOriginalTopics] = React.useState<Topic[]>([]);
 
   // Estados para sugestões de modelos - v1.12.2: inicia true para sugestões funcionarem na primeira abertura
   const [isSplitMode, setIsSplitMode] = React.useState(true);
@@ -15260,13 +15263,13 @@ const GlobalEditorModal = React.memo(({
   const [currentFocusedTopic, setCurrentFocusedTopic] = React.useState(null);
   const isSavingRef = React.useRef(false); // Indica quando salvando para evitar reset de sugestões
   const wasOpenRef = React.useRef(false); // Track se modal já estava aberto (evita reset no Ctrl+S)
-  const [suggestions, setSuggestions] = React.useState([]);
-  const [suggestionsSource, setSuggestionsSource] = React.useState(null); // v1.28.06
+  const [suggestions, setSuggestions] = React.useState<Model[]>([]);
+  const [suggestionsSource, setSuggestionsSource] = React.useState<string | null>(null); // v1.28.06
   const [loadingSuggestions, setLoadingSuggestions] = React.useState(false);
 
   // Estados para busca manual de modelos - v1.12.12
   const [globalManualSearchTerm, setGlobalManualSearchTerm] = React.useState('');
-  const [globalManualSearchResults, setGlobalManualSearchResults] = React.useState([]);
+  const [globalManualSearchResults, setGlobalManualSearchResults] = React.useState<Model[]>([]);
 
   // v1.33.19: Estados para busca semântica na busca manual do editor global
   // v1.33.20: Inicializa com modelSemanticEnabled (respeitando config IA)
@@ -15277,12 +15280,12 @@ const GlobalEditorModal = React.memo(({
   const [showCancelConfirm, setShowCancelConfirm] = React.useState(false);
 
   // Estado para seções colapsadas - iniciar todas colapsadas
-  const [collapsedSections, setCollapsedSections] = React.useState({});
+  const [collapsedSections, setCollapsedSections] = React.useState<Record<string, boolean>>({});
 
   // Estados para detecção automática de resultado ao salvar - v1.13
   const [editedTopicTitles, setEditedTopicTitles] = React.useState(new Set());
   const [isAnalyzingResults, setIsAnalyzingResults] = React.useState(false);
-  const [analyzingProgress, setAnalyzingProgress] = React.useState({ current: 0, total: 0 });
+  const [analyzingProgress, setAnalyzingProgress] = React.useState<ProgressState>({ current: 0, total: 0 });
 
   // Estados para modal de provas vinculadas - v1.12.14
   const [showProofsModal, setShowProofsModal] = React.useState(false);
@@ -18873,10 +18876,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // ☁️ v1.35.40: Google Drive - Salvar/Carregar projetos
   const googleDrive = useGoogleDrive();
   const [driveFilesModalOpen, setDriveFilesModalOpen] = React.useState(false);
-  const [driveFiles, setDriveFiles] = React.useState([]);
+  const [driveFiles, setDriveFiles] = React.useState<DriveFile[]>([]);
 
   // 🪄 v1.35.69: Gerador de Modelo a partir de Exemplos (v1.35.77: +estiloRedacao)
-  const [modelGeneratorModal, setModelGeneratorModal] = React.useState({
+  const [modelGeneratorModal, setModelGeneratorModal] = React.useState<ModelGeneratorModalState>({
     isOpen: false,
     targetField: null // 'modeloRelatorio' | 'modeloDispositivo' | 'modeloTopicoRelatorio' | 'estiloRedacao'
   });
@@ -19262,7 +19265,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // 🎨 ESTADOS: Navegação e UI
   const [activeTab, setActiveTab] = useState('upload');
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' }); // 'success', 'error', 'info'
+  const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' }); // 'success', 'error', 'info'
   const [error, setError] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
   const copyTimeoutRef = React.useRef(null);
@@ -19287,7 +19290,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   }, [aiIntegration?.aiSettings?.anonymization?.nomesUsuario]);
 
   // v1.15.3: Estado para Slash Menu (acesso rápido a modelos com /)
-  const [slashMenu, setSlashMenu] = React.useState({
+  const [slashMenu, setSlashMenu] = React.useState<SlashMenuStateExtended>({
     isOpen: false,
     position: { top: 0, left: 0 },
     searchTerm: '',
@@ -19544,7 +19547,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [dragOverComplementaryIndex, setDragOverComplementaryIndex] = useState(null);
 
   // 💾 ESTADOS: Sessão e Persistência
-  const [partesProcesso, setPartesProcesso] = useState({ reclamante: '', reclamadas: [] });
+  const [partesProcesso, setPartesProcesso] = useState<PartesProcesso>({ reclamante: '', reclamadas: [] });
 
   // 📝 ESTADOS: Editor de Texto Rico
   const [exportedText, setExportedText] = useState('');
@@ -19561,7 +19564,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [quillRetryCount, setQuillRetryCount] = useState(0);
 
   // 🧠 v1.32.00: ESTADOS: IA Offline (NER)
-  const [nerFilesStored, setNerFilesStored] = useState([]); // Legado - não mais usado
+  const [nerFilesStored, setNerFilesStored] = useState<string[]>([]); // Legado - não mais usado
   const [nerModelReady, setNerModelReady] = useState(false);
   const [nerInitializing, setNerInitializing] = useState(false);
   const [nerDownloadProgress, setNerDownloadProgress] = useState(0);
@@ -19576,12 +19579,12 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   });
 
   // 🔍 v1.26.00: ESTADOS: Busca Semântica (E5-base)
-  const [searchFilesStored, setSearchFilesStored] = useState([]);
+  const [searchFilesStored, setSearchFilesStored] = useState<string[]>([]);
   const [searchModelReady, setSearchModelReady] = useState(false);
   const [searchInitializing, setSearchInitializing] = useState(false);
   const [searchDownloadProgress, setSearchDownloadProgress] = useState(0);
   const [embeddingsCount, setEmbeddingsCount] = useState(0);
-  const [embeddingsProgress, setEmbeddingsProgress] = useState({ current: 0, total: 0 });
+  const [embeddingsProgress, setEmbeddingsProgress] = useState<ProgressState>({ current: 0, total: 0 });
   // v1.28.00: Toggle MASTER que controla carregamento do modelo E5
   const [searchEnabled, setSearchEnabled] = useState(() => {
     try {
@@ -19594,12 +19597,12 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.35.74: semanticSearchEnabled, semanticThreshold, jurisSemanticEnabled, jurisSemanticThreshold
   // movidos para aiSettings (agora em aiIntegration.aiSettings.X)
   const [jurisEmbeddingsCount, setJurisEmbeddingsCount] = useState(0);
-  const [jurisEmbeddingsProgress, setJurisEmbeddingsProgress] = useState({ current: 0, total: 0 });
+  const [jurisEmbeddingsProgress, setJurisEmbeddingsProgress] = useState<ProgressState>({ current: 0, total: 0 });
   const jurisEmbeddingsFileInputRef = useRef(null);
 
   // 🌐 v1.33.0: Estados para download automático de embeddings via CDN
   const [showEmbeddingsDownloadModal, setShowEmbeddingsDownloadModal] = useState(false);
-  const [embeddingsDownloadStatus, setEmbeddingsDownloadStatus] = useState({
+  const [embeddingsDownloadStatus, setEmbeddingsDownloadStatus] = useState<EmbeddingsDownloadStatusExtended>({
     legislacao: { needed: null, downloading: false, progress: 0, error: null },
     jurisprudencia: { needed: null, downloading: false, progress: 0, error: null }
   });
@@ -19609,7 +19612,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // 📥 v1.33.61: Estados para download automático de DADOS (legislação e jurisprudência)
   const [showDataDownloadModal, setShowDataDownloadModal] = useState(false);
-  const [dataDownloadStatus, setDataDownloadStatus] = useState({
+  const [dataDownloadStatus, setDataDownloadStatus] = useState<DataDownloadStatusExtended>({
     legislacao: { needed: null, downloading: false, progress: 0, error: null, completed: false },
     jurisprudencia: { needed: null, downloading: false, progress: 0, error: null, completed: false }
   });
@@ -19621,7 +19624,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.35.74: modelSemanticEnabled, modelSemanticThreshold, useLocalAIForSuggestions
   // movidos para aiSettings (agora em aiIntegration.aiSettings.X)
   const [generatingModelEmbeddings, setGeneratingModelEmbeddings] = useState(false);
-  const [modelEmbeddingsProgress, setModelEmbeddingsProgress] = useState({ current: 0, total: 0 });
+  const [modelEmbeddingsProgress, setModelEmbeddingsProgress] = useState<ProgressState>({ current: 0, total: 0 });
   // v1.32.18: Jurisprudência via IA Local nos editores
   // v1.35.74: useLocalAIForJuris movido para aiSettings
 
