@@ -140,13 +140,25 @@ import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 // v1.35.26: Prompts de IA movidos para src/prompts/
 import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS } from './prompts';
 
+// v1.35.82: Tipos TypeScript centralizados
+import type {
+  ModalState, TextPreviewState, AISettings, TokenMetrics,
+  Topic, TopicCategory, Model, Proof, ProofFile, ProofText, ProofAnalysisResult,
+  ProcessingMode, FieldVersion, DriveFile,
+  ProgressState, ToastState, SlashMenuState, ModelGeneratorModalState,
+  FiltrosJuris, FiltrosLegislacao, PastedText, ChatMessage, Precedente, Artigo,
+  JurisSuggestion, ShareInfo, DownloadStatus, EmbeddingsDownloadStatus, DataDownloadStatus,
+  DocumentAnalysis, PartesProcesso, QuillInstance, NewProofTextData, CacheEntry, CacheStats,
+  TargetField
+} from './types';
+
 // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.77'; // v1.35.77: Gerar Estilo de Redação a partir de exemplos (buildStyleMetaPrompt)
+const APP_VERSION = '1.35.82'; // v1.35.82: TypeScript interno - FASE 8.2 useState com objetos tipados
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -1420,7 +1432,7 @@ const isDispositivo = (topic) => topic?.title?.toUpperCase() === 'DISPOSITIVO';
 
 // 🎣 CUSTOM HOOK: useModalManager
 const useModalManager = () => {
-  const [modals, setModals] = useState({
+  const [modals, setModals] = useState<ModalState>({
     modelForm: false,
     extractModelConfirm: false,
     extractedModelPreview: false,
@@ -1457,10 +1469,13 @@ const useModalManager = () => {
     sentenceReview: false,
     sentenceReviewResult: false,
     logout: false,  // v1.33.57
-    shareLibrary: false  // v1.35.0
+    shareLibrary: false,  // v1.35.0
+    changelog: false,
+    topicCuration: false,
+    modelGenerator: false
   });
 
-  const [textPreview, setTextPreview] = useState({ isOpen: false, title: '', text: '' });
+  const [textPreview, setTextPreview] = useState<TextPreviewState>({ isOpen: false, title: '', text: '' });
 
   const openModal = React.useCallback((modalName) => {
     setModals(prev => ({ ...prev, [modalName]: true }));
@@ -1514,7 +1529,7 @@ const aiGenerationReducer = (state, action) => {
 };
 
 const useAIIntegration = () => {
-  const [aiSettings, setAiSettingsState] = React.useState({
+  const [aiSettings, setAiSettingsState] = React.useState<AISettings>({
     // v1.30: Multi-provider support
     provider: 'claude',  // 'claude' | 'gemini'
     claudeModel: 'claude-sonnet-4-20250514',
@@ -1572,34 +1587,29 @@ const useAIIntegration = () => {
     quickPrompts: [
       {
         id: 'qp-1',
-        name: 'Avaliar Decisão',
-        prompt: 'Avalie criticamente a qualidade da decisão/fundamentação que redigi. IMPORTANTE: Não me bajule nem seja condescendente - quero uma avaliação genuinamente crítica que me ajude a melhorar efetivamente. Seja direto ao apontar problemas. Considere: (1) coerência com os fatos narrados nos documentos, (2) adequação jurídica aos pedidos, (3) clareza e objetividade da redação, (4) possíveis lacunas ou inconsistências. Priorize apontar o que precisa melhorar, não o que está bom.',
-        icon: '⚖️'
+        label: 'Avaliar Decisão',
+        prompt: 'Avalie criticamente a qualidade da decisão/fundamentação que redigi. IMPORTANTE: Não me bajule nem seja condescendente - quero uma avaliação genuinamente crítica que me ajude a melhorar efetivamente. Seja direto ao apontar problemas. Considere: (1) coerência com os fatos narrados nos documentos, (2) adequação jurídica aos pedidos, (3) clareza e objetividade da redação, (4) possíveis lacunas ou inconsistências. Priorize apontar o que precisa melhorar, não o que está bom.'
       },
       {
         id: 'qp-2',
-        name: 'Sugerir Melhorias',
-        prompt: 'Sugira melhorias específicas para o texto da decisão que redigi, mantendo o mesmo entendimento jurídico mas aprimorando a redação, clareza e fundamentação.',
-        icon: '✨'
+        label: 'Sugerir Melhorias',
+        prompt: 'Sugira melhorias específicas para o texto da decisão que redigi, mantendo o mesmo entendimento jurídico mas aprimorando a redação, clareza e fundamentação.'
       },
       {
         id: 'qp-3',
-        name: 'Verificar Omissões',
-        prompt: 'Verifique se há pedidos, argumentos ou provas relevantes nos documentos que não foram adequadamente abordados na minha decisão. Liste qualquer omissão encontrada.',
-        icon: '🔍'
+        label: 'Verificar Omissões',
+        prompt: 'Verifique se há pedidos, argumentos ou provas relevantes nos documentos que não foram adequadamente abordados na minha decisão. Liste qualquer omissão encontrada.'
       },
       {
         id: 'qp-4',
-        name: 'Análise de Prova Oral',
-        prompt: '**INSTRUÇÃO CRÍTICA**: Analise a prova oral EXCLUSIVAMENTE sobre "{TOPICO}".\n\nREGRAS OBRIGATÓRIAS:\n1. IGNORE 100% de qualquer trecho que NÃO trate de "{TOPICO}"\n2. NÃO mencione outros assuntos discutidos nos depoimentos\n3. Se um depoente falou sobre múltiplos temas, extraia APENAS o que se refere a "{TOPICO}"\n4. Se não houver NENHUMA menção a "{TOPICO}", responda: "Não há menção a {TOPICO} nesta prova oral."\n\nProduza um resumo estruturado APENAS com trechos relevantes a "{TOPICO}", com minutagem quando disponível:\n\nAUTOR: [afirmação sobre {TOPICO}] (mm:ss);\nPREPOSTO: [afirmação sobre {TOPICO}] (mm:ss);\nTestemunha [nome]: [afirmação sobre {TOPICO}] (mm:ss);\n\n⚠️ LEMBRE-SE: Analise SOMENTE "{TOPICO}". Outros assuntos devem ser COMPLETAMENTE ignorados.',
-        icon: '🎤',
-        proofFilter: 'oral'
+        label: 'Análise de Prova Oral',
+        prompt: '**INSTRUÇÃO CRÍTICA**: Analise a prova oral EXCLUSIVAMENTE sobre "{TOPICO}".\n\nREGRAS OBRIGATÓRIAS:\n1. IGNORE 100% de qualquer trecho que NÃO trate de "{TOPICO}"\n2. NÃO mencione outros assuntos discutidos nos depoimentos\n3. Se um depoente falou sobre múltiplos temas, extraia APENAS o que se refere a "{TOPICO}"\n4. Se não houver NENHUMA menção a "{TOPICO}", responda: "Não há menção a {TOPICO} nesta prova oral."\n\nProduza um resumo estruturado APENAS com trechos relevantes a "{TOPICO}", com minutagem quando disponível:\n\nAUTOR: [afirmação sobre {TOPICO}] (mm:ss);\nPREPOSTO: [afirmação sobre {TOPICO}] (mm:ss);\nTestemunha [nome]: [afirmação sobre {TOPICO}] (mm:ss);\n\n⚠️ LEMBRE-SE: Analise SOMENTE "{TOPICO}". Outros assuntos devem ser COMPLETAMENTE ignorados.'
       }
     ]
   });
 
   // v1.20.3: Contador de tokens persistente por projeto
-  const [tokenMetrics, setTokenMetrics] = React.useState({
+  const [tokenMetrics, setTokenMetrics] = React.useState<TokenMetrics>({
     totalInput: 0,
     totalOutput: 0,
     totalCacheRead: 0,
@@ -4820,14 +4830,14 @@ const useModelLibrary = () => {
   // ===========================================================================
   // SEÇÃO 3: FORMULÁRIO E EDIÇÃO
   // ===========================================================================
-  const [newModel, setNewModel] = React.useState({ title: '', content: '', keywords: '', category: '' });
-  const [editingModel, setEditingModel] = React.useState(null);
-  const [extractingModelFromDecision, setExtractingModelFromDecision] = React.useState(false);
-  const [showExtractModelButton, setShowExtractModelButton] = React.useState(true);
-  const [extractedModelPreview, setExtractedModelPreview] = React.useState(null);
-  const [exportedModelsText, setExportedModelsText] = React.useState('');
-  const [modelToDelete, setModelToDelete] = React.useState(null);
-  const [similarityWarning, setSimilarityWarning] = React.useState(null);
+  const [newModel, setNewModel] = React.useState<Partial<Model>>({ title: '', content: '', keywords: '', category: '' });
+  const [editingModel, setEditingModel] = React.useState<Model | null>(null);
+  const [extractingModelFromDecision, setExtractingModelFromDecision] = React.useState<boolean>(false);
+  const [showExtractModelButton, setShowExtractModelButton] = React.useState<boolean>(true);
+  const [extractedModelPreview, setExtractedModelPreview] = React.useState<Model | null>(null);
+  const [exportedModelsText, setExportedModelsText] = React.useState<string>('');
+  const [modelToDelete, setModelToDelete] = React.useState<Model | null>(null);
+  const [similarityWarning, setSimilarityWarning] = React.useState<{ model: Model; similarity: number } | null>(null);
 
   // --- Resetar formulário ---
   const resetForm = React.useCallback(() => {
@@ -4851,18 +4861,18 @@ const useModelLibrary = () => {
   // ===========================================================================
   // SEÇÃO 4: PROCESSAMENTO EM LOTE (BULK)
   // ===========================================================================
-  const [deleteAllConfirmText, setDeleteAllConfirmText] = React.useState('');
-  const [bulkFiles, setBulkFiles] = React.useState([]);
-  const [bulkProcessing, setBulkProcessing] = React.useState(false);
-  const [bulkCurrentFileIndex, setBulkCurrentFileIndex] = React.useState(0);
-  const [bulkProcessedFiles, setBulkProcessedFiles] = React.useState([]);
-  const [bulkGeneratedModels, setBulkGeneratedModels] = React.useState([]);
-  const [bulkErrors, setBulkErrors] = React.useState([]);
-  const [bulkReviewModels, setBulkReviewModels] = React.useState([]);
-  const [bulkEditingModel, setBulkEditingModel] = React.useState(null);
-  const [bulkCancelController, setBulkCancelController] = React.useState(null);
-  const [bulkStaggerDelay, setBulkStaggerDelay] = React.useState(0);
-  const [bulkCurrentBatch, setBulkCurrentBatch] = React.useState(0);
+  const [deleteAllConfirmText, setDeleteAllConfirmText] = React.useState<string>('');
+  const [bulkFiles, setBulkFiles] = React.useState<File[]>([]);
+  const [bulkProcessing, setBulkProcessing] = React.useState<boolean>(false);
+  const [bulkCurrentFileIndex, setBulkCurrentFileIndex] = React.useState<number>(0);
+  const [bulkProcessedFiles, setBulkProcessedFiles] = React.useState<File[]>([]);
+  const [bulkGeneratedModels, setBulkGeneratedModels] = React.useState<Model[]>([]);
+  const [bulkErrors, setBulkErrors] = React.useState<string[]>([]);
+  const [bulkReviewModels, setBulkReviewModels] = React.useState<Model[]>([]);
+  const [bulkEditingModel, setBulkEditingModel] = React.useState<Model | null>(null);
+  const [bulkCancelController, setBulkCancelController] = React.useState<AbortController | null>(null);
+  const [bulkStaggerDelay, setBulkStaggerDelay] = React.useState<number>(0);
+  const [bulkCurrentBatch, setBulkCurrentBatch] = React.useState<number>(0);
 
   // --- Cancelar processamento bulk ---
   const cancelBulkProcessing = React.useCallback(() => {
@@ -5719,41 +5729,41 @@ const useProofManager = (documentServices = null) => {
   // 📊 ESTADOS CORE DE DADOS (8 estados)
 
   // Provas Principais
-  const [proofFiles, setProofFiles] = React.useState([]);
+  const [proofFiles, setProofFiles] = React.useState<ProofFile[]>([]);
   // Array de { id, file, name, type: 'pdf', size, uploadDate }
 
-  const [proofTexts, setProofTexts] = React.useState([]);
+  const [proofTexts, setProofTexts] = React.useState<ProofText[]>([]);
   // Array de { id, text, name, uploadDate }
 
   // Controle de Visualização de PDFs
-  const [proofUsePdfMode, setProofUsePdfMode] = React.useState({});
+  const [proofUsePdfMode, setProofUsePdfMode] = React.useState<Record<string, boolean>>({});
   // { proofId: true/false } - true = enviar PDF completo, false = usar texto extraído
 
   // Extração de Texto
-  const [extractedProofTexts, setExtractedProofTexts] = React.useState({});
+  const [extractedProofTexts, setExtractedProofTexts] = React.useState<Record<string, string>>({});
   // { proofId: 'texto extraído via pdf.js' }
 
-  const [proofExtractionFailed, setProofExtractionFailed] = React.useState({});
+  const [proofExtractionFailed, setProofExtractionFailed] = React.useState<Record<string, boolean>>({});
   // { proofId: true } - marca PDFs que falharam na extração (PDFs de imagens)
 
   // Vinculações e Análises
-  const [proofTopicLinks, setProofTopicLinks] = React.useState({});
+  const [proofTopicLinks, setProofTopicLinks] = React.useState<Record<string, string[]>>({});
   // { proofId: ['Tópico A', 'Tópico B'] } - Relação many-to-many
 
-  const [proofAnalysisResults, setProofAnalysisResults] = React.useState({});
+  const [proofAnalysisResults, setProofAnalysisResults] = React.useState<Record<string, ProofAnalysisResult>>({});
   // { proofId: { type: 'contextual' | 'livre', result: 'análise da IA' } }
 
-  const [proofConclusions, setProofConclusions] = React.useState({});
+  const [proofConclusions, setProofConclusions] = React.useState<Record<string, string>>({});
   // { proofId: 'conclusão manual do juiz sobre esta prova' }
 
   // 🆕 v1.19.2: Flag para enviar conteúdo completo da prova à IA
-  const [proofSendFullContent, setProofSendFullContent] = React.useState({});
+  const [proofSendFullContent, setProofSendFullContent] = React.useState<Record<string, boolean>>({});
   // { proofId: true/false } - se true, envia texto completo da prova ao assistente IA
 
   // 🎛️ ESTADOS DE UI/CONTROLE (7 estados) - ETAPA 6b
 
   // Controle de Análise - v1.15.0: Suporte a múltiplas análises simultâneas
-  const [analyzingProofIds, setAnalyzingProofIds] = React.useState(new Set());
+  const [analyzingProofIds, setAnalyzingProofIds] = React.useState<Set<string | number>>(new Set());
   // Set de IDs das provas sendo analisadas (para mostrar loader em cada uma)
 
   const addAnalyzingProof = React.useCallback((id) => {
@@ -5777,47 +5787,47 @@ const useProofManager = (documentServices = null) => {
   }, []);
 
   // Controle de UI
-  const [showProofPanel, setShowProofPanel] = React.useState(true);
+  const [showProofPanel, setShowProofPanel] = React.useState<boolean>(true);
   // Controla visibilidade do painel lateral de provas no editor
 
   // Formulário de Nova Prova Texto
-  const [newProofTextData, setNewProofTextData] = React.useState({ name: '', text: '' });
+  const [newProofTextData, setNewProofTextData] = React.useState<NewProofTextData>({ name: '', text: '' });
   // Dados do formulário para adicionar prova em texto
 
   // Prova Selecionada para Ações
-  const [proofToDelete, setProofToDelete] = React.useState(null);
+  const [proofToDelete, setProofToDelete] = React.useState<Proof | null>(null);
   // Prova selecionada para deletar (usado no modal de confirmação)
 
-  const [proofToLink, setProofToLink] = React.useState(null);
+  const [proofToLink, setProofToLink] = React.useState<Proof | null>(null);
   // Prova selecionada para vincular a tópicos
 
-  const [proofToAnalyze, setProofToAnalyze] = React.useState(null);
+  const [proofToAnalyze, setProofToAnalyze] = React.useState<Proof | null>(null);
   // Prova selecionada para análise com IA
 
   // Configurações de Análise
-  const [proofAnalysisCustomInstructions, setProofAnalysisCustomInstructions] = React.useState('');
+  const [proofAnalysisCustomInstructions, setProofAnalysisCustomInstructions] = React.useState<string>('');
   // Instruções customizadas para análise da prova atual
 
-  const [useOnlyMiniRelatorios, setUseOnlyMiniRelatorios] = React.useState(false);
+  const [useOnlyMiniRelatorios, setUseOnlyMiniRelatorios] = React.useState<boolean>(false);
   // Toggle: usar apenas mini-relatórios na análise contextual (em vez de documentos completos)
 
-  const [includeLinkedTopicsInFree, setIncludeLinkedTopicsInFree] = React.useState(false);
+  const [includeLinkedTopicsInFree, setIncludeLinkedTopicsInFree] = React.useState<boolean>(false);
 
   // 🆕 v1.12.20: Modo de processamento por prova PDF (v1.12.22: removido OCRAD)
-  const [proofProcessingModes, setProofProcessingModes] = React.useState({});
+  const [proofProcessingModes, setProofProcessingModes] = React.useState<Record<string, ProcessingMode>>({});
   // { proofId: 'pdfjs' | 'pdf-puro' | 'claude-vision' }
   // Define qual método de extração de texto usar para cada prova PDF
 
   // 🆕 v1.21.3: Texto de prova pendente aguardando confirmação de anonimização
-  const [pendingProofText, setPendingProofText] = React.useState(null);
+  const [pendingProofText, setPendingProofText] = React.useState<NewProofTextData | null>(null);
   // { name: string, text: string } - guardado temporariamente até confirmar nomes
 
   // 🆕 v1.21.5: Extração de PDF pendente aguardando confirmação de nomes
-  const [pendingExtraction, setPendingExtraction] = React.useState(null);
+  const [pendingExtraction, setPendingExtraction] = React.useState<{ proofId: string | number; proof: Proof } | null>(null);
   // { proofId: number, proof: object } - guardado temporariamente até confirmar nomes
 
   // 🆕 v1.21.6: Mensagem de chat pendente aguardando confirmação de nomes
-  const [pendingChatMessage, setPendingChatMessage] = React.useState(null);
+  const [pendingChatMessage, setPendingChatMessage] = React.useState<{ message: string; options: unknown; isGlobal: boolean; topicTitle: string } | null>(null);
   // { message: string, options: object, isGlobal: boolean, topicTitle: string }
 
   // 📊 HELPERS COMPUTADOS (ETAPA 6b)
@@ -6094,27 +6104,34 @@ const useDocumentManager = () => {
   // 📦 ESTADOS CORE (13 total)
 
   // Arquivos de Documentos (3)
-  const [peticaoFiles, setPeticaoFiles] = React.useState([]);
+  const [peticaoFiles, setPeticaoFiles] = React.useState<File[]>([]);
   // Array de File objects dos PDFs da petição inicial e emendas
 
-  const [contestacaoFiles, setContestacaoFiles] = React.useState([]);
+  const [contestacaoFiles, setContestacaoFiles] = React.useState<File[]>([]);
   // Array de File objects dos PDFs de contestações
 
-  const [complementaryFiles, setComplementaryFiles] = React.useState([]);
+  const [complementaryFiles, setComplementaryFiles] = React.useState<File[]>([]);
   // Array de File objects dos PDFs de documentos complementares
 
   // Textos Colados (Alternativa aos PDFs) (3)
-  const [pastedPeticaoTexts, setPastedPeticaoTexts] = React.useState([]);
+  const [pastedPeticaoTexts, setPastedPeticaoTexts] = React.useState<PastedText[]>([]);
   // Array de {text: string, name: string} - petição e emendas coladas
 
-  const [pastedContestacaoTexts, setPastedContestacaoTexts] = React.useState([]);
+  const [pastedContestacaoTexts, setPastedContestacaoTexts] = React.useState<PastedText[]>([]);
   // Array de {text: string, name: string} - contestações coladas
 
-  const [pastedComplementaryTexts, setPastedComplementaryTexts] = React.useState([]);
+  const [pastedComplementaryTexts, setPastedComplementaryTexts] = React.useState<PastedText[]>([]);
   // Array de {text: string, name: string} - documentos complementares colados
 
   // Metadados de Documentos Processados (1)
-  const [analyzedDocuments, setAnalyzedDocuments] = React.useState({
+  const [analyzedDocuments, setAnalyzedDocuments] = React.useState<{
+    peticoes: string[];
+    peticoesText: PastedText[];
+    contestacoes: string[];
+    contestacoesText: PastedText[];
+    complementares: string[];
+    complementaresText: PastedText[];
+  }>({
     peticoes: [],            // Array de base64 (PDFs não extraídos)
     peticoesText: [],        // Array de {text, name} (textos extraídos/colados)
     contestacoes: [],        // Array de base64 (PDFs não extraídos)
@@ -6125,23 +6142,27 @@ const useDocumentManager = () => {
   // Objeto contendo documentos processados após análise
 
   // Estados de UI e Progresso (6)
-  const [analyzing, setAnalyzing] = React.useState(false);
+  const [analyzing, setAnalyzing] = React.useState<boolean>(false);
   // Flag indicando se análise está em andamento
 
-  const [analysisProgress, setAnalysisProgress] = React.useState('');
+  const [analysisProgress, setAnalysisProgress] = React.useState<string>('');
   // Mensagem de progresso exibida durante análise (ex: "Extraindo texto da petição...")
 
-  const [extractingText, setExtractingText] = React.useState(false);
+  const [extractingText, setExtractingText] = React.useState<boolean>(false);
   // Flag indicando se extração de texto de PDF está em andamento
 
-  const [showPasteArea, setShowPasteArea] = React.useState({
+  const [showPasteArea, setShowPasteArea] = React.useState<Record<string, boolean>>({
     peticao: false,
     contestacao: false,
     complementary: false
   });
   // Controla visibilidade das áreas de colagem de texto para cada tipo de documento
 
-  const [extractedTexts, setExtractedTexts] = React.useState({
+  const [extractedTexts, setExtractedTexts] = React.useState<{
+    peticoes: string[];
+    contestacoes: string[];
+    complementares: string[];
+  }>({
     peticoes: [],
     contestacoes: [],
     complementares: []
@@ -6150,13 +6171,17 @@ const useDocumentManager = () => {
 
   // 🆕 v1.12.18: Modo de processamento por documento (v1.12.22: removido OCRAD)
   // Cada documento pode ter seu próprio modo: 'pdf-puro' | 'pdfjs' | 'claude-vision'
-  const [documentProcessingModes, setDocumentProcessingModes] = React.useState({
+  const [documentProcessingModes, setDocumentProcessingModes] = React.useState<{
+    peticoes: ProcessingMode[];
+    contestacoes: ProcessingMode[];
+    complementares: ProcessingMode[];
+  }>({
     peticoes: [],               // Array de modos, um por arquivo de petição
     contestacoes: [],           // Array de modos, um por arquivo
     complementares: []          // Array de modos, um por arquivo
   });
 
-  const [showTextPreview, setShowTextPreview] = React.useState(false);
+  const [showTextPreview, setShowTextPreview] = React.useState<boolean>(false);
   // Controla exibição de modal de preview de texto extraído
 
   // 🆕 v1.12.18: Helpers para definir modo de processamento por índice

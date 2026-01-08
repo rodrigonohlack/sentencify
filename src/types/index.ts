@@ -134,6 +134,15 @@ export interface QuickPrompt {
   prompt: string;
 }
 
+/** Tópico complementar para geração automática */
+export interface TopicoComplementar {
+  id: number;
+  title: string;
+  category: TopicCategory;
+  enabled: boolean;
+  ordem: number;
+}
+
 export interface AISettings {
   provider: AIProvider;
   claudeModel: string;
@@ -142,19 +151,30 @@ export interface AISettings {
   useExtendedThinking: boolean;
   thinkingBudget: string;
   geminiThinkingLevel: GeminiThinkingLevel;
+  model?: string; // Legacy field for backwards compatibility
   customPrompt: string;
   modeloRelatorio: string;
   modeloDispositivo: string;
   modeloTopicoRelatorio: string;
   estiloRedacao?: string;
+  topicosComplementares?: TopicoComplementar[];
   ocrEngine: OCREngine;
+  ocrLanguage?: string;
+  detailedMiniReports?: boolean;
+  topicsPerRequest?: number;
   parallelRequests: number;
   anonymization: AnonymizationSettings;
+  // IA Local settings
   semanticSearchEnabled: boolean;
   semanticThreshold: number;
   jurisSemanticEnabled: boolean;
+  jurisSemanticThreshold?: number;
+  modelSemanticEnabled?: boolean;
+  modelSemanticThreshold?: number;
+  useLocalAIForSuggestions?: boolean;
+  useLocalAIForJuris?: boolean;
   quickPrompts: QuickPrompt[];
-  logThinking: boolean;
+  logThinking?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -212,21 +232,34 @@ export type ModalKey =
   | 'exportModels'
   | 'deleteModel'
   | 'deleteAllModels'
+  | 'deleteAllPrecedentes'
   | 'rename'
   | 'merge'
   | 'split'
   | 'newTopic'
   | 'deleteTopic'
   | 'aiAssistant'
+  | 'aiAssistantModel'
   | 'analysis'
   | 'settings'
   | 'dispositivo'
   | 'restoreSession'
   | 'clearProject'
   | 'bulkModel'
+  | 'bulkReview'
+  | 'bulkDiscardConfirm'
+  | 'confirmBulkCancel'
+  | 'addProofText'
+  | 'deleteProof'
+  | 'linkProof'
+  | 'proofAnalysis'
   | 'globalEditor'
   | 'jurisIndividual'
+  | 'proofTextAnonymization'
+  | 'proofExtractionAnonymization'
   | 'sentenceReview'
+  | 'sentenceReviewResult'
+  | 'logout'
   | 'shareLibrary'
   | 'changelog'
   | 'topicCuration'
@@ -239,12 +272,19 @@ export type ModalState = Record<ModalKey, boolean>;
 // ═══════════════════════════════════════════════════════════════════════════
 
 export interface TokenMetrics {
-  inputTokens: number;
-  outputTokens: number;
-  thinkingTokens: number;
-  cacheCreationTokens: number;
-  cacheReadTokens: number;
-  totalCost: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  thinkingTokens?: number;
+  cacheCreationTokens?: number;
+  cacheReadTokens?: number;
+  totalCost?: number;
+  // Campos usados no App.tsx
+  totalInput?: number;
+  totalOutput?: number;
+  totalCacheRead?: number;
+  totalCacheCreation?: number;
+  requestCount?: number;
+  lastUpdated?: string | null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -374,3 +414,194 @@ export type RequireKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 /** Callback type for generic functions */
 export type VoidCallback = () => void;
 export type AsyncVoidCallback = () => Promise<void>;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UI STATE TYPES (FASE 8.1)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Estado do modal de preview de texto */
+export interface TextPreviewState {
+  isOpen: boolean;
+  title: string;
+  text: string;
+}
+
+/** Estado do toast de notificação */
+export interface ToastState {
+  show: boolean;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
+/** Estado do menu slash command */
+export interface SlashMenuState {
+  visible: boolean;
+  x: number;
+  y: number;
+  query: string;
+  items: Model[];
+}
+
+/** Estado de progresso genérico */
+export interface ProgressState {
+  current: number;
+  total: number;
+}
+
+/** Target field para geração de modelo */
+export type TargetField = 'relatorio' | 'dispositivo' | 'topicoRelatorio' | 'estiloRedacao';
+
+/** Estado do modal de geração de modelo */
+export interface ModelGeneratorModalState {
+  isOpen: boolean;
+  targetField: TargetField | null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FILTER TYPES (FASE 8.1)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Filtros de jurisprudência */
+export interface FiltrosJuris {
+  fonte: string[];
+  tipo: string[];
+}
+
+/** Filtros de legislação */
+export interface FiltrosLegislacao {
+  tipo: string[];
+  tribunal: string[];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DATA TYPES (FASE 8.1)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Texto colado (petição, contestação, complementar) */
+export interface PastedText {
+  id: string;
+  text: string;
+  name: string;
+}
+
+/** Mensagem do chat assistente */
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp?: number;
+}
+
+/** Precedente (súmula, OJ, tese) */
+export interface Precedente {
+  id: string;
+  tipo: string;
+  numero: string;
+  texto: string;
+  tribunal?: string;
+  similarity?: number;
+  fullText?: string;
+}
+
+/** Artigo de legislação */
+export interface Artigo {
+  id: string;
+  lei: string;
+  numero: string;
+  texto: string;
+  caput?: string;
+  incisos?: string[];
+  paragrafos?: string[];
+}
+
+/** Sugestão de jurisprudência */
+export interface JurisSuggestion {
+  id: string;
+  texto: string;
+  tipo?: string;
+  similarity: number;
+}
+
+/** Informação de compartilhamento */
+export interface ShareInfo {
+  id: string;
+  email: string;
+  permission: 'view' | 'edit';
+  createdAt: string;
+  status?: 'pending' | 'accepted';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DOWNLOAD STATUS TYPES (FASE 8.1)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Status de download */
+export type DownloadStatus = 'idle' | 'downloading' | 'done' | 'error';
+
+/** Status de download de embeddings */
+export interface EmbeddingsDownloadStatus {
+  legislacao: DownloadStatus;
+  jurisprudencia: DownloadStatus;
+}
+
+/** Status de download de dados */
+export interface DataDownloadStatus {
+  legislacao: DownloadStatus;
+  jurisprudencia: DownloadStatus;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DOCUMENT TYPES (FASE 8.1)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Resultado de análise de documento */
+export interface DocumentAnalysis {
+  extracted: boolean;
+  text?: string;
+  mode?: ProcessingMode;
+}
+
+/** Partes do processo */
+export interface PartesProcesso {
+  reclamante: string;
+  reclamadas: string[];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EDITOR TYPES (FASE 8.1)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Interface do Quill Editor */
+export interface QuillInstance {
+  getText: () => string;
+  getContents: () => unknown;
+  setContents: (delta: unknown) => void;
+  setText: (text: string) => void;
+  getSelection: () => { index: number; length: number } | null;
+  setSelection: (index: number, length?: number) => void;
+  format: (name: string, value: unknown) => void;
+  insertText: (index: number, text: string, formats?: Record<string, unknown>) => void;
+  deleteText: (index: number, length: number) => void;
+  on: (event: string, handler: (...args: unknown[]) => void) => void;
+  off: (event: string, handler: (...args: unknown[]) => void) => void;
+  root: HTMLElement;
+  clipboard: { dangerouslyPasteHTML: (html: string) => void };
+}
+
+/** Estado de provas para novo texto */
+export interface NewProofTextData {
+  name: string;
+  text: string;
+}
+
+/** Entrada de cache genérica */
+export interface CacheEntry<T = unknown> {
+  data: T;
+  timestamp: number;
+}
+
+/** Estatísticas de cache */
+export interface CacheStats {
+  hits: number;
+  misses: number;
+  evictions: number;
+}
