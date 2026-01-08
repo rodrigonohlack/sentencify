@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipTap V9 - Ultra Robust</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        .ProseMirror {
+            outline: none !important;
+            min-height: 500px;
+            padding: 3rem;
+            font-size: 12pt;
+            line-height: 1.5;
+            color: #000;
+            font-family: 'Times New Roman', Times, serif;
+            background: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            max-width: 210mm;
+            margin: 0 auto;
+        }
+        .ProseMirror p { margin-bottom: 1em; }
+        
+        #bubble-menu {
+            display: flex;
+            background-color: #111827;
+            padding: 4px;
+            border-radius: 8px;
+            gap: 2px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            border: 1px solid #374151;
+            z-index: 1000;
+        }
+        #bubble-menu button {
+            border: none;
+            background: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #bubble-menu button:hover { background-color: #374151; }
+        #bubble-menu button.is-active { color: #60A5FA; background-color: #1F2937; }
+        .toolbar-btn.is-active { background-color: #dbeafe; color: #2563eb; }
+        
+        /* Layout Fixes */
+        .editor-container { background-color: #e5e7eb; padding: 2rem; border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+        
+        <!-- Header Section -->
+        <header class="p-6 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
+            <div>
+                <h1 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+                    <span class="text-blue-600"><i class="ri-quill-pen-fill"></i></span> SENTENCIFY V9
+                </h1>
+                <p class="text-slate-500 text-sm italic">O editor definitivo para magistrados.</p>
+            </div>
+            <button id="btn-copy-word" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg shadow-md flex items-center gap-2 font-bold transition-all active:scale-95 whitespace-nowrap">
+                <i class="ri-file-word-2-fill text-lg"></i> COPIAR PARA WORD
+            </button>
+        </header>
+
+        <!-- Bubble Menu (Hidden initially) -->
+        <div id="bubble-menu" style="visibility: hidden;">
+            <button data-bubble-cmd="toggleBold"><i class="ri-bold"></i></button>
+            <button data-bubble-cmd="toggleItalic"><i class="ri-italic"></i></button>
+            <button data-bubble-cmd="toggleUnderline"><i class="ri-underline"></i></button>
+            <button data-bubble-cmd="toggleHighlight" class="text-yellow-400"><i class="ri-mark-pen-line"></i></button>
+        </div>
+
+        <!-- Toolbar Section -->
+        <div class="bg-slate-50 border-b border-slate-200 p-3 flex flex-wrap gap-1.5 items-center" id="toolbar">
+            <button data-cmd="undo" class="p-2 rounded hover:bg-slate-200" title="Desfazer"><i class="ri-arrow-go-back-line"></i></button>
+            <button data-cmd="redo" class="p-2 rounded hover:bg-slate-200" title="Refazer"><i class="ri-arrow-go-forward-line"></i></button>
+            
+            <div class="w-px h-6 bg-slate-300 mx-1"></div>
+
+            <button data-cmd="toggleBold" class="p-2 rounded hover:bg-slate-200" title="Negrito"><i class="ri-bold"></i></button>
+            <button data-cmd="toggleItalic" class="p-2 rounded hover:bg-slate-200" title="Itálico"><i class="ri-italic"></i></button>
+            <button data-cmd="toggleUnderline" class="p-2 rounded hover:bg-slate-200" title="Sublinhado"><i class="ri-underline"></i></button>
+            
+            <div class="w-px h-6 bg-slate-300 mx-1"></div>
+
+            <button data-cmd="setTextAlign" data-align="left" class="p-2 rounded hover:bg-slate-200" title="Esquerda"><i class="ri-align-left"></i></button>
+            <button data-cmd="setTextAlign" data-align="center" class="p-2 rounded hover:bg-slate-200" title="Centro"><i class="ri-align-center"></i></button>
+            <button data-cmd="setTextAlign" data-align="right" class="p-2 rounded hover:bg-slate-200" title="Direita"><i class="ri-align-right"></i></button>
+            <button data-cmd="setTextAlign" data-align="justify" class="p-2 rounded hover:bg-slate-200" title="Justificado"><i class="ri-align-justify"></i></button>
+            
+            <div class="w-px h-6 bg-slate-300 mx-1"></div>
+
+            <button data-cmd="insertTable" class="p-2 rounded hover:bg-slate-200" title="Tabela"><i class="ri-table-line"></i></button>
+            <button data-cmd="toggleBulletList" class="p-2 rounded hover:bg-slate-200" title="Lista"><i class="ri-list-unordered"></i></button>
+        </div>
+
+        <!-- Main Editor Area -->
+        <div class="editor-container overflow-y-auto" style="height: 70vh;">
+            <div id="editor-mount"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="p-4 bg-white border-t border-slate-200 text-slate-400 text-[10px] text-center uppercase tracking-widest">
+            Desenvolvido para SentencifyAI • Alta Fidelidade de Formatação
+        </footer>
+    </div>
+
+    <!-- Script Section -->
+    <script type="module">
+        import { Editor } from 'https://esm.sh/@tiptap/core@2.1.13';
+        import StarterKit from 'https://esm.sh/@tiptap/starter-kit@2.1.13';
+        import Underline from 'https://esm.sh/@tiptap/extension-underline@2.1.13';
+        import TextAlign from 'https://esm.sh/@tiptap/extension-text-align@2.1.13';
+        import BubbleMenu from 'https://esm.sh/@tiptap/extension-bubble-menu@2.1.13';
+        import Highlight from 'https://esm.sh/@tiptap/extension-highlight@2.1.13';
+        import Table from 'https://esm.sh/@tiptap/extension-table@2.1.13';
+        import TableRow from 'https://esm.sh/@tiptap/extension-table-row@2.1.13';
+        import TableCell from 'https://esm.sh/@tiptap/extension-table-cell@2.1.13';
+        import TableHeader from 'https://esm.sh/@tiptap/extension-table-header@2.1.13';
+
+        // Wait for DOM to be ready
+        window.addEventListener('DOMContentLoaded', () => {
+            const editorElement = document.querySelector('#editor-mount');
+            const bubbleMenuElement = document.querySelector('#bubble-menu');
+            const toolbarElement = document.querySelector('#toolbar');
+            const btnCopyWord = document.querySelector('#btn-copy-word');
+
+            if (!editorElement) return;
+
+            const editor = new Editor({
+                element: editorElement,
+                extensions: [
+                    StarterKit,
+                    Underline,
+                    Highlight,
+                    TextAlign.configure({ types: ['heading', 'paragraph'] }),
+                    Table.configure({ resizable: true }),
+                    TableRow, TableHeader, TableCell,
+                    BubbleMenu.configure({
+                        element: bubbleMenuElement,
+                        tippyOptions: { duration: 150 },
+                    }),
+                ],
+                content: "" +
+                    "<h1>SENTENÇA V9</h1>" +
+                    "<p style=\"text-align: center\"><strong>PODER JUDICIÁRIO</strong></p>" +
+                    "<p style=\"text-align: justify\">Este é o editor <strong>Sentencify V9</strong>. Todas as falhas de carregamento foram corrigidas. Agora, o sistema aguarda o carregamento completo do DOM para anexar os eventos.</p>" +
+                    "<p style=\"text-align: justify\"><strong>Teste agora:</strong> Selecione este parágrafo e veja o menu flutuante aparecer. Ele permite aplicar negrito, itálico e marca-texto instantaneamente.</p>" +
+                    "<p style=\"text-align: justify\">O botão de cópia acima foi calibrado para enviar ao Word um HTML compatível com o padrão MsoNormal, garantindo que o seu justificado não se perca.</p>" +
+                    "",
+                onUpdate: () => updateUI(),
+                onSelectionUpdate: () => updateUI(),
+            });
+
+            // Copy for Word Implementation
+            btnCopyWord.onclick = async () => {
+                const html = editor.getHTML();
+                const text = editor.getText();
+                
+                // MsoNormal Styles for Word compatibility
+                const processed = html
+                    .replace(/text-align: justify/g, 'text-align:justify;text-justify:inter-ideograph')
+                    .replace(/text-align: center/g, 'text-align:center')
+                    .replace(/<p/g, '<p class="MsoNormal" style="margin:0cm;margin-bottom:.0001pt;font-family:\'Times New Roman\',serif;font-size:12.0pt;line-height:150%"');
+
+                const wrapper = `<html><head><meta charset="utf-8"></head><body>${processed}</body></html>`;
+                
+                try {
+                    const blob = new Blob([wrapper], { type: 'text/html' });
+                    const textBlob = new Blob([text], { type: 'text/plain' });
+                    const item = new ClipboardItem({ 'text/html': blob, 'text/plain': textBlob });
+                    await navigator.clipboard.write([item]);
+                    
+                    btnCopyWord.innerHTML = '<i class="ri-check-line"></i> COPIADO!';
+                    btnCopyWord.classList.replace('bg-emerald-600', 'bg-blue-600');
+                    setTimeout(() => {
+                        btnCopyWord.innerHTML = '<i class="ri-file-word-2-fill"></i> COPIAR PARA WORD';
+                        btnCopyWord.classList.replace('bg-blue-600', 'bg-emerald-600');
+                    }, 2000);
+                } catch (e) {
+                    alert('Erro ao copiar. Use o navegador Chrome/Edge.');
+                }
+            };
+
+            // Toolbar Events
+            toolbarElement.onclick = (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const { cmd, align } = btn.dataset;
+                if (cmd === 'toggleBold') editor.chain().focus().toggleBold().run();
+                if (cmd === 'toggleItalic') editor.chain().focus().toggleItalic().run();
+                if (cmd === 'toggleUnderline') editor.chain().focus().toggleUnderline().run();
+                if (cmd === 'setTextAlign') editor.chain().focus().setTextAlign(align).run();
+                if (cmd === 'insertTable') editor.chain().focus().insertTable({ rows: 2, cols: 2 }).run();
+                if (cmd === 'toggleBulletList') editor.chain().focus().toggleBulletList().run();
+                if (cmd === 'undo') editor.chain().focus().undo().run();
+                if (cmd === 'redo') editor.chain().focus().redo().run();
+            };
+
+            // Bubble Menu Events
+            bubbleMenuElement.onclick = (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const cmd = btn.dataset.bubbleCmd;
+                if (cmd === 'toggleBold') editor.chain().focus().toggleBold().run();
+                if (cmd === 'toggleItalic') editor.chain().focus().toggleItalic().run();
+                if (cmd === 'toggleUnderline') editor.chain().focus().toggleUnderline().run();
+                if (cmd === 'toggleHighlight') editor.chain().focus().toggleHighlight().run();
+            };
+
+            function updateUI() {
+                // Toolbar
+                document.querySelectorAll('#toolbar [data-cmd]').forEach(btn => {
+                    const { cmd, align } = btn.dataset;
+                    let active = false;
+                    if (cmd === 'toggleBold') active = editor.isActive('bold');
+                    if (cmd === 'toggleItalic') active = editor.isActive('italic');
+                    if (cmd === 'toggleUnderline') active = editor.isActive('underline');
+                    if (cmd === 'setTextAlign') active = editor.isActive({ textAlign: align });
+                    btn.classList.toggle('is-active', active);
+                });
+                // Bubble Menu
+                document.querySelectorAll('#bubble-menu button').forEach(btn => {
+                    const cmd = btn.dataset.bubbleCmd;
+                    let active = false;
+                    if (cmd === 'toggleBold') active = editor.isActive('bold');
+                    if (cmd === 'toggleItalic') active = editor.isActive('italic');
+                    if (cmd === 'toggleUnderline') active = editor.isActive('underline');
+                    if (cmd === 'toggleHighlight') active = editor.isActive('highlight');
+                    btn.classList.toggle('is-active', active);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

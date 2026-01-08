@@ -472,7 +472,7 @@ const AIModelService = {
         });
         this.pending.clear();
         // Reset status para error
-        (Object.keys(this.status) as AIModelType[]).forEach((key) => {
+        (Object.keys(this.status) as AIModelType[]).forEach((key: string) => {
           this.status[key] = 'error';
         });
         this._notify();
@@ -537,7 +537,7 @@ const AIModelService = {
     }
 
     // Reset status
-    (Object.keys(this.status) as AIModelType[]).forEach((key) => {
+    (Object.keys(this.status) as AIModelType[]).forEach((key: string) => {
       this.status[key] = 'idle';
       this.progress[key] = 0;
     });
@@ -1280,62 +1280,62 @@ const anonymizeText = (text: string, config: AnonymizationSettings | null | unde
 
   // CNPJ: 00.000.000/0000-00
   if (config.cnpj !== false) {
-    result = result.replace(/\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/g, (m) => { encontrados.cnpj.push(m); return '[CNPJ]'; });
+    result = result.replace(/\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/g, (m: Model) => { encontrados.cnpj.push(m); return '[CNPJ]'; });
   }
 
   // CPF: 000.000.000-00 (após CNPJ para evitar conflito)
   if (config.cpf !== false) {
-    result = result.replace(/\d{3}\.?\d{3}\.?\d{3}-?\d{2}/g, (m) => { encontrados.cpf.push(m); return '[CPF]'; });
+    result = result.replace(/\d{3}\.?\d{3}\.?\d{3}-?\d{2}/g, (m: Model) => { encontrados.cpf.push(m); return '[CPF]'; });
   }
 
   // RG: 00.000.000-0 ou similar
   if (config.rg !== false) {
-    result = result.replace(/\d{1,2}\.?\d{3}\.?\d{3}-?[\dXx]/g, (m) => { encontrados.rg.push(m); return '[RG]'; });
+    result = result.replace(/\d{1,2}\.?\d{3}\.?\d{3}-?[\dXx]/g, (m: Model) => { encontrados.rg.push(m); return '[RG]'; });
   }
 
   // PIS/PASEP: 000.00000.00-0
   if (config.pis !== false) {
-    result = result.replace(/\d{3}\.?\d{5}\.?\d{2}-?\d/g, (m) => { encontrados.pis.push(m); return '[PIS]'; });
+    result = result.replace(/\d{3}\.?\d{5}\.?\d{2}-?\d/g, (m: Model) => { encontrados.pis.push(m); return '[PIS]'; });
   }
 
   // CTPS: 0000000/00000 ou similar
   if (config.ctps !== false) {
-    result = result.replace(/\d{5,7}[/-]\d{3,5}/g, (m) => { encontrados.ctps.push(m); return '[CTPS]'; });
+    result = result.replace(/\d{5,7}[/-]\d{3,5}/g, (m: Model) => { encontrados.ctps.push(m); return '[CTPS]'; });
   }
 
   // CEP: 00.000-000 ou 00000-000
   if (config.cep !== false) {
-    result = result.replace(/\d{2}\.?\d{3}-?\d{3}/g, (m) => { encontrados.cep.push(m); return '[CEP]'; });
+    result = result.replace(/\d{2}\.?\d{3}-?\d{3}/g, (m: Model) => { encontrados.cep.push(m); return '[CEP]'; });
   }
 
   // Número de processo CNJ: 0000000-00.0000.0.00.0000 (com espaços antes/depois de separadores)
   if (config.processo !== false) {
-    result = result.replace(/\d{7}\s*-\s*\d{2}\s*\.\s*\d{4}\s*\.\s*\d\s*\.\s*\d{2}\s*\.\s*\d{4}/g, (m) => { encontrados.processo.push(m); return '[PROCESSO]'; });
+    result = result.replace(/\d{7}\s*-\s*\d{2}\s*\.\s*\d{4}\s*\.\s*\d\s*\.\s*\d{2}\s*\.\s*\d{4}/g, (m: Model) => { encontrados.processo.push(m); return '[PROCESSO]'; });
   }
 
   // OAB: OAB/XX 0000
   if (config.oab !== false) {
-    result = result.replace(/OAB\/?\s*[A-Z]{2}\s*\d+/gi, (m) => { encontrados.oab.push(m); return '[OAB]'; });
+    result = result.replace(/OAB\/?\s*[A-Z]{2}\s*\d+/gi, (m: Model) => { encontrados.oab.push(m); return '[OAB]'; });
   }
 
   // Telefone: (00) 00000-0000 ou variações
   if (config.telefone !== false) {
-    result = result.replace(/\(?\d{2}\)?\s*\d{4,5}-?\d{4}/g, (m) => { encontrados.telefone.push(m); return '[TELEFONE]'; });
+    result = result.replace(/\(?\d{2}\)?\s*\d{4,5}-?\d{4}/g, (m: Model) => { encontrados.telefone.push(m); return '[TELEFONE]'; });
   }
 
   // E-mail
   if (config.email !== false) {
-    result = result.replace(/[\w.-]+@[\w.-]+\.\w{2,}/gi, (m) => { encontrados.email.push(m); return '[EMAIL]'; });
+    result = result.replace(/[\w.-]+@[\w.-]+\.\w{2,}/gi, (m: Model) => { encontrados.email.push(m); return '[EMAIL]'; });
   }
 
   // Conta bancária: Ag. 0000 C/C 00000-0 ou variações
   if (config.contaBancaria !== false) {
-    result = result.replace(/[Aa]g[êe]?n?c?i?a?\.?\s*:?\s*\d[\d.-]*\s*[Cc]\.?\/?\s*[Cc]\.?\s*:?\s*\d[\d.-]*/g, (m) => { encontrados.conta.push(m); return '[CONTA]'; });
+    result = result.replace(/[Aa]g[êe]?n?c?i?a?\.?\s*:?\s*\d[\d.-]*\s*[Cc]\.?\/?\s*[Cc]\.?\s*:?\s*\d[\d.-]*/g, (m: Model) => { encontrados.conta.push(m); return '[CONTA]'; });
   }
 
   // Valores monetários R$
   if (config.valores === true) {
-    result = result.replace(/R\$\s*[\d.,]+/g, (m) => { encontrados.valor.push(m); return '[VALOR]'; });
+    result = result.replace(/R\$\s*[\d.,]+/g, (m: Model) => { encontrados.valor.push(m); return '[VALOR]'; });
   }
 
   // Nomes inseridos pelo usuário (v1.17.0)
@@ -1375,7 +1375,7 @@ const anonymizeText = (text: string, config: AnonymizationSettings | null | unde
 
       matchCount = (result.match(nomeRegex) || []).length;
       if (matchCount > 0) {
-        result = result.replace(nomeRegex, (m) => {
+        result = result.replace(nomeRegex, (m: Model) => {
           encontrados.pessoa.push(m);
           return placeholder;
         });
@@ -2665,7 +2665,7 @@ const useSpacingControl = () => {
   }, [spacing]);
 
   // Função de controle com validação
-  const setSpacing = React.useCallback((newSpacing) => {
+  const setSpacing = React.useCallback((newSpacing: string) => {
     if (SPACING_PRESETS[newSpacing]) {
       setSpacingState(newSpacing);
       window.dispatchEvent(new CustomEvent('spacing-changed', {
@@ -2722,7 +2722,7 @@ const useFontSizeControl = () => {
     return () => window.removeEventListener('fontsize-changed', handleFontSizeChange);
   }, [fontSize]);
 
-  const setFontSize = React.useCallback((newFontSize) => {
+  const setFontSize = React.useCallback((newFontSize: string) => {
     if (FONTSIZE_PRESETS[newFontSize]) {
       setFontSizeState(newFontSize);
       window.dispatchEvent(new CustomEvent('fontsize-changed', {
@@ -2775,11 +2775,11 @@ const useFeatureFlags = () => {
     }
   }, [flags]);
 
-const setFlag = React.useCallback((flagName, value) => {
-    setFlags(prev => ({ ...prev, [flagName]: value }));
+const setFlag = React.useCallback((flagName: string, value: boolean) => {
+    setFlags((prev: Record<string, boolean>) => ({ ...prev, [flagName]: value }));
   }, []);
 
-  const isEnabled = React.useCallback((flagName) => flags[flagName] === true, [flags]);
+  const isEnabled = React.useCallback((flagName: string) => flags[flagName] === true, [flags]);
 
   const resetFlags = React.useCallback(() => setFlags(DEFAULT_FLAGS), []);
 
@@ -2802,7 +2802,7 @@ const useThrottledBroadcast = (channelRef: React.RefObject<BroadcastChannel | nu
   const pendingMessageRef = React.useRef<unknown>(null);
   const trailingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const broadcast = React.useCallback((message) => {
+  const broadcast = React.useCallback((message: unknown) => {
     const channel = channelRef?.current;
     if (!channel) return;
 
@@ -2852,7 +2852,7 @@ const useAPICache = (maxSize = 50, ttlMs = 5 * 60 * 1000) => {
   const cacheRef = React.useRef<Map<string, CacheEntry>>(new Map());
   const statsRef = React.useRef<CacheStats>({ hits: 0, misses: 0, evictions: 0 });
 
-  const hashKey = React.useCallback((input) => {
+  const hashKey = React.useCallback((input: string) => {
     let hash = 0;
     for (let i = 0; i < input.length; i++) {
       const char = input.charCodeAt(i);
@@ -2862,7 +2862,7 @@ const useAPICache = (maxSize = 50, ttlMs = 5 * 60 * 1000) => {
     return `cache_${hash.toString(36)}`;
   }, []);
 
-  const isExpired = React.useCallback((entry) => (Date.now() - entry.timestamp) > ttlMs, [ttlMs]);
+  const isExpired = React.useCallback((entry: CacheEntry) => (Date.now() - entry.timestamp) > ttlMs, [ttlMs]);
 
   const evictLRU = React.useCallback(() => {
     const cache = cacheRef.current;
@@ -2875,7 +2875,7 @@ const useAPICache = (maxSize = 50, ttlMs = 5 * 60 * 1000) => {
     if (lruKey) { cache.delete(lruKey); statsRef.current.evictions++; }
   }, [maxSize]);
 
-  const get = React.useCallback((key) => {
+  const get = React.useCallback((key: string) => {
     const cache = cacheRef.current;
     const hashedKey = hashKey(key);
     if (!cache.has(hashedKey)) { statsRef.current.misses++; return null; }
@@ -2885,7 +2885,7 @@ const useAPICache = (maxSize = 50, ttlMs = 5 * 60 * 1000) => {
     return entry.result;
   }, [hashKey, isExpired]);
 
-  const set = React.useCallback((key, result) => {
+  const set = React.useCallback((key: string, result: unknown) => {
     evictLRU();
     cacheRef.current.set(hashKey(key), { result, timestamp: Date.now(), hits: 0 });
   }, [hashKey, evictLRU, maxSize]);
@@ -2895,7 +2895,7 @@ const useAPICache = (maxSize = 50, ttlMs = 5 * 60 * 1000) => {
     statsRef.current = { hits: 0, misses: 0, evictions: 0 };
   }, []);
 
-  const invalidate = React.useCallback((pattern) => {
+  const invalidate = React.useCallback((pattern: string) => {
     for (const [key] of cacheRef.current.entries()) {
       if (key.includes(pattern)) cacheRef.current.delete(key);
     }
@@ -3056,7 +3056,7 @@ const useIndexedDB = () => {
           }
         };
 
-        channel.onerror = (err) => {
+        channel.onerror = (err: unknown) => {
         };
 
       } catch (err) {
@@ -3310,7 +3310,7 @@ const useIndexedDB = () => {
   }, []);
 
   // Set Sync Callback (v1.7 FASE 1.4)
-  const setSyncCallback = React.useCallback((callback) => {
+  const setSyncCallback = React.useCallback((callback: (() => void) | null) => {
     syncCallbackRef.current = callback;
   }, []);
 
@@ -3536,7 +3536,7 @@ const openPdfDB = () => {
 };
 
 // Salva um PDF no IndexedDB
-const savePdfToIndexedDB = async (id, file, type) => {
+const savePdfToIndexedDB = async (id: string, file: File, type: string) => {
   try {
     // Converter File para ArrayBuffer ANTES de abrir transação
     // (evita TransactionInactiveError quando chamado em paralelo)
@@ -3569,7 +3569,7 @@ const savePdfToIndexedDB = async (id, file, type) => {
 };
 
 // Recupera um PDF do IndexedDB
-const getPdfFromIndexedDB = async (id) => {
+const getPdfFromIndexedDB = async (id: string) => {
   try {
     const db = await openPdfDB();
     const transaction = db.transaction([PDF_STORE_NAME], 'readonly');
@@ -3601,7 +3601,7 @@ const getPdfFromIndexedDB = async (id) => {
 };
 
 // Remove um PDF específico do IndexedDB
-const removePdfFromIndexedDB = async (id) => {
+const removePdfFromIndexedDB = async (id: string) => {
   try {
     const db = await openPdfDB();
     const transaction = db.transaction([PDF_STORE_NAME], 'readwrite');
@@ -3717,7 +3717,7 @@ const LEIS_METADATA = {
   'l9029': { nome: 'Lei 9.029', nomeCompleto: 'Práticas Discriminatórias', numero: 'Lei 9.029/1995' }
 };
 
-const getLeiFromId = (id) => {
+const getLeiFromId = (id: string) => {
   const prefix = id?.split('-art-')[0] || id?.split('-')[0];
   return LEIS_METADATA[prefix] || { nome: prefix?.toUpperCase() || '?', nomeCompleto: prefix, numero: '' };
 };
@@ -3818,7 +3818,7 @@ const useFieldVersioning = () => {
       }
       store.add({ topicTitle, content, timestamp: Date.now(), preview: stripHtml(content) });
       if (existing.length >= 10) {
-        existing.slice(0, existing.length - 9).forEach(v => store.delete(v.id));
+        existing.slice(0, existing.length - 9).forEach((v: FieldVersion) => store.delete(v.id));
       }
       db.close();
     } catch (e) { console.warn('Erro ao salvar versão:', e); }
@@ -3834,7 +3834,7 @@ const useFieldVersioning = () => {
         req.onsuccess = () => r(req.result || []);
       });
       db.close();
-      return versions.sort((a, b) => b.timestamp - a.timestamp);
+      return (versions as FieldVersion[]).sort((a: FieldVersion, b: FieldVersion) => b.timestamp - a.timestamp);
     } catch { return []; }
   }, []);
 
@@ -3858,9 +3858,9 @@ const useFieldVersioning = () => {
   );
 };
 
-const sortArtigosNatural = (artigos) => {
+const sortArtigosNatural = (artigos: Artigo[]) => {
   return [...artigos].sort((a, b) => {
-    const parseId = (id) => {
+    const parseId = (id: string) => {
       const match = id.match(/^(.+)-art-(\d+)(?:-([a-z]))?$/i);
       if (!match) return { lei: id, num: 0, suffix: '' };
       return { lei: match[1], num: parseInt(match[2]), suffix: match[3] || '' };
@@ -3887,7 +3887,7 @@ const useLocalStorage = () => {
   const pdfCacheOrderRef = React.useRef<string[]>([]); // Track insertion order para LRU
 
   // Adiciona ao cache com eviction LRU
-  const addToPdfCache = (key, value) => {
+  const addToPdfCache = (key: string, value: string) => {
     if (pdfCacheRef.current.has(key)) {
       pdfCacheRef.current.set(key, value);
       return;
@@ -3909,7 +3909,7 @@ const useLocalStorage = () => {
   // Funções Auxiliares
 
   // Converte File para base64 (com cache LRU)
-  const fileToBase64 = React.useCallback((file) => {
+  const fileToBase64 = React.useCallback((file: File) => {
     // Criar chave única baseada em propriedades do arquivo
     const cacheKey = `${file.name}-${file.size}-${file.lastModified}`;
 
@@ -3940,7 +3940,7 @@ const useLocalStorage = () => {
   }, []);
 
   // Converte base64 para File
-  const base64ToFile = React.useCallback((base64, fileName, mimeType = 'application/pdf') => {
+  const base64ToFile = React.useCallback((base64: string, fileName: string, mimeType = 'application/pdf') => {
     const byteCharacters = atob(base64);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
@@ -3953,7 +3953,7 @@ const useLocalStorage = () => {
   }, []);
 
   // Verifica se existe sessão salva
-  const checkSavedSession = React.useCallback((openModal) => {
+  const checkSavedSession = React.useCallback((openModal: (modalName: string) => void) => {
     try {
       const saved = localStorage.getItem('sentencifySession');
       if (saved) {
@@ -3993,7 +3993,7 @@ const useLocalStorage = () => {
         tokenMetrics // v1.20.3: Contador de tokens persistente
       } = allStates;
 
-      const proofFilesSerializable = proofFiles.map((proof) => ({
+      const proofFilesSerializable = proofFiles.map((proof: Proof) => ({
         id: proof.id,
         name: proof.name,
         type: proof.type,
@@ -4152,7 +4152,7 @@ const useLocalStorage = () => {
       if (setDocumentProcessingModes) {
         // Migrar modos legados (ex: 'gemini-vision') para 'pdfjs'
         const validModes = ['pdfjs', 'tesseract', 'pdf-puro', 'claude-vision'];
-        const migrateMode = (mode) => validModes.includes(mode) ? mode : 'pdfjs';
+        const migrateMode = (mode: ProcessingMode) => validModes.includes(mode) ? mode : 'pdfjs';
         const migrateModes = (modes) => (modes || []).map(migrateMode);
         const rawModes = session.documentProcessingModes || { peticoes: [], contestacoes: [], complementares: [] };
         setDocumentProcessingModes({
@@ -4235,7 +4235,7 @@ const useLocalStorage = () => {
 
       if (session.proofFiles && Array.isArray(session.proofFiles)) {
         const results = await Promise.allSettled(
-          session.proofFiles.map(async (proof) => {
+          session.proofFiles.map(async (proof: Proof) => {
             const pdfFile = await getPdfFromIndexedDB(`proof-${proof.id}`);
             return {
               id: proof.id,
@@ -4323,7 +4323,7 @@ const useLocalStorage = () => {
 
     if (peticaoFiles && peticaoFiles.length > 0) {
       uploadPdfs.peticoes = await Promise.all(
-        peticaoFiles.map(async (f) => {
+        peticaoFiles.map(async (f: File) => {
           const fileObj = f.file || f;
           return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
         })
@@ -4332,7 +4332,7 @@ const useLocalStorage = () => {
 
     if (contestacaoFiles && contestacaoFiles.length > 0) {
       uploadPdfs.contestacoes = await Promise.all(
-        contestacaoFiles.map(async (f) => {
+        contestacaoFiles.map(async (f: File) => {
           const fileObj = f.file || f;
           return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
         })
@@ -4341,7 +4341,7 @@ const useLocalStorage = () => {
 
     if (complementaryFiles && complementaryFiles.length > 0) {
       uploadPdfs.complementares = await Promise.all(
-        complementaryFiles.map(async (f) => {
+        complementaryFiles.map(async (f: File) => {
           const fileObj = f.file || f;
           return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
         })
@@ -4349,7 +4349,7 @@ const useLocalStorage = () => {
     }
 
     const proofFilesSerializable = await Promise.all(
-      (proofFiles || []).map(async (proof) => {
+      (proofFiles || []).map(async (proof: Proof) => {
         if (!proof.file) {
           return {
             id: proof.id,
@@ -4510,7 +4510,7 @@ const useLocalStorage = () => {
 
     if (setDocumentProcessingModes) {
       const validModes = ['pdfjs', 'tesseract', 'pdf-puro', 'claude-vision'];
-      const migrateMode = (mode) => validModes.includes(mode) ? mode : 'pdfjs';
+      const migrateMode = (mode: ProcessingMode) => validModes.includes(mode) ? mode : 'pdfjs';
       const migrateModes = (modes) => (modes || []).map(migrateMode);
       const rawModes = project.documentProcessingModes || { peticoes: [], contestacoes: [], complementares: [] };
       setDocumentProcessingModes({
@@ -4567,7 +4567,7 @@ const useLocalStorage = () => {
     let restoredProofFiles = [];
     if (project.proofFiles && Array.isArray(project.proofFiles)) {
       restoredProofFiles = await Promise.all(
-        project.proofFiles.map(async (proof) => {
+        project.proofFiles.map(async (proof: Proof) => {
           if (!proof.fileData) {
             return { id: proof.id, file: null, name: proof.name, type: proof.type, size: proof.size, uploadDate: proof.uploadDate };
           }
@@ -4897,7 +4897,7 @@ const useModelLibrary = () => {
   }, []);
 
   // --- Iniciar edição de modelo ---
-  const startEditingModel = React.useCallback((model) => {
+  const startEditingModel = React.useCallback((model: Model) => {
     setEditingModel(model);
     setNewModel({
       title: model.title || '',
@@ -4934,8 +4934,8 @@ const useModelLibrary = () => {
   }, [bulkCancelController]);
 
   // --- Remover arquivo da fila ---
-  const removeBulkFile = React.useCallback((index) => {
-    setBulkFiles(prev => prev.filter((_, i) => i !== index));
+  const removeBulkFile = React.useCallback((index: number) => {
+    setBulkFiles(prev => prev.filter((_, i: number) => i !== index));
   }, []);
 
   // --- Resetar estados bulk ---
@@ -5012,7 +5012,7 @@ const useModelLibrary = () => {
 };
 
 // 🔍 Busca Inteligente Unificada de Modelos - v1.15.0
-const removeAccents = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const removeAccents = (str: string) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 // ⚖️ v1.20.0: Helpers de Jurisprudência (reutilizáveis)
 const STATUS_INVALIDOS = new Set(['cancelada', 'revogada', 'convertida', 'superado', 'convertida em súmula']);
@@ -5026,7 +5026,7 @@ const isIRRType = (tipo) => IRR_TYPES.has((tipo || '').toUpperCase().replace(/-/
 // Cache global para resultados de jurisprudência
 const jurisCache = new Map();
 const JURIS_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
-const hashJurisKey = (str) => {
+const hashJurisKey = (str: string) => {
   let hash = 0;
   for (let i = 0; i < (str || '').length; i++) {
     hash = ((hash << 5) - hash) + str.charCodeAt(i);
@@ -5035,14 +5035,14 @@ const hashJurisKey = (str) => {
   return hash.toString(36);
 };
 
-const refineJurisWithAIHelper = async (title, context, candidates, callLLM) => {
+const refineJurisWithAIHelper = async (title: string, context: string, candidates: Precedente[], callLLM: CallAIFunction) => {
   if (!callLLM || typeof callLLM !== 'function') {
     console.warn('[JurisAI] callLLM não disponível, retornando candidatos sem refinamento');
     return candidates.slice(0, 10);
   }
   try {
     // Formatar candidatos com mais informação para a IA decidir melhor
-    const candidatosFormatados = candidates.map((c, i) => {
+    const candidatosFormatados = candidates.map((c: Precedente, i: number) => {
       const tipo = c.tipoProcesso || 'Precedente';
       const num = c.numero ? ` ${c.numero}` : '';
       const tribunal = c.tribunal ? ` (${c.tribunal})` : '';
@@ -5079,7 +5079,7 @@ Formato: 5,12,3,8,15,1,9,7,2,11`;
     const response = await callLLM(messages, { maxTokens: 300, disableThinking: true, useInstructions: false, temperature: 0.0, topP: 0.9, topK: 40 });
     const text = typeof response === 'string' ? response : response?.content?.[0]?.text || '';
     const indices = text.match(/\d+/g)?.map(Number) || [];
-    const result = indices.filter(i => i < candidates.length).map(i => candidates[i]);
+    const result = indices.filter((i: number) => i < candidates.length).map((i: number) => candidates[i]);
     return result.length > 0 ? result.slice(0, 10) : candidates.slice(0, 10);
   } catch (err) {
     console.warn('[JurisAI] Refinamento falhou:', err?.message || err);
@@ -5087,7 +5087,7 @@ Formato: 5,12,3,8,15,1,9,7,2,11`;
   }
 };
 
-const findJurisprudenciaHelper = async (topicTitle, miniRelatorio, callLLM, filtros = {}) => {
+const findJurisprudenciaHelper = async (topicTitle: string, miniRelatorio: string, callLLM: CallAIFunction, filtros: Record<string, unknown> = {}) => {
   // Verificar cache primeiro (incluindo filtros na chave)
   const cacheKey = `juris_${topicTitle}_${hashJurisKey(miniRelatorio)}_${filtros.tipo?.join(',') || ''}_${filtros.tribunal?.join(',') || ''}_${filtros.searchTerm || ''}`;
   const cached = jurisCache.get(cacheKey);
@@ -5117,7 +5117,7 @@ const findJurisprudenciaHelper = async (topicTitle, miniRelatorio, callLLM, filt
   // Filtro por busca textual do usuário
   if (filtros.searchTerm?.trim()) {
     const searchTermNorm = removeAccents(filtros.searchTerm.toLowerCase().trim());
-    const rawTerms = searchTermNorm.split(/\s+/).filter(w => w.length > 2 && !SEARCH_STOPWORDS.has(w));
+    const rawTerms = searchTermNorm.split(/\s+/).filter((w: string) => w.length > 2 && !SEARCH_STOPWORDS.has(w));
     if (rawTerms.length === 0) return [];
 
     // Só expande sinônimos se a frase COMPLETA corresponder a uma chave do dicionário
@@ -5130,7 +5130,7 @@ const findJurisprudenciaHelper = async (topicTitle, miniRelatorio, callLLM, filt
     }
 
     // Termos para busca: originais + stems + sinônimos de frase completa (sem sinônimos genéricos)
-    const rawStems = rawTerms.map(stemJuridico).filter(s => s.length > 3);
+    const rawStems = rawTerms.map(stemJuridico).filter((s: string) => s.length > 3);
 
     // Pontuar cada precedente por quantos termos deram match
     const scored = validPrecedentes.map(p => {
@@ -5197,13 +5197,13 @@ const findJurisprudenciaHelper = async (topicTitle, miniRelatorio, callLLM, filt
 
   // 1. Limpar e normalizar título (remover pontuação e stopwords)
   const cleanTitle = topicTitle.replace(/[.,;:!?()\[\]{}]/g, ' ').toLowerCase();
-  const rawWords = cleanTitle.split(/\s+/).filter(w => w.length > 2);
-  const titleWords = rawWords.filter(w => !SEARCH_STOPWORDS.has(w));
+  const rawWords = cleanTitle.split(/\s+/).filter((w: string) => w.length > 2);
+  const titleWords = rawWords.filter((w: string) => !SEARCH_STOPWORDS.has(w));
 
   // 2. Também extrair termos do relatório (contexto adicional)
   const cleanRelatorio = (miniRelatorio || '').replace(/[.,;:!?()\[\]{}]/g, ' ').toLowerCase();
   const relatorioWords = cleanRelatorio.split(/\s+/)
-    .filter(w => w.length > 3 && !SEARCH_STOPWORDS.has(w))
+    .filter((w: string) => w.length > 3 && !SEARCH_STOPWORDS.has(w))
     .slice(0, 30); // Limitar para não sobrecarregar
 
   // 3. Expandir com sinônimos
@@ -5211,19 +5211,19 @@ const findJurisprudenciaHelper = async (topicTitle, miniRelatorio, callLLM, filt
   const expandedRelatorio = expandWithSynonyms(relatorioWords);
 
   // 4. Criar stems para busca fuzzy
-  const titleStems = new Set(titleWords.map(w => stemJuridico(w)).filter(s => s.length > 2));
+  const titleStems = new Set(titleWords.map((w: string) => stemJuridico(w)).filter((s: string) => s.length > 2));
   const allSearchTerms = new Set([...expandedTitle, ...titleWords]);
-  const allSearchStems = new Set([...titleStems, ...titleWords.map(w => removeAccents(w))]);
+  const allSearchStems = new Set([...titleStems, ...titleWords.map((w: string) => removeAccents(w))]);
 
   // 5. Pontuar cada precedente
   const scored = validPrecedentes.map(p => {
     let score = 0;
-    const keywordsRaw = typeof p.keywords === 'string' ? p.keywords.split(/[,;]/).map(k => k.trim()) : (Array.isArray(p.keywords) ? p.keywords : []);
-    const keywords = keywordsRaw.map(k => removeAccents(k.toLowerCase()));
-    const keywordStems = keywords.map(k => k.split(/\s+/).map(w => stemJuridico(w))).flat();
+    const keywordsRaw = typeof p.keywords === 'string' ? p.keywords.split(/[,;]/).map((k: string) => k.trim()) : (Array.isArray(p.keywords) ? p.keywords : []);
+    const keywords = keywordsRaw.map((k: string) => removeAccents(k.toLowerCase()));
+    const keywordStems = keywords.map((k: string) => k.split(/\s+/).map((w: string) => stemJuridico(w))).flat();
     const tese = removeAccents((p.tese || p.enunciado || '').toLowerCase());
     const titulo = removeAccents((p.titulo || '').toLowerCase());
-    const teseStems = tese.split(/\s+/).map(w => stemJuridico(w));
+    const teseStems = tese.split(/\s+/).map((w: string) => stemJuridico(w));
 
     // Match em keywords (mais importante)
     for (const term of allSearchTerms) {
@@ -5368,7 +5368,7 @@ const SINONIMOS_JURIDICOS = {
 };
 
 // Stemming simplificado para português jurídico
-const stemJuridico = (word) => {
+const stemJuridico = (word: string) => {
   if (!word || word.length < 3) return word;
   const w = removeAccents(word.toLowerCase());
   return w
@@ -5448,7 +5448,7 @@ const searchModelsInLibrary = (models, term, options = {}) => {
 
   // Remover termos entre aspas e processar palavras restantes como fuzzy
   const termWithoutQuotes = normalizedTerm.replace(quotedRegex, '').trim();
-  const fuzzyTerms = termWithoutQuotes.split(/\s+/).filter(w => w.length > 2 && !SEARCH_STOPWORDS.has(w));
+  const fuzzyTerms = termWithoutQuotes.split(/\s+/).filter((w: string) => w.length > 2 && !SEARCH_STOPWORDS.has(w));
 
   if (exactTerms.length === 0 && fuzzyTerms.length === 0) return [];
 
@@ -5563,7 +5563,7 @@ const useModelPreview = () => {
   // v1.19.2: Callback para notificar quando modelo é atualizado (sincroniza sugestões do GlobalEditor)
   const onModelUpdatedRef = React.useRef<(() => void) | null>(null);
 
-  const openPreview = React.useCallback((model) => {
+  const openPreview = React.useCallback((model: Model) => {
     if (!model || !model.content) {
       return;
     }
@@ -5667,7 +5667,7 @@ const generateModelId = () => {
 };
 
 // 🔍 MODEL VALIDATION & SANITIZATION (v1.7)
-const validateModel = (model) => {
+const validateModel = (model: Model) => {
   const errors = [];
 
   // Required fields
@@ -5729,7 +5729,7 @@ const validateModel = (model) => {
   };
 };
 
-const sanitizeModel = (model) => {
+const sanitizeModel = (model: Model) => {
   if (!model || typeof model !== 'object') {
     throw new Error('Modelo inválido para sanitização');
   }
@@ -5815,11 +5815,11 @@ const useProofManager = (documentServices = null) => {
   const [analyzingProofIds, setAnalyzingProofIds] = React.useState<Set<string | number>>(new Set());
   // Set de IDs das provas sendo analisadas (para mostrar loader em cada uma)
 
-  const addAnalyzingProof = React.useCallback((id) => {
+  const addAnalyzingProof = React.useCallback((id: string) => {
     setAnalyzingProofIds(prev => new Set([...prev, id]));
   }, []);
 
-  const removeAnalyzingProof = React.useCallback((id) => {
+  const removeAnalyzingProof = React.useCallback((id: string) => {
     setAnalyzingProofIds(prev => {
       const next = new Set(prev);
       next.delete(id);
@@ -5827,7 +5827,7 @@ const useProofManager = (documentServices = null) => {
     });
   }, []);
 
-  const isAnalyzingProof = React.useCallback((id) => {
+  const isAnalyzingProof = React.useCallback((id: string) => {
     return analyzingProofIds.has(id);
   }, [analyzingProofIds]);
 
@@ -5946,7 +5946,7 @@ const useProofManager = (documentServices = null) => {
   }, [newProofTextData]); // 🚀 v1.8.1: Memoizado (modal texto)
 
   // Handler: Deletar prova (PDF ou texto)
-  const handleDeleteProof = React.useCallback((proof) => {
+  const handleDeleteProof = React.useCallback((proof: Proof) => {
     // Deletar da lista correta
     if (proof.isPdf || proof.type === 'pdf') {
       setProofFiles(prev => removeById(prev, proof.id));
@@ -6300,26 +6300,26 @@ const useDocumentManager = () => {
   // Handler: Remove texto colado
   const removePastedText = (type, index = null) => {
     if (type === 'peticao' && index !== null) {
-      setPastedPeticaoTexts(prev => prev.filter((_, i) => i !== index));
+      setPastedPeticaoTexts(prev => prev.filter((_, i: number) => i !== index));
     } else if (type === 'contestacao' && index !== null) {
-      setPastedContestacaoTexts(prev => prev.filter((_, i) => i !== index));
+      setPastedContestacaoTexts(prev => prev.filter((_, i: number) => i !== index));
     } else if (type === 'complementary' && index !== null) {
-      setPastedComplementaryTexts(prev => prev.filter((_, i) => i !== index));
+      setPastedComplementaryTexts(prev => prev.filter((_, i: number) => i !== index));
     }
   };
 
   // Handler: Remove arquivo de petição por índice (com limpeza IndexedDB)
-  const removePeticaoFile = React.useCallback(async (index) => {
+  const removePeticaoFile = React.useCallback(async (index: number) => {
     const fileToRemove = peticaoFiles[index];
     if (fileToRemove?.id) {
       try {
         await removePdfFromIndexedDB(`upload-peticao-${fileToRemove.id}`);
       } catch (err) { /* ignore */ }
     }
-    setPeticaoFiles(prev => prev.filter((_, i) => i !== index));
+    setPeticaoFiles(prev => prev.filter((_, i: number) => i !== index));
     setDocumentProcessingModes(prev => ({
       ...prev,
-      peticoes: (prev.peticoes || []).filter((_, i) => i !== index)
+      peticoes: (prev.peticoes || []).filter((_, i: number) => i !== index)
     }));
   }, [peticaoFiles]);
 
@@ -6598,11 +6598,11 @@ const useTopicManager = () => {
 
   // 🛠️ HANDLERS DE UI E PREPARAÇÃO (5) - ETAPA 7e
 
-  const prepareDeleteTopic = (topic) => {
+  const prepareDeleteTopic = (topic: Topic) => {
     setTopicToDelete(topic);
   };
 
-  const prepareRenameTopic = (topic) => {
+  const prepareRenameTopic = (topic: Topic) => {
     setTopicToRename(topic);
     setNewTopicName(topic.title);
   };
@@ -6611,7 +6611,7 @@ const useTopicManager = () => {
     setTopicsToMerge(topics);
   };
 
-  const prepareSplitTopic = (topic) => {
+  const prepareSplitTopic = (topic: Topic) => {
     setTopicToSplit(topic);
     setSplitNames(['', '']);
   };
@@ -6872,7 +6872,7 @@ const useJurisprudencia = () => {
   const itemsPerPage = 10;
   const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const removeAccents = React.useCallback((str) =>
+  const removeAccents = React.useCallback((str: string) =>
     str.normalize('NFD').replace(/[\u0300-\u036f]/g, ''), []);
 
   const searchPrecedentes = React.useCallback((term) => {
@@ -6927,7 +6927,7 @@ const useJurisprudencia = () => {
     setCurrentPage(1);
   }, []);
 
-  const handleImportJSON = React.useCallback(async (file) => {
+  const handleImportJSON = React.useCallback(async (file: File) => {
     setIsLoading(true);
     try {
       const text = await file.text();
@@ -6949,7 +6949,7 @@ const useJurisprudencia = () => {
     }
   }, []);
 
-  const handleCopyTese = React.useCallback(async (precedente) => {
+  const handleCopyTese = React.useCallback(async (precedente: Precedente) => {
     const tipo = precedente.tipoProcesso || '';
     const identificador = precedente.tema ? `Tema ${precedente.tema}` : (precedente.numero ? `nº ${precedente.numero}` : '');
     const titulo = precedente.titulo ? `\n${precedente.titulo}` : '';
@@ -7016,7 +7016,7 @@ const useLegislacao = () => {
 
   const ITEMS_PER_PAGE = 15;
 
-  const removeAccents = React.useCallback((str) => {
+  const removeAccents = React.useCallback((str: string) => {
     return str?.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() || '';
   }, []);
 
@@ -7030,7 +7030,7 @@ const useLegislacao = () => {
       let score = 0;
       const caputNorm = removeAccents(artigo.caput || '');
       const numeroNorm = removeAccents(artigo.numero || '');
-      const keywordsNorm = (artigo.keywords || []).map(k => removeAccents(k));
+      const keywordsNorm = (artigo.keywords || []).map((k: string) => removeAccents(k));
       // v1.21.1: Buscar também em parágrafos, incisos e alíneas
       const paragrafosText = (artigo.paragrafos || []).map(p => p.texto || '').join(' ');
       const incisosText = (artigo.incisos || []).map(i => i.texto || '').join(' ');
@@ -7073,7 +7073,7 @@ const useLegislacao = () => {
     return filteredArtigos.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredArtigos, currentPage]);
 
-  const handleImportJSON = React.useCallback(async (file) => {
+  const handleImportJSON = React.useCallback(async (file: File) => {
     setIsLoading(true);
     try {
       const text = await file.text();
@@ -7101,7 +7101,7 @@ const useLegislacao = () => {
     }
   }, []);
 
-  const handleCopyArtigo = React.useCallback(async (artigo) => {
+  const handleCopyArtigo = React.useCallback(async (artigo: Artigo) => {
     try {
       const lei = getLeiFromId(artigo.id);
       let texto = `Art. ${artigo.numero} - ${lei.nome}\n${artigo.caput}`;
@@ -7258,7 +7258,7 @@ FontSizeDropdown.displayName = 'FontSizeDropdown';
 
 // 💡 COMPONENTE: VersionCompareModal - Modal de comparação com diff visual
 const VersionCompareModal = React.memo(({ oldContent, newContent, timestamp, onRestore, onClose }) => {
-  const stripHtml = (html) => (html || '').replace(/<[^>]*>/g, '');
+  const stripHtml = (html: string) => (html || '').replace(/<[^>]*>/g, '');
   const oldText = stripHtml(oldContent);
   const newText = stripHtml(newContent);
 
@@ -7311,7 +7311,7 @@ const VersionCompareModal = React.memo(({ oldContent, newContent, timestamp, onR
             <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-200 rounded"></span> Adicionado</span>
           </div>
           <div className="border theme-border-input rounded p-3 max-h-80 overflow-auto text-sm theme-text-primary theme-bg-primary leading-relaxed">
-            {computeDiff.map((item, i) => {
+            {computeDiff.map((item, i: number) => {
               if (item.type === 'removed') return <span key={i} className="bg-red-200 text-red-900 line-through">{item.text}</span>;
               if (item.type === 'added') return <span key={i} className="bg-green-200 text-green-900">{item.text}</span>;
               return <span key={i}>{item.text}</span>;
@@ -7598,15 +7598,15 @@ const FullscreenModelPanel = React.memo(({
   ]), []);
 
   // Função de scoring local (fallback)
-  const scoreModelLocal = React.useCallback((model) => {
+  const scoreModelLocal = React.useCallback((model: Model) => {
     if (!topicTitle) return 0;
     let score = 0;
 
     const titleLower = topicTitle.toLowerCase();
     const modelTitleLower = (model.title || '').toLowerCase();
 
-    const titleWords = titleLower.split(/\s+/).filter(w => w.length > 2 && !STOPWORDS.has(w));
-    const modelWords = modelTitleLower.split(/\s+/).filter(w => w.length > 2 && !STOPWORDS.has(w));
+    const titleWords = titleLower.split(/\s+/).filter((w: string) => w.length > 2 && !STOPWORDS.has(w));
+    const modelWords = modelTitleLower.split(/\s+/).filter((w: string) => w.length > 2 && !STOPWORDS.has(w));
 
     titleWords.forEach(titleWord => {
       if (modelWords.includes(titleWord)) score += 10;
@@ -7625,7 +7625,7 @@ const FullscreenModelPanel = React.memo(({
     }
 
     if (model.keywords) {
-      const keywords = model.keywords.toLowerCase().split(',').map(k => k.trim()).filter(k => k.length > 0);
+      const keywords = model.keywords.toLowerCase().split(',').map((k: string) => k.trim()).filter((k: string) => k.length > 0);
       keywords.forEach(keyword => {
         if (titleLower.includes(keyword) || keyword.includes(titleLower.replace(/\s+/g, ''))) {
           score += 12;
@@ -7766,7 +7766,7 @@ const FullscreenModelPanel = React.memo(({
               Resultados da Busca ({searchResults.length})
             </h4>
             <div className="space-y-2">
-              {searchResults.map((model) => (
+              {searchResults.map((model: Model) => (
                 <SuggestionCard
                   key={`search-${model.id}`}
                   model={model}
@@ -8517,7 +8517,7 @@ const ModelCard = React.memo(({
               const kwArr = model.keywords.split(',');
               return (
               <div className="flex flex-wrap gap-1 mb-3">
-                {kwArr.slice(0, 3).map((kw, i) => (
+                {kwArr.slice(0, 3).map((kw, i: number) => (
                   <span key={i} className="text-xs px-2 py-0.5 rounded theme-bg-tertiary theme-text-tertiary">
                     {kw.trim()}
                   </span>
@@ -8705,7 +8705,7 @@ const ProofCard = React.memo(({
   // null = não extraindo | { current: N, total: N, mode: 'pdfjs'|'claude-vision' } = em progresso
 
   // Handler: Remover vínculo de tópico
-  const handleUnlinkTopic = React.useCallback((topicTitle) => {
+  const handleUnlinkTopic = React.useCallback((topicTitle: string) => {
     proofManager.setProofTopicLinks(prev => ({
       ...prev,
       [proof.id]: (prev[proof.id] || []).filter(t => t !== topicTitle)
@@ -8926,7 +8926,7 @@ const ProofCard = React.memo(({
                 <span className="text-xs theme-text-muted">Modo:</span>
                 <ProcessingModeSelector
                   value={proofManager.proofProcessingModes[proof.id] || 'pdfjs'}
-                  onChange={(mode) => proofManager.setProofProcessingModes(prev => ({
+                  onChange={(mode: ProcessingMode) => proofManager.setProofProcessingModes(prev => ({
                     ...prev,
                     [proof.id]: mode
                   }))}
@@ -9242,7 +9242,7 @@ const ArtigoCard = React.memo(({ artigo, onCopy, expanded, onToggleExpand, copie
           {artigo.paragrafos?.length > 0 && (
             <div>
               <span className="text-xs font-medium text-purple-400 block mb-1">Parágrafos:</span>
-              {artigo.paragrafos.map((p, i) => (
+              {artigo.paragrafos.map((p, i: number) => (
                 <p key={i} className="theme-text-secondary ml-2 mb-1">
                   <span className="text-purple-300">§ {p.numero}º</span> {p.texto}
                 </p>
@@ -9252,7 +9252,7 @@ const ArtigoCard = React.memo(({ artigo, onCopy, expanded, onToggleExpand, copie
           {artigo.incisos?.length > 0 && (
             <div>
               <span className="text-xs font-medium text-amber-400 block mb-1">Incisos:</span>
-              {artigo.incisos.map((inc, i) => (
+              {artigo.incisos.map((inc, i: number) => (
                 <p key={i} className="theme-text-secondary ml-2 mb-1">
                   <span className="text-amber-300">{inc.numero}</span> - {inc.texto}
                 </p>
@@ -9262,7 +9262,7 @@ const ArtigoCard = React.memo(({ artigo, onCopy, expanded, onToggleExpand, copie
           {artigo.alineas?.length > 0 && (
             <div>
               <span className="text-xs font-medium text-teal-400 block mb-1">Alíneas:</span>
-              {artigo.alineas.map((al, i) => (
+              {artigo.alineas.map((al, i: number) => (
                 <p key={i} className="theme-text-secondary ml-2 mb-1">
                   <span className="text-teal-300">{al.letra})</span> {al.texto}
                 </p>
@@ -9307,7 +9307,7 @@ const JurisprudenciaTab = React.memo(({
   const semanticAvailable = jurisSemanticEnabled && searchModelReady && jurisEmbeddingsCount > 0;
 
   // v1.27.00: Handler para busca semântica de jurisprudência
-  const performSemanticSearch = React.useCallback(async (query) => {
+  const performSemanticSearch = React.useCallback(async (query: string) => {
     if (!query || query.length < 3 || !semanticAvailable) {
       setSemanticResults(null);
       return;
@@ -9344,7 +9344,7 @@ const JurisprudenciaTab = React.memo(({
     return () => clearTimeout(semanticSearchTimeoutRef.current);
   }, [jurisprudencia.searchTerm, useSemanticSearch, semanticAvailable, performSemanticSearch, jurisprudencia.filtros]);
 
-  const handleToggleExpand = React.useCallback((id) => {
+  const handleToggleExpand = React.useCallback((id: string) => {
     setExpandedIds(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
@@ -9650,7 +9650,7 @@ const LegislacaoTab = React.memo(({
   const semanticAvailable = semanticSearchEnabled && searchModelReady && embeddingsCount > 0;
 
   // v1.26.00: Handler para busca semântica
-  const performSemanticSearch = React.useCallback(async (query) => {
+  const performSemanticSearch = React.useCallback(async (query: string) => {
     if (!query || query.length < 3 || !semanticAvailable) {
       setSemanticResults(null);
       return;
@@ -9685,7 +9685,7 @@ const LegislacaoTab = React.memo(({
     return () => clearTimeout(semanticSearchTimeoutRef.current);
   }, [legislacao.searchTerm, useSemanticSearch, semanticAvailable, performSemanticSearch]);
 
-  const handleToggleExpand = React.useCallback((id) => {
+  const handleToggleExpand = React.useCallback((id: string) => {
     setExpandedIds(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
@@ -9834,7 +9834,7 @@ const LegislacaoTab = React.memo(({
               if (!artigo) return null;
               const hasDetails = (artigo.paragrafos?.length > 0) || (artigo.incisos?.length > 0) || (artigo.alineas?.length > 0);
               const isMatchedType = (type) => item.type === type;
-              const isMatchedParagrafo = (p) => item.type === 'paragrafo' && item.text.includes(p.texto?.slice(0, 50));
+              const isMatchedParagrafo = (p: Precedente) => item.type === 'paragrafo' && item.text.includes(p.texto?.slice(0, 50));
               const isMatchedInciso = (inc) => item.type === 'inciso' && item.text.includes(inc.texto?.slice(0, 50));
               const isMatchedAlinea = (al) => item.type === 'alinea' && item.text.includes(al.texto?.slice(0, 50));
               return (
@@ -9863,7 +9863,7 @@ const LegislacaoTab = React.memo(({
                     <div className="mt-2 pt-2 border-t theme-border-subtle text-sm space-y-2">
                       {artigo.paragrafos?.length > 0 && (
                         <div>
-                          {artigo.paragrafos.map((p, i) => (
+                          {artigo.paragrafos.map((p, i: number) => (
                             <p key={i} className={`theme-text-secondary ml-2 mb-1 ${isMatchedParagrafo(p) ? 'font-semibold bg-yellow-500/10 px-1 rounded' : ''}`}>
                               <span className="text-purple-400">§ {p.numero}º</span> {p.texto}
                             </p>
@@ -9872,7 +9872,7 @@ const LegislacaoTab = React.memo(({
                       )}
                       {artigo.incisos?.length > 0 && (
                         <div>
-                          {artigo.incisos.map((inc, i) => (
+                          {artigo.incisos.map((inc, i: number) => (
                             <p key={i} className={`theme-text-secondary ml-2 mb-1 ${isMatchedInciso(inc) ? 'font-semibold bg-yellow-500/10 px-1 rounded' : ''}`}>
                               <span className="text-amber-400">{inc.numero}</span> - {inc.texto}
                             </p>
@@ -9881,7 +9881,7 @@ const LegislacaoTab = React.memo(({
                       )}
                       {artigo.alineas?.length > 0 && (
                         <div>
-                          {artigo.alineas.map((al, i) => (
+                          {artigo.alineas.map((al, i: number) => (
                             <p key={i} className={`theme-text-secondary ml-2 mb-1 ${isMatchedAlinea(al) ? 'font-semibold bg-yellow-500/10 px-1 rounded' : ''}`}>
                               <span className="text-teal-400">{al.letra})</span> {al.texto}
                             </p>
@@ -9907,7 +9907,7 @@ const LegislacaoTab = React.memo(({
             overscan={3}
             className="h-full"
             expandedIds={expandedIds}
-            renderItem={(artigo) => (
+            renderItem={(artigo: Artigo) => (
               <ArtigoCard
                 key={artigo.id}
                 artigo={artigo}
@@ -10244,7 +10244,7 @@ const MergeTopicsModal = React.memo(({ isOpen, onClose, topicsToMerge, onConfirm
       </>}>
       <div className="space-y-4">
         <p className="theme-text-tertiary">Você está prestes a unir os seguintes tópicos:</p>
-        <div className="space-y-2">{topicsToMerge.map((t, i) => <div key={i} className="theme-bg-app p-3 rounded border theme-border-input"><p className="font-medium theme-text-primary">{i+1}. {t.title}</p></div>)}</div>
+        <div className="space-y-2">{topicsToMerge.map((t, i: number) => <div key={i} className="theme-bg-app p-3 rounded border theme-border-input"><p className="font-medium theme-text-primary">{i+1}. {t.title}</p></div>)}</div>
         {hasDocuments ? <ModalInfoBox>✓ Um novo tópico unificado será criado e o mini-relatório será regenerado com base nos documentos originais.</ModalInfoBox> : <p className="text-xs theme-text-disabled">O mini-relatório será regenerado automaticamente.</p>}
       </div>
     </BaseModal>
@@ -10267,7 +10267,7 @@ const SplitTopicModal = React.memo(({ isOpen, onClose, topicToSplit, setTopicToS
       <div className="space-y-4">
         <div><label className={CSS.label}>Tópico Original</label><p className="theme-text-muted theme-bg-app p-3 rounded">{topicToSplit?.title}</p></div>
         <p className="theme-text-tertiary">Separe em quantos subtópicos desejar:</p>
-        {splitNames.map((name, i) => <div key={i}><label className={CSS.label}>Subtópico {i+1}</label><input type="text" value={name} onChange={(e) => { const n=[...splitNames]; n[i]=e.target.value; setSplitNames(n); }} className="w-full theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary" placeholder={`Título do subtópico ${i+1}`} /></div>)}
+        {splitNames.map((name, i: number) => <div key={i}><label className={CSS.label}>Subtópico {i+1}</label><input type="text" value={name} onChange={(e) => { const n=[...splitNames]; n[i]=e.target.value; setSplitNames(n); }} className="w-full theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary" placeholder={`Título do subtópico ${i+1}`} /></div>)}
         <button onClick={() => setSplitNames([...splitNames, ''])} className="text-sm hover-text-blue-400-from-300">+ Adicionar mais um subtópico</button>
         {hasDocuments ? <ModalInfoBox>✓ Cada subtópico terá seu mini-relatório regenerado com base nos documentos originais.</ModalInfoBox> : <p className="text-xs theme-text-disabled">O mini-relatório será regenerado com as informações relevantes.</p>}
       </div>
@@ -10480,7 +10480,7 @@ const ExtractedModelPreviewModal = React.memo(({
   setExtractedModel,
   onSave,
   onCancel,
-  sanitizeHTML = (html) => html || ''
+  sanitizeHTML = (html: string) => html || ''
 }) => {
   // ESC handler
   React.useEffect(() => {
@@ -10796,7 +10796,7 @@ const LinkProofModal = React.memo(({
             <p className="text-sm theme-text-muted mb-4">
               Selecione os tópicos aos quais esta prova se relaciona:
             </p>
-            {extractedTopics.map((topic) => {
+            {extractedTopics.map((topic: Topic) => {
               const isLinked = proofTopicLinks[proofToLink.id]?.includes(topic.title) || false;
               return (
                 <label
@@ -10878,11 +10878,11 @@ const DeleteProofModal = React.memo(({ isOpen, onClose, proofToDelete, onConfirm
 DeleteProofModal.displayName = 'DeleteProofModal';
 
 // 💬 v1.19.0: ChatBubble - Mensagem individual no chat
-const ChatBubble = React.memo(({ msg, onUse, showUse, sanitizeHTML = (html) => html || '' }) => {
+const ChatBubble = React.memo(({ msg, onUse, showUse, sanitizeHTML = (html: string) => html || '' }) => {
   const isUser = msg.role === 'user';
   const time = new Date(msg.ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   // v1.19.4: Converter Markdown básico para HTML (fix espaçamento)
-  const markdownToHtml = (text) => {
+  const markdownToHtml = (text: string) => {
     if (!text) return '';
     return text
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -10948,7 +10948,7 @@ const ChatHistoryArea = React.memo(({ history, generating, onUseMessage, showUse
           </div>
         </div>
       ) : (
-        history.map((msg, i) => (
+        history.map((msg, i: number) => (
           <ChatBubble
             key={i}
             msg={msg}
@@ -10992,7 +10992,7 @@ const ChatInput = React.memo(({ onSend, disabled, placeholder }) => {
   };
 
   // v1.35.59: Handler para Voice-to-Text - adiciona texto ao valor
-  const handleVoiceTranscript = React.useCallback((text) => {
+  const handleVoiceTranscript = React.useCallback((text: string) => {
     setValue(prev => (prev ? prev + ' ' : '') + text);
   }, []);
 
@@ -11106,7 +11106,7 @@ const AIAssistantBaseLegacy = React.memo(({
   // Controle de quais botões mostrar
   showInsertButtons = true,
   showCopyButton = true,
-  sanitizeHTML = (html) => html || '',
+  sanitizeHTML = (html: string) => html || '',
 }) => {
   const [copied, setCopied] = React.useState(false);
 
@@ -11123,7 +11123,7 @@ const AIAssistantBaseLegacy = React.memo(({
   }, [aiGeneratedText]);
 
   // v1.35.62: Handler para Voice-to-Text no campo de instruções
-  const handleVoiceInstruction = React.useCallback((text) => {
+  const handleVoiceInstruction = React.useCallback((text: string) => {
     const current = aiInstruction || '';
     setAiInstruction(current + (current ? ' ' : '') + text);
   }, [aiInstruction, setAiInstruction]);
@@ -11215,7 +11215,7 @@ const AIAssistantBaseLegacy = React.memo(({
                 onTranscript={handleVoiceInstruction}
                 size="sm"
                 idleText="Ditar"
-                onError={(err) => console.warn('[VoiceToText]', err)}
+                onError={(err: unknown) => console.warn('[VoiceToText]', err)}
               />
             </div>
             <textarea
@@ -11331,7 +11331,7 @@ const AIAssistantBase = React.memo(({
   placeholder = 'Digite sua mensagem...',
   extraContent = null,
   showInsertButtons = true,
-  sanitizeHTML = (html) => html || '',
+  sanitizeHTML = (html: string) => html || '',
   quickPrompts = [],  // v1.20.0: Prompts rápidos
   topicTitle = '',    // v1.21.1: Título do tópico para substituição em quick prompts
   onQuickPromptClick = null, // v1.21.1: Handler opcional para quick prompts (permite validação)
@@ -11354,7 +11354,7 @@ const AIAssistantBase = React.memo(({
 
   if (!isOpen) return null;
 
-  const handleInsert = (mode) => {
+  const handleInsert = (mode: ProcessingMode) => {
     if (lastResponse) onInsertResponse(mode);
   };
 
@@ -11496,7 +11496,7 @@ const AIAssistantModal = React.memo(({
   generating,
   onClear,
   lastResponse,
-  sanitizeHTML = (html) => html || '',
+  sanitizeHTML = (html: string) => html || '',
   quickPrompts = [],  // v1.20.0
   proofManager = null  // v1.21.1: Para validação de provas orais
 }) => {
@@ -11601,7 +11601,7 @@ const AIAssistantGlobalModal = React.memo(({
   generating,
   onClear,
   lastResponse,
-  sanitizeHTML = (html) => html || '',
+  sanitizeHTML = (html: string) => html || '',
   quickPrompts = [],  // v1.20.0
   proofManager = null  // v1.21.1: Para validação de provas orais
 }) => {
@@ -11703,7 +11703,7 @@ const AIAssistantModelModal = React.memo(({
   aiGeneratedTextModel,
   onGenerateText,
   onInsertText,
-  sanitizeHTML = (html) => html || ''
+  sanitizeHTML = (html: string) => html || ''
 }) => {
   // Exemplos específicos para criação de modelos
   const modelExamples = (
@@ -12538,7 +12538,7 @@ const DispositivoModal = React.memo(({
   setExtractedTopics,
   selectedTopics,
   setSelectedTopics,
-  sanitizeHTML = (html) => html || ''
+  sanitizeHTML = (html: string) => html || ''
 }) => {
   const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   React.useEffect(() => () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }, []);
@@ -13093,7 +13093,7 @@ LockedTabOverlay.displayName = 'LockedTabOverlay';
 
 // 🔍 Modal de Aviso de Similaridade (v1.13.3 - Comparação lado a lado)
 // v1.33.3: Feedback visual "Salvando..." durante geração de embedding
-const SimilarityWarningModal = React.memo(({ warning, saving, onCancel, onSaveNew, onReplace, sanitizeHTML = (html) => html || '' }) => {
+const SimilarityWarningModal = React.memo(({ warning, saving, onCancel, onSaveNew, onReplace, sanitizeHTML = (html: string) => html || '' }) => {
   // ESC handler
   React.useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape' && !saving) onCancel(); };
@@ -13165,7 +13165,7 @@ const BulkReviewModal = React.memo(({
   onRemoveModel,
   onDiscard,
   onSave,
-  sanitizeHTML = (html) => html || ''
+  sanitizeHTML = (html: string) => html || ''
 }) => {
   if (!isOpen) return null;
 
@@ -13771,7 +13771,7 @@ const ModelFormModal = React.forwardRef(({
   }, []);
 
   // v1.35.10: Handler para mudanças no editor rico - atualiza estado LOCAL
-  const handleContentChange = React.useCallback((html) => {
+  const handleContentChange = React.useCallback((html: string) => {
     setLocalModel(prev => ({ ...prev, content: html }));
   }, []);
 
@@ -13912,7 +13912,7 @@ const ModelPreviewModal = React.memo(({
   }, [model?.content, showToast]);
 
   // v1.35.61: Handler para Voice-to-Text no modo Quick Edit
-  const handleVoiceTranscript = React.useCallback((text) => {
+  const handleVoiceTranscript = React.useCallback((text: string) => {
     const quill = quickEditRef.current;
     if (quill) {
       requestAnimationFrame(() => {
@@ -14056,7 +14056,7 @@ const ModelPreviewModal = React.memo(({
                   onTranscript={handleVoiceTranscript}
                   size="md"
                   idleText="Ditar"
-                  onError={(err) => console.warn('[VoiceToText]', err)}
+                  onError={(err: unknown) => console.warn('[VoiceToText]', err)}
                 />
               </div>
               <div
@@ -14069,7 +14069,7 @@ const ModelPreviewModal = React.memo(({
                 <QuillEditorBase
                   ref={quickEditRef}
                   content={editedContent}
-                  onChange={(html) => onContentChange?.(html)}
+                  onChange={(html: string) => onContentChange?.(html)}
                   toolbarConfig={getQuillToolbarConfig('simple')}
                   placeholder="Edite o conteúdo do modelo..."
                   className="flex-1"
@@ -14311,7 +14311,7 @@ const SlashCommandMenu = React.memo(({
 
   // v1.33.8: Helper para extrair texto puro do HTML (para tooltip)
   // v1.33.10: Mostrar modelo completo no tooltip
-  const getPreviewText = (content) => {
+  const getPreviewText = (content: string) => {
     if (!content) return 'Sem conteúdo';
     return content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   };
@@ -14575,7 +14575,7 @@ const FieldEditor = React.memo(React.forwardRef(({
   }, []);
 
   // v1.35.62: Handler para Voice-to-Text - insere texto na posição do cursor
-  const handleVoiceTranscript = React.useCallback((text) => {
+  const handleVoiceTranscript = React.useCallback((text: string) => {
     const quill = quillInstanceRef.current;
     if (quill) {
       requestAnimationFrame(() => {
@@ -14618,7 +14618,7 @@ const FieldEditor = React.memo(React.forwardRef(({
           <VoiceButton
             onTranscript={handleVoiceTranscript}
             size="sm"
-            onError={(err) => console.warn('[VoiceToText]', err)}
+            onError={(err: unknown) => console.warn('[VoiceToText]', err)}
           />
         )}
       </div>
@@ -14674,7 +14674,7 @@ const LinkedProofsModal = React.memo(({
               <p>Nenhuma prova vinculada a este tópico</p>
             </div>
           ) : (
-            linkedProofs.map((proof) => (
+            linkedProofs.map((proof: Proof) => (
               <div
                 key={proof.id}
                 className="theme-bg-secondary-50 rounded-lg p-3 border theme-border-input"
@@ -14842,7 +14842,7 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
 
   if (!isOpen) return null;
 
-  const handleCopy = async (p) => {
+  const handleCopy = async (p: Precedente) => {
     const tipo = isIRRType(p.tipoProcesso) ? 'IRR' : (p.tipoProcesso || '');
     const identificador = p.tema ? `Tema ${p.tema}` : (p.numero ? `nº ${p.numero}` : '');
     const partes = [];
@@ -15147,7 +15147,7 @@ const GlobalEditorSection = React.memo(({
               label="Relatório"
               fieldType="relatorio"
               content={topic.editedRelatorio || topic.relatorio || ''}
-              onChange={(html) => onFieldChange(topicIndex, 'editedRelatorio', html)}
+              onChange={(html: string) => onFieldChange(topicIndex, 'editedRelatorio', html)}
               onFocus={() => onFieldFocus?.(topicIndex, 'relatorio', null)}
               onSlashCommand={onSlashCommand}
               quillReady={quillReady}
@@ -15161,7 +15161,7 @@ const GlobalEditorSection = React.memo(({
               label="Dispositivo"
               fieldType="dispositivo"
               content={topic.editedContent || ''}
-              onChange={(html) => onFieldChange(topicIndex, 'editedContent', html)}
+              onChange={(html: string) => onFieldChange(topicIndex, 'editedContent', html)}
               onFocus={() => onFieldFocus?.(topicIndex, 'dispositivo', null)}
               onSlashCommand={onSlashCommand}
               quillReady={quillReady}
@@ -15176,7 +15176,7 @@ const GlobalEditorSection = React.memo(({
                 label="Mini-Relatório"
                 fieldType="relatorio"
                 content={topic.editedRelatorio || topic.relatorio || ''}
-                onChange={(html) => onFieldChange(topicIndex, 'editedRelatorio', html)}
+                onChange={(html: string) => onFieldChange(topicIndex, 'editedRelatorio', html)}
                 onFocus={() => onFieldFocus?.(topicIndex, 'relatorio', null)}
                 onSlashCommand={onSlashCommand}
                 quillReady={quillReady}
@@ -15200,7 +15200,7 @@ const GlobalEditorSection = React.memo(({
                         topicTitle={topic.title}
                         versioning={versioning}
                         currentContent={topic.editedFundamentacao || topic.fundamentacao || ''}
-                        onRestore={(content) => onFieldChange(topicIndex, 'editedFundamentacao', content)}
+                        onRestore={(content: string) => onFieldChange(topicIndex, 'editedFundamentacao', content)}
                       />
                     )}
                     {onOpenJurisModal && (
@@ -15225,7 +15225,7 @@ const GlobalEditorSection = React.memo(({
                     )}
                     {/* v1.35.65: VoiceButton ao lado do Assistente IA */}
                     <VoiceButton
-                      onTranscript={(text) => {
+                      onTranscript={(text: string) => {
                         // Inserir texto no editor de fundamentação via ref
                         if (fundamentacaoEditorRef.current) {
                           const current = topic.editedFundamentacao || topic.fundamentacao || '';
@@ -15233,7 +15233,7 @@ const GlobalEditorSection = React.memo(({
                         }
                       }}
                       size="sm"
-                      onError={(err) => console.warn('[VoiceToText]', err)}
+                      onError={(err: unknown) => console.warn('[VoiceToText]', err)}
                     />
                   </div>
                 </div>
@@ -15242,9 +15242,9 @@ const GlobalEditorSection = React.memo(({
                   label=""
                   fieldType="fundamentacao"
                   content={topic.editedFundamentacao || topic.fundamentacao || ''}
-                  onChange={(html) => onFieldChange(topicIndex, 'editedFundamentacao', html)}
+                  onChange={(html: string) => onFieldChange(topicIndex, 'editedFundamentacao', html)}
                   onFocus={() => onFieldFocus?.(topicIndex, 'fundamentacao', topic)}
-                  onBlur={(html) => versioning?.saveVersion(topic.title, html)}
+                  onBlur={(html: string) => versioning?.saveVersion(topic.title, html)}
                   onSlashCommand={onSlashCommand}
                   quillReady={quillReady}
                   quillError={quillError}
@@ -15575,7 +15575,7 @@ const GlobalEditorModal = React.memo(({
     handleInsertModelRef.current = handleInsertModel;
   }, [handleInsertModel]);
 
-  const handlePreviewModel = React.useCallback((model) => {
+  const handlePreviewModel = React.useCallback((model: Model) => {
     if (modelPreview?.openPreview) {
       modelPreview.openPreview(model);
     }
@@ -15586,7 +15586,7 @@ const GlobalEditorModal = React.memo(({
   React.useEffect(() => {
     if (isOpen && modelPreview?.setContextualInsertFn) {
       // Wrapper com identidade estável que chama a ref
-      modelPreview.setContextualInsertFn((content) => handleInsertModelRef.current(content));
+      modelPreview.setContextualInsertFn((content: string) => handleInsertModelRef.current(content));
     }
     return () => {
       if (modelPreview?.setContextualInsertFn) {
@@ -15677,7 +15677,7 @@ const GlobalEditorModal = React.memo(({
       for (let i = 0; i < topicsToAnalyze.length; i += BATCH_SIZE) {
         const batch = topicsToAnalyze.slice(i, i + BATCH_SIZE);
 
-        const promises = batch.map(async (topic) => {
+        const promises = batch.map(async (topic: Topic) => {
           const resultado = await detectResultadoAutomatico(
             topic.title,
             topic.editedFundamentacao || topic.fundamentacao,
@@ -15758,7 +15758,7 @@ const GlobalEditorModal = React.memo(({
   }, []);
 
   // v1.12.14: Helper para calcular provas vinculadas a um tópico
-  const getLinkedProofsForTopic = React.useCallback((topicTitle) => {
+  const getLinkedProofsForTopic = React.useCallback((topicTitle: string) => {
     if (!proofManager) return [];
     const linkedProofIds = Object.keys(proofManager.proofTopicLinks || {}).filter(proofId =>
       proofManager.proofTopicLinks[proofId]?.includes(topicTitle)
@@ -15907,7 +15907,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
     }
   }, [globalAiInstruction, aiIntegration, aiAssistantTopicIndex, localTopics, analyzedDocuments, proofManager, globalContextScope, showToast]);
 
-  const insertGlobalAiText = React.useCallback((mode) => {
+  const insertGlobalAiText = React.useCallback((mode: ProcessingMode) => {
     if (!globalAiGeneratedText || aiAssistantTopicIndex === null) return;
 
     setLocalTopics(prev => {
@@ -16048,7 +16048,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
   }, [localTopics, aiAssistantTopicIndex, analyzedDocuments, proofManager, globalContextScope, aiIntegration?.aiSettings?.anonymization?.enabled]);
 
   // 🤖 v1.19.0: Handler para inserir resposta do chat no editor global
-  const handleInsertGlobalChatResponse = React.useCallback((mode) => {
+  const handleInsertGlobalChatResponse = React.useCallback((mode: ProcessingMode) => {
     const response = chatAssistantGlobal.lastResponse;
     if (!response || aiAssistantTopicIndex === null) return;
 
@@ -16269,13 +16269,13 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
                   editorTheme={editorTheme}
                   onOpenAIAssistant={handleOpenAIAssistant}
                   onOpenProofsModal={handleOpenProofsModal}
-                  onOpenJurisModal={(idx) => {
+                  onOpenJurisModal={(idx: number) => {
                     setJurisTopicIndex(idx);
                     setShowJurisModal(true);
                   }}
                   linkedProofsCount={getLinkedProofsForTopic(topic.title).length}
                   isCollapsed={collapsedSections[index] ?? false}
-                  onToggleCollapse={(idx) => setCollapsedSections(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                  onToggleCollapse={(idx: number) => setCollapsedSections(prev => ({ ...prev, [idx]: !prev[idx] }))}
                   versioning={fieldVersioning}
                 />
               ))
@@ -16409,7 +16409,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
                       index={idx}
                       totalSuggestions={globalManualSearchResults.length}
                       onPreview={handlePreviewModel}
-                      onInsert={(content) => handleInsertModel(content)}
+                      onInsert={(content: string) => handleInsertModel(content)}
                       sanitizeHTML={sanitizeHTML}
                       showRanking={false}
                     />
@@ -16424,7 +16424,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
                     index={idx}
                     totalSuggestions={suggestions.length}
                     onPreview={handlePreviewModel}
-                    onInsert={(content) => handleInsertModel(content)}
+                    onInsert={(content: string) => handleInsertModel(content)}
                     sanitizeHTML={sanitizeHTML}
                     showRanking={true}
                   />
@@ -16830,7 +16830,7 @@ const getQuillToolbarConfig = (type = 'full') => {
 };
 
 // Sanitiza HTML gerado pelo Quill.js
-const sanitizeQuillHTML = (html) => {
+const sanitizeQuillHTML = (html: string) => {
   // Verificar se DOMPurify está disponível (não depende de estado React)
   if (!window.DOMPurify) {
     return html || '';
@@ -17254,7 +17254,7 @@ const QuillModelEditor = React.forwardRef(({
   const toolbarConfig = React.useMemo(() => getQuillToolbarConfig('full'), []);
 
   // v1.35.61: Handler para Voice-to-Text - insere texto na posição do cursor
-  const handleVoiceTranscript = React.useCallback((text) => {
+  const handleVoiceTranscript = React.useCallback((text: string) => {
     const quill = quillInstanceRef.current;
     if (quill) {
       requestAnimationFrame(() => {
@@ -17292,7 +17292,7 @@ const QuillModelEditor = React.forwardRef(({
         <VoiceButton
           onTranscript={handleVoiceTranscript}
           size="md"
-          onError={(err) => console.warn('[VoiceToText]', err)}
+          onError={(err: unknown) => console.warn('[VoiceToText]', err)}
         />
 
         {/* Botão Assistente IA */}
@@ -17466,16 +17466,16 @@ const QuillDecisionEditor = React.forwardRef(({
   // Configurar toolbar completa (28 opções - igual DecisionEditorToolbar)
   const toolbarConfig = React.useMemo(() => getQuillToolbarConfig('full'), []);
 
-  const handleInsertModel = React.useCallback((content) => {
+  const handleInsertModel = React.useCallback((content: string) => {
     onInsertModel?.(content);
   }, [onInsertModel]);
 
-  const handlePreviewModel = React.useCallback((model) => {
+  const handlePreviewModel = React.useCallback((model: Model) => {
     onPreviewModel?.(model);
   }, [onPreviewModel]);
 
   // v1.35.59: Handler para Voice-to-Text - insere texto na posição do cursor
-  const handleVoiceTranscript = React.useCallback((text) => {
+  const handleVoiceTranscript = React.useCallback((text: string) => {
     const quill = quillInstanceRef.current;
     if (quill) {
       // Usar requestAnimationFrame para não bloquear UI
@@ -17538,7 +17538,7 @@ const QuillDecisionEditor = React.forwardRef(({
           <VoiceButton
             onTranscript={handleVoiceTranscript}
             size="md"
-            onError={(err) => console.warn('[VoiceToText]', err)}
+            onError={(err: unknown) => console.warn('[VoiceToText]', err)}
           />
 
           {/* Botão Assistente IA */}
@@ -17782,7 +17782,7 @@ const AIRegenerationSection = React.memo(({
   }, [onInstructionChange, localInstruction, customInstruction, onRegenerate]);
 
   // v1.35.59: Handler para Voice-to-Text - adiciona texto ao final da instrução
-  const handleVoiceTranscript = React.useCallback((text) => {
+  const handleVoiceTranscript = React.useCallback((text: string) => {
     setLocalInstruction(prev => (prev ? prev + ' ' : '') + text);
   }, []);
 
@@ -18071,7 +18071,7 @@ const DecisionEditorContainer = React.memo(React.forwardRef(({
         onSlashCommand={onSlashCommand}
         isDirty={isDirty}
         versioning={versioning}
-        onBlur={(html) => versioning?.saveVersion(topic.title, html)}
+        onBlur={(html: string) => versioning?.saveVersion(topic.title, html)}
         {...editorConfig.editorConfig}
       />
       )}
@@ -18107,7 +18107,7 @@ const DecisionEditorContainer = React.memo(React.forwardRef(({
 DecisionEditorContainer.displayName = 'DecisionEditorContainer';
 
 // 🔧 HELPER: Fast Hash (v1.9.1)
-const fastHashUtil = (str) => {
+const fastHashUtil = (str: string) => {
   if (!str) return 'empty';
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -18143,7 +18143,7 @@ const useDocumentServices = (aiIntegration) => {
         }
       };
 
-      script.onerror = (err) => {
+      script.onerror = (err: unknown) => {
         reject(new Error('Falha ao carregar PDF.js da CDN'));
       };
 
@@ -18176,7 +18176,7 @@ const useDocumentServices = (aiIntegration) => {
         }
       };
 
-      script.onerror = (err) => {
+      script.onerror = (err: unknown) => {
         reject(new Error('Falha ao carregar Mammoth.js da CDN'));
       };
 
@@ -18260,7 +18260,7 @@ const useDocumentServices = (aiIntegration) => {
     }
   }, [loadPDFJS]);
 
-  const extractTextFromDOCX = React.useCallback(async (file) => {
+  const extractTextFromDOCX = React.useCallback(async (file: File) => {
     try {
       const mammoth = await loadMammoth();
 
@@ -18481,7 +18481,7 @@ INSTRUÇÕES IMPORTANTES:
         const batchEnd = Math.min(batchStart + BATCH_SIZE, totalPages);
         const batchPages = Array.from(
           { length: batchEnd - batchStart },
-          (_, i) => batchStart + i + 1
+          (_, i: number) => batchStart + i + 1
         );
 
         // 2a. Renderizar batch de páginas
@@ -18562,7 +18562,7 @@ INSTRUÇÕES IMPORTANTES:
 
   // 🔢 DETECÇÃO DE NÚMERO DO PROCESSO
 
-  const extractProcessoFromFileName = React.useCallback((fileName) => {
+  const extractProcessoFromFileName = React.useCallback((fileName: string) => {
     if (!fileName) return null;
 
     const match = fileName.match(/(AT|ATOrd|RO|RR|AP|AI|MS)?\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/);
@@ -18575,7 +18575,7 @@ INSTRUÇÕES IMPORTANTES:
   }, []);
 
   // v1.20.2: Adicionado pdf.destroy() em finally (FIX memory leak)
-  const extractProcessoFromFirstPage = React.useCallback(async (file) => {
+  const extractProcessoFromFirstPage = React.useCallback(async (file: File) => {
     if (!file || file.type !== 'application/pdf') return null;
 
     let pdf = null;
@@ -18658,7 +18658,7 @@ INSTRUÇÕES IMPORTANTES:
 
   // 📦 PROCESSAMENTO EM LOTE
 
-  const extractTextFromBulkFile = React.useCallback(async (file) => {
+  const extractTextFromBulkFile = React.useCallback(async (file: File) => {
     const fileType = file.type;
     const fileName = file.name.toLowerCase();
 
@@ -19092,7 +19092,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // Hash rápido baseado apenas em IDs e timestamps (~1ms vs 50-200ms stringify)
   const modelsHashRef = React.useRef<string | null>(null);
 
-  const fastHash = React.useCallback((str) => {
+  const fastHash = React.useCallback((str: string) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
@@ -19554,24 +19554,24 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const uploadHash = React.useMemo(() => {
     try {
       // v1.13.7: Incluir arquivos PDF selecionados no hash (compatível com formato {file, id})
-      const peticaoFilesSig = peticaoFiles.map((f, i) => `${i}:${f?.file?.name || f?.name || ''}:${f?.file?.size || f?.size || 0}`).join('|');
-      const contestacaoFilesSig = contestacaoFiles.map((f, i) => `${i}:${f?.file?.name || f?.name || ''}:${f?.file?.size || f?.size || 0}`).join('|');
-      const complementaryFilesSig = complementaryFiles.map((f, i) => `${i}:${f?.file?.name || f?.name || ''}:${f?.file?.size || f?.size || 0}`).join('|');
+      const peticaoFilesSig = peticaoFiles.map((f, i: number) => `${i}:${f?.file?.name || f?.name || ''}:${f?.file?.size || f?.size || 0}`).join('|');
+      const contestacaoFilesSig = contestacaoFiles.map((f, i: number) => `${i}:${f?.file?.name || f?.name || ''}:${f?.file?.size || f?.size || 0}`).join('|');
+      const complementaryFilesSig = complementaryFiles.map((f, i: number) => `${i}:${f?.file?.name || f?.name || ''}:${f?.file?.size || f?.size || 0}`).join('|');
 
       // extractedTexts: { peticoes: [{text, name}], contestacoes: [{text, name}], complementares: [{text, name}] }
       const peticoesText = (extractedTexts?.peticoes || [])
-        .map((c, i) => `${i}:${(c?.text || '').substring(0, 50)}`)
+        .map((c, i: number) => `${i}:${(c?.text || '').substring(0, 50)}`)
         .join('|');
 
       const contestacoesText = (extractedTexts?.contestacoes || [])
-        .map((c, i) => {
+        .map((c, i: number) => {
           const text = c?.text || '';
           return `${i}:${text.substring(0, 50)}`;
         })
         .join('|');
 
       const complementaresText = (extractedTexts?.complementares || [])
-        .map((c, i) => {
+        .map((c, i: number) => {
           const text = c?.text || '';
           return `${i}:${text.substring(0, 50)}`;
         })
@@ -20826,7 +20826,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     await new Promise(resolve => setTimeout(resolve, 50));
 
     try {
-      const stripHTML = (html) => {
+      const stripHTML = (html: string) => {
         const div = document.createElement('div');
         div.innerHTML = html || '';
         return div.textContent || div.innerText || '';
@@ -21181,7 +21181,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       };
 
       // Helper: extrair texto de string ou objeto (só primeira página)
-      const getFirstPage = (t) => {
+      const getFirstPage = (t: Topic) => {
         if (!t) return null;
         const fullText = typeof t === 'string' ? t : (t.text || null);
         if (!fullText) return null;
@@ -21526,7 +21526,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     });
   }, []);
 
-  const selectModelFromSlash = React.useCallback((model) => {
+  const selectModelFromSlash = React.useCallback((model: Model) => {
     const { quillInstance, triggerPosition } = slashMenu;
     if (!quillInstance || !model) {
       closeSlashMenu();
@@ -21624,7 +21624,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 🔧 HELPER FUNCTIONS - v1.3.5.1
 
   // Verifica se um tópico está decidido
-  const isTopicDecidido = React.useCallback((topic) => {
+  const isTopicDecidido = React.useCallback((topic: Topic) => {
     if (!topic) return false;
 
     // DISPOSITIVO usa editedContent
@@ -21951,14 +21951,14 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // Estes handlers são passados como props para DecisionEditorContainer.
   // Memoizá-los evita quebrar React.memo e recalcular useMemo internos.
 
-  const handleFundamentacaoChange = React.useCallback((html) => {
+  const handleFundamentacaoChange = React.useCallback((html: string) => {
     setEditingTopic(prev => ({
       ...prev,
       editedFundamentacao: html
     }));
   }, []);
 
-  const handleRelatorioChange = React.useCallback((html) => {
+  const handleRelatorioChange = React.useCallback((html: string) => {
     setEditingTopic(prev => ({
       ...prev,
       editedRelatorio: html
@@ -21996,7 +21996,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // Este helper retorna configuração específica para cada tipo de tópico,
   // permitindo especialização de editores sem acoplar componentes filhos.
 
-  const getTopicEditorConfig = React.useCallback((topicTitle) => {
+  const getTopicEditorConfig = React.useCallback((topicTitle: string) => {
     switch(topicTitle?.toUpperCase()) {
       case 'RELATÓRIO':
         return {
@@ -22202,7 +22202,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
       await new Promise(resolve => setTimeout(resolve, 50));
       try {
-        const stripHTML = (html) => {
+        const stripHTML = (html: string) => {
           const div = document.createElement('div');
           div.innerHTML = html || '';
           return div.textContent || div.innerText || '';
@@ -22270,7 +22270,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         // v1.27.02: Regenerar embedding se IA local estiver ativa
         if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
           try {
-            const stripHTML = (html) => {
+            const stripHTML = (html: string) => {
               const div = document.createElement('div');
               div.innerHTML = html || '';
               return div.textContent || div.innerText || '';
@@ -22431,7 +22431,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
         await new Promise(resolve => setTimeout(resolve, 50));
         try {
-          const stripHTML = (html) => {
+          const stripHTML = (html: string) => {
             const div = document.createElement('div');
             div.innerHTML = html || '';
             return div.textContent || div.innerText || '';
@@ -22521,7 +22521,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
       await new Promise(resolve => setTimeout(resolve, 50));
       try {
-        const stripHTML = (html) => {
+        const stripHTML = (html: string) => {
           const div = document.createElement('div');
           div.innerHTML = html || '';
           return div.textContent || div.innerText || '';
@@ -22553,7 +22553,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
       await new Promise(resolve => setTimeout(resolve, 50));
       try {
-        const stripHTML = (html) => {
+        const stripHTML = (html: string) => {
           const div = document.createElement('div');
           div.innerHTML = html || '';
           return div.textContent || div.innerText || '';
@@ -22588,7 +22588,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     modelPreview.closePreview();
   };
 
-  const startEditingModel = (model) => {
+  const startEditingModel = (model: Model) => {
     modelLibrary.setEditingModel(model);
     modelLibrary.setNewModel({
       title: model.title,
@@ -22662,7 +22662,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     }
 
     // Level 2: Exact content match (normalized)
-    const normalizeContent = (text) => {
+    const normalizeContent = (text: string) => {
       return text.toLowerCase().trim().replace(/\s+/g, ' ');
     };
 
@@ -22731,7 +22731,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && newModels.length > 0) {
         const modelsWithoutEmbedding = newModels.filter(m => !m.embedding || m.embedding.length !== 768);
         if (modelsWithoutEmbedding.length > 0) {
-          const stripHTML = (html) => {
+          const stripHTML = (html: string) => {
             const div = document.createElement('div');
             div.innerHTML = html || '';
             return div.textContent || div.innerText || '';
@@ -22886,7 +22886,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
   const reorderTopicsViaLLM = async (topics) => {
     if (!topics || topics.length <= 1) return topics;
 
-    const topicsList = topics.map((t, i) => `${i + 1}. "${t.title}" (${t.category})`).join('\n');
+    const topicsList = topics.map((t, i: number) => `${i + 1}. "${t.title}" (${t.category})`).join('\n');
 
     const prompt = `Reordene os seguintes tópicos de uma ação trabalhista na ordem processual correta:
 
@@ -23018,7 +23018,7 @@ ${totalContestacoes > 2 ? `QUARTO PARÁGRAFO (terceira defesa):
     if (partesProcesso?.reclamadas?.length > 0) {
       partesInfo = `\nPARTES DO PROCESSO:
 - Reclamante: ${partesProcesso.reclamante || 'Não identificado'}
-${partesProcesso.reclamadas.map((r, i) => `- ${i + 1}ª Reclamada: ${r}`).join('\n')}
+${partesProcesso.reclamadas.map((r, i: number) => `- ${i + 1}ª Reclamada: ${r}`).join('\n')}
 `;
     }
 
@@ -23084,7 +23084,7 @@ Responda APENAS com o texto do mini-relatório formatado em HTML, sem JSON, sem 
     const { isInitialGeneration = false } = options;
 
     const core = buildMiniReportPromptCore({ isInitialGeneration });
-    const topicsList = topics.map((t, i) => `${i + 1}. "${t.title}"`).join('\n');
+    const topicsList = topics.map((t, i: number) => `${i + 1}. "${t.title}"`).join('\n');
 
     return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestação${core.totalContestacoes > 1 ? 'ões' : ''})` : ' (petição inicial)'}, gere mini-relatórios narrativos para os seguintes ${topics.length} tópicos:
 
@@ -23506,7 +23506,7 @@ Se não houver informações específicas, indique: "Não foram localizadas info
     try {
       const mergedTitle = topicsToMerge.map(t => t.title).join(' e ');
       setAnalysisProgress(`🔄 Gerando mini-relatório unificado para "${mergedTitle}"...`);
-      const topicsInfo = topicsToMerge.map((t, i) => `${i + 1}. ${t.title}`).join('\n');
+      const topicsInfo = topicsToMerge.map((t, i: number) => `${i + 1}. ${t.title}`).join('\n');
       const mergeContext = `**CONTEXTO DE UNIÃO DE TÓPICOS:**
 Os seguintes tópicos estão sendo unidos em um único tópico:
 ${topicsInfo}
@@ -23768,7 +23768,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
     }
   };
 
-  const insertAiText = (mode) => {
+  const insertAiText = (mode: ProcessingMode) => {
     if (!aiIntegration.aiGeneratedText || !editorRef.current) return;
 
         const currentHtml = editorRef.current.root.innerHTML;
@@ -23902,7 +23902,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
   }, [analyzedDocuments, proofManager, editingTopic, topicContextScope, selectedTopics, aiIntegration?.aiSettings?.anonymization?.enabled]);
 
   // 🤖 v1.19.0: Handler para inserir resposta do chat no editor
-  const handleInsertChatResponse = React.useCallback((mode) => {
+  const handleInsertChatResponse = React.useCallback((mode: ProcessingMode) => {
     const response = chatAssistant.lastResponse;
     if (!response || !editorRef.current) return;
 
@@ -24015,7 +24015,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
     }
   };
 
-  const insertAiTextModel = (mode) => {
+  const insertAiTextModel = (mode: ProcessingMode) => {
     if (!aiIntegration.aiGeneratedTextModel || !modelEditorRef.current) return;
 
     // Editor Quill - usar API do Quill
@@ -24076,13 +24076,13 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
   };
 
   
-  const htmlToPlainText = (html) => {
+  const htmlToPlainText = (html: string) => {
     const temp = document.createElement('div');
     temp.innerHTML = sanitizeHTML(html); // Sanitizar antes de processar
     return temp.textContent || temp.innerText || '';
   };
 
-  const htmlToFormattedText = (html) => {
+  const htmlToFormattedText = (html: string) => {
     if (!html) return '';
     
     let text = html;
@@ -24139,7 +24139,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
     return text.trim();
   };
 
-  const plainTextToHtml = (text) => {
+  const plainTextToHtml = (text: string) => {
     if (!text) return '';
     
     // Converter texto puro em HTML, preservando quebras de linha
@@ -24156,7 +24156,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
     return html;
   };
 
-  const cleanHtmlForExport = (html) => {
+  const cleanHtmlForExport = (html: string) => {
     if (!html) return '';
 
     // Preservar a formatação original
@@ -24233,7 +24233,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
     return cleaned.trim();
   };
 
-  const confirmDeleteModel = (model) => {
+  const confirmDeleteModel = (model: Model) => {
     modelLibrary.setModelToDelete(model);
     openModal('deleteModel');
   };
@@ -24287,7 +24287,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
 
   // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
   // v1.33.7: Feedback visual ao duplicar modelo
-  const duplicateModel = async (model) => {
+  const duplicateModel = async (model: Model) => {
     try {
       showToast('⏳ Duplicando modelo...', 'info');
       await new Promise(resolve => setTimeout(resolve, 50)); // yield para UI
@@ -24311,7 +24311,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
       if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
         await new Promise(resolve => setTimeout(resolve, 50));
         try {
-          const stripHTML = (html) => {
+          const stripHTML = (html: string) => {
             const div = document.createElement('div');
             div.innerHTML = html || '';
             return div.textContent || div.innerText || '';
@@ -24688,7 +24688,7 @@ ${decisionText}`;
     if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
       await new Promise(resolve => setTimeout(resolve, 50));
       try {
-        const stripHTML = (html) => {
+        const stripHTML = (html: string) => {
           const div = document.createElement('div');
           div.innerHTML = html || '';
           return div.textContent || div.innerText || '';
@@ -24782,7 +24782,7 @@ ${decisionText}`;
       if (saved.length > 0 || replacements.length > 0) {
         // v1.27.02: Gerar embeddings para todos os modelos novos se IA local ativa E opção ativada
         if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
-          const stripHTML = (html) => {
+          const stripHTML = (html: string) => {
             const div = document.createElement('div');
             div.innerHTML = html || '';
             return div.textContent || div.innerText || '';
@@ -25548,7 +25548,7 @@ ${textToAnalyze}`;
         if (anonymizationEnabled && blockedModes.includes(docMode)) return 'pdfjs';
         return docMode || globalOcrEngine || 'pdfjs';
       };
-      const maybeAnonymize = (text) => anonymizationEnabled ? anonymizeText(text, anonConfig, nomesParaAnonimizar) : text;
+      const maybeAnonymize = (text: string) => anonymizationEnabled ? anonymizeText(text, anonConfig, nomesParaAnonimizar) : text;
 
       // === PROCESSAR PETIÇÕES (MÚLTIPLAS) ===
       const totalPeticoes = peticaoFiles.length + pastedPeticaoTexts.length;
@@ -26518,7 +26518,7 @@ Extraia e classifique todos os tópicos/pedidos em:
       const anonConfig = aiIntegration?.aiSettings?.anonymization;
       const shouldAnonymize = anonConfig?.enabled;
       const nomesParaAnonimizar = anonConfig?.nomesUsuario || [];
-      const maybeAnonymize = (text) => shouldAnonymize ? anonymizeText(text, anonConfig, nomesParaAnonimizar) : text;
+      const maybeAnonymize = (text: string) => shouldAnonymize ? anonymizeText(text, anonConfig, nomesParaAnonimizar) : text;
 
       // Preparar conteúdo da prova
       let contentArray = [];
@@ -26819,7 +26819,7 @@ DECIDE-SE.`;
   };
 
   // v1.19.2: Normalizar comparações case-insensitive
-  const toggleTopicSelection = (topic) => {
+  const toggleTopicSelection = (topic: Topic) => {
     const topicTitleUpper = (topic.title || '').toUpperCase().trim();
     const exists = selectedTopics.find(t => (t.title || '').toUpperCase().trim() === topicTitleUpper);
     if (exists) {
@@ -26874,7 +26874,7 @@ DECIDE-SE.`;
     setTopicToDelete(null);
   };
 
-  const moveTopicUp = (index) => {
+  const moveTopicUp = (index: number) => {
     if (index === 0) return;
     
     // Bloquear movimento de RELATÓRIO e DISPOSITIVO
@@ -26894,7 +26894,7 @@ DECIDE-SE.`;
     setSelectedTopics(newTopics);
   };
 
-  const moveTopicDown = (index) => {
+  const moveTopicDown = (index: number) => {
     if (index === selectedTopics.length - 1) return;
 
     // Bloquear movimento de RELATÓRIO e DISPOSITIVO
@@ -26953,9 +26953,9 @@ DECIDE-SE.`;
 
     // Remover stopwords e pegar palavras relevantes
     const titleWords = titleLower.split(/\s+/)
-      .filter(w => w.length > 2 && !STOPWORDS.has(w));
+      .filter((w: string) => w.length > 2 && !STOPWORDS.has(w));
     const modelWords = modelTitleLower.split(/\s+/)
-      .filter(w => w.length > 2 && !STOPWORDS.has(w));
+      .filter((w: string) => w.length > 2 && !STOPWORDS.has(w));
 
     // 1. Correspondência exata de palavras (peso 10)
     titleWords.forEach(titleWord => {
@@ -26976,8 +26976,8 @@ DECIDE-SE.`;
     // 3. Keywords (peso 12 - mais importante)
     if (model.keywords) {
       const keywords = model.keywords.toLowerCase().split(',')
-        .map(k => k.trim())
-        .filter(k => k.length > 0);
+        .map((k: string) => k.trim())
+        .filter((k: string) => k.length > 0);
 
       keywords.forEach(keyword => {
         if (titleLower.includes(keyword) || keyword.includes(titleLower.replace(/\s+/g, ''))) {
@@ -27018,7 +27018,7 @@ Categoria: ${topicCategory || 'Não especificada'}
 Mini-relatório: ${topicRelatorio || 'Não disponível'}
 
 MODELOS CANDIDATOS:
-${topCandidates.map((m, i) => `${i + 1}. [ID: ${m.id}] ${m.title}
+${topCandidates.map((m, i: number) => `${i + 1}. [ID: ${m.id}] ${m.title}
    Categoria: ${m.category || 'N/A'}
    Keywords: ${m.keywords || 'N/A'}
    Resumo: ${m.content || 'N/A'}`).join('\n\n')}
@@ -27094,7 +27094,7 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
   // 🚀 v1.8.2: Função principal de busca de sugestões (híbrida - COM CACHE)
   // v1.28.02: Suporte a IA Local via embeddings
   // v1.35.8: useCallback para evitar re-criação a cada render (causa lag no textarea de "regenerar com IA")
-  const findSuggestions = React.useCallback(async (topic) => {
+  const findSuggestions = React.useCallback(async (topic: Topic) => {
     // v1.29.05: Não gerar sugestões para tópicos especiais (RELATÓRIO e DISPOSITIVO)
     if (isSpecialTopic(topic)) return { suggestions: [], source: null };
     // v1.28.02: IA Local para sugestões (sem API Claude)
@@ -27166,7 +27166,7 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
     return result;
   }, [aiIntegration.aiSettings.useLocalAIForSuggestions, searchModelReady, modelLibrary.models, aiIntegration.aiSettings.modelSemanticThreshold, apiCache, refineWithAI]);
 
-  const startEditing = async (topic) => {
+  const startEditing = async (topic: Topic) => {
     const topicCopy = {
       ...topic,
       editedFundamentacao: topic.editedFundamentacao || topic.fundamentacao || '',
@@ -27200,7 +27200,7 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
     }
   };
 
-  const insertModelContent = (content) => {
+  const insertModelContent = (content: string) => {
     if (editorRef.current) {
       const quill = editorRef.current;
 
@@ -28156,7 +28156,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 
   // Handler para busca semântica de modelos
   // v1.35.74: Usa aiSettings unificado
-  const performModelSemanticSearch = React.useCallback(async (query) => {
+  const performModelSemanticSearch = React.useCallback(async (query: string) => {
     if (!query || query.length < 3 || !modelSemanticAvailable) {
       setModelSemanticResults(null);
       return;
@@ -28550,7 +28550,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             </span>
                             <ProcessingModeSelector
                               value={documentProcessingModes.peticoes?.[idx] || 'pdfjs'}
-                              onChange={(mode) => setPeticaoMode(idx, mode)}
+                              onChange={(mode: ProcessingMode) => setPeticaoMode(idx, mode)}
                               anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
                             />
                             <button
@@ -28573,7 +28573,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             <button
                               onClick={() => setAnalyzedDocuments(prev => ({
                                 ...prev,
-                                peticoes: prev.peticoes.filter((_, i) => i !== idx)
+                                peticoes: prev.peticoes.filter((_, i: number) => i !== idx)
                               }))}
                               className="ml-2 hover-text-red-400-from-300"
                               title="Remover"
@@ -28616,7 +28616,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             <button
                               onClick={() => setAnalyzedDocuments(prev => ({
                                 ...prev,
-                                peticoesText: prev.peticoesText.filter((_, i) => i !== idx)
+                                peticoesText: prev.peticoesText.filter((_, i: number) => i !== idx)
                               }))}
                               className="ml-2 hover-text-red-400-from-300"
                               title="Remover"
@@ -28798,7 +28798,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             {/* v1.14.1: Seletor sempre visível */}
                             <ProcessingModeSelector
                               value={documentProcessingModes.contestacoes?.[idx] || 'pdfjs'}
-                              onChange={(mode) => setContestacaoMode(idx, mode)}
+                              onChange={(mode: ProcessingMode) => setContestacaoMode(idx, mode)}
                               className="mx-2"
                               anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
                             />
@@ -28808,10 +28808,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                                 if (fileToRemove?.id) {
                                   try { await removePdfFromIndexedDB(`upload-contestacao-${fileToRemove.id}`); } catch {}
                                 }
-                                setContestacaoFiles(prev => prev.filter((_, i) => i !== idx));
+                                setContestacaoFiles(prev => prev.filter((_, i: number) => i !== idx));
                                 setDocumentProcessingModes(prev => ({
                                   ...prev,
-                                  contestacoes: (prev.contestacoes || []).filter((_, i) => i !== idx)
+                                  contestacoes: (prev.contestacoes || []).filter((_, i: number) => i !== idx)
                                 }));
                               }}
                               className="text-red-400 hover-text-red-300"
@@ -28830,7 +28830,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             <button
                               onClick={() => {
                                 const newDocs = { ...analyzedDocuments };
-                                newDocs.contestacoes = newDocs.contestacoes.filter((_, i) => i !== idx);
+                                newDocs.contestacoes = newDocs.contestacoes.filter((_, i: number) => i !== idx);
                                 setAnalyzedDocuments(newDocs);
                               }}
                               className="ml-2 text-red-400 hover-text-red-300"
@@ -28868,7 +28868,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             <button
                               onClick={() => {
                                 const newDocs = { ...analyzedDocuments };
-                                newDocs.contestacoesText = newDocs.contestacoesText.filter((_, i) => i !== idx);
+                                newDocs.contestacoesText = newDocs.contestacoesText.filter((_, i: number) => i !== idx);
                                 setAnalyzedDocuments(newDocs);
                               }}
                               className="ml-2 text-red-400 hover-text-red-300"
@@ -29012,7 +29012,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           {/* v1.14.1: Seletor sempre visível */}
                           <ProcessingModeSelector
                             value={documentProcessingModes.complementares?.[idx] || 'pdfjs'}
-                            onChange={(mode) => setComplementarMode(idx, mode)}
+                            onChange={(mode: ProcessingMode) => setComplementarMode(idx, mode)}
                             className="mx-2"
                             anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
                           />
@@ -29022,10 +29022,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                               if (fileToRemove?.id) {
                                 try { await removePdfFromIndexedDB(`upload-complementar-${fileToRemove.id}`); } catch {}
                               }
-                              setComplementaryFiles(prev => prev.filter((_, i) => i !== idx));
+                              setComplementaryFiles(prev => prev.filter((_, i: number) => i !== idx));
                               setDocumentProcessingModes(prev => ({
                                 ...prev,
-                                complementares: (prev.complementares || []).filter((_, i) => i !== idx)
+                                complementares: (prev.complementares || []).filter((_, i: number) => i !== idx)
                               }));
                             }}
                             className="hover-text-red-400-from-300"
@@ -29044,7 +29044,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           <button
                             onClick={() => {
                               const newDocs = { ...analyzedDocuments };
-                              newDocs.complementares = newDocs.complementares.filter((_, i) => i !== idx);
+                              newDocs.complementares = newDocs.complementares.filter((_, i: number) => i !== idx);
                               setAnalyzedDocuments(newDocs);
                             }}
                             className="ml-2 hover-text-red-400-from-300"
@@ -29082,7 +29082,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           <button
                             onClick={() => {
                               const newDocs = { ...analyzedDocuments };
-                              newDocs.complementaresText = newDocs.complementaresText.filter((_, i) => i !== idx);
+                              newDocs.complementaresText = newDocs.complementaresText.filter((_, i: number) => i !== idx);
                               setAnalyzedDocuments(newDocs);
                             }}
                             className="ml-2 hover-text-red-400-from-300"
@@ -29493,7 +29493,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     ) : (
                       <div className="space-y-3">
                         {/* 🚀 v1.8.2: Componentizado com ProofCard - PROVAS EM PDF */}
-                        {proofManager.proofFiles.map((proof) => (
+                        {proofManager.proofFiles.map((proof: Proof) => (
                           <ProofCard
                             key={proof.id}
                             proof={proof}
@@ -29511,7 +29511,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         ))}
 
                         {/* 🚀 v1.8.2: Componentizado com ProofCard - PROVAS EM TEXTO */}
-                        {proofManager.proofTexts.map((proof) => (
+                        {proofManager.proofTexts.map((proof: Proof) => (
                           <ProofCard
                             key={proof.id}
                             proof={proof}
@@ -29622,7 +29622,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 
                             {proofManager.showProofPanel && (
                               <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
-                                {linkedProofs.map((proof) => (
+                                {linkedProofs.map((proof: Proof) => (
                                   <div
                                     key={proof.id}
                                     className="theme-bg-secondary-50 rounded-lg p-3 border theme-border-input"
@@ -30175,7 +30175,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       {/* v1.33.5: 1 card por linha na busca semântica */}
                       {modelLibrary.modelViewMode === 'cards' ? (
                         <div className="grid grid-cols-1 gap-4">
-                          {modelSemanticResults.map((model) => (
+                          {modelSemanticResults.map((model: Model) => (
                             <ModelCard
                               key={model.id}
                               model={model}
@@ -30193,7 +30193,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         </div>
                       ) : (
                         <div className="space-y-1">
-                          {modelSemanticResults.map((model) => (
+                          {modelSemanticResults.map((model: Model) => (
                             <ModelCard
                               key={model.id}
                               model={model}
@@ -30227,7 +30227,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     /* v1.33.6: 1 card por linha */
                     <>
                       <div className="grid grid-cols-1 gap-4">
-                        {currentModels.map((model) => (
+                        {currentModels.map((model: Model) => (
                           <ModelCard
                             key={model.id}
                             model={model}
@@ -30249,7 +30249,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         // Helper: Gera array de páginas truncado com elipse (null = "...")
                         const getPaginationRange = (current, total) => {
                           if (total <= 7) {
-                            return Array.from({ length: total }, (_, i) => i + 1);
+                            return Array.from({ length: total }, (_, i: number) => i + 1);
                           }
                           const pages = new Set([1, total]);
                           for (let i = Math.max(2, current - 2); i <= Math.min(total - 1, current + 2); i++) {
@@ -30324,7 +30324,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     <VirtualList
                       items={filteredModels}
                       itemHeight={90}
-                      renderItem={(model) => (
+                      renderItem={(model: Model) => (
                         <ModelCard
                           key={model.id}
                           model={model}
@@ -30680,7 +30680,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         onClose={() => setDriveFilesModalOpen(false)}
         files={driveFiles}
         isLoading={googleDrive.isLoading}
-        onLoad={async (file) => {
+        onLoad={async (file: File) => {
           try {
             const projectData = await googleDrive.loadFile(file.id);
             // Simular evento de importação de arquivo
@@ -30721,7 +30721,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
             setError({ type: 'error', message: `Erro ao carregar projeto: ${err.message}` });
           }
         }}
-        onDelete={async (file) => {
+        onDelete={async (file: File) => {
           try {
             await googleDrive.deleteFile(file.id);
             setDriveFiles(prev => prev.filter(f => f.id !== file.id));
@@ -32012,7 +32012,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       />
                       <button
                         onClick={() => {
-                          const updated = aiIntegration.aiSettings.quickPrompts.filter((_, i) => i !== idx);
+                          const updated = aiIntegration.aiSettings.quickPrompts.filter((_, i: number) => i !== idx);
                           aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, quickPrompts: updated });
                         }}
                         className="p-1 text-red-500 hover-text-red-400"
@@ -32189,7 +32189,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         </div>
                         <button
                           onClick={() => {
-                            const updated = aiIntegration.aiSettings.topicosComplementares.filter((_, i) => i !== idx);
+                            const updated = aiIntegration.aiSettings.topicosComplementares.filter((_, i: number) => i !== idx);
                             aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, topicosComplementares: updated });
                           }}
                           className="text-red-400 hover-text-red-300 transition-colors p-1"
@@ -32331,7 +32331,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         size="md"
       >
         <div className="p-4 overflow-y-auto max-h-[60vh]">
-          {CHANGELOG.map((item, i) => (
+          {CHANGELOG.map((item, i: number) => (
             <div key={i} className="mb-3 pb-3 border-b theme-border-secondary last:border-0">
               <span className="text-blue-400 font-mono text-sm font-semibold">v{item.version}</span>
               <p className="theme-text-secondary text-sm mt-1">{item.feature}</p>
