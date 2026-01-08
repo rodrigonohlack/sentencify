@@ -6298,7 +6298,7 @@ const useDocumentManager = () => {
   }, []); // 🚀 v1.8.1: Memoizado (3 textareas)
 
   // Handler: Remove texto colado
-  const removePastedText = (type, index = null) => {
+  const removePastedText = (type: string, index: number | null = null) => {
     if (type === 'peticao' && index !== null) {
       setPastedPeticaoTexts(prev => prev.filter((_, i: number) => i !== index));
     } else if (type === 'contestacao' && index !== null) {
@@ -6323,7 +6323,7 @@ const useDocumentManager = () => {
     }));
   }, [peticaoFiles]);
 
-  const handleUploadPeticao = React.useCallback(async (files) => {
+  const handleUploadPeticao = React.useCallback(async (files: FileList | File[]) => {
     const filesArray = toUploadFilesArray(files);
     const pdfFiles = filesArray.filter(f => f.type === 'application/pdf');
     if (pdfFiles.length === 0) return;
@@ -6342,7 +6342,7 @@ const useDocumentManager = () => {
     }
   }, []);
 
-  const handleUploadContestacao = React.useCallback(async (files) => {
+  const handleUploadContestacao = React.useCallback(async (files: FileList | File[]) => {
     const filesArray = toUploadFilesArray(files);
     const pdfFiles = filesArray.filter(f => f.type === 'application/pdf');
     if (pdfFiles.length === 0) return;
@@ -6362,7 +6362,7 @@ const useDocumentManager = () => {
   }, []);
 
   // Handler: Upload de complementares
-  const handleUploadComplementary = React.useCallback(async (files) => {
+  const handleUploadComplementary = React.useCallback(async (files: FileList | File[]) => {
     const filesArray = toUploadFilesArray(files);
     const pdfFiles = filesArray.filter(f => f.type === 'application/pdf');
     if (pdfFiles.length === 0) return;
@@ -6607,7 +6607,7 @@ const useTopicManager = () => {
     setNewTopicName(topic.title);
   };
 
-  const prepareMergeTopics = (topics) => {
+  const prepareMergeTopics = (topics: Topic[]) => {
     setTopicsToMerge(topics);
   };
 
@@ -6646,7 +6646,7 @@ const useTopicManager = () => {
     setNewTopicData(null);
   };
 
-  const updateSelectedTopics = (topics) => {
+  const updateSelectedTopics = (topics: Topic[]) => {
     setSelectedTopics(topics);
   };
 
@@ -6749,7 +6749,7 @@ const useTopicManager = () => {
 };
 
 // 💬 HOOK: useChatAssistant (v1.19.0) - Gerenciador de chat interativo para assistente IA
-const useChatAssistant = (aiIntegration) => {
+const useChatAssistant = (aiIntegration: { callAI?: CallAIFunction } | null) => {
   const [history, setHistory] = React.useState<ChatMessage[]>([]);
   const [generating, setGenerating] = React.useState(false);
 
@@ -6763,7 +6763,7 @@ const useChatAssistant = (aiIntegration) => {
 
   // Envia mensagem e atualiza histórico
   // 🆕 v1.19.5: Suporta contextBuilder assíncrono
-  const send = React.useCallback(async (message, contextBuilder) => {
+  const send = React.useCallback(async (message: string, contextBuilder: (msg: string) => string | Promise<string>) => {
     if (!message?.trim()) return { success: false, error: 'Mensagem vazia' };
     if (!aiIntegration?.callAI) return { success: false, error: 'IA não disponível' };
 
@@ -7020,21 +7020,21 @@ const useLegislacao = () => {
     return str?.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() || '';
   }, []);
 
-  const searchArtigos = React.useCallback((term, lista) => {
+  const searchArtigos = React.useCallback((term: string, lista: Artigo[]) => {
     if (!term?.trim()) return lista;
     const termNorm = removeAccents(term.trim());
     const terms = termNorm.split(/\s+/).filter(t => t.length > 1);
     const numeroMatch = term.match(/\d+[º°]?(?:-[a-z])?/i);
 
-    return lista.map(artigo => {
+    return lista.map((artigo: Artigo) => {
       let score = 0;
       const caputNorm = removeAccents(artigo.caput || '');
       const numeroNorm = removeAccents(artigo.numero || '');
       const keywordsNorm = (artigo.keywords || []).map((k: string) => removeAccents(k));
       // v1.21.1: Buscar também em parágrafos, incisos e alíneas
-      const paragrafosText = (artigo.paragrafos || []).map(p => p.texto || '').join(' ');
-      const incisosText = (artigo.incisos || []).map(i => i.texto || '').join(' ');
-      const alineasText = (artigo.alineas || []).map(a => a.texto || '').join(' ');
+      const paragrafosText = (artigo.paragrafos || []).map((p: { texto?: string }) => p.texto || '').join(' ');
+      const incisosText = (artigo.incisos || []).map((i: { texto?: string }) => i.texto || '').join(' ');
+      const alineasText = (artigo.alineas || []).map((a: { texto?: string }) => a.texto || '').join(' ');
       const subTextoNorm = removeAccents(paragrafosText + ' ' + incisosText + ' ' + alineasText);
 
       if (numeroMatch && numeroNorm.includes(removeAccents(numeroMatch[0]))) {
@@ -7051,7 +7051,7 @@ const useLegislacao = () => {
       return { artigo, score };
     })
     .filter(({ score }) => score > 0)
-    .sort((a, b) => b.score - a.score)
+    .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
     .map(({ artigo }) => artigo);
   }, [removeAccents]);
 
@@ -7257,12 +7257,12 @@ const FontSizeDropdown = React.memo(({
 FontSizeDropdown.displayName = 'FontSizeDropdown';
 
 // 💡 COMPONENTE: VersionCompareModal - Modal de comparação com diff visual
-const VersionCompareModal = React.memo(({ oldContent, newContent, timestamp, onRestore, onClose }) => {
+const VersionCompareModal = React.memo(({ oldContent, newContent, timestamp, onRestore, onClose }: { oldContent: string; newContent: string; timestamp: number; onRestore: () => void; onClose: () => void }) => {
   const stripHtml = (html: string) => (html || '').replace(/<[^>]*>/g, '');
   const oldText = stripHtml(oldContent);
   const newText = stripHtml(newContent);
 
-  const formatTimeAgo = (ts) => {
+  const formatTimeAgo = (ts: number) => {
     const diff = Math.floor((Date.now() - ts) / 60000);
     if (diff < 60) return `${diff} minuto${diff !== 1 ? 's' : ''}`;
     if (diff < 1440) return `${Math.floor(diff / 60)} hora${Math.floor(diff / 60) !== 1 ? 's' : ''}`;
@@ -7329,7 +7329,7 @@ const VersionCompareModal = React.memo(({ oldContent, newContent, timestamp, onR
 VersionCompareModal.displayName = 'VersionCompareModal';
 
 // 💡 COMPONENTE: VersionSelect - Botão compacto com dropdown de versões
-const VersionSelect = React.memo(({ topicTitle, versioning, currentContent, onRestore, className = '' }) => {
+const VersionSelect = React.memo(({ topicTitle, versioning, currentContent, onRestore, className = '' }: { topicTitle: string; versioning: { getVersions: (title: string) => Promise<FieldVersion[]> } | null; currentContent: string; onRestore: (content: string) => void; className?: string }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [versions, setVersions] = React.useState<FieldVersion[]>([]);
   const [compareVersion, setCompareVersion] = React.useState<FieldVersion | null>(null);
@@ -7344,7 +7344,7 @@ const VersionSelect = React.memo(({ topicTitle, versioning, currentContent, onRe
   // Carregar versões ao montar e quando topicTitle mudar
   React.useEffect(() => { loadVersions(); }, [loadVersions]);
 
-  const formatTime = (ts) => {
+  const formatTime = (ts: number) => {
     const diff = Math.floor((Date.now() - ts) / 60000);
     if (diff < 60) return `${diff}min`;
     if (diff < 1440) return `${Math.floor(diff / 60)}h`;
@@ -7356,7 +7356,7 @@ const VersionSelect = React.memo(({ topicTitle, versioning, currentContent, onRe
     setIsOpen(!isOpen);
   };
 
-  const handleVersionClick = (version) => {
+  const handleVersionClick = (version: FieldVersion) => {
     setCompareVersion(version);
     setIsOpen(false);
   };
@@ -7372,7 +7372,7 @@ const VersionSelect = React.memo(({ topicTitle, versioning, currentContent, onRe
   // Fechar ao clicar fora
   React.useEffect(() => {
     if (!isOpen) return;
-    const handleClickOutside = (e) => {
+    const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -21576,7 +21576,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   React.useEffect(() => {
     if (!slashMenu.isOpen) return;
 
-    const handleClickOutside = (e) => {
+    const handleClickOutside = (e: MouseEvent) => {
       const menuEl = document.querySelector('.slash-command-menu');
       if (menuEl && !menuEl.contains(e.target)) {
         closeSlashMenu(true);
