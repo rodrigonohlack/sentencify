@@ -161,7 +161,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.83'; // v1.35.83: TypeScript interno - FASE 8.2-8.3 useState com objetos e arrays tipados
+const APP_VERSION = '1.35.84'; // v1.35.84: TypeScript interno - FASE 8.4 useState com null tipados
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -2883,10 +2883,10 @@ const useIndexedDB = () => {
 
   // Estados
   const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState(null);
-  const [dbInstance, setDbInstance] = React.useState(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const [dbInstance, setDbInstance] = React.useState<IDBDatabase | null>(null);
   const [isAvailable, setIsAvailable] = React.useState(false); // false até DB estar pronto
-  const [lastSyncTime, setLastSyncTime] = React.useState(null);
+  const [lastSyncTime, setLastSyncTime] = React.useState<number | null>(null);
 
   // Ref para cache de modelos
   const modelsCacheRef = React.useRef(null);
@@ -3830,7 +3830,7 @@ const sortArtigosNatural = (artigos) => {
 // 🎣 CUSTOM HOOK: useLocalStorage (persistência e localStorage)
 const useLocalStorage = () => {
   // Estados de Persistência
-  const [sessionLastSaved, setSessionLastSaved] = React.useState(null);
+  const [sessionLastSaved, setSessionLastSaved] = React.useState<Date | null>(null);
   const [showAutoSaveIndicator, setShowAutoSaveIndicator] = React.useState(false);
 
   // 🚀 OTIMIZAÇÃO v1.4.1: Cache de conversões PDF→base64
@@ -4795,7 +4795,7 @@ const useModelLibrary = () => {
   const [models, setModels] = React.useState<Model[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
   const [isLoadingModels, setIsLoadingModels] = React.useState(false);
-  const [persistenceError, setPersistenceError] = React.useState(null);
+  const [persistenceError, setPersistenceError] = React.useState<string | null>(null);
 
   // ===========================================================================
   // SEÇÃO 2: BUSCA E FILTROS
@@ -4808,7 +4808,7 @@ const useModelLibrary = () => {
   const [manualSearchTerm, setManualSearchTerm] = React.useState('');
   const [manualSearchResults, setManualSearchResults] = React.useState<Model[]>([]);
   const [suggestions, setSuggestions] = React.useState<Model[]>([]);
-  const [suggestionsSource, setSuggestionsSource] = React.useState(null); // v1.28.04: 'local' ou 'api'
+  const [suggestionsSource, setSuggestionsSource] = React.useState<string | null>(null); // v1.28.04: 'local' ou 'api'
   const [loadingSuggestions, setLoadingSuggestions] = React.useState(false);
   const [modelViewMode, setModelViewMode] = React.useState('cards');
   const modelsPerPage = 5;
@@ -5502,7 +5502,7 @@ const searchModelsBySimilarity = async (models, query, options = {}) => {
 
 // 🎣 CUSTOM HOOK: useModelPreview - Preview de modelos de texto
 const useModelPreview = () => {
-  const [previewingModel, setPreviewingModel] = React.useState(null);
+  const [previewingModel, setPreviewingModel] = React.useState<Model | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
   const [isEditing, setIsEditing] = React.useState(false);
   const [editedContent, setEditedContent] = React.useState('');
@@ -5513,7 +5513,7 @@ const useModelPreview = () => {
     contextualInsertFnRef.current = fn;
   }, []);
   // v1.15.3: Estado para "Salvar como Novo Modelo"
-  const [saveAsNewData, setSaveAsNewData] = React.useState(null);
+  const [saveAsNewData, setSaveAsNewData] = React.useState<{ title: string; content: string } | null>(null);
   // v1.19.2: Callback para notificar quando modelo é atualizado (sincroniza sugestões do GlobalEditor)
   const onModelUpdatedRef = React.useRef(null);
 
@@ -6521,8 +6521,8 @@ const useTopicManager = () => {
   const [selectedTopics, setSelectedTopics] = React.useState<Topic[]>([]);
 
   // Estado de Edição (3)
-  const [editingTopic, setEditingTopic] = React.useState(null);
-  const [lastEditedTopicTitle, setLastEditedTopicTitle] = React.useState(null);
+  const [editingTopic, setEditingTopic] = React.useState<Topic | null>(null);
+  const [lastEditedTopicTitle, setLastEditedTopicTitle] = React.useState<string | null>(null);
   const [topicContextScope, setTopicContextScope] = React.useState('current');
 
   // Estados de UI/Progresso (1)
@@ -6530,21 +6530,21 @@ const useTopicManager = () => {
 
   // Estados de Manipulação de Tópicos (7)
   // Deleção
-  const [topicToDelete, setTopicToDelete] = React.useState(null);
+  const [topicToDelete, setTopicToDelete] = React.useState<Topic | null>(null);
 
   // Renomeação
-  const [topicToRename, setTopicToRename] = React.useState(null);
+  const [topicToRename, setTopicToRename] = React.useState<Topic | null>(null);
   const [newTopicName, setNewTopicName] = React.useState('');
 
   // Merge (mesclagem)
   const [topicsToMerge, setTopicsToMerge] = React.useState<string[]>([]);
 
   // Split (divisão)
-  const [topicToSplit, setTopicToSplit] = React.useState(null);
+  const [topicToSplit, setTopicToSplit] = React.useState<Topic | null>(null);
   const [splitNames, setSplitNames] = React.useState(['', '']);
 
   // Novo tópico
-  const [newTopicData, setNewTopicData] = React.useState(null);
+  const [newTopicData, setNewTopicData] = React.useState<Partial<Topic> | null>(null);
 
   // 🛠️ HANDLERS DE UI E PREPARAÇÃO (5) - ETAPA 7e
 
@@ -6957,12 +6957,12 @@ const useJurisprudencia = () => {
 const useLegislacao = () => {
   const [artigos, setArtigos] = React.useState<Artigo[]>([]);
   const [leisDisponiveis, setLeisDisponiveis] = React.useState<string[]>([]);
-  const [leiAtiva, setLeiAtiva] = React.useState(null);
+  const [leiAtiva, setLeiAtiva] = React.useState<string | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isLoading, setIsLoading] = React.useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = React.useState('');
-  const [copiedId, setCopiedId] = React.useState(null);
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);
 
   const ITEMS_PER_PAGE = 15;
 
@@ -7282,7 +7282,7 @@ VersionCompareModal.displayName = 'VersionCompareModal';
 const VersionSelect = React.memo(({ topicTitle, versioning, currentContent, onRestore, className = '' }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [versions, setVersions] = React.useState<FieldVersion[]>([]);
-  const [compareVersion, setCompareVersion] = React.useState(null);
+  const [compareVersion, setCompareVersion] = React.useState<FieldVersion | null>(null);
   const dropdownRef = React.useRef(null);
 
   const loadVersions = React.useCallback(async () => {
@@ -8651,7 +8651,7 @@ const ProofCard = React.memo(({
   setTextPreview // v1.21.16: Para preview de texto extraído
 }) => {
   // 🆕 v1.12.27: Estado local para progresso de extração (em vez de setError global)
-  const [extractionProgress, setExtractionProgress] = React.useState(null);
+  const [extractionProgress, setExtractionProgress] = React.useState<{ current: number; total: number; mode: string } | null>(null);
   // null = não extraindo | { current: N, total: N, mode: 'pdfjs'|'claude-vision' } = em progresso
 
   // Handler: Remover vínculo de tópico
@@ -9237,8 +9237,8 @@ const JurisprudenciaTab = React.memo(({
   jurisSemanticThreshold = 50
 }) => {
   const jurisprudencia = useJurisprudencia();
-  const [expandedIds, setExpandedIds] = React.useState(new Set());
-  const [importStatus, setImportStatus] = React.useState(null);
+  const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
+  const [importStatus, setImportStatus] = React.useState<string | null>(null);
   const fileInputRef = React.useRef(null);
 
   // v1.27.00: Estados para busca semântica (usa scroll, não paginação)
@@ -9250,7 +9250,7 @@ const JurisprudenciaTab = React.memo(({
       return jurisSemanticEnabled; // Usa toggle global como fallback
     } catch { return false; }
   });
-  const [semanticResults, setSemanticResults] = React.useState(null);
+  const [semanticResults, setSemanticResults] = React.useState<Precedente[] | null>(null);
   const [searchingSemantics, setSearchingSemantics] = React.useState(false);
 
   // Busca semântica disponível se: toggle global ativo + modelo pronto + embeddings gerados
@@ -9581,8 +9581,8 @@ const LegislacaoTab = React.memo(({
   semanticThreshold = 50
 }) => {
   const legislacao = useLegislacao();
-  const [expandedIds, setExpandedIds] = React.useState(new Set());
-  const [importStatus, setImportStatus] = React.useState(null);
+  const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
+  const [importStatus, setImportStatus] = React.useState<string | null>(null);
   const fileInputRef = React.useRef(null);
   // v1.26.00: Toggle local de busca semântica (modo de busca)
   // v1.28.01: Usa toggle global como padrão se não houver valor no localStorage
@@ -9593,7 +9593,7 @@ const LegislacaoTab = React.memo(({
       return semanticSearchEnabled; // Usa toggle global como fallback
     } catch { return false; }
   });
-  const [semanticResults, setSemanticResults] = React.useState(null);
+  const [semanticResults, setSemanticResults] = React.useState<Artigo[] | null>(null);
   const [searchingSemantics, setSearchingSemantics] = React.useState(false);
 
   // Busca semântica disponível se: toggle global ativo + modelo pronto + embeddings gerados
@@ -11451,7 +11451,7 @@ const AIAssistantModal = React.memo(({
   proofManager = null  // v1.21.1: Para validação de provas orais
 }) => {
   // v1.21.2: Estado para erro no botão do quick prompt
-  const [qpError, setQpError] = React.useState(null);
+  const [qpError, setQpError] = React.useState<{ id: string; message: string } | null>(null);
 
   // v1.21.2: Handler para quick prompts com validação - mostra erro no próprio botão
   const handleQuickPromptClick = React.useCallback((qp, resolvedPrompt) => {
@@ -11556,7 +11556,7 @@ const AIAssistantGlobalModal = React.memo(({
   proofManager = null  // v1.21.1: Para validação de provas orais
 }) => {
   // v1.21.2: Estado para erro no botão do quick prompt
-  const [qpError, setQpError] = React.useState(null);
+  const [qpError, setQpError] = React.useState<{ id: string; message: string } | null>(null);
 
   // v1.21.2: Handler para quick prompts com validação - mostra erro no próprio botão
   const handleQuickPromptClick = React.useCallback((qp, resolvedPrompt) => {
@@ -12192,7 +12192,7 @@ ShareLibraryModal.displayName = 'ShareLibraryModal';
 // v1.35.0: Página para aceitar compartilhamento de biblioteca
 const AcceptSharePage = React.memo(({ token, onAccepted, onLogin }) => {
   const [loading, setLoading] = React.useState(true);
-  const [shareInfo, setShareInfo] = React.useState(null);
+  const [shareInfo, setShareInfo] = React.useState<ShareInfo | null>(null);
   const [error, setError] = React.useState('');
   const [accepting, setAccepting] = React.useState(false);
   const [accepted, setAccepted] = React.useState(false);
@@ -14148,7 +14148,7 @@ const SlashCommandMenu = React.memo(({
 
   // v1.33.8: Estado para toggle busca semântica
   const [useSemanticSearch, setUseSemanticSearch] = React.useState(false);
-  const [semanticResults, setSemanticResults] = React.useState(null);
+  const [semanticResults, setSemanticResults] = React.useState<Model[] | null>(null);
   const [isSearching, setIsSearching] = React.useState(false);
 
   // v1.33.8: Ajustar posição para ficar dentro da viewport
@@ -14702,11 +14702,11 @@ const JURIS_TRIBUNAIS_DISPONIVEIS = ['TST', 'STF', 'STJ', 'TRT8'];
 const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRelatorio, callAI, useLocalAI = false, jurisSemanticThreshold = 50, jurisSemanticEnabled = false }) => {
   const [suggestions, setSuggestions] = React.useState<JurisSuggestion[]>([]);
   const [loading, setLoading] = React.useState(false);
-  const [copiedId, setCopiedId] = React.useState(null);
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const [filtros, setFiltros] = React.useState<FiltrosLegislacao>({ tipo: [], tribunal: [] });
   const [searchTerm, setSearchTerm] = React.useState('');
   const [searchApplied, setSearchApplied] = React.useState('');
-  const [searchSource, setSearchSource] = React.useState(null); // 'local' ou 'text'
+  const [searchSource, setSearchSource] = React.useState<string | null>(null); // 'local' ou 'text'
   const [useSemanticMode, setUseSemanticMode] = React.useState(useLocalAI); // v1.33.16: estado interno para toggle
 
   // v1.32.18: Busca semântica via IA Local
@@ -15289,10 +15289,10 @@ const GlobalEditorModal = React.memo(({
 
   // Estados para modal de provas vinculadas - v1.12.14
   const [showProofsModal, setShowProofsModal] = React.useState(false);
-  const [proofsModalTopicIndex, setProofsModalTopicIndex] = React.useState(null);
+  const [proofsModalTopicIndex, setProofsModalTopicIndex] = React.useState<number | null>(null);
 
   const [showAIAssistant, setShowAIAssistant] = React.useState(false);
-  const [aiAssistantTopicIndex, setAiAssistantTopicIndex] = React.useState(null);
+  const [aiAssistantTopicIndex, setAiAssistantTopicIndex] = React.useState<number | null>(null);
   const [globalAiInstruction, setGlobalAiInstruction] = React.useState('');
   const [globalAiGeneratedText, setGlobalAiGeneratedText] = React.useState('');
   const [generatingGlobalAi, setGeneratingGlobalAi] = React.useState(false);
@@ -15306,7 +15306,7 @@ const GlobalEditorModal = React.memo(({
 
   // ⚖️ v1.20.0: Jurisprudência contextual (usa componente JurisprudenciaModal)
   const [showJurisModal, setShowJurisModal] = React.useState(false);
-  const [jurisTopicIndex, setJurisTopicIndex] = React.useState(null);
+  const [jurisTopicIndex, setJurisTopicIndex] = React.useState<number | null>(null);
 
   // Ref para o container (drag do divisor)
   const containerRef = React.useRef(null);
@@ -19279,7 +19279,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // v1.35.30: Estados para modal de curadoria de tópicos (pré-geração de mini-relatórios)
   const [showTopicCurationModal, setShowTopicCurationModal] = useState(false);
-  const [pendingCurationData, setPendingCurationData] = useState(null);
+  const [pendingCurationData, setPendingCurationData] = useState<{ topics: Topic[]; action: string } | null>(null);
 
   // v1.21.14: Sincronizar nomes do modal com aiSettings persistido
   useEffect(() => {
@@ -19541,10 +19541,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   }, [peticaoFiles, contestacaoFiles, complementaryFiles, extractedTexts, documentProcessingModes]);
 
   // 🖱️ ESTADOS: Drag & Drop
-  const [draggedIndex, setDraggedIndex] = useState(null);
-  const [dragOverIndex, setDragOverIndex] = useState(null);
-  const [draggedComplementaryIndex, setDraggedComplementaryIndex] = useState(null);
-  const [dragOverComplementaryIndex, setDragOverComplementaryIndex] = useState(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [draggedComplementaryIndex, setDraggedComplementaryIndex] = useState<number | null>(null);
+  const [dragOverComplementaryIndex, setDragOverComplementaryIndex] = useState<number | null>(null);
 
   // 💾 ESTADOS: Sessão e Persistência
   const [partesProcesso, setPartesProcesso] = useState<PartesProcesso>({ reclamante: '', reclamadas: [] });
@@ -19560,7 +19560,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 🔧 ESTADOS: Utilitários
   const [domPurifyReady, setDomPurifyReady] = useState(false);
   const [quillReady, setQuillReady] = useState(false);
-  const [quillError, setQuillError] = useState(null);
+  const [quillError, setQuillError] = useState<Error | null>(null);
   const [quillRetryCount, setQuillRetryCount] = useState(0);
 
   // 🧠 v1.32.00: ESTADOS: IA Offline (NER)
@@ -19634,9 +19634,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [useSemanticManualSearch, setUseSemanticManualSearch] = useState(() => aiIntegration.aiSettings.modelSemanticEnabled);
 
   // v1.35.75: Feedback inline nos botões de teste de API Key
-  const [claudeTestStatus, setClaudeTestStatus] = useState(null); // null | 'testing' | 'ok' | 'error'
-  const [geminiTestStatus, setGeminiTestStatus] = useState(null);
-  const [semanticManualSearchResults, setSemanticManualSearchResults] = useState(null);
+  const [claudeTestStatus, setClaudeTestStatus] = useState<'testing' | 'ok' | 'error' | null>(null); // null | 'testing' | 'ok' | 'error'
+  const [geminiTestStatus, setGeminiTestStatus] = useState<'testing' | 'ok' | 'error' | null>(null);
+  const [semanticManualSearchResults, setSemanticManualSearchResults] = useState<Model[] | null>(null);
   const [semanticManualSearching, setSemanticManualSearching] = useState(false);
 
   // 📜 v1.26.02: Hook de legislação para geração de embeddings
