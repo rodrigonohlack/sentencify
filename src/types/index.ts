@@ -116,15 +116,19 @@ export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
 
 export interface AnonymizationSettings {
   enabled: boolean;
-  cpf: boolean;
-  rg: boolean;
-  pis: boolean;
-  ctps: boolean;
-  telefone: boolean;
-  email: boolean;
-  contaBancaria: boolean;
-  valores: boolean;
-  nomes: boolean;
+  cnpj?: boolean;
+  cpf?: boolean;
+  rg?: boolean;
+  pis?: boolean;
+  ctps?: boolean;
+  cep?: boolean;
+  processo?: boolean;
+  oab?: boolean;
+  telefone?: boolean;
+  email?: boolean;
+  contaBancaria?: boolean;
+  valores?: boolean;
+  nomes?: boolean;
   nomesUsuario: string[];
 }
 
@@ -305,6 +309,29 @@ export type AIGenerationAction =
   | { type: 'SUCCESS' }
   | { type: 'ERROR'; payload: string }
   | { type: 'RESET' };
+
+/** Context item state for AI generation */
+export interface AIGenContextItem {
+  instruction?: string;
+  text?: string;
+  generating?: boolean;
+  regenerating?: boolean;
+}
+
+/** Contextos do estado de geração de IA */
+export type AIGenContext = 'generic' | 'model' | 'relatorio' | 'dispositivo' | 'keywords' | 'title';
+
+/** Estado completo do reducer de geração de IA */
+export type AIGenState = Record<AIGenContext, AIGenContextItem>;
+
+/** Ação do reducer de geração de IA */
+export type AIGenAction =
+  | { type: 'SET_INSTRUCTION'; context: AIGenContext; value: string }
+  | { type: 'SET_TEXT'; context: AIGenContext; value: string }
+  | { type: 'SET_GENERATING'; context: AIGenContext; value: boolean }
+  | { type: 'SET_REGENERATING'; context: AIGenContext; value: boolean }
+  | { type: 'RESET_CONTEXT'; context: AIGenContext }
+  | { type: 'RESET_ALL'; context: AIGenContext };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // FIELD VERSIONING TYPES
@@ -651,3 +678,117 @@ export interface DataDownloadStatusExtended {
 
 /** Format state for inline formatting toolbar */
 export type ActiveFormatsState = Record<string, boolean | string | undefined>
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AI MODEL SERVICE TYPES (FASE 8.7)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Tipo de modelo de IA local */
+export type AIModelType = 'ner' | 'search';
+
+/** Status do modelo de IA */
+export type AIModelStatus = 'idle' | 'loading' | 'ready' | 'error';
+
+/** Status do AIModelService */
+export type AIModelServiceStatus = Record<AIModelType, AIModelStatus>;
+
+/** Progresso do AIModelService */
+export type AIModelServiceProgress = Record<AIModelType, number>;
+
+/** Entidade NER bruta do worker */
+export interface NERRawEntity {
+  word: string;
+  entity: string;
+  score: number;
+  start: number;
+  end: number;
+}
+
+/** Entidade NER processada */
+export interface NERProcessedEntity {
+  text: string;
+  type: string;
+  score: number;
+  start: number;
+  end: number;
+}
+
+/** Callback de status do AIModelService */
+export type AIModelStatusCallback = (state: { status: AIModelServiceStatus; progress: AIModelServiceProgress }) => void;
+
+/** Mensagem do worker de IA */
+export interface AIWorkerMessage {
+  id: string;
+  type: string;
+  result?: unknown;
+  error?: string;
+  progress?: { model: AIModelType; progress: number };
+}
+
+/** Promise pendente do worker */
+export interface PendingWorkerPromise {
+  resolve: (result: unknown) => void;
+  reject: (error: Error) => void;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EMBEDDINGS SERVICE TYPES (FASE 8.7)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Item de embedding de legislação */
+export interface LegislacaoEmbeddingItem {
+  id: string;
+  artigoId: string;
+  type: string;
+  lei: string;
+  text: string;
+  embedding: number[];
+}
+
+/** Item de embedding de jurisprudência */
+export interface JurisEmbeddingItem {
+  id: string;
+  tipo: string;
+  texto: string;
+  embedding: number[];
+  tribunal?: string;
+  fullText?: string;
+}
+
+/** Resultado de busca por similaridade */
+export interface SimilaritySearchResult {
+  item: unknown;
+  similarity: number;
+}
+
+/** Item de jurisprudência com similaridade (resultado de busca) */
+export interface JurisEmbeddingWithSimilarity extends JurisEmbeddingItem {
+  similarity: number;
+  precedenteId?: string;
+  tipoProcesso?: string;
+}
+
+/** Filtros de jurisprudência extendidos */
+export interface JurisFiltros {
+  tipo?: string[];
+  tribunal?: string[];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CDN SERVICE TYPES (FASE 8.7)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Tipo de download (embeddings ou dados) */
+export type CDNDownloadType = 'legislacao' | 'jurisprudencia';
+
+/** Callback de progresso de download (0-1) */
+export type DownloadProgressCallback = (progress: number) => void;
+
+/** Callback de batch completo (current, total) */
+export type BatchCompleteCallback = (current: number, total: number) => void;
+
+/** Nomes de arquivos conhecidos no CDN */
+export type CDNFileName = 'legis-embeddings.json' | 'juris-embeddings.json' | 'legis-data.json' | 'juris-data.json';
+
+/** Mapeamento de tamanhos estimados */
+export type EstimatedSizes = Record<CDNFileName, number>;

@@ -152,7 +152,13 @@ import type {
   TargetField,
   // FASE 8.2: Tipos adicionais para useState com objetos
   LocalModelForm, SlashMenuStateExtended, DownloadItemStatus,
-  EmbeddingsDownloadStatusExtended, DataDownloadStatusExtended, ActiveFormatsState
+  EmbeddingsDownloadStatusExtended, DataDownloadStatusExtended, ActiveFormatsState,
+  // FASE 8.7: Tipos para AIModelService e serviços
+  AIModelType, AIModelStatus, AIModelServiceStatus, AIModelServiceProgress,
+  NERRawEntity, NERProcessedEntity, AIModelStatusCallback, AIWorkerMessage, PendingWorkerPromise,
+  LegislacaoEmbeddingItem, JurisEmbeddingItem, JurisEmbeddingWithSimilarity, SimilaritySearchResult, JurisFiltros,
+  CDNDownloadType, DownloadProgressCallback, BatchCompleteCallback, CDNFileName, EstimatedSizes,
+  AIGenContextItem, AIGenContext, AIGenState, AIGenAction, AnonymizationSettings
 } from './types';
 
 // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
@@ -161,7 +167,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.86'; // v1.35.86: TypeScript FASE 8.6 - Tipar useRef (84 instâncias: DOM, Timer, Callback, Data)
+const APP_VERSION = '1.35.87'; // v1.35.87: TypeScript FASE 8.7 parcial - Tipar services (AIModel, Embeddings, CDN) e callbacks
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -219,7 +225,7 @@ PREFERIR PERGUNTAR a presumir. Na dúvida, pergunte.
 - Estrutura e formatação da decisão`;
 
 // v1.25.18: Helper para extrair texto sem criar DOM (memory leak fix)
-const extractPlainText = (html) => {
+const extractPlainText = (html: string): string => {
   if (!html) return '';
   return html
     .replace(/<br\s*\/?>/gi, '\n')
@@ -335,40 +341,40 @@ const RESULTADO_STYLES = {
   'SEM RESULTADO': { borderColor: '#64748b', color: 'var(--result-muted)' },
   default: { borderColor: '#64748b', color: 'var(--result-muted)' }
 };
-const getResultadoStyle = (r) => RESULTADO_STYLES[r] || RESULTADO_STYLES.default;
+const getResultadoStyle = (r: string | null | undefined) => RESULTADO_STYLES[r as keyof typeof RESULTADO_STYLES] || RESULTADO_STYLES.default;
 
 // v1.32.00: LocalAIProcessingOverlay removido - IA agora roda em Web Worker (não bloqueia UI)
 
 // 🔍 TF-IDF SIMILARITY ENGINE (v1.13.1 - Detecção de modelos similares)
 const TFIDFSimilarity = {
   STOPWORDS: new Set(['de','da','do','das','dos','em','na','no','nas','nos','para','por','com','sem','sob','sobre','entre','ate','o','a','os','as','um','uma','uns','umas','e','ou','mas','porem','contudo','todavia','que','qual','quais','quando','onde','como','porque','ser','estar','ter','haver','fazer','ir','vir','foi','era','sido','sendo','seja','foram','sao','ao','aos','pela','pelo','pelas','pelos','este','esta','estes','estas','esse','essa','esses','essas','isso','isto','aquilo','aquele','aquela','se','nao','sim','mais','menos','muito','pouco','art','artigo','paragrafo','inciso','alinea','fls','folhas','pag','pagina','id','processo','autos','requerente','requerido','reclamante','reclamada','autor','reu','parte','partes','assim','ainda','ja','tambem','apenas','mesmo','so','entao','pois']),
-  cache: { vectors: new Map(), vocab: new Map(), idf: new Map(), valid: false },
-  tokenize(t) {
-    return (t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/<[^>]+>/g,' ').replace(/[^\w\s]/g,' ').replace(/\d+/g,' ').split(/\s+/).filter(w=>w.length>2&&!this.STOPWORDS.has(w));
+  cache: { vectors: new Map<string, Map<number, number>>(), vocab: new Map<string, number>(), idf: new Map<string, number>(), valid: false },
+  tokenize(t: string): string[] {
+    return (t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/<[^>]+>/g,' ').replace(/[^\w\s]/g,' ').replace(/\d+/g,' ').split(/\s+/).filter((w: string)=>w.length>2&&!this.STOPWORDS.has(w));
   },
-  buildIndex(models) {
-    const df=new Map(), N=models.length;
-    models.forEach(m=>{const terms=new Set(this.tokenize(m.content));terms.forEach(t=>df.set(t,(df.get(t)||0)+1));});
+  buildIndex(models: Model[]) {
+    const df=new Map<string, number>(), N=models.length;
+    models.forEach((m: Model)=>{const terms=new Set(this.tokenize(m.content));terms.forEach((t: string)=>df.set(t,(df.get(t)||0)+1));});
     this.cache.vocab.clear();this.cache.idf.clear();let i=0;
-    df.forEach((f,t)=>{if(f>=2&&f<N*0.9){this.cache.vocab.set(t,i++);this.cache.idf.set(t,Math.log(N/f)+1);}});
+    df.forEach((f: number,t: string)=>{if(f>=2&&f<N*0.9){this.cache.vocab.set(t,i++);this.cache.idf.set(t,Math.log(N/f)+1);}});
     this.cache.vectors.clear();
-    models.forEach(m=>this.cache.vectors.set(m.id,this.computeVector(m.content)));
+    models.forEach((m: Model)=>this.cache.vectors.set(m.id,this.computeVector(m.content)));
     this.cache.valid=true;
   },
-  computeVector(text) {
-    const tokens=this.tokenize(text),tf=new Map();
-    tokens.forEach(t=>{if(this.cache.vocab.has(t))tf.set(t,(tf.get(t)||0)+1);});
-    const vec=new Map();let norm=0;
-    tf.forEach((f,t)=>{const idf=this.cache.idf.get(t);const idx=this.cache.vocab.get(t);if(idf===undefined||idx===undefined)return;const v=(1+Math.log(f))*idf;vec.set(idx,v);norm+=v*v;});
-    norm=Math.sqrt(norm);if(norm>0)vec.forEach((v,k)=>vec.set(k,v/norm));
+  computeVector(text: string): Map<number, number> {
+    const tokens=this.tokenize(text),tf=new Map<string, number>();
+    tokens.forEach((t: string)=>{if(this.cache.vocab.has(t))tf.set(t,(tf.get(t)||0)+1);});
+    const vec=new Map<number, number>();let norm=0;
+    tf.forEach((f: number,t: string)=>{const idf=this.cache.idf.get(t);const idx=this.cache.vocab.get(t);if(idf===undefined||idx===undefined)return;const v=(1+Math.log(f))*idf;vec.set(idx,v);norm+=v*v;});
+    norm=Math.sqrt(norm);if(norm>0)vec.forEach((v: number,k: number)=>vec.set(k,v/norm));
     return vec;
   },
-  cosine(a,b){let dot=0;a.forEach((v,k)=>{if(typeof k==='number'&&b.has(k))dot+=v*b.get(k);});return dot;},
-  findSimilar(newModel,models,threshold=0.80) {
+  cosine(a: Map<number, number>,b: Map<number, number>){let dot=0;a.forEach((v: number,k: number)=>{if(typeof k==='number'&&b.has(k))dot+=v*(b.get(k) || 0);});return dot;},
+  findSimilar(newModel: Model,models: Model[],threshold=0.80) {
     if(!this.cache.valid||this.cache.vectors.size!==models.length)this.buildIndex(models);
     const vec=this.computeVector(newModel.content);
-    let best=null,bestSim=0;
-    models.forEach(m=>{if(m.id===newModel.id)return;const ev=this.cache.vectors.get(m.id);if(!ev)return;const s=this.cosine(vec,ev);if(s>=threshold&&s>bestSim){bestSim=s;best=m;}});
+    let best: Model | null=null,bestSim=0;
+    models.forEach((m: Model)=>{if(m.id===newModel.id)return;const ev=this.cache.vectors.get(m.id);if(!ev)return;const s=this.cosine(vec,ev);if(s>=threshold&&s>bestSim){bestSim=s;best=m;}});
     return best?{hasSimilar:true,similarModel:best,similarity:bestSim}:{hasSimilar:false};
   },
   invalidate(){this.cache.valid=false;this.cache.vectors.clear();}
@@ -418,17 +424,17 @@ const detectAICapabilities = () => {
 //          Embeddings (Xenova/multilingual-e5-base)
 // v1.32.08: Worker thread para não bloquear UI
 const AIModelService = {
-  worker: null,
-  pending: new Map(),
-  status: { ner: 'idle', search: 'idle' }, // idle, loading, ready, error
-  progress: { ner: 0, search: 0 },
-  listeners: new Set(),
+  worker: null as Worker | null,
+  pending: new Map<string, PendingWorkerPromise>(),
+  status: { ner: 'idle', search: 'idle' } as AIModelServiceStatus,
+  progress: { ner: 0, search: 0 } as AIModelServiceProgress,
+  listeners: new Set<AIModelStatusCallback>(),
 
   // Obter/criar worker
-  getWorker() {
+  getWorker(): Worker {
     if (!this.worker) {
       this.worker = new Worker(new URL('./ai-worker.js', import.meta.url), { type: 'module' });
-      this.worker.onmessage = (e) => {
+      this.worker.onmessage = (e: MessageEvent<AIWorkerMessage>) => {
         const { id, type, result, error, progress } = e.data;
 
         // Progresso de download
@@ -450,14 +456,14 @@ const AIModelService = {
         this.pending.delete(id);
 
         if (type === 'error') {
-          pending.reject(new Error(error));
+          pending.reject(new Error(error || 'Unknown error'));
         } else {
           pending.resolve(result);
         }
       };
 
       // v1.35.58: Handler de erro do worker - rejeita promises pendentes
-      this.worker.onerror = (err) => {
+      this.worker.onerror = (err: ErrorEvent) => {
         console.error('[AI Worker] Error:', err);
         // Rejeitar todas as promises pendentes
         this.pending.forEach(({ reject }) => {
@@ -465,7 +471,7 @@ const AIModelService = {
         });
         this.pending.clear();
         // Reset status para error
-        Object.keys(this.status).forEach(key => {
+        (Object.keys(this.status) as AIModelType[]).forEach((key) => {
           this.status[key] = 'error';
         });
         this._notify();
@@ -476,7 +482,7 @@ const AIModelService = {
 
   // Chamar worker
   // v1.35.58: Adicionado timeout para evitar promises pendentes eternamente
-  _call(type, text = null, options = null, timeoutMs = 60000) {
+  _call(type: string, text: string | null = null, options: Record<string, unknown> | null = null, timeoutMs = 60000): Promise<unknown> {
     return new Promise((resolve, reject) => {
       const id = crypto.randomUUID();
 
@@ -489,8 +495,8 @@ const AIModelService = {
       }, timeoutMs);
 
       this.pending.set(id, {
-        resolve: (result) => { clearTimeout(timeout); resolve(result); },
-        reject: (err) => { clearTimeout(timeout); reject(err); }
+        resolve: (result: unknown) => { clearTimeout(timeout); resolve(result); },
+        reject: (err: Error) => { clearTimeout(timeout); reject(err); }
       });
 
       this.getWorker().postMessage({ id, type, text, options });
@@ -499,18 +505,18 @@ const AIModelService = {
 
   // Notificar listeners de mudança de status
   _notify() {
-    this.listeners.forEach(fn => fn({ status: this.status, progress: this.progress }));
+    this.listeners.forEach((fn) => fn({ status: this.status, progress: this.progress }));
   },
 
   // Adicionar listener de status
-  onStatusChange(fn) {
+  onStatusChange(fn: AIModelStatusCallback): () => void {
     this.listeners.add(fn);
     return () => this.listeners.delete(fn);
   },
 
   // Alias para onStatusChange (compatibilidade)
-  subscribe(fn) {
-    const wrappedFn = ({ status, progress }) => fn(status, progress);
+  subscribe(fn: (status: AIModelServiceStatus, progress: AIModelServiceProgress) => void): () => void {
+    const wrappedFn: AIModelStatusCallback = ({ status, progress }) => fn(status, progress);
     this.listeners.add(wrappedFn);
     return () => this.listeners.delete(wrappedFn);
   },
@@ -530,7 +536,7 @@ const AIModelService = {
     }
 
     // Reset status
-    Object.keys(this.status).forEach(key => {
+    (Object.keys(this.status) as AIModelType[]).forEach((key) => {
       this.status[key] = 'idle';
       this.progress[key] = 0;
     });
@@ -540,7 +546,7 @@ const AIModelService = {
   },
 
   // Inicializar modelo
-  async init(modelType = 'ner') {
+  async init(modelType: AIModelType = 'ner'): Promise<boolean> {
     if (this.status[modelType] === 'ready') return true;
     if (this.status[modelType] === 'loading') return false;
 
@@ -567,12 +573,12 @@ const AIModelService = {
   },
 
   // Verificar se modelo está pronto
-  isReady(modelType = 'ner') {
+  isReady(modelType: AIModelType = 'ner'): boolean {
     return this.status[modelType] === 'ready';
   },
 
   // Descarregar modelo
-  async unload(modelType) {
+  async unload(modelType: AIModelType): Promise<void> {
     await this._call('unload', null, { model: modelType });
     this.status[modelType] = 'idle';
     this.progress[modelType] = 0;
@@ -581,13 +587,13 @@ const AIModelService = {
   },
 
   // v1.32.08: Extrair entidades NER via Worker (lógica v1.28 com offsets manuais)
-  async extractEntities(text) {
+  async extractEntities(text: string): Promise<NERProcessedEntity[]> {
     if (!this.isReady('ner')) await this.init('ner');
 
     const cleanText = text.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
     const CHUNK_SIZE = 1000;
     const OVERLAP = 200;
-    let allRaw = [];
+    let allRaw: NERRawEntity[] = [];
 
     for (let i = 0; i < cleanText.length; i += (CHUNK_SIZE - OVERLAP)) {
       let chunk = cleanText.slice(i, i + CHUNK_SIZE);
@@ -596,18 +602,18 @@ const AIModelService = {
       // Segment Title Case para ALL CAPS
       chunk = chunk.replace(
         /\b([A-ZÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]{2,}(?:\s+[A-ZÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]{2,})+)\b/g,
-        (match) => match.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase())
+        (match: string) => match.toLowerCase().replace(/(?:^|\s)\S/g, (a: string) => a.toUpperCase())
       );
 
       try {
         // v1.32.08: Chamar worker ao invés de pipeline direto
-        const chunkEntities = await this._call('ner', chunk, { truncation: true, max_length: 512 });
+        const chunkEntities = await this._call('ner', chunk, { truncation: true, max_length: 512 }) as NERRawEntity[];
 
         // OFFSETS MANUAIS via indexOf (Transformers.js retorna start/end incorretos)
         // v1.33.14: Busca case-insensitive (BERT retorna "Mac" mas texto é "MACEDO")
         let cursor = 0;
         const chunkLower = chunk.toLowerCase();
-        const adjusted = chunkEntities.reduce((acc, e) => {
+        const adjusted = chunkEntities.reduce((acc: NERRawEntity[], e: NERRawEntity) => {
           if (e.word === '[UNK]' || e.word === '[CLS]' || e.word === '[SEP]') return acc;
           const cleanWord = (e.word || '').replace(/^##/, '');
           if (!cleanWord) return acc;
@@ -621,13 +627,13 @@ const AIModelService = {
 
         allRaw = allRaw.concat(adjusted);
       } catch (err) {
-        console.warn('[NER] Erro no chunk:', err.message);
+        console.warn('[NER] Erro no chunk:', (err as Error).message);
       }
     }
 
     // Deduplicar (v1.33.14: incluir tipo de entidade na key para não confundir Mac/LOC com Mac/PER)
-    const seen = new Set();
-    const unique = allRaw.filter(e => {
+    const seen = new Set<string>();
+    const unique = allRaw.filter((e: NERRawEntity) => {
       const entityType = (e.entity || '').replace(/^(B-|I-)/, ''); // PER, LOC, ORG
       const key = `${e.word?.toLowerCase()}-${entityType}-${Math.floor((e.start || 0) / 50)}`;
       if (seen.has(key)) return false;
@@ -646,16 +652,16 @@ const AIModelService = {
 
   // v1.33.13: Processar tokens NER com healing de subtokens órfãos
   // Healing: se subtoken (##xxx) é entidade mas prefixo foi 'O', unir se adjacentes
-  processTokens(rawEntities) {
-    const sorted = [...rawEntities].sort((a, b) => a.start - b.start);
+  processTokens(rawEntities: NERRawEntity[]): NERProcessedEntity[] {
+    const sorted = [...rawEntities].sort((a: NERRawEntity, b: NERRawEntity) => a.start - b.start);
 
     // v1.33.13: Log de debug para análise
-    console.log('[NER] Tokens brutos:', rawEntities.slice(0, 50).map(t =>
+    console.log('[NER] Tokens brutos:', rawEntities.slice(0, 50).map((t: NERRawEntity) =>
       `${t.word}(${t.entity}:${t.start}-${t.end})`).join(', '));
 
-    const result = [];
-    let current = null;
-    let pendingPrefix = null; // Token 'O' que pode ser prefixo de subtoken
+    const result: NERProcessedEntity[] = [];
+    let current: NERProcessedEntity | null = null;
+    let pendingPrefix: { word: string; end: number; start: number } | null = null; // Token 'O' que pode ser prefixo de subtoken
 
     for (const token of sorted) {
       const isSubtoken = (token.word || '').startsWith('##');
@@ -709,8 +715,8 @@ const AIModelService = {
 
   // v1.32.10: Fundir ORG + LOC quando conectados por "DE/DO/DA"
   // Ex: "COMPANHIA DE TRANSITO E TRANSPORTE" (ORG) + "MACAPA" (LOC) → "COMPANHIA DE TRANSITO E TRANSPORTE DE MACAPA" (ORG)
-  mergeOrgLoc(entities, originalText) {
-    const result = [];
+  mergeOrgLoc(entities: NERProcessedEntity[], originalText: string): NERProcessedEntity[] {
+    const result: NERProcessedEntity[] = [];
     let i = 0;
 
     while (i < entities.length) {
@@ -747,16 +753,16 @@ const AIModelService = {
   },
 
   // v1.32.08: Gerar embedding via Worker
-  async getEmbedding(text, type = 'passage') {
+  async getEmbedding(text: string, type: 'query' | 'passage' = 'passage'): Promise<number[]> {
     if (!this.isReady('search')) await this.init('search');
 
     // E5 recomenda prefixos
     const prefixed = type === 'query' ? `query: ${text}` : `passage: ${text}`;
-    return this._call('embedding', prefixed);
+    return this._call('embedding', prefixed) as Promise<number[]>;
   },
 
   // Calcular similaridade de cosseno (roda na main thread - é rápido)
-  cosineSimilarity(a, b) {
+  cosineSimilarity(a: number[], b: number[]): number {
     if (!a || !b || a.length !== b.length) return 0;
     let dot = 0, normA = 0, normB = 0;
     for (let i = 0; i < a.length; i++) {
@@ -775,13 +781,13 @@ const EmbeddingsService = {
   STORE_NAME: 'embeddings',
   VERSION: 1,
 
-  openDB() {
+  openDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
       const req = indexedDB.open(this.DB_NAME, this.VERSION);
       req.onerror = () => reject(req.error);
       req.onsuccess = () => resolve(req.result);
-      req.onupgradeneeded = (e) => {
-        const db = e.target.result;
+      req.onupgradeneeded = (e: IDBVersionChangeEvent) => {
+        const db = (e.target as IDBOpenDBRequest).result;
         if (!db.objectStoreNames.contains(this.STORE_NAME)) {
           const store = db.createObjectStore(this.STORE_NAME, { keyPath: 'id' });
           store.createIndex('artigoId', 'artigoId', { unique: false });
@@ -792,28 +798,28 @@ const EmbeddingsService = {
     });
   },
 
-  async saveEmbedding(item) {
+  async saveEmbedding(item: LegislacaoEmbeddingItem): Promise<void> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readwrite');
       tx.objectStore(this.STORE_NAME).put(item);
-      tx.oncomplete = resolve;
+      tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
   },
 
-  async saveEmbeddingsBatch(items) {
+  async saveEmbeddingsBatch(items: LegislacaoEmbeddingItem[]): Promise<void> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readwrite');
       const store = tx.objectStore(this.STORE_NAME);
-      items.forEach(item => store.put(item));
-      tx.oncomplete = resolve;
+      items.forEach((item: LegislacaoEmbeddingItem) => store.put(item));
+      tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
   },
 
-  async getAllEmbeddings() {
+  async getAllEmbeddings(): Promise<LegislacaoEmbeddingItem[]> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readonly');
@@ -823,7 +829,7 @@ const EmbeddingsService = {
     });
   },
 
-  async getEmbeddingsByLei(lei) {
+  async getEmbeddingsByLei(lei: string): Promise<LegislacaoEmbeddingItem[]> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readonly');
@@ -834,7 +840,7 @@ const EmbeddingsService = {
     });
   },
 
-  async getCount() {
+  async getCount(): Promise<number> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readonly');
@@ -845,7 +851,7 @@ const EmbeddingsService = {
   },
 
   // v1.26.02: Obter apenas os IDs dos embeddings (para verificação incremental)
-  async getAllIds() {
+  async getAllIds(): Promise<IDBValidKey[]> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readonly');
@@ -855,58 +861,58 @@ const EmbeddingsService = {
     });
   },
 
-  async clearAll() {
+  async clearAll(): Promise<void> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readwrite');
       tx.objectStore(this.STORE_NAME).clear();
-      tx.oncomplete = resolve;
+      tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
   },
 
-  async clearByLei(lei) {
+  async clearByLei(lei: string): Promise<void> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readwrite');
       const store = tx.objectStore(this.STORE_NAME);
       const index = store.index('lei');
       const req = index.openCursor(lei);
-      req.onsuccess = (e) => {
-        const cursor = e.target.result;
+      req.onsuccess = (e: Event) => {
+        const cursor = (e.target as IDBRequest<IDBCursorWithValue | null>).result;
         if (cursor) {
           store.delete(cursor.primaryKey);
           cursor.continue();
         }
       };
-      tx.oncomplete = resolve;
+      tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
   },
 
   // Buscar por similaridade (retorna top N resultados, deduplicado por artigoId)
-  async searchBySimilarity(queryEmbedding, threshold = 0.5, limit = 20) {
+  async searchBySimilarity(queryEmbedding: number[], threshold = 0.5, limit = 20): Promise<(LegislacaoEmbeddingItem & { similarity: number })[]> {
     const allEmbeddings = await this.getAllEmbeddings();
     const results = allEmbeddings
-      .map(item => ({
+      .map((item: LegislacaoEmbeddingItem) => ({
         ...item,
         similarity: AIModelService.cosineSimilarity(queryEmbedding, item.embedding)
       }))
-      .filter(item => item.similarity >= threshold);
+      .filter((item: LegislacaoEmbeddingItem & { similarity: number }) => item.similarity >= threshold);
 
     // Deduplicar por artigoId (manter chunk com maior similaridade)
     const deduped = Object.values(
-      results.reduce((acc, item) => {
+      results.reduce((acc: Record<string, LegislacaoEmbeddingItem & { similarity: number }>, item: LegislacaoEmbeddingItem & { similarity: number }) => {
         const key = item.artigoId || item.id;
         if (!acc[key] || item.similarity > acc[key].similarity) {
           acc[key] = item;
         }
         return acc;
-      }, {})
+      }, {} as Record<string, LegislacaoEmbeddingItem & { similarity: number }>)
     );
 
-    return deduped
-      .sort((a, b) => b.similarity - a.similarity)
+    return (deduped as (LegislacaoEmbeddingItem & { similarity: number })[])
+      .sort((a: LegislacaoEmbeddingItem & { similarity: number }, b: LegislacaoEmbeddingItem & { similarity: number }) => b.similarity - a.similarity)
       .slice(0, limit);
   }
 };
@@ -919,16 +925,22 @@ const JURIS_CHUNK_THRESHOLD = 1500;
 const JURIS_CHUNK_SIZE = 1200;
 const JURIS_CHUNK_OVERLAP = 200;
 
-const chunkJurisText = (text) => {
+interface JurisChunk {
+  text: string;
+  chunkIndex: number;
+  totalChunks: number;
+}
+
+const chunkJurisText = (text: string): JurisChunk[] => {
   if (!text || text.length < JURIS_CHUNK_THRESHOLD) {
     return [{ text, chunkIndex: 0, totalChunks: 1 }];
   }
   const teseRegex = /(?:^|\n)\s*(?:\d+[ªº°]?\)|\d+\s*[\.\)]\s)/;
-  const parts = text.split(teseRegex).filter(t => t && t.trim().length > 50);
+  const parts = text.split(teseRegex).filter((t: string) => t && t.trim().length > 50);
   if (parts.length > 1) {
-    return parts.map((t, i) => ({ text: t.trim(), chunkIndex: i, totalChunks: parts.length }));
+    return parts.map((t: string, i: number) => ({ text: t.trim(), chunkIndex: i, totalChunks: parts.length }));
   }
-  const chunks = [];
+  const chunks: JurisChunk[] = [];
   let start = 0;
   while (start < text.length) {
     const end = Math.min(start + JURIS_CHUNK_SIZE, text.length);
@@ -936,7 +948,7 @@ const chunkJurisText = (text) => {
     start = end - JURIS_CHUNK_OVERLAP;
     if (start >= text.length - 50) break;
   }
-  chunks.forEach(c => c.totalChunks = chunks.length);
+  chunks.forEach((c: JurisChunk) => c.totalChunks = chunks.length);
   return chunks;
 };
 
@@ -945,13 +957,13 @@ const JurisEmbeddingsService = {
   STORE_NAME: 'embeddings',
   VERSION: 1,
 
-  openDB() {
+  openDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
-      const req = indexedDB.open(this.DB_NAME, this.VERSION);
+      const req = indexedDB.open(this.DB_NAME, this.VERSION) as IDBOpenDBRequest;
       req.onerror = () => reject(req.error);
       req.onsuccess = () => resolve(req.result);
-      req.onupgradeneeded = (e) => {
-        const db = e.target.result;
+      req.onupgradeneeded = (e: IDBVersionChangeEvent) => {
+        const db = (e.target as IDBOpenDBRequest).result;
         if (!db.objectStoreNames.contains(this.STORE_NAME)) {
           const store = db.createObjectStore(this.STORE_NAME, { keyPath: 'id' });
           store.createIndex('precedenteId', 'precedenteId', { unique: false });
@@ -962,38 +974,38 @@ const JurisEmbeddingsService = {
     });
   },
 
-  async saveEmbedding(item) {
+  async saveEmbedding(item: JurisEmbeddingItem): Promise<void> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readwrite');
       tx.objectStore(this.STORE_NAME).put(item);
-      tx.oncomplete = resolve;
+      tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
   },
 
-  async saveEmbeddingsBatch(items) {
+  async saveEmbeddingsBatch(items: JurisEmbeddingItem[]): Promise<void> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readwrite');
       const store = tx.objectStore(this.STORE_NAME);
       items.forEach(item => store.put(item));
-      tx.oncomplete = resolve;
+      tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
   },
 
-  async getAllEmbeddings() {
+  async getAllEmbeddings(): Promise<JurisEmbeddingItem[]> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readonly');
-      const req = tx.objectStore(this.STORE_NAME).getAll();
+      const req = tx.objectStore(this.STORE_NAME).getAll() as IDBRequest<JurisEmbeddingItem[]>;
       req.onsuccess = () => resolve(req.result || []);
       req.onerror = () => reject(req.error);
     });
   },
 
-  async getCount() {
+  async getCount(): Promise<number> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readonly');
@@ -1003,7 +1015,7 @@ const JurisEmbeddingsService = {
     });
   },
 
-  async getAllIds() {
+  async getAllIds(): Promise<IDBValidKey[]> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readonly');
@@ -1013,40 +1025,45 @@ const JurisEmbeddingsService = {
     });
   },
 
-  async clearAll() {
+  async clearAll(): Promise<void> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(this.STORE_NAME, 'readwrite');
       tx.objectStore(this.STORE_NAME).clear();
-      tx.oncomplete = resolve;
+      tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
   },
 
   // v1.32.21: Aceita filtros para aplicar ANTES do limit
-  async searchBySimilarity(queryEmbedding, threshold = 0.5, limit = 30, filters = {}) {
+  async searchBySimilarity(
+    queryEmbedding: number[],
+    threshold = 0.5,
+    limit = 30,
+    filters: JurisFiltros = {}
+  ): Promise<JurisEmbeddingWithSimilarity[]> {
     const allEmbeddings = await this.getAllEmbeddings();
-    let results = allEmbeddings
+    let results: JurisEmbeddingWithSimilarity[] = allEmbeddings
       .map(item => ({
         ...item,
         similarity: AIModelService.cosineSimilarity(queryEmbedding, item.embedding)
-      }))
+      }) as JurisEmbeddingWithSimilarity)
       .filter(item => item.similarity >= threshold);
 
     // v1.32.21: Aplicar filtros ANTES de limitar (para ter até 30 do tipo desejado)
-    if (filters.tipo?.length > 0) {
+    if (filters.tipo && filters.tipo.length > 0) {
       const IRR_TYPES = new Set(['IRR', 'RR', 'RRAG', 'INCJULGRREMBREP', 'INCJULGRREPETITIVO']);
       results = results.filter(r => {
-        if (filters.tipo.includes('IRR') && IRR_TYPES.has((r.tipoProcesso || '').toUpperCase().replace(/-/g, ''))) return true;
-        return filters.tipo.includes(r.tipoProcesso);
+        if (filters.tipo!.includes('IRR') && IRR_TYPES.has((r.tipoProcesso || '').toUpperCase().replace(/-/g, ''))) return true;
+        return filters.tipo!.includes(r.tipoProcesso || '');
       });
     }
-    if (filters.tribunal?.length > 0) {
-      results = results.filter(r => filters.tribunal.includes(r.tribunal));
+    if (filters.tribunal && filters.tribunal.length > 0) {
+      results = results.filter(r => filters.tribunal!.includes(r.tribunal || ''));
     }
 
     const deduped = Object.values(
-      results.reduce((acc, item) => {
+      results.reduce((acc: Record<string, JurisEmbeddingWithSimilarity>, item) => {
         const key = item.precedenteId || item.id;
         if (!acc[key] || item.similarity > acc[key].similarity) {
           acc[key] = item;
@@ -1070,15 +1087,15 @@ const EmbeddingsCDNService = {
     'juris-embeddings.json': 50_000_000,   // ~50MB
     'legis-data.json': 5_000_000,          // ~5MB
     'juris-data.json': 2_000_000,          // ~2MB
-  },
+  } as EstimatedSizes,
 
   // Retorna URL do proxy (funciona local e Vercel, resolve CORS)
-  getProxyUrl(file) {
+  getProxyUrl(file: CDNFileName): string {
     return `${API_BASE}/api/embeddings?file=${file}`;
   },
 
   // Verifica se precisa baixar embeddings
-  async needsDownload(type) {
+  async needsDownload(type: CDNDownloadType): Promise<boolean> {
     try {
       const count = type === 'legislacao'
         ? await EmbeddingsService.getCount()
@@ -1091,10 +1108,14 @@ const EmbeddingsCDNService = {
 
   // Download com progresso e retry
   // v1.35.20: Usa tamanhos estimados como fallback quando Content-Length não disponível
-  async downloadFile(url, onProgress, maxRetries = 3) {
+  async downloadFile(
+    url: string,
+    onProgress?: DownloadProgressCallback,
+    maxRetries = 3
+  ): Promise<string> {
     // Extrair nome do arquivo da URL (ex: ?file=legis-embeddings.json)
     const fileMatch = url.match(/[?&]file=([^&]+)/);
-    const filename = fileMatch ? fileMatch[1] : null;
+    const filename = fileMatch ? fileMatch[1] as CDNFileName : null;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -1110,8 +1131,8 @@ const EmbeddingsCDNService = {
           console.log(`[CDN] Usando tamanho estimado para ${filename}: ${(total / 1_000_000).toFixed(1)}MB`);
         }
 
-        const reader = res.body.getReader();
-        const chunks = [];
+        const reader = res.body!.getReader();
+        const chunks: Uint8Array[] = [];
         let received = 0;
 
         while (true) {
@@ -1137,13 +1158,18 @@ const EmbeddingsCDNService = {
         await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt - 1)));
       }
     }
+    // TypeScript: unreachable, but needed for type safety
+    throw new Error('Download failed after max retries');
   },
 
   // Baixa e salva embeddings de legislação
-  async downloadLegislacao(onProgress, onBatchComplete) {
+  async downloadLegislacao(
+    onProgress?: DownloadProgressCallback,
+    onBatchComplete?: BatchCompleteCallback
+  ): Promise<number> {
     const url = this.getProxyUrl('legis-embeddings.json');
     const text = await this.downloadFile(url, onProgress);
-    const items = JSON.parse(text);
+    const items = JSON.parse(text) as LegislacaoEmbeddingItem[];
 
     // Salvar em batches de 100 para não travar
     const batchSize = 100;
@@ -1159,10 +1185,13 @@ const EmbeddingsCDNService = {
   },
 
   // Baixa e salva embeddings de jurisprudência
-  async downloadJurisprudencia(onProgress, onBatchComplete) {
+  async downloadJurisprudencia(
+    onProgress?: DownloadProgressCallback,
+    onBatchComplete?: BatchCompleteCallback
+  ): Promise<number> {
     const url = this.getProxyUrl('juris-embeddings.json');
     const text = await this.downloadFile(url, onProgress);
-    const items = JSON.parse(text);
+    const items = JSON.parse(text) as JurisEmbeddingItem[];
 
     // Salvar em batches de 100
     const batchSize = 100;
@@ -1181,7 +1210,7 @@ const EmbeddingsCDNService = {
   // ═══════════════════════════════════════════════════════════════
 
   // Verifica se precisa baixar dados (não embeddings)
-  async needsDataDownload(type) {
+  async needsDataDownload(type: CDNDownloadType): Promise<boolean> {
     try {
       if (type === 'legislacao') {
         const artigos = await loadArtigosFromIndexedDB();
@@ -1196,11 +1225,14 @@ const EmbeddingsCDNService = {
   },
 
   // Baixa e salva dados de legislação
-  async downloadLegislacaoData(onProgress, onBatchComplete) {
+  async downloadLegislacaoData(
+    onProgress?: DownloadProgressCallback,
+    onBatchComplete?: BatchCompleteCallback
+  ): Promise<number> {
     const url = this.getProxyUrl('legis-data.json');
     const text = await this.downloadFile(url, onProgress);
     const json = JSON.parse(text);
-    const items = json.data || json;
+    const items = (json.data || json) as Artigo[];
 
     // Salvar em batches de 500 (artigos são menores que embeddings)
     const batchSize = 500;
@@ -1215,11 +1247,14 @@ const EmbeddingsCDNService = {
   },
 
   // Baixa e salva dados de jurisprudência
-  async downloadJurisprudenciaData(onProgress, onBatchComplete) {
+  async downloadJurisprudenciaData(
+    onProgress?: DownloadProgressCallback,
+    onBatchComplete?: BatchCompleteCallback
+  ): Promise<number> {
     const url = this.getProxyUrl('juris-data.json');
     const text = await this.downloadFile(url, onProgress);
     const json = JSON.parse(text);
-    const items = json.data || json;
+    const items = (json.data || json) as Precedente[];
 
     // Salvar em batches de 200
     const batchSize = 200;
@@ -1235,12 +1270,12 @@ const EmbeddingsCDNService = {
 };
 
 // 🔒 ANONIMIZAÇÃO DE TEXTO (v1.17.0 - Nomes inseridos pelo usuário)
-const anonymizeText = (text, config, nomesUsuario = []) => {
+const anonymizeText = (text: string, config: AnonymizationSettings | null | undefined, nomesUsuario: string[] = []): string => {
   if (!text || !config?.enabled) return text;
 
   // Normalizar: juntar dígitos separados por quebras de linha (PDF.js às vezes quebra números)
   let result = text.replace(/(\d)\s+(\d)/g, '$1$2');
-  const encontrados = { cnpj: [], cpf: [], rg: [], pis: [], ctps: [], cep: [], processo: [], oab: [], telefone: [], email: [], conta: [], valor: [], pessoa: [] };
+  const encontrados: Record<string, string[]> = { cnpj: [], cpf: [], rg: [], pis: [], ctps: [], cep: [], processo: [], oab: [], telefone: [], email: [], conta: [], valor: [], pessoa: [] };
 
   // CNPJ: 00.000.000/0000-00
   if (config.cnpj !== false) {
@@ -1305,12 +1340,12 @@ const anonymizeText = (text, config, nomesUsuario = []) => {
   // Nomes inseridos pelo usuário (v1.17.0)
   if (nomesUsuario && nomesUsuario.length > 0) {
     // Helper: escapar caracteres especiais de regex
-    const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapeRegex = (str: string): string => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     // Normalizar texto (remover acentos para comparação)
-    const normalize = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const normalize = (str: string): string => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
     // Criar regex flexível para uma palavra
-    const buildFlexRegex = (palavra) => {
+    const buildFlexRegex = (palavra: string): string => {
       let escaped = escapeRegex(palavra);
       // Permitir espaço opcional antes de caracteres acentuados (PDF.js bug)
       escaped = escaped.replace(/([ÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ])/gi, '\\s*$1');
@@ -1356,8 +1391,8 @@ const anonymizeText = (text, config, nomesUsuario = []) => {
         const resultNorm = normalize(result);
 
         // Encontrar posições no texto normalizado (limitar a 100 matches para evitar loops)
-        const matches = [];
-        let match;
+        const matches: Array<{ start: number; len: number; original: string }> = [];
+        let match: RegExpExecArray | null;
         let matchLimit = 100;
         while ((match = regexNorm.exec(resultNorm)) !== null && matchLimit-- > 0) {
           matches.push({ start: match.index, len: match[0].length, original: result.substring(match.index, match.index + match[0].length) });
@@ -1380,8 +1415,8 @@ const anonymizeText = (text, config, nomesUsuario = []) => {
 };
 
 // 🔧 NORMALIZAÇÃO HTML (Remove espaçamento extra entre tags)
-const normalizeHTMLSpacing = (html) => {
-  if (!html) return html;
+const normalizeHTMLSpacing = (html: string | null | undefined): string => {
+  if (!html) return html ?? '';
   return html
     .replace(/>\s*\n\s*\n+\s*</g, '><')
     .replace(/>\s*\n\s*</g, '><')
@@ -1389,8 +1424,8 @@ const normalizeHTMLSpacing = (html) => {
 };
 
 // 🔧 v1.35.29: Remove meta-comentários de revisão que a IA pode adicionar ao final do texto
-const removeMetaComments = (text) => {
-  if (!text) return text;
+const removeMetaComments = (text: string | null | undefined): string => {
+  if (!text) return text ?? '';
 
   // Padrões de meta-comentários que a IA pode adicionar
   const patterns = [
@@ -1421,9 +1456,9 @@ const removeMetaComments = (text) => {
 
 // 🔧 HELPERS: Verificação de tópicos especiais
 const SPECIAL_TOPICS = ['RELATÓRIO', 'DISPOSITIVO'];
-const isSpecialTopic = (topic) => topic && SPECIAL_TOPICS.includes(topic.title?.toUpperCase());
-const isRelatorio = (topic) => topic?.title?.toUpperCase() === 'RELATÓRIO';
-const isDispositivo = (topic) => topic?.title?.toUpperCase() === 'DISPOSITIVO';
+const isSpecialTopic = (topic: Topic | null | undefined): boolean => Boolean(topic && SPECIAL_TOPICS.includes(topic.title?.toUpperCase()));
+const isRelatorio = (topic: Topic | null | undefined): boolean => topic?.title?.toUpperCase() === 'RELATÓRIO';
+const isDispositivo = (topic: Topic | null | undefined): boolean => topic?.title?.toUpperCase() === 'DISPOSITIVO';
 
 // 📦 HOOKS CUSTOMIZADOS - Ver CLAUDE.md para documentação completa
 // 🤖 v1.35.26: AI_INSTRUCTIONS movido para src/prompts/system.js
@@ -1480,11 +1515,11 @@ const useModalManager = () => {
 
   const [textPreview, setTextPreview] = useState<TextPreviewState>({ isOpen: false, title: '', text: '' });
 
-  const openModal = React.useCallback((modalName) => {
+  const openModal = React.useCallback((modalName: keyof ModalState) => {
     setModals(prev => ({ ...prev, [modalName]: true }));
   }, []);
 
-  const closeModal = React.useCallback((modalName) => {
+  const closeModal = React.useCallback((modalName: keyof ModalState) => {
     setModals(prev => ({ ...prev, [modalName]: false }));
   }, []);
 
@@ -1501,7 +1536,7 @@ const useModalManager = () => {
 
 // 🎣 CUSTOM HOOK: useAIIntegration
 // 🔧 Reducer para estados de geração de IA (consolidado)
-const aiGenerationInitialState = {
+const aiGenerationInitialState: AIGenState = {
   generic: { instruction: '', text: '', generating: false },
   model: { instruction: '', text: '', generating: false },
   relatorio: { instruction: '', regenerating: false },
@@ -1510,7 +1545,7 @@ const aiGenerationInitialState = {
   title: { generating: false }
 };
 
-const aiGenerationReducer = (state, action) => {
+const aiGenerationReducer = (state: AIGenState, action: AIGenAction): AIGenState => {
   const ctx = action.context;
   const base = state[ctx] || aiGenerationInitialState[ctx] || {};
   switch (action.type) {
@@ -1630,85 +1665,85 @@ const useAIIntegration = () => {
   // Genérica
   const aiInstruction = aiGeneration.generic.instruction;
   const setAiInstruction = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_INSTRUCTION', context: 'generic', value }),
+    (value: string) => dispatchAI({ type: 'SET_INSTRUCTION', context: 'generic', value }),
     []
   );
   const aiGeneratedText = aiGeneration.generic.text;
   const setAiGeneratedText = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_TEXT', context: 'generic', value }),
+    (value: string) => dispatchAI({ type: 'SET_TEXT', context: 'generic', value }),
     []
   );
   const generatingAi = aiGeneration.generic.generating;
   const setGeneratingAi = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_GENERATING', context: 'generic', value }),
+    (value: boolean) => dispatchAI({ type: 'SET_GENERATING', context: 'generic', value }),
     []
   );
 
   // Modelo
   const aiInstructionModel = aiGeneration.model.instruction;
   const setAiInstructionModel = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_INSTRUCTION', context: 'model', value }),
+    (value: string) => dispatchAI({ type: 'SET_INSTRUCTION', context: 'model', value }),
     []
   );
   const aiGeneratedTextModel = aiGeneration.model.text;
   const setAiGeneratedTextModel = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_TEXT', context: 'model', value }),
+    (value: string) => dispatchAI({ type: 'SET_TEXT', context: 'model', value }),
     []
   );
   const generatingAiModel = aiGeneration.model.generating;
   const setGeneratingAiModel = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_GENERATING', context: 'model', value }),
+    (value: boolean) => dispatchAI({ type: 'SET_GENERATING', context: 'model', value }),
     []
   );
 
   // Keywords e Title
   const generatingKeywords = aiGeneration.keywords.generating;
   const setGeneratingKeywords = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_GENERATING', context: 'keywords', value }),
+    (value: boolean) => dispatchAI({ type: 'SET_GENERATING', context: 'keywords', value }),
     []
   );
   const generatingTitle = aiGeneration.title.generating;
   const setGeneratingTitle = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_GENERATING', context: 'title', value }),
+    (value: boolean) => dispatchAI({ type: 'SET_GENERATING', context: 'title', value }),
     []
   );
 
   // Relatório
   const relatorioInstruction = aiGeneration.relatorio.instruction;
   const setRelatorioInstruction = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_INSTRUCTION', context: 'relatorio', value }),
+    (value: string) => dispatchAI({ type: 'SET_INSTRUCTION', context: 'relatorio', value }),
     []
   );
   const regeneratingRelatorio = aiGeneration.relatorio.regenerating;
   const setRegeneratingRelatorio = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_REGENERATING', context: 'relatorio', value }),
+    (value: boolean) => dispatchAI({ type: 'SET_REGENERATING', context: 'relatorio', value }),
     []
   );
   const regenerating = aiGeneration.relatorio.regenerating;
   const setRegenerating = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_REGENERATING', context: 'relatorio', value }),
+    (value: boolean) => dispatchAI({ type: 'SET_REGENERATING', context: 'relatorio', value }),
     []
   );
 
   // Dispositivo
   const dispositivoText = aiGeneration.dispositivo.text;
   const setDispositivoText = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_TEXT', context: 'dispositivo', value }),
+    (value: string) => dispatchAI({ type: 'SET_TEXT', context: 'dispositivo', value }),
     []
   );
   const generatingDispositivo = aiGeneration.dispositivo.generating;
   const setGeneratingDispositivo = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_GENERATING', context: 'dispositivo', value }),
+    (value: boolean) => dispatchAI({ type: 'SET_GENERATING', context: 'dispositivo', value }),
     []
   );
   const dispositivoInstruction = aiGeneration.dispositivo.instruction;
   const setDispositivoInstruction = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_INSTRUCTION', context: 'dispositivo', value }),
+    (value: string) => dispatchAI({ type: 'SET_INSTRUCTION', context: 'dispositivo', value }),
     []
   );
   const regeneratingDispositivo = aiGeneration.dispositivo.regenerating;
   const setRegeneratingDispositivo = React.useCallback(
-    (value) => dispatchAI({ type: 'SET_REGENERATING', context: 'dispositivo', value }),
+    (value: boolean) => dispatchAI({ type: 'SET_REGENERATING', context: 'dispositivo', value }),
     []
   );
 
@@ -1782,7 +1817,7 @@ const useAIIntegration = () => {
   }, []);
 
   // Save AI Settings - v1.21.13: suporta tanto objeto direto quanto função updater
-  const setAiSettings = React.useCallback((newSettingsOrUpdater) => {
+  const setAiSettings = React.useCallback((newSettingsOrUpdater: AISettings | ((prev: AISettings) => AISettings)) => {
     if (typeof newSettingsOrUpdater === 'function') {
       setAiSettingsState(prev => {
         const newSettings = newSettingsOrUpdater(prev);
@@ -1801,7 +1836,7 @@ const useAIIntegration = () => {
 
   // Utilities
   // v1.20.3: Modificado para acumular tokens no estado persistente
-  const logCacheMetrics = React.useCallback((data) => {
+  const logCacheMetrics = React.useCallback((data: { usage?: { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number } }) => {
     if (data.usage) {
       const input = data.usage.input_tokens || 0;
       const output = data.usage.output_tokens || 0;
@@ -1810,11 +1845,11 @@ const useAIIntegration = () => {
 
       // Acumular no contador persistente
       setTokenMetrics(prev => ({
-        totalInput: prev.totalInput + input,
-        totalOutput: prev.totalOutput + output,
-        totalCacheRead: prev.totalCacheRead + cacheRead,
-        totalCacheCreation: prev.totalCacheCreation + cacheCreation,
-        requestCount: prev.requestCount + 1,
+        totalInput: (prev.totalInput || 0) + input,
+        totalOutput: (prev.totalOutput || 0) + output,
+        totalCacheRead: (prev.totalCacheRead || 0) + cacheRead,
+        totalCacheCreation: (prev.totalCacheCreation || 0) + cacheCreation,
+        requestCount: (prev.requestCount || 0) + 1,
         lastUpdated: new Date().toISOString()
       }));
     }
@@ -3596,19 +3631,19 @@ const clearAllPdfsFromIndexedDB = async () => {
 const JURIS_DB_NAME = 'sentencify-jurisprudencia';
 const JURIS_STORE_NAME = 'precedentes';
 
-const openJurisDB = () => new Promise((resolve, reject) => {
+const openJurisDB = (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
   const request = indexedDB.open(JURIS_DB_NAME, 2);
   request.onerror = () => reject(request.error);
   request.onsuccess = () => resolve(request.result);
-  request.onupgradeneeded = (e) => {
-    const db = e.target.result;
+  request.onupgradeneeded = (e: IDBVersionChangeEvent) => {
+    const db = (e.target as IDBOpenDBRequest).result;
     if (!db.objectStoreNames.contains(JURIS_STORE_NAME)) {
       const store = db.createObjectStore(JURIS_STORE_NAME, { keyPath: 'id' });
       store.createIndex('byCategory', 'category', { unique: false });
       store.createIndex('byTipo', 'tipoProcesso', { unique: false });
       store.createIndex('byTribunal', 'tribunal', { unique: false });
     } else if (e.oldVersion < 2) {
-      const store = e.target.transaction.objectStore(JURIS_STORE_NAME);
+      const store = ((e.target as IDBOpenDBRequest).transaction as IDBTransaction).objectStore(JURIS_STORE_NAME);
       if (!store.indexNames.contains('byTribunal')) {
         store.createIndex('byTribunal', 'tribunal', { unique: false });
       }
@@ -3616,7 +3651,7 @@ const openJurisDB = () => new Promise((resolve, reject) => {
   };
 });
 
-const savePrecedentesToIndexedDB = async (precedentes) => {
+const savePrecedentesToIndexedDB = async (precedentes: Precedente[]): Promise<void> => {
   const db = await openJurisDB();
   const tx = db.transaction([JURIS_STORE_NAME], 'readwrite');
   const store = tx.objectStore(JURIS_STORE_NAME);
@@ -3624,13 +3659,13 @@ const savePrecedentesToIndexedDB = async (precedentes) => {
   db.close();
 };
 
-const loadPrecedentesFromIndexedDB = async () => {
+const loadPrecedentesFromIndexedDB = async (): Promise<Precedente[]> => {
   try {
     const db = await openJurisDB();
     const tx = db.transaction([JURIS_STORE_NAME], 'readonly');
     const store = tx.objectStore(JURIS_STORE_NAME);
-    const result = await new Promise((resolve, reject) => {
-      const req = store.getAll();
+    const result = await new Promise<Precedente[]>((resolve, reject) => {
+      const req = store.getAll() as IDBRequest<Precedente[]>;
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
@@ -3639,12 +3674,12 @@ const loadPrecedentesFromIndexedDB = async () => {
   } catch { return []; }
 };
 
-const clearPrecedentesFromIndexedDB = async () => {
+const clearPrecedentesFromIndexedDB = async (): Promise<void> => {
   try {
     const db = await openJurisDB();
     const tx = db.transaction([JURIS_STORE_NAME], 'readwrite');
     const store = tx.objectStore(JURIS_STORE_NAME);
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const req = store.clear();
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
@@ -3676,12 +3711,12 @@ const getLeiFromId = (id) => {
   return LEIS_METADATA[prefix] || { nome: prefix?.toUpperCase() || '?', nomeCompleto: prefix, numero: '' };
 };
 
-const openLegisDB = () => new Promise((resolve, reject) => {
+const openLegisDB = (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
   const request = indexedDB.open(LEGIS_DB_NAME, 1);
   request.onerror = () => reject(request.error);
   request.onsuccess = () => resolve(request.result);
-  request.onupgradeneeded = (event) => {
-    const db = event.target.result;
+  request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+    const db = (event.target as IDBOpenDBRequest).result;
     if (!db.objectStoreNames.contains(LEGIS_STORE_NAME)) {
       const store = db.createObjectStore(LEGIS_STORE_NAME, { keyPath: 'id' });
       store.createIndex('byLei', 'lei', { unique: false });
@@ -3690,7 +3725,7 @@ const openLegisDB = () => new Promise((resolve, reject) => {
   };
 });
 
-const saveArtigosToIndexedDB = async (artigos) => {
+const saveArtigosToIndexedDB = async (artigos: Artigo[]): Promise<void> => {
   try {
     const db = await openLegisDB();
     const tx = db.transaction([LEGIS_STORE_NAME], 'readwrite');
@@ -3699,7 +3734,7 @@ const saveArtigosToIndexedDB = async (artigos) => {
       const lei = artigo.id?.split('-art-')[0] || artigo.id?.split('-')[0];
       store.put({ ...artigo, lei });
     }
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -3707,13 +3742,13 @@ const saveArtigosToIndexedDB = async (artigos) => {
   } catch (err) { console.error('Erro ao salvar artigos:', err); }
 };
 
-const loadArtigosFromIndexedDB = async () => {
+const loadArtigosFromIndexedDB = async (): Promise<Artigo[]> => {
   try {
     const db = await openLegisDB();
     const tx = db.transaction([LEGIS_STORE_NAME], 'readonly');
     const store = tx.objectStore(LEGIS_STORE_NAME);
-    const result = await new Promise((resolve, reject) => {
-      const req = store.getAll();
+    const result = await new Promise<Artigo[]>((resolve, reject) => {
+      const req = store.getAll() as IDBRequest<Artigo[]>;
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
@@ -3722,12 +3757,12 @@ const loadArtigosFromIndexedDB = async () => {
   } catch { return []; }
 };
 
-const clearArtigosFromIndexedDB = async () => {
+const clearArtigosFromIndexedDB = async (): Promise<void> => {
   try {
     const db = await openLegisDB();
     const tx = db.transaction([LEGIS_STORE_NAME], 'readwrite');
     const store = tx.objectStore(LEGIS_STORE_NAME);
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const req = store.clear();
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);

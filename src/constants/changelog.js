@@ -2,6 +2,12 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.35.87', feature: 'TypeScript Migration FASE 8.7 (parcial): Tipagem completa de AIModelService, EmbeddingsService, JurisEmbeddingsService, EmbeddingsCDNService + callbacks do useAIIntegration (930→775 erros TS7006)' },
+  { version: '1.35.86', feature: 'TypeScript Migration FASE 8.6: Tipagem de 84 useRef<T> - timers (ReturnType<typeof setTimeout>), DOM refs (HTMLDivElement, HTMLInputElement), Quill instances, callbacks, caches (Map<K,V>)' },
+  { version: '1.35.85', feature: 'TypeScript Migration FASE 8.1-8.5: +20 tipos em src/types/index.ts (TextPreviewState, ToastState, SlashMenuState, ProgressState, PastedText, ChatMessage, Precedente, Artigo, etc.) + useState com objetos/arrays/null tipados' },
+  { version: '1.35.80', feature: 'TypeScript Migration: prompts migrados (system.ts, ai-prompts.ts, meta-prompts.ts) + barrel exports em src/prompts/index.ts' },
+  { version: '1.35.79', feature: 'TypeScript Migration FASE 5: App.jsx → App.tsx (~35000 linhas) - build OK, 503 testes passando' },
+  { version: '1.35.78', feature: 'TypeScript Migration FASE 1-4: 11 hooks migrados (useModalManager, useFieldVersioning, useLocalStorage, useModelPreview, useTopicManager, useModelLibrary, useAIIntegration, useProofManager, useAuthMagicLink, useSyncManager, useCloudSync) + src/types/index.ts com 40+ tipos core' },
   { version: '1.35.77', feature: 'Gerar Estilo de Redação a partir de exemplos: botão "Gerar a partir de exemplos" no campo Estilo de Redação Personalizado - IA analisa sentenças do juiz e extrai TOM/VOCABULÁRIO/RITMO (buildStyleMetaPrompt)' },
   { version: '1.35.76', feature: 'Estilo Personalizado Substitutivo: AI_INSTRUCTIONS refatorado em CORE/STYLE/SAFETY - customPrompt do juiz SUBSTITUI (não complementa) o estilo default, evitando conflitos como "Use latinismos" vs "Evite latinismos"' },
   { version: '1.35.75', feature: 'UX: Feedback inline no botão Testar API Key - mostra ✓ (verde) ou ✗ (vermelho) por 2s ao invés de toast popup' },

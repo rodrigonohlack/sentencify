@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.79 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.35.87 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -67,6 +67,9 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.35.87 | TypeScript Migration FASE 8.7 (parcial): Tipagem completa de AIModelService, EmbeddingsService, JurisEmbeddingsService, EmbeddingsCDNService + callbacks do useAIIntegration (930→775 erros TS7006) |
+| v1.35.86 | TypeScript Migration FASE 8.6: useRef<T> tipados (84 instâncias) - timers, DOM refs, Quill instances, callbacks, caches |
+| v1.35.85 | TypeScript Migration FASE 8.1-8.5: +20 tipos em src/types/index.ts (TextPreviewState, ToastState, SlashMenuState, ProgressState, etc.) + useState com objetos/arrays/null tipados |
 | v1.35.79 | TypeScript Migration FASE 5: App.jsx → App.tsx (~35000 linhas) - build OK, 503 testes passando, 3563 type warnings para refinamento futuro |
 | v1.35.78 | TypeScript Migration: 11 hooks migrados (useModalManager, useFieldVersioning, useLocalStorage, useModelPreview, useTopicManager, useModelLibrary, useAIIntegration, useProofManager, useAuthMagicLink, useSyncManager, useCloudSync) + src/types/index.ts com tipos core |
 | v1.35.77 | Gerar Estilo de Redação a partir de exemplos: botão no campo customPrompt, buildStyleMetaPrompt extrai TOM/VOCABULÁRIO/RITMO |
