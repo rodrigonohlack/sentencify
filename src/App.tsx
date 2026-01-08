@@ -2575,7 +2575,7 @@ const useFullscreen = () => {
   }, []);
 
   // Handler para drag do divisor
-  const handleSplitDrag = React.useCallback((e) => {
+  const handleSplitDrag = React.useCallback((e: MouseEvent) => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -4153,7 +4153,7 @@ const useLocalStorage = () => {
         // Migrar modos legados (ex: 'gemini-vision') para 'pdfjs'
         const validModes = ['pdfjs', 'tesseract', 'pdf-puro', 'claude-vision'];
         const migrateMode = (mode: ProcessingMode) => validModes.includes(mode) ? mode : 'pdfjs';
-        const migrateModes = (modes) => (modes || []).map(migrateMode);
+        const migrateModes = (modes: ProcessingMode[]) => (modes || []).map(migrateMode);
         const rawModes = session.documentProcessingModes || { peticoes: [], contestacoes: [], complementares: [] };
         setDocumentProcessingModes({
           peticoes: migrateModes(rawModes.peticoes),
@@ -4511,7 +4511,7 @@ const useLocalStorage = () => {
     if (setDocumentProcessingModes) {
       const validModes = ['pdfjs', 'tesseract', 'pdf-puro', 'claude-vision'];
       const migrateMode = (mode: ProcessingMode) => validModes.includes(mode) ? mode : 'pdfjs';
-      const migrateModes = (modes) => (modes || []).map(migrateMode);
+      const migrateModes = (modes: ProcessingMode[]) => (modes || []).map(migrateMode);
       const rawModes = project.documentProcessingModes || { peticoes: [], contestacoes: [], complementares: [] };
       setDocumentProcessingModes({
         peticoes: migrateModes(rawModes.peticoes),
@@ -4860,7 +4860,7 @@ const useModelLibrary = () => {
   const modelsPerPage = 5;
 
   // --- Busca manual por termo (lógica encapsulada) ---
-  const performManualSearch = React.useCallback((term) => {
+  const performManualSearch = React.useCallback((term: string) => {
     if (!term?.trim()) {
       setManualSearchResults([]);
       return;
@@ -4871,7 +4871,7 @@ const useModelLibrary = () => {
 
   // --- Busca com debounce 300ms ---
   const debouncedSearchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const debouncedManualSearch = React.useCallback((term) => {
+  const debouncedManualSearch = React.useCallback((term: string) => {
     clearTimeout(debouncedSearchTimeoutRef.current);
     debouncedSearchTimeoutRef.current = setTimeout(() => performManualSearch(term), 300);
   }, [performManualSearch]);
@@ -5016,12 +5016,12 @@ const removeAccents = (str: string) => str.normalize('NFD').replace(/[\u0300-\u0
 
 // ⚖️ v1.20.0: Helpers de Jurisprudência (reutilizáveis)
 const STATUS_INVALIDOS = new Set(['cancelada', 'revogada', 'convertida', 'superado', 'convertida em súmula']);
-const isStatusValido = (status) => {
+const isStatusValido = (status: string | null | undefined) => {
   if (!status) return true;
   return !STATUS_INVALIDOS.has(status.toLowerCase());
 };
 const IRR_TYPES = new Set(['IRR', 'RR', 'RRAG', 'INCJULGRREMBREP', 'INCJULGRREPETITIVO']);
-const isIRRType = (tipo) => IRR_TYPES.has((tipo || '').toUpperCase().replace(/-/g, ''));
+const isIRRType = (tipo: string | null | undefined) => IRR_TYPES.has((tipo || '').toUpperCase().replace(/-/g, ''));
 
 // Cache global para resultados de jurisprudência
 const jurisCache = new Map();
@@ -6875,7 +6875,7 @@ const useJurisprudencia = () => {
   const removeAccents = React.useCallback((str: string) =>
     str.normalize('NFD').replace(/[\u0300-\u036f]/g, ''), []);
 
-  const searchPrecedentes = React.useCallback((term) => {
+  const searchPrecedentes = React.useCallback((term: string) => {
     if (!term?.trim()) return precedentes;
     const normalizedTerm = removeAccents(term.toLowerCase());
     const terms = normalizedTerm.split(/\s+/).filter(t => t.length > 2);
@@ -6921,7 +6921,7 @@ const useJurisprudencia = () => {
 
   const totalPages = Math.ceil(filteredPrecedentes.length / itemsPerPage);
 
-  const handleSearchChange = React.useCallback((e) => {
+  const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value;
     setSearchTerm(term);
     setCurrentPage(1);
@@ -7552,8 +7552,8 @@ const SuggestionCard = React.memo(({
 SuggestionCard.displayName = 'SuggestionCard';
 
 // 🔀 COMPONENTE: SplitDivider (v1.9.21) - Divisor arrastável para split window
-const SplitDivider = React.memo(({ onDragStart }) => {
-  const handleMouseDown = React.useCallback((e) => {
+const SplitDivider = React.memo(({ onDragStart }: { onDragStart: (e: React.MouseEvent) => void }) => {
+  const handleMouseDown = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     onDragStart(e);
   }, [onDragStart]);
@@ -7608,12 +7608,12 @@ const FullscreenModelPanel = React.memo(({
     const titleWords = titleLower.split(/\s+/).filter((w: string) => w.length > 2 && !STOPWORDS.has(w));
     const modelWords = modelTitleLower.split(/\s+/).filter((w: string) => w.length > 2 && !STOPWORDS.has(w));
 
-    titleWords.forEach(titleWord => {
+    titleWords.forEach((titleWord: string) => {
       if (modelWords.includes(titleWord)) score += 10;
     });
 
-    titleWords.forEach(titleWord => {
-      modelWords.forEach(modelWord => {
+    titleWords.forEach((titleWord: string) => {
+      modelWords.forEach((modelWord: string) => {
         if (titleWord !== modelWord && (titleWord.includes(modelWord) || modelWord.includes(titleWord))) {
           score += 5;
         }
@@ -7626,7 +7626,7 @@ const FullscreenModelPanel = React.memo(({
 
     if (model.keywords) {
       const keywords = model.keywords.toLowerCase().split(',').map((k: string) => k.trim()).filter((k: string) => k.length > 0);
-      keywords.forEach(keyword => {
+      keywords.forEach((keyword: string) => {
         if (titleLower.includes(keyword) || keyword.includes(titleLower.replace(/\s+/g, ''))) {
           score += 12;
         }
@@ -7664,10 +7664,11 @@ const FullscreenModelPanel = React.memo(({
           }
         } catch (err) {
           // Fallback para scoring local em caso de erro
+          type ScoredModel = Model & { score: number };
           const scoredModels = models
-            .map(m => ({ ...m, score: scoreModelLocal(m) }))
-            .filter(m => m.score > 0)
-            .sort((a, b) => b.score - a.score)
+            .map((m: Model): ScoredModel => ({ ...m, score: scoreModelLocal(m) }))
+            .filter((m: ScoredModel) => m.score > 0)
+            .sort((a: ScoredModel, b: ScoredModel) => b.score - a.score)
             .slice(0, 5);
           setSuggestions(scoredModels);
           setSuggestionsSource(null);
@@ -7677,10 +7678,11 @@ const FullscreenModelPanel = React.memo(({
       })();
     } else {
       // Fallback: scoring local
+      type ScoredModel = Model & { score: number };
       const scoredModels = models
-        .map(m => ({ ...m, score: scoreModelLocal(m) }))
-        .filter(m => m.score > 0)
-        .sort((a, b) => b.score - a.score)
+        .map((m: Model): ScoredModel => ({ ...m, score: scoreModelLocal(m) }))
+        .filter((m: ScoredModel) => m.score > 0)
+        .sort((a: ScoredModel, b: ScoredModel) => b.score - a.score)
         .slice(0, 5);
       setSuggestions(scoredModels);
     }
@@ -7689,7 +7691,7 @@ const FullscreenModelPanel = React.memo(({
   // Busca manual com debounce
   const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleSearchChange = React.useCallback((e) => {
+  const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value;
     setSearchTerm(term);
 
@@ -7706,7 +7708,7 @@ const FullscreenModelPanel = React.memo(({
 
       const termLower = term.toLowerCase();
       const results = (models || [])
-        .filter(m => {
+        .filter((m: Model) => {
           const titleMatch = (m.title || '').toLowerCase().includes(termLower);
           const keywordsMatch = (m.keywords || '').toLowerCase().includes(termLower);
           const contentMatch = (m.content || '').toLowerCase().includes(termLower);
@@ -7858,7 +7860,7 @@ const ModelSearchPanel = React.memo(({
   const [selectedCategory, setSelectedCategory] = React.useState('all');
 
   const filteredModels = React.useMemo(() => {
-    return (models || []).filter(m => {
+    return (models || []).filter((m: Model) => {
       const matchesSearch = !searchTerm ||
         (m.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (m.keywords || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -7868,7 +7870,7 @@ const ModelSearchPanel = React.memo(({
   }, [models, searchTerm, selectedCategory]);
 
   const categories = React.useMemo(() => {
-    const cats = new Set((models || []).map(m => m.category).filter(Boolean));
+    const cats = new Set((models || []).map((m: Model) => m.category).filter(Boolean));
     return ['all', ...Array.from(cats)];
   }, [models]);
 
@@ -7920,7 +7922,7 @@ const ModelSearchPanel = React.memo(({
             Nenhum modelo encontrado
           </p>
         ) : (
-          filteredModels.map(model => (
+          filteredModels.map((model: Model) => (
             <div
               key={model.id}
               className="p-3 rounded border theme-border-primary theme-bg-secondary"
@@ -8152,7 +8154,7 @@ const TopicCard = React.memo(({
                     setSelectedTopics(newTopics);
 
                     // Atualizar também em extractedTopics se existir
-                    const extractedIndex = extractedTopics.findIndex(t => t.title === topic.title);
+                    const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === topic.title);
                     if (extractedIndex !== -1) {
                       const newExtracted = [...extractedTopics];
                       newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], category: e.target.value };
@@ -8191,7 +8193,7 @@ const TopicCard = React.memo(({
                     setSelectedTopics(newTopics);
 
                     // Atualizar também em extractedTopics se existir
-                    const extractedIndex = extractedTopics.findIndex(t => t.title === topic.title);
+                    const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === topic.title);
                     if (extractedIndex !== -1) {
                       const newExtracted = [...extractedTopics];
                       newExtracted[extractedIndex] = {
@@ -8278,28 +8280,28 @@ const TopicCard = React.memo(({
                 </button>
                 <button
                   onClick={() => {
-                    if (topicsToMerge.find(t => t.title === topic.title)) {
-                      setTopicsToMerge(topicsToMerge.filter(t => t.title !== topic.title));
+                    if (topicsToMerge.find((t: Topic) => t.title === topic.title)) {
+                      setTopicsToMerge(topicsToMerge.filter((t: Topic) => t.title !== topic.title));
                     } else {
                       setTopicsToMerge([...topicsToMerge, topic]);
                     }
                   }}
                   className="px-3 py-2 rounded text-sm flex items-center gap-1 text-white"
                   style={{
-                    backgroundColor: topicsToMerge.find(t => t.title === topic.title) ? '#059669' : '#475569',
+                    backgroundColor: topicsToMerge.find((t: Topic) => t.title === topic.title) ? '#059669' : '#475569',
                     transition: 'background-color 0.3s ease'
                   }}
                   onMouseEnter={(e) => {
-                    const isSelected = topicsToMerge.find(t => t.title === topic.title);
+                    const isSelected = topicsToMerge.find((t: Topic) => t.title === topic.title);
                     e.currentTarget.style.backgroundColor = isSelected ? '#047857' : '#334155';
                   }}
                   onMouseLeave={(e) => {
-                    const isSelected = topicsToMerge.find(t => t.title === topic.title);
+                    const isSelected = topicsToMerge.find((t: Topic) => t.title === topic.title);
                     e.currentTarget.style.backgroundColor = isSelected ? '#059669' : '#475569';
                   }}
                 >
                   <Merge className="w-3 h-3" />
-                  {topicsToMerge.find(t => t.title === topic.title) ? 'Selecionado' : 'Unir'}
+                  {topicsToMerge.find((t: Topic) => t.title === topic.title) ? 'Selecionado' : 'Unir'}
                 </button>
               </>
             )}
@@ -8385,8 +8387,8 @@ const VirtualList = React.memo(({ items, itemHeight, renderItem, className = '',
   }, [items, visibleStart, visibleEnd]);
 
   // Handler de scroll com RAF para performance
-  const handleScroll = React.useCallback((e) => {
-    const newScrollTop = e.target.scrollTop;
+  const handleScroll = React.useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const newScrollTop = (e.target as HTMLDivElement).scrollTop;
     // Só atualizar se mudou significativamente (> 10px)
     if (Math.abs(newScrollTop - scrollTop) > 10) {
       requestAnimationFrame(() => {
@@ -8517,7 +8519,7 @@ const ModelCard = React.memo(({
               const kwArr = model.keywords.split(',');
               return (
               <div className="flex flex-wrap gap-1 mb-3">
-                {kwArr.slice(0, 3).map((kw, i: number) => (
+                {kwArr.slice(0, 3).map((kw: string, i: number) => (
                   <span key={i} className="text-xs px-2 py-0.5 rounded theme-bg-tertiary theme-text-tertiary">
                     {kw.trim()}
                   </span>
@@ -8706,15 +8708,15 @@ const ProofCard = React.memo(({
 
   // Handler: Remover vínculo de tópico
   const handleUnlinkTopic = React.useCallback((topicTitle: string) => {
-    proofManager.setProofTopicLinks(prev => ({
+    proofManager.setProofTopicLinks((prev: Record<string, string[]>) => ({
       ...prev,
-      [proof.id]: (prev[proof.id] || []).filter(t => t !== topicTitle)
+      [proof.id]: (prev[proof.id] || []).filter((t: string) => t !== topicTitle)
     }));
   }, [proof.id, proofManager]);
 
   // Handler: Atualizar conclusão
-  const handleConclusionChange = React.useCallback((e) => {
-    proofManager.setProofConclusions(prev => ({
+  const handleConclusionChange = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    proofManager.setProofConclusions((prev: Record<string, string>) => ({
       ...prev,
       [proof.id]: e.target.value
     }));
@@ -8723,7 +8725,7 @@ const ProofCard = React.memo(({
   // Handler: Definir modo PDF
   const handleSetPdfMode = React.useCallback(() => {
     if (!proof.isPlaceholder) {
-      proofManager.setProofUsePdfMode(prev => ({
+      proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({
         ...prev,
         [proof.id]: true
       }));
@@ -8741,15 +8743,15 @@ const ProofCard = React.memo(({
 
     // Se modo é 'pdf-puro', usar PDF binário diretamente
     if (selectedMode === 'pdf-puro') {
-      proofManager.setProofUsePdfMode(prev => ({ ...prev, [proof.id]: true }));
+      proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
       return;
     }
 
-    proofManager.setProofUsePdfMode(prev => ({ ...prev, [proof.id]: false }));
+    proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: false }));
 
     try {
       setExtractionProgress({ current: 0, total: 0, mode: selectedMode });
-      const extractedText = await extractTextFromPDFWithMode(proof.file, selectedMode, (current, total) => {
+      const extractedText = await extractTextFromPDFWithMode(proof.file, selectedMode, (current: number, total: number) => {
         setExtractionProgress({ current, total, mode: selectedMode });
       });
       setExtractionProgress(null);
@@ -8759,16 +8761,16 @@ const ProofCard = React.memo(({
         const textToStore = (anonymizationEnabled && anonConfig)
           ? anonymizeText(extractedText, anonConfig, nomesToUse)
           : extractedText;
-        proofManager.setExtractedProofTexts(prev => ({ ...prev, [proof.id]: textToStore }));
-        proofManager.setProofExtractionFailed(prev => ({ ...prev, [proof.id]: false }));
+        proofManager.setExtractedProofTexts((prev: Record<string, string>) => ({ ...prev, [proof.id]: textToStore }));
+        proofManager.setProofExtractionFailed((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: false }));
       } else {
-        proofManager.setProofExtractionFailed(prev => ({ ...prev, [proof.id]: true }));
-        proofManager.setProofUsePdfMode(prev => ({ ...prev, [proof.id]: true }));
+        proofManager.setProofExtractionFailed((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
+        proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
       }
     } catch (err) {
       setExtractionProgress(null);
-      proofManager.setProofExtractionFailed(prev => ({ ...prev, [proof.id]: true }));
-      proofManager.setProofUsePdfMode(prev => ({ ...prev, [proof.id]: true }));
+      proofManager.setProofExtractionFailed((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
+      proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
     }
   }, [proof.id, proof.file, proofManager, extractTextFromPDFWithMode, anonymizationEnabled, anonConfig]);
 
@@ -8926,7 +8928,7 @@ const ProofCard = React.memo(({
                 <span className="text-xs theme-text-muted">Modo:</span>
                 <ProcessingModeSelector
                   value={proofManager.proofProcessingModes[proof.id] || 'pdfjs'}
-                  onChange={(mode: ProcessingMode) => proofManager.setProofProcessingModes(prev => ({
+                  onChange={(mode: ProcessingMode) => proofManager.setProofProcessingModes((prev: Record<string, ProcessingMode>) => ({
                     ...prev,
                     [proof.id]: mode
                   }))}
@@ -9015,7 +9017,7 @@ const ProofCard = React.memo(({
               onClick={() => {
                 const isDisabled = anonymizationEnabled && isPdf && !proofManager.extractedProofTexts[proof.id];
                 if (!isDisabled) {
-                  proofManager.setProofSendFullContent(prev => ({
+                  proofManager.setProofSendFullContent((prev: Record<string, boolean>) => ({
                     ...prev,
                     [proof.id]: !prev[proof.id]
                   }));
@@ -9079,7 +9081,7 @@ const ProofCard = React.memo(({
             <div className="mt-3">
               <p className="text-xs theme-text-muted mb-2">Vinculado a:</p>
               <div className="flex flex-wrap gap-1">
-                {proofManager.proofTopicLinks[proof.id].map((topicTitle, idx) => (
+                {proofManager.proofTopicLinks[proof.id].map((topicTitle: string, idx: number) => (
                   <span
                     key={idx}
                     className="inline-flex items-center gap-1 px-2 py-1 theme-bg-purple-accent theme-text-purple text-xs rounded border border-purple-500/30"
@@ -9242,7 +9244,7 @@ const ArtigoCard = React.memo(({ artigo, onCopy, expanded, onToggleExpand, copie
           {artigo.paragrafos?.length > 0 && (
             <div>
               <span className="text-xs font-medium text-purple-400 block mb-1">Parágrafos:</span>
-              {artigo.paragrafos.map((p, i: number) => (
+              {artigo.paragrafos.map((p: { numero: string; texto: string }, i: number) => (
                 <p key={i} className="theme-text-secondary ml-2 mb-1">
                   <span className="text-purple-300">§ {p.numero}º</span> {p.texto}
                 </p>
@@ -9252,7 +9254,7 @@ const ArtigoCard = React.memo(({ artigo, onCopy, expanded, onToggleExpand, copie
           {artigo.incisos?.length > 0 && (
             <div>
               <span className="text-xs font-medium text-amber-400 block mb-1">Incisos:</span>
-              {artigo.incisos.map((inc, i: number) => (
+              {artigo.incisos.map((inc: { numero: string; texto: string }, i: number) => (
                 <p key={i} className="theme-text-secondary ml-2 mb-1">
                   <span className="text-amber-300">{inc.numero}</span> - {inc.texto}
                 </p>
@@ -9262,7 +9264,7 @@ const ArtigoCard = React.memo(({ artigo, onCopy, expanded, onToggleExpand, copie
           {artigo.alineas?.length > 0 && (
             <div>
               <span className="text-xs font-medium text-teal-400 block mb-1">Alíneas:</span>
-              {artigo.alineas.map((al, i: number) => (
+              {artigo.alineas.map((al: { letra: string; texto: string }, i: number) => (
                 <p key={i} className="theme-text-secondary ml-2 mb-1">
                   <span className="text-teal-300">{al.letra})</span> {al.texto}
                 </p>
@@ -9352,7 +9354,7 @@ const JurisprudenciaTab = React.memo(({
     });
   }, []);
 
-  const handleFileSelect = React.useCallback(async (e) => {
+  const handleFileSelect = React.useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
     let totalCount = 0;
@@ -9693,7 +9695,7 @@ const LegislacaoTab = React.memo(({
     });
   }, []);
 
-  const handleFileSelect = React.useCallback(async (e) => {
+  const handleFileSelect = React.useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
     let totalCount = 0;
@@ -15692,7 +15694,7 @@ const GlobalEditorModal = React.memo(({
         let rejectedCount = 0;
         results.forEach(r => {
           if (r.status === 'fulfilled' && r.value.resultado) {
-            const idx = updatedTopics.findIndex(t => t.title === r.value.title);
+            const idx = updatedTopics.findIndex((t: Topic) => t.title === r.value.title);
             if (idx !== -1) {
               updatedTopics[idx] = { ...updatedTopics[idx], resultado: r.value.resultado };
             }
@@ -17975,7 +17977,7 @@ const DecisionEditorContainer = React.memo(React.forwardRef(({
     onCategoryChange(newCategory);
 
     // Atualizar em selectedTopics
-    const selectedIndex = selectedTopics.findIndex(t => t.title === topic.title);
+    const selectedIndex = selectedTopics.findIndex((t: Topic) => t.title === topic.title);
     if (selectedIndex !== -1) {
       const newSelected = [...selectedTopics];
       newSelected[selectedIndex] = { ...newSelected[selectedIndex], category: newCategory };
@@ -17983,7 +17985,7 @@ const DecisionEditorContainer = React.memo(React.forwardRef(({
     }
 
     // Atualizar em extractedTopics
-    const extractedIndex = extractedTopics.findIndex(t => t.title === topic.title);
+    const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === topic.title);
     if (extractedIndex !== -1) {
       const newExtracted = [...extractedTopics];
       newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], category: newCategory };
@@ -21789,8 +21791,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = selectedTopics.findIndex(t => (t.id || t.title) === active.id);
-    const newIndex = selectedTopics.findIndex(t => (t.id || t.title) === over.id);
+    const oldIndex = selectedTopics.findIndex((t: Topic) => (t.id || t.title) === active.id);
+    const newIndex = selectedTopics.findIndex((t: Topic) => (t.id || t.title) === over.id);
 
     // Proteger tópicos especiais (RELATÓRIO e DISPOSITIVO)
     if (isSpecialTopic(selectedTopics[oldIndex]) || isSpecialTopic(selectedTopics[newIndex])) {
@@ -21973,7 +21975,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
     // Atualiza selectedTopics
     setSelectedTopics(prevSelected => {
-      const selectedIndex = prevSelected.findIndex(t => t.title === editingTopic?.title);
+      const selectedIndex = prevSelected.findIndex((t: Topic) => t.title === editingTopic?.title);
       if (selectedIndex === -1) return prevSelected;
 
       const newSelected = [...prevSelected];
@@ -21983,7 +21985,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
     // Atualiza extractedTopics
     setExtractedTopics(prevExtracted => {
-      const extractedIndex = prevExtracted.findIndex(t => t.title === editingTopic?.title);
+      const extractedIndex = prevExtracted.findIndex((t: Topic) => t.title === editingTopic?.title);
       if (extractedIndex === -1) return prevExtracted;
 
       const newExtracted = [...prevExtracted];
@@ -23518,12 +23520,12 @@ Unifique as informações de forma coerente e abrangente.`;
         const mergedTopic = { title: mergedTitle, category: topicsToMerge[0]?.category || 'MÉRITO', relatorio: newRelatorio, editedContent: '' };
         const mergeSet = new Set(topicsToMerge.map(mt => mt.title));
         // Calcular posição correta: contar quantos itens NÃO mesclados vêm ANTES do primeiro mesclado
-        const firstTopicIndex = selectedTopics.findIndex(t => mergeSet.has(t.title));
+        const firstTopicIndex = selectedTopics.findIndex((t: Topic) => mergeSet.has(t.title));
         const insertPosition = firstTopicIndex >= 0 ? selectedTopics.slice(0, firstTopicIndex).filter(t => !mergeSet.has(t.title)).length : 0;
         const remainingTopics = selectedTopics.filter(t => !mergeSet.has(t.title));
         remainingTopics.splice(insertPosition, 0, mergedTopic);
         setSelectedTopics(remainingTopics);
-        const firstExtractedIndex = extractedTopics.findIndex(t => mergeSet.has(t.title));
+        const firstExtractedIndex = extractedTopics.findIndex((t: Topic) => mergeSet.has(t.title));
         const extractInsertPosition = firstExtractedIndex >= 0 ? extractedTopics.slice(0, firstExtractedIndex).filter(t => !mergeSet.has(t.title)).length : 0;
         const remainingExtracted = extractedTopics.filter(t => !mergeSet.has(t.title));
         remainingExtracted.splice(extractInsertPosition, 0, mergedTopic);
@@ -23571,11 +23573,11 @@ Se não houver informações específicas nos documentos, indique de forma clara
       if (newTopics.length === 0) {
         throw new Error('Nenhum subtópico foi gerado com sucesso.');
       }
-      const originalIndex = selectedTopics.findIndex(t => t.title === topicToSplit.title);
+      const originalIndex = selectedTopics.findIndex((t: Topic) => t.title === topicToSplit.title);
       const remainingTopics = selectedTopics.filter(t => t.title !== topicToSplit.title);
       remainingTopics.splice(originalIndex, 0, ...newTopics);
       setSelectedTopics(remainingTopics);
-      const originalExtractedIndex = extractedTopics.findIndex(t => t.title === topicToSplit.title);
+      const originalExtractedIndex = extractedTopics.findIndex((t: Topic) => t.title === topicToSplit.title);
       const remainingExtracted = extractedTopics.filter(t => t.title !== topicToSplit.title);
       remainingExtracted.splice(originalExtractedIndex, 0, ...newTopics);
       setExtractedTopics(remainingExtracted);
@@ -26842,7 +26844,7 @@ DECIDE-SE.`;
       }
 
       // Para qualquer outro tópico, inserir antes do DISPOSITIVO
-      const dispositivoIndex = selectedTopics.findIndex(t => isDispositivo(t));
+      const dispositivoIndex = selectedTopics.findIndex((t: Topic) => isDispositivo(t));
       
       if (dispositivoIndex !== -1) {
         // DISPOSITIVO existe - inserir antes dele
@@ -26868,7 +26870,7 @@ DECIDE-SE.`;
       // Remove dos tópicos selecionados caso esteja lá
       setSelectedTopics(selectedTopics.filter(t => t.title !== topicToDelete.title));
       // Remove dos tópicos para mesclar caso esteja lá
-      setTopicsToMerge(topicsToMerge.filter(t => t.title !== topicToDelete.title));
+      setTopicsToMerge(topicsToMerge.filter((t: Topic) => t.title !== topicToDelete.title));
     }
     closeModal('deleteTopic');
     setTopicToDelete(null);
@@ -26979,7 +26981,7 @@ DECIDE-SE.`;
         .map((k: string) => k.trim())
         .filter((k: string) => k.length > 0);
 
-      keywords.forEach(keyword => {
+      keywords.forEach((keyword: string) => {
         if (titleLower.includes(keyword) || keyword.includes(titleLower.replace(/\s+/g, ''))) {
           score += 12;
         }
@@ -27361,7 +27363,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       setSelectedTopics(updatedTopics);
 
       // Atualizar também em extractedTopics
-      const extractedIndex = extractedTopics.findIndex(t => t.title === editingTopic.title);
+      const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === editingTopic.title);
       if (extractedIndex !== -1) {
         const newExtracted = [...extractedTopics];
         newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], resultado: updatedTopic.resultado };
@@ -27413,7 +27415,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       setSelectedTopics(updatedTopics);
 
       // Atualizar também em extractedTopics
-      const extractedIndex = extractedTopics.findIndex(t => t.title === editingTopic.title);
+      const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === editingTopic.title);
       if (extractedIndex !== -1) {
         const newExtracted = [...extractedTopics];
         newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], resultado: updatedTopic.resultado };
@@ -29333,7 +29335,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                                       onChange={(e) => {
                                         e.stopPropagation();
                                         const newExtracted = [...extractedTopics];
-                                        const extractedIndex = extractedTopics.findIndex(t => t.title === topic.title);
+                                        const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === topic.title);
                                         if (extractedIndex !== -1) {
                                           newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], category: e.target.value };
                                           setExtractedTopics(newExtracted);
