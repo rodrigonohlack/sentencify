@@ -161,7 +161,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.84'; // v1.35.84: TypeScript interno - FASE 8.4 useState com null tipados
+const APP_VERSION = '1.35.85'; // v1.35.85: TypeScript - Fix erros FASE 8.1-8.4 (lastSyncTime, sessionLastSaved, ProofText, PastedText, ModalState)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -1489,7 +1489,7 @@ const useModalManager = () => {
   }, []);
 
   const closeAllModals = React.useCallback(() => {
-    setModals(prev => Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {}));
+    setModals(prev => Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {} as ModalState));
   }, []);
 
   const isAnyModalOpen = React.useMemo(() => {
@@ -2886,7 +2886,7 @@ const useIndexedDB = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [dbInstance, setDbInstance] = React.useState<IDBDatabase | null>(null);
   const [isAvailable, setIsAvailable] = React.useState(false); // false até DB estar pronto
-  const [lastSyncTime, setLastSyncTime] = React.useState<number | null>(null);
+  const [lastSyncTime, setLastSyncTime] = React.useState<string | null>(null);
 
   // Ref para cache de modelos
   const modelsCacheRef = React.useRef(null);
@@ -3830,7 +3830,7 @@ const sortArtigosNatural = (artigos) => {
 // 🎣 CUSTOM HOOK: useLocalStorage (persistência e localStorage)
 const useLocalStorage = () => {
   // Estados de Persistência
-  const [sessionLastSaved, setSessionLastSaved] = React.useState<Date | null>(null);
+  const [sessionLastSaved, setSessionLastSaved] = React.useState<string | null>(null);
   const [showAutoSaveIndicator, setShowAutoSaveIndicator] = React.useState(false);
 
   // 🚀 OTIMIZAÇÃO v1.4.1: Cache de conversões PDF→base64
@@ -5513,7 +5513,7 @@ const useModelPreview = () => {
     contextualInsertFnRef.current = fn;
   }, []);
   // v1.15.3: Estado para "Salvar como Novo Modelo"
-  const [saveAsNewData, setSaveAsNewData] = React.useState<{ title: string; content: string } | null>(null);
+  const [saveAsNewData, setSaveAsNewData] = React.useState<{ title: string; content: string; keywords?: string; category?: string } | null>(null);
   // v1.19.2: Callback para notificar quando modelo é atualizado (sincroniza sugestões do GlobalEditor)
   const onModelUpdatedRef = React.useRef(null);
 
@@ -5885,10 +5885,11 @@ const useProofManager = (documentServices = null) => {
     }
 
     const id = Date.now() + Math.random();
-    const newProof = {
+    const newProof: ProofText = {
       id,
       text: newProofTextData.text,
       name: newProofTextData.name,
+      type: 'text',
       uploadDate: new Date().toISOString()
     };
 
@@ -6226,18 +6227,21 @@ const useDocumentManager = () => {
 
     if (type === 'peticao') {
       setPastedPeticaoTexts(prev => [...prev, {
+        id: `pasted-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
         text,
         name: prev.length === 0 ? 'Petição Inicial' : `Emenda/Doc Autor ${prev.length + 1}`
       }]);
       setShowPasteArea(prev => ({ ...prev, peticao: false }));
     } else if (type === 'contestacao') {
       setPastedContestacaoTexts(prev => [...prev, {
+        id: `pasted-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
         text,
         name: `Contestação ${prev.length + 1}`
       }]);
       setShowPasteArea(prev => ({ ...prev, contestacao: false }));
     } else if (type === 'complementary') {
       setPastedComplementaryTexts(prev => [...prev, {
+        id: `pasted-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
         text,
         name: `Documento Complementar ${prev.length + 1}`
       }]);
