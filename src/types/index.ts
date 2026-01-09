@@ -968,13 +968,13 @@ export interface ModelFormModalProps {
   newModel: NewModelData;
   setNewModel: React.Dispatch<React.SetStateAction<NewModelData>>;
   models: Model[];
-  onSave: () => void;
+  onSave: (modelData?: NewModelData) => void;
   onCancel: () => void;
   onGenerateKeywords: () => void;
   generatingKeywords?: boolean;
   onGenerateTitle: () => void;
   generatingTitle?: boolean;
-  onSaveWithoutClosing: () => void;
+  onSaveWithoutClosing: (modelData?: NewModelData) => void;
   onOpenAIAssistant: () => void;
   sanitizeHTML: (html: string) => string;
   modelEditorRef: React.RefObject<QuillInstance | null>;

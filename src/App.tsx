@@ -116,6 +116,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CHANGELOG } from './constants/changelog';
+import { EXPORT_STYLES } from './constants/export-styles';
 import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2, LogOut, Share2, Link, Users, Mail } from 'lucide-react';
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
@@ -200,7 +201,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.0'; // v1.36.0: TypeScript strict mode COMPLETO - Zero errors (tsc --noEmit passes)
+const APP_VERSION = '1.36.1'; // v1.36.1: Fix race condition ao salvar modelo (dados passados diretamente para saveModel)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -13879,18 +13880,19 @@ const ModelFormModal = React.forwardRef<HTMLDivElement, ModelFormModalProps>(({
     setLocalModel(prev => ({ ...prev, content: html }));
   }, []);
 
-  // v1.35.10: Sincronizar com pai ANTES de salvar
+  // v1.36.1: Passa localModel diretamente para evitar race condition
   const handleSave = React.useCallback(() => {
-    // Sincroniza estado local com o pai antes de salvar
+    // Sincroniza estado local com o pai
     setNewModel(localModel);
-    // Pequeno delay para garantir que o estado foi propagado
-    setTimeout(() => onSave(), 0);
+    // Passa dados diretamente para onSave (não depende de state propagado)
+    onSave(localModel);
   }, [localModel, setNewModel, onSave]);
 
-  // v1.35.10: Sincronizar com pai ANTES de salvar sem fechar
+  // v1.36.1: Passa localModel diretamente para evitar race condition
   const handleSaveWithoutClosing = React.useCallback(() => {
     setNewModel(localModel);
-    setTimeout(() => onSaveWithoutClosing(), 0);
+    // Passa dados diretamente para onSaveWithoutClosing
+    onSaveWithoutClosing(localModel);
   }, [localModel, setNewModel, onSaveWithoutClosing]);
 
   // v1.35.5: Return condicional APÓS todos os hooks
@@ -22419,12 +22421,14 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     }, 1200);
   };
 
-  const saveModel = async () => {
+  const saveModel = async (formData?: NewModelData) => {
+    // v1.36.1: Aceita dados do formulário diretamente para evitar race condition
+    const effectiveModel = formData || modelLibrary.newModel;
     const currentContent = modelEditorRef.current?.root
       ? sanitizeHTML(modelEditorRef.current.root.innerHTML)
-      : modelLibrary.newModel.content;
+      : effectiveModel.content;
 
-    if (!modelLibrary.newModel.title || !currentContent) {
+    if (!effectiveModel.title || !currentContent) {
       setError('Título e conteúdo são obrigatórios');
       return;
     }
@@ -22438,10 +22442,10 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         // Edição de modelo existente - sem verificação de similaridade
         const modelData: Model = {
           ...editingModel,
-          title: modelLibrary.newModel.title,
+          title: effectiveModel.title,
           content: currentContent,
-          keywords: modelLibrary.newModel.keywords,
-          category: modelLibrary.newModel.category,
+          keywords: effectiveModel.keywords,
+          category: effectiveModel.category,
           updatedAt: new Date().toISOString()
         };
 
@@ -22484,10 +22488,10 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         const modelId = generateModelId();
         const modelData: Model = {
           id: modelId,
-          title: modelLibrary.newModel.title,
+          title: effectiveModel.title,
           content: currentContent,
-          keywords: modelLibrary.newModel.keywords,
-          category: modelLibrary.newModel.category,
+          keywords: effectiveModel.keywords,
+          category: effectiveModel.category,
           createdAt: new Date().toISOString()
         };
 
@@ -22512,14 +22516,16 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     }
   };
 
-  const saveModelWithoutClosing = async () => {
+  const saveModelWithoutClosing = async (formData?: NewModelData) => {
+    // v1.36.1: Aceita dados do formulário diretamente para evitar race condition
+    const effectiveModel = formData || modelLibrary.newModel;
     // 🔧 BUGFIX: Capturar conteúdo diretamente do editor Quill (igual saveTopicEditWithoutClosing)
     // Previne problema onde state pode estar desatualizado ao apertar Ctrl+S
     const currentContent = modelEditorRef.current?.root
       ? sanitizeHTML(modelEditorRef.current.root.innerHTML)
-      : modelLibrary.newModel.content;
+      : effectiveModel.content;
 
-    if (!modelLibrary.newModel.title || !currentContent) {
+    if (!effectiveModel.title || !currentContent) {
       setError('Título e conteúdo são obrigatórios');
       return;
     }
@@ -22529,10 +22535,10 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       if (editingModel) {
         const modelData: Model = {
           ...editingModel,
-          title: modelLibrary.newModel.title,
+          title: effectiveModel.title,
           content: currentContent,  // 🔧 BUGFIX: Usar conteúdo atual do editor
-          keywords: modelLibrary.newModel.keywords,
-          category: modelLibrary.newModel.category,
+          keywords: effectiveModel.keywords,
+          category: effectiveModel.category,
           updatedAt: new Date().toISOString()
         };
 
@@ -22544,15 +22550,15 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         modelLibrary.setEditingModel(modelData);
 
         // 🔧 BUGFIX: Atualizar também o newModel.content para manter state sincronizado
-        modelLibrary.setNewModel({ ...modelLibrary.newModel, content: currentContent });
+        modelLibrary.setNewModel({ ...effectiveModel, content: currentContent });
       } else {
         const modelId = generateModelId();
         const modelData: Model = {
           id: modelId,
-          title: modelLibrary.newModel.title,
+          title: effectiveModel.title,
           content: currentContent,  // 🔧 BUGFIX: Usar conteúdo atual do editor
-          keywords: modelLibrary.newModel.keywords,
-          category: modelLibrary.newModel.category,
+          keywords: effectiveModel.keywords,
+          category: effectiveModel.category,
           createdAt: new Date().toISOString()
         };
 
@@ -22563,7 +22569,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         modelLibrary.setEditingModel(modelData);
 
         // 🔧 BUGFIX: Atualizar também o newModel.content para manter state sincronizado
-        modelLibrary.setNewModel({ ...modelLibrary.newModel, content: currentContent });
+        modelLibrary.setNewModel({ ...effectiveModel, content: currentContent });
       }
 
       setError('');
@@ -24441,7 +24447,22 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
     // Limpar parágrafos vazios
     cleaned = cleaned.replace(/<p><\/p>/gi, '');
     cleaned = cleaned.replace(/<p>\s*<\/p>/gi, '');
-    
+
+    // Adicionar estilos inline em parágrafos (Google Docs ignora CSS em <style>)
+    cleaned = cleaned.replace(
+      /<p(?![^>]*style=)>/gi,
+      `<p style="${EXPORT_STYLES.p}">`
+    );
+    cleaned = cleaned.replace(
+      /<p\s+style="([^"]*)">/gi,
+      (match: string, existingStyles: string) => {
+        if (!existingStyles.includes('text-align')) {
+          return `<p style="${existingStyles}; text-align: justify;">`;
+        }
+        return match;
+      }
+    );
+
     return cleaned.trim();
   };
 
@@ -27763,7 +27784,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
 </style>
 </head>
 <body>
-<h1>SENTENÇA</h1>
+<h1 style="${EXPORT_STYLES.h1}">SENTENÇA</h1>
 `;
 
       selectedTopics.forEach((topic, index) => {
@@ -27774,11 +27795,11 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         topicTitle = topicTitle.replace(/^III\s*[-–]\s*/i, '');
         topicTitle = topicTitle.replace(/^IV\s*[-–]\s*/i, '');
         topicTitle = topicTitle.replace(/^V\s*[-–]\s*/i, '');
-        
+
         plainText += `\n${topicTitle}\n\n`;
-        
-        htmlText += `<div class="section">`;
-        htmlText += `<h2>${topicTitle}</h2>`;
+
+        htmlText += `<div style="${EXPORT_STYLES.section}">`;
+        htmlText += `<h2 style="${EXPORT_STYLES.h2}">${topicTitle}</h2>`;
         
                 const isRelatorio = topic.title.toUpperCase() === 'RELATÓRIO';
         const isDispositivo = topic.title.toUpperCase() === 'DISPOSITIVO';
@@ -27814,7 +27835,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         // Adicionar "FUNDAMENTAÇÃO" após o primeiro tópico (RELATÓRIO)
         if (index === 0) {
           plainText += '\nFUNDAMENTAÇÃO\n\n';
-          htmlText += `<div class="fundamentacao-header">FUNDAMENTAÇÃO</div>`;
+          htmlText += `<div style="${EXPORT_STYLES.fundamentacaoHeader}">FUNDAMENTAÇÃO</div>`;
         }
       });
 

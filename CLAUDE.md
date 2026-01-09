@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.0 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.1 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -104,6 +104,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.1 | Fix race condition ao salvar modelo: dados passados diretamente para saveModel/saveModelWithoutClosing (evita erro "Título e conteúdo são obrigatórios") |
 | v1.36.0 | 🎉 **TypeScript strict mode COMPLETO** - Zero errors (`tsc --noEmit` passa), migração de ~930 erros concluída, tipos alinhados, null safety |
 | v1.35.96 | docs(CLAUDE.md): Seção "Development Standards" - padrões obrigatórios de qualidade, TypeScript, manutenção por LLM, performance e segurança |
 | v1.35.95 | TypeScript: GlobalEditorModal, AnalysisModal, DispositivoModal, BulkReviewModal, BulkUploadModal, SlashCommandMenu, LinkedProofsModal + GeminiRequest/GeminiGenerationConfig (1217→1164 erros) |
