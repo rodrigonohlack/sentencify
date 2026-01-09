@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.0', feature: '🎉 TypeScript strict mode COMPLETO - Zero errors (tsc --noEmit passa), migração de ~930 erros concluída, tipos alinhados, null safety' },
   { version: '1.35.89', feature: 'TypeScript FASE 8.7: Tipagem de event handlers (KeyboardEvent para ESC handlers, StorageEvent para multi-tab sync, CustomEvent para spacing/fontSize) - erros TS7006: 930→711' },
   { version: '1.35.88', feature: 'TypeScript Migration FASE 8.7: Tipagem de callAI/callLLM/callGemini, buildApiRequest, convertToGeminiFormat, extractTokenMetrics, extractResponseText + propriedades adicionais em AICallOptions + AIMessageContent import' },
   { version: '1.35.87', feature: 'TypeScript Migration FASE 8.7 (parcial): Tipagem completa de AIModelService, EmbeddingsService, JurisEmbeddingsService, EmbeddingsCDNService + callbacks do useAIIntegration (930→775 erros TS7006)' },
