@@ -201,7 +201,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.7'; // v1.36.7: Fix lista bolinha (CSS + export) e blockquote no Google Docs
+const APP_VERSION = '1.36.8'; // v1.36.8: Fix listas no Quill (list-style-type: none - Quill usa ::before)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -20099,23 +20099,13 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         font-style: italic !important;
       }
 
-      .ql-editor ul {
-        list-style-type: disc !important;
-        padding-left: 2rem !important;
-        margin: 1rem 0 !important;
-      }
-
+      /* v1.36.8: Quill usa ::before para todos os marcadores de lista
+         NÃO usar list-style-type - causa duplicação */
+      .ql-editor ul,
       .ql-editor ol {
+        list-style-type: none !important;
         padding-left: 2rem !important;
         margin: 1rem 0 !important;
-      }
-
-      /* v1.36.7: Quill usa <ol> para ambos tipos de lista, diferenciando via data-list */
-      .ql-editor ol li[data-list="bullet"] {
-        list-style-type: none !important;
-      }
-      .ql-editor ol li[data-list="ordered"] {
-        list-style-type: decimal !important;
       }
 
       /* Indentação de parágrafos - usando margin-left para melhor compatibilidade */

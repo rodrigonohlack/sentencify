@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.7 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.8 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -114,6 +114,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.8 | Fix listas no Quill: `list-style-type: none` para evitar duplicação (Quill usa `::before` para marcadores) |
 | v1.36.7 | Fix lista bolinha: CSS respeita `data-list`, export converte `<ol>` bullet para `<ul>`, blockquote sem `border-left` |
 | v1.36.6 | Fix exportação: listas bullet (`data-list`), indent (`ql-indent-*`), blockquote - DOMPurify agora permite atributos necessários |
 | v1.36.5 | Fix exportação minuta: converter classes `ql-align-*` do Quill para inline styles (Google Docs ignora classes CSS) |
