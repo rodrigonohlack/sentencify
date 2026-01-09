@@ -41,9 +41,19 @@
 > Código mal escrito custa mais tempo para corrigir do que fazer certo da primeira vez.
 
 ### Versionamento Obrigatório
-- **SEMPRE** atualizar a versão no `CLAUDE.md` (linha 7) ao fazer alterações
-- **SEMPRE** adicionar entrada no changelog (`Recent Changes`) com descrição clara
+
+**A cada incremento de versão, atualizar TODOS os arquivos abaixo:**
+
+| Arquivo | Local | Exemplo |
+|---------|-------|---------|
+| `CLAUDE.md` | Linha 7 (Version) | `**Version**: 1.36.2` |
+| `CLAUDE.md` | Seção `Recent Changes` | Nova linha no topo da tabela |
+| `src/App.tsx` | `APP_VERSION` (~linha 204) | `const APP_VERSION = '1.36.2';` |
+| `src/constants/changelog.js` | Array `CHANGELOG` | Nova entrada no topo |
+| `package.json` | Campo `version` | `"version": "1.36.2"` |
+
 - Formato: `v1.XX.YY` onde YY incrementa a cada alteração
+- Descrição clara e concisa da mudança em cada changelog
 
 ### TypeScript
 - Todos os tipos devem ir para `src/types/index.ts` (não inline no App.tsx)
