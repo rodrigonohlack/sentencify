@@ -201,7 +201,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.6'; // v1.36.6: Fix listas bullet, indent e blockquote na exportação
+const APP_VERSION = '1.36.7'; // v1.36.7: Fix lista bolinha (CSS + export) e blockquote no Google Docs
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -20106,9 +20106,16 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       }
 
       .ql-editor ol {
-        list-style-type: decimal !important;
         padding-left: 2rem !important;
         margin: 1rem 0 !important;
+      }
+
+      /* v1.36.7: Quill usa <ol> para ambos tipos de lista, diferenciando via data-list */
+      .ql-editor ol li[data-list="bullet"] {
+        list-style-type: none !important;
+      }
+      .ql-editor ol li[data-list="ordered"] {
+        list-style-type: decimal !important;
       }
 
       /* Indentação de parágrafos - usando margin-left para melhor compatibilidade */
@@ -24469,6 +24476,23 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
       }
     );
 
+    // v1.36.7: Converter listas bullet do Quill para <ul>
+    // Quill usa <ol> para ambos os tipos, diferenciando via data-list="bullet"|"ordered"
+    // Google Docs não entende data-list, então converter para <ul>/<ol> corretos
+    cleaned = cleaned.replace(
+      /<ol>([\s\S]*?)<\/ol>/gi,
+      (match: string, content: string) => {
+        if (content.includes('data-list="bullet"')) {
+          // Converter para <ul> e remover data-list
+          const newContent = content.replace(/\s*data-list="bullet"/gi, '');
+          return `<ul>${newContent}</ul>`;
+        }
+        // Manter como <ol> e remover data-list="ordered"
+        const newContent = content.replace(/\s*data-list="ordered"/gi, '');
+        return `<ol>${newContent}</ol>`;
+      }
+    );
+
     // v1.36.6: Converter classes de indentação do Quill para inline styles
     // Quill gera: <p class="ql-indent-1"> ou <li class="ql-indent-2">
     // Google Docs precisa: <p style="margin-left: 3em;">
@@ -24487,10 +24511,11 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
       }
     );
 
-    // v1.36.6: Converter blockquote para estilo inline (Google Docs ignora CSS)
+    // v1.36.7: Converter blockquote para estilo inline
+    // Google Docs não suporta border-left, usar margin-left + italic
     cleaned = cleaned.replace(
       /<blockquote(?![^>]*style=)>/gi,
-      '<blockquote style="border-left: 4px solid #9ca3af; padding-left: 1rem; margin: 1rem 0; font-style: italic;">'
+      '<blockquote style="margin-left: 2em; font-style: italic; color: #666;">'
     );
 
     // Adicionar estilos inline em parágrafos, preservando alinhamento do usuário

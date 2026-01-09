@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.7', feature: 'Fix lista bolinha: CSS respeita data-list, export converte <ol> bullet para <ul>, blockquote sem border-left' },
   { version: '1.36.6', feature: 'Fix exportação: listas bullet (data-list), indent (ql-indent-*), blockquote - DOMPurify agora permite atributos necessários' },
   { version: '1.36.5', feature: 'Fix exportação minuta: converter classes ql-align-* do Quill para inline styles (Google Docs ignora classes CSS)' },
   { version: '1.36.4', feature: 'Fix exportação minuta: preserva alinhamento do usuário (center, right) - remove align deprecated, corrige bug que sobrescrevia text-align' },
