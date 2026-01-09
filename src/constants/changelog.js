@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.3', feature: 'Fix exportação minuta: atributo align="center/justify" para Google Docs (style inline não era suficiente)' },
   { version: '1.36.2', feature: 'Fix exportação minuta: estilos inline para Google Docs (alinhamento centralizado/justificado preservado) - EXPORT_STYLES em src/constants/export-styles.ts' },
   { version: '1.36.1', feature: 'Fix race condition ao salvar modelo: dados passados diretamente para saveModel (evita erro "Título e conteúdo são obrigatórios" causado por state assíncrono)' },
   { version: '1.36.0', feature: '🎉 TypeScript strict mode COMPLETO - Zero errors (tsc --noEmit passa), migração de ~930 erros concluída, tipos alinhados, null safety' },

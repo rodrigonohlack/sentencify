@@ -201,7 +201,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.2'; // v1.36.2: Fix exportação minuta - estilos inline para Google Docs
+const APP_VERSION = '1.36.3'; // v1.36.3: Fix exportação minuta - atributo align para Google Docs
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -24448,18 +24448,18 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
     cleaned = cleaned.replace(/<p><\/p>/gi, '');
     cleaned = cleaned.replace(/<p>\s*<\/p>/gi, '');
 
-    // Adicionar estilos inline em parágrafos (Google Docs ignora CSS em <style>)
+    // Adicionar estilos inline + atributo align em parágrafos (Google Docs ignora CSS em <style>)
     cleaned = cleaned.replace(
-      /<p(?![^>]*style=)>/gi,
-      `<p style="${EXPORT_STYLES.p}">`
+      /<p(?![^>]*(?:style=|align=))>/gi,
+      `<p align="justify" style="${EXPORT_STYLES.p}">`
     );
     cleaned = cleaned.replace(
       /<p\s+style="([^"]*)">/gi,
       (match: string, existingStyles: string) => {
         if (!existingStyles.includes('text-align')) {
-          return `<p style="${existingStyles}; text-align: justify;">`;
+          return `<p align="justify" style="${existingStyles}; text-align: justify;">`;
         }
-        return match;
+        return match.replace('<p ', '<p align="justify" ');
       }
     );
 
@@ -27784,7 +27784,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
 </style>
 </head>
 <body>
-<h1 style="${EXPORT_STYLES.h1}">SENTENÇA</h1>
+<h1 align="center" style="${EXPORT_STYLES.h1}">SENTENÇA</h1>
 `;
 
       selectedTopics.forEach((topic, index) => {
@@ -27799,7 +27799,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         plainText += `\n${topicTitle}\n\n`;
 
         htmlText += `<div style="${EXPORT_STYLES.section}">`;
-        htmlText += `<h2 style="${EXPORT_STYLES.h2}">${topicTitle}</h2>`;
+        htmlText += `<h2 align="left" style="${EXPORT_STYLES.h2}">${topicTitle}</h2>`;
         
                 const isRelatorio = topic.title.toUpperCase() === 'RELATÓRIO';
         const isDispositivo = topic.title.toUpperCase() === 'DISPOSITIVO';
@@ -27835,7 +27835,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         // Adicionar "FUNDAMENTAÇÃO" após o primeiro tópico (RELATÓRIO)
         if (index === 0) {
           plainText += '\nFUNDAMENTAÇÃO\n\n';
-          htmlText += `<div style="${EXPORT_STYLES.fundamentacaoHeader}">FUNDAMENTAÇÃO</div>`;
+          htmlText += `<div align="left" style="${EXPORT_STYLES.fundamentacaoHeader}">FUNDAMENTAÇÃO</div>`;
         }
       });
 
