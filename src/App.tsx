@@ -201,7 +201,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.5'; // v1.36.5: Fix exportação - converter classes ql-align-* do Quill para inline styles
+const APP_VERSION = '1.36.6'; // v1.36.6: Fix listas bullet, indent e blockquote na exportação
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -16968,7 +16968,8 @@ const sanitizeQuillHTML = (html: string) => {
     ALLOWED_ATTR: [
       'href', 'target', 'rel',                  // Links
       'class',                                  // Classes do Quill (ql-*)
-      'style'                                   // Estilos inline
+      'style',                                  // Estilos inline
+      'data-list'                               // v1.36.6: Tipo de lista (bullet/ordered)
     ],
     ALLOWED_STYLES: {
       '*': {
@@ -20726,16 +20727,22 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         'p', 'br', 'div', 'span',           // Estrutura
         'strong', 'b', 'em', 'i', 'u',      // Formatação básica
         'ul', 'ol', 'li',                    // Listas
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6'  // Cabeçalhos
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', // Cabeçalhos
+        'blockquote'                         // v1.36.6: Citações
       ],
       ALLOWED_ATTR: [
-        'class', 'id', 'style'               // Atributos permitidos (limitados)
+        'class', 'id', 'style',              // Atributos permitidos (limitados)
+        'data-list'                          // v1.36.6: Tipo de lista (bullet/ordered)
       ],
       ALLOWED_STYLES: {
         '*': {
           'font-weight': [/^bold$/],
           'font-style': [/^italic$/],
-          'text-decoration': [/^underline$/]
+          'text-decoration': [/^underline$/],
+          'text-align': [/^(left|center|right|justify)$/],  // v1.36.6: Alinhamento
+          'margin-left': [/^\d+(\.\d+)?(em|px|rem)$/],      // v1.36.6: Indent
+          'padding-left': [/^\d+(\.\d+)?(em|px|rem)$/],     // v1.36.6: Blockquote
+          'border-left': [/.*/]                              // v1.36.6: Blockquote
         }
       },
       KEEP_CONTENT: true,                     // Preserva conteúdo de tags removidas
@@ -24460,6 +24467,30 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
         }
         return `<${tag} style="text-align: ${align};"${rest}>`;
       }
+    );
+
+    // v1.36.6: Converter classes de indentação do Quill para inline styles
+    // Quill gera: <p class="ql-indent-1"> ou <li class="ql-indent-2">
+    // Google Docs precisa: <p style="margin-left: 3em;">
+    cleaned = cleaned.replace(
+      /<(p|li)([^>]*)\s+class="([^"]*ql-indent-(\d+)[^"]*)"([^>]*)>/gi,
+      (match: string, tag: string, before: string, classes: string, level: string, after: string) => {
+        const marginLeft = `${parseInt(level) * 3}em`;
+        const newClasses = classes.replace(/ql-indent-\d+/g, '').trim();
+        const classAttr = newClasses ? ` class="${newClasses}"` : '';
+        // Verificar se já tem style
+        const fullTag = before + after;
+        if (fullTag.includes('style="')) {
+          return `<${tag}${before}${classAttr}${after.replace('style="', `style="margin-left: ${marginLeft}; `)}>`;
+        }
+        return `<${tag}${before}${classAttr} style="margin-left: ${marginLeft};"${after}>`;
+      }
+    );
+
+    // v1.36.6: Converter blockquote para estilo inline (Google Docs ignora CSS)
+    cleaned = cleaned.replace(
+      /<blockquote(?![^>]*style=)>/gi,
+      '<blockquote style="border-left: 4px solid #9ca3af; padding-left: 1rem; margin: 1rem 0; font-style: italic;">'
     );
 
     // Adicionar estilos inline em parágrafos, preservando alinhamento do usuário
