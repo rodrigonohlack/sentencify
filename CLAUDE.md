@@ -56,11 +56,13 @@
 - Descrição clara e concisa da mudança em cada changelog
 
 ### TypeScript
+- **SEMPRE verificar erros após edições**: Rodar `npx tsc --noEmit` após modificar código
 - Todos os tipos devem ir para `src/types/index.ts` (não inline no App.tsx)
 - Tipos explícitos em parâmetros e retornos de função (não depender de inferência)
 - Interfaces para objetos complexos (`OpenAIMessage`, não `Record<string, unknown>`)
 - `as const` para objetos de configuração imutáveis
 - Type assertions (`as Type`) apenas quando necessário
+- Usar `\u` para escapes Unicode em strings (não `\x` octal que causa erro TS1487)
 
 ### Código Otimizado para Manutenção por LLM
 - **Comentários de seção**: Usar bordas `═══` para delimitar seções grandes
@@ -114,6 +116,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.9 | Fix bullet list no Quill: override `::before` para `data-list="bullet"` (CSS do CDN não tem regra para bullets em `<ol>`) |
 | v1.36.8 | Fix listas no Quill: `list-style-type: none` para evitar duplicação (Quill usa `::before` para marcadores) |
 | v1.36.7 | Fix lista bolinha: CSS respeita `data-list`, export converte `<ol>` bullet para `<ul>`, blockquote sem `border-left` |
 | v1.36.6 | Fix exportação: listas bullet (`data-list`), indent (`ql-indent-*`), blockquote - DOMPurify agora permite atributos necessários |

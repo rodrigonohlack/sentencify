@@ -201,7 +201,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.8'; // v1.36.8: Fix listas no Quill (list-style-type: none - Quill usa ::before)
+const APP_VERSION = '1.36.9'; // v1.36.9: Fix bullet list no Quill (override ::before para data-list="bullet")
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -20106,6 +20106,13 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         list-style-type: none !important;
         padding-left: 2rem !important;
         margin: 1rem 0 !important;
+      }
+
+      /* v1.36.9: Override ::before para bullets em <ol>
+         Quill CDN não tem regra para data-list="bullet" em <ol> */
+      .ql-editor ol li[data-list="bullet"]::before {
+        content: '\u2022' !important;
+        margin-right: 0.3em;
       }
 
       /* Indentação de parágrafos - usando margin-left para melhor compatibilidade */
