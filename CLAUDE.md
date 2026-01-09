@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.3 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.4 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -114,6 +114,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.4 | Fix exportação minuta: preserva alinhamento do usuário (center, right) - remove `align` deprecated, corrige bug que sobrescrevia `text-align` |
 | v1.36.3 | Fix exportação minuta: atributo `align="center/justify"` para Google Docs (style inline não era suficiente) |
 | v1.36.2 | Fix exportação minuta: estilos inline para Google Docs (alinhamento centralizado/justificado preservado) - `EXPORT_STYLES` em `src/constants/export-styles.ts` |
 | v1.36.1 | Fix race condition ao salvar modelo: dados passados diretamente para saveModel/saveModelWithoutClosing (evita erro "Título e conteúdo são obrigatórios") |
