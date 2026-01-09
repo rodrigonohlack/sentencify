@@ -201,7 +201,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.1'; // v1.36.1: Fix race condition ao salvar modelo (dados passados diretamente para saveModel)
+const APP_VERSION = '1.36.2'; // v1.36.2: Fix exportação minuta - estilos inline para Google Docs
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
