@@ -16,7 +16,8 @@ export type TopicCategory =
   | 'PREJUDICIAL'
   | 'MÉRITO'
   | 'PROCESSUAL'
-  | 'RELATÓRIO';
+  | 'RELATÓRIO'
+  | 'DISPOSITIVO';
 
 export type TopicResultado =
   | 'PROCEDENTE'
@@ -24,6 +25,8 @@ export type TopicResultado =
   | 'PARCIALMENTE PROCEDENTE'
   | 'ACOLHIDO'
   | 'REJEITADO'
+  | 'SEM RESULTADO'
+  | 'INDEFINIDO'
   | null;
 
 export interface Topic {
@@ -43,6 +46,17 @@ export interface Topic {
   mergedFrom?: string[];
   splitFrom?: string;
   isNew?: boolean;
+  // Propriedades adicionais usadas no App.tsx
+  resultadoManual?: boolean;
+  editedContent?: string;
+  content?: string;
+  text?: string;
+  context?: string;
+  instruction?: string;
+  includeComplementares?: boolean;
+  isInitialGeneration?: boolean;
+  documentsOverride?: unknown;
+  isComplementar?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -64,12 +78,18 @@ export interface Model {
   ownerEmail?: string;
   sharedBy?: string;
   isShared?: boolean;
+  sharedPermission?: 'view' | 'edit';
   // Embedding
   embedding?: number[];
   // Timestamps
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string;
+  // Propriedades adicionais usadas no App.tsx
+  usageCount?: number;
+  similarity?: number;
+  sourceFile?: string;
+  similarityInfo?: { similarity: number; similarModel: Model };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -78,6 +98,7 @@ export interface Model {
 
 export type ProofType = 'pdf' | 'text';
 export type ProcessingMode = 'pdfjs' | 'pdf-puro' | 'claude-vision' | 'tesseract';
+export type InsertMode = 'replace' | 'append' | 'prepend';
 
 export interface ProofFile {
   id: string | number;
@@ -86,7 +107,11 @@ export interface ProofFile {
   type: 'pdf';
   size?: number;
   uploadDate: string;
-  isPdf?: true;
+  isPdf?: boolean;
+  fileData?: string; // Base64 data for restored PDFs
+  isPlaceholder?: boolean; // v1.35.92: PDF placeholder (arquivo não salvo, só texto)
+  // Union compatibility
+  text?: never;
 }
 
 export interface ProofText {
@@ -95,6 +120,12 @@ export interface ProofText {
   name: string;
   type: 'text';
   uploadDate: string;
+  isPlaceholder?: boolean; // v1.35.92: Consistência com ProofFile
+  isPdf?: boolean; // v1.35.79: Compat com linkedProofs
+  // Union compatibility
+  file?: never;
+  size?: never;
+  fileData?: never;
 }
 
 export type Proof = ProofFile | ProofText;
@@ -113,6 +144,24 @@ export interface ProofAnalysisResult {
 export type AIProvider = 'claude' | 'gemini';
 export type OCREngine = 'pdfjs' | 'tesseract' | 'pdf-puro' | 'claude-vision';
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
+
+/** Gemini API types - v1.35.95 */
+export interface GeminiGenerationConfig {
+  maxOutputTokens?: number;
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+  thinking_config?: {
+    thinking_budget?: number;
+    includeThoughts?: boolean;
+  };
+}
+
+export interface GeminiRequest {
+  contents: unknown[];
+  systemInstruction?: { parts: { text: string }[] };
+  generationConfig?: GeminiGenerationConfig;
+}
 
 export interface AnonymizationSettings {
   enabled: boolean;
@@ -136,6 +185,10 @@ export interface QuickPrompt {
   id: string;
   label: string;
   prompt: string;
+  // Propriedades adicionais usadas no App.tsx
+  icon?: string;
+  name?: string;
+  proofFilter?: string;
 }
 
 /** Tópico complementar para geração automática */
@@ -145,6 +198,7 @@ export interface TopicoComplementar {
   category: TopicCategory;
   enabled: boolean;
   ordem: number;
+  descricao?: string;
 }
 
 export interface AISettings {
@@ -165,7 +219,7 @@ export interface AISettings {
   ocrEngine: OCREngine;
   ocrLanguage?: string;
   detailedMiniReports?: boolean;
-  topicsPerRequest?: number;
+  topicsPerRequest?: number | 'all';
   parallelRequests: number;
   anonymization: AnonymizationSettings;
   // IA Local settings
@@ -237,6 +291,7 @@ export type ModalKey =
   | 'deleteModel'
   | 'deleteAllModels'
   | 'deleteAllPrecedentes'
+  | 'deleteAllLegislacao'
   | 'rename'
   | 'merge'
   | 'split'
@@ -267,7 +322,9 @@ export type ModalKey =
   | 'shareLibrary'
   | 'changelog'
   | 'topicCuration'
-  | 'modelGenerator';
+  | 'modelGenerator'
+  | 'regenerateRelatorioCustom'
+  | 'bulkModal';
 
 export type ModalState = Record<ModalKey, boolean>;
 
@@ -344,6 +401,7 @@ export interface FieldVersion {
   content: string;
   timestamp: number;
   label?: string;
+  preview?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -380,6 +438,7 @@ export type AIMessageRole = 'user' | 'assistant' | 'system';
 export interface AITextContent {
   type: 'text';
   text: string;
+  cache_control?: { type: 'ephemeral' | string };
 }
 
 /** Conteúdo de imagem (base64) */
@@ -400,6 +459,7 @@ export interface AIDocumentContent {
     media_type: 'application/pdf';
     data: string;
   };
+  cache_control?: { type: 'ephemeral' | string };
 }
 
 /** Tipos de conteúdo possíveis */
@@ -465,7 +525,7 @@ export interface TextPreviewState {
 export interface ToastState {
   show: boolean;
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error' | 'info' | 'warning';
 }
 
 /** Estado do menu slash command */
@@ -483,8 +543,8 @@ export interface ProgressState {
   total: number;
 }
 
-/** Target field para geração de modelo */
-export type TargetField = 'relatorio' | 'dispositivo' | 'topicoRelatorio' | 'estiloRedacao';
+/** Target field para geração de modelo (valores matcham meta-prompts.ts) */
+export type TargetField = 'modeloRelatorio' | 'modeloDispositivo' | 'modeloTopicoRelatorio' | 'estiloRedacao';
 
 /** Estado do modal de geração de modelo */
 export interface ModelGeneratorModalState {
@@ -500,6 +560,7 @@ export interface ModelGeneratorModalState {
 export interface FiltrosJuris {
   fonte: string[];
   tipo: string[];
+  tribunal?: string[];
 }
 
 /** Filtros de legislação */
@@ -524,6 +585,8 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp?: number;
+  ts?: number;
+  contentForApi?: AIMessageContent[] | string;
 }
 
 /** Precedente (súmula, OJ, tese) */
@@ -535,6 +598,26 @@ export interface Precedente {
   tribunal?: string;
   similarity?: number;
   fullText?: string;
+  // Propriedades adicionais usadas no App.tsx
+  tipoProcesso?: string;
+  titulo?: string;
+  tese?: string;
+  enunciado?: string;
+  status?: string;
+  keywords?: string | string[];
+  orgao?: string;
+  category?: string;
+  tema?: string;
+  numeroProcesso?: string;
+  // Propriedades de metadados (IRDRs, IACs, etc.)
+  relator?: string;
+  dataJulgamento?: string;
+  dataAprovacao?: string;
+  dataPublicacao?: string;
+  resolucao?: string;
+  // Propriedades para chunking de teses longas
+  totalChunks?: number;
+  chunkIndex?: number;
 }
 
 /** Artigo de legislação */
@@ -544,8 +627,15 @@ export interface Artigo {
   numero: string;
   texto: string;
   caput?: string;
-  incisos?: string[];
-  paragrafos?: string[];
+  incisos?: { numero: string; texto: string }[];
+  paragrafos?: { numero: string; texto: string }[];
+  // Propriedades adicionais usadas no App.tsx
+  alineas?: { letra: string; texto: string }[];
+  keywords?: string | string[];
+  artigoId?: string;
+  type?: string;
+  similarity?: number;
+  status?: string;
 }
 
 /** Sugestão de jurisprudência */
@@ -554,6 +644,17 @@ export interface JurisSuggestion {
   texto: string;
   tipo?: string;
   similarity: number;
+  // Propriedades adicionais usadas no App.tsx
+  tipoProcesso?: string;
+  numero?: string;
+  tema?: string;
+  status?: string;
+  orgao?: string;
+  tribunal?: string;
+  titulo?: string;
+  tese?: string;
+  enunciado?: string;
+  fullText?: string;
 }
 
 /** Informação de compartilhamento */
@@ -563,6 +664,14 @@ export interface ShareInfo {
   permission: 'view' | 'edit';
   createdAt: string;
   status?: 'pending' | 'accepted';
+  // Propriedades adicionais usadas no App.tsx
+  accessId?: string;
+  ownerId?: string;
+  ownerEmail?: string;
+  owner?: { email: string } | string;
+  recipient_email?: string;
+  recipients?: Array<{ email: string; permission: string }>;
+  modelsCount?: number;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -605,6 +714,18 @@ export interface PartesProcesso {
 // EDITOR TYPES (FASE 8.1)
 // ═══════════════════════════════════════════════════════════════════════════
 
+/** Interface para Quill Delta (objeto de mudanças) */
+export interface QuillDeltaOp {
+  insert?: string | Record<string, unknown>;
+  delete?: number;
+  retain?: number;
+  attributes?: Record<string, unknown>;
+}
+
+export interface QuillDelta {
+  ops: QuillDeltaOp[];
+}
+
 /** Interface do Quill Editor */
 export interface QuillInstance {
   getText: () => string;
@@ -617,9 +738,19 @@ export interface QuillInstance {
   insertText: (index: number, text: string, formats?: Record<string, unknown>) => void;
   deleteText: (index: number, length: number) => void;
   on: (event: string, handler: (...args: unknown[]) => void) => void;
-  off: (event: string, handler: (...args: unknown[]) => void) => void;
+  off: (event: string, handler?: (...args: unknown[]) => void) => void;
   root: HTMLElement;
-  clipboard: { dangerouslyPasteHTML: (html: string) => void };
+  clipboard: {
+    dangerouslyPasteHTML: ((html: string) => void) & ((index: number, html: string) => void);
+    convert: (html: string) => unknown;
+  };
+  // Métodos adicionais usados no App.tsx
+  focus: () => void;
+  getBounds: (index: number, length?: number) => { top: number; left: number; height: number; width: number; bottom: number; right: number };
+  getLength: () => number;
+  update: (source?: string) => void;
+  enable: (enabled?: boolean) => void;
+  getFormat: (index?: number, length?: number) => Record<string, unknown>;
 }
 
 /** Estado de provas para novo texto */
@@ -630,8 +761,10 @@ export interface NewProofTextData {
 
 /** Entrada de cache genérica */
 export interface CacheEntry<T = unknown> {
-  data: T;
+  data?: T;
+  result?: T;
   timestamp: number;
+  hits?: number;
 }
 
 /** Estatísticas de cache */
@@ -662,6 +795,16 @@ export interface SlashMenuStateExtended {
   quillInstance: QuillInstance | null;
   triggerPosition: number;
 }
+
+/** Data passed to onSlashCommand callback */
+export interface SlashCommandData {
+  position: { top: number; left: number };
+  quillInstance: QuillInstance | null;
+  triggerPosition: number;
+}
+
+/** Callback type for slash command */
+export type OnSlashCommandCallback = (data: SlashCommandData) => void;
 
 /** Download item status (detailed) */
 export interface DownloadItemStatus {
@@ -774,12 +917,17 @@ export interface JurisEmbeddingWithSimilarity extends JurisEmbeddingItem {
   similarity: number;
   precedenteId?: string;
   tipoProcesso?: string;
+  numero?: string;
+  titulo?: string;
+  totalChunks?: number;
+  chunkIndex?: number;
 }
 
 /** Filtros de jurisprudência extendidos */
 export interface JurisFiltros {
   tipo?: string[];
   tribunal?: string[];
+  searchTerm?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -800,3 +948,1287 @@ export type CDNFileName = 'legis-embeddings.json' | 'juris-embeddings.json' | 'l
 
 /** Mapeamento de tamanhos estimados */
 export type EstimatedSizes = Record<CDNFileName, number>;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODAL PROPS (movido de App.tsx v1.35.79)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** NewModelData type for model forms */
+export interface NewModelData {
+  title: string;
+  content: string;
+  keywords?: string;
+  category?: string;
+}
+
+/** Props para ModelFormModal - v1.35.92 */
+export interface ModelFormModalProps {
+  isOpen: boolean;
+  editingModel: Model | null;
+  newModel: NewModelData;
+  setNewModel: React.Dispatch<React.SetStateAction<NewModelData>>;
+  models: Model[];
+  onSave: () => void;
+  onCancel: () => void;
+  onGenerateKeywords: () => void;
+  generatingKeywords?: boolean;
+  onGenerateTitle: () => void;
+  generatingTitle?: boolean;
+  onSaveWithoutClosing: () => void;
+  onOpenAIAssistant: () => void;
+  sanitizeHTML: (html: string) => string;
+  modelEditorRef: React.RefObject<QuillInstance | null>;
+  quillReady?: boolean;
+  quillError?: Error | string | null;
+  editorTheme?: 'dark' | 'light' | string;
+  toggleEditorTheme?: () => void;
+  modelSaved?: boolean;
+  savingModel?: boolean;
+}
+
+/** Props para ModelPreviewModal - v1.35.92 */
+export interface ModelPreviewModalProps {
+  isOpen: boolean;
+  model: Model | null;
+  onInsert: (html: string, topic?: Topic | null) => void;
+  onClose: () => void;
+  sanitizeHTML: (html: string) => string;
+  showToast?: (msg: string, type?: 'success' | 'error' | 'info') => void;
+  isEditing?: boolean;
+  editedContent?: string;
+  onStartEditing?: () => void;
+  onCancelEditing?: () => void;
+  onSaveEdit?: (ref: React.RefObject<{ root?: HTMLElement } | null>) => void;
+  onContentChange?: (content: string) => void;
+  quillReady?: boolean;
+  quillError?: Error | string | null;
+  fontSize?: 'small' | 'normal' | 'large' | string;
+  spacing?: 'compact' | 'normal' | 'relaxed' | string;
+  editorTheme?: 'dark' | 'light' | string;
+  onDelete?: (model: Model) => void;
+  onToggleFavorite?: (id: string) => void;
+  onOpenSaveAsNew?: (content: string, model: Model) => void;
+}
+
+export interface RenameTopicModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  topicToRename: Topic | null;
+  setTopicToRename: (topic: Topic | null) => void;
+  newTopicName: string;
+  setNewTopicName: (name: string) => void;
+  handleRenameTopic: (regenerate: boolean) => void;
+  isRegenerating?: boolean;
+  hasDocuments?: boolean;
+}
+
+export interface DeleteTopicModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  topicToDelete: Topic | null;
+  setTopicToDelete: (topic: Topic | null) => void;
+  onConfirmDelete: () => void;
+}
+
+export interface MergeTopicsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  topicsToMerge: Topic[];
+  onConfirmMerge: () => void;
+  isRegenerating?: boolean;
+  hasDocuments?: boolean;
+}
+
+export interface SplitTopicModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  topicToSplit: Topic | null;
+  setTopicToSplit: (topic: Topic | null) => void;
+  splitNames: string[];
+  setSplitNames: (names: string[]) => void;
+  onConfirmSplit: () => void;
+  isRegenerating?: boolean;
+  hasDocuments?: boolean;
+}
+
+export interface NewTopicModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  newTopicData: Partial<Topic> | null;
+  setNewTopicData: React.Dispatch<React.SetStateAction<Partial<Topic> | null>>;
+  onConfirmCreate: () => void;
+  isRegenerating?: boolean;
+  hasDocuments?: boolean;
+}
+
+export interface DeleteModelModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  modelToDelete: Model | null;
+  setModelToDelete: (model: Model | null) => void;
+  onConfirmDelete: () => void;
+}
+
+export interface DeleteAllModelsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  totalModels: number;
+  confirmText: string;
+  setConfirmText: (text: string) => void;
+  onConfirmDelete: () => void;
+}
+
+export interface DeleteAllPrecedentesModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  totalPrecedentes: number;
+  confirmText: string;
+  setConfirmText: (text: string) => void;
+  onConfirmDelete: () => void;
+}
+
+export interface ExportModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  exportedText: string;
+  exportedHtml: string;
+  copySuccess: boolean;
+  setCopySuccess: (success: boolean) => void;
+  setError: (error: string) => void;
+}
+
+export interface JurisprudenciaModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  topicTitle?: string;
+  topicRelatorio?: string;
+  callAI?: (messages: AIMessage[], options?: AICallOptions) => Promise<string>;
+  useLocalAI?: boolean;
+  jurisSemanticThreshold?: number;
+  jurisSemanticEnabled?: boolean;
+}
+
+/** Tipo para similarityWarning state - v1.35.95 */
+export type SimilarityWarningContext = 'saveModel' | 'saveExtractedModel' | 'saveAsNew' | 'saveBulkModel';
+
+export interface SimilarityWarningState {
+  newModel: Model;
+  similarModel: Model;
+  similarity: number;
+  context: SimilarityWarningContext;
+  // Propriedades específicas para bulk operations
+  bulkQueue?: Array<{ title: string; content: string; keywords?: string | string[]; category?: string; embedding?: number[] }>;
+  bulkSaved?: Model[];
+  bulkSkipped?: number;
+  bulkReplacements?: Array<{ oldId: string; newModel: Model }>;
+}
+
+export interface SimilarityWarningModalProps {
+  warning: SimilarityWarningState | null;
+  saving: boolean;
+  onCancel: () => void;
+  onSaveNew: () => void;
+  onReplace: () => void;
+  sanitizeHTML?: (html: string) => string;
+}
+
+export interface ShareLibraryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  user: { email: string } | null;
+  onRemoveSharedModels: (ownerEmail: string) => void;
+}
+
+/** Props para AnalysisModal - v1.35.95 */
+export interface AnalysisModalProps {
+  isOpen: boolean;
+  analysisProgress: string;
+  peticaoFiles?: UploadedFile[];
+  pastedPeticaoTexts?: PastedText[];
+  contestacaoFiles?: UploadedFile[];
+  pastedContestacaoTexts?: PastedText[];
+  complementaryFiles?: UploadedFile[];
+  pastedComplementaryTexts?: PastedText[];
+}
+
+/** Props para DispositivoModal - v1.35.95 */
+export interface DispositivoModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  dispositivoText?: string;
+  setDispositivoText: (text: string) => void;
+  copySuccess: boolean;
+  setCopySuccess: (success: boolean) => void;
+  setError: (error: string) => void;
+  extractedTopics: Topic[];
+  setExtractedTopics: React.Dispatch<React.SetStateAction<Topic[]>>;
+  selectedTopics: Topic[];
+  setSelectedTopics: React.Dispatch<React.SetStateAction<Topic[]>>;
+  sanitizeHTML?: (html: string) => string;
+}
+
+/** Arquivo para processamento em lote (re-exportado de useModelLibrary) */
+export interface BulkFile {
+  file: File;
+  name: string;
+  size: number;
+  status?: 'pending' | 'processing' | 'done' | 'error';
+  error?: string;
+}
+
+/** Modelo gerado no bulk processing (re-exportado de useModelLibrary) */
+export interface BulkGeneratedModel {
+  id?: string;
+  title: string;
+  content: string;
+  keywords?: string | string[];
+  category?: string;
+  sourceFile?: string;
+  similarityInfo?: {
+    similarity: number;
+    similarModel: { title: string };
+  };
+}
+
+/** Erro no processamento bulk (re-exportado de useModelLibrary) */
+export interface BulkError {
+  file: string;
+  error?: string;
+  status?: string;
+  duration?: string;
+}
+
+/** Props para BulkReviewModal - v1.35.95 */
+export interface BulkReviewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  bulkReviewModels: BulkGeneratedModel[];
+  bulkFiles: BulkFile[];
+  bulkGeneratedModels: BulkGeneratedModel[];
+  bulkErrors: BulkError[];
+  onRemoveModel: (modelId: string) => void;
+  onDiscard: () => void;
+  onSave: () => void;
+  sanitizeHTML?: (html: string) => string;
+}
+
+/** Props para BulkUploadModal - v1.35.95 */
+export interface BulkUploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  isProcessing: boolean;
+  isReviewOpen: boolean;
+  bulkFiles: BulkFile[];
+  bulkFileInputRef: React.RefObject<HTMLInputElement | null>;
+  onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemoveFile: (index: number) => void;
+  onProcess: () => void;
+  currentFileIndex: number;
+  processedFiles: Array<{ file: string; status: string; modelsCount?: number; models?: Model[]; error?: string; duration?: string }>;
+  bulkStaggerDelay: number;
+  setBulkStaggerDelay: (delay: number) => void;
+  bulkCancelController: AbortController | null;
+  generatedModels: BulkGeneratedModel[];
+  bulkCurrentBatch: number;
+  bulkBatchSize?: number;
+  openModal: (modalName: ModalKey) => void;
+}
+
+/** Props para SlashCommandMenu - v1.35.95 */
+export interface SlashCommandMenuProps {
+  isOpen: boolean;
+  position: { top: number; left: number };
+  models: Model[];
+  searchTerm: string;
+  selectedIndex: number;
+  onSelect: (model: Model) => void;
+  onClose: () => void;
+  onSearchChange: (term: string) => void;
+  onNavigate: (direction: 'up' | 'down', length?: number) => void;
+  semanticAvailable?: boolean;
+  searchModelsBySimilarity?: ((models: Model[], query: string, options?: { threshold?: number; limit?: number }) => Promise<(Model & { similarity: number })[]>) | null;
+}
+
+/** Props para LinkedProofsModal - v1.35.95 */
+export interface LinkedProofsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  topicTitle: string;
+  linkedProofs: Proof[];
+  proofManager: {
+    proofTopicLinks: Record<string, string[]>;
+    setProofTopicLinks: (fn: (prev: Record<string, string[]>) => Record<string, string[]>) => void;
+    proofAnalysisResults: Record<string, { type: string; result: string }>;
+    proofConclusions: Record<string, string>;
+  };
+}
+
+export interface LogoutConfirmModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+export interface RestoreSessionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  sessionLastSaved: string | number | null;
+  onRestoreSession: () => void;
+  onStartNew: () => void;
+}
+
+export interface ClearProjectModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirmClear: () => void;
+}
+
+export interface AddProofTextModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  newProofData: { name: string; text: string } | null;
+  setNewProofData: (data: { name: string; text: string } | ((prev: { name: string; text: string }) => { name: string; text: string })) => void;
+  onAddProof: () => void;
+}
+
+export interface ProofAnalysisModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  proofToAnalyze: Proof | null;
+  customInstructions: string;
+  setCustomInstructions: (value: string) => void;
+  useOnlyMiniRelatorios: boolean;
+  setUseOnlyMiniRelatorios: (value: boolean) => void;
+  includeLinkedTopicsInFree: boolean;
+  setIncludeLinkedTopicsInFree: (value: boolean) => void;
+  proofTopicLinks: Record<string, string[]>;
+  onAnalyzeContextual: () => void;
+  onAnalyzeFree: () => void;
+  editorTheme?: 'dark' | 'light' | string;
+}
+
+export interface DeleteProofModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  proofToDelete: Proof | null;
+  onConfirmDelete: () => void;
+}
+
+export interface ConfirmBulkCancelModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  filesInProgress: number;
+  onConfirm: () => void;
+}
+
+export interface BulkDiscardConfirmModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  totalModels: number;
+  onConfirm: () => void;
+}
+
+export interface TextPreviewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  text: string;
+}
+
+export interface ExtractModelConfirmModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  editingTopic: Topic | null;
+  editorRef: React.RefObject<QuillInstance | null>;
+  onConfirmExtract: () => void;
+}
+
+export interface ExtractedModelPreviewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  extractedModel: { title: string; content: string; keywords?: string; category?: string } | null;
+  setExtractedModel: (model: { title: string; content: string; keywords?: string; category?: string } | null) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  sanitizeHTML?: (html: string) => string;
+}
+
+export interface LinkProofModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  proofToLink: Proof | null;
+  extractedTopics: Topic[];
+  proofTopicLinks: Record<string, string[]>;
+  setProofTopicLinks: (fn: (prev: Record<string, string[]>) => Record<string, string[]>) => void;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPONENT PROPS (movido de App.tsx v1.35.79)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Props para FieldEditor - v1.35.93 */
+export interface FieldEditorProps {
+  label: string;
+  content: string;
+  onChange: (html: string) => void;
+  onFocus?: () => void;
+  onBlur?: ((html: string) => void) | null;
+  onSlashCommand?: OnSlashCommandCallback | null;
+  fieldType?: 'text' | 'relatorio' | 'fundamentacao' | 'dispositivo';
+  quillReady?: boolean;
+  quillError?: Error | string | null;
+  minHeight?: string;
+  editorTheme?: 'dark' | 'light' | string;
+  hideVoiceButton?: boolean;
+}
+
+/** Ref exposta pelo FieldEditor - v1.35.93 */
+export interface FieldEditorRef {
+  format: (name: string, value: unknown) => void;
+  getFormat: () => Record<string, unknown>;
+  focus: () => void;
+}
+
+/** Props para GlobalEditorSection - v1.35.94 */
+export interface GlobalEditorSectionProps {
+  topic: Topic;
+  topicIndex: number;
+  onFieldChange: (index: number, field: string, value: string) => void;
+  onFieldFocus?: (index: number, field: string, topic: Topic | null) => void | Promise<void>;
+  onSlashCommand?: OnSlashCommandCallback | null;
+  quillReady?: boolean;
+  quillError?: Error | string | null;
+  editorTheme?: 'dark' | 'light' | string;
+  onOpenAIAssistant?: ((index: number) => void) | null;
+  onOpenProofsModal?: ((index: number) => void) | null;
+  onOpenJurisModal?: ((index: number) => void) | null;
+  linkedProofsCount?: number;
+  isCollapsed?: boolean;
+  onToggleCollapse?: ((index: number) => void) | null;
+  versioning?: { saveVersion: (title: string, content: string) => void; getVersions: (title: string) => Promise<FieldVersion[]> } | null;
+}
+
+/** Props para QuillEditorBase - v1.35.94 */
+export interface QuillEditorBaseProps {
+  content?: string;
+  onChange?: (html: string) => void;
+  onReady?: (quill: QuillInstance) => void;
+  onSelectionChange?: (range: { index: number; length: number } | null, oldRange?: { index: number; length: number } | null, source?: string) => void;
+  onSlashCommand?: OnSlashCommandCallback;
+  toolbarConfig?: unknown;
+  placeholder?: string;
+  readOnly?: boolean;
+  className?: string;
+  theme?: string;
+  modules?: Record<string, unknown>;
+  quillReady?: boolean;
+  quillError?: Error | string | null;
+}
+
+/** Props para QuillModelEditor - v1.35.94 */
+export interface QuillModelEditorProps {
+  content: string;
+  onChange: (html: string) => void;
+  onSaveWithoutClosing?: () => void;
+  onOpenAIAssistant?: () => void;
+  toolbarRef?: React.RefObject<HTMLDivElement | null>;
+  quillReady?: boolean;
+  quillError?: Error | string | null;
+  editorTheme?: 'dark' | 'light' | string;
+  toggleEditorTheme?: () => void;
+}
+
+/** Props para QuillDecisionEditor - v1.35.94 */
+export interface QuillDecisionEditorProps {
+  content?: string;
+  onChange: (html: string) => void;
+  onSaveWithoutClosing?: () => void;
+  onOpenAIAssistant?: () => void;
+  onOpenJurisModal?: () => void;
+  onExtractModel?: () => void;
+  onSaveAsModel?: () => void;
+  extractingModel?: boolean;
+  showExtractButton?: boolean;
+  label?: string;
+  placeholder?: string;
+  topicTitle?: string;
+  topicCategory?: string;
+  quillReady?: boolean;
+  quillError?: Error | string | null;
+  onRegenerate?: () => void;
+  customInstruction?: string;
+  onInstructionChange?: (instruction: string) => void;
+  regenerating?: boolean;
+  showRegenerateSection?: boolean;
+  editorTheme?: 'dark' | 'light' | string;
+  toggleEditorTheme?: () => void;
+  models?: Model[];
+  onInsertModel?: (html: string) => void;
+  onPreviewModel?: (model: Model) => void;
+  sanitizeHTML?: (html: string) => string;
+  topicRelatorio?: string;
+  onFindSuggestions?: (topic: Topic) => Promise<{ suggestions: Model[]; source: string | null }>;
+  onSlashCommand?: OnSlashCommandCallback;
+  isDirty?: boolean;
+  versioning?: { saveVersion: (title: string, content: string) => void; getVersions: (title: string) => Promise<FieldVersion[]> } | null;
+  onBlur?: ((html: string) => void) | null;
+}
+
+/** Props para QuillMiniRelatorioEditor - v1.35.94 */
+export interface QuillMiniRelatorioEditorProps {
+  content?: string;
+  onChange: (html: string) => void;
+  onRegenerate?: () => void;
+  onSaveWithoutClosing?: () => void;
+  customInstruction?: string;
+  onInstructionChange?: (instruction: string) => void;
+  regenerating?: boolean;
+  topicTitle?: string;
+  label?: string;
+  showRegenerateSection?: boolean;
+  quillReady?: boolean;
+  quillError?: Error | string | null;
+  editorTheme?: 'dark' | 'light' | string;
+  toggleEditorTheme?: () => void;
+  onSlashCommand?: OnSlashCommandCallback;
+}
+
+/** Props para DecisionEditorContainer - v1.35.94 */
+export interface DecisionEditorContainerProps {
+  editorRef: React.RefObject<QuillInstance | null>;
+  relatorioRef: React.RefObject<QuillInstance | null>;
+  toolbarRef?: React.RefObject<HTMLDivElement | null>;
+  topic: Topic;
+  onSave: () => void;
+  onCancel: () => void;
+  onSaveWithoutClosing?: () => void;
+  onCategoryChange: (category: string) => void;
+  onFundamentacaoChange: (html: string) => void;
+  onRelatorioChange: (html: string) => void;
+  onOpenAIAssistant?: () => void;
+  onOpenJurisModal?: () => void;
+  onExtractModel?: () => void;
+  onSaveAsModel?: () => void;
+  onRegenerateRelatorio?: () => void;
+  savingTopic?: boolean;
+  extractingModel?: boolean;
+  showExtractButton?: boolean;
+  regeneratingRelatorio?: boolean;
+  relatorioInstruction?: string;
+  onInstructionChange?: (instruction: string) => void;
+  sanitizeHTML?: (html: string) => string;
+  onTextSelection?: (text: string) => void;
+  selectedTopics: Topic[];
+  setSelectedTopics: (topics: Topic[]) => void;
+  extractedTopics: Topic[];
+  setExtractedTopics: (topics: Topic[]) => void;
+  getTopicEditorConfig: (title: string) => {
+    showCategory?: boolean;
+    showMiniRelatorio?: boolean;
+    showDecisionEditor?: boolean;
+    showRelatorio?: boolean;
+    showFundamentacao?: boolean;
+    relatorioConfig?: { label?: string; minHeight?: string; showRegenerateSection?: boolean };
+    editorConfig?: { label?: string; placeholder?: string; showRegenerateSection?: boolean };
+  };
+  quillReady?: boolean;
+  quillError?: Error | string | null;
+  onRegenerateDispositivo?: () => void;
+  dispositivoInstruction?: string;
+  onDispositivoInstructionChange?: (instruction: string) => void;
+  regeneratingDispositivo?: boolean;
+  editorTheme?: 'dark' | 'light' | string;
+  toggleEditorTheme?: () => void;
+  models?: Model[];
+  onInsertModel?: (html: string) => void;
+  onPreviewModel?: (model: Model) => void;
+  findSuggestions?: (topic: Topic) => Promise<{ suggestions: Model[]; source: string | null }>;
+  onSlashCommand?: OnSlashCommandCallback;
+  isDirty?: boolean;
+  versioning?: { saveVersion: (title: string, content: string) => void; getVersions: (title: string) => Promise<FieldVersion[]> } | null;
+}
+
+/** Props para GlobalEditorModal - v1.35.95 */
+export interface GlobalEditorModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  selectedTopics: Topic[];
+  setSelectedTopics: (topics: Topic[] | ((prev: Topic[]) => Topic[])) => void;
+  setExtractedTopics: (fn: (prev: Topic[]) => Topic[]) => void;
+  models: Model[];
+  findSuggestions: (topic: Topic) => Promise<{ suggestions: Model[]; source: string | null }>;
+  sanitizeHTML: (html: string) => string;
+  showToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
+  fontSize?: 'small' | 'normal' | 'large' | string;
+  spacing?: 'compact' | 'normal' | 'wide' | string;
+  setFontSize?: ((size: 'small' | 'normal' | 'large') => void) | null;
+  setSpacing?: ((spacing: 'compact' | 'normal' | 'wide') => void) | null;
+  editorTheme?: 'dark' | 'light' | string;
+  quillReady?: boolean;
+  quillError?: Error | string | null;
+  modelPreview?: {
+    previewingModel: Model | null;
+    setPreviewingModel?: (model: Partial<Model> | null) => void;
+    contextualInsertFn?: ((html: string) => void) | null;
+    setContextualInsertFn: (fn: ((html: string) => void) | null) => void;
+    onModelUpdatedRef: React.MutableRefObject<((model: Model) => void) | null>;
+    openPreview: (model: Model) => void;
+  } | null;
+  analyzedDocuments?: AnalyzedDocuments;
+  proofManager?: {
+    proofFiles: ProofFile[];
+    proofTexts: ProofText[];
+    proofTopicLinks?: Record<string, string[]>;
+    setProofTopicLinks: (fn: (prev: Record<string, string[]>) => Record<string, string[]>) => void;
+    proofAnalysisResults?: Record<string, { type: string; result: string }>;
+    proofConclusions?: Record<string, string>;
+    extractedProofTexts?: Record<string, string>;
+    proofProcessingModes?: Record<string, ProcessingMode>;
+  } | null;
+  aiIntegration?: {
+    aiSettings: AISettings;
+    callAI: (messages: AIMessage[], options?: AICallOptions) => Promise<string>;
+  } | null;
+  detectResultadoAutomatico?: ((topicTitle: string, fundamentacao: string, category: TopicCategory) => Promise<string | null>) | null;
+  onSlashCommand?: OnSlashCommandCallback | null;
+  fileToBase64?: ((file: File) => Promise<string>) | null;
+  openModal?: ((modalName: ModalKey) => void) | null;
+  closeModal?: ((name: ModalKey) => void) | null;
+  useLocalAIForSuggestions?: boolean;
+  useLocalAIForJuris?: boolean;
+  jurisSemanticThreshold?: number;
+  searchModelReady?: boolean;
+  jurisEmbeddingsCount?: number;
+  searchModelsBySimilarity?: ((models: Model[], query: string, options?: { threshold?: number; limit?: number }) => Promise<(Model & { similarity: number })[]>) | null;
+  modelSemanticEnabled?: boolean;
+}
+
+export interface TopicCardProps {
+  topic: Topic;
+  selectedIdx: number;
+  topicRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
+  lastEditedTopicTitle: string | null;
+  isDragging: boolean;
+  isOver: boolean;
+  selectedTopics: Topic[];
+  extractedTopics: Topic[];
+  topicsToMerge: Topic[];
+  toggleTopicSelection: (topic: Topic) => void;
+  moveTopicUp: (idx: number) => void;
+  moveTopicDown: (idx: number) => void;
+  moveTopicToPosition: (idx: number, position: number) => void;
+  setSelectedTopics: React.Dispatch<React.SetStateAction<Topic[]>>;
+  setExtractedTopics: React.Dispatch<React.SetStateAction<Topic[]>>;
+  startEditing: (topic: Topic) => void;
+  setTopicToRename: (topic: Topic | null) => void;
+  setNewTopicName: (name: string) => void;
+  openModal: (name: ModalKey) => void;
+  setTopicToSplit: (topic: Topic | null) => void;
+  setTopicsToMerge: (topics: Topic[]) => void;
+}
+
+export interface SortableTopicCardProps extends Omit<TopicCardProps, 'isDragging' | 'isOver'> {
+  id: string;
+}
+
+export interface ModelCardProps {
+  model: Model;
+  viewMode: 'cards' | 'list';
+  onEdit: (model: Model) => void;
+  onToggleFavorite: (id: string) => void;
+  onDuplicate: (model: Model) => void;
+  onDelete: (model: Model) => void;
+  onInsert?: (content: string) => void;
+  sanitizeHTML: (html: string) => string;
+  isShared?: boolean;
+  ownerEmail?: string | null;
+  sharedPermission?: 'view' | 'edit';
+}
+
+export interface ProofCardProps {
+  proof: Proof;
+  isPdf: boolean;
+  proofManager: {
+    setProofTopicLinks: (fn: (prev: Record<string, string[]>) => Record<string, string[]>) => void;
+    setProofConclusions: (fn: (prev: Record<string, string>) => Record<string, string>) => void;
+    setProofUsePdfMode: (fn: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
+    setProofExtractionFailed: (fn: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
+    setExtractedProofTexts: (fn: (prev: Record<string, string>) => Record<string, string>) => void;
+    setProofProcessingModes: (fn: (prev: Record<string, ProcessingMode>) => Record<string, ProcessingMode>) => void;
+    setProofSendFullContent: (fn: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
+    setProofToAnalyze: (proof: Proof | null) => void;
+    setProofToDelete: (proof: Proof | null) => void;
+    setProofToLink: (proof: Proof | null) => void;
+    setPendingExtraction: (data: { proofId: string | number; proof: Proof; executeExtraction?: (nomes: string[]) => Promise<void> } | null) => void;
+    isAnalyzingProof: (id: string) => boolean;
+    proofTopicLinks: Record<string, string[]>;
+    proofConclusions: Record<string, string>;
+    proofUsePdfMode: Record<string, boolean>;
+    proofExtractionFailed: Record<string, boolean>;
+    extractedProofTexts: Record<string, string>;
+    proofProcessingModes: Record<string, ProcessingMode>;
+    proofAnalysisResults: Record<string, { type: string; result: string }>;
+    proofSendFullContent: Record<string, boolean>;
+  };
+  openModal: (name: ModalKey) => void;
+  setError: (error: string) => void;
+  extractTextFromPDFWithMode: (file: File, mode: string, progressCallback?: ((page: number, total: number) => void) | null) => Promise<string | null>;
+  anonymizationEnabled?: boolean;
+  anonConfig?: AnonymizationSettings | null;
+  nomesParaAnonimizar?: string[];
+  editorTheme?: 'dark' | 'light' | string;
+  setTextPreview?: (preview: TextPreviewState) => void;
+}
+
+export interface SuggestionCardProps {
+  model: Model;
+  index?: number;
+  totalSuggestions?: number;
+  onPreview: (model: Model) => void;
+  onInsert: (content: string) => void;
+  sanitizeHTML?: (html: string) => string;
+  showRanking?: boolean;
+  similarity?: number;
+}
+
+export interface ArtigoCardProps {
+  artigo: Artigo;
+  onCopy: (artigo: Artigo) => void;
+  expanded: boolean;
+  onToggleExpand: (id: string) => void;
+  copiedId: string | null;
+}
+
+export interface JurisprudenciaCardProps {
+  precedente: Precedente;
+  onCopy: (precedente: Precedente) => void;
+  expanded: boolean;
+  onToggleExpand: (id: string) => void;
+}
+
+export interface ChatBubbleProps {
+  msg: { role: string; content: string; ts?: number; error?: string };
+  onUse: (content: string) => void;
+  showUse: boolean;
+  sanitizeHTML?: (html: string) => string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UI/PANEL PROPS (movido de App.tsx v1.35.79)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface VirtualListProps<T> {
+  items: T[];
+  itemHeight: number;
+  renderItem: (item: T, index: number) => React.ReactNode;
+  className?: string;
+  overscan?: number;
+  expandedIds?: Set<string>;
+}
+
+export interface ProcessingModeSelectorProps {
+  value: ProcessingMode;
+  onChange: (value: ProcessingMode) => void;
+  disabled?: boolean;
+  anonymizationEnabled?: boolean;
+  className?: string;
+}
+
+export interface InsertDropdownProps {
+  onInsert: (mode: 'replace' | 'prepend' | 'append') => void;
+  disabled: boolean;
+}
+
+export interface SpacingDropdownProps {
+  value: string;
+  onChange: (value: 'compact' | 'normal' | 'wide') => void;
+  ariaLabel?: string;
+}
+
+export interface FontSizeDropdownProps {
+  value: string;
+  onChange: (value: 'small' | 'normal' | 'large') => void;
+  ariaLabel?: string;
+}
+
+export interface ChatInputProps {
+  onSend: (message: string) => void;
+  disabled: boolean;
+  placeholder: string;
+}
+
+export interface ChatHistoryAreaProps {
+  history: Array<{ role: string; content: string; ts?: number }>;
+  generating: boolean;
+  onUseMessage: (content: string) => void;
+  showUseButtons: boolean;
+  sanitizeHTML: (html: string) => string;
+}
+
+export interface LockedTabOverlayProps {
+  isPrimaryTab: boolean;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+export interface LegislacaoTabProps {
+  openModal: (name: ModalKey) => void;
+  closeModal: (name: ModalKey) => void;
+  modals: Record<string, boolean>;
+  isReadOnly?: boolean;
+  semanticSearchEnabled?: boolean;
+  searchModelReady?: boolean;
+  embeddingsCount?: number;
+  semanticThreshold?: number;
+}
+
+export interface JurisprudenciaTabProps {
+  openModal: (name: ModalKey) => void;
+  closeModal: (name: ModalKey) => void;
+  modals: Record<string, boolean>;
+  isReadOnly?: boolean;
+  jurisSemanticEnabled?: boolean;
+  searchModelReady?: boolean;
+  jurisEmbeddingsCount?: number;
+  jurisSemanticThreshold?: number;
+}
+
+export interface FullscreenModelPanelProps {
+  models: Model[];
+  topicTitle?: string;
+  topicCategory?: string;
+  topicRelatorio?: string;
+  onInsert: (content: string) => void;
+  onPreview: (model: Model) => void;
+  sanitizeHTML?: (html: string) => string;
+  onFindSuggestions?: (topic: Topic) => Promise<{ suggestions: Model[]; source: string | null }>;
+}
+
+export interface ModelSearchPanelProps {
+  models: Model[];
+  onInsert: (content: string) => void;
+  onPreview: (model: Model) => void;
+  sanitizeHTML: (html: string) => string;
+}
+
+export interface AcceptSharePageProps {
+  token: string;
+  onAccepted?: () => void;
+  onLogin?: () => void;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AI ASSISTANT PROPS (movido de App.tsx v1.35.79)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface AIAssistantBaseLegacyProps {
+  isOpen: boolean;
+  onClose: () => void;
+  aiInstruction?: string;
+  setAiInstruction: (instruction: string) => void;
+  generatingAi?: boolean;
+  aiGeneratedText?: string;
+  onGenerateText: () => void;
+  onInsertText: ((text: string) => void) | ((mode: InsertMode) => void);
+  title?: string;
+  subtitle?: React.ReactNode;
+  zIndex?: number;
+  placeholder?: string;
+  extraContent?: React.ReactNode;
+  customExamples?: React.ReactNode;
+  showInsertButtons?: boolean;
+  showCopyButton?: boolean;
+  sanitizeHTML?: (html: string) => string;
+}
+
+export interface AIAssistantBaseProps {
+  isOpen: boolean;
+  onClose: () => void;
+  chatHistory: ChatMessage[];
+  onSendMessage: (message: string) => void;
+  onInsertResponse: (mode: InsertMode) => void;
+  generating: boolean;
+  onClear: () => void;
+  lastResponse: string | null;
+  title?: string;
+  subtitle?: React.ReactNode;
+  zIndex?: number;
+  placeholder?: string;
+  extraContent?: React.ReactNode;
+  showInsertButtons?: boolean;
+  sanitizeHTML?: (html: string) => string;
+  quickPrompts?: QuickPrompt[];
+  topicTitle?: string;
+  onQuickPromptClick?: ((qp: QuickPrompt, resolvedPrompt: string) => void) | null;
+  qpError?: { id: string; message: string } | null;
+}
+
+export interface ProofManagerForAI {
+  proofTopicLinks?: Record<string, string[]>;
+  proofFiles: ProofFile[];
+  proofTexts: ProofText[];
+}
+
+export interface AIAssistantModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  contextScope: string;
+  setContextScope: (scope: string) => void;
+  topicTitle?: string;
+  chatHistory: ChatMessage[];
+  onSendMessage: (message: string, options?: { proofFilter?: string }) => void;
+  onInsertResponse: (mode: InsertMode) => void;
+  generating: boolean;
+  onClear: () => void;
+  lastResponse: string | null;
+  sanitizeHTML?: (html: string) => string;
+  quickPrompts?: QuickPrompt[];
+  proofManager?: ProofManagerForAI | null;
+}
+
+export interface AIAssistantGlobalModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  contextScope: string;
+  setContextScope: (scope: string) => void;
+  topicTitle?: string;
+  chatHistory: ChatMessage[];
+  onSendMessage: (message: string, options?: { proofFilter?: string }) => void;
+  onInsertResponse: (mode: InsertMode) => void;
+  generating: boolean;
+  onClear: () => void;
+  lastResponse: string | null;
+  sanitizeHTML?: (html: string) => string;
+  quickPrompts?: QuickPrompt[];
+  proofManager?: ProofManagerForAI | null;
+}
+
+export interface AIAssistantModelModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  aiInstructionModel?: string;
+  setAiInstructionModel: (instruction: string) => void;
+  generatingAiModel?: boolean;
+  aiGeneratedTextModel?: string;
+  setAiGeneratedTextModel?: (text: string) => void;
+  onGenerateText: () => void;
+  onInsertText: (mode: InsertMode) => void;
+  sanitizeHTML?: (html: string) => string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SESSION/PROJECT TYPES (movido de App.tsx v1.35.79)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface AnalyzedDocuments {
+  peticoes: string[];
+  peticoesText: PastedText[];
+  contestacoes: string[];
+  contestacoesText: PastedText[];
+  complementares: string[];
+  complementaresText: PastedText[];
+  peticao?: string;
+  peticaoType?: string;
+}
+
+export interface ExtractedTexts {
+  peticoes: Array<{ text: string; name?: string }>;
+  contestacoes: Array<{ text: string; name?: string }>;
+  complementares: Array<{ text: string; name?: string }>;
+}
+
+export interface DocumentProcessingModes {
+  peticoes: ProcessingMode[];
+  contestacoes: ProcessingMode[];
+  complementares: ProcessingMode[];
+}
+
+export interface UploadedFile {
+  file: File;
+  id: string;
+  // Fallback properties for backwards compatibility
+  name?: string;
+  size?: number;
+}
+
+export interface SessionState {
+  processoNumero: string;
+  pastedPeticaoTexts: PastedText[];
+  pastedContestacaoTexts: PastedText[];
+  pastedComplementaryTexts: PastedText[];
+  extractedTopics: Topic[];
+  selectedTopics: Topic[];
+  partesProcesso: PartesProcesso;
+  activeTab: string;
+  analyzedDocuments: AnalyzedDocuments;
+  proofFiles: Proof[];
+  proofTexts: ProofText[];
+  proofUsePdfMode: Record<string, boolean>;
+  extractedProofTexts: Record<string, string>;
+  proofExtractionFailed: Record<string, boolean>;
+  proofTopicLinks: Record<string, string[]>;
+  proofAnalysisResults: Record<string, { type: string; result: string }>;
+  proofConclusions: Record<string, string>;
+  proofSendFullContent?: Record<string, boolean>;
+  extractedTexts: ExtractedTexts;
+  documentProcessingModes: DocumentProcessingModes;
+  peticaoFiles: UploadedFile[];
+  contestacaoFiles: UploadedFile[];
+  complementaryFiles: UploadedFile[];
+  tokenMetrics?: TokenMetrics;
+  hasUploadFiles?: boolean;
+}
+
+export interface ProjectState extends SessionState {
+  aiSettings: AISettings;
+}
+
+export interface UploadPdfData {
+  name: string;
+  id: string;
+  fileData: string;
+}
+
+export interface UploadPdfs {
+  peticoes?: UploadPdfData[];
+  peticao?: UploadPdfData;
+  contestacoes?: UploadPdfData[];
+  complementares?: UploadPdfData[];
+}
+
+export interface ImportedProject {
+  version?: string;
+  processoNumero?: string;
+  pastedPeticaoTexts?: PastedText[];
+  pastedPeticaoText?: string; // formato antigo
+  pastedContestacaoTexts?: PastedText[];
+  pastedComplementaryTexts?: PastedText[];
+  extractedTopics?: Topic[];
+  selectedTopics?: Topic[];
+  partesProcesso?: PartesProcesso;
+  analyzedDocuments?: AnalyzedDocuments;
+  extractedTexts?: ExtractedTexts;
+  documentProcessingModes?: DocumentProcessingModes;
+  uploadPdfs?: UploadPdfs;
+  proofFiles?: Proof[];
+  proofTexts?: Record<string, string>;
+  proofUsePdfMode?: Record<string, boolean>;
+  extractedProofTexts?: Record<string, string>;
+  proofExtractionFailed?: Record<string, boolean>;
+  proofTopicLinks?: Record<string, string[]>;
+  proofAnalysisResults?: Record<string, string>;
+  proofConclusions?: Record<string, string>;
+  proofSendFullContent?: Record<string, boolean>;
+  aiSettings?: AISettings;
+  tokenMetrics?: TokenMetrics;
+}
+
+export interface ImportCallbacks {
+  setPastedPeticaoTexts: (texts: PastedText[]) => void;
+  setPastedContestacaoTexts: (texts: PastedText[]) => void;
+  setPastedComplementaryTexts: (texts: PastedText[]) => void;
+  setExtractedTopics: (topics: Topic[]) => void;
+  setSelectedTopics: React.Dispatch<React.SetStateAction<Topic[]>>;
+  setPartesProcesso: (partes: PartesProcesso) => void;
+  setAnalyzedDocuments: (docs: AnalyzedDocuments) => void;
+  setProofFiles: React.Dispatch<React.SetStateAction<ProofFile[]>>;
+  setProofTexts: (texts: ProofText[]) => void;
+  setProofUsePdfMode: (modes: Record<string, boolean>) => void;
+  setExtractedProofTexts: (texts: Record<string, string>) => void;
+  setProofExtractionFailed: (failed: Record<string, boolean>) => void;
+  setProofTopicLinks: (links: Record<string, string[]>) => void;
+  setProofAnalysisResults: React.Dispatch<React.SetStateAction<Record<string, ProofAnalysisResult>>>;
+  setProofConclusions: (conclusions: Record<string, string>) => void;
+  setProofSendFullContent: (content: Record<string, boolean>) => void;
+  setAiSettings: (settings: AISettings) => void;
+  setActiveTab: (tab: string) => void;
+  setError: React.Dispatch<React.SetStateAction<string | { type: string; message: string }>>;
+  setProcessoNumero: (numero: string) => void;
+  setPeticaoFiles?: (files: UploadedFile[]) => void;
+  setContestacaoFiles?: (files: UploadedFile[]) => void;
+  setComplementaryFiles?: (files: UploadedFile[]) => void;
+  setExtractedTexts?: (texts: ExtractedTexts) => void;
+  setDocumentProcessingModes?: (modes: DocumentProcessingModes) => void;
+  setTokenMetrics?: (metrics: TokenMetrics) => void;
+}
+
+export interface RestoreSessionCallbacks extends Omit<ImportCallbacks, 'setAiSettings' | 'setSelectedTopics' | 'setProofFiles'> {
+  closeModal: (modalName: ModalKey) => void;
+  setSelectedTopics: React.Dispatch<React.SetStateAction<Topic[]>>;
+  setProofFiles: React.Dispatch<React.SetStateAction<ProofFile[]>>;
+}
+
+export interface ImportProjectCallbacks {
+  setError: React.Dispatch<React.SetStateAction<string | { type: string; message: string }>>;
+}
+
+export interface ClearProjectCallbacks extends Omit<ImportCallbacks, 'setAiSettings' | 'setSelectedTopics' | 'setProofFiles'> {
+  closeModal: (modalName: ModalKey) => void;
+  setSelectedTopics: React.Dispatch<React.SetStateAction<Topic[]>>;
+  setProofFiles: React.Dispatch<React.SetStateAction<ProofFile[]>>;
+  setProofToDelete: (proof: Proof | null) => void;
+  setProofToLink: (proof: Proof | null) => void;
+  setProofToAnalyze: (proof: Proof | null) => void;
+  clearAnalyzingProofs: () => void;
+  setShowProofPanel: (show: boolean) => void;
+  setNewProofTextData: (data: NewProofTextData) => void;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BASE COMPONENT PROPS (movido de App.tsx v1.35.91)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface BaseModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  subtitle?: string;
+  icon?: React.ReactElement;
+  iconColor?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+  preventClose?: boolean;
+}
+
+export interface AnonymizationNamesModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (nomes: string[]) => void;
+  nomesTexto: string;
+  setNomesTexto: (text: string) => void;
+  nerEnabled: boolean;
+  onDetectNames: () => void;
+  detectingNames: boolean;
+  onOpenAiSettings: () => void;
+}
+
+export interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+export interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: React.ErrorInfo | null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GLOBAL TYPE AUGMENTATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Quill editor constructor */
+export interface QuillConstructor {
+  new (container: HTMLElement | string, options?: Record<string, unknown>): QuillInstance;
+  import: (path: string) => unknown;
+  register: (path: string, module: unknown) => void;
+  find: (element: Element) => QuillInstance | null;
+}
+
+/** PDF.js page interface */
+export interface PdfPage {
+  getTextContent: () => Promise<{ items: Array<{ str?: string }> }>;
+  render: (params: { canvasContext: CanvasRenderingContext2D; viewport: PdfViewport }) => { promise: Promise<void> };
+  getViewport: (options: { scale: number }) => PdfViewport;
+}
+
+export interface PdfViewport {
+  width: number;
+  height: number;
+}
+
+/** PDF.js document interface */
+export interface PdfDocument {
+  numPages: number;
+  getPage: (num: number) => Promise<PdfPage>;
+  destroy: () => void;
+}
+
+/** PDF.js library interface */
+export interface PdfjsLib {
+  getDocument: (src: { data: ArrayBuffer } | string) => { promise: Promise<PdfDocument> };
+  GlobalWorkerOptions: { workerSrc: string };
+}
+
+/** Mammoth library interface */
+export interface MammothLib {
+  extractRawText: (options: { arrayBuffer: ArrayBuffer }) => Promise<{ value: string; messages?: unknown[] }>;
+}
+
+/** Tesseract library interface */
+export interface TesseractLib {
+  createWorker: (lang?: string, loggerCallback?: (info: { status: string; progress: number }) => void) => Promise<TesseractWorker>;
+  createScheduler: () => TesseractScheduler;
+}
+
+export interface TesseractWorker {
+  terminate: () => Promise<void>;
+  setParameters: (params: Record<string, unknown>) => Promise<void>;
+  recognize: (image: unknown) => Promise<{ data: { text: string } }>;
+}
+
+export interface TesseractScheduler {
+  addWorker: (worker: TesseractWorker) => void;
+  addJob: (type: string, data: unknown) => Promise<{ data: { text: string } }>;
+  terminate: () => void;
+}
+
+/** DOMPurify library interface */
+export interface DOMPurifyInstance {
+  sanitize: (html: string, options?: Record<string, unknown>) => string;
+  version: string;
+  isSupported: boolean;
+}
+
+declare global {
+  interface Window {
+    Quill: QuillConstructor;
+    pdfjsLib: PdfjsLib;
+    mammoth: MammothLib;
+    DOMPurify?: DOMPurifyInstance;
+    Tesseract: TesseractLib;
+    google: {
+      accounts: {
+        oauth2: {
+          initTokenClient: (config: Record<string, unknown>) => { requestAccessToken: (options?: Record<string, unknown>) => void };
+          revoke: (token: string, callback?: () => void) => void;
+        };
+      };
+    };
+    gapi: {
+      load: (api: string, callback: () => void) => void;
+      client: {
+        init: (config: Record<string, unknown>) => Promise<void>;
+        setToken: (token: { access_token: string } | null) => void;
+        drive: {
+          files: {
+            list: (params: Record<string, unknown>) => Promise<{ result: { files: DriveFile[] } }>;
+            get: (params: Record<string, unknown>) => Promise<{ body: string }>;
+            create: (params: Record<string, unknown>, body?: unknown) => Promise<{ result: { id: string } }>;
+            update: (params: Record<string, unknown>, body?: unknown) => Promise<{ result: { id: string } }>;
+            delete: (params: Record<string, unknown>) => Promise<void>;
+          };
+          permissions: {
+            list: (params: Record<string, unknown>) => Promise<{ result: { permissions: DrivePermission[] } }>;
+            create: (params: Record<string, unknown>) => Promise<{ result: DrivePermission }>;
+            delete: (params: Record<string, unknown>) => Promise<void>;
+          };
+          about: {
+            get: (params: Record<string, unknown>) => Promise<{ result: { user: { emailAddress: string; displayName?: string; photoLink?: string } } }>;
+          };
+        };
+      };
+    };
+  }
+
+  interface ImportMeta {
+    env: {
+      PROD: boolean;
+      DEV: boolean;
+      MODE: string;
+      BASE_URL: string;
+      VITE_GOOGLE_CLIENT_ID?: string;
+      VITE_API_KEY?: string;
+    };
+  }
+}

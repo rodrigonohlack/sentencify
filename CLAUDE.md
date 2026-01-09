@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.35.87 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.0 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -33,6 +33,43 @@
 5. **NUNCA usar PowerShell para editar conteúdo de arquivos**: Corrompe encoding UTF-8 (acentuação quebrada). Use `sed`, `Edit` tool, ou `Write` tool.
 
 > **Nota**: Este projeto agora roda como aplicação standalone (fora do sandbox Claude.ai). Não há mais limite de tamanho de arquivo nem necessidade de minificação.
+
+## Development Standards
+
+### Filosofia
+> **QUALIDADE > VELOCIDADE**: JAMAIS priorizar desenvolvimento rápido à custa de qualidade.
+> Código mal escrito custa mais tempo para corrigir do que fazer certo da primeira vez.
+
+### Versionamento Obrigatório
+- **SEMPRE** atualizar a versão no `CLAUDE.md` (linha 7) ao fazer alterações
+- **SEMPRE** adicionar entrada no changelog (`Recent Changes`) com descrição clara
+- Formato: `v1.XX.YY` onde YY incrementa a cada alteração
+
+### TypeScript
+- Todos os tipos devem ir para `src/types/index.ts` (não inline no App.tsx)
+- Tipos explícitos em parâmetros e retornos de função (não depender de inferência)
+- Interfaces para objetos complexos (`OpenAIMessage`, não `Record<string, unknown>`)
+- `as const` para objetos de configuração imutáveis
+- Type assertions (`as Type`) apenas quando necessário
+
+### Código Otimizado para Manutenção por LLM
+- **Comentários de seção**: Usar bordas `═══` para delimitar seções grandes
+- **JSDoc**: Documentar funções públicas com `@param`, `@returns`, `@example`
+- **Nomes autoexplicativos**: `finalSystemPrompt` não `fsp`, `reasoningLevel` não `rl`
+- **Constantes nomeadas**: `OPENAI_CONFIG.RETRY_DELAY_MS` não `5000`
+- **Padrões consistentes**: Novas funções devem seguir padrão das existentes
+
+### Performance
+- `React.useCallback` em todas as funções passadas como props ou em deps
+- `React.useMemo` para cálculos pesados
+- Dependências mínimas nos arrays de deps dos hooks
+- Evitar re-renders: estado local para inputs (buffer antes de propagar)
+
+### Segurança
+- API keys sempre via headers (nunca no body ou URL)
+- Proxy pelo backend (chaves não expostas no frontend)
+- Validar/sanitizar inputs do usuário
+- `apiKeys` excluídas de exports de projeto
 
 ## Deploy (Render)
 
@@ -67,6 +104,13 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.0 | 🎉 **TypeScript strict mode COMPLETO** - Zero errors (`tsc --noEmit` passa), migração de ~930 erros concluída, tipos alinhados, null safety |
+| v1.35.96 | docs(CLAUDE.md): Seção "Development Standards" - padrões obrigatórios de qualidade, TypeScript, manutenção por LLM, performance e segurança |
+| v1.35.95 | TypeScript: GlobalEditorModal, AnalysisModal, DispositivoModal, BulkReviewModal, BulkUploadModal, SlashCommandMenu, LinkedProofsModal + GeminiRequest/GeminiGenerationConfig (1217→1164 erros) |
+| v1.35.93 | TypeScript: FieldEditorProps/Ref, QuillInstance refs tipados, ModelFormModalProps, ModelPreviewModalProps (1421→1323 erros) |
+| v1.35.92 | TypeScript: searchTerm em JurisFiltros, isPlaceholder em ProofFile/ProofText, tipos IDBVersionChangeEvent e FileReader |
+| v1.35.91 | TypeScript ETAPA 0.1: +4 interfaces movidas (BaseModalProps, AnonymizationNamesModalProps, ErrorBoundaryProps/State) |
+| v1.35.90 | TypeScript ETAPA 0: Reorganização - 62 interfaces movidas de App.tsx para types/index.ts (Modal Props, Component Props, AI Assistant Props, Session/Project Types) |
 | v1.35.87 | TypeScript Migration FASE 8.7 (parcial): Tipagem completa de AIModelService, EmbeddingsService, JurisEmbeddingsService, EmbeddingsCDNService + callbacks do useAIIntegration (930→775 erros TS7006) |
 | v1.35.86 | TypeScript Migration FASE 8.6: useRef<T> tipados (84 instâncias) - timers, DOM refs, Quill instances, callbacks, caches |
 | v1.35.85 | TypeScript Migration FASE 8.1-8.5: +20 tipos em src/types/index.ts (TextPreviewState, ToastState, SlashMenuState, ProgressState, etc.) + useState com objetos/arrays/null tipados |
@@ -329,5 +373,5 @@
 | v1.14.0 | Detecção TF-IDF de similaridade + Botão "Salvar como Modelo" + Comparação lado a lado |
 | v1.12.27 | Progresso de extração inline no ProofCard (não mais banner de erro) |
 
-**Last Updated**: 2026-01-07
+**Last Updated**: 2026-01-08
 - sempre atualize a versão nas alterações realizadas

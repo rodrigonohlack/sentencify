@@ -8,7 +8,7 @@
  * 4. Juiz revisa/edita antes de salvar
  * 5. Prompt salvo substitui o hardcoded nas gerações futuras
  *
- * @version 1.35.77
+ * @version 1.35.78
  * - Suporta estiloRedacao: usa buildStyleMetaPrompt (foco em tom/vocabulário/ritmo)
  */
 

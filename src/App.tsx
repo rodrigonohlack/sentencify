@@ -120,7 +120,7 @@ import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, D
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // v1.34.0: Cloud Sync - Magic Link Authentication + SQLite Sync
-import useCloudSync from './hooks/useCloudSync';
+import useCloudSync, { type UseCloudSyncReturn, type SharedLibrary } from './hooks/useCloudSync';
 import LoginMagicModal from './components/LoginMagicModal';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 
@@ -140,15 +140,16 @@ import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 // v1.35.26: Prompts de IA movidos para src/prompts/
 import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS } from './prompts';
 
-// v1.35.82: Tipos TypeScript centralizados
+// v1.35.79: Tipos TypeScript centralizados (ETAPA 0 reorganização completa)
 import type {
-  ModalState, TextPreviewState, AISettings, TokenMetrics,
-  Topic, TopicCategory, Model, Proof, ProofFile, ProofText, ProofAnalysisResult,
-  ProcessingMode, FieldVersion, DriveFile,
+  // Core Types
+  ModalKey, ModalState, TextPreviewState, AISettings, TokenMetrics,
+  Topic, TopicCategory, TopicResultado, TopicoComplementar, Model, NewModelData, Proof, ProofFile, ProofText, ProofAnalysisResult,
+  ProcessingMode, InsertMode, FieldVersion, DriveFile, GeminiThinkingLevel,
   ProgressState, ToastState, SlashMenuState, ModelGeneratorModalState,
   FiltrosJuris, FiltrosLegislacao, PastedText, ChatMessage, Precedente, Artigo,
   JurisSuggestion, ShareInfo, DownloadStatus, EmbeddingsDownloadStatus, DataDownloadStatus,
-  DocumentAnalysis, PartesProcesso, QuillInstance, NewProofTextData, CacheEntry, CacheStats,
+  DocumentAnalysis, PartesProcesso, QuillInstance, QuillDelta, NewProofTextData, CacheEntry, CacheStats,
   TargetField,
   // FASE 8.2: Tipos adicionais para useState com objetos
   LocalModelForm, SlashMenuStateExtended, DownloadItemStatus,
@@ -158,8 +159,39 @@ import type {
   NERRawEntity, NERProcessedEntity, AIModelStatusCallback, AIWorkerMessage, PendingWorkerPromise,
   LegislacaoEmbeddingItem, JurisEmbeddingItem, JurisEmbeddingWithSimilarity, SimilaritySearchResult, JurisFiltros,
   CDNDownloadType, DownloadProgressCallback, BatchCompleteCallback, CDNFileName, EstimatedSizes,
+  BulkFile, BulkGeneratedModel, BulkError,
   AIGenContextItem, AIGenContext, AIGenState, AIGenAction, AnonymizationSettings,
-  QuickPrompt, AIMessage, AIMessageContent, AICallOptions, AIProvider
+  QuickPrompt, AIMessage, AIMessageContent, AITextContent, AIDocumentContent, AICallOptions, AIProvider, GeminiRequest, GeminiGenerationConfig,
+  // MODAL PROPS (movido de App.tsx v1.35.79)
+  ModelFormModalProps, ModelPreviewModalProps, RenameTopicModalProps, DeleteTopicModalProps, MergeTopicsModalProps, SplitTopicModalProps,
+  NewTopicModalProps, DeleteModelModalProps, DeleteAllModelsModalProps, DeleteAllPrecedentesModalProps,
+  ExportModalProps, JurisprudenciaModalProps, SimilarityWarningState, SimilarityWarningModalProps, ShareLibraryModalProps, AnalysisModalProps, DispositivoModalProps, BulkReviewModalProps, BulkUploadModalProps, SlashCommandMenuProps, LinkedProofsModalProps,
+  LogoutConfirmModalProps, RestoreSessionModalProps, ClearProjectModalProps,
+  AddProofTextModalProps, ProofAnalysisModalProps, DeleteProofModalProps,
+  ConfirmBulkCancelModalProps, BulkDiscardConfirmModalProps, TextPreviewModalProps,
+  ExtractModelConfirmModalProps, ExtractedModelPreviewModalProps, LinkProofModalProps,
+  // COMPONENT PROPS (movido de App.tsx v1.35.79)
+  FieldEditorProps, FieldEditorRef, GlobalEditorSectionProps,
+  QuillEditorBaseProps, QuillModelEditorProps, QuillDecisionEditorProps, QuillMiniRelatorioEditorProps,
+  DecisionEditorContainerProps, GlobalEditorModalProps, TopicCardProps, SortableTopicCardProps, ModelCardProps, ProofCardProps,
+  SuggestionCardProps, ArtigoCardProps, JurisprudenciaCardProps, ChatBubbleProps,
+  // UI/PANEL PROPS (movido de App.tsx v1.35.79)
+  VirtualListProps, ProcessingModeSelectorProps, InsertDropdownProps,
+  SpacingDropdownProps, FontSizeDropdownProps, ChatInputProps, ChatHistoryAreaProps,
+  LockedTabOverlayProps, LegislacaoTabProps, JurisprudenciaTabProps,
+  FullscreenModelPanelProps, ModelSearchPanelProps, AcceptSharePageProps,
+  // AI ASSISTANT PROPS (movido de App.tsx v1.35.79)
+  AIAssistantBaseLegacyProps, AIAssistantBaseProps, AIAssistantModalProps,
+  AIAssistantGlobalModalProps, AIAssistantModelModalProps,
+  // FUNCTION TYPES
+  CallAIFunction,
+  // SESSION/PROJECT TYPES (movido de App.tsx v1.35.79)
+  AnalyzedDocuments, ExtractedTexts, DocumentProcessingModes, UploadedFile,
+  SessionState, ProjectState, UploadPdfData, UploadPdfs, ImportedProject, ImportCallbacks, RestoreSessionCallbacks, ImportProjectCallbacks, ClearProjectCallbacks,
+  // BASE COMPONENT PROPS (movido de App.tsx v1.35.91)
+  BaseModalProps, AnonymizationNamesModalProps, ErrorBoundaryProps, ErrorBoundaryState,
+  // LIBRARY TYPES
+  PdfjsLib, PdfDocument, PdfPage, MammothLib, TesseractLib, TesseractWorker, TesseractScheduler
 } from './types';
 
 // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
@@ -168,7 +200,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.35.89'; // v1.35.89: TypeScript FASE 8.7 - Tipar event handlers (KeyboardEvent, StorageEvent, CustomEvent)
+const APP_VERSION = '1.36.0'; // v1.36.0: TypeScript strict mode COMPLETO - Zero errors (tsc --noEmit passes)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -253,6 +285,7 @@ const CSS = {
   // Input
   inputField: "w-full px-4 py-3 theme-input border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
   inputBase: "w-full theme-bg-secondary border theme-border-input rounded-lg theme-text-primary theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
+  input: "w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text-primary theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
   // Info boxes
   infoBox: "theme-info-box",
   spinner: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin",
@@ -286,7 +319,7 @@ const CSS = {
 };
 
 // ⚙️ CONFIGURAÇÃO DE ESPAÇAMENTO DE PARÁGRAFOS
-const SPACING_PRESETS = {
+const SPACING_PRESETS: Record<string, { label: string; lineHeight: string; paragraphMargin: string; icon: string }> = {
   compact: {
     label: 'Compacto',
     lineHeight: '1.2',
@@ -314,7 +347,7 @@ const SPACING_PRESETS = {
 };
 
 // ⚙️ CONFIGURAÇÃO DE TAMANHO DE FONTE DOS EDITORES (v1.10.8)
-const FONTSIZE_PRESETS = {
+const FONTSIZE_PRESETS: Record<string, { label: string; fontSize: string; icon: string }> = {
   normal: {
     label: 'Normal',
     fontSize: '14px',
@@ -371,12 +404,12 @@ const TFIDFSimilarity = {
     return vec;
   },
   cosine(a: Map<number, number>,b: Map<number, number>){let dot=0;a.forEach((v: number,k: number)=>{if(typeof k==='number'&&b.has(k))dot+=v*(b.get(k) || 0);});return dot;},
-  findSimilar(newModel: Model,models: Model[],threshold=0.80) {
+  findSimilar(newModel: Model,models: Model[],threshold=0.80): { hasSimilar: true; similarModel: Model; similarity: number } | { hasSimilar: false; similarModel?: undefined; similarity?: undefined } {
     if(!this.cache.valid||this.cache.vectors.size!==models.length)this.buildIndex(models);
     const vec=this.computeVector(newModel.content);
     let best: Model | null=null,bestSim=0;
     models.forEach((m: Model)=>{if(m.id===newModel.id)return;const ev=this.cache.vectors.get(m.id);if(!ev)return;const s=this.cosine(vec,ev);if(s>=threshold&&s>bestSim){bestSim=s;best=m;}});
-    return best?{hasSimilar:true,similarModel:best,similarity:bestSim}:{hasSimilar:false};
+    return best?{hasSimilar:true as const,similarModel:best,similarity:bestSim}:{hasSimilar:false as const};
   },
   invalidate(){this.cache.valid=false;this.cache.vectors.clear();}
 };
@@ -472,7 +505,7 @@ const AIModelService = {
         });
         this.pending.clear();
         // Reset status para error
-        (Object.keys(this.status) as AIModelType[]).forEach((key: string) => {
+        (Object.keys(this.status) as AIModelType[]).forEach((key) => {
           this.status[key] = 'error';
         });
         this._notify();
@@ -537,7 +570,7 @@ const AIModelService = {
     }
 
     // Reset status
-    (Object.keys(this.status) as AIModelType[]).forEach((key: string) => {
+    (Object.keys(this.status) as AIModelType[]).forEach((key) => {
       this.status[key] = 'idle';
       this.progress[key] = 0;
     });
@@ -1280,62 +1313,62 @@ const anonymizeText = (text: string, config: AnonymizationSettings | null | unde
 
   // CNPJ: 00.000.000/0000-00
   if (config.cnpj !== false) {
-    result = result.replace(/\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/g, (m: Model) => { encontrados.cnpj.push(m); return '[CNPJ]'; });
+    result = result.replace(/\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/g, (m: string) => { encontrados.cnpj.push(m); return '[CNPJ]'; });
   }
 
   // CPF: 000.000.000-00 (após CNPJ para evitar conflito)
   if (config.cpf !== false) {
-    result = result.replace(/\d{3}\.?\d{3}\.?\d{3}-?\d{2}/g, (m: Model) => { encontrados.cpf.push(m); return '[CPF]'; });
+    result = result.replace(/\d{3}\.?\d{3}\.?\d{3}-?\d{2}/g, (m: string) => { encontrados.cpf.push(m); return '[CPF]'; });
   }
 
   // RG: 00.000.000-0 ou similar
   if (config.rg !== false) {
-    result = result.replace(/\d{1,2}\.?\d{3}\.?\d{3}-?[\dXx]/g, (m: Model) => { encontrados.rg.push(m); return '[RG]'; });
+    result = result.replace(/\d{1,2}\.?\d{3}\.?\d{3}-?[\dXx]/g, (m: string) => { encontrados.rg.push(m); return '[RG]'; });
   }
 
   // PIS/PASEP: 000.00000.00-0
   if (config.pis !== false) {
-    result = result.replace(/\d{3}\.?\d{5}\.?\d{2}-?\d/g, (m: Model) => { encontrados.pis.push(m); return '[PIS]'; });
+    result = result.replace(/\d{3}\.?\d{5}\.?\d{2}-?\d/g, (m: string) => { encontrados.pis.push(m); return '[PIS]'; });
   }
 
   // CTPS: 0000000/00000 ou similar
   if (config.ctps !== false) {
-    result = result.replace(/\d{5,7}[/-]\d{3,5}/g, (m: Model) => { encontrados.ctps.push(m); return '[CTPS]'; });
+    result = result.replace(/\d{5,7}[/-]\d{3,5}/g, (m: string) => { encontrados.ctps.push(m); return '[CTPS]'; });
   }
 
   // CEP: 00.000-000 ou 00000-000
   if (config.cep !== false) {
-    result = result.replace(/\d{2}\.?\d{3}-?\d{3}/g, (m: Model) => { encontrados.cep.push(m); return '[CEP]'; });
+    result = result.replace(/\d{2}\.?\d{3}-?\d{3}/g, (m: string) => { encontrados.cep.push(m); return '[CEP]'; });
   }
 
   // Número de processo CNJ: 0000000-00.0000.0.00.0000 (com espaços antes/depois de separadores)
   if (config.processo !== false) {
-    result = result.replace(/\d{7}\s*-\s*\d{2}\s*\.\s*\d{4}\s*\.\s*\d\s*\.\s*\d{2}\s*\.\s*\d{4}/g, (m: Model) => { encontrados.processo.push(m); return '[PROCESSO]'; });
+    result = result.replace(/\d{7}\s*-\s*\d{2}\s*\.\s*\d{4}\s*\.\s*\d\s*\.\s*\d{2}\s*\.\s*\d{4}/g, (m: string) => { encontrados.processo.push(m); return '[PROCESSO]'; });
   }
 
   // OAB: OAB/XX 0000
   if (config.oab !== false) {
-    result = result.replace(/OAB\/?\s*[A-Z]{2}\s*\d+/gi, (m: Model) => { encontrados.oab.push(m); return '[OAB]'; });
+    result = result.replace(/OAB\/?\s*[A-Z]{2}\s*\d+/gi, (m: string) => { encontrados.oab.push(m); return '[OAB]'; });
   }
 
   // Telefone: (00) 00000-0000 ou variações
   if (config.telefone !== false) {
-    result = result.replace(/\(?\d{2}\)?\s*\d{4,5}-?\d{4}/g, (m: Model) => { encontrados.telefone.push(m); return '[TELEFONE]'; });
+    result = result.replace(/\(?\d{2}\)?\s*\d{4,5}-?\d{4}/g, (m: string) => { encontrados.telefone.push(m); return '[TELEFONE]'; });
   }
 
   // E-mail
   if (config.email !== false) {
-    result = result.replace(/[\w.-]+@[\w.-]+\.\w{2,}/gi, (m: Model) => { encontrados.email.push(m); return '[EMAIL]'; });
+    result = result.replace(/[\w.-]+@[\w.-]+\.\w{2,}/gi, (m: string) => { encontrados.email.push(m); return '[EMAIL]'; });
   }
 
   // Conta bancária: Ag. 0000 C/C 00000-0 ou variações
   if (config.contaBancaria !== false) {
-    result = result.replace(/[Aa]g[êe]?n?c?i?a?\.?\s*:?\s*\d[\d.-]*\s*[Cc]\.?\/?\s*[Cc]\.?\s*:?\s*\d[\d.-]*/g, (m: Model) => { encontrados.conta.push(m); return '[CONTA]'; });
+    result = result.replace(/[Aa]g[êe]?n?c?i?a?\.?\s*:?\s*\d[\d.-]*\s*[Cc]\.?\/?\s*[Cc]\.?\s*:?\s*\d[\d.-]*/g, (m: string) => { encontrados.conta.push(m); return '[CONTA]'; });
   }
 
   // Valores monetários R$
   if (config.valores === true) {
-    result = result.replace(/R\$\s*[\d.,]+/g, (m: Model) => { encontrados.valor.push(m); return '[VALOR]'; });
+    result = result.replace(/R\$\s*[\d.,]+/g, (m: string) => { encontrados.valor.push(m); return '[VALOR]'; });
   }
 
   // Nomes inseridos pelo usuário (v1.17.0)
@@ -1375,8 +1408,8 @@ const anonymizeText = (text: string, config: AnonymizationSettings | null | unde
 
       matchCount = (result.match(nomeRegex) || []).length;
       if (matchCount > 0) {
-        result = result.replace(nomeRegex, (m: Model) => {
-          encontrados.pessoa.push(m);
+        result = result.replace(nomeRegex, (match: string) => {
+          encontrados.pessoa.push(match);
           return placeholder;
         });
       }
@@ -1481,6 +1514,7 @@ const useModalManager = () => {
     deleteModel: false,
     deleteAllModels: false,
     deleteAllPrecedentes: false,
+    deleteAllLegislacao: false,
     rename: false,
     merge: false,
     split: false,
@@ -1511,7 +1545,9 @@ const useModalManager = () => {
     shareLibrary: false,  // v1.35.0
     changelog: false,
     topicCuration: false,
-    modelGenerator: false
+    modelGenerator: false,
+    regenerateRelatorioCustom: false,
+    bulkModal: false
   });
 
   const [textPreview, setTextPreview] = useState<TextPreviewState>({ isOpen: false, title: '', text: '' });
@@ -1810,7 +1846,7 @@ const useAIIntegration = () => {
           }));
         }
       } catch (err) {
-        console.warn('[loadAiSettings] Erro ao carregar configurações:', err instanceof Error ? err.message : err);
+        console.warn('[loadAiSettings] Erro ao carregar configurações:', err instanceof Error ? (err as Error).message : err);
       }
     };
 
@@ -2079,7 +2115,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
             maxTokens,
             useInstructions,
             systemPrompt: systemPrompt ?? undefined,
-            model,
+            model: model ?? undefined,
             disableThinking
           })),
           signal
@@ -2185,24 +2221,25 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   // ========================================
 
   // Converter formato de mensagens Claude → Gemini
-  const convertToGeminiFormat = React.useCallback((claudeMessages: AIMessage[], systemPrompt: string | null | Record<string, unknown>[] = null) => {
+  const convertToGeminiFormat = React.useCallback((claudeMessages: AIMessage[], systemPrompt: string | null | Record<string, unknown>[] = null): GeminiRequest => {
     const contents = claudeMessages.map((msg: AIMessage) => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: Array.isArray(msg.content)
-        ? msg.content.map((c: Record<string, unknown>) => {
+        ? msg.content.map((c: AIMessageContent) => {
+            // String direta
+            if (typeof c === 'string') return { text: c };
             // Texto simples
-            if (c.type === 'text') return { text: c.text as string };
+            if (c.type === 'text') return { text: c.text };
             // Imagem (base64)
             if (c.type === 'image') return {
-              inlineData: { mimeType: (c.source as Record<string, unknown>)?.media_type || 'image/png', data: (c.source as Record<string, unknown>)?.data }
+              inlineData: { mimeType: c.source.media_type || 'image/png', data: c.source.data }
             };
             // PDF/Documento
-            const source = c.source as Record<string, unknown> | undefined;
-            if (c.type === 'document' && source?.type === 'base64') {
+            if (c.type === 'document' && c.source.type === 'base64') {
               return {
                 inlineData: {
-                  mimeType: source.media_type || 'application/pdf',
-                  data: source.data
+                  mimeType: c.source.media_type || 'application/pdf',
+                  data: c.source.data
                 }
               };
             }
@@ -2212,14 +2249,14 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         : [{ text: msg.content as string }]
     }));
 
-    const result: Record<string, unknown> = { contents };
+    const result: GeminiRequest = { contents };
 
     // System prompt → systemInstruction
     if (systemPrompt) {
       const systemText = Array.isArray(systemPrompt)
         ? systemPrompt.map((s: Record<string, unknown>) => s.text || s).join('\n\n')
         : systemPrompt;
-      result.systemInstruction = { parts: [{ text: systemText }] };
+      result.systemInstruction = { parts: [{ text: systemText as string }] };
     }
 
     return result;
@@ -2329,7 +2366,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
     // AbortController para timeout
     const internalController = timeout ? new AbortController() : null;
-    const timeoutId = timeout ? setTimeout(() => internalController.abort(), timeout) : null;
+    const timeoutId = timeout && internalController ? setTimeout(() => internalController.abort(), timeout) : null;
     const signal = abortSignal || internalController?.signal;
 
     let lastError = null;
@@ -2420,11 +2457,11 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         if (logMetrics && data.usageMetadata) {
           const metrics = extractTokenMetrics(data, 'gemini');
           setTokenMetrics(prev => ({
-            totalInput: prev.totalInput + metrics.input,
-            totalOutput: prev.totalOutput + metrics.output,
-            totalCacheRead: prev.totalCacheRead + metrics.cacheRead,
-            totalCacheCreation: prev.totalCacheCreation + metrics.cacheCreation,
-            requestCount: prev.requestCount + 1,
+            totalInput: (prev.totalInput ?? 0) + metrics.input,
+            totalOutput: (prev.totalOutput ?? 0) + metrics.output,
+            totalCacheRead: (prev.totalCacheRead ?? 0) + metrics.cacheRead,
+            totalCacheCreation: (prev.totalCacheCreation ?? 0) + metrics.cacheCreation,
+            requestCount: (prev.requestCount ?? 0) + 1,
             lastUpdated: new Date().toISOString()
           }));
         }
@@ -2442,8 +2479,8 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         lastError = err;
         if (timeoutId) clearTimeout(timeoutId);
 
-        if (err.name === 'AbortError') {
-          throw new Error(abortSignal?.aborted ? 'Operação cancelada' : `Timeout após ${timeout/1000}s`);
+        if ((err as Error).name === 'AbortError') {
+          throw new Error(abortSignal?.aborted ? 'Operação cancelada' : `Timeout após ${(timeout ?? 0)/1000}s`);
         }
 
         if (attempt < RETRY_MAX - 1) {
@@ -2482,7 +2519,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   // ========================================
 
   const getModelDisplayName = React.useCallback((modelId: string) => {
-    const models = {
+    const models: Record<string, string> = {
       // Claude
       'claude-sonnet-4-20250514': 'Claude Sonnet 4.5',
       'claude-opus-4-5-20251101': 'Claude Opus 4.5',
@@ -2653,10 +2690,11 @@ const useSpacingControl = () => {
   }, [spacing]);
 
   React.useEffect(() => {
-    const handleSpacingChange = (e: CustomEvent<{ spacing: string }>) => {
+    const handleSpacingChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ spacing: string }>;
       // Evitar loop infinito: só atualizar se for diferente
-      if (e.detail.spacing !== spacing) {
-        setSpacingState(e.detail.spacing);
+      if (customEvent.detail.spacing !== spacing) {
+        setSpacingState(customEvent.detail.spacing);
       }
     };
 
@@ -2712,9 +2750,10 @@ const useFontSizeControl = () => {
   }, [fontSize]);
 
   React.useEffect(() => {
-    const handleFontSizeChange = (e: CustomEvent<{ fontSize: string }>) => {
-      if (e.detail.fontSize !== fontSize) {
-        setFontSizeState(e.detail.fontSize);
+    const handleFontSizeChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ fontSize: string }>;
+      if (customEvent.detail.fontSize !== fontSize) {
+        setFontSizeState(customEvent.detail.fontSize);
       }
     };
 
@@ -2869,7 +2908,7 @@ const useAPICache = (maxSize = 50, ttlMs = 5 * 60 * 1000) => {
     if (cache.size < maxSize) return;
     let lruKey = null, lruScore = Infinity;
     for (const [key, entry] of cache.entries()) {
-      const score = entry.hits - ((Date.now() - entry.timestamp) / 1000);
+      const score = (entry.hits ?? 0) - ((Date.now() - entry.timestamp) / 1000);
       if (score < lruScore) { lruScore = score; lruKey = key; }
     }
     if (lruKey) { cache.delete(lruKey); statsRef.current.evictions++; }
@@ -2880,8 +2919,8 @@ const useAPICache = (maxSize = 50, ttlMs = 5 * 60 * 1000) => {
     const hashedKey = hashKey(key);
     if (!cache.has(hashedKey)) { statsRef.current.misses++; return null; }
     const entry = cache.get(hashedKey);
-    if (isExpired(entry)) { cache.delete(hashedKey); statsRef.current.misses++; return null; }
-    entry.hits++; statsRef.current.hits++;
+    if (!entry || isExpired(entry)) { cache.delete(hashedKey); statsRef.current.misses++; return null; }
+    entry.hits = (entry.hits ?? 0) + 1; statsRef.current.hits++;
     return entry.result;
   }, [hashKey, isExpired]);
 
@@ -2941,13 +2980,13 @@ const useIndexedDB = () => {
   const broadcastChannelRef = React.useRef<BroadcastChannel | null>(null);
   const tabIdRef = React.useRef<string>(`tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const lastBroadcastTimestampRef = React.useRef<number | null>(null);
-  const syncCallbackRef = React.useRef<((models: Model[]) => void) | null>(null); // Callback para notificar componente pai
+  const syncCallbackRef = React.useRef<((params: { action: string; timestamp: number }) => void) | null>(null); // Callback para notificar componente pai
 
   // 🚀 v1.8.1: Throttled broadcast via hook
   const notifyOtherTabs = useThrottledBroadcast(broadcastChannelRef, 1000);
 
   // Helper: Exponential Backoff Retry
-  const retryWithBackoff = React.useCallback(async (fn: () => Promise<unknown>, retries: number = MAX_RETRIES): Promise<unknown> => {
+  const retryWithBackoff = React.useCallback(async <T,>(fn: () => Promise<T>, retries: number = MAX_RETRIES): Promise<T> => {
     for (let i = 0; i < retries; i++) {
       try {
         return await fn();
@@ -2957,11 +2996,12 @@ const useIndexedDB = () => {
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
+    throw new Error('retryWithBackoff: max retries exceeded');
   }, []);
 
   // Open Database
-  const openDB = React.useCallback(() => {
-    return new Promise((resolve, reject) => {
+  const openDB = React.useCallback((): Promise<IDBDatabase> => {
+    return new Promise<IDBDatabase>((resolve, reject) => {
       try {
         if (!window.indexedDB) {
           reject(new Error('IndexedDB não disponível neste navegador'));
@@ -2979,7 +3019,7 @@ const useIndexedDB = () => {
         };
 
         request.onupgradeneeded = (event) => {
-          const db = event.target.result;
+          const db = (event.target as IDBOpenDBRequest).result;
 
           // Create models store
           if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -3009,7 +3049,7 @@ const useIndexedDB = () => {
       } catch (err) {
         if (isMounted) {
           setIsAvailable(false);
-          setError(err.message);
+          setError((err as Error).message);
         }
       }
     };
@@ -3047,7 +3087,7 @@ const useIndexedDB = () => {
             // Notificar componente pai para atualizar state React
             // (isso será implementado via callback)
             if (syncCallbackRef.current) {
-              syncCallbackRef.current({ action, timestamp });
+              syncCallbackRef.current({ action: action || 'models-updated', timestamp });
             }
 
             // Atualizar timestamp para deduplicação
@@ -3108,7 +3148,7 @@ const useIndexedDB = () => {
 
           request.onerror = () => reject(request.error);
         });
-      });
+      }) as Model[];
 
       // Update cache
       modelsCacheRef.current = models;
@@ -3116,7 +3156,7 @@ const useIndexedDB = () => {
       setIsLoading(false);
       return models;
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
       setIsLoading(false);
       throw err;
     }
@@ -3133,8 +3173,8 @@ const useIndexedDB = () => {
 
     try {
       // v1.34.8: Validar ANTES da transação para poder atualizar cache corretamente
-      const validatedModels = [];
-      const rejectedModels = [];
+      const validatedModels: Model[] = [];
+      const rejectedModels: Array<{ id: string; title: string; errors: string[] }> = [];
       for (const model of newModels) {
         const validation = validateModel(model);
         if (!validation.valid) {
@@ -3151,7 +3191,7 @@ const useIndexedDB = () => {
       }
 
       await retryWithBackoff(async () => {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
           const store = transaction.objectStore(STORE_NAME);
 
@@ -3195,7 +3235,7 @@ const useIndexedDB = () => {
         }
       }
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
       setIsLoading(false);
       throw err;
     }
@@ -3212,7 +3252,7 @@ const useIndexedDB = () => {
 
     try {
       await retryWithBackoff(async () => {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
           const store = transaction.objectStore(STORE_NAME);
           const request = store.delete(modelId);
@@ -3247,7 +3287,7 @@ const useIndexedDB = () => {
         }
       }
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
       setIsLoading(false);
       throw err;
     }
@@ -3264,7 +3304,7 @@ const useIndexedDB = () => {
 
     try {
       await retryWithBackoff(async () => {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
           const store = transaction.objectStore(STORE_NAME);
           const request = store.clear();
@@ -3298,7 +3338,7 @@ const useIndexedDB = () => {
         }
       }
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
       setIsLoading(false);
       throw err;
     }
@@ -3310,7 +3350,7 @@ const useIndexedDB = () => {
   }, []);
 
   // Set Sync Callback (v1.7 FASE 1.4)
-  const setSyncCallback = React.useCallback((callback: (() => void) | null) => {
+  const setSyncCallback = React.useCallback((callback: ((params: { action: string; timestamp: number }) => void) | null) => {
     syncCallbackRef.current = callback;
   }, []);
 
@@ -3513,7 +3553,7 @@ const PDF_DB_NAME = 'sentencify-pdfs';
 const PDF_STORE_NAME = 'pdfs';
 const PDF_DB_VERSION = 1;
 
-const openPdfDB = () => {
+const openPdfDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(PDF_DB_NAME, PDF_DB_VERSION);
 
@@ -3526,7 +3566,7 @@ const openPdfDB = () => {
     };
 
     request.onupgradeneeded = (event) => {
-      const db = event.target.result;
+      const db = (event.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(PDF_STORE_NAME)) {
         // Store com chave 'id' (formato: 'upload-{index}' ou 'proof-{id}')
         db.createObjectStore(PDF_STORE_NAME, { keyPath: 'id' });
@@ -3556,7 +3596,7 @@ const savePdfToIndexedDB = async (id: string, file: File, type: string) => {
       savedAt: Date.now()
     };
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const request = store.put(pdfRecord);
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
@@ -3568,6 +3608,15 @@ const savePdfToIndexedDB = async (id: string, file: File, type: string) => {
   }
 };
 
+// Tipo para registro de PDF no IndexedDB
+interface PdfRecord {
+  id: string;
+  data: ArrayBuffer;
+  mimeType: string;
+  fileName: string;
+  savedAt: number;
+}
+
 // Recupera um PDF do IndexedDB
 const getPdfFromIndexedDB = async (id: string) => {
   try {
@@ -3575,9 +3624,9 @@ const getPdfFromIndexedDB = async (id: string) => {
     const transaction = db.transaction([PDF_STORE_NAME], 'readonly');
     const store = transaction.objectStore(PDF_STORE_NAME);
 
-    const record = await new Promise((resolve, reject) => {
+    const record = await new Promise<PdfRecord | undefined>((resolve, reject) => {
       const request = store.get(id);
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => resolve(request.result as PdfRecord | undefined);
       request.onerror = () => reject(request.error);
     });
 
@@ -3607,7 +3656,7 @@ const removePdfFromIndexedDB = async (id: string) => {
     const transaction = db.transaction([PDF_STORE_NAME], 'readwrite');
     const store = transaction.objectStore(PDF_STORE_NAME);
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const request = store.delete(id);
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
@@ -3626,7 +3675,7 @@ const clearAllPdfsFromIndexedDB = async () => {
     const transaction = db.transaction([PDF_STORE_NAME], 'readwrite');
     const store = transaction.objectStore(PDF_STORE_NAME);
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const request = store.clear();
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
@@ -3706,7 +3755,7 @@ const clearPrecedentesFromIndexedDB = async (): Promise<void> => {
 const LEGIS_DB_NAME = 'sentencify-legislacao';
 const LEGIS_STORE_NAME = 'artigos';
 
-const LEIS_METADATA = {
+const LEIS_METADATA: Record<string, { nome: string; nomeCompleto: string; numero: string }> = {
   'clt': { nome: 'CLT', nomeCompleto: 'Consolidação das Leis do Trabalho', numero: 'Decreto-Lei 5.452/1943' },
   'cf': { nome: 'CF/88', nomeCompleto: 'Constituição Federal', numero: 'CF 1988' },
   'cpc': { nome: 'CPC', nomeCompleto: 'Código de Processo Civil', numero: 'Lei 13.105/2015' },
@@ -3786,12 +3835,12 @@ const clearArtigosFromIndexedDB = async (): Promise<void> => {
 const VERSION_DB = 'sentencify-versions';
 const VERSION_STORE = 'versions';
 
-const openVersionDB = () => new Promise((resolve, reject) => {
+const openVersionDB = (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
   const req = indexedDB.open(VERSION_DB, 1);
   req.onerror = () => reject(req.error);
   req.onsuccess = () => resolve(req.result);
-  req.onupgradeneeded = (e) => {
-    const db = e.target.result;
+  req.onupgradeneeded = (e: IDBVersionChangeEvent) => {
+    const db = (e.target as IDBOpenDBRequest).result;
     if (!db.objectStoreNames.contains(VERSION_STORE)) {
       db.createObjectStore(VERSION_STORE, { keyPath: 'id', autoIncrement: true })
         .createIndex('topicTitle', 'topicTitle');
@@ -3809,7 +3858,7 @@ const useFieldVersioning = () => {
       const tx = db.transaction(VERSION_STORE, 'readwrite');
       const store = tx.objectStore(VERSION_STORE);
       const index = store.index('topicTitle');
-      const existing = await new Promise(r => {
+      const existing = await new Promise<FieldVersion[]>(r => {
         const req = index.getAll(topicTitle);
         req.onsuccess = () => r(req.result || []);
       });
@@ -3842,12 +3891,12 @@ const useFieldVersioning = () => {
     await saveVersion(topicTitle, currentContent);
     try {
       const db = await openVersionDB();
-      const version = await new Promise(r => {
+      const version = await new Promise<FieldVersion | undefined>(r => {
         const req = db.transaction(VERSION_STORE).objectStore(VERSION_STORE).get(id);
-        req.onsuccess = () => r(req.result);
+        req.onsuccess = () => r(req.result as FieldVersion | undefined);
       });
       db.close();
-      return version?.content;
+      return version?.content ?? null;
     } catch { return null; }
   }, [saveVersion]);
 
@@ -3909,13 +3958,13 @@ const useLocalStorage = () => {
   // Funções Auxiliares
 
   // Converte File para base64 (com cache LRU)
-  const fileToBase64 = React.useCallback((file: File) => {
+  const fileToBase64 = React.useCallback((file: File): Promise<string> => {
     // Criar chave única baseada em propriedades do arquivo
     const cacheKey = `${file.name}-${file.size}-${file.lastModified}`;
 
     // Verificar cache primeiro
     if (pdfCacheRef.current.has(cacheKey)) {
-      return Promise.resolve(pdfCacheRef.current.get(cacheKey));
+      return Promise.resolve(pdfCacheRef.current.get(cacheKey)!);
     }
 
     // Se não está no cache, converter e cachear
@@ -3953,7 +4002,7 @@ const useLocalStorage = () => {
   }, []);
 
   // Verifica se existe sessão salva
-  const checkSavedSession = React.useCallback((openModal: (modalName: string) => void) => {
+  const checkSavedSession = React.useCallback((openModal: (modalName: ModalKey) => void) => {
     try {
       const saved = localStorage.getItem('sentencifySession');
       if (saved) {
@@ -3965,7 +4014,7 @@ const useLocalStorage = () => {
     }
   }, []);
 
-  const autoSaveSession = React.useCallback(async (allStates: Record<string, unknown>, setError: (err: string | null) => void, immediate = false) => {
+  const autoSaveSession = React.useCallback(async (allStates: SessionState, setError: (err: string | null) => void, immediate = false) => {
     try {
       const {
         processoNumero,
@@ -4051,7 +4100,7 @@ const useLocalStorage = () => {
           setShowAutoSaveIndicator(true);
           setTimeout(() => setShowAutoSaveIndicator(false), 3000);
         } catch (storageErr) {
-          if (storageErr.name === 'QuotaExceededError') {
+          if ((storageErr as Error).name === 'QuotaExceededError') {
             setError('❌ LocalStorage cheio. Considere limpar dados antigos.');
             setTimeout(() => setError(''), 8000);
           }
@@ -4068,7 +4117,7 @@ const useLocalStorage = () => {
               setShowAutoSaveIndicator(true);
               setTimeout(() => setShowAutoSaveIndicator(false), 3000);
             } catch (storageErr) {
-              if (storageErr.name === 'QuotaExceededError') {
+              if ((storageErr as Error).name === 'QuotaExceededError') {
                 setError('❌ LocalStorage cheio. Considere limpar dados antigos.');
                 setTimeout(() => setError(''), 8000);
               }
@@ -4082,7 +4131,7 @@ const useLocalStorage = () => {
   }, [setShowAutoSaveIndicator, setSessionLastSaved]);
 
   // Restaura sessão (PDFs do IndexedDB, metadados do localStorage)
-  const restoreSession = React.useCallback(async (callbacks: Record<string, unknown>) => {
+  const restoreSession = React.useCallback(async (callbacks: RestoreSessionCallbacks) => {
     try {
       const saved = localStorage.getItem('sentencifySession');
       if (!saved) return;
@@ -4282,13 +4331,13 @@ const useLocalStorage = () => {
 
       // Sessão restaurada silenciosamente
     } catch (err) {
-      setError('Erro ao restaurar sessão: ' + err.message);
+      console.error('[useLocalStorage] Erro ao restaurar sessão:', (err as Error).message);
     }
   }, [setSessionLastSaved]);
 
   // v1.35.40: Constrói JSON do projeto para salvar no Google Drive (sem download)
   // v1.35.41: Movido para antes de exportProject (usado por ambos)
-  const buildProjectJson = React.useCallback(async (allStates: Record<string, unknown>) => {
+  const buildProjectJson = React.useCallback(async (allStates: ProjectState) => {
     const {
       processoNumero,
       pastedPeticaoTexts,
@@ -4315,7 +4364,11 @@ const useLocalStorage = () => {
       tokenMetrics
     } = allStates;
 
-    const uploadPdfs = {
+    const uploadPdfs: {
+      peticoes: Array<{ name: string; id: string; fileData: string }>;
+      contestacoes: Array<{ name: string; id: string; fileData: string }>;
+      complementares: Array<{ name: string; id: string; fileData: string }>;
+    } = {
       peticoes: [],
       contestacoes: [],
       complementares: []
@@ -4323,8 +4376,8 @@ const useLocalStorage = () => {
 
     if (peticaoFiles && peticaoFiles.length > 0) {
       uploadPdfs.peticoes = await Promise.all(
-        peticaoFiles.map(async (f: File) => {
-          const fileObj = f.file || f;
+        peticaoFiles.map(async (f: UploadedFile) => {
+          const fileObj = f.file;
           return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
         })
       );
@@ -4332,8 +4385,8 @@ const useLocalStorage = () => {
 
     if (contestacaoFiles && contestacaoFiles.length > 0) {
       uploadPdfs.contestacoes = await Promise.all(
-        contestacaoFiles.map(async (f: File) => {
-          const fileObj = f.file || f;
+        contestacaoFiles.map(async (f: UploadedFile) => {
+          const fileObj = f.file;
           return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
         })
       );
@@ -4341,8 +4394,8 @@ const useLocalStorage = () => {
 
     if (complementaryFiles && complementaryFiles.length > 0) {
       uploadPdfs.complementares = await Promise.all(
-        complementaryFiles.map(async (f: File) => {
-          const fileObj = f.file || f;
+        complementaryFiles.map(async (f: UploadedFile) => {
+          const fileObj = f.file;
           return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
         })
       );
@@ -4406,7 +4459,7 @@ const useLocalStorage = () => {
 
   // Exporta projeto completo em JSON (PDFs em base64)
   // v1.35.41: Refatorado para usar buildProjectJson (elimina duplicação)
-  const exportProject = React.useCallback(async (allStates: Record<string, unknown>, setError: (err: string | null) => void) => {
+  const exportProject = React.useCallback(async (allStates: ProjectState, setError: (err: string | null) => void) => {
     try {
       const project = await buildProjectJson(allStates);
       const dataStr = JSON.stringify(project, null, 2);
@@ -4434,13 +4487,13 @@ const useLocalStorage = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err) {
-      setError('Erro ao exportar projeto: ' + err.message);
+      setError('Erro ao exportar projeto: ' + (err as Error).message);
     }
   }, [buildProjectJson]);
 
   // v1.35.40: Importa projeto a partir de JSON (para Google Drive)
   // v1.35.41: Adicionadas migrações de projetos antigos (formato singular)
-  const importProjectFromJson = React.useCallback(async (project: Record<string, unknown>, callbacks: Record<string, unknown>, autoSaveSessionFn: (states: Record<string, unknown>, setError: (err: string | null) => void, immediate: boolean) => Promise<void>) => {
+  const importProjectFromJson = React.useCallback(async (project: ImportedProject, callbacks: ImportCallbacks, autoSaveSessionFn: (states: SessionState, setError: (err: string | null) => void, immediate: boolean) => Promise<void>) => {
     if (!project || !project.version) {
       throw new Error('Arquivo inválido ou incompatível.');
     }
@@ -4482,13 +4535,13 @@ const useLocalStorage = () => {
 
     // Migração de projetos antigos (formato singular → plural)
     if (project.pastedPeticaoText && !project.pastedPeticaoTexts) {
-      project.pastedPeticaoTexts = [{ text: project.pastedPeticaoText, name: 'Petição Inicial' }];
+      project.pastedPeticaoTexts = [{ id: crypto.randomUUID(), text: project.pastedPeticaoText, name: 'Petição Inicial' }];
     }
     if (project.analyzedDocuments?.peticao && !project.analyzedDocuments?.peticoes) {
       project.analyzedDocuments.peticoes = project.analyzedDocuments.peticaoType === 'pdf'
-        ? [project.analyzedDocuments.peticao] : [];
+        ? [project.analyzedDocuments.peticao as string] : [];
       project.analyzedDocuments.peticoesText = project.analyzedDocuments.peticaoType === 'text'
-        ? [{ text: project.analyzedDocuments.peticao, name: 'Petição Inicial' }] : [];
+        ? [{ id: crypto.randomUUID(), text: project.analyzedDocuments.peticao as string, name: 'Petição Inicial' }] : [];
     }
 
     // Restaurar dados
@@ -4564,12 +4617,17 @@ const useLocalStorage = () => {
     }
 
     // Restaurar provas
-    let restoredProofFiles = [];
+    let restoredProofFiles: Proof[] = [];
     if (project.proofFiles && Array.isArray(project.proofFiles)) {
       restoredProofFiles = await Promise.all(
-        project.proofFiles.map(async (proof: Proof) => {
+        project.proofFiles.map(async (proof: Proof): Promise<Proof> => {
+          if (proof.type === 'text') {
+            // ProofText - return as-is
+            return proof;
+          }
           if (!proof.fileData) {
-            return { id: proof.id, file: null, name: proof.name, type: proof.type, size: proof.size, uploadDate: proof.uploadDate };
+            // ProofFile without data - mark as placeholder
+            return { id: proof.id, name: proof.name, type: 'pdf' as const, size: proof.size, uploadDate: proof.uploadDate, isPlaceholder: true };
           }
           const byteCharacters = atob(proof.fileData);
           const byteNumbers = new Array(byteCharacters.length);
@@ -4580,20 +4638,21 @@ const useLocalStorage = () => {
           const blob = new Blob([byteArray], { type: 'application/pdf' });
           const restoredFile = new File([blob], proof.name, { type: 'application/pdf' });
           await savePdfToIndexedDB(`proof-${proof.id}`, restoredFile, 'proof');
-          return { id: proof.id, file: restoredFile, name: proof.name, type: proof.type, size: proof.size, uploadDate: proof.uploadDate };
+          return { id: proof.id, file: restoredFile, name: proof.name, type: 'pdf' as const, size: proof.size, uploadDate: proof.uploadDate };
         })
       );
-      setProofFiles(restoredProofFiles);
+      // Filtrar apenas PDFs para setProofFiles (textos vão em setProofTexts)
+      setProofFiles(restoredProofFiles.filter((p): p is ProofFile => p.type === 'pdf'));
     } else {
       setProofFiles([]);
     }
 
-    setProofTexts(project.proofTexts || []);
+    setProofTexts((project.proofTexts as unknown as ProofText[]) || []);
     setProofUsePdfMode(project.proofUsePdfMode || {});
     setExtractedProofTexts(project.extractedProofTexts || {});
     setProofExtractionFailed(project.proofExtractionFailed || {});
     setProofTopicLinks(project.proofTopicLinks || {});
-    setProofAnalysisResults(project.proofAnalysisResults || {});
+    setProofAnalysisResults((project.proofAnalysisResults as unknown as Record<string, ProofAnalysisResult>) || {});
     setProofConclusions(project.proofConclusions || {});
     setProofSendFullContent(project.proofSendFullContent || {});
 
@@ -4637,7 +4696,7 @@ const useLocalStorage = () => {
     setActiveTab('upload');
 
     if (autoSaveSessionFn) {
-      const allStates = {
+      const allStates: SessionState = {
         processoNumero: project.processoNumero || '',
         pastedPeticaoTexts: project.pastedPeticaoTexts || [],
         pastedContestacaoTexts: project.pastedContestacaoTexts || [],
@@ -4645,30 +4704,34 @@ const useLocalStorage = () => {
         extractedTopics: project.extractedTopics || [],
         selectedTopics: project.selectedTopics || [],
         partesProcesso: project.partesProcesso || { reclamante: '', reclamadas: [] },
-        activeTab: 'upload',
-        analyzedDocuments: project.analyzedDocuments || {},
+        activeTab: 'upload' as const,
+        analyzedDocuments: project.analyzedDocuments || { peticoes: [], peticoesText: [], contestacoes: [], contestacoesText: [], complementares: [], complementaresText: [] },
         extractedTexts: project.extractedTexts || { peticoes: [], contestacoes: [], complementares: [] },
         proofFiles: restoredProofFiles || [],
-        proofTexts: project.proofTexts || [],
+        proofTexts: (project.proofTexts as unknown as ProofText[]) || [],
         proofUsePdfMode: project.proofUsePdfMode || {},
         extractedProofTexts: project.extractedProofTexts || {},
         proofExtractionFailed: project.proofExtractionFailed || {},
         proofTopicLinks: project.proofTopicLinks || {},
-        proofAnalysisResults: project.proofAnalysisResults || {},
+        proofAnalysisResults: (project.proofAnalysisResults as unknown as Record<string, { type: string; result: string }>) || {},
         proofConclusions: project.proofConclusions || {},
         proofSendFullContent: project.proofSendFullContent || {},
-        documentProcessingModes: project.documentProcessingModes || { peticao: 'pdfjs', contestacoes: [], complementares: [] },
-        tokenMetrics: project.tokenMetrics || { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0, requestCount: 0, lastUpdated: null }
+        documentProcessingModes: project.documentProcessingModes || { peticoes: ['pdfjs'], contestacoes: [], complementares: [] },
+        tokenMetrics: project.tokenMetrics || { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0, requestCount: 0, lastUpdated: null },
+        peticaoFiles: [],
+        contestacaoFiles: [],
+        complementaryFiles: []
       };
-      autoSaveSessionFn(allStates, setError, true);
+      autoSaveSessionFn(allStates, (err) => err && setError(err), true);
     }
   }, [base64ToFile, clearAllPdfsFromIndexedDB, savePdfToIndexedDB]);
 
   // Importa projeto de arquivo JSON
   // v1.35.41: Refatorado para usar importProjectFromJson (elimina duplicação)
-  const importProject = React.useCallback(async (event: React.ChangeEvent<HTMLInputElement>, callbacks: Record<string, unknown>, autoSaveSessionFn: (states: Record<string, unknown>, setError: (err: string | null) => void, immediate: boolean) => Promise<void>) => {
-    const file = event.target.files[0];
-    if (!file) return;
+  const importProject = React.useCallback(async (event: React.ChangeEvent<HTMLInputElement>, callbacks: ImportCallbacks & ImportProjectCallbacks, autoSaveSessionFn: (states: SessionState, setError: (err: string | null) => void, immediate: boolean) => Promise<void>) => {
+    const files = event.target.files;
+    if (!files || !files[0]) return;
+    const file = files[0];
 
     try {
       const text = await file.text();
@@ -4685,13 +4748,13 @@ const useLocalStorage = () => {
       // Limpar input para permitir reimportar o mesmo arquivo
       event.target.value = '';
     } catch (err) {
-      callbacks.setError('Erro ao importar projeto: ' + err.message);
+      callbacks.setError('Erro ao importar projeto: ' + (err as Error).message);
       event.target.value = '';
     }
   }, [importProjectFromJson]);
 
   // Limpa todos os dados do projeto
-  const clearProject = React.useCallback((callbacks: Record<string, unknown>) => {
+  const clearProject = React.useCallback((callbacks: ClearProjectCallbacks) => {
     try {
       const {
         closeModal,
@@ -4746,9 +4809,9 @@ const useLocalStorage = () => {
         complementares: [],
         complementaresText: []
       });
-      setPeticaoFiles([]);
-      setContestacaoFiles([]);
-      setComplementaryFiles([]);
+      setPeticaoFiles?.([]);
+      setContestacaoFiles?.([]);
+      setComplementaryFiles?.([]);
       setActiveTab('upload');
 
       // Limpar estados do sistema de provas - Dados (v1.2.0)
@@ -4796,7 +4859,7 @@ const useLocalStorage = () => {
       }
 
     } catch (err) {
-      setError('Erro ao limpar sessão: ' + err.message);
+      console.error('[useLocalStorage] Erro ao limpar sessão:', (err as Error).message);
     }
   }, [setSessionLastSaved]);
 
@@ -4813,6 +4876,7 @@ const useLocalStorage = () => {
     // Funções Auxiliares
     fileToBase64,
     base64ToFile,
+    clearPdfCache,
 
     // Funções de Verificação
     checkSavedSession,
@@ -4872,21 +4936,21 @@ const useModelLibrary = () => {
   // --- Busca com debounce 300ms ---
   const debouncedSearchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const debouncedManualSearch = React.useCallback((term: string) => {
-    clearTimeout(debouncedSearchTimeoutRef.current);
+    if (debouncedSearchTimeoutRef.current) clearTimeout(debouncedSearchTimeoutRef.current);
     debouncedSearchTimeoutRef.current = setTimeout(() => performManualSearch(term), 300);
   }, [performManualSearch]);
 
   // ===========================================================================
   // SEÇÃO 3: FORMULÁRIO E EDIÇÃO
   // ===========================================================================
-  const [newModel, setNewModel] = React.useState<Partial<Model>>({ title: '', content: '', keywords: '', category: '' });
+  const [newModel, setNewModel] = React.useState<NewModelData>({ title: '', content: '', keywords: '', category: '' });
   const [editingModel, setEditingModel] = React.useState<Model | null>(null);
   const [extractingModelFromDecision, setExtractingModelFromDecision] = React.useState<boolean>(false);
   const [showExtractModelButton, setShowExtractModelButton] = React.useState<boolean>(true);
-  const [extractedModelPreview, setExtractedModelPreview] = React.useState<Model | null>(null);
+  const [extractedModelPreview, setExtractedModelPreview] = React.useState<NewModelData | null>(null);
   const [exportedModelsText, setExportedModelsText] = React.useState<string>('');
   const [modelToDelete, setModelToDelete] = React.useState<Model | null>(null);
-  const [similarityWarning, setSimilarityWarning] = React.useState<{ model: Model; similarity: number } | null>(null);
+  const [similarityWarning, setSimilarityWarning] = React.useState<SimilarityWarningState | null>(null);
 
   // --- Resetar formulário ---
   const resetForm = React.useCallback(() => {
@@ -4902,7 +4966,7 @@ const useModelLibrary = () => {
     setNewModel({
       title: model.title || '',
       content: model.content || '',
-      keywords: model.keywords || '',
+      keywords: typeof model.keywords === 'string' ? model.keywords : (model.keywords || []).join(', '),
       category: model.category || ''
     });
   }, []);
@@ -4910,15 +4974,20 @@ const useModelLibrary = () => {
   // ===========================================================================
   // SEÇÃO 4: PROCESSAMENTO EM LOTE (BULK)
   // ===========================================================================
+  type BulkProcessedFile = { file: string; status: string; modelsCount?: number; models?: Model[]; error?: string; duration: string };
+  type BulkError = { file: string; error?: string; status?: string; duration?: string };
+  type BulkFile = { file: File; name: string; size: number; status?: 'pending' | 'processing' | 'done' | 'error'; error?: string };
+  type BulkGeneratedModel = { id?: string; title: string; content: string; keywords?: string | string[]; category?: string; embedding?: number[]; sourceFile?: string; similarityInfo?: { similarity: number; similarModel: Model } };
+
   const [deleteAllConfirmText, setDeleteAllConfirmText] = React.useState<string>('');
-  const [bulkFiles, setBulkFiles] = React.useState<File[]>([]);
+  const [bulkFiles, setBulkFiles] = React.useState<BulkFile[]>([]);
   const [bulkProcessing, setBulkProcessing] = React.useState<boolean>(false);
   const [bulkCurrentFileIndex, setBulkCurrentFileIndex] = React.useState<number>(0);
-  const [bulkProcessedFiles, setBulkProcessedFiles] = React.useState<File[]>([]);
-  const [bulkGeneratedModels, setBulkGeneratedModels] = React.useState<Model[]>([]);
-  const [bulkErrors, setBulkErrors] = React.useState<string[]>([]);
-  const [bulkReviewModels, setBulkReviewModels] = React.useState<Model[]>([]);
-  const [bulkEditingModel, setBulkEditingModel] = React.useState<Model | null>(null);
+  const [bulkProcessedFiles, setBulkProcessedFiles] = React.useState<BulkProcessedFile[]>([]);
+  const [bulkGeneratedModels, setBulkGeneratedModels] = React.useState<BulkGeneratedModel[]>([]);
+  const [bulkErrors, setBulkErrors] = React.useState<BulkError[]>([]);
+  const [bulkReviewModels, setBulkReviewModels] = React.useState<BulkGeneratedModel[]>([]);
+  const [bulkEditingModel, setBulkEditingModel] = React.useState<BulkGeneratedModel | null>(null);
   const [bulkCancelController, setBulkCancelController] = React.useState<AbortController | null>(null);
   const [bulkStaggerDelay, setBulkStaggerDelay] = React.useState<number>(0);
   const [bulkCurrentBatch, setBulkCurrentBatch] = React.useState<number>(0);
@@ -5074,20 +5143,21 @@ IMPORTANTE: Foque na PERTINÊNCIA TEMÁTICA REAL, não apenas em palavras coinci
 Retorne APENAS os índices dos 10 selecionados, do mais ao menos relevante.
 Formato: 5,12,3,8,15,1,9,7,2,11`;
 
-    const messages = [{ role: 'user', content: [{ type: 'text', text: prompt }] }];
+    const messages: AIMessage[] = [{ role: 'user', content: [{ type: 'text', text: prompt }] }];
     // v1.21.26: Parametros deterministicos para ranking
     const response = await callLLM(messages, { maxTokens: 300, disableThinking: true, useInstructions: false, temperature: 0.0, topP: 0.9, topK: 40 });
-    const text = typeof response === 'string' ? response : response?.content?.[0]?.text || '';
+    // CallAIFunction always returns string
+    const text = response || '';
     const indices = text.match(/\d+/g)?.map(Number) || [];
     const result = indices.filter((i: number) => i < candidates.length).map((i: number) => candidates[i]);
     return result.length > 0 ? result.slice(0, 10) : candidates.slice(0, 10);
   } catch (err) {
-    console.warn('[JurisAI] Refinamento falhou:', err?.message || err);
+    console.warn('[JurisAI] Refinamento falhou:', err instanceof Error ? (err as Error).message : err);
     return candidates.slice(0, 10);
   }
 };
 
-const findJurisprudenciaHelper = async (topicTitle: string, miniRelatorio: string, callLLM: CallAIFunction, filtros: Record<string, unknown> = {}) => {
+const findJurisprudenciaHelper = async (topicTitle: string, miniRelatorio: string, callLLM: CallAIFunction, filtros: JurisFiltros = {}) => {
   // Verificar cache primeiro (incluindo filtros na chave)
   const cacheKey = `juris_${topicTitle}_${hashJurisKey(miniRelatorio)}_${filtros.tipo?.join(',') || ''}_${filtros.tribunal?.join(',') || ''}_${filtros.searchTerm || ''}`;
   const cached = jurisCache.get(cacheKey);
@@ -5102,16 +5172,19 @@ const findJurisprudenciaHelper = async (topicTitle: string, miniRelatorio: strin
   let validPrecedentes = allPrecedentes.filter(p => isStatusValido(p.status));
 
   // Aplicar filtros por tipo
-  if (filtros.tipo?.length > 0) {
+  if (filtros.tipo && filtros.tipo.length > 0) {
+    const tipoFilter = filtros.tipo;
     validPrecedentes = validPrecedentes.filter(p => {
-      if (filtros.tipo.includes('IRR') && isIRRType(p.tipoProcesso)) return true;
-      return filtros.tipo.includes(p.tipoProcesso);
+      if (!p.tipoProcesso) return false;
+      if (tipoFilter.includes('IRR') && isIRRType(p.tipoProcesso)) return true;
+      return tipoFilter.includes(p.tipoProcesso);
     });
   }
 
   // Aplicar filtros por tribunal
-  if (filtros.tribunal?.length > 0) {
-    validPrecedentes = validPrecedentes.filter(p => filtros.tribunal.includes(p.tribunal));
+  if (filtros.tribunal && filtros.tribunal.length > 0) {
+    const tribunalFilter = filtros.tribunal;
+    validPrecedentes = validPrecedentes.filter(p => p.tribunal && tribunalFilter.includes(p.tribunal));
   }
 
   // Filtro por busca textual do usuário
@@ -5121,7 +5194,7 @@ const findJurisprudenciaHelper = async (topicTitle: string, miniRelatorio: strin
     if (rawTerms.length === 0) return [];
 
     // Só expande sinônimos se a frase COMPLETA corresponder a uma chave do dicionário
-    const expandedFromPhrase = [];
+    const expandedFromPhrase: string[] = [];
     for (const [termo, sinonimos] of Object.entries(SINONIMOS_JURIDICOS)) {
       const termoNorm = removeAccents(termo.toLowerCase());
       if (searchTermNorm.includes(termoNorm) || termoNorm.includes(searchTermNorm)) {
@@ -5177,10 +5250,10 @@ const findJurisprudenciaHelper = async (topicTitle: string, miniRelatorio: strin
 
       // Boost por hierarquia de tribunal
       if (isIRRType(p.tipoProcesso) && p.tribunal === 'TST') score += 500;
-      else if (['ADI', 'ADC', 'ADPF', 'RE', 'ARE'].some(t => p.tipoProcesso?.includes(t))) score += 500;
-      else if (['IRDR', 'IAC'].includes(p.tipoProcesso) && p.tribunal === 'TRT8') score += 450;
+      else if (p.tipoProcesso && ['ADI', 'ADC', 'ADPF', 'RE', 'ARE'].some(t => p.tipoProcesso?.includes(t))) score += 500;
+      else if (p.tipoProcesso && ['IRDR', 'IAC'].includes(p.tipoProcesso) && p.tribunal === 'TRT8') score += 450;
       else if (p.tipoProcesso === 'Súmula' && p.tribunal === 'STF') score += 100;
-      else if (['Súmula', 'OJ'].includes(p.tipoProcesso) && p.tribunal === 'TST') score += 100;
+      else if (p.tipoProcesso && ['Súmula', 'OJ'].includes(p.tipoProcesso) && p.tribunal === 'TST') score += 100;
       else if (p.tribunal === 'STF') score += 50;
       else if (p.tribunal === 'TST') score += 50;
       else if (p.tribunal === 'TRT8') score += 30;
@@ -5426,7 +5499,7 @@ const fuzzyMatch = (term: string, text: string, threshold = 0.7) => {
   return false;
 };
 
-const searchModelsInLibrary = (models: Model[], term: string, options: Record<string, unknown> = {}) => {
+const searchModelsInLibrary = (models: Model[], term: string, options: { limit?: number | null; includeContent?: boolean; useSynonyms?: boolean; boostByUsage?: boolean } = {}) => {
   if (!term || !term.trim()) return [];
 
   const {
@@ -5439,7 +5512,7 @@ const searchModelsInLibrary = (models: Model[], term: string, options: Record<st
   const normalizedTerm = removeAccents(term.toLowerCase().trim());
 
   // Extrair termos entre aspas (busca exata) e termos normais (fuzzy)
-  const exactTerms = [];
+  const exactTerms: string[] = [];
   const quotedRegex = /"([^"]+)"/g;
   let match;
   while ((match = quotedRegex.exec(normalizedTerm)) !== null) {
@@ -5466,7 +5539,8 @@ const searchModelsInLibrary = (models: Model[], term: string, options: Record<st
 
   const scored = models.map(model => {
     const titleNorm = removeAccents((model.title || '').toLowerCase());
-    const keywordsNorm = removeAccents((model.keywords || '').toLowerCase());
+    const keywordsRaw = Array.isArray(model.keywords) ? model.keywords.join(' ') : (model.keywords || '');
+    const keywordsNorm = removeAccents(keywordsRaw.toLowerCase());
     const contentNorm = includeContent ? removeAccents((model.content || '').toLowerCase()) : '';
 
     let score = 0;
@@ -5521,7 +5595,7 @@ const searchModelsInLibrary = (models: Model[], term: string, options: Record<st
 };
 
 // v1.27.01: Busca semântica de modelos (usa embeddings inline)
-const searchModelsBySimilarity = async (models: Model[], query: string, options: Record<string, unknown> = {}) => {
+const searchModelsBySimilarity = async (models: Model[], query: string, options: { threshold?: number; limit?: number } = {}) => {
   const { threshold = 0.4, limit = 20 } = options;
 
   if (!query || query.length < 3) return [];
@@ -5536,7 +5610,7 @@ const searchModelsBySimilarity = async (models: Model[], query: string, options:
   // Calcular similaridade
   const scored = modelsWithEmbedding.map((model: Model) => ({
     ...model,
-    similarity: AIModelService.cosineSimilarity(queryEmbedding, model.embedding)
+    similarity: AIModelService.cosineSimilarity(queryEmbedding, model.embedding!)
   }));
 
   // Filtrar por threshold e ordenar
@@ -5561,7 +5635,7 @@ const useModelPreview = () => {
   // v1.15.3: Estado para "Salvar como Novo Modelo"
   const [saveAsNewData, setSaveAsNewData] = React.useState<{ title: string; content: string; keywords?: string; category?: string } | null>(null);
   // v1.19.2: Callback para notificar quando modelo é atualizado (sincroniza sugestões do GlobalEditor)
-  const onModelUpdatedRef = React.useRef<(() => void) | null>(null);
+  const onModelUpdatedRef = React.useRef<((model: Model) => void) | null>(null);
 
   const openPreview = React.useCallback((model: Model) => {
     if (!model || !model.content) {
@@ -5594,10 +5668,11 @@ const useModelPreview = () => {
 
   // v1.15.3: Funções para "Salvar como Novo Modelo"
   const openSaveAsNew = React.useCallback((content: string, originalModel: Model | null) => {
+    const keywords = originalModel?.keywords;
     setSaveAsNewData({
       title: '',
       content: content,
-      keywords: originalModel?.keywords || '',
+      keywords: Array.isArray(keywords) ? keywords.join(', ') : (keywords || ''),
       category: originalModel?.category || 'Mérito'
     });
   }, []);
@@ -5729,17 +5804,24 @@ const validateModel = (model: Model) => {
   };
 };
 
-const sanitizeModel = (model: Model) => {
+const sanitizeModel = (model: Model): Model => {
   if (!model || typeof model !== 'object') {
     throw new Error('Modelo inválido para sanitização');
   }
 
+  // Handle keywords that can be string or string[]
+  const normalizeKeywords = (kw: string | string[] | undefined): string => {
+    if (!kw) return '';
+    if (Array.isArray(kw)) return kw.join(', ').trim();
+    return kw.trim();
+  };
+
   // Extract and trim required fields
-  const sanitized = {
+  const sanitized: Partial<Model> = {
     title: (model.title || '').trim(),
     content: (model.content || '').trim(),
     category: (model.category || '').trim(),
-    keywords: (model.keywords || '').trim()
+    keywords: normalizeKeywords(model.keywords)
   };
 
   // Optional fields - only include if present and valid
@@ -5765,16 +5847,16 @@ const sanitizeModel = (model: Model) => {
   // (future-proof for new fields without breaking)
   const knownFields = ['id', 'title', 'content', 'category', 'keywords', 'createdAt', 'updatedAt'];
   Object.keys(model).forEach(key => {
-    if (!knownFields.includes(key) && model[key] !== undefined) {
-      sanitized[key] = model[key];
+    if (!knownFields.includes(key) && (model as unknown as Record<string, unknown>)[key] !== undefined) {
+      (sanitized as unknown as Record<string, unknown>)[key] = (model as unknown as Record<string, unknown>)[key];
     }
   });
 
-  return sanitized;
+  return sanitized as Model;
 };
 
 // 🎣 CUSTOM HOOK: useProofManager (v1.2.6) - Sistema de Provas
-const useProofManager = (documentServices = null) => {
+const useProofManager = (documentServices: ReturnType<typeof useDocumentServices> | null = null) => {
   // 📊 ESTADOS CORE DE DADOS (8 estados)
 
   // Provas Principais
@@ -5872,7 +5954,7 @@ const useProofManager = (documentServices = null) => {
   // { name: string, text: string } - guardado temporariamente até confirmar nomes
 
   // 🆕 v1.21.5: Extração de PDF pendente aguardando confirmação de nomes
-  const [pendingExtraction, setPendingExtraction] = React.useState<{ proofId: string | number; proof: Proof } | null>(null);
+  const [pendingExtraction, setPendingExtraction] = React.useState<{ proofId: string | number; proof: Proof; executeExtraction?: (nomes: string[]) => void } | null>(null);
   // { proofId: number, proof: object } - guardado temporariamente até confirmar nomes
 
   // 🆕 v1.21.6: Mensagem de chat pendente aguardando confirmação de nomes
@@ -5884,13 +5966,13 @@ const useProofManager = (documentServices = null) => {
   const hasProofs = totalProofs > 0;
 
   // 🔧 v1.14.1: Helpers utilitários para redução de código duplicado
-  const removeObjectKey = React.useCallback((setter: (fn: (prev: Record<string, unknown>) => Record<string, unknown>) => void, keyToRemove: string | number) => {
-    setter((prev: Record<string, unknown>) => {
+  const removeObjectKey = React.useCallback(<T extends Record<string, unknown>>(setter: React.Dispatch<React.SetStateAction<T>>, keyToRemove: string | number) => {
+    setter((prev: T) => {
       const { [keyToRemove]: _, ...rest } = prev;
-      return rest;
+      return rest as T;
     });
   }, []);
-  const removeById = React.useCallback((arr: { id: string | number }[], id: string | number) => arr.filter((item: { id: string | number }) => item.id !== id), []);
+  const removeById = React.useCallback(<T extends { id: string | number }>(arr: T[], id: string | number): T[] => arr.filter((item: T) => item.id !== id), []);
   const isValidString = React.useCallback((str: unknown, minLength = 1) => str && typeof str === 'string' && str.trim().length >= minLength, []);
   const toFilesArray = React.useCallback((value: FileList | File[] | null) => Array.isArray(value) ? value : Array.from(value || []), []);
 
@@ -5902,7 +5984,7 @@ const useProofManager = (documentServices = null) => {
 
     for (const file of filesArray) {
       const id = Date.now() + Math.random(); // ID único
-      const newProof = {
+      const newProof: ProofFile = {
         id,
         file,
         name: file.name,
@@ -6029,23 +6111,23 @@ const useProofManager = (documentServices = null) => {
     if (!data) return;
 
     // Restaurar arrays de provas
-    if (data.proofFiles) setProofFiles(data.proofFiles);
-    if (data.proofTexts) setProofTexts(data.proofTexts);
+    if (data.proofFiles) setProofFiles(data.proofFiles as ProofFile[]);
+    if (data.proofTexts) setProofTexts(data.proofTexts as ProofText[]);
 
     // Restaurar objetos de configuração
-    if (data.proofUsePdfMode) setProofUsePdfMode(data.proofUsePdfMode);
-    if (data.extractedProofTexts) setExtractedProofTexts(data.extractedProofTexts);
-    if (data.proofExtractionFailed) setProofExtractionFailed(data.proofExtractionFailed);
+    if (data.proofUsePdfMode) setProofUsePdfMode(data.proofUsePdfMode as Record<string, boolean>);
+    if (data.extractedProofTexts) setExtractedProofTexts(data.extractedProofTexts as Record<string, string>);
+    if (data.proofExtractionFailed) setProofExtractionFailed(data.proofExtractionFailed as Record<string, boolean>);
 
     // Restaurar vinculações e análises
-    if (data.proofTopicLinks) setProofTopicLinks(data.proofTopicLinks);
-    if (data.proofAnalysisResults) setProofAnalysisResults(data.proofAnalysisResults);
-    if (data.proofConclusions) setProofConclusions(data.proofConclusions);
+    if (data.proofTopicLinks) setProofTopicLinks(data.proofTopicLinks as Record<string, string[]>);
+    if (data.proofAnalysisResults) setProofAnalysisResults(data.proofAnalysisResults as Record<string, ProofAnalysisResult>);
+    if (data.proofConclusions) setProofConclusions(data.proofConclusions as Record<string, string>);
 
     // 🆕 v1.12.20: Restaurar modos de processamento
-    if (data.proofProcessingModes) setProofProcessingModes(data.proofProcessingModes);
+    if (data.proofProcessingModes) setProofProcessingModes(data.proofProcessingModes as Record<string, ProcessingMode>);
     // 🆕 v1.19.2: Restaurar flag de conteúdo completo
-    if (data.proofSendFullContent) setProofSendFullContent(data.proofSendFullContent);
+    if (data.proofSendFullContent) setProofSendFullContent(data.proofSendFullContent as Record<string, boolean>);
   };
 
   const resetAll = () => {
@@ -6150,17 +6232,17 @@ const useProofManager = (documentServices = null) => {
 };
 
 // 🎣 CUSTOM HOOK: useDocumentManager (v1.2.7a) - Sistema de Análise de Documentos
-const useDocumentManager = () => {
+const useDocumentManager = (clearPdfCache?: () => void) => {
   // 📦 ESTADOS CORE (13 total)
 
   // Arquivos de Documentos (3)
-  const [peticaoFiles, setPeticaoFiles] = React.useState<File[]>([]);
-  // Array de File objects dos PDFs da petição inicial e emendas
+  const [peticaoFiles, setPeticaoFiles] = React.useState<UploadedFile[]>([]);
+  // Array de {file: File, id: string} dos PDFs da petição inicial e emendas
 
-  const [contestacaoFiles, setContestacaoFiles] = React.useState<File[]>([]);
-  // Array de File objects dos PDFs de contestações
+  const [contestacaoFiles, setContestacaoFiles] = React.useState<UploadedFile[]>([]);
+  // Array de {file: File, id: string} dos PDFs de contestações
 
-  const [complementaryFiles, setComplementaryFiles] = React.useState<File[]>([]);
+  const [complementaryFiles, setComplementaryFiles] = React.useState<UploadedFile[]>([]);
   // Array de File objects dos PDFs de documentos complementares
 
   // Textos Colados (Alternativa aos PDFs) (3)
@@ -6208,11 +6290,7 @@ const useDocumentManager = () => {
   });
   // Controla visibilidade das áreas de colagem de texto para cada tipo de documento
 
-  const [extractedTexts, setExtractedTexts] = React.useState<{
-    peticoes: string[];
-    contestacoes: string[];
-    complementares: string[];
-  }>({
+  const [extractedTexts, setExtractedTexts] = React.useState<ExtractedTexts>({
     peticoes: [],
     contestacoes: [],
     complementares: []
@@ -6415,24 +6493,24 @@ const useDocumentManager = () => {
     if (!data) return;
 
     // Restaurar arquivos (File objects reconstruídos pelo useLocalStorage)
-    if (data.peticaoFiles) setPeticaoFiles(data.peticaoFiles);
-    if (data.contestacaoFiles) setContestacaoFiles(data.contestacaoFiles);
-    if (data.complementaryFiles) setComplementaryFiles(data.complementaryFiles);
+    if (data.peticaoFiles) setPeticaoFiles(data.peticaoFiles as UploadedFile[]);
+    if (data.contestacaoFiles) setContestacaoFiles(data.contestacaoFiles as UploadedFile[]);
+    if (data.complementaryFiles) setComplementaryFiles(data.complementaryFiles as UploadedFile[]);
 
     // Restaurar textos colados
-    if (data.pastedPeticaoTexts) setPastedPeticaoTexts(data.pastedPeticaoTexts);
-    if (data.pastedContestacaoTexts) setPastedContestacaoTexts(data.pastedContestacaoTexts);
-    if (data.pastedComplementaryTexts) setPastedComplementaryTexts(data.pastedComplementaryTexts);
+    if (data.pastedPeticaoTexts) setPastedPeticaoTexts(data.pastedPeticaoTexts as PastedText[]);
+    if (data.pastedContestacaoTexts) setPastedContestacaoTexts(data.pastedContestacaoTexts as PastedText[]);
+    if (data.pastedComplementaryTexts) setPastedComplementaryTexts(data.pastedComplementaryTexts as PastedText[]);
 
     // Restaurar metadados
-    if (data.analyzedDocuments) setAnalyzedDocuments(data.analyzedDocuments);
+    if (data.analyzedDocuments) setAnalyzedDocuments(data.analyzedDocuments as AnalyzedDocuments);
 
     // Restaurar estados de UI
-    if (data.showPasteArea) setShowPasteArea(data.showPasteArea);
-    if (data.extractedTexts) setExtractedTexts(data.extractedTexts);
+    if (data.showPasteArea) setShowPasteArea(data.showPasteArea as Record<string, boolean>);
+    if (data.extractedTexts) setExtractedTexts(data.extractedTexts as ExtractedTexts);
 
     // v1.12.18: Restaurar modos de processamento
-    if (data.documentProcessingModes) setDocumentProcessingModes(data.documentProcessingModes);
+    if (data.documentProcessingModes) setDocumentProcessingModes(data.documentProcessingModes as DocumentProcessingModes);
   };
 
   // Limpa TODOS os estados de documentos
@@ -6447,7 +6525,7 @@ const useDocumentManager = () => {
     for (const fileObj of complementaryFiles) {
       if (fileObj?.id) try { await removePdfFromIndexedDB(`upload-complementar-${fileObj.id}`); } catch {}
     }
-    clearPdfCache();
+    clearPdfCache?.();
 
     // Limpar arquivos
     setPeticaoFiles([]);
@@ -6587,7 +6665,7 @@ const useTopicManager = () => {
   const [newTopicName, setNewTopicName] = React.useState('');
 
   // Merge (mesclagem)
-  const [topicsToMerge, setTopicsToMerge] = React.useState<string[]>([]);
+  const [topicsToMerge, setTopicsToMerge] = React.useState<Topic[]>([]);
 
   // Split (divisão)
   const [topicToSplit, setTopicToSplit] = React.useState<Topic | null>(null);
@@ -6616,10 +6694,10 @@ const useTopicManager = () => {
     setSplitNames(['', '']);
   };
 
-  const prepareNewTopic = (category = 'MÉRITO') => {
+  const prepareNewTopic = (category: TopicCategory = 'MÉRITO') => {
     setNewTopicData({
       title: '',
-      category: category,
+      category,
       relatorio: '',
       fundamentacao: ''
     });
@@ -6664,10 +6742,10 @@ const useTopicManager = () => {
   const restoreFromPersistence = (data: Record<string, unknown> | null) => {
     if (!data) return;
 
-    if (data.extractedTopics) setExtractedTopics(data.extractedTopics);
-    if (data.selectedTopics) setSelectedTopics(data.selectedTopics);
-    if (data.editingTopic) setEditingTopic(data.editingTopic);
-    if (data.lastEditedTopicTitle) setLastEditedTopicTitle(data.lastEditedTopicTitle);
+    if (data.extractedTopics) setExtractedTopics(data.extractedTopics as Topic[]);
+    if (data.selectedTopics) setSelectedTopics(data.selectedTopics as Topic[]);
+    if (data.editingTopic) setEditingTopic(data.editingTopic as Topic | null);
+    if (data.lastEditedTopicTitle) setLastEditedTopicTitle(data.lastEditedTopicTitle as string | null);
   };
 
   const clearAll = () => {
@@ -6763,7 +6841,7 @@ const useChatAssistant = (aiIntegration: { callAI?: CallAIFunction } | null) => 
 
   // Envia mensagem e atualiza histórico
   // 🆕 v1.19.5: Suporta contextBuilder assíncrono
-  const send = React.useCallback(async (message: string, contextBuilder: (msg: string) => string | Promise<string>) => {
+  const send = React.useCallback(async (message: string, contextBuilder: (msg: string) => AIMessageContent[] | string | Promise<AIMessageContent[] | string>) => {
     if (!message?.trim()) return { success: false, error: 'Mensagem vazia' };
     if (!aiIntegration?.callAI) return { success: false, error: 'IA não disponível' };
 
@@ -6778,28 +6856,28 @@ const useChatAssistant = (aiIntegration: { callAI?: CallAIFunction } | null) => 
         // Primeira interação: contexto completo + mensagem
         contextContent = await Promise.resolve(contextBuilder(message));
         apiMessages.push({
-          role: 'user',
-          content: contextContent
+          role: 'user' as const,
+          content: contextContent || ''
         });
       } else {
         // Interações seguintes: reconstrói histórico completo
         // Primeira mensagem com contexto (para cache hit)
         apiMessages.push({
-          role: 'user',
-          content: history[0].contentForApi
+          role: 'user' as const,
+          content: history[0].contentForApi || ''
         });
 
         // Resto do histórico
         for (let i = 1; i < history.length; i++) {
           apiMessages.push({
-            role: history[i].role,
+            role: history[i].role as 'user' | 'assistant',
             content: history[i].content
           });
         }
 
         // Nova mensagem
         apiMessages.push({
-          role: 'user',
+          role: 'user' as const,
           content: message
         });
       }
@@ -6819,11 +6897,11 @@ const useChatAssistant = (aiIntegration: { callAI?: CallAIFunction } | null) => 
 
       // Atualiza histórico (com limite)
       setHistory(prev => {
-        let newHistory;
+        let newHistory: ChatMessage[];
         if (prev.length === 0) {
           // Primeira interação: salvar content completo para cache
           newHistory = [
-            { role: 'user', content: message, contentForApi: contextContent, ts: Date.now() },
+            { role: 'user', content: message, contentForApi: contextContent ?? undefined, ts: Date.now() },
             { role: 'assistant', content: trimmedResponse, ts: Date.now() }
           ];
         } else {
@@ -6851,9 +6929,9 @@ const useChatAssistant = (aiIntegration: { callAI?: CallAIFunction } | null) => 
       // Adiciona mensagem de erro ao histórico
       setHistory(prev => [
         ...prev,
-        { role: 'user', content: message, ts: Date.now(), error: err.message }
+        { role: 'user', content: message, ts: Date.now(), error: (err as Error).message }
       ]);
-      return { success: false, error: err.message };
+      return { success: false, error: (err as Error).message };
     } finally {
       setGenerating(false);
     }
@@ -6900,16 +6978,18 @@ const useJurisprudencia = () => {
   const filteredPrecedentes = React.useMemo(() => {
     let result = searchTerm ? searchPrecedentes(searchTerm) : precedentes;
     if (filtros.fonte.length > 0) {
-      result = result.filter(p => filtros.fonte.includes(p.category));
+      result = result.filter(p => p.category && filtros.fonte.includes(p.category));
     }
     if (filtros.tipo.length > 0) {
       result = result.filter(p => {
+        if (!p.tipoProcesso) return false;
         if (filtros.tipo.includes('IRR') && isIRRType(p.tipoProcesso)) return true;
         return filtros.tipo.includes(p.tipoProcesso);
       });
     }
-    if (filtros.tribunal?.length > 0) {
-      result = result.filter(p => filtros.tribunal.includes(p.tribunal));
+    if (filtros.tribunal && filtros.tribunal.length > 0) {
+      const tribunalFilter = filtros.tribunal;
+      result = result.filter(p => p.tribunal && tribunalFilter.includes(p.tribunal));
     }
     return result;
   }, [precedentes, searchTerm, filtros, searchPrecedentes]);
@@ -7030,7 +7110,8 @@ const useLegislacao = () => {
       let score = 0;
       const caputNorm = removeAccents(artigo.caput || '');
       const numeroNorm = removeAccents(artigo.numero || '');
-      const keywordsNorm = (artigo.keywords || []).map((k: string) => removeAccents(k));
+      const keywordsArr = Array.isArray(artigo.keywords) ? artigo.keywords : (artigo.keywords ? [artigo.keywords] : []);
+      const keywordsNorm = keywordsArr.map((k: string) => removeAccents(k));
       // v1.21.1: Buscar também em parágrafos, incisos e alíneas
       const paragrafosText = (artigo.paragrafos || []).map((p: { texto?: string }) => p.texto || '').join(' ');
       const incisosText = (artigo.incisos || []).map((i: { texto?: string }) => i.texto || '').join(' ');
@@ -7095,7 +7176,7 @@ const useLegislacao = () => {
       return { success: true, count: items.length };
     } catch (err) {
       console.error('Erro ao importar JSON:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: (err as Error).message };
     } finally {
       setIsLoading(false);
     }
@@ -7106,14 +7187,14 @@ const useLegislacao = () => {
       const lei = getLeiFromId(artigo.id);
       let texto = `Art. ${artigo.numero} - ${lei.nome}\n${artigo.caput}`;
 
-      if (artigo.paragrafos?.length > 0) {
+      if (artigo.paragrafos && artigo.paragrafos.length > 0) {
         texto += '\n';
         for (const p of artigo.paragrafos) {
           texto += `\n§ ${p.numero}º ${p.texto}`;
         }
       }
 
-      if (artigo.incisos?.length > 0) {
+      if (artigo.incisos && artigo.incisos.length > 0) {
         texto += '\n';
         for (const inc of artigo.incisos) {
           texto += `\n${inc.numero} - ${inc.texto}`;
@@ -7187,7 +7268,7 @@ const SpacingDropdown = React.memo(({
   value,
   onChange,
   ariaLabel = 'Espaçamento de parágrafo'
-}) => {
+}: SpacingDropdownProps) => {
   // Classes de Tema (v1.9.39: Suporte a tema claro/escuro)
   const themeClasses = {
     select: 'theme-bg-secondary theme-text-primary theme-border-input',
@@ -7199,7 +7280,7 @@ const SpacingDropdown = React.memo(({
     <div className="relative">
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value as 'compact' | 'normal' | 'wide')}
         className={`px-2 py-1 border rounded text-sm cursor-pointer hover-border-blue-500 transition-colors ${themeClasses.select}`}
         aria-label={ariaLabel}
         title="Espaçamento entre linhas e parágrafos"
@@ -7225,7 +7306,7 @@ const FontSizeDropdown = React.memo(({
   value,
   onChange,
   ariaLabel = 'Tamanho da fonte'
-}) => {
+}: FontSizeDropdownProps) => {
   const themeClasses = {
     select: 'theme-bg-secondary theme-text-primary theme-border-input',
     option: 'theme-bg-secondary theme-text-primary'
@@ -7235,7 +7316,7 @@ const FontSizeDropdown = React.memo(({
     <div className="relative">
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value as 'small' | 'normal' | 'large')}
         className={`px-2 py-1 border rounded text-sm cursor-pointer hover-border-blue-500 transition-colors ${themeClasses.select}`}
         aria-label={ariaLabel}
         title="Tamanho da fonte do editor"
@@ -7373,7 +7454,7 @@ const VersionSelect = React.memo(({ topicTitle, versioning, currentContent, onRe
   React.useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setIsOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -7436,7 +7517,7 @@ const SuggestionCard = React.memo(({
   sanitizeHTML,
   showRanking = true,
   similarity, // v1.33.18: % similaridade (opcional, vem de busca semântica)
-}) => {
+}: SuggestionCardProps) => {
   // Validação de Props
   if (!model) {
     return null;
@@ -7447,12 +7528,12 @@ const SuggestionCard = React.memo(({
 
   // Preview Sanitizado (Memoizado para Performance)
   const sanitizedPreview = React.useMemo(
-    () => sanitizeHTML(model.content?.substring(0, 300) || ''),
+    () => sanitizeHTML ? sanitizeHTML(model.content?.substring(0, 300) || '') : (model.content?.substring(0, 300) || ''),
     [model.content, sanitizeHTML]
   );
 
   // Labels de Ranking
-  const rankingLabels = {
+  const rankingLabels: Record<number, string> = {
     5: 'Mais relevante',
     4: '2º lugar',
     3: '3º lugar',
@@ -7584,7 +7665,7 @@ const FullscreenModelPanel = React.memo(({
   onPreview,
   sanitizeHTML,
   onFindSuggestions
-}) => {
+}: FullscreenModelPanelProps) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [searchResults, setSearchResults] = React.useState<Model[]>([]);
   const [suggestions, setSuggestions] = React.useState<Model[]>([]);
@@ -7625,7 +7706,8 @@ const FullscreenModelPanel = React.memo(({
     }
 
     if (model.keywords) {
-      const keywords = model.keywords.toLowerCase().split(',').map((k: string) => k.trim()).filter((k: string) => k.length > 0);
+      const keywordsStr = Array.isArray(model.keywords) ? model.keywords.join(',') : model.keywords;
+      const keywords = keywordsStr.toLowerCase().split(',').map((k: string) => k.trim()).filter((k: string) => k.length > 0);
       keywords.forEach((keyword: string) => {
         if (titleLower.includes(keyword) || keyword.includes(titleLower.replace(/\s+/g, ''))) {
           score += 12;
@@ -7651,15 +7733,18 @@ const FullscreenModelPanel = React.memo(({
         try {
           const result = await onFindSuggestions({
             title: topicTitle,
-            category: topicCategory,
-            relatorio: topicRelatorio
+            category: (topicCategory || 'MÉRITO') as TopicCategory,
+            relatorio: topicRelatorio || ''
           });
           // v1.28.04: Suporta novo formato { suggestions, source }
           if (result?.suggestions) {
             setSuggestions(result.suggestions);
             setSuggestionsSource(result.source);
+          } else if (Array.isArray(result)) {
+            setSuggestions(result);
+            setSuggestionsSource(null);
           } else {
-            setSuggestions(result || []);
+            setSuggestions([]);
             setSuggestionsSource(null);
           }
         } catch (err) {
@@ -7710,7 +7795,8 @@ const FullscreenModelPanel = React.memo(({
       const results = (models || [])
         .filter((m: Model) => {
           const titleMatch = (m.title || '').toLowerCase().includes(termLower);
-          const keywordsMatch = (m.keywords || '').toLowerCase().includes(termLower);
+          const kwStr = Array.isArray(m.keywords) ? m.keywords.join(' ') : (m.keywords || '');
+          const keywordsMatch = kwStr.toLowerCase().includes(termLower);
           const contentMatch = (m.content || '').toLowerCase().includes(termLower);
           return titleMatch || keywordsMatch || contentMatch;
         })
@@ -7745,12 +7831,12 @@ const FullscreenModelPanel = React.memo(({
             type="text"
             value={searchTerm}
             onChange={handleSearchChange}
-            onKeyDown={(e) => e.key === 'Escape' && handleSearchChange({ target: { value: '' } })}
+            onKeyDown={(e) => e.key === 'Escape' && handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
             placeholder="Buscar modelos..."
             className="w-full pl-9 pr-8 py-2 text-sm rounded theme-bg-secondary theme-border-input border theme-text-primary"
           />
           {searchTerm && (
-            <button onClick={() => handleSearchChange({ target: { value: '' } })} className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 theme-text-muted hover-text-primary" title="Limpar (Esc)">
+            <button onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)} className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 theme-text-muted hover-text-primary" title="Limpar (Esc)">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
@@ -7855,7 +7941,7 @@ const ModelSearchPanel = React.memo(({
   onInsert,
   onPreview,
   sanitizeHTML
-}) => {
+}: ModelSearchPanelProps) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState('all');
 
@@ -7863,7 +7949,7 @@ const ModelSearchPanel = React.memo(({
     return (models || []).filter((m: Model) => {
       const matchesSearch = !searchTerm ||
         (m.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (m.keywords || '').toLowerCase().includes(searchTerm.toLowerCase());
+        (Array.isArray(m.keywords) ? m.keywords.join(' ') : (m.keywords || '')).toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || m.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
@@ -7987,14 +8073,14 @@ ModelSearchPanel.displayName = 'ModelSearchPanel';
 // v1.14.1: Restaurado PDF Puro como opção (config global é apenas padrão, usuário pode mudar por arquivo)
 // v1.32.13: anonymizationEnabled bloqueia apenas modos que não extraem texto (claude-vision, pdf-puro)
 // PDF.js e Tesseract extraem texto → podem ser anonimizados
-const ProcessingModeSelector = React.memo(({ value, onChange, disabled = false, anonymizationEnabled = false, className = '' }) => {
+const ProcessingModeSelector = React.memo(({ value, onChange, disabled = false, anonymizationEnabled = false, className = '' }: ProcessingModeSelectorProps) => {
   const blockedModes = ['claude-vision', 'pdf-puro'];
   const isValueBlocked = anonymizationEnabled && blockedModes.includes(value);
   const effectiveValue = isValueBlocked ? 'pdfjs' : (value || 'pdfjs');
   return (
     <select
       value={effectiveValue}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => onChange(e.target.value as ProcessingMode)}
       disabled={disabled}
       title={anonymizationEnabled ? 'Anonimização ativa: modos binários bloqueados' : undefined}
       className={`text-xs theme-bg-secondary theme-border-input border rounded px-2 py-1 cursor-pointer theme-text-primary hover-border-blue-500 transition-colors ${className}`}
@@ -8031,7 +8117,7 @@ const TopicCard = React.memo(({
   openModal,
   setTopicToSplit,
   setTopicsToMerge
-}) => {
+}: TopicCardProps) => {
   const isRelatorioOrDispositivo = isSpecialTopic(topic);
 
   // Helper para verificar se o tópico está decidido (v1.3.5.1 - bug fix)
@@ -8054,7 +8140,7 @@ const TopicCard = React.memo(({
   return (
     <div
       key={topic.title}
-      ref={(el) => topicRefs.current[topic.title] = el}
+      ref={(el) => { topicRefs.current[topic.title] = el; }}
       className={`hover-topic-drag-area rounded-lg p-3 border-2 transition-all duration-300 ${
         isRelatorioOrDispositivo ? 'cursor-default' : 'cursor-move'
       } ${
@@ -8110,7 +8196,7 @@ const TopicCard = React.memo(({
               className="w-12 theme-bg-primary border theme-border-input rounded text-center text-xs py-1 theme-text-primary"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  const newPos = parseInt(e.target.value);
+                  const newPos = parseInt((e.target as HTMLInputElement).value);
                   moveTopicToPosition(selectedIdx, newPos);
                 }
               }}
@@ -8150,14 +8236,14 @@ const TopicCard = React.memo(({
                   value={topic.category || 'MÉRITO'}
                   onChange={(e) => {
                     const newTopics = [...selectedTopics];
-                    newTopics[selectedIdx] = { ...topic, category: e.target.value };
+                    newTopics[selectedIdx] = { ...topic, category: e.target.value as TopicCategory };
                     setSelectedTopics(newTopics);
 
                     // Atualizar também em extractedTopics se existir
                     const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === topic.title);
                     if (extractedIndex !== -1) {
                       const newExtracted = [...extractedTopics];
-                      newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], category: e.target.value };
+                      newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], category: e.target.value as TopicCategory };
                       setExtractedTopics(newExtracted);
                     }
                   }}
@@ -8187,8 +8273,8 @@ const TopicCard = React.memo(({
                     const resultadoManual = e.target.value !== '';
                     newTopics[selectedIdx] = {
                       ...topic,
-                      resultado: e.target.value,
-                      resultadoManual: resultadoManual
+                      resultado: (e.target.value || undefined) as TopicResultado | undefined,
+                      resultadoManual
                     };
                     setSelectedTopics(newTopics);
 
@@ -8198,8 +8284,8 @@ const TopicCard = React.memo(({
                       const newExtracted = [...extractedTopics];
                       newExtracted[extractedIndex] = {
                         ...newExtracted[extractedIndex],
-                        resultado: e.target.value,
-                        resultadoManual: resultadoManual
+                        resultado: (e.target.value || undefined) as TopicResultado | undefined,
+                        resultadoManual
                       };
                       setExtractedTopics(newExtracted);
                     }
@@ -8316,7 +8402,7 @@ const TopicCard = React.memo(({
 TopicCard.displayName = 'TopicCard';
 
 // v1.33.58: SortableTopicCard - wrapper para dnd-kit com suporte a wheel scroll
-const SortableTopicCard = React.memo(({ topic, id, ...props }) => {
+const SortableTopicCard = React.memo(({ topic, id, ...props }: SortableTopicCardProps) => {
   const isSpecial = isSpecialTopic(topic);
 
   const {
@@ -8359,7 +8445,8 @@ SortableTopicCard.displayName = 'SortableTopicCard';
 
 // 📦 COMPONENTE: VirtualList (v1.7.1) - Virtual scrolling para performance
 // v1.19.2: Adicionado suporte a expandedIds para items com altura dinâmica
-const VirtualList = React.memo(({ items, itemHeight, renderItem, className = '', overscan = 5, expandedIds = new Set() }) => {
+// v1.35.79: Generic component with proper React.memo typing
+function VirtualListBase<T>({ items, itemHeight, renderItem, className = '', overscan = 5, expandedIds = new Set() }: VirtualListProps<T>) {
   const [scrollTop, setScrollTop] = React.useState(0);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -8420,12 +8507,13 @@ const VirtualList = React.memo(({ items, itemHeight, renderItem, className = '',
           left: 0,
           right: 0
         }}>
-          {visibleItems.map((item: { id: string | number }, idx: number) => {
+          {visibleItems.map((item, idx) => {
             const absoluteIndex = visibleStart + idx;
-            const isExpanded = expandedIds.has(item.id);
+            const itemWithId = item as { id?: string | number };
+            const isExpanded = itemWithId.id ? expandedIds.has(String(itemWithId.id)) : false;
             return (
               <div
-                key={item.id || absoluteIndex}
+                key={itemWithId.id ?? absoluteIndex}
                 style={isExpanded ? {
                   position: 'relative',
                   zIndex: 10,
@@ -8443,9 +8531,12 @@ const VirtualList = React.memo(({ items, itemHeight, renderItem, className = '',
       </div>
     </div>
   );
-});
+}
 
-VirtualList.displayName = 'VirtualList';
+// Create memoized version with proper generic support
+const VirtualList = React.memo(VirtualListBase) as <T>(props: VirtualListProps<T>) => React.ReactElement;
+
+(VirtualList as React.FC).displayName = 'VirtualList';
 
 // 📚 COMPONENTE: ModelCard (v1.2.7) - Card dual-view cards/list
 // v1.35.0: Suporte a modelos compartilhados com badge de proprietário
@@ -8461,7 +8552,7 @@ const ModelCard = React.memo(({
   isShared = false,
   ownerEmail = null,
   sharedPermission = 'view'
-}) => {
+}: ModelCardProps) => {
   // Validação de viewMode
   let validViewMode = viewMode;
   if (viewMode !== 'cards' && viewMode !== 'list') {
@@ -8516,7 +8607,7 @@ const ModelCard = React.memo(({
               )}
             </div>
             {model.keywords && (() => {
-              const kwArr = model.keywords.split(',');
+              const kwArr = Array.isArray(model.keywords) ? model.keywords : model.keywords.split(',');
               return (
               <div className="flex flex-wrap gap-1 mb-3">
                 {kwArr.slice(0, 3).map((kw: string, i: number) => (
@@ -8625,7 +8716,7 @@ const ModelCard = React.memo(({
                 </span>
               )}
               {model.keywords && (() => {
-                const kwArr = model.keywords.split(',');
+                const kwArr = Array.isArray(model.keywords) ? model.keywords : model.keywords.split(',');
                 return (
                 <span className="text-xs theme-text-muted truncate">
                   {kwArr[0].trim()}
@@ -8701,7 +8792,7 @@ const ProofCard = React.memo(({
   nomesParaAnonimizar = [],
   editorTheme = 'dark', // v1.21.7: Para contraste correto do aviso de anonimização
   setTextPreview // v1.21.16: Para preview de texto extraído
-}) => {
+}: ProofCardProps) => {
   // 🆕 v1.12.27: Estado local para progresso de extração (em vez de setError global)
   const [extractionProgress, setExtractionProgress] = React.useState<{ current: number; total: number; mode: string } | null>(null);
   // null = não extraindo | { current: N, total: N, mode: 'pdfjs'|'claude-vision' } = em progresso
@@ -8733,7 +8824,7 @@ const ProofCard = React.memo(({
   }, [proof.id, proof.isPlaceholder, proofManager]);
 
   // v1.21.5: Função interna de extração (chamada diretamente ou após modal de nomes)
-  const executeExtraction = React.useCallback(async (nomesToUse = []) => {
+  const executeExtraction = React.useCallback(async (nomesToUse: string[] = []) => {
     // v1.32.14: Bloquear apenas modos binários, permitir tesseract
     const userMode = proofManager.proofProcessingModes[proof.id] || 'pdfjs';
     const blockedModes = ['claude-vision', 'pdf-puro'];
@@ -8751,7 +8842,7 @@ const ProofCard = React.memo(({
 
     try {
       setExtractionProgress({ current: 0, total: 0, mode: selectedMode });
-      const extractedText = await extractTextFromPDFWithMode(proof.file, selectedMode, (current: number, total: number) => {
+      const extractedText = await extractTextFromPDFWithMode(proof.file!, selectedMode, (current: number, total: number) => {
         setExtractionProgress({ current, total, mode: selectedMode });
       });
       setExtractionProgress(null);
@@ -8794,21 +8885,21 @@ const ProofCard = React.memo(({
 
   // Handler: Abrir modal de análise
   const handleAnalyze = React.useCallback(() => {
-    proofManager.setProofToAnalyze({ ...proof, isPdf });
+    proofManager.setProofToAnalyze(proof);
     openModal('proofAnalysis');
-  }, [proof, isPdf, proofManager, openModal]);
+  }, [proof, proofManager, openModal]);
 
   // Handler: Abrir modal de vinculação
   const handleLink = React.useCallback(() => {
-    proofManager.setProofToLink({ ...proof, isPdf });
+    proofManager.setProofToLink(proof);
     openModal('linkProof');
-  }, [proof, isPdf, proofManager, openModal]);
+  }, [proof, proofManager, openModal]);
 
   // Handler: Abrir modal de remoção
   const handleDelete = React.useCallback(() => {
-    proofManager.setProofToDelete({ ...proof, isPdf });
+    proofManager.setProofToDelete(proof);
     openModal('deleteProof');
-  }, [proof, isPdf, proofManager, openModal]);
+  }, [proof, proofManager, openModal]);
 
   return (
     <div
@@ -8858,7 +8949,7 @@ const ProofCard = React.memo(({
 
           {/* Metadata - Tamanho/Caracteres + Data */}
           <div className="flex items-center gap-4 text-xs theme-text-muted mb-2">
-            <span>{isPdf ? `${(proof.size / 1024).toFixed(1)} KB` : `${proof.text.length} caracteres`}</span>
+            <span>{isPdf ? `${((proof.size ?? 0) / 1024).toFixed(1)} KB` : `${(proof.text ?? '').length} caracteres`}</span>
             <span>{new Date(proof.uploadDate).toLocaleDateString('pt-BR')}</span>
           </div>
 
@@ -8886,7 +8977,7 @@ const ProofCard = React.memo(({
           )}
 
           {/* Preview de Texto (apenas para tipo TEXTO) */}
-          {!isPdf && (
+          {!isPdf && proof.text && (
             <p className="text-xs theme-text-muted line-clamp-2 mb-2">{proof.text.substring(0, 150)}...</p>
           )}
 
@@ -8896,7 +8987,7 @@ const ProofCard = React.memo(({
               <div className={CSS.flexGap2}>
                 <button
                   onClick={handleSetPdfMode}
-                  disabled={proof.isPlaceholder || extractionProgress || anonymizationEnabled}
+                  disabled={proof.isPlaceholder || !!extractionProgress || anonymizationEnabled}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                     proof.isPlaceholder || extractionProgress || anonymizationEnabled
                       ? 'theme-bg-tertiary-30 theme-text-disabled cursor-not-allowed'
@@ -8910,7 +9001,7 @@ const ProofCard = React.memo(({
                 </button>
                 <button
                   onClick={handleExtractText}
-                  disabled={extractionProgress}
+                  disabled={!!extractionProgress}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                     extractionProgress
                       ? 'theme-bg-tertiary-30 theme-text-disabled cursor-not-allowed'
@@ -8932,7 +9023,7 @@ const ProofCard = React.memo(({
                     ...prev,
                     [proof.id]: mode
                   }))}
-                  disabled={proofManager.isAnalyzingProof(proof.id) || extractionProgress}
+                  disabled={proofManager.isAnalyzingProof(String(proof.id)) || !!extractionProgress}
                   anonymizationEnabled={anonymizationEnabled}
                 />
               </div>
@@ -8954,7 +9045,7 @@ const ProofCard = React.memo(({
               {!proofManager.proofUsePdfMode[proof.id] && proofManager.extractedProofTexts[proof.id] && (
                 <div
                   className={`mt-2 text-xs flex items-center gap-1 cursor-pointer hover:underline ${editorTheme === 'light' ? 'text-green-600' : 'text-green-400'}`}
-                  onClick={() => setTextPreview({ isOpen: true, title: proof.name, text: proofManager.extractedProofTexts[proof.id] })}
+                  onClick={() => setTextPreview?.({ isOpen: true, title: proof.name, text: proofManager.extractedProofTexts[proof.id] })}
                 >
                   <Check className="w-3 h-3" />
                   Texto extraído com sucesso ({proofManager.extractedProofTexts[proof.id].length.toLocaleString()} caracteres)
@@ -8976,10 +9067,10 @@ const ProofCard = React.memo(({
           <div className="mt-3">
             <button
               onClick={handleAnalyze}
-              disabled={proofManager.isAnalyzingProof(proof.id) || (anonymizationEnabled && isPdf && !proofManager.extractedProofTexts[proof.id]) || (anonymizationEnabled && isPdf && proofManager.proofUsePdfMode[proof.id])}
+              disabled={proofManager.isAnalyzingProof(String(proof.id)) || (anonymizationEnabled && isPdf && !proofManager.extractedProofTexts[proof.id]) || (anonymizationEnabled && isPdf && proofManager.proofUsePdfMode[proof.id])}
               className="w-full px-3 py-2 border border-blue-500/30 rounded-lg text-xs font-medium theme-text-blue flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover-blue-alpha-3-from-2 theme-bg-blue-accent transition-all duration-300"
             >
-              {proofManager.isAnalyzingProof(proof.id) ? (
+              {proofManager.isAnalyzingProof(String(proof.id)) ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin" />
                   Analisando...
@@ -9115,7 +9206,7 @@ const ProofCard = React.memo(({
 // Display name para React DevTools
 ProofCard.displayName = 'ProofCard';
 
-const JurisprudenciaCard = React.memo(({ precedente, onCopy, expanded, onToggleExpand }) => {
+const JurisprudenciaCard = React.memo(({ precedente, onCopy, expanded, onToggleExpand }: JurisprudenciaCardProps) => {
   const texto = precedente.tese || precedente.enunciado || '';
   const tesePreview = texto.length > 200 ? texto.slice(0, 200) + '...' : texto;
   const renderIdentificador = () => {
@@ -9193,9 +9284,9 @@ JurisprudenciaCard.displayName = 'JurisprudenciaCard';
 // ═══════════════════════════════════════════════════════════════
 // 📜 COMPONENTE: ArtigoCard - Card de exibição de artigo de lei
 // ═══════════════════════════════════════════════════════════════
-const ArtigoCard = React.memo(({ artigo, onCopy, expanded, onToggleExpand, copiedId }) => {
+const ArtigoCard = React.memo(({ artigo, onCopy, expanded, onToggleExpand, copiedId }: ArtigoCardProps) => {
   const lei = getLeiFromId(artigo.id);
-  const hasDetails = (artigo.paragrafos?.length > 0) || (artigo.incisos?.length > 0) || (artigo.alineas?.length > 0);
+  const hasDetails = (artigo.paragrafos && artigo.paragrafos.length > 0) || (artigo.incisos && artigo.incisos.length > 0) || (artigo.alineas && artigo.alineas.length > 0);
   const isCopied = copiedId === artigo.id;
 
   return (
@@ -9241,7 +9332,7 @@ const ArtigoCard = React.memo(({ artigo, onCopy, expanded, onToggleExpand, copie
 
       {expanded && hasDetails && (
         <div className="mt-3 pt-3 border-t theme-border-subtle text-sm space-y-2">
-          {artigo.paragrafos?.length > 0 && (
+          {artigo.paragrafos && artigo.paragrafos.length > 0 && (
             <div>
               <span className="text-xs font-medium text-purple-400 block mb-1">Parágrafos:</span>
               {artigo.paragrafos.map((p: { numero: string; texto: string }, i: number) => (
@@ -9251,7 +9342,7 @@ const ArtigoCard = React.memo(({ artigo, onCopy, expanded, onToggleExpand, copie
               ))}
             </div>
           )}
-          {artigo.incisos?.length > 0 && (
+          {artigo.incisos && artigo.incisos.length > 0 && (
             <div>
               <span className="text-xs font-medium text-amber-400 block mb-1">Incisos:</span>
               {artigo.incisos.map((inc: { numero: string; texto: string }, i: number) => (
@@ -9261,7 +9352,7 @@ const ArtigoCard = React.memo(({ artigo, onCopy, expanded, onToggleExpand, copie
               ))}
             </div>
           )}
-          {artigo.alineas?.length > 0 && (
+          {artigo.alineas && artigo.alineas.length > 0 && (
             <div>
               <span className="text-xs font-medium text-teal-400 block mb-1">Alíneas:</span>
               {artigo.alineas.map((al: { letra: string; texto: string }, i: number) => (
@@ -9287,10 +9378,10 @@ const JurisprudenciaTab = React.memo(({
   searchModelReady = false,
   jurisEmbeddingsCount = 0,
   jurisSemanticThreshold = 50
-}) => {
+}: JurisprudenciaTabProps) => {
   const jurisprudencia = useJurisprudencia();
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
-  const [importStatus, setImportStatus] = React.useState<string | null>(null);
+  const [importStatus, setImportStatus] = React.useState<{ success: boolean; message?: string; count?: number; error?: string } | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   // v1.27.00: Estados para busca semântica (usa scroll, não paginação)
@@ -9302,7 +9393,7 @@ const JurisprudenciaTab = React.memo(({
       return jurisSemanticEnabled; // Usa toggle global como fallback
     } catch { return false; }
   });
-  const [semanticResults, setSemanticResults] = React.useState<Precedente[] | null>(null);
+  const [semanticResults, setSemanticResults] = React.useState<JurisEmbeddingWithSimilarity[] | null>(null);
   const [searchingSemantics, setSearchingSemantics] = React.useState(false);
 
   // Busca semântica disponível se: toggle global ativo + modelo pronto + embeddings gerados
@@ -9343,7 +9434,7 @@ const JurisprudenciaTab = React.memo(({
     } else {
       setSemanticResults(null);
     }
-    return () => clearTimeout(semanticSearchTimeoutRef.current);
+    return () => { if (semanticSearchTimeoutRef.current) clearTimeout(semanticSearchTimeoutRef.current); };
   }, [jurisprudencia.searchTerm, useSemanticSearch, semanticAvailable, performSemanticSearch, jurisprudencia.filtros]);
 
   const handleToggleExpand = React.useCallback((id: string) => {
@@ -9388,11 +9479,11 @@ const JurisprudenciaTab = React.memo(({
             placeholder={useSemanticSearch ? "Buscar por significado (ex: intervalo intrajornada)..." : "Buscar por tese, keywords ou número..."}
             value={jurisprudencia.searchTerm}
             onChange={jurisprudencia.handleSearchChange}
-            onKeyDown={(e) => e.key === 'Escape' && jurisprudencia.handleSearchChange({ target: { value: '' } })}
+            onKeyDown={(e) => e.key === 'Escape' && jurisprudencia.handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
             className="w-full pl-10 pr-12 py-2 border theme-input rounded-lg text-sm"
           />
           {jurisprudencia.searchTerm && !searchingSemantics && (
-            <button onClick={() => jurisprudencia.handleSearchChange({ target: { value: '' } })} className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 theme-text-muted hover-text-primary" title="Limpar (Esc)">
+            <button onClick={() => jurisprudencia.handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)} className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 theme-text-muted hover-text-primary" title="Limpar (Esc)">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
@@ -9522,8 +9613,8 @@ const JurisprudenciaTab = React.memo(({
                   }`}>
                     {Math.round(result.similarity * 100)}%
                   </span>
-                  {result.totalChunks > 1 && (
-                    <span className="text-xs theme-text-muted">(chunk {result.chunkIndex + 1}/{result.totalChunks})</span>
+                  {(result.totalChunks ?? 0) > 1 && (
+                    <span className="text-xs theme-text-muted">(chunk {(result.chunkIndex ?? 0) + 1}/{result.totalChunks})</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
@@ -9532,10 +9623,13 @@ const JurisprudenciaTab = React.memo(({
                   )}
                   <button
                     onClick={() => jurisprudencia.handleCopyTese({
+                      id: result.id,
+                      tipo: result.tipo || result.tipoProcesso || '',
+                      numero: result.numero || '',
+                      texto: result.texto || result.fullText || '',
                       tipoProcesso: result.tipoProcesso,
-                      numero: result.numero,
                       titulo: result.titulo,
-                      tese: result.fullText || result.text
+                      tese: result.fullText || result.texto
                     })}
                     className="p-1.5 rounded hover-icon-blue-scale"
                     title="Copiar tese completa"
@@ -9548,7 +9642,7 @@ const JurisprudenciaTab = React.memo(({
                 <h4 className="font-semibold theme-text-primary text-sm mb-2 uppercase">{result.titulo}</h4>
               )}
               <p className="text-sm theme-text-secondary whitespace-pre-wrap">
-                {result.fullText || result.text}
+                {result.fullText || result.texto}
               </p>
             </div>
           ))
@@ -9631,10 +9725,10 @@ const LegislacaoTab = React.memo(({
   searchModelReady = false,
   embeddingsCount = 0,
   semanticThreshold = 50
-}) => {
+}: LegislacaoTabProps) => {
   const legislacao = useLegislacao();
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
-  const [importStatus, setImportStatus] = React.useState<string | null>(null);
+  const [importStatus, setImportStatus] = React.useState<{ success: boolean; message?: string; count?: number; error?: string } | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   // v1.26.00: Toggle local de busca semântica (modo de busca)
   // v1.28.01: Usa toggle global como padrão se não houver valor no localStorage
@@ -9645,7 +9739,7 @@ const LegislacaoTab = React.memo(({
       return semanticSearchEnabled; // Usa toggle global como fallback
     } catch { return false; }
   });
-  const [semanticResults, setSemanticResults] = React.useState<Artigo[] | null>(null);
+  const [semanticResults, setSemanticResults] = React.useState<(LegislacaoEmbeddingItem & { similarity: number })[] | null>(null);
   const [searchingSemantics, setSearchingSemantics] = React.useState(false);
 
   // Busca semântica disponível se: toggle global ativo + modelo pronto + embeddings gerados
@@ -9684,7 +9778,7 @@ const LegislacaoTab = React.memo(({
     } else {
       setSemanticResults(null);
     }
-    return () => clearTimeout(semanticSearchTimeoutRef.current);
+    return () => { if (semanticSearchTimeoutRef.current) clearTimeout(semanticSearchTimeoutRef.current); };
   }, [legislacao.searchTerm, useSemanticSearch, semanticAvailable, performSemanticSearch]);
 
   const handleToggleExpand = React.useCallback((id: string) => {
@@ -9834,7 +9928,7 @@ const LegislacaoTab = React.memo(({
               .map((item, idx) => {
               const artigo = legislacao.artigos.find(a => a.id === item.artigoId);
               if (!artigo) return null;
-              const hasDetails = (artigo.paragrafos?.length > 0) || (artigo.incisos?.length > 0) || (artigo.alineas?.length > 0);
+              const hasDetails = (artigo.paragrafos && artigo.paragrafos.length > 0) || (artigo.incisos && artigo.incisos.length > 0) || (artigo.alineas && artigo.alineas.length > 0);
               const isMatchedType = (type: string) => item.type === type;
               const isMatchedParagrafo = (p: { texto?: string }) => item.type === 'paragrafo' && item.text.includes(p.texto?.slice(0, 50) || '');
               const isMatchedInciso = (inc: { numero: string; texto: string }) => item.type === 'inciso' && item.text.includes(inc.texto?.slice(0, 50));
@@ -9847,7 +9941,7 @@ const LegislacaoTab = React.memo(({
                         {Math.round(item.similarity * 100)}% similar
                       </span>
                       <span className="text-xs theme-text-muted uppercase">{item.lei}</span>
-                      <span className="text-xs font-medium theme-text-primary">Art. {item.numero}</span>
+                      <span className="text-xs font-medium theme-text-primary">Art. {artigo.numero}</span>
                       <span className="text-xs theme-text-muted capitalize">({item.type})</span>
                     </div>
                     <button
@@ -9863,7 +9957,7 @@ const LegislacaoTab = React.memo(({
                   </p>
                   {hasDetails && (
                     <div className="mt-2 pt-2 border-t theme-border-subtle text-sm space-y-2">
-                      {artigo.paragrafos?.length > 0 && (
+                      {artigo.paragrafos && artigo.paragrafos.length > 0 && (
                         <div>
                           {artigo.paragrafos.map((p, i: number) => (
                             <p key={i} className={`theme-text-secondary ml-2 mb-1 ${isMatchedParagrafo(p) ? 'font-semibold bg-yellow-500/10 px-1 rounded' : ''}`}>
@@ -9872,7 +9966,7 @@ const LegislacaoTab = React.memo(({
                           ))}
                         </div>
                       )}
-                      {artigo.incisos?.length > 0 && (
+                      {artigo.incisos && artigo.incisos.length > 0 && (
                         <div>
                           {artigo.incisos.map((inc, i: number) => (
                             <p key={i} className={`theme-text-secondary ml-2 mb-1 ${isMatchedInciso(inc) ? 'font-semibold bg-yellow-500/10 px-1 rounded' : ''}`}>
@@ -9881,7 +9975,7 @@ const LegislacaoTab = React.memo(({
                           ))}
                         </div>
                       )}
-                      {artigo.alineas?.length > 0 && (
+                      {artigo.alineas && artigo.alineas.length > 0 && (
                         <div>
                           {artigo.alineas.map((al: { letra: string; texto: string }, i: number) => (
                             <p key={i} className={`theme-text-secondary ml-2 mb-1 ${isMatchedAlinea(al) ? 'font-semibold bg-yellow-500/10 px-1 rounded' : ''}`}>
@@ -9909,16 +10003,19 @@ const LegislacaoTab = React.memo(({
             overscan={3}
             className="h-full"
             expandedIds={expandedIds}
-            renderItem={(artigo: Artigo) => (
-              <ArtigoCard
-                key={artigo.id}
-                artigo={artigo}
-                onCopy={legislacao.handleCopyArtigo}
-                expanded={expandedIds.has(artigo.id)}
-                onToggleExpand={handleToggleExpand}
-                copiedId={legislacao.copiedId}
-              />
-            )}
+            renderItem={(item, _index) => {
+              const artigo = item as Artigo;
+              return (
+                <ArtigoCard
+                  key={artigo.id}
+                  artigo={artigo}
+                  onCopy={legislacao.handleCopyArtigo}
+                  expanded={expandedIds.has(artigo.id)}
+                  onToggleExpand={handleToggleExpand}
+                  copiedId={legislacao.copiedId}
+                />
+              );
+            }}
           />
         ) : legislacao.artigos.length === 0 ? (
           <div className="text-center py-12 theme-text-muted">
@@ -9938,7 +10035,7 @@ const LegislacaoTab = React.memo(({
       </div>
 
       {/* v1.26.00: Footer com contagem (filtrada por lei) */}
-      {(useSemanticSearch && semanticResults?.length > 0) ? (() => {
+      {(useSemanticSearch && semanticResults && semanticResults.length > 0) ? (() => {
         const filteredSemanticCount = semanticResults.filter(item => !legislacao.leiAtiva || item.lei === legislacao.leiAtiva).length;
         return filteredSemanticCount > 0 ? (
           <div className="flex items-center justify-center mt-3 pt-2 border-t theme-border-subtle">
@@ -10028,7 +10125,7 @@ const BaseModal = React.memo(({
   children,
   footer,
   preventClose = false // v1.33.62: Impedir fechamento (ESC, X, click fora)
-}) => {
+}: BaseModalProps) => {
   // ESC handler - deve vir antes do early return para cleanup funcionar
   React.useEffect(() => {
     if (preventClose) return; // v1.33.62: Não registrar ESC se preventClose
@@ -10054,7 +10151,7 @@ const BaseModal = React.memo(({
 
   if (!isOpen) return null;
 
-  const sizes = {
+  const sizes: Record<string, string> = {
     sm: 'max-w-md',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
@@ -10063,7 +10160,7 @@ const BaseModal = React.memo(({
   };
 
   // Gradientes para o círculo do ícone
-  const iconGradients = {
+  const iconGradients: Record<string, string> = {
     blue: 'from-blue-500 to-cyan-500 shadow-blue-500/30',
     red: 'from-red-500 to-orange-500 shadow-red-500/30',
     green: 'from-green-500 to-emerald-500 shadow-green-500/30',
@@ -10084,7 +10181,7 @@ const BaseModal = React.memo(({
           <div className="flex items-center gap-3">
             {icon && (
               <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${iconGradients[iconColor] || iconGradients.blue} flex items-center justify-center shadow-lg`}>
-                {React.cloneElement(icon, { className: 'w-4 h-4 text-white' })}
+                {React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'w-4 h-4 text-white' })}
               </div>
             )}
             <div>
@@ -10119,7 +10216,7 @@ const BaseModal = React.memo(({
 // 🔧 ModalFooter: Helpers para footers de modais
 const ModalFooter = {
   // Footer com Cancelar + Confirmar (azul)
-  Standard: ({ onClose, onConfirm, confirmText = 'Confirmar', disabled = false, loading = false }) => (
+  Standard: ({ onClose, onConfirm, confirmText = 'Confirmar', disabled = false, loading = false }: { onClose: () => void; onConfirm: () => void; confirmText?: string; disabled?: boolean; loading?: boolean }) => (
     <>
       <button onClick={onClose} className={CSS.btnSecondary} disabled={loading}>Cancelar</button>
       <button onClick={onConfirm} disabled={disabled || loading} className={CSS.btnBlue}>
@@ -10128,18 +10225,18 @@ const ModalFooter = {
     </>
   ),
   // Footer com apenas Fechar
-  CloseOnly: ({ onClose, text = 'Fechar' }) => (
+  CloseOnly: ({ onClose, text = 'Fechar' }: { onClose: () => void; text?: string }) => (
     <button onClick={onClose} className={CSS.btnSecondary}>{text}</button>
   ),
   // Footer com Cancelar + Ação Destrutiva (vermelho)
-  Destructive: ({ onClose, onConfirm, confirmText = 'Deletar', disabled = false }) => (
+  Destructive: ({ onClose, onConfirm, confirmText = 'Deletar', disabled = false }: { onClose: () => void; onConfirm: () => void; confirmText?: string; disabled?: boolean }) => (
     <>
       <button onClick={onClose} className={CSS.btnSecondary}>Cancelar</button>
       <button onClick={onConfirm} disabled={disabled} className={CSS.btnRed}>{confirmText}</button>
     </>
   ),
   // Footer com Cancelar + Confirmar (verde)
-  Success: ({ onClose, onConfirm, confirmText = 'Confirmar', disabled = false }) => (
+  Success: ({ onClose, onConfirm, confirmText = 'Confirmar', disabled = false }: { onClose: () => void; onConfirm: () => void; confirmText?: string; disabled?: boolean }) => (
     <>
       <button onClick={onClose} className={CSS.btnSecondary}>Cancelar</button>
       <button onClick={onConfirm} disabled={disabled} className={CSS.btnGreen}>{confirmText}</button>
@@ -10148,7 +10245,7 @@ const ModalFooter = {
 };
 
 // 🔧 ModalWarningBox: Caixa de aviso vermelho para ações destrutivas (v1.18.3: suporta children complexos)
-const ModalWarningBox = ({ children, className = '' }) => (
+const ModalWarningBox = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
   <div className={`bg-red-900/20 border border-red-500/30 rounded-lg p-3 ${className}`}>
     <div className="text-xs theme-text-red flex items-start gap-2">
       <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -10158,21 +10255,21 @@ const ModalWarningBox = ({ children, className = '' }) => (
 );
 
 // 🔧 ModalInfoBox: Caixa de informação azul para dicas (v1.18.3: suporta children complexos)
-const ModalInfoBox = ({ children, className = '' }) => (
+const ModalInfoBox = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
   <div className={`${CSS.infoBox} ${className}`}>
     <div className="text-xs theme-text-blue">{children}</div>
   </div>
 );
 
 // 🔧 ModalAmberBox: Caixa de aviso amarelo
-const ModalAmberBox = ({ children, className = '' }) => (
+const ModalAmberBox = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
   <div className={`theme-warning-box p-4 ${className}`}>
     {children}
   </div>
 );
 
 // 🔧 ModalContentPreview: Preview de conteúdo em box
-const ModalContentPreview = ({ title, subtitle, badge, children, className = '' }) => (
+const ModalContentPreview = ({ title, subtitle, badge, children, className = '' }: { title?: string; subtitle?: string; badge?: string; children?: React.ReactNode; className?: string }) => (
   <div className={`theme-bg-app p-4 rounded-lg border theme-border-secondary ${className}`}>
     {title && <p className="font-semibold theme-text-primary text-lg">{title}</p>}
     {subtitle && <p className="text-sm theme-text-muted mt-1">{subtitle}</p>}
@@ -10182,7 +10279,7 @@ const ModalContentPreview = ({ title, subtitle, badge, children, className = '' 
 );
 
 // Modal: Renomear Tópico (migrado para BaseModal v1.18.3)
-const RenameTopicModal = React.memo(({ isOpen, onClose, topicToRename, setTopicToRename, newTopicName, setNewTopicName, handleRenameTopic, isRegenerating, hasDocuments }) => {
+const RenameTopicModal = React.memo(({ isOpen, onClose, topicToRename, setTopicToRename, newTopicName, setNewTopicName, handleRenameTopic, isRegenerating, hasDocuments }: RenameTopicModalProps) => {
   const handleClose = () => { onClose(); setTopicToRename(null); setNewTopicName(''); };
   return (
     <BaseModal isOpen={isOpen} onClose={handleClose} title="Renomear Tópico" icon={<Edit2 />} iconColor="purple" size="lg"
@@ -10212,7 +10309,7 @@ const RenameTopicModal = React.memo(({ isOpen, onClose, topicToRename, setTopicT
 RenameTopicModal.displayName = 'RenameTopicModal';
 
 // Modal: Excluir Tópico (migrado para BaseModal)
-const DeleteTopicModal = React.memo(({ isOpen, onClose, topicToDelete, setTopicToDelete, onConfirmDelete }) => (
+const DeleteTopicModal = React.memo(({ isOpen, onClose, topicToDelete, setTopicToDelete, onConfirmDelete }: DeleteTopicModalProps) => (
   <BaseModal
     isOpen={isOpen}
     onClose={() => { onClose(); setTopicToDelete(null); }}
@@ -10234,7 +10331,7 @@ const DeleteTopicModal = React.memo(({ isOpen, onClose, topicToDelete, setTopicT
 DeleteTopicModal.displayName = 'DeleteTopicModal';
 
 // Modal: Unir Tópicos (migrado para BaseModal v1.18.3)
-const MergeTopicsModal = React.memo(({ isOpen, onClose, topicsToMerge, onConfirmMerge, isRegenerating, hasDocuments }) => {
+const MergeTopicsModal = React.memo(({ isOpen, onClose, topicsToMerge, onConfirmMerge, isRegenerating, hasDocuments }: MergeTopicsModalProps) => {
   if (!topicsToMerge || topicsToMerge.length === 0) return null;
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title="Unir Tópicos" icon={<Merge />} iconColor="yellow" size="lg"
@@ -10255,7 +10352,7 @@ const MergeTopicsModal = React.memo(({ isOpen, onClose, topicsToMerge, onConfirm
 MergeTopicsModal.displayName = 'MergeTopicsModal';
 
 // Modal: Separar Tópico (migrado para BaseModal v1.18.3)
-const SplitTopicModal = React.memo(({ isOpen, onClose, topicToSplit, setTopicToSplit, splitNames, setSplitNames, onConfirmSplit, isRegenerating, hasDocuments }) => {
+const SplitTopicModal = React.memo(({ isOpen, onClose, topicToSplit, setTopicToSplit, splitNames, setSplitNames, onConfirmSplit, isRegenerating, hasDocuments }: SplitTopicModalProps) => {
   if (!splitNames) return null;
   const handleClose = () => { onClose(); setTopicToSplit(null); setSplitNames(['', '']); };
   return (
@@ -10279,20 +10376,20 @@ const SplitTopicModal = React.memo(({ isOpen, onClose, topicToSplit, setTopicToS
 SplitTopicModal.displayName = 'SplitTopicModal';
 
 // Modal: Criar Novo Tópico (migrado para BaseModal v1.18.3)
-const NewTopicModal = React.memo(({ isOpen, onClose, newTopicData, setNewTopicData, onConfirmCreate, isRegenerating, hasDocuments }) => {
+const NewTopicModal = React.memo(({ isOpen, onClose, newTopicData, setNewTopicData, onConfirmCreate, isRegenerating, hasDocuments }: NewTopicModalProps) => {
   const data = newTopicData || { title: '', category: 'MÉRITO', relatorio: '' };
   const handleClose = () => { onClose(); setNewTopicData({ title: '', category: 'MÉRITO', relatorio: '' }); };
   return (
     <BaseModal isOpen={isOpen} onClose={handleClose} title="Criar Novo Tópico" icon={<PlusCircle />} iconColor="green" size="lg"
       footer={<>
-        <button onClick={onConfirmCreate} disabled={isRegenerating || !data.title.trim()} className="flex-1 py-3 rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2 bg-green-600 text-white hover-green-700-from-600">
+        <button onClick={onConfirmCreate} disabled={isRegenerating || !(data.title || '').trim()} className="flex-1 py-3 rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2 bg-green-600 text-white hover-green-700-from-600">
           {isRegenerating ? <><div className={CSS.spinner}></div>{hasDocuments ? 'Analisando...' : 'Criando...'}</> : 'Criar Tópico'}
         </button>
         <button onClick={handleClose} className="px-6 py-3 rounded-lg theme-bg-tertiary hover-slate-500">Cancelar</button>
       </>}>
       <div className="space-y-4">
         <div><label className={CSS.label}>Título do Tópico</label><input type="text" value={data.title} onChange={(e) => setNewTopicData({...data, title: e.target.value})} className="w-full theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary" placeholder="Ex: Adicional de Periculosidade" /></div>
-        <div><label className={CSS.label}>Categoria</label><select value={data.category} onChange={(e) => setNewTopicData({...data, category: e.target.value})} className="w-full theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary"><option value="PRELIMINAR">Preliminar</option><option value="PREJUDICIAL">Prejudicial</option><option value="MÉRITO">Mérito</option></select></div>
+        <div><label className={CSS.label}>Categoria</label><select value={data.category} onChange={(e) => setNewTopicData({...data, category: e.target.value as TopicCategory})} className="w-full theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary"><option value="PRELIMINAR">Preliminar</option><option value="PREJUDICIAL">Prejudicial</option><option value="MÉRITO">Mérito</option></select></div>
         <div><label className={CSS.label}>Mini-relatório (opcional)</label><textarea value={data.relatorio} onChange={(e) => setNewTopicData({...data, relatorio: e.target.value})} className="w-full h-32 theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary resize-none" placeholder="Digite ou deixe em branco para gerar automaticamente" /></div>
         {hasDocuments ? <ModalInfoBox>✓ Se deixar em branco, o mini-relatório será gerado com base nos documentos.</ModalInfoBox> : <p className="text-xs theme-text-disabled">Se deixar vazio, será gerado um texto padrão.</p>}
       </div>
@@ -10302,7 +10399,7 @@ const NewTopicModal = React.memo(({ isOpen, onClose, newTopicData, setNewTopicDa
 NewTopicModal.displayName = 'NewTopicModal';
 
 // Modal: Excluir Modelo (migrado para BaseModal)
-const DeleteModelModal = React.memo(({ isOpen, onClose, modelToDelete, setModelToDelete, onConfirmDelete }) => {
+const DeleteModelModal = React.memo(({ isOpen, onClose, modelToDelete, setModelToDelete, onConfirmDelete }: DeleteModelModalProps) => {
   if (!modelToDelete) return null;
   const handleClose = () => { onClose(); setModelToDelete(null); };
   return (
@@ -10321,7 +10418,7 @@ const DeleteModelModal = React.memo(({ isOpen, onClose, modelToDelete, setModelT
 DeleteModelModal.displayName = 'DeleteModelModal';
 
 // Modal: Excluir Todos os Modelos (migrado para BaseModal v1.18.3)
-const DeleteAllModelsModal = React.memo(({ isOpen, onClose, totalModels, confirmText, setConfirmText, onConfirmDelete }) => {
+const DeleteAllModelsModal = React.memo(({ isOpen, onClose, totalModels, confirmText, setConfirmText, onConfirmDelete }: DeleteAllModelsModalProps) => {
   const handleClose = () => { onClose(); setConfirmText(''); };
   return (
     <BaseModal isOpen={isOpen} onClose={handleClose} title="ATENÇÃO: Exclusão em Massa" icon={<AlertCircle />} iconColor="red" size="md"
@@ -10350,7 +10447,7 @@ const DeleteAllModelsModal = React.memo(({ isOpen, onClose, totalModels, confirm
 });
 DeleteAllModelsModal.displayName = 'DeleteAllModelsModal';
 
-const DeleteAllPrecedentesModal = React.memo(({ isOpen, onClose, totalPrecedentes, confirmText, setConfirmText, onConfirmDelete }) => {
+const DeleteAllPrecedentesModal = React.memo(({ isOpen, onClose, totalPrecedentes, confirmText, setConfirmText, onConfirmDelete }: DeleteAllPrecedentesModalProps) => {
   const handleClose = () => { onClose(); setConfirmText(''); };
   return (
     <BaseModal isOpen={isOpen} onClose={handleClose} title="ATENÇÃO: Exclusão em Massa" icon={<AlertCircle />} iconColor="red" size="md"
@@ -10381,7 +10478,7 @@ const ExtractModelConfirmModal = React.memo(({
   editingTopic,
   editorRef,
   onConfirmExtract
-}) => {
+}: ExtractModelConfirmModalProps) => {
   // ESC handler
   React.useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -10483,7 +10580,7 @@ const ExtractedModelPreviewModal = React.memo(({
   onSave,
   onCancel,
   sanitizeHTML = (html: string) => html || ''
-}) => {
+}: ExtractedModelPreviewModalProps) => {
   // ESC handler
   React.useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -10573,7 +10670,7 @@ const ExtractedModelPreviewModal = React.memo(({
             </label>
             <div
               className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg min-h-[200px] max-h-[300px] overflow-y-auto theme-text"
-              dangerouslySetInnerHTML={{ __html: sanitizeHTML(extractedModel.content) }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHTML(extractedModel.content || '') }}
             />
             <p className="text-xs theme-text-muted mt-1">
               Conteúdo editado no modal anterior
@@ -10592,7 +10689,7 @@ const ExtractedModelPreviewModal = React.memo(({
           </button>
           <button
             onClick={onSave}
-            disabled={!extractedModel.title.trim() || !extractedModel.content.trim()}
+            disabled={!(extractedModel.title ?? '').trim() || !(extractedModel.content ?? '').trim()}
             className="flex-1 px-6 py-3 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed rounded-lg font-medium shadow-lg flex items-center justify-center gap-2 hover-gradient-purple-pink-darker transition-all duration-300"
           >
             <Save className="w-5 h-5" />
@@ -10607,7 +10704,7 @@ const ExtractedModelPreviewModal = React.memo(({
 ExtractedModelPreviewModal.displayName = 'ExtractedModelPreviewModal';
 
 // Modal: Adicionar Prova (Texto) (migrado para BaseModal v1.18.3)
-const AddProofTextModal = React.memo(({ isOpen, onClose, newProofData, setNewProofData, onAddProof }) => {
+const AddProofTextModal = React.memo(({ isOpen, onClose, newProofData, setNewProofData, onAddProof }: AddProofTextModalProps) => {
   const data = newProofData || { name: '', text: '' };
   const handleClose = () => { onClose(); setNewProofData({ name: '', text: '' }); };
   return (
@@ -10640,7 +10737,7 @@ const ProofAnalysisModal = React.memo(({
   onAnalyzeContextual,
   onAnalyzeFree,
   editorTheme = 'dark'
-}) => {
+}: ProofAnalysisModalProps) => {
   if (!isOpen || !proofToAnalyze) return null;
 
   const linkedTopicsCount = proofTopicLinks[proofToAnalyze.id]?.length || 0;
@@ -10764,7 +10861,7 @@ const LinkProofModal = React.memo(({
   extractedTopics,
   proofTopicLinks,
   setProofTopicLinks
-}) => {
+}: LinkProofModalProps) => {
   if (!isOpen || !proofToLink) return null;
 
   return (
@@ -10859,7 +10956,7 @@ const LinkProofModal = React.memo(({
 LinkProofModal.displayName = 'LinkProofModal';
 
 // Modal: Excluir Prova (migrado para BaseModal)
-const DeleteProofModal = React.memo(({ isOpen, onClose, proofToDelete, onConfirmDelete }) => {
+const DeleteProofModal = React.memo(({ isOpen, onClose, proofToDelete, onConfirmDelete }: DeleteProofModalProps) => {
   if (!proofToDelete) return null;
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title="Confirmar Exclusão" icon={<Trash2 />} iconColor="red" size="md"
@@ -10880,9 +10977,9 @@ const DeleteProofModal = React.memo(({ isOpen, onClose, proofToDelete, onConfirm
 DeleteProofModal.displayName = 'DeleteProofModal';
 
 // 💬 v1.19.0: ChatBubble - Mensagem individual no chat
-const ChatBubble = React.memo(({ msg, onUse, showUse, sanitizeHTML = (html: string) => html || '' }) => {
+const ChatBubble = React.memo(({ msg, onUse, showUse, sanitizeHTML = (html: string) => html || '' }: ChatBubbleProps) => {
   const isUser = msg.role === 'user';
-  const time = new Date(msg.ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const time = new Date(msg.ts ?? Date.now()).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   // v1.19.4: Converter Markdown básico para HTML (fix espaçamento)
   const markdownToHtml = (text: string) => {
     if (!text) return '';
@@ -10932,7 +11029,7 @@ const ChatBubble = React.memo(({ msg, onUse, showUse, sanitizeHTML = (html: stri
 ChatBubble.displayName = 'ChatBubble';
 
 // 💬 v1.19.0: ChatHistoryArea - Área de histórico do chat
-const ChatHistoryArea = React.memo(({ history, generating, onUseMessage, showUseButtons, sanitizeHTML }) => {
+const ChatHistoryArea = React.memo(({ history, generating, onUseMessage, showUseButtons, sanitizeHTML }: ChatHistoryAreaProps) => {
   const ref = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
@@ -10977,7 +11074,7 @@ const ChatHistoryArea = React.memo(({ history, generating, onUseMessage, showUse
 ChatHistoryArea.displayName = 'ChatHistoryArea';
 
 // 💬 v1.19.0: ChatInput - Campo de entrada do chat
-const ChatInput = React.memo(({ onSend, disabled, placeholder }) => {
+const ChatInput = React.memo(({ onSend, disabled, placeholder }: ChatInputProps) => {
   const [value, setValue] = React.useState('');
 
   const handleSend = () => {
@@ -11031,7 +11128,7 @@ const ChatInput = React.memo(({ onSend, disabled, placeholder }) => {
 ChatInput.displayName = 'ChatInput';
 
 // 💬 v1.19.0: InsertDropdown - Dropdown para inserir resposta
-const InsertDropdown = React.memo(({ onInsert, disabled }) => {
+const InsertDropdown = React.memo(({ onInsert, disabled }: InsertDropdownProps) => {
   const [open, setOpen] = React.useState(false);
 
   if (disabled) return null;
@@ -11074,10 +11171,11 @@ const isOralProof = (proofName: string | undefined) => {
 };
 
 // 🆕 v1.21.1: Verifica se há provas orais vinculadas a um tópico
-const hasOralProofsForTopic = (proofManager: { proofTopicLinks: Record<string, string[]>; proofFiles: ProofFile[]; proofTexts: ProofText[] } | null, topicTitle: string) => {
-  if (!proofManager) return false;
-  const linkedProofIds = Object.keys(proofManager.proofTopicLinks || {}).filter(proofId =>
-    proofManager.proofTopicLinks[proofId]?.includes(topicTitle)
+const hasOralProofsForTopic = (proofManager: { proofTopicLinks?: Record<string, string[]>; proofFiles: ProofFile[]; proofTexts: ProofText[] } | null, topicTitle: string | undefined) => {
+  if (!proofManager || !topicTitle) return false;
+  const proofTopicLinks = proofManager.proofTopicLinks || {};
+  const linkedProofIds = Object.keys(proofTopicLinks).filter(proofId =>
+    proofTopicLinks[proofId]?.includes(topicTitle)
   );
   const allLinkedProofs = [
     ...(proofManager.proofFiles || []).filter((p: ProofFile) => linkedProofIds.includes(String(p.id))),
@@ -11109,12 +11207,12 @@ const AIAssistantBaseLegacy = React.memo(({
   showInsertButtons = true,
   showCopyButton = true,
   sanitizeHTML = (html: string) => html || '',
-}) => {
+}: AIAssistantBaseLegacyProps) => {
   const [copied, setCopied] = React.useState(false);
 
   const handleCopyText = React.useCallback(() => {
     // v1.25.18: Usar helper ao invés de DOM (memory leak fix)
-    let plainText = extractPlainText(aiGeneratedText);
+    let plainText = extractPlainText(aiGeneratedText || '');
     plainText = plainText.replace(/\n{2,}/g, '\n').trim();
     navigator.clipboard.writeText(plainText)
       .then(() => {
@@ -11237,7 +11335,7 @@ const AIAssistantBaseLegacy = React.memo(({
           {/* Botão Gerar */}
           <button
             onClick={onGenerateText}
-            disabled={generatingAi || !aiInstruction.trim()}
+            disabled={generatingAi || !(aiInstruction || '').trim()}
             className="w-full py-3 rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2 text-white bg-gradient-to-r from-purple-600 to-blue-600 hover-gradient-purple-blue-darker transition-all duration-300"
           >
             {generatingAi ? (
@@ -11338,7 +11436,7 @@ const AIAssistantBase = React.memo(({
   topicTitle = '',    // v1.21.1: Título do tópico para substituição em quick prompts
   onQuickPromptClick = null, // v1.21.1: Handler opcional para quick prompts (permite validação)
   qpError = null,     // v1.21.2: Estado de erro para mostrar no botão do quick prompt
-}) => {
+}: AIAssistantBaseProps) => {
   // Bloquear scroll do body quando modal está aberto
   React.useEffect(() => {
     if (isOpen) {
@@ -11356,7 +11454,7 @@ const AIAssistantBase = React.memo(({
 
   if (!isOpen) return null;
 
-  const handleInsert = (mode: ProcessingMode) => {
+  const handleInsert = (mode: 'replace' | 'prepend' | 'append') => {
     if (lastResponse) onInsertResponse(mode);
   };
 
@@ -11501,7 +11599,7 @@ const AIAssistantModal = React.memo(({
   sanitizeHTML = (html: string) => html || '',
   quickPrompts = [],  // v1.20.0
   proofManager = null  // v1.21.1: Para validação de provas orais
-}) => {
+}: AIAssistantModalProps) => {
   // v1.21.2: Estado para erro no botão do quick prompt
   const [qpError, setQpError] = React.useState<{ id: string; message: string } | null>(null);
 
@@ -11606,7 +11704,7 @@ const AIAssistantGlobalModal = React.memo(({
   sanitizeHTML = (html: string) => html || '',
   quickPrompts = [],  // v1.20.0
   proofManager = null  // v1.21.1: Para validação de provas orais
-}) => {
+}: AIAssistantGlobalModalProps) => {
   // v1.21.2: Estado para erro no botão do quick prompt
   const [qpError, setQpError] = React.useState<{ id: string; message: string } | null>(null);
 
@@ -11706,7 +11804,7 @@ const AIAssistantModelModal = React.memo(({
   onGenerateText,
   onInsertText,
   sanitizeHTML = (html: string) => html || ''
-}) => {
+}: AIAssistantModelModalProps) => {
   // Exemplos específicos para criação de modelos
   const modelExamples = (
     <ul className="text-xs theme-text-disabled space-y-1">
@@ -11741,7 +11839,7 @@ const AIAssistantModelModal = React.memo(({
 
 AIAssistantModelModal.displayName = 'AIAssistantModelModal';
 
-const AnalysisModal = React.memo(({
+const AnalysisModal: React.FC<AnalysisModalProps> = ({
   isOpen,
   analysisProgress,
   peticaoFiles,
@@ -11807,20 +11905,20 @@ const AnalysisModal = React.memo(({
                     Docs do Autor: {totalPeticoes > 0 ? `${totalPeticoes} documento${totalPeticoes !== 1 ? 's' : ''}` : 'Não anexados'}
                   </span>
                 </div>
-                {(contestacaoFiles.length > 0 || pastedContestacaoTexts.length > 0) && (
+                {((contestacaoFiles?.length ?? 0) > 0 || (pastedContestacaoTexts?.length ?? 0) > 0) && (
                   <div className={CSS.flexGap2}>
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                     <span>
-                      Contestações: {contestacaoFiles.length + pastedContestacaoTexts.length} documento{(contestacaoFiles.length + pastedContestacaoTexts.length) !== 1 ? 's' : ''}
-                      {pastedContestacaoTexts.length > 0 && ` (${pastedContestacaoTexts.length} texto${pastedContestacaoTexts.length !== 1 ? 's' : ''})`}
+                      Contestações: {(contestacaoFiles?.length ?? 0) + (pastedContestacaoTexts?.length ?? 0)} documento{((contestacaoFiles?.length ?? 0) + (pastedContestacaoTexts?.length ?? 0)) !== 1 ? 's' : ''}
+                      {(pastedContestacaoTexts?.length ?? 0) > 0 && ` (${pastedContestacaoTexts?.length ?? 0} texto${(pastedContestacaoTexts?.length ?? 0) !== 1 ? 's' : ''})`}
                     </span>
                   </div>
                 )}
-                {(complementaryFiles.length > 0 || pastedComplementaryTexts.length > 0) && (
+                {((complementaryFiles?.length ?? 0) > 0 || (pastedComplementaryTexts?.length ?? 0) > 0) && (
                   <div className={CSS.flexGap2}>
                     <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
                     <span>
-                      Complementares: {complementaryFiles.length + pastedComplementaryTexts.length} documento{(complementaryFiles.length + pastedComplementaryTexts.length) !== 1 ? 's' : ''}
+                      Complementares: {(complementaryFiles?.length ?? 0) + (pastedComplementaryTexts?.length ?? 0)} documento{((complementaryFiles?.length ?? 0) + (pastedComplementaryTexts?.length ?? 0)) !== 1 ? 's' : ''}
                     </span>
                   </div>
                 )}
@@ -11836,12 +11934,10 @@ const AnalysisModal = React.memo(({
       </div>
     </div>
   );
-});
-
-AnalysisModal.displayName = 'AnalysisModal';
+};
 
 // Modal: Exportar Minuta (migrado para BaseModal v1.18.3)
-const ExportModal = React.memo(({ isOpen, onClose, exportedText, exportedHtml, copySuccess, setCopySuccess, setError }) => {
+const ExportModal = React.memo(({ isOpen, onClose, exportedText, exportedHtml, copySuccess, setCopySuccess, setError }: ExportModalProps) => {
   const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   React.useEffect(() => () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }, []);
   const handleCopy = async () => {
@@ -11876,7 +11972,7 @@ ExportModal.displayName = 'ExportModal';
 
 // Modal: Restaurar Sessão (migrado para BaseModal)
 // v1.33.62: preventClose - usuário deve escolher uma opção
-const RestoreSessionModal = React.memo(({ isOpen, onClose, sessionLastSaved, onRestoreSession, onStartNew }) => (
+const RestoreSessionModal = React.memo(({ isOpen, onClose, sessionLastSaved, onRestoreSession, onStartNew }: RestoreSessionModalProps) => (
   <BaseModal isOpen={isOpen} onClose={onClose} title="Sessão Anterior Encontrada" icon={<Save />} iconColor="blue" size="sm" preventClose
     footer={<><button onClick={onRestoreSession} className={CSS.btnGreen}>✅ Continuar Sessão</button><button onClick={onStartNew} className={CSS.btnRed}>🗑️ Começar do Zero</button></>}>
     <div className="space-y-4">
@@ -11889,7 +11985,7 @@ const RestoreSessionModal = React.memo(({ isOpen, onClose, sessionLastSaved, onR
 RestoreSessionModal.displayName = 'RestoreSessionModal';
 
 // Modal: Limpar Projeto (migrado para BaseModal)
-const ClearProjectModal = React.memo(({ isOpen, onClose, onConfirmClear }) => (
+const ClearProjectModal = React.memo(({ isOpen, onClose, onConfirmClear }: ClearProjectModalProps) => (
   <BaseModal isOpen={isOpen} onClose={onClose} title="Limpar Projeto" icon={<Trash2 />} iconColor="red" size="sm"
     footer={<ModalFooter.Destructive onClose={onClose} onConfirm={onConfirmClear} confirmText="Sim, Limpar Tudo" />}>
     <div className="space-y-4">
@@ -11909,7 +12005,7 @@ const ClearProjectModal = React.memo(({ isOpen, onClose, onConfirmClear }) => (
 ClearProjectModal.displayName = 'ClearProjectModal';
 
 // v1.33.57: Modal de confirmação de logout estilizado
-const LogoutConfirmModal = React.memo(({ isOpen, onClose, onConfirm }) => (
+const LogoutConfirmModal = React.memo(({ isOpen, onClose, onConfirm }: LogoutConfirmModalProps) => (
   <BaseModal isOpen={isOpen} onClose={onClose} title="Sair do Sistema" icon={<LogOut />} iconColor="red" size="sm"
     footer={<ModalFooter.Destructive onClose={onClose} onConfirm={onConfirm} confirmText="Sim, Sair" />}>
     <div className="space-y-4">
@@ -11922,7 +12018,7 @@ LogoutConfirmModal.displayName = 'LogoutConfirmModal';
 
 // v1.35.1: Modal para compartilhar biblioteca de modelos (convite por email)
 // v1.35.23: Adicionado onRemoveSharedModels para limpar modelos ao remover acesso
-const ShareLibraryModal = React.memo(({ isOpen, onClose, user, onRemoveSharedModels }) => {
+const ShareLibraryModal = React.memo(({ isOpen, onClose, user, onRemoveSharedModels }: ShareLibraryModalProps) => {
   const [permission, setPermission] = React.useState('view');
   const [loading, setLoading] = React.useState(false);
   const [recipientEmail, setRecipientEmail] = React.useState('');
@@ -11990,9 +12086,10 @@ const ShareLibraryModal = React.memo(({ isOpen, onClose, user, onRemoveSharedMod
         // Adicionar à lista de convites
         setShares(prev => [{
           id: data.shareId,
-          permission,
+          email: recipientEmail.toLowerCase(),
+          permission: permission as 'view' | 'edit',
           recipient_email: recipientEmail.toLowerCase(),
-          created_at: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
           recipients: []
         }, ...prev]);
       } else {
@@ -12174,7 +12271,7 @@ const ShareLibraryModal = React.memo(({ isOpen, onClose, user, onRemoveSharedMod
                           {share.permission === 'edit' ? 'Leitura/Escrita' : 'Somente Leitura'}
                         </span>
                         {/* Status: pendente ou aceito */}
-                        {share.recipients?.length > 0 ? (
+                        {share.recipients && share.recipients.length > 0 ? (
                           <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400">
                             Aceito
                           </span>
@@ -12184,7 +12281,7 @@ const ShareLibraryModal = React.memo(({ isOpen, onClose, user, onRemoveSharedMod
                           </span>
                         )}
                         <span className="text-xs theme-text-tertiary">
-                          {new Date(share.created_at || share.createdAt).toLocaleDateString('pt-BR')}
+                          {new Date(share.createdAt).toLocaleDateString('pt-BR')}
                         </span>
                       </div>
                     </div>
@@ -12224,7 +12321,7 @@ const ShareLibraryModal = React.memo(({ isOpen, onClose, user, onRemoveSharedMod
                       </div>
                     </div>
                     <button
-                      onClick={() => handleRemoveAccess(lib.accessId)}
+                      onClick={() => handleRemoveAccess(lib.accessId || '')}
                       className="text-red-400 hover:text-red-300 text-xs"
                     >
                       Remover
@@ -12242,7 +12339,7 @@ const ShareLibraryModal = React.memo(({ isOpen, onClose, user, onRemoveSharedMod
 ShareLibraryModal.displayName = 'ShareLibraryModal';
 
 // v1.35.0: Página para aceitar compartilhamento de biblioteca
-const AcceptSharePage = React.memo(({ token, onAccepted, onLogin }) => {
+const AcceptSharePage = React.memo(({ token, onAccepted, onLogin }: AcceptSharePageProps) => {
   const [loading, setLoading] = React.useState(true);
   const [shareInfo, setShareInfo] = React.useState<ShareInfo | null>(null);
   const [error, setError] = React.useState('');
@@ -12350,7 +12447,7 @@ const AcceptSharePage = React.memo(({ token, onAccepted, onLogin }) => {
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Compartilhamento Aceito!</h2>
           <p className="text-slate-400 mb-4">
-            Os modelos de <span className="text-purple-400 font-medium">{shareInfo?.owner?.email}</span> agora aparecem na sua biblioteca.
+            Os modelos de <span className="text-purple-400 font-medium">{typeof shareInfo?.owner === 'object' ? shareInfo?.owner?.email : shareInfo?.owner}</span> agora aparecem na sua biblioteca.
           </p>
           <p className="text-slate-500 text-sm">Redirecionando...</p>
         </div>
@@ -12367,14 +12464,14 @@ const AcceptSharePage = React.memo(({ token, onAccepted, onLogin }) => {
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Convite de Compartilhamento</h2>
           <p className="text-slate-400">
-            <span className="text-purple-400 font-medium">{shareInfo?.owner?.email}</span> quer compartilhar sua biblioteca de modelos com você.
+            <span className="text-purple-400 font-medium">{typeof shareInfo?.owner === 'object' ? shareInfo?.owner?.email : shareInfo?.owner}</span> quer compartilhar sua biblioteca de modelos com você.
           </p>
         </div>
 
         <div className="bg-slate-700/50 rounded-xl p-4 mb-6 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-slate-400 text-sm">Proprietário</span>
-            <span className="text-white font-medium">{shareInfo?.owner?.email}</span>
+            <span className="text-white font-medium">{typeof shareInfo?.owner === 'object' ? shareInfo?.owner?.email : shareInfo?.owner}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-slate-400 text-sm">Modelos</span>
@@ -12419,7 +12516,7 @@ AcceptSharePage.displayName = 'AcceptSharePage';
 
 // Modal: Anonimização (migrado para BaseModal) - v1.25: + NER
 // v1.29.03: Adicionar overlay IA Local durante detecção
-const AnonymizationNamesModal = React.memo(({ isOpen, onClose, onConfirm, nomesTexto, setNomesTexto, nerEnabled, onDetectNames, detectingNames, onOpenAiSettings }) => {
+const AnonymizationNamesModal = React.memo(({ isOpen, onClose, onConfirm, nomesTexto, setNomesTexto, nerEnabled, onDetectNames, detectingNames, onOpenAiSettings }: AnonymizationNamesModalProps) => {
   const handleConfirm = () => { onConfirm(nomesTexto.split(/[\n,]/).map((n: string) => n.trim()).filter((n: string) => n.length >= 2)); };
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title="Anonimização de Documentos" icon={<AlertCircle />} iconColor="purple" size="lg"
@@ -12477,7 +12574,7 @@ const AnonymizationNamesModal = React.memo(({ isOpen, onClose, onConfirm, nomesT
 AnonymizationNamesModal.displayName = 'AnonymizationNamesModal';
 
 // v1.21.16: Modal de preview de texto extraído
-const TextPreviewModal = React.memo(({ isOpen, onClose, title, text }) => {
+const TextPreviewModal = React.memo(({ isOpen, onClose, title, text }: TextPreviewModalProps) => {
   // v1.35.67: ESC handler
   React.useEffect(() => {
     if (!isOpen) return;
@@ -12528,10 +12625,10 @@ const TextPreviewModal = React.memo(({ isOpen, onClose, title, text }) => {
 });
 TextPreviewModal.displayName = 'TextPreviewModal';
 
-const DispositivoModal = React.memo(({
+const DispositivoModal: React.FC<DispositivoModalProps> = ({
   isOpen,
   onClose,
-  dispositivoText,
+  dispositivoText = '',
   setDispositivoText,
   copySuccess,
   setCopySuccess,
@@ -12553,12 +12650,11 @@ const DispositivoModal = React.memo(({
   }, [isOpen, onClose]);
 
   const handleAddToTopics = React.useCallback(() => {
-    const dispositivoTopic = {
+    const dispositivoTopic: Topic = {
       title: 'DISPOSITIVO',
-      category: 'DISPOSITIVO',
+      category: 'DISPOSITIVO' as TopicCategory,
       relatorio: 'Dispositivo final da sentença com todos os pedidos julgados.',
-      editedContent: dispositivoText.replace(/\n/g, '<br>'),
-      order: extractedTopics.length
+      editedContent: dispositivoText.replace(/\n/g, '<br>')
     };
 
     // Verificar se já existe em extractedTopics
@@ -12618,11 +12714,13 @@ const DispositivoModal = React.memo(({
       const range = document.createRange();
       range.selectNodeContents(tempDiv);
       const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
       let success = false;
       try { success = document.execCommand('copy'); } catch (e) { /* execCommand deprecated */ }
-      selection.removeAllRanges();
+      if (selection) selection.removeAllRanges();
       document.body.removeChild(tempDiv);
       if (success) {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -12803,12 +12901,10 @@ const DispositivoModal = React.memo(({
       </div>
     </div>
   );
-});
-
-DispositivoModal.displayName = 'DispositivoModal';
+};
 
 // Modal: Descartar Modelos em Lote (migrado para BaseModal)
-const BulkDiscardConfirmModal = React.memo(({ isOpen, onClose, totalModels, onConfirm }) => (
+const BulkDiscardConfirmModal = React.memo(({ isOpen, onClose, totalModels, onConfirm }: BulkDiscardConfirmModalProps) => (
   <BaseModal isOpen={isOpen} onClose={onClose} title="Descartar Modelos?" icon={<AlertCircle />} iconColor="red" size="sm"
     footer={<ModalFooter.Destructive onClose={onClose} onConfirm={onConfirm} confirmText="Sim, Descartar" />}>
     <div className="space-y-4">
@@ -12820,7 +12916,7 @@ const BulkDiscardConfirmModal = React.memo(({ isOpen, onClose, totalModels, onCo
 BulkDiscardConfirmModal.displayName = 'BulkDiscardConfirmModal';
 
 // Modal: Cancelar Processamento em Lote (migrado para BaseModal)
-const ConfirmBulkCancelModal = React.memo(({ isOpen, onClose, filesInProgress, onConfirm }) => (
+const ConfirmBulkCancelModal = React.memo(({ isOpen, onClose, filesInProgress, onConfirm }: ConfirmBulkCancelModalProps) => (
   <BaseModal isOpen={isOpen} onClose={onClose} title="Cancelar Processamento?" icon={<AlertCircle />} iconColor="yellow" size="sm"
     footer={<><button onClick={onClose} className={CSS.btnSecondary}>Continuar</button><button onClick={onConfirm} className="flex-1 px-4 py-3 rounded-lg font-medium bg-amber-600 text-white hover-amber-700-from-600">Sim, Cancelar</button></>}>
     <div className="space-y-4">
@@ -12831,7 +12927,7 @@ const ConfirmBulkCancelModal = React.memo(({ isOpen, onClose, filesInProgress, o
 ));
 ConfirmBulkCancelModal.displayName = 'ConfirmBulkCancelModal';
 
-const LockedTabOverlay = React.memo(({ isPrimaryTab, activeTab, setActiveTab }) => {
+const LockedTabOverlay = React.memo(({ isPrimaryTab, activeTab, setActiveTab }: LockedTabOverlayProps) => {
   const [controlTaken, setControlTaken] = React.useState(false);
 
   const handleTakeControl = React.useCallback(() => {
@@ -13095,7 +13191,7 @@ LockedTabOverlay.displayName = 'LockedTabOverlay';
 
 // 🔍 Modal de Aviso de Similaridade (v1.13.3 - Comparação lado a lado)
 // v1.33.3: Feedback visual "Salvando..." durante geração de embedding
-const SimilarityWarningModal = React.memo(({ warning, saving, onCancel, onSaveNew, onReplace, sanitizeHTML = (html: string) => html || '' }) => {
+const SimilarityWarningModal = React.memo(({ warning, saving, onCancel, onSaveNew, onReplace, sanitizeHTML = (html: string) => html || '' }: SimilarityWarningModalProps) => {
   // ESC handler
   React.useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape' && !saving) onCancel(); };
@@ -13157,7 +13253,7 @@ const SimilarityWarningModal = React.memo(({ warning, saving, onCancel, onSaveNe
 });
 SimilarityWarningModal.displayName = 'SimilarityWarningModal';
 
-const BulkReviewModal = React.memo(({
+const BulkReviewModal: React.FC<BulkReviewModalProps> = ({
   isOpen,
   onClose,
   bulkReviewModels,
@@ -13218,9 +13314,9 @@ const BulkReviewModal = React.memo(({
             <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
               <p className="font-semibold theme-text-red mb-2">⚠️ Arquivos com erro:</p>
               <div className="space-y-1 text-sm">
-                {bulkErrors.map((err: { file: string; error: string }, idx: number) => (
+                {bulkErrors.map((err: BulkError, idx: number) => (
                   <div key={idx} className="theme-text-secondary">
-                    • <span className="font-medium">{err.file}</span>: {err.error}
+                    • <span className="font-medium">{err.file}</span>: {err.error || 'Erro desconhecido'}
                   </div>
                 ))}
               </div>
@@ -13229,9 +13325,9 @@ const BulkReviewModal = React.memo(({
 
           {/* Lista de Modelos */}
           <div className="space-y-4">
-            {bulkReviewModels.map((model: Model, idx: number) => (
+            {bulkReviewModels.map((model: BulkGeneratedModel, idx: number) => (
               <div
-                key={model.id}
+                key={idx}
                 style={{ borderColor: '#475569', transition: 'border-color 0.3s ease' }}
                 className="theme-bg-secondary-30 rounded-lg border p-4 hover-border-purple-alpha-50"
               >
@@ -13250,7 +13346,7 @@ const BulkReviewModal = React.memo(({
                       </span>
                       {model.keywords && (
                         <span className={CSS.textMuted}>
-                          🏷️ {model.keywords.split(',').slice(0, 3).join(', ')}
+                          🏷️ {(Array.isArray(model.keywords) ? model.keywords : String(model.keywords).split(',')).slice(0, 3).join(', ')}
                         </span>
                       )}
                       {model.similarityInfo && (
@@ -13265,7 +13361,7 @@ const BulkReviewModal = React.memo(({
                     </div>
                   </div>
                   <button
-                    onClick={() => onRemoveModel(model.id)}
+                    onClick={() => onRemoveModel(model.id || String(idx))}
                     className="hover-delete-topic p-2 rounded"
                     title="Remover este modelo"
                   >
@@ -13311,11 +13407,9 @@ const BulkReviewModal = React.memo(({
       </div>
     </div>
   );
-});
+};
 
-BulkReviewModal.displayName = 'BulkReviewModal';
-
-const BulkUploadModal = React.memo(({
+const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
   isOpen,
   onClose,
   isProcessing,
@@ -13403,16 +13497,16 @@ const BulkUploadModal = React.memo(({
                   📋 Arquivos Selecionados ({bulkFiles.length}/20)
                 </label>
                 <div className="theme-bg-secondary-30 rounded-lg border theme-border-input max-h-64 overflow-y-auto">
-                  {bulkFiles.map((file: File, idx: number) => (
+                  {bulkFiles.map((bulkFile: BulkFile, idx: number) => (
                     <div
                       key={idx}
                       className="flex items-center justify-between p-3 border-b theme-border-input/50 last:border-b-0 hover-slate-alpha-30-from-transparent"
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <FileText className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                        <span className="text-sm theme-text-secondary truncate">{file.name}</span>
+                        <span className="text-sm theme-text-secondary truncate">{bulkFile.name}</span>
                         <span className="text-xs theme-text-disabled">
-                          ({(file.size / 1024).toFixed(1)} KB)
+                          ({(bulkFile.size / 1024).toFixed(1)} KB)
                         </span>
                       </div>
                       <button
@@ -13513,8 +13607,8 @@ const BulkUploadModal = React.memo(({
           <div className="p-6 space-y-4 flex-1 overflow-y-auto">
             {/* Grid de status por arquivo */}
             <div className="space-y-3">
-              {bulkFiles.map((file: File, index: number) => {
-                const result = processedFiles.find((f: { file: string; status: string }) => f.file === file.name);
+              {bulkFiles.map((bulkFile: BulkFile, index: number) => {
+                const result = processedFiles.find((f: { file: string; status: string }) => f.file === bulkFile.name);
                 const isComplete = result?.status === 'success';
                 const isError = result?.status === 'error';
 
@@ -13546,7 +13640,7 @@ const BulkUploadModal = React.memo(({
 
                     {/* Info do arquivo */}
                     <div className="flex-grow min-w-0">
-                      <p className="text-sm theme-text-secondary truncate font-medium">{file.name}</p>
+                      <p className="text-sm theme-text-secondary truncate font-medium">{bulkFile.name}</p>
                       <p className="text-xs theme-text-muted mt-1">
                         {isComplete && `✅ ${result.modelsCount} modelo${result.modelsCount !== 1 ? 's' : ''} gerado${result.modelsCount !== 1 ? 's' : ''} em ${result.duration}s`}
                         {isError && `❌ Erro: ${result.error}`}
@@ -13600,11 +13694,18 @@ const BulkUploadModal = React.memo(({
   }
 
   return null;
-});
-
-BulkUploadModal.displayName = 'BulkUploadModal';
+};
 
 // 📋 FASE 3.1: ModelFormFields - Campos do formulário de modelos
+interface ModelFormFieldsProps {
+  formData: { title: string; category: string; keywords: string; content: string };
+  onChange: (field: string, value: string) => void;
+  categories: string[];
+  onGenerateKeywords: () => void;
+  generatingKeywords?: boolean;
+  onGenerateTitle: () => void;
+  generatingTitle?: boolean;
+}
 const ModelFormFields = React.memo(({
   formData,
   onChange,
@@ -13613,7 +13714,7 @@ const ModelFormFields = React.memo(({
   generatingKeywords,
   onGenerateTitle,
   generatingTitle
-}) => {
+}: ModelFormFieldsProps) => {
 
   const handleFieldChange = React.useCallback((field: string, value: string) => {
     onChange(field, value);
@@ -13722,7 +13823,8 @@ ModelFormFields.displayName = 'ModelFormFields';
 
 // ModelFormModal - Container para edição de modelos
 // v1.35.10: Estado local bufferizado para evitar re-render do LegalDecisionEditor a cada keystroke
-const ModelFormModal = React.forwardRef(({
+// v1.35.92: Tipagem correta com ModelFormModalProps
+const ModelFormModal = React.forwardRef<HTMLDivElement, ModelFormModalProps>(({
   isOpen,
   editingModel,
   newModel,
@@ -13756,7 +13858,7 @@ const ModelFormModal = React.forwardRef(({
       setLocalModel({
         title: newModel.title || '',
         content: newModel.content || '',
-        keywords: newModel.keywords || '',
+        keywords: Array.isArray(newModel.keywords) ? newModel.keywords.join(', ') : (newModel.keywords || ''),
         category: newModel.category || ''
       });
     }
@@ -13764,12 +13866,12 @@ const ModelFormModal = React.forwardRef(({
 
   // v1.35.3: Memoizar categorias para evitar recálculo a cada keystroke
   const categories = React.useMemo(() => {
-    return [...new Set(models.map((m: Model) => m.category).filter((c: string | undefined | null) => c && c.trim() !== ''))].sort();
+    return [...new Set(models.map((m: Model) => m.category).filter((c: string | undefined | null): c is string => !!c && c.trim() !== ''))].sort();
   }, [models]);
 
   // v1.35.10: Handler para mudanças nos campos - atualiza estado LOCAL
   const handleFieldChange = React.useCallback((field: string, value: string) => {
-    setLocalModel((prev: Partial<Model>) => ({ ...prev, [field]: value }));
+    setLocalModel((prev: LocalModelForm) => ({ ...prev, [field]: value }));
   }, []);
 
   // v1.35.10: Handler para mudanças no editor rico - atualiza estado LOCAL
@@ -13853,7 +13955,8 @@ const ModelFormModal = React.forwardRef(({
 ModelFormModal.displayName = 'ModelFormModal';
 
 // 👁️ COMPONENTE: ModelPreviewModal - Preview de modelo
-const ModelPreviewModal = React.memo(({
+// v1.35.92: Tipagem correta com ModelPreviewModalProps
+const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
   isOpen,
   model,
   onInsert,
@@ -13882,7 +13985,7 @@ const ModelPreviewModal = React.memo(({
 }) => {
   // Hooks DEVEM vir antes de qualquer early return
   // Ref para o editor Quill em modo edição
-  const quickEditRef = React.useRef<HTMLDivElement | null>(null);
+  const quickEditRef = React.useRef<QuillInstance | null>(null); // v1.35.92: Tipar como QuillInstance
 
   // Conteúdo Sanitizado (Memoizado para Performance)
   const sanitizedContent = React.useMemo(
@@ -14158,7 +14261,7 @@ const ModelPreviewModal = React.memo(({
                 </svg>
                 Inserir no Editor
               </button>
-              {onDelete && (
+              {onDelete && model && (
                 <button
                   onClick={() => { onDelete(model); onClose(); }}
                   className="hover-red-700-from-600 px-4 py-2 text-white rounded-lg font-semibold flex items-center gap-2 bg-red-600"
@@ -14175,13 +14278,11 @@ const ModelPreviewModal = React.memo(({
       </div>
     </div>
   );
-});
-
-ModelPreviewModal.displayName = 'ModelPreviewModal';
+};
 
 // 📝 SLASH COMMAND MENU (v1.33.8) - Acesso rápido a modelos com /
 // v1.33.8: Viewport-aware positioning, tooltip preview, toggle busca semântica
-const SlashCommandMenu = React.memo(({
+const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
   isOpen,
   position,
   models,
@@ -14195,7 +14296,7 @@ const SlashCommandMenu = React.memo(({
   searchModelsBySimilarity // v1.33.8: função para busca semântica
 }) => {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
-  const listRef = React.useRef<HTMLUListElement | null>(null);
+  const listRef = React.useRef<HTMLDivElement | null>(null);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
 
   // v1.33.8: Estado para toggle busca semântica
@@ -14237,7 +14338,8 @@ const SlashCommandMenu = React.memo(({
       setIsSearching(true);
       try {
         const results = await searchModelsBySimilarity(models, searchTerm.toLowerCase(), { threshold: 0.3, limit: 10 });
-        setSemanticResults(results);
+        // Resultados já são modelos com similarity, apenas converter para array de Model
+        setSemanticResults(results as Model[]);
       } catch (error) {
         console.error('[SlashCommand] Erro na busca semântica:', error);
         setSemanticResults(null);
@@ -14259,7 +14361,7 @@ const SlashCommandMenu = React.memo(({
     if (!term) return models.slice(0, 10);
     return models.filter((m: Model) =>
       m.title.toLowerCase().includes(term) ||
-      (m.keywords && m.keywords.toLowerCase().includes(term))
+      (m.keywords && (Array.isArray(m.keywords) ? m.keywords.join(' ') : m.keywords).toLowerCase().includes(term))
     ).slice(0, 10);
   }, [models, searchTerm, useSemanticSearch, semanticResults]);
 
@@ -14371,7 +14473,7 @@ const SlashCommandMenu = React.memo(({
             Nenhum modelo encontrado
           </div>
         ) : (
-          filteredModels.map((model: ScoredModel, idx: number) => (
+          filteredModels.map((model: Model, idx: number) => (
             <div
               key={model.id}
               onClick={() => onSelect?.(model)}
@@ -14411,14 +14513,13 @@ const SlashCommandMenu = React.memo(({
       </div>
     </div>
   );
-});
-
-SlashCommandMenu.displayName = 'SlashCommandMenu';
+};
 
 // 📝 FIELD EDITOR (v1.12.0) - Editor Quill sem toolbar
 // v1.15.3: Adicionado suporte a slash command (/)
 // v1.20.4: forwardRef para expor API de formatação
-const FieldEditor = React.memo(React.forwardRef(({
+// v1.35.93: Tipagem correta com FieldEditorProps e FieldEditorRef
+const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEditorProps>(({
   label,
   content,
   onChange,
@@ -14478,13 +14579,14 @@ const FieldEditor = React.memo(React.forwardRef(({
 
       // Event listener - mudanças de texto
       // v1.35.3: Debounce para evitar lag durante digitação rápida
-      quillInstanceRef.current.on('text-change', (delta, oldDelta, source) => {
+      quillInstanceRef.current.on('text-change', ((delta: unknown, _oldDelta: unknown, source: string) => {
         // v1.15.3: Detectar "\" digitado pelo usuário para slash command (SEM debounce)
         if (source === 'user' && onSlashCommandRef.current) {
-          const ops = delta.ops || [];
+          const ops = (delta as QuillDelta).ops || [];
           const lastOp = ops[ops.length - 1];
           if (typeof lastOp?.insert === 'string' && lastOp.insert.endsWith('\\')) {
             const quill = quillInstanceRef.current;
+            if (!quill) return;
             const range = quill.getSelection();
             if (range) {
               const bounds = quill.getBounds(range.index);
@@ -14515,7 +14617,7 @@ const FieldEditor = React.memo(React.forwardRef(({
             onChange?.(html);
           }
         }, 150);
-      });
+      }) as (...args: unknown[]) => void);
 
       // Event listener - foco (para sugestões contextuais)
       if (onFocus) {
@@ -14605,7 +14707,7 @@ const FieldEditor = React.memo(React.forwardRef(({
       <div className="field-editor">
         <label className="block text-xs font-semibold theme-text-muted mb-1">{label}</label>
         <div className="bg-red-900/20 border border-red-600 rounded p-3 text-sm text-red-400">
-          ❌ {quillError}
+          ❌ {quillError instanceof Error ? quillError.message : quillError}
         </div>
       </div>
     );
@@ -14639,7 +14741,7 @@ const FieldEditor = React.memo(React.forwardRef(({
 FieldEditor.displayName = 'FieldEditor';
 
 // 📝 LINKED PROOFS MODAL (v1.12.14)
-const LinkedProofsModal = React.memo(({
+const LinkedProofsModal: React.FC<LinkedProofsModalProps> = ({
   isOpen,
   onClose,
   topicTitle,
@@ -14741,9 +14843,7 @@ const LinkedProofsModal = React.memo(({
       </div>
     </div>
   );
-});
-
-LinkedProofsModal.displayName = 'LinkedProofsModal';
+};
 
 // ⚖️ v1.20.0: Modal de Jurisprudência Reutilizável
 const JURIS_TIPOS_DISPONIVEIS = ['IRR', 'IAC', 'IRDR', 'Súmula', 'OJ', 'RG', 'ADI/ADC/ADPF', 'Informativo'];
@@ -14751,7 +14851,7 @@ const JURIS_TRIBUNAIS_DISPONIVEIS = ['TST', 'STF', 'STJ', 'TRT8'];
 
 // v1.32.18: Adicionado useLocalAI e jurisSemanticThreshold para busca semântica
 // v1.33.16: Adicionado jurisSemanticEnabled para toggle interno + badge IA Local
-const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRelatorio, callAI, useLocalAI = false, jurisSemanticThreshold = 50, jurisSemanticEnabled = false }) => {
+const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRelatorio, callAI, useLocalAI = false, jurisSemanticThreshold = 50, jurisSemanticEnabled = false }: JurisprudenciaModalProps) => {
   const [suggestions, setSuggestions] = React.useState<JurisSuggestion[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
@@ -14785,12 +14885,12 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
       // v1.33.16: Usar busca semântica se toggle ativo E IA Local habilitada
       if (useSemanticMode && jurisSemanticEnabled) {
         // v1.32.19: Usar apenas título para query mais focada (relatório longo dilui relevância)
-        const queryText = term || topicTitle;
+        const queryText = term || topicTitle || '';
         const results = await doSemanticSearch(queryText);
         setSuggestions(results);
         setSearchSource('local');
-      } else {
-        const results = await findJurisprudenciaHelper(topicTitle, topicRelatorio, callAI, { ...filtros, searchTerm: term });
+      } else if (callAI) {
+        const results = await findJurisprudenciaHelper(topicTitle || '', topicRelatorio || '', callAI, { ...filtros, searchTerm: term });
         setSuggestions(results);
         setSearchSource('text');
       }
@@ -14844,18 +14944,13 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
 
   if (!isOpen) return null;
 
-  const handleCopy = async (p: Precedente) => {
+  const handleCopy = async (p: JurisSuggestion) => {
     const tipo = isIRRType(p.tipoProcesso) ? 'IRR' : (p.tipoProcesso || '');
     const identificador = p.tema ? `Tema ${p.tema}` : (p.numero ? `nº ${p.numero}` : '');
-    const partes = [];
+    const partes: string[] = [];
     partes.push(`${tipo}${identificador ? ` ${identificador}` : ''}${p.tribunal ? ` - ${p.tribunal}` : ''}${p.orgao ? ` - ${p.orgao}` : ''}`);
     if (p.titulo) partes.push(`Título: ${p.titulo}`);
-    if (p.numeroProcesso) partes.push(`Processo: ${p.numeroProcesso}`);
-    if (p.relator) partes.push(`Relator: ${p.relator}`);
-    if (p.dataPublicacao || p.dataAprovacao || p.dataJulgamento) partes.push(`Data: ${p.dataPublicacao || p.dataAprovacao || p.dataJulgamento}`);
-    if (p.resolucao) partes.push(`Resolução: ${p.resolucao}`);
-    if (p.status) partes.push(`Status: ${p.status.replace(/_/g, ' ')}`);
-    partes.push('');
+    if (p.tese || p.enunciado) partes.push('');
     partes.push(p.tese || p.enunciado || '');
     await navigator.clipboard.writeText(partes.join('\n'));
     setCopiedId(p.id);
@@ -14990,7 +15085,7 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
                   </div>
                 </div>
                 {p.titulo && <p className="text-xs font-medium theme-text-primary mb-1">{p.titulo}</p>}
-                <p className="text-sm theme-text-secondary mb-3 line-clamp-4">{p.tese || p.enunciado || p.fullText || p.text}</p>
+                <p className="text-sm theme-text-secondary mb-3 line-clamp-4">{p.tese || p.enunciado || p.fullText || p.texto}</p>
                 <button
                   onClick={() => handleCopy(p)}
                   className={`text-xs px-3 py-1.5 text-white rounded flex items-center gap-1 ${copiedId === p.id ? 'bg-green-600' : 'bg-purple-600 hover-purple-700'}`}
@@ -15009,12 +15104,15 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
 JurisprudenciaModal.displayName = 'JurisprudenciaModal';
 
 // 📝 INLINE FORMATTING TOOLBAR (v1.20.4) - Toolbar de formatação para FieldEditor
-const InlineFormattingToolbar = React.memo(({ editorRef }) => {
+interface InlineFormattingToolbarProps {
+  editorRef: React.RefObject<FieldEditorRef | null>;
+}
+const InlineFormattingToolbar = React.memo(({ editorRef }: InlineFormattingToolbarProps) => {
   const [activeFormats, setActiveFormats] = React.useState<ActiveFormatsState>({});
 
   const updateFormats = React.useCallback(() => {
     if (editorRef?.current) {
-      setActiveFormats(editorRef.current.getFormat());
+      setActiveFormats(editorRef.current.getFormat() as ActiveFormatsState);
     }
   }, [editorRef]);
 
@@ -15061,7 +15159,7 @@ const InlineFormattingToolbar = React.memo(({ editorRef }) => {
       <select
         className="text-xs px-1 py-0.5 theme-bg-secondary theme-border-input border rounded theme-text-primary"
         onChange={(e) => setHeader(e.target.value ? parseInt(e.target.value) : false)}
-        value={activeFormats.header || ''}
+        value={typeof activeFormats.header === 'number' ? activeFormats.header : ''}
         onFocus={updateFormats}
       >
         <option value="">¶</option>
@@ -15070,9 +15168,9 @@ const InlineFormattingToolbar = React.memo(({ editorRef }) => {
         <option value="3">H3</option>
       </select>
       <span className="text-gray-500 text-xs">|</span>
-      <button onClick={() => toggleFormat('bold')} className={btnClass(activeFormats.bold)} title="Negrito (Ctrl+B)"><strong>N</strong></button>
-      <button onClick={() => toggleFormat('italic')} className={btnClass(activeFormats.italic)} title="Itálico (Ctrl+I)"><em>I</em></button>
-      <button onClick={() => toggleFormat('underline')} className={btnClass(activeFormats.underline)} title="Sublinhado (Ctrl+U)"><u>S</u></button>
+      <button onClick={() => toggleFormat('bold')} className={btnClass(!!activeFormats.bold)} title="Negrito (Ctrl+B)"><strong>N</strong></button>
+      <button onClick={() => toggleFormat('italic')} className={btnClass(!!activeFormats.italic)} title="Itálico (Ctrl+I)"><em>I</em></button>
+      <button onClick={() => toggleFormat('underline')} className={btnClass(!!activeFormats.underline)} title="Sublinhado (Ctrl+U)"><u>S</u></button>
       <span className="text-gray-500 text-xs">|</span>
       <button onClick={() => toggleFormat('list', 'ordered')} className={btnClass(activeFormats.list === 'ordered')} title="Lista numerada">1.</button>
       <button onClick={() => toggleFormat('list', 'bullet')} className={btnClass(activeFormats.list === 'bullet')} title="Lista com marcadores">•</button>
@@ -15089,7 +15187,8 @@ const InlineFormattingToolbar = React.memo(({ editorRef }) => {
 InlineFormattingToolbar.displayName = 'InlineFormattingToolbar';
 
 // 📝 GLOBAL EDITOR SECTION (v1.12.0)
-const GlobalEditorSection = React.memo(({
+// v1.35.94: Tipagem correta com GlobalEditorSectionProps
+const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
   topic,
   topicIndex,
   onFieldChange,
@@ -15111,7 +15210,7 @@ const GlobalEditorSection = React.memo(({
   const isDispositivo = titleUpper === 'DISPOSITIVO';
 
   // v1.20.4: Ref para toolbar inline no campo Decisão
-  const fundamentacaoEditorRef = React.useRef<HTMLDivElement | null>(null);
+  const fundamentacaoEditorRef = React.useRef<FieldEditorRef | null>(null);
 
   return (
     <div className="global-editor-section mb-6 border theme-border-secondary rounded-lg overflow-hidden">
@@ -15261,13 +15360,12 @@ const GlobalEditorSection = React.memo(({
       )}
     </div>
   );
-});
-
-GlobalEditorSection.displayName = 'GlobalEditorSection';
+};
 
 // 📝 GLOBAL EDITOR MODAL (v1.12.0) - Edição global da sentença
 // v1.15.3: Adicionado suporte a slash command (/)
-const GlobalEditorModal = React.memo(({
+// v1.35.95: Tipagem correta com GlobalEditorModalProps
+const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   isOpen,
   onClose,
   selectedTopics,
@@ -15312,7 +15410,7 @@ const GlobalEditorModal = React.memo(({
   // Estados para sugestões de modelos - v1.12.2: inicia true para sugestões funcionarem na primeira abertura
   const [isSplitMode, setIsSplitMode] = React.useState(true);
   const [splitPosition, setSplitPosition] = React.useState(80); // v1.13: 80/20 por padrão
-  const [currentFocusedTopic, setCurrentFocusedTopic] = React.useState(null);
+  const [currentFocusedTopic, setCurrentFocusedTopic] = React.useState<{ title: string; category: TopicCategory; relatorio: string; index: number } | null>(null);
   const isSavingRef = React.useRef(false); // Indica quando salvando para evitar reset de sugestões
   const wasOpenRef = React.useRef(false); // Track se modal já estava aberto (evita reset no Ctrl+S)
   const [suggestions, setSuggestions] = React.useState<Model[]>([]);
@@ -15414,7 +15512,8 @@ const GlobalEditorModal = React.memo(({
       setGlobalSemanticSearching(true);
       try {
         const results = await searchModelsBySimilarity(models || [], globalManualSearchTerm.toLowerCase(), { threshold: 0.3, limit: 10 });
-        setGlobalManualSearchResults(results);
+        // Resultados já são modelos com similarity, apenas converter para array de Model
+        setGlobalManualSearchResults(results as Model[]);
       } catch (error) {
         console.error('[GlobalEditor] Erro na busca semântica:', error);
       }
@@ -15441,7 +15540,7 @@ const GlobalEditorModal = React.memo(({
       // v1.13: Limpar rastreamento de edições ao abrir
       setEditedTopicTitles(new Set());
       // Iniciar todas seções colapsadas
-      const initialCollapsed = {};
+      const initialCollapsed: Record<number, boolean> = {};
       copy.forEach((_: Topic, idx: number) => { initialCollapsed[idx] = true; });
       setCollapsedSections(initialCollapsed);
     }
@@ -15472,7 +15571,7 @@ const GlobalEditorModal = React.memo(({
   }, []);
 
   // Handler para foco em campo (sugestões contextuais) - v1.12.2: usa ref para evitar closure stale
-  const handleFieldFocus = React.useCallback(async (topicIndex: number, fieldType: string, topic: Topic) => {
+  const handleFieldFocus = React.useCallback(async (topicIndex: number, fieldType: string, topic: Topic | null) => {
     if (fieldType === 'fundamentacao' && topic) {
       // Campo de fundamentação/decisão focado → buscar sugestões automaticamente
       const topicInfo = {
@@ -15494,9 +15593,9 @@ const GlobalEditorModal = React.memo(({
             relatorio: topicInfo.relatorio
           });
           // v1.28.06: Suporta novo formato { suggestions, source }
-          if (results?.suggestions) {
+          if (results && 'suggestions' in results) {
             setSuggestions(results.suggestions);
-            setSuggestionsSource(results.source);
+            setSuggestionsSource(results.source ?? null);
           } else {
             setSuggestions(results || []);
             setSuggestionsSource(null);
@@ -15532,9 +15631,9 @@ const GlobalEditorModal = React.memo(({
             relatorio: currentFocusedTopic.relatorio
           });
           // v1.28.06: Suporta novo formato { suggestions, source }
-          if (results?.suggestions) {
+          if (results && 'suggestions' in results) {
             setSuggestions(results.suggestions);
-            setSuggestionsSource(results.source);
+            setSuggestionsSource(results.source ?? null);
           } else {
             setSuggestions(results || []);
             setSuggestionsSource(null);
@@ -15680,11 +15779,11 @@ const GlobalEditorModal = React.memo(({
         const batch = topicsToAnalyze.slice(i, i + BATCH_SIZE);
 
         const promises = batch.map(async (topic: Topic) => {
-          const resultado = await detectResultadoAutomatico(
+          const resultado = detectResultadoAutomatico ? await detectResultadoAutomatico(
             topic.title,
-            topic.editedFundamentacao || topic.fundamentacao,
+            topic.editedFundamentacao || topic.fundamentacao || '',
             topic.category
-          );
+          ) : null;
           return { title: topic.title, resultado };
         });
 
@@ -15696,7 +15795,7 @@ const GlobalEditorModal = React.memo(({
           if (r.status === 'fulfilled' && r.value.resultado) {
             const idx = updatedTopics.findIndex((t: Topic) => t.title === r.value.title);
             if (idx !== -1) {
-              updatedTopics[idx] = { ...updatedTopics[idx], resultado: r.value.resultado };
+              updatedTopics[idx] = { ...updatedTopics[idx], resultado: r.value.resultado as TopicResultado };
             }
           } else if (r.status === 'rejected') {
             rejectedCount++;
@@ -15762,17 +15861,18 @@ const GlobalEditorModal = React.memo(({
   // v1.12.14: Helper para calcular provas vinculadas a um tópico
   const getLinkedProofsForTopic = React.useCallback((topicTitle: string) => {
     if (!proofManager) return [];
-    const linkedProofIds = Object.keys(proofManager.proofTopicLinks || {}).filter(proofId =>
-      proofManager.proofTopicLinks[proofId]?.includes(topicTitle)
+    const proofTopicLinks = proofManager.proofTopicLinks || {};
+    const linkedProofIds = Object.keys(proofTopicLinks).filter(proofId =>
+      proofTopicLinks[proofId]?.includes(topicTitle)
     );
     return [
-      ...(proofManager.proofFiles || []).filter((p: ProofFile) => linkedProofIds.includes(String(p.id))).map((p: ProofFile) => ({ ...p, isPdf: true })),
-      ...(proofManager.proofTexts || []).filter((p: ProofText) => linkedProofIds.includes(String(p.id))).map((p: ProofText) => ({ ...p, isPdf: false }))
-    ];
+      ...(proofManager.proofFiles || []).filter((p: ProofFile) => linkedProofIds.includes(String(p.id))).map((p: ProofFile) => ({ ...p, isPdf: true as const })),
+      ...(proofManager.proofTexts || []).filter((p: ProofText) => linkedProofIds.includes(String(p.id))).map((p: ProofText) => ({ ...p, isPdf: false as const }))
+    ] as Proof[];
   }, [proofManager]);
 
   const generateGlobalAiText = React.useCallback(async () => {
-    if (!globalAiInstruction.trim() || !aiIntegration) return;
+    if (!globalAiInstruction.trim() || !aiIntegration || aiAssistantTopicIndex === null) return;
 
     setGeneratingGlobalAi(true);
     setGlobalAiGeneratedText('');
@@ -15788,9 +15888,9 @@ const GlobalEditorModal = React.memo(({
       // 🆕 v1.19.5: Usar função centralizada para provas
       // v1.19.2: Passar flag de anonimização
       // v1.21.5: Passar anonConfig para anonimizar texto
-      const { proofDocuments, proofsContext, hasProofs } = await prepareProofsContext(
+      const { proofDocuments, proofsContext, hasProofs } = fileToBase64 ? await prepareProofsContext(
         proofManager, topic.title, fileToBase64, aiIntegration?.aiSettings?.anonymization?.enabled, aiIntegration?.aiSettings?.anonymization
-      );
+      ) : { proofDocuments: [], proofsContext: '', hasProofs: false };
       contentArray.push(...proofDocuments);
 
       // Preparar contexto baseado no escopo selecionado
@@ -15891,7 +15991,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
       // v1.21.26: Parametros para assistente interativo (criativo moderado)
       const textContent = await aiIntegration.callAI([{
         role: 'user',
-        content: contentArray
+        content: contentArray as AIMessageContent[]
       }], {
         maxTokens: 4000,
         useInstructions: true,
@@ -15903,13 +16003,13 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
 
       setGlobalAiGeneratedText(textContent.trim());
     } catch (err) {
-      showToast?.('Erro ao gerar texto: ' + err.message, 'error');
+      showToast?.('Erro ao gerar texto: ' + (err as Error).message, 'error');
     } finally {
       setGeneratingGlobalAi(false);
     }
   }, [globalAiInstruction, aiIntegration, aiAssistantTopicIndex, localTopics, analyzedDocuments, proofManager, globalContextScope, showToast]);
 
-  const insertGlobalAiText = React.useCallback((mode: ProcessingMode) => {
+  const insertGlobalAiText = React.useCallback((mode: InsertMode) => {
     if (!globalAiGeneratedText || aiAssistantTopicIndex === null) return;
 
     setLocalTopics(prev => {
@@ -15949,6 +16049,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
   // 🆕 v1.19.5: Agora assíncrono para suportar PDFs binários
   // v1.21.1: Aceita options para filtrar provas
   const buildContextForChatGlobal = React.useCallback(async (userMessage: string, options: { proofFilter?: string } = {}) => {
+    if (aiAssistantTopicIndex === null) return [];
     const topic = localTopics[aiAssistantTopicIndex];
     if (!topic) return [];
     const { proofFilter } = options;
@@ -15961,9 +16062,9 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
     // v1.19.2: Passar flag de anonimização
     // v1.21.5: Passar anonConfig para anonimizar texto
     const prepareFunction = proofFilter === 'oral' ? prepareOralProofsContext : prepareProofsContext;
-    const { proofDocuments, proofsContext, hasProofs } = await prepareFunction(
+    const { proofDocuments, proofsContext, hasProofs } = fileToBase64 ? await prepareFunction(
       proofManager, topic.title, fileToBase64, aiIntegration?.aiSettings?.anonymization?.enabled, aiIntegration?.aiSettings?.anonymization
-    );
+    ) : { proofDocuments: [] as AIMessageContent[], proofsContext: '', hasProofs: false };
     contentArray.push(...proofDocuments);
 
     // Contexto baseado no escopo selecionado
@@ -16050,7 +16151,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
   }, [localTopics, aiAssistantTopicIndex, analyzedDocuments, proofManager, globalContextScope, aiIntegration?.aiSettings?.anonymization?.enabled]);
 
   // 🤖 v1.19.0: Handler para inserir resposta do chat no editor global
-  const handleInsertGlobalChatResponse = React.useCallback((mode: ProcessingMode) => {
+  const handleInsertGlobalChatResponse = React.useCallback((mode: InsertMode) => {
     const response = chatAssistantGlobal.lastResponse;
     if (!response || aiAssistantTopicIndex === null) return;
 
@@ -16517,9 +16618,19 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
             setShowProofsModal(false);
             setProofsModalTopicIndex(null);
           }}
-          topicTitle={localTopics[proofsModalTopicIndex]?.title}
-          linkedProofs={getLinkedProofsForTopic(localTopics[proofsModalTopicIndex]?.title)}
-          proofManager={proofManager}
+          topicTitle={localTopics[proofsModalTopicIndex]?.title || ''}
+          linkedProofs={getLinkedProofsForTopic(localTopics[proofsModalTopicIndex]?.title || '')}
+          proofManager={proofManager ? {
+            proofTopicLinks: proofManager.proofTopicLinks || {},
+            setProofTopicLinks: proofManager.setProofTopicLinks,
+            proofAnalysisResults: proofManager.proofAnalysisResults || {},
+            proofConclusions: proofManager.proofConclusions || {}
+          } : {
+            proofTopicLinks: {},
+            setProofTopicLinks: () => {},
+            proofAnalysisResults: {},
+            proofConclusions: {}
+          }}
         />
       )}
 
@@ -16529,8 +16640,8 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
       <JurisprudenciaModal
         isOpen={showJurisModal && jurisTopicIndex !== null}
         onClose={() => { setShowJurisModal(false); setJurisTopicIndex(null); }}
-        topicTitle={localTopics[jurisTopicIndex]?.title}
-        topicRelatorio={localTopics[jurisTopicIndex]?.editedRelatorio || localTopics[jurisTopicIndex]?.relatorio}
+        topicTitle={jurisTopicIndex !== null ? localTopics[jurisTopicIndex]?.title : undefined}
+        topicRelatorio={jurisTopicIndex !== null ? (localTopics[jurisTopicIndex]?.editedRelatorio || localTopics[jurisTopicIndex]?.relatorio) : undefined}
         callAI={aiIntegration?.callAI}
         useLocalAI={useLocalAIForJuris && searchModelReady && jurisEmbeddingsCount > 0}
         jurisSemanticThreshold={jurisSemanticThreshold}
@@ -16538,14 +16649,12 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
       />
     </div>
   );
-});
-
-GlobalEditorModal.displayName = 'GlobalEditorModal';
+};
 
 // Prepara array de documentos para envio à API de IA
 // v1.25: Adicionado cache_control para otimização de tokens
 const prepareDocumentsContext = (docs: { peticao?: string; peticaoType?: string; contestacoes?: string[]; contestacoesText?: { text: string }[]; complementares?: string[]; complementaresText?: { text: string }[] }) => {
-  const contentArray = [];
+  const contentArray: AIMessageContent[] = [];
 
   if (docs.peticao) {
     contentArray.push(docs.peticaoType === 'pdf'
@@ -16582,11 +16691,12 @@ const prepareDocumentsContext = (docs: { peticao?: string; peticaoType?: string;
 // 🆕 v1.19.5: Prepara contexto de provas vinculadas para envio à API de IA
 // v1.19.2: Adicionado anonymizationEnabled para bloquear PDF binário
 // v1.21.5: Adicionado anonConfig para anonimizar texto extraído ao enviar
-const prepareProofsContext = async (proofManager: { proofTopicLinks?: Record<string, string[]>; proofFiles?: ProofFile[]; proofTexts?: ProofText[]; proofUsePdfMode?: Record<string, boolean>; extractedProofTexts?: Record<string, string>; proofAnalysisResults?: Record<string, { type: string; result: string }>; proofConclusions?: Record<string, string>; proofSendFullContent?: Record<string, boolean> } | null, topicTitle: string, fileToBase64Fn: (file: File) => Promise<string>, anonymizationEnabled = false, anonConfig: { nomes?: string[] } | null = null) => {
-  if (!proofManager) return { proofDocuments: [], proofsContext: '', hasProofs: false };
+const prepareProofsContext = async (proofManager: { proofTopicLinks?: Record<string, string[]>; proofFiles?: ProofFile[]; proofTexts?: ProofText[]; proofUsePdfMode?: Record<string, boolean>; extractedProofTexts?: Record<string, string>; proofAnalysisResults?: Record<string, { type: string; result: string }>; proofConclusions?: Record<string, string>; proofSendFullContent?: Record<string, boolean> } | null, topicTitle: string, fileToBase64Fn: (file: File) => Promise<string>, anonymizationEnabled = false, anonConfig: AnonymizationSettings | null = null) => {
+  if (!proofManager) return { proofDocuments: [] as AIMessageContent[], proofsContext: '', hasProofs: false };
 
-  const linkedProofIds = Object.keys(proofManager.proofTopicLinks || {}).filter(proofId =>
-    proofManager.proofTopicLinks[proofId]?.includes(topicTitle)
+  const proofTopicLinks = proofManager.proofTopicLinks || {};
+  const linkedProofIds = Object.keys(proofTopicLinks).filter(proofId =>
+    proofTopicLinks[proofId]?.includes(topicTitle)
   );
 
   const linkedProofs = [
@@ -16613,10 +16723,10 @@ const prepareProofsContext = async (proofManager: { proofTopicLinks?: Record<str
   });
 
   if (filteredProofs.length === 0) {
-    return { proofDocuments: [], proofsContext: '', hasProofs: false };
+    return { proofDocuments: [] as AIMessageContent[], proofsContext: '', hasProofs: false };
   }
 
-  const proofDocuments = [];
+  const proofDocuments: AIMessageContent[] = [];
   let proofsContext = '\n\n🔍 PROVAS VINCULADAS A ESTE TÓPICO:\n\n';
 
   for (let index = 0; index < filteredProofs.length; index++) {
@@ -16691,11 +16801,12 @@ const prepareProofsContext = async (proofManager: { proofTopicLinks?: Record<str
 
 // 🆕 v1.21.1: Prepara contexto APENAS de provas orais vinculadas (isOralProof definido antes dos componentes)
 // v1.21.5: Adicionado anonConfig para anonimizar texto extraído ao enviar
-const prepareOralProofsContext = async (proofManager: { proofTopicLinks?: Record<string, string[]>; proofFiles?: ProofFile[]; proofTexts?: ProofText[]; proofUsePdfMode?: Record<string, boolean>; extractedProofTexts?: Record<string, string>; proofAnalysisResults?: Record<string, { type: string; result: string }>; proofConclusions?: Record<string, string>; proofSendFullContent?: Record<string, boolean> } | null, topicTitle: string, fileToBase64Fn: (file: File) => Promise<string>, anonymizationEnabled = false, anonConfig: { nomes?: string[] } | null = null) => {
-  if (!proofManager) return { proofDocuments: [], proofsContext: '', hasProofs: false, noOralProofFound: true };
+const prepareOralProofsContext = async (proofManager: { proofTopicLinks?: Record<string, string[]>; proofFiles?: ProofFile[]; proofTexts?: ProofText[]; proofUsePdfMode?: Record<string, boolean>; extractedProofTexts?: Record<string, string>; proofAnalysisResults?: Record<string, { type: string; result: string }>; proofConclusions?: Record<string, string>; proofSendFullContent?: Record<string, boolean> } | null, topicTitle: string, fileToBase64Fn: (file: File) => Promise<string>, anonymizationEnabled = false, anonConfig: AnonymizationSettings | null = null) => {
+  if (!proofManager) return { proofDocuments: [] as AIMessageContent[], proofsContext: '', hasProofs: false, noOralProofFound: true };
 
-  const linkedProofIds = Object.keys(proofManager.proofTopicLinks || {}).filter(proofId =>
-    proofManager.proofTopicLinks[proofId]?.includes(topicTitle)
+  const proofTopicLinks = proofManager.proofTopicLinks || {};
+  const linkedProofIds = Object.keys(proofTopicLinks).filter(proofId =>
+    proofTopicLinks[proofId]?.includes(topicTitle)
   );
 
   const allLinkedProofs = [
@@ -16721,10 +16832,10 @@ const prepareOralProofsContext = async (proofManager: { proofTopicLinks?: Record
   });
 
   if (filteredProofs.length === 0) {
-    return { proofDocuments: [], proofsContext: '', hasProofs: false, noOralProofFound: true };
+    return { proofDocuments: [] as AIMessageContent[], proofsContext: '', hasProofs: false, noOralProofFound: true };
   }
 
-  const proofDocuments = [];
+  const proofDocuments: AIMessageContent[] = [];
   let proofsContext = '\n\n🎤 PROVAS ORAIS VINCULADAS A ESTE TÓPICO:\n\n';
 
   for (let index = 0; index < filteredProofs.length; index++) {
@@ -16805,7 +16916,7 @@ const prepareOralProofsContext = async (proofManager: { proofTopicLinks?: Record
 
 // Retorna configuração de toolbar do Quill.js
 const getQuillToolbarConfig = (type = 'full') => {
-  const configs = {
+  const configs: Record<string, unknown> = {
     // Toolbar completa para editor de decisão (28 opções)
     full: [
       [{ 'header': [1, 2, 3, 4, false] }],
@@ -16874,7 +16985,15 @@ const sanitizeQuillHTML = (html: string) => {
 
 // 🔧 HOOK COMPARTILHADO: useQuillEditor (v1.9.12)
 // Centraliza lógica comum dos editores Quill (keyboard bindings, refs, topic detection)
-const useQuillEditor = (options = {}) => {
+interface UseQuillEditorOptions {
+  ref?: React.ForwardedRef<QuillInstance> | React.MutableRefObject<QuillInstance | null>;
+  onSaveWithoutClosing?: () => void;
+  enableCtrlS?: boolean;
+  topicTitle?: string;
+  content?: string;
+  enableTopicChangeDetection?: boolean;
+}
+const useQuillEditor = (options: UseQuillEditorOptions = {}) => {
   const {
     ref,
     onSaveWithoutClosing,
@@ -16932,7 +17051,7 @@ const useQuillEditor = (options = {}) => {
       try {
         const sanitized = sanitizeQuillHTML(content || '');
         quillInstanceRef.current.root.innerHTML = sanitized;
-        lastTopicTitle.current = topicTitle;
+        lastTopicTitle.current = topicTitle ?? null;
       } catch (error) {
       }
     }
@@ -16952,7 +17071,8 @@ const useQuillEditor = (options = {}) => {
   };
 };
 
-const QuillEditorBase = React.forwardRef(({
+// v1.35.94: Tipagem correta com QuillEditorBaseProps
+const QuillEditorBase = React.forwardRef<QuillInstance, QuillEditorBaseProps>(({
   content = '',
   onChange,
   onReady,
@@ -17033,13 +17153,14 @@ const QuillEditorBase = React.forwardRef(({
 
       // Event listener - mudanças de texto
       // v1.35.3: Debounce para evitar lag durante digitação rápida
-      quillInstanceRef.current.on('text-change', (delta, oldDelta, source) => {
+      quillInstanceRef.current.on('text-change', ((delta: unknown, _oldDelta: unknown, source: string) => {
         // v1.15.4: Detectar "\" para slash command (SEM debounce - precisa ser imediato)
         if (source === 'user' && onSlashCommandRef.current) {
-          const ops = delta.ops || [];
+          const ops = (delta as QuillDelta).ops || [];
           const lastOp = ops[ops.length - 1];
           if (typeof lastOp?.insert === 'string' && lastOp.insert.endsWith('\\')) {
             const quill = quillInstanceRef.current;
+            if (!quill) return;
             const range = quill.getSelection();
             if (range) {
               const bounds = quill.getBounds(range.index);
@@ -17076,19 +17197,19 @@ const QuillEditorBase = React.forwardRef(({
             }
           }
         }, 150);
-      });
+      }) as (...args: unknown[]) => void);
 
       // Event listener - mudança de seleção (v1.11.3: para detectar seção atual)
       if (onSelectionChange) {
-        quillInstanceRef.current.on('selection-change', (range, oldRange, source) => {
+        quillInstanceRef.current.on('selection-change', ((range: { index: number; length: number } | null, oldRange: { index: number; length: number } | null, source: string) => {
           onSelectionChange(range, oldRange, source);
-        });
+        }) as (...args: unknown[]) => void);
       }
 
       // Handler de clipboard - converter classes de indentação em estilos inline ao copiar
       copyHandlerRef.current = (e) => {
         const selection = window.getSelection();
-        if (!selection.rangeCount) return;
+        if (!selection || !selection.rangeCount) return;
 
         // Obter HTML selecionado
         const range = selection.getRangeAt(0);
@@ -17100,7 +17221,7 @@ const QuillEditorBase = React.forwardRef(({
         indentElements.forEach(el => {
           const classList = Array.from(el.classList);
           const indentClass = classList.find(cls => cls.startsWith('ql-indent-'));
-          if (indentClass) {
+          if (indentClass && el instanceof HTMLElement) {
             const level = parseInt(indentClass.replace('ql-indent-', ''));
             const marginLeft = `${level * 3}em`;
             el.style.marginLeft = marginLeft;
@@ -17109,8 +17230,10 @@ const QuillEditorBase = React.forwardRef(({
         });
 
         // Copiar HTML com estilos inline
-        e.clipboardData.setData('text/html', container.innerHTML);
-        e.clipboardData.setData('text/plain', selection.toString());
+        if (e.clipboardData) {
+          e.clipboardData.setData('text/html', container.innerHTML);
+          e.clipboardData.setData('text/plain', selection.toString());
+        }
         e.preventDefault();
       };
       // v1.20.2: Guard para evitar listeners duplicados
@@ -17206,7 +17329,7 @@ const QuillEditorBase = React.forwardRef(({
     return (
       <div className={`bg-red-900/20 border border-red-600 rounded-lg p-4 ${className}`}>
         <p className="text-red-400 text-sm">
-          ❌ {quillError}
+          ❌ {quillError instanceof Error ? quillError.message : quillError}
         </p>
         <p className="theme-text-muted text-xs mt-2">
           Usando editor alternativo. Verifique sua conexão com a internet.
@@ -17227,7 +17350,8 @@ const QuillEditorBase = React.forwardRef(({
 QuillEditorBase.displayName = 'QuillEditorBase';
 
 // QuillModelEditor - Editor para modelos/templates
-const QuillModelEditor = React.forwardRef(({
+// v1.35.94: Tipagem correta com QuillModelEditorProps
+const QuillModelEditor = React.forwardRef<QuillInstance, QuillModelEditorProps>(({
   content,
   onChange,
   onSaveWithoutClosing,
@@ -17375,7 +17499,8 @@ QuillModelEditor.displayName = 'QuillModelEditor';
 
 // QuillDecisionEditor - Editor para decisões judiciais
 // v1.15.4: Adicionado onSlashCommand
-const QuillDecisionEditor = React.forwardRef(({
+// v1.35.94: Tipagem correta com QuillDecisionEditorProps
+const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecisionEditorProps>(({
   content = '',
   onChange,
   onSaveWithoutClosing,
@@ -17736,13 +17861,20 @@ QuillDecisionEditor.displayName = 'QuillDecisionEditor';
 // 🔧 COMPONENTE COMPARTILHADO: AIRegenerationSection (v1.9.12)
 // Seção de regeneração com IA (textarea de instruções + botão gerar)
 // v1.35.10: Estado local bufferizado para evitar re-render do LegalDecisionEditor a cada keystroke
+interface AIRegenerationSectionProps {
+  customInstruction?: string;
+  onInstructionChange?: (instruction: string) => void;
+  regenerating?: boolean;
+  onRegenerate: () => void;
+  contextLabel?: string;
+}
 const AIRegenerationSection = React.memo(({
   customInstruction = '',
   onInstructionChange,
   regenerating = false,
   onRegenerate,
   contextLabel = 'texto' // "dispositivo" ou "mini-relatório"
-}) => {
+}: AIRegenerationSectionProps) => {
   // v1.35.10: Estado LOCAL para o textarea
   // Digitação atualiza apenas este componente (leve), não o LegalDecisionEditor (pesado)
   const [localInstruction, setLocalInstruction] = React.useState(customInstruction);
@@ -17802,7 +17934,7 @@ const AIRegenerationSection = React.memo(({
           onBlur={handleBlur}
           placeholder="Instrução opcional (ex: 'Seja mais objetivo', 'Adicione detalhes sobre...')"
           className="flex-1 px-3 py-2 theme-bg-primary border theme-border-input rounded theme-text-tertiary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
-          rows="2"
+          rows={2}
         />
         <VoiceButton
           onTranscript={handleVoiceTranscript}
@@ -17843,7 +17975,8 @@ AIRegenerationSection.displayName = 'AIRegenerationSection';
 
 // QuillMiniRelatorioEditor - Mini-relatório sem toolbar
 // v1.15.6: Adicionado onSlashCommand
-const QuillMiniRelatorioEditor = React.memo(React.forwardRef(({
+// v1.35.94: Tipagem correta com QuillMiniRelatorioEditorProps
+const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstance, QuillMiniRelatorioEditorProps>(({
   content = '',
   onChange,
   onRegenerate,
@@ -17920,7 +18053,8 @@ QuillMiniRelatorioEditor.displayName = 'QuillMiniRelatorioEditor';
 
 // 🛠️ COMPONENTE: DecisionEditorContainer - Container do editor de decisão
 // v1.15.4: Adicionado onSlashCommand, v1.20.0: Adicionado onOpenJurisModal
-const DecisionEditorContainer = React.memo(React.forwardRef(({
+// v1.35.94: Tipagem correta com DecisionEditorContainerProps
+const DecisionEditorContainer = React.memo(React.forwardRef<HTMLDivElement, DecisionEditorContainerProps>(({
   editorRef,
   relatorioRef,
   toolbarRef,
@@ -17971,7 +18105,7 @@ const DecisionEditorContainer = React.memo(React.forwardRef(({
 
   // 🚀 v1.8.3: Handler para mudança de categoria (MEMOIZADO)
   const handleCategoryChange = React.useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCategory = e.target.value;
+    const newCategory = e.target.value as TopicCategory;
 
     // Chamar callback do pai
     onCategoryChange(newCategory);
@@ -18122,10 +18256,10 @@ const fastHashUtil = (str: string) => {
 
 // 🔧 HOOK: useDocumentServices (v1.9.12)
 // Centraliza toda a lógica de processamento de documentos (PDF, DOCX, OCR)
-const useDocumentServices = (aiIntegration: AIIntegrationReturn | null) => {
+const useDocumentServices = (aiIntegration: ReturnType<typeof useAIIntegration> | null) => {
   // 📚 CARREGAR BIBLIOTECAS VIA CDN
 
-  const loadPDFJS = React.useCallback(() => {
+  const loadPDFJS = React.useCallback((): Promise<PdfjsLib> => {
     return new Promise((resolve, reject) => {
 
       if (window.pdfjsLib) {
@@ -18159,7 +18293,7 @@ const useDocumentServices = (aiIntegration: AIIntegrationReturn | null) => {
     });
   }, []);
 
-  const loadMammoth = React.useCallback(() => {
+  const loadMammoth = React.useCallback((): Promise<MammothLib> => {
     return new Promise((resolve, reject) => {
 
       if (window.mammoth) {
@@ -18193,7 +18327,7 @@ const useDocumentServices = (aiIntegration: AIIntegrationReturn | null) => {
   }, []);
 
   // 🆕 v1.31: Loader Tesseract.js para OCR offline
-  const loadTesseract = React.useCallback(() => {
+  const loadTesseract = React.useCallback((): Promise<TesseractLib> => {
     return new Promise((resolve, reject) => {
       if (window.Tesseract) {
         resolve(window.Tesseract);
@@ -18276,7 +18410,7 @@ const useDocumentServices = (aiIntegration: AIIntegrationReturn | null) => {
 
       return text;
     } catch (err) {
-      throw new Error(`Falha ao extrair texto do DOCX: ${err.message}`);
+      throw new Error(`Falha ao extrair texto do DOCX: ${(err as Error).message}`);
     }
   }, [loadMammoth]);
 
@@ -18303,7 +18437,7 @@ const useDocumentServices = (aiIntegration: AIIntegrationReturn | null) => {
         data: arrayBuffer,
         useSystemFonts: true,
         disableFontFace: true
-      }).promise;
+      } as unknown as { data: ArrayBuffer }).promise;
 
       const totalPages = pdf.numPages;
 
@@ -18323,6 +18457,7 @@ const useDocumentServices = (aiIntegration: AIIntegrationReturn | null) => {
 
         try {
           const context = canvas.getContext('2d');
+          if (!context) throw new Error('Canvas 2D context not available');
           await page.render({
             canvasContext: context,
             viewport: viewport
@@ -18367,7 +18502,7 @@ const useDocumentServices = (aiIntegration: AIIntegrationReturn | null) => {
         });
 
         // Prompt final pedindo extração de TODAS as páginas do batch
-        const idioma = aiIntegration.aiSettings?.ocrLanguage === 'por' ? 'Português' : 'English';
+        const idioma = aiIntegration?.aiSettings?.ocrLanguage === 'por' ? 'Português' : 'English';
         // v1.14.1: Validar batchPageNumbers antes de acessar índices (fix: array vazio)
         const firstPage = batchPageNumbers[0] || 1;
         const lastPage = batchPageNumbers[batchPageNumbers.length - 1] || firstPage;
@@ -18384,6 +18519,7 @@ INSTRUÇÕES IMPORTANTES:
         });
 
         // Fazer a requisição para o batch inteiro
+        if (!aiIntegration) throw new Error('AI integration not available');
         const requestBody = {
           model: aiIntegration.aiSettings?.model || 'claude-sonnet-4-20250514',
           max_tokens: MAX_TOKENS,
@@ -18435,14 +18571,14 @@ INSTRUÇÕES IMPORTANTES:
   // v1.31.02: Paralelo com Scheduler (pool de workers)
   // v1.31.03: Batching + Workers dinâmicos (75% cores, max 8)
   // v1.32.15: Alta qualidade (SCALE 4.0 + PSM 6)
-  const extractTextFromPDFWithTesseract = React.useCallback(async (file: File, progressCallback: ((page: number, total: number) => void) | null = null) => {
+  const extractTextFromPDFWithTesseract = React.useCallback(async (file: File, progressCallback: ((page: number, total: number, status?: string) => void) | null = null) => {
     const SCALE = 4.0;  // v1.32.15: Máxima qualidade OCR
     // 75% dos cores lógicos, mínimo 2, máximo 8
     const NUM_WORKERS = Math.min(Math.max(Math.ceil((navigator.hardwareConcurrency || 4) * 0.75), 2), 8);
     const BATCH_SIZE = NUM_WORKERS;
 
-    let pdf = null;
-    let scheduler = null;
+    let pdf: PdfDocument | null = null;
+    let scheduler: TesseractScheduler | null = null;
 
     try {
       const [pdfjsLib, Tesseract] = await Promise.all([
@@ -18455,7 +18591,7 @@ INSTRUÇÕES IMPORTANTES:
         data: arrayBuffer,
         useSystemFonts: true,
         disableFontFace: true
-      }).promise;
+      } as unknown as { data: ArrayBuffer }).promise;
 
       const totalPages = pdf.numPages;
 
@@ -18463,6 +18599,7 @@ INSTRUÇÕES IMPORTANTES:
       if (progressCallback) progressCallback(0, totalPages, `Iniciando ${NUM_WORKERS} workers...`);
 
       scheduler = Tesseract.createScheduler();
+      const tesseractScheduler = scheduler; // Capture reference for closure
       await Promise.all(
         Array.from({ length: NUM_WORKERS }, async () => {
           const worker = await Tesseract.createWorker('por');
@@ -18471,7 +18608,7 @@ INSTRUÇÕES IMPORTANTES:
             tessedit_pageseg_mode: '6',
             preserve_interword_spaces: '1'
           });
-          scheduler.addWorker(worker);
+          tesseractScheduler.addWorker(worker);
         })
       );
 
@@ -18489,21 +18626,25 @@ INSTRUÇÕES IMPORTANTES:
         // 2a. Renderizar batch de páginas
         const canvases = await Promise.all(
           batchPages.map(async (pageNum) => {
+            if (!pdf) throw new Error('PDF not loaded');
             const page = await pdf.getPage(pageNum);
             const viewport = page.getViewport({ scale: SCALE });
             const canvas = document.createElement('canvas');
             canvas.width = viewport.width;
             canvas.height = viewport.height;
             const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('Canvas 2D context not available');
             await page.render({ canvasContext: ctx, viewport }).promise;
             return { canvas, pageNum };
           })
         );
 
         // 2b. OCR batch em paralelo
+        if (!scheduler) throw new Error('Tesseract scheduler not available');
+        const activeScheduler = scheduler; // Capture non-null for closure
         const batchResults = await Promise.all(
           canvases.map(async ({ canvas, pageNum }) => {
-            const { data: { text } } = await scheduler.addJob('recognize', canvas);
+            const { data: { text } } = await activeScheduler.addJob('recognize', canvas);
             completed++;
             if (progressCallback) progressCallback(completed, totalPages, 'OCR...');
             // Cleanup imediato
@@ -18534,7 +18675,7 @@ INSTRUÇÕES IMPORTANTES:
   }, [loadPDFJS, loadTesseract]);
 
   const extractTextFromPDF = React.useCallback(async (file: File, progressCallback: ((page: number, total: number, status?: string) => void) | null = null) => {
-    const engine = aiIntegration.aiSettings?.ocrEngine || 'pdfjs';
+    const engine = aiIntegration?.aiSettings?.ocrEngine || 'pdfjs';
 
     switch (engine) {
       case 'claude-vision':
@@ -18589,7 +18730,7 @@ INSTRUÇÕES IMPORTANTES:
         data: arrayBuffer,
         useSystemFonts: true,
         disableFontFace: true
-      }).promise;
+      } as unknown as { data: ArrayBuffer }).promise;
 
       const page = await pdf.getPage(1);
       const textContent = await page.getTextContent();
@@ -18660,15 +18801,15 @@ INSTRUÇÕES IMPORTANTES:
 
   // 📦 PROCESSAMENTO EM LOTE
 
-  const extractTextFromBulkFile = React.useCallback(async (file: File) => {
+  const extractTextFromBulkFile = React.useCallback(async (file: File): Promise<string> => {
     const fileType = file.type;
     const fileName = file.name.toLowerCase();
 
     if (fileType === 'text/plain' || fileName.endsWith('.txt')) {
-      return new Promise((resolve, reject) => {
+      return new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          const text = e.target.result;
+        reader.onload = (e: ProgressEvent<FileReader>) => {
+          const text = e.target?.result as string;
           resolve(text);
         };
         reader.onerror = () => reject(new Error('Erro ao ler arquivo TXT'));
@@ -18686,7 +18827,7 @@ INSTRUÇÕES IMPORTANTES:
 
         return text;
       } catch (err) {
-        throw new Error(`Falha ao extrair texto do PDF: ${err.message}`);
+        throw new Error(`Falha ao extrair texto do PDF: ${(err as Error).message}`);
       }
     }
 
@@ -18703,20 +18844,25 @@ INSTRUÇÕES IMPORTANTES:
 
         return text;
       } catch (err) {
-        throw new Error(`Falha ao extrair texto do DOCX: ${err.message}`);
+        throw new Error(`Falha ao extrair texto do DOCX: ${(err as Error).message}`);
       }
     }
 
     throw new Error(`Tipo de arquivo não suportado: ${fileType}`);
   }, [extractTextFromPDF, extractTextFromDOCX]);
 
-  const tryExtractTextFromPDFs = React.useCallback(async (files: { peticao?: File | null; contestacoes?: File[]; complementares?: File[] }, callbacks: { setExtractingText: (v: boolean) => void; setAnalysisProgress: (v: string) => void; setExtractedTexts: (v: { peticao: string | null; contestacoes: string[]; complementares: string[] }) => void; setError: (v: string | null) => void }) => {
+  const tryExtractTextFromPDFs = React.useCallback(async (files: { peticao?: File | null; contestacoes?: File[]; complementares?: File[] }, callbacks: { setExtractingText: (v: boolean) => void; setAnalysisProgress: (v: string) => void; setExtractedTexts: (v: { peticao: string | null; contestacoes: ({ text: string; name: string } | null)[]; complementares: ({ text: string; name: string } | null)[] }) => void; setError: (v: string | null) => void } | null | undefined) => {
+    if (!callbacks) return { peticao: null, contestacoes: [], complementares: [] };
     const { setExtractingText, setAnalysisProgress, setExtractedTexts, setError } = callbacks;
 
     setExtractingText(true);
     setAnalysisProgress('📄 Extraindo texto dos PDFs...');
 
-    const extracted = {
+    const extracted: {
+      peticao: string | null;
+      contestacoes: ({ text: string; name: string } | null)[];
+      complementares: ({ text: string; name: string } | null)[];
+    } = {
       peticao: null,
       contestacoes: [],
       complementares: []
@@ -18724,7 +18870,7 @@ INSTRUÇÕES IMPORTANTES:
 
     try {
       if (files.peticao) {
-        const engine = aiIntegration.aiSettings?.ocrEngine || 'pdfjs';
+        const engine = aiIntegration?.aiSettings?.ocrEngine || 'pdfjs';
         const engineLabel = engine === 'claude-vision' ? ' (Claude Vision)' : engine === 'tesseract' ? ' (Tesseract)' : engine === 'pdfjs' ? ' (PDF.js)' : '';
         setAnalysisProgress(`📄 Extraindo texto da petição inicial${engineLabel}...`);
 
@@ -18742,7 +18888,7 @@ INSTRUÇÕES IMPORTANTES:
       }
 
       if (files.contestacoes && files.contestacoes.length > 0) {
-        const engine = aiIntegration.aiSettings?.ocrEngine || 'pdfjs';
+        const engine = aiIntegration?.aiSettings?.ocrEngine || 'pdfjs';
         const engineLabel = engine === 'claude-vision' ? ' (Claude Vision)' : engine === 'tesseract' ? ' (Tesseract)' : engine === 'pdfjs' ? ' (PDF.js)' : '';
         for (let i = 0; i < files.contestacoes.length; i++) {
           try {
@@ -18763,7 +18909,7 @@ INSTRUÇÕES IMPORTANTES:
       }
 
       if (files.complementares && files.complementares.length > 0) {
-        const engine = aiIntegration.aiSettings?.ocrEngine || 'pdfjs';
+        const engine = aiIntegration?.aiSettings?.ocrEngine || 'pdfjs';
         const engineLabel = engine === 'claude-vision' ? ' (Claude Vision)' : engine === 'tesseract' ? ' (Tesseract)' : engine === 'pdfjs' ? ' (PDF.js)' : '';
         for (let i = 0; i < files.complementares.length; i++) {
           try {
@@ -18825,7 +18971,13 @@ INSTRUÇÕES IMPORTANTES:
 
 // 📦 COMPONENTE PRINCIPAL: LegalDecisionEditor
 // v1.34.1: Adicionado props receivedModels e clearReceivedModels para merge de sync
-const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeSharedLibraries, clearReceivedModels }) => {
+const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeSharedLibraries, clearReceivedModels }: {
+  onLogout: () => void;
+  cloudSync: UseCloudSyncReturn;
+  receivedModels: Model[] | null;
+  activeSharedLibraries: Array<{ ownerId: string; ownerEmail: string }> | null;
+  clearReceivedModels: () => void;
+}) => {
 
   // 🎣 CUSTOM HOOKS
   const { modals, openModal, closeModal, closeAllModals, isAnyModalOpen, textPreview, setTextPreview } = useModalManager();
@@ -18875,7 +19027,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
           merged.delete(serverModel.id);
         } else {
           const local = merged.get(serverModel.id);
-          if (!local || new Date(serverModel.updatedAt) > new Date(local.updatedAt || 0)) {
+          if (!local || new Date(serverModel.updatedAt || 0) > new Date(local.updatedAt || 0)) {
             merged.set(serverModel.id, serverModel);
           }
         }
@@ -18884,7 +19036,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       // v1.35.24: Filtrar compartilhados locais por owners que ainda têm acesso ativo
       // Isso resolve B8b: quando share é removido, modelos desse owner são excluídos no próximo sync
       const activeOwnerIds = new Set((activeSharedLibraries || []).map((lib: { ownerId: string }) => lib.ownerId));
-      const validLocalSharedModels = localSharedModels.filter(m => activeOwnerIds.has(m.ownerId));
+      const validLocalSharedModels = localSharedModels.filter(m => m.ownerId && activeOwnerIds.has(m.ownerId));
 
       if (localSharedModels.length !== validLocalSharedModels.length) {
         console.log(`[Sync] Removidos ${localSharedModels.length - validLocalSharedModels.length} modelos de owners sem acesso`);
@@ -18936,7 +19088,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     targetField: null // 'modeloRelatorio' | 'modeloDispositivo' | 'modeloTopicoRelatorio' | 'estiloRedacao'
   });
 
-  const openModelGenerator = React.useCallback((targetField: string) => {
+  const openModelGenerator = React.useCallback((targetField: TargetField) => {
     setModelGeneratorModal({ isOpen: true, targetField });
   }, []);
 
@@ -18958,8 +19110,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   }, [modelGeneratorModal.targetField, aiIntegration.setAiSettings]);
 
   const getHardcodedPrompt = React.useCallback((targetField: string) => {
-    const prompts = {
-      modeloRelatorio: AI_PROMPTS.instrucoesRelatorioMiniPadrao || '',
+    const prompts: Record<string, string> = {
+      modeloRelatorio: AI_PROMPTS.instrucoesRelatorioPadrao || '',
       modeloDispositivo: AI_PROMPTS.instrucoesDispositivoPadrao || '',
       modeloTopicoRelatorio: AI_PROMPTS.instrucoesRelatorioPadrao || '',
       estiloRedacao: AI_INSTRUCTIONS_STYLE // v1.35.77: Estilo de redação usa AI_INSTRUCTIONS_STYLE como referência
@@ -18970,7 +19122,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 📄 v1.9.12: Serviços de Processamento de Documentos ────────────────────
   const documentServices = useDocumentServices(aiIntegration);
 
-  const proofManager = useProofManager(documentServices);   const documentManager = useDocumentManager();   const topicManager = useTopicManager();   const modelPreview = useModelPreview(); // Preview de modelos sugeridos
+  const proofManager = useProofManager(documentServices);   const documentManager = useDocumentManager(storage.clearPdfCache);   const topicManager = useTopicManager();   const modelPreview = useModelPreview(); // Preview de modelos sugeridos
 
   // v1.13.9: Ref para auto-save debounced no Editor Individual
   const individualAutoSaveTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -19088,7 +19240,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const hasLoadedModelsRef = React.useRef(false);
 
   // Ref para rastrear último array de models salvo (otimização de performance)
-  const lastSavedModelsRef = React.useRef<Model[] | null>(null);
+  const lastSavedModelsRef = React.useRef<string | null>(null);
 
   // 🚀 OTIMIZAÇÃO v1.7: Fast hash ao invés de JSON.stringify (FASE 1.2) ──────
   // Hash rápido baseado apenas em IDs e timestamps (~1ms vs 50-200ms stringify)
@@ -19122,7 +19274,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const autoSaveTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // v1.12.28: Ref para snapshot atualizado (evita stale closure no auto-save)
-  const currentSessionSnapshotRef = React.useRef<string | null>(null);
+  const currentSessionSnapshotRef = React.useRef<SessionState | null>(null);
 
   // Helper: marcar sessão como dirty (needs save)
   const markSessionDirty = React.useCallback(() => {
@@ -19132,14 +19284,15 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 🚀 OTIMIZAÇÃO v1.7 (FASE 1.3): Batch DOM updates para evitar múltiplos reflows
   // Antes: 3 innerHTML = 3 reflows (~300ms total)
   // Depois: 1 RAF batch = 1 reflow (~100ms)
-  const batchDOMUpdates = React.useCallback((updates: Array<{ ref: React.RefObject<HTMLElement>; content: string; property?: string }>) => {
+  // v1.35.92: Tipo union para suportar refs diretos e Quill refs
+  const batchDOMUpdates = React.useCallback((updates: Array<{ ref: React.RefObject<HTMLElement | QuillInstance | null>; content: string; property?: string }>) => {
     requestAnimationFrame(() => {
       updates.forEach(({ ref, content, property = 'innerHTML' }) => {
         if (!ref || !ref.current) return;
 
         try {
           // Suporta refs diretos ou Quill refs (com .root)
-          const element = ref.current.root || ref.current;
+          const element = ('root' in ref.current && ref.current.root) ? ref.current.root : ref.current as HTMLElement;
 
           if (property === 'innerHTML') {
             element.innerHTML = content;
@@ -19169,7 +19322,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   React.useEffect(() => {
     // Registrar callback para receber notificações de sync de outras tabs
-    const handleSync = async ({ action, timestamp }) => {
+    const handleSync = async ({ action, timestamp }: { action: string; timestamp: number }) => {
 
       // Usar refs para acessar versão sempre atualizada (evitar closure stale)
       const currentIndexedDB = indexedDBRef.current;
@@ -19198,7 +19351,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         lastSavedModelsRef.current = JSON.stringify(reloadedModels);
 
       } catch (err) {
-        currentModelLibrary.setPersistenceError(`Erro ao sincronizar com outra tab: ${err.message}`);
+        currentModelLibrary.setPersistenceError(`Erro ao sincronizar com outra tab: ${(err as Error).message}`);
       }
     };
 
@@ -19247,7 +19400,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         }
       } catch (err) {
         if (isMounted) {
-          modelLibrary.setPersistenceError(err.message);
+          modelLibrary.setPersistenceError((err as Error).message);
         }
       } finally {
         if (isMounted) {
@@ -19308,7 +19461,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
         modelLibrary.setPersistenceError(null);
       } catch (err) {
-        modelLibrary.setPersistenceError(err.message);
+        modelLibrary.setPersistenceError((err as Error).message);
       }
     }, 1500); // 🚀 v1.8.1: 1500ms debounce (-20% saves em edições rápidas)
 
@@ -19318,7 +19471,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 🎨 ESTADOS: Navegação e UI
   const [activeTab, setActiveTab] = useState('upload');
   const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' }); // 'success', 'error', 'info'
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | { type: string; message: string }>('');
   const [copySuccess, setCopySuccess] = useState(false);
   const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const [modelSaved, setModelSaved] = useState(false);
@@ -19331,7 +19484,25 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // v1.35.30: Estados para modal de curadoria de tópicos (pré-geração de mini-relatórios)
   const [showTopicCurationModal, setShowTopicCurationModal] = useState(false);
-  const [pendingCurationData, setPendingCurationData] = useState<{ topics: Topic[]; action: string } | null>(null);
+  const [pendingCurationData, setPendingCurationData] = useState<{
+    topics: Topic[];
+    partes: { reclamante: string; reclamadas: string[] };
+    relatorioContentArray: AIMessageContent[];
+    documents: {
+      peticoesText: PastedText[];
+      contestacoesText: PastedText[];
+      complementaresText: PastedText[];
+      peticoesBase64: string[];
+      contestacoesBase64: string[];
+      complementaryBase64: string[];
+      contestacoesExtraidasDePDF: PastedText[];
+      contestacoesJaColadas: PastedText[];
+      complementaresExtraidasDePDF: PastedText[];
+      complementaresJaColadas: PastedText[];
+      peticoesExtraidasDePDF: PastedText[];
+      peticoesJaColadas: PastedText[];
+    };
+  } | null>(null);
 
   // v1.21.14: Sincronizar nomes do modal com aiSettings persistido
   useEffect(() => {
@@ -19623,11 +19794,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [detectingNames, setDetectingNames] = useState(false);
   // v1.32.00: Toggle master para NER
   const [nerEnabled, setNerEnabled] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('nerEnabled')) || false; } catch { return false; }
+    try { return JSON.parse(localStorage.getItem('nerEnabled') || 'false'); } catch { return false; }
   });
   // v1.29: Estado para incluir ORG (empresas) na detecção
   const [nerIncludeOrg, setNerIncludeOrg] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('nerIncludeOrg')) || false; } catch { return false; }
+    try { return JSON.parse(localStorage.getItem('nerIncludeOrg') || 'false'); } catch { return false; }
   });
 
   // 🔍 v1.26.00: ESTADOS: Busca Semântica (E5-base)
@@ -19643,7 +19814,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       // Migração: se searchEnabled não existe, usa semanticSearchEnabled como fallback
       const stored = localStorage.getItem('searchEnabled');
       if (stored !== null) return JSON.parse(stored);
-      return JSON.parse(localStorage.getItem('semanticSearchEnabled')) || false;
+      return JSON.parse(localStorage.getItem('semanticSearchEnabled') || 'false');
     } catch { return false; }
   });
   // v1.35.74: semanticSearchEnabled, semanticThreshold, jurisSemanticEnabled, jurisSemanticThreshold
@@ -19659,7 +19830,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     jurisprudencia: { needed: null, downloading: false, progress: 0, error: null }
   });
   const [dismissedEmbeddingsPrompt, setDismissedEmbeddingsPrompt] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('dismissedEmbeddingsPrompt')) || false; } catch { return false; }
+    try { return JSON.parse(localStorage.getItem('dismissedEmbeddingsPrompt') || 'false'); } catch { return false; }
   });
 
   // 📥 v1.33.61: Estados para download automático de DADOS (legislação e jurisprudência)
@@ -19669,7 +19840,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     jurisprudencia: { needed: null, downloading: false, progress: 0, error: null, completed: false }
   });
   const [dismissedDataPrompt, setDismissedDataPrompt] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('dismissedDataPrompt')) || false; } catch { return false; }
+    try { return JSON.parse(localStorage.getItem('dismissedDataPrompt') || 'false'); } catch { return false; }
   });
 
   // 📦 v1.27.01: Estados para busca semântica de MODELOS (embeddings inline)
@@ -19696,11 +19867,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // 🎯 REFS
   const bulkFileInputRef = useRef<HTMLInputElement | null>(null);
-  const bulkEditorRef = useRef<HTMLDivElement | null>(null);
-  const editorRef = useRef<HTMLDivElement | null>(null);
-  const modelEditorRef = useRef<HTMLDivElement | null>(null);
-  const modelFormRef = useRef<HTMLFormElement | null>(null);
-  const relatorioRef = useRef<HTMLTextAreaElement | null>(null);
+  const bulkEditorRef = useRef<QuillInstance | null>(null); // v1.35.92: Tipar como QuillInstance
+  const editorRef = useRef<QuillInstance | null>(null); // v1.35.92: Tipar como QuillInstance
+  const modelEditorRef = useRef<QuillInstance | null>(null); // v1.35.92: Tipar como QuillInstance
+  const modelFormRef = useRef<HTMLDivElement | null>(null);
+  const relatorioRef = useRef<QuillInstance | null>(null); // v1.35.92: Tipar como QuillInstance
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const topicRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const editorContainerRef = useRef<HTMLDivElement | null>(null);
@@ -19743,6 +19914,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
           setProofTopicLinks: proofManager.setProofTopicLinks,
           setProofAnalysisResults: proofManager.setProofAnalysisResults,
           setProofConclusions: proofManager.setProofConclusions,
+          setProofSendFullContent: proofManager.setProofSendFullContent,
           setActiveTab,
           closeModal,
           setError,
@@ -19752,9 +19924,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
 
         // Atualizar ref para refletir novo estado
-        localStateRef.current.lastSaveTimestamp = Date.now();
+        // Note: localStateRef was removed - timestamp tracking handled elsewhere
       } catch (err) {
-        setError('Erro ao sincronizar com outra aba: ' + err.message);
+        setError('Erro ao sincronizar com outra aba: ' + (err as Error).message);
       }
     };
 
@@ -20211,8 +20383,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   useEffect(() => {
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 2000; // 2 segundos
-    let styleDelayTimeout = null;
-    let retryTimeout = null;
+    let styleDelayTimeout: ReturnType<typeof setTimeout> | null = null;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
     let isMounted = true;
 
     // Verificar se já existe script carregando/carregado
@@ -20245,7 +20417,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     link.id = 'quill-theme-css';
 
     link.onerror = () => {
-      if (isMounted) setQuillError('Falha ao carregar tema do editor');
+      if (isMounted) setQuillError(new Error('Falha ao carregar tema do editor'));
     };
 
     document.head.appendChild(link);
@@ -20268,7 +20440,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
           }
         }, 100);
       } else {
-        setQuillError('Biblioteca carregada mas não disponível');
+        setQuillError(new Error('Biblioteca carregada mas não disponível'));
       }
     };
 
@@ -20279,7 +20451,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
           if (isMounted) setQuillRetryCount(prev => prev + 1);
         }, RETRY_DELAY);
       } else {
-        setQuillError(`Falha ao carregar editor após ${MAX_RETRIES} tentativas. Verifique sua conexão.`);
+        setQuillError(new Error(`Falha ao carregar editor após ${MAX_RETRIES} tentativas. Verifique sua conexão.`));
       }
     };
 
@@ -20365,7 +20537,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     if (extractedTopics.length > 0 || selectedTopics.length > 0 ||
         proofManager.proofFiles.length > 0 || proofManager.proofTexts.length > 0 ||
         peticaoFiles.length > 0 || contestacaoFiles.length > 0 || complementaryFiles.length > 0 ||
-        aiIntegration.tokenMetrics.requestCount > 0) {
+        (aiIntegration.tokenMetrics.requestCount || 0) > 0) {
       markSessionDirty();
       // 🚫 v1.9.5: DESABILITADO - Timestamp de edição não mais usado (sync removido)
       // localStateRef.current.lastLocalEditTimestamp = Date.now();
@@ -20380,9 +20552,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     // Outros lengths (não precisam de hash pois são simples)
     pastedContestacaoTexts?.length || 0,
     pastedComplementaryTexts?.length || 0,
-    analyzedDocuments?.length || 0,
+    (analyzedDocuments?.peticoes?.length || 0) + (analyzedDocuments?.contestacoes?.length || 0) + (analyzedDocuments?.complementares?.length || 0),
     partesProcesso?.reclamante || '',
-    partesProcesso?.reclamado || '',
+    partesProcesso?.reclamadas || '',
     aiIntegration.tokenMetrics.requestCount,  // v1.22.01: Persistir tokens ao contabilizar
     markSessionDirty
   ]);
@@ -20467,7 +20639,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       // Comparar com último snapshot (evitar saves duplicados)
       const currentJson = JSON.stringify(snapshot);
       if (currentJson !== lastAutoSaveSnapshotRef.current) {
-        storage.autoSaveSession(snapshot, setError);
+        storage.autoSaveSession(snapshot, (err) => err && setError(err));
         lastAutoSaveSnapshotRef.current = currentJson;
       }
 
@@ -20531,7 +20703,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       const saved = localStorage.getItem('sentencifySession');
       if (saved) {
         const session = JSON.parse(saved);
-        setSessionLastSaved(session.savedAt);
+        storage.setSessionLastSaved(session.savedAt);
         openModal('restoreSession');
       }
     } catch (err) {
@@ -20547,7 +20719,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     }
 
     // Configuração de sanitização para permitir apenas tags seguras de formatação
-    const cleanHTML = window.DOMPurify.sanitize(dirty, {
+    const cleanHTML = window.DOMPurify.sanitize(dirty || '', {
       ALLOWED_TAGS: [
         'p', 'br', 'div', 'span',           // Estrutura
         'strong', 'b', 'em', 'i', 'u',      // Formatação básica
@@ -20583,9 +20755,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   if (typeof window !== 'undefined') {
     window.testSanitization = testSanitization;
     window.checkDOMPurify = () => ({
-      loaded: domPurifyReady,
-      available: !!window.DOMPurify,
-      version: window.DOMPurify?.version || 'Desconhecida'
+      version: window.DOMPurify?.version || 'Desconhecida',
+      isSupported: domPurifyReady && !!window.DOMPurify
     });
   }
 
@@ -20630,7 +20801,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       setNerModelReady(true);
       showToast('Modelo NER pronto!', 'success');
     } catch (err) {
-      showToast('Erro ao inicializar NER: ' + err.message, 'error');
+      showToast('Erro ao inicializar NER: ' + (err as Error).message, 'error');
     } finally {
       setNerInitializing(false);
       setNerDownloadProgress(0);
@@ -20673,7 +20844,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       setSearchModelReady(true);
       showToast('Modelo de busca pronto!', 'success');
     } catch (err) {
-      showToast('Erro ao inicializar: ' + err.message, 'error');
+      showToast('Erro ao inicializar: ' + (err as Error).message, 'error');
     } finally {
       setSearchInitializing(false);
       setSearchDownloadProgress(0);
@@ -20741,7 +20912,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       setEmbeddingsCount(0);
       showToast('Embeddings removidos', 'info');
     } catch (err) {
-      showToast('Erro ao limpar embeddings: ' + err.message, 'error');
+      showToast('Erro ao limpar embeddings: ' + (err as Error).message, 'error');
     }
   };
 
@@ -20780,7 +20951,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       setEmbeddingsCount(count);
       showToast(`${items.length} embeddings importados com sucesso!`, 'success');
     } catch (err) {
-      showToast('Erro ao importar: ' + err.message, 'error');
+      showToast('Erro ao importar: ' + (err as Error).message, 'error');
       console.error('Import error:', err);
     } finally {
       setImportingEmbeddings(false);
@@ -20803,7 +20974,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       setJurisEmbeddingsCount(0);
       showToast('Embeddings de jurisprudência removidos', 'info');
     } catch (err) {
-      showToast('Erro ao limpar embeddings: ' + err.message, 'error');
+      showToast('Erro ao limpar embeddings: ' + (err as Error).message, 'error');
     }
   };
 
@@ -20850,7 +21021,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       modelLibrary.setModels([...modelLibrary.models]);
       showToast(`${modelsWithoutEmbedding.length} embeddings de modelos gerados`, 'success');
     } catch (err) {
-      showToast('Erro ao gerar embeddings: ' + err.message, 'error');
+      showToast('Erro ao gerar embeddings: ' + (err as Error).message, 'error');
       console.error('[MODEL-SEARCH] Erro:', err);
     } finally {
       setGeneratingModelEmbeddings(false);
@@ -20868,7 +21039,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       await indexedDB.saveModels(updatedModels);
       showToast('Embeddings dos modelos removidos', 'info');
     } catch (err) {
-      showToast('Erro ao limpar embeddings: ' + err.message, 'error');
+      showToast('Erro ao limpar embeddings: ' + (err as Error).message, 'error');
     }
   };
 
@@ -20904,7 +21075,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       setJurisEmbeddingsCount(count);
       showToast(`${items.length} embeddings de jurisprudência importados!`, 'success');
     } catch (err) {
-      showToast('Erro ao importar: ' + err.message, 'error');
+      showToast('Erro ao importar: ' + (err as Error).message, 'error');
       console.error('[JURIS-SEARCH] Import error:', err);
     } finally {
       setImportingJurisEmbeddings(false);
@@ -21008,9 +21179,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       } catch (err) {
         setDataDownloadStatus(prev => ({
           ...prev,
-          legislacao: { ...prev.legislacao, downloading: false, error: err.message }
+          legislacao: { ...prev.legislacao, downloading: false, error: (err as Error).message }
         }));
-        showToast('Erro ao baixar legislação: ' + err.message, 'error');
+        showToast('Erro ao baixar legislação: ' + (err as Error).message, 'error');
       }
     }
 
@@ -21042,9 +21213,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       } catch (err) {
         setDataDownloadStatus(prev => ({
           ...prev,
-          jurisprudencia: { ...prev.jurisprudencia, downloading: false, error: err.message }
+          jurisprudencia: { ...prev.jurisprudencia, downloading: false, error: (err as Error).message }
         }));
-        showToast('Erro ao baixar jurisprudência: ' + err.message, 'error');
+        showToast('Erro ao baixar jurisprudência: ' + (err as Error).message, 'error');
       }
     }
   };
@@ -21092,9 +21263,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       } catch (err) {
         setEmbeddingsDownloadStatus(prev => ({
           ...prev,
-          legislacao: { ...prev.legislacao, downloading: false, error: err.message }
+          legislacao: { ...prev.legislacao, downloading: false, error: (err as Error).message }
         }));
-        showToast('Erro ao baixar legislação: ' + err.message, 'error');
+        showToast('Erro ao baixar legislação: ' + (err as Error).message, 'error');
       }
     }
 
@@ -21125,9 +21296,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       } catch (err) {
         setEmbeddingsDownloadStatus(prev => ({
           ...prev,
-          jurisprudencia: { ...prev.jurisprudencia, downloading: false, error: err.message }
+          jurisprudencia: { ...prev.jurisprudencia, downloading: false, error: (err as Error).message }
         }));
-        showToast('Erro ao baixar jurisprudência: ' + err.message, 'error');
+        showToast('Erro ao baixar jurisprudência: ' + (err as Error).message, 'error');
       }
     }
 
@@ -21150,7 +21321,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.25: Detectar nomes automaticamente usando NER
   // v1.25.26: Adicionar overrideText para modais de prova
   // v1.28.09: Adicionar skipSetDetecting para feedback visual imediato
-  const detectarNomesAutomaticamente = async (overrideText = null, skipSetDetecting = false) => {
+  const detectarNomesAutomaticamente = async (overrideText: string | null = null, skipSetDetecting = false) => {
     // v1.32.17: Verificar se NER está habilitado (modelo será carregado sob demanda)
     if (!nerEnabled) {
       showToast('Ative o NER em Configurações IA para detectar nomes automaticamente.', 'error');
@@ -21169,8 +21340,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         // Coletar APENAS qualificação das partes (~1000 chars por doc)
         // Nomes aparecem nos primeiros ~500-800 chars (cabeçalho)
         const CHARS_PER_PAGE = 1000;
-        const textos = [];
-        const textosHash = new Set(); // Para deduplicação
+        const textos: string[] = [];
+        const textosHash = new Set<string>(); // Para deduplicação
 
       // Helper: adicionar texto se não for duplicata
       const addTexto = (txt: string | null) => {
@@ -21183,7 +21354,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       };
 
       // Helper: extrair texto de string ou objeto (só primeira página)
-      const getFirstPage = (t: Topic) => {
+      const getFirstPage = (t: { text?: string | null } | string | null | undefined) => {
         if (!t) return null;
         const fullText = typeof t === 'string' ? t : (t.text || null);
         if (!fullText) return null;
@@ -21193,12 +21364,12 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       // Helper: extrair primeira página de um PDF
       const extractFirstPageFromPDF = async (fileObj: { file?: File } | File) => {
         try {
-          const file = fileObj.file || fileObj;
-          if (!file || !(file instanceof Blob || file instanceof File)) return null;
+          const file = (fileObj as { file?: File }).file ?? (fileObj as File);
+          if (!file || !(file instanceof Blob)) return null;
           const text = await documentServices.extractTextFromPDFPure(file);
           return text ? text.slice(0, CHARS_PER_PAGE) : null;
         } catch (e) {
-          console.warn('[NER] Falha ao extrair PDF:', e.message);
+          console.warn('[NER] Falha ao extrair PDF:', (e as Error).message);
           return null;
         }
       };
@@ -21320,7 +21491,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         );
         if (!alreadyDetected && !ORG_STOP_WORDS.some(sw => fullOrg.includes(sw))) {
           console.log(`[NER] Fallback ORG: "${fullOrg}"`);
-          entidadesFiltradas.push({ text: fullOrg, type: 'ORG', score: 0.9 });
+          entidadesFiltradas.push({ text: fullOrg, type: 'ORG', score: 0.9, start: 0, end: fullOrg.length });
         }
       }
     }
@@ -21357,9 +21528,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     };
 
     // v1.29.02: Fuzzy dedup separado por tipo (PER vs ORG)
-    const nomesUnicos = [];
+    const nomesUnicos: { text: string; isOrg: boolean }[] = [];
     for (const item of nomesFiltrados) {
-      const similarIdx = nomesUnicos.findIndex(n => {
+      const similarIdx: number = nomesUnicos.findIndex(n => {
         // Só comparar entidades do mesmo tipo
         if (n.isOrg !== item.isOrg) return false;
         // Threshold mais alto para ORG (0.85) vs PER (0.7)
@@ -21405,7 +21576,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   } catch (err) {
     console.error('Erro na detecção de nomes:', err);
-    showToast('Erro ao detectar nomes: ' + err.message, 'error');
+    showToast('Erro ao detectar nomes: ' + (err as Error).message, 'error');
   } finally {
     setDetectingNames(false);
   }
@@ -21430,7 +21601,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
       showToast('Configurações exportadas com sucesso! Arquivo baixado e copiado para área de transferência.', 'success');
     } catch (err) {
-      showToast('Erro ao exportar configurações: ' + err.message, 'error');
+      showToast('Erro ao exportar configurações: ' + (err as Error).message, 'error');
     }
   };
 
@@ -21464,16 +21635,19 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         ]
       };
 
-      aiIntegration.setAiSettings(mergedSettings);
+      aiIntegration.setAiSettings(prev => ({
+        ...prev,
+        ...mergedSettings
+      }));
       showToast('Configurações importadas com sucesso!', 'success');
       event.target.value = '';
     } catch (err) {
-      showToast('Erro ao importar: ' + err.message, 'error');
+      showToast('Erro ao importar: ' + (err as Error).message, 'error');
       event.target.value = '';
     }
   };
 
-  const showToast = (message: string, type: string = 'success') => {
+  const showToast = (message: string, type: 'error' | 'success' | 'info' | 'warning' = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
       setToast({ show: false, message: '', type: 'success' });
@@ -21488,7 +21662,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     return -1;
   };
 
-  const openSlashMenu = React.useCallback((data: { position: { top: number; left: number }; quillInstance: unknown; triggerPosition: number }) => {
+  const openSlashMenu = React.useCallback((data: { position: { top: number; left: number }; quillInstance: QuillInstance | null; triggerPosition: number }) => {
     setSlashMenu({
       isOpen: true,
       position: data.position,
@@ -21503,13 +21677,14 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     setSlashMenu(prev => {
       if (removeSlash && prev.quillInstance && typeof prev.triggerPosition === 'number') {
         try {
-          const text = prev.quillInstance.getText();
+          const quill = prev.quillInstance;
+          const text = quill.getText();
           const slashPos = findSlashPosition(text, prev.triggerPosition);
           if (slashPos >= 0) {
-            prev.quillInstance.deleteText(slashPos, 1);
+            quill.deleteText(slashPos, 1);
             setTimeout(() => {
-              prev.quillInstance.focus();
-              prev.quillInstance.setSelection(slashPos, 0);
+              quill.focus();
+              quill.setSelection(slashPos, 0);
             }, 0);
           }
         } catch (e) { /* Quill pode estar indisponível */ }
@@ -21518,7 +21693,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     });
   }, []);
 
-  const navigateSlashMenu = React.useCallback((direction: 'up' | 'down', maxItems: number) => {
+  const navigateSlashMenu = React.useCallback((direction: 'up' | 'down', maxItems: number = 10) => {
     setSlashMenu(prev => {
       if (direction === 'down') {
         return { ...prev, selectedIndex: Math.min(prev.selectedIndex + 1, maxItems - 1) };
@@ -21580,7 +21755,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
     const handleClickOutside = (e: MouseEvent) => {
       const menuEl = document.querySelector('.slash-command-menu');
-      if (menuEl && !menuEl.contains(e.target)) {
+      if (menuEl && !menuEl.contains(e.target as Node)) {
         closeSlashMenu(true);
       }
     };
@@ -21597,7 +21772,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   useEffect(() => {
     if (lastEditedTopicTitle && activeTab === 'topics') {
-      let nestedTimeoutId = null;
+      let nestedTimeoutId: ReturnType<typeof setTimeout> | null = null;
       // Timeout maior para garantir que o DOM foi atualizado após troca de aba
       const timeoutId = setTimeout(() => {
         const element = topicRefs.current[lastEditedTopicTitle];
@@ -21776,12 +21951,12 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // v1.33.60: Collision detection otimizado - O(n) ao invés de O(n²)
   // Ignora RELATÓRIO e DISPOSITIVO para evitar feedback visual enganoso
-  const customCollisionDetection = React.useCallback((args: { droppableContainers: Array<{ id: string | number }>; [key: string]: unknown }) => {
+  const customCollisionDetection = React.useCallback((args: Parameters<typeof closestCenter>[0]) => {
     const { droppableContainers, ...rest } = args;
 
     // Filtrar usando Set (O(1) por lookup)
     const filteredContainers = droppableContainers.filter(
-      (container: { id: string | number }) => !specialTopicIds.has(container.id)
+      container => !specialTopicIds.has(container.id)
     );
 
     return closestCenter({ ...rest, droppableContainers: filteredContainers });
@@ -21934,7 +22109,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       return;
     }
 
-    const updatedTopics = [...aiIntegration.aiSettings.topicosComplementares];
+    const updatedTopics = [...(aiIntegration.aiSettings.topicosComplementares || [])];
     const [draggedTopic] = updatedTopics.splice(draggedComplementaryIndex, 1);
     updatedTopics.splice(dropIndex, 0, draggedTopic);
 
@@ -21954,24 +22129,24 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // Memoizá-los evita quebrar React.memo e recalcular useMemo internos.
 
   const handleFundamentacaoChange = React.useCallback((html: string) => {
-    setEditingTopic(prev => ({
-      ...prev,
-      editedFundamentacao: html
-    }));
+    setEditingTopic(prev => {
+      if (!prev) return prev;
+      return { ...prev, editedFundamentacao: html };
+    });
   }, []);
 
   const handleRelatorioChange = React.useCallback((html: string) => {
-    setEditingTopic(prev => ({
-      ...prev,
-      editedRelatorio: html
-    }));
+    setEditingTopic(prev => {
+      if (!prev) return prev;
+      return { ...prev, editedRelatorio: html };
+    });
   }, []);
 
   const handleCategoryChange = React.useCallback((newCategory: string) => {
-    setEditingTopic(prev => ({
-      ...prev,
-      category: newCategory
-    }));
+    setEditingTopic(prev => {
+      if (!prev) return prev;
+      return { ...prev, category: newCategory as TopicCategory };
+    });
 
     // Atualiza selectedTopics
     setSelectedTopics(prevSelected => {
@@ -21979,7 +22154,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       if (selectedIndex === -1) return prevSelected;
 
       const newSelected = [...prevSelected];
-      newSelected[selectedIndex] = { ...newSelected[selectedIndex], category: newCategory };
+      newSelected[selectedIndex] = { ...newSelected[selectedIndex], category: newCategory as TopicCategory };
       return newSelected;
     });
 
@@ -21989,7 +22164,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       if (extractedIndex === -1) return prevExtracted;
 
       const newExtracted = [...prevExtracted];
-      newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], category: newCategory };
+      newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], category: newCategory as TopicCategory };
       return newExtracted;
     });
   }, [editingTopic?.title]);
@@ -22060,7 +22235,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
     // 🚀 v1.8.2: Verificar cache antes de chamar API
     const cachedKeywords = apiCache.get(cacheKey);
-    if (cachedKeywords) {
+    if (cachedKeywords && typeof cachedKeywords === 'string') {
       modelLibrary.setNewModel({ ...modelLibrary.newModel, keywords: cachedKeywords });
       return; // Retornar imediatamente com resultado cacheado
     }
@@ -22114,7 +22289,7 @@ Não adicione explicações, apenas as keywords separadas por vírgula.`;
       }
 
     } catch (err) {
-      setError('Erro ao gerar palavras-chave: ' + err.message);
+      setError('Erro ao gerar palavras-chave: ' + (err as Error).message);
     } finally {
       aiIntegration.setGeneratingKeywords(false);
     }
@@ -22135,7 +22310,7 @@ Não adicione explicações, apenas as keywords separadas por vírgula.`;
     // Cache key baseado nos primeiros 500 caracteres do conteúdo
     const cacheKey = `title_${modelLibrary.newModel.content.substring(0, 500)}`;
     const cachedTitle = apiCache.get(cacheKey);
-    if (cachedTitle) {
+    if (cachedTitle && typeof cachedTitle === 'string') {
       modelLibrary.setNewModel({ ...modelLibrary.newModel, title: cachedTitle });
       return;
     }
@@ -22191,7 +22366,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         setError('Não foi possível gerar o título. Tente novamente.');
       }
     } catch (err) {
-      setError('Erro ao gerar título: ' + err.message);
+      setError('Erro ao gerar título: ' + (err as Error).message);
     } finally {
       aiIntegration.setGeneratingTitle(false);
     }
@@ -22199,7 +22374,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 
   // 🔍 v1.13.1: Executa salvamento do modelo (chamado após verificação de similaridade)
   // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
-  const executeSaveModel = async (modelData: Partial<Model> & { title: string; content: string; embedding?: number[] }, isReplace = false, replaceId: string | null = null) => {
+  const executeSaveModel = async (modelData: Partial<Model> & { id: string; title: string; content: string; embedding?: number[] }, isReplace = false, replaceId: string | null = null) => {
     // Gerar embedding se modelo de busca estiver pronto E opção ativada
     if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
       await new Promise(resolve => setTimeout(resolve, 50));
@@ -22258,10 +22433,11 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     // Yield para React renderizar "Salvando..." antes da operação pesada
     await new Promise(resolve => setTimeout(resolve, 50));
     try {
-      if (modelLibrary.editingModel) {
+      const editingModel = modelLibrary.editingModel;
+      if (editingModel) {
         // Edição de modelo existente - sem verificação de similaridade
-        const modelData = {
-          ...modelLibrary.editingModel,
+        const modelData: Model = {
+          ...editingModel,
           title: modelLibrary.newModel.title,
           content: currentContent,
           keywords: modelLibrary.newModel.keywords,
@@ -22287,7 +22463,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
           delete modelData.embedding;
         }
 
-        const updated = modelLibrary.models.map(m => m.id === modelLibrary.editingModel.id ? modelData : m);
+        const updated = modelLibrary.models.map(m => m.id === editingModel.id ? modelData : m);
         modelLibrary.setModels(updated);
         // v1.34.0: Rastrear update para sync
         if (cloudSync?.trackChange) cloudSync.trackChange('update', modelData);
@@ -22306,10 +22482,12 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       } else {
         // Novo modelo - verificar similaridade
         const modelId = generateModelId();
-        const modelData = {
-          ...modelLibrary.newModel,
-          content: currentContent,
+        const modelData: Model = {
           id: modelId,
+          title: modelLibrary.newModel.title,
+          content: currentContent,
+          keywords: modelLibrary.newModel.keywords,
+          category: modelLibrary.newModel.category,
           createdAt: new Date().toISOString()
         };
 
@@ -22321,14 +22499,14 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
             similarModel: simResult.similarModel,
             similarity: simResult.similarity,
             context: 'saveModel'
-          });
+          } as SimilarityWarningState);
           return;
         }
 
         await executeSaveModel(modelData);
       }
     } catch (err) {
-      setError('Erro ao salvar modelo: ' + err.message);
+      setError('Erro ao salvar modelo: ' + (err as Error).message);
     } finally {
       setSavingModel(false);
     }
@@ -22347,9 +22525,10 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     }
 
     try {
-      if (modelLibrary.editingModel) {
-        const modelData = {
-          ...modelLibrary.editingModel,
+      const editingModel = modelLibrary.editingModel;
+      if (editingModel) {
+        const modelData: Model = {
+          ...editingModel,
           title: modelLibrary.newModel.title,
           content: currentContent,  // 🔧 BUGFIX: Usar conteúdo atual do editor
           keywords: modelLibrary.newModel.keywords,
@@ -22357,21 +22536,23 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
           updatedAt: new Date().toISOString()
         };
 
-        const updated = modelLibrary.models.map(m => m.id === modelLibrary.editingModel.id ? modelData : m);
+        const updated = modelLibrary.models.map(m => m.id === editingModel.id ? modelData : m);
         modelLibrary.setModels(updated);
         // v1.34.0: Rastrear update para sync
         if (cloudSync?.trackChange) cloudSync.trackChange('update', modelData);
         modelLibrary.setHasUnsavedChanges(true);
-                modelLibrary.setEditingModel(modelData);
+        modelLibrary.setEditingModel(modelData);
 
         // 🔧 BUGFIX: Atualizar também o newModel.content para manter state sincronizado
         modelLibrary.setNewModel({ ...modelLibrary.newModel, content: currentContent });
       } else {
         const modelId = generateModelId();
-        const modelData = {
-          ...modelLibrary.newModel,
-          content: currentContent,  // 🔧 BUGFIX: Usar conteúdo atual do editor
+        const modelData: Model = {
           id: modelId,
+          title: modelLibrary.newModel.title,
+          content: currentContent,  // 🔧 BUGFIX: Usar conteúdo atual do editor
+          keywords: modelLibrary.newModel.keywords,
+          category: modelLibrary.newModel.category,
           createdAt: new Date().toISOString()
         };
 
@@ -22379,7 +22560,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         // v1.34.0: Rastrear create para sync
         if (cloudSync?.trackChange) cloudSync.trackChange('create', modelData);
         modelLibrary.setHasUnsavedChanges(true);
-                modelLibrary.setEditingModel(modelData);
+        modelLibrary.setEditingModel(modelData);
 
         // 🔧 BUGFIX: Atualizar também o newModel.content para manter state sincronizado
         modelLibrary.setNewModel({ ...modelLibrary.newModel, content: currentContent });
@@ -22394,7 +22575,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       document.body.appendChild(successMsg);
       setTimeout(() => successMsg.remove(), 2000);
     } catch (err) {
-      setError('Erro ao salvar modelo: ' + err.message);
+      setError('Erro ao salvar modelo: ' + (err as Error).message);
     }
   };
 
@@ -22472,7 +22653,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 
       showToast('Modelo salvo com sucesso!', 'success');
     } catch (err) {
-      showToast('Erro ao salvar modelo: ' + err.message, 'error');
+      showToast('Erro ao salvar modelo: ' + (err as Error).message, 'error');
     }
   };
 
@@ -22498,7 +22679,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     }
 
     const modelId = generateModelId();
-    const modelData = {
+    const modelData: Model = {
       id: modelId,
       title: title.trim(),
       content: sanitizeHTML(content),
@@ -22515,7 +22696,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
         similarModel: simResult.similarModel,
         similarity: simResult.similarity,
         context: 'saveAsNew'
-      });
+      } as SimilarityWarningState);
       return;
     }
 
@@ -22550,7 +22731,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 
   // v1.15.3: Executa salvamento de "Salvar como Novo" (chamado após confirmação de similaridade)
   // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
-  const executeSaveAsNew = async (modelData: Partial<Model> & { title: string; content: string; embedding?: number[] }, isReplace = false, replaceId: string | null = null) => {
+  const executeSaveAsNew = async (modelData: Partial<Model> & { id: string; title: string; content: string; embedding?: number[] }, isReplace = false, replaceId: string | null = null) => {
     // Gerar embedding se modelo de busca estiver pronto E opção ativada
     if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
       await new Promise(resolve => setTimeout(resolve, 50));
@@ -22595,7 +22776,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     modelLibrary.setNewModel({
       title: model.title,
       content: model.content,
-      keywords: model.keywords || '',
+      keywords: typeof model.keywords === 'string' ? model.keywords : (model.keywords || []).join(', '),
       category: model.category || ''
     });
     openModal('modelForm');
@@ -22643,7 +22824,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       modelLibrary.setHasUnsavedChanges(false);
       showToast(`✅ Modelos exportados com sucesso!\n\n${modelsToExport.length} modelo(s) exportado(s).\nArquivo baixado e copiado para área de transferência.`, 'success');
     } catch (err) {
-      showToast('Erro ao exportar modelos: ' + err.message, 'error');
+      showToast('Erro ao exportar modelos: ' + (err as Error).message, 'error');
     }
   };
 
@@ -22700,8 +22881,8 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 
       let importCount = 0;
       let duplicateCount = 0;
-      const newModels = [];
-      const duplicates = [];
+      const newModels: Model[] = [];
+      const duplicates: Array<{ title: string; reason: string; existingId: string }> = [];
 
       for (const model of importedModels) {
         if (model.title && model.content) {
@@ -22711,18 +22892,21 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
             duplicateCount++;
             duplicates.push({
               title: model.title,
-              reason: dupCheck.reason,
-              existingId: dupCheck.existingId
+              reason: dupCheck.reason || 'duplicado',
+              existingId: dupCheck.existingId || ''
             });
             continue; // SKIP this model
           }
 
           const modelId = `${generateModelId()}_import${importCount}`;
-          const modelData = {
-            ...model,
+          const modelData: Model = {
             id: modelId,
+            title: model.title as string,
+            content: model.content as string,
+            keywords: model.keywords || '',
+            category: model.category || '',
             createdAt: new Date().toISOString(),
-            category: model.category || ''
+            embedding: model.embedding
           };
           newModels.push(modelData);
           importCount++;
@@ -22773,7 +22957,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       }
 
     } catch (err) {
-      setError('Erro ao importar modelos: ' + err.message);
+      setError('Erro ao importar modelos: ' + (err as Error).message);
     }
   };
 
@@ -22782,7 +22966,13 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
   // ============================================================================
 
   // Helper: Constrói array de documentos para envio à API (elimina duplicação)
-  const buildDocumentContentArray = (options = {}) => {
+  interface BuildDocumentOptions {
+    includePeticao?: boolean;
+    includeContestacoes?: boolean;
+    includeComplementares?: boolean;
+    documentsOverride?: AnalyzedDocuments | null;
+  }
+  const buildDocumentContentArray = (options: BuildDocumentOptions = {}) => {
     const {
       includePeticao = true,
       includeContestacoes = true,
@@ -22792,7 +22982,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 
     // Usar documentsOverride se fornecido, senão usar analyzedDocuments (estado React)
     const docs = documentsOverride || analyzedDocuments;
-    const contentArray = [];
+    const contentArray: (AITextContent | AIDocumentContent)[] = [];
 
     // v1.16.6: Anonimização já aplicada em analyzeDocuments (não duplicar aqui)
 
@@ -22992,7 +23182,7 @@ Use os números originais da lista.`;
   };
 
   // v1.21.27: Função base que retorna componentes reutilizáveis para prompts de mini-relatório
-  const buildMiniReportPromptCore = (options = {}) => {
+  const buildMiniReportPromptCore = (options: { isInitialGeneration?: boolean } = {}) => {
     const { isInitialGeneration = false } = options;
 
     const totalContestacoes = (analyzedDocuments.contestacoes?.length || 0) +
@@ -23043,7 +23233,13 @@ A descrição fática (postulatória e defensiva) deve ter alto nível de detalh
   };
 
   // v1.21.27: Helper para prompt de mini-relatório INDIVIDUAL (usa Core)
-  const buildMiniReportPrompt = (options = {}) => {
+  const buildMiniReportPrompt = (options: {
+    title?: string;
+    context?: string;
+    instruction?: string;
+    currentRelatorio?: string;
+    isInitialGeneration?: boolean;
+  } = {}) => {
     const {
       title,
       context = '',
@@ -23121,7 +23317,16 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
   };
 
   // Função unificada: Gera um mini-relatório individual
-  const generateMiniReport = async (options = {}) => {
+  const generateMiniReport = async (options: {
+    title?: string;
+    context?: string;
+    instruction?: string;
+    currentRelatorio?: string;
+    includeComplementares?: boolean;
+    isInitialGeneration?: boolean;
+    maxTokens?: number;
+    documentsOverride?: AnalyzedDocuments | null;
+  } = {}) => {
     const {
       title,
       context = '',
@@ -23171,7 +23376,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
 
   // v1.14.1: Função para gerar múltiplos mini-relatórios em UMA requisição
   // v1.21.27: Refatorado para usar buildBatchMiniReportPrompt centralizado
-  const generateMultipleMiniReports = async (topics: Topic[], options: { includeComplementares?: boolean; isInitialGeneration?: boolean; documentsOverride?: unknown } = {}) => {
+  const generateMultipleMiniReports = async (topics: Topic[], options: { includeComplementares?: boolean; isInitialGeneration?: boolean; documentsOverride?: AnalyzedDocuments | null } = {}) => {
     const {
       includeComplementares = false,
       isInitialGeneration = false,
@@ -23255,12 +23460,12 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
     // v1.14.1: Obter configuração de tópicos por requisição
     const topicsPerRequestSetting = aiIntegration.aiSettings?.topicsPerRequest || 1;
 
-    const results = [];
-    const errors = [];
+    const results: Array<{ title: string; relatorio?: string; status?: string }> = [];
+    const errors: Array<{ title: string; error?: string; status?: string }> = [];
     const totalTopics = topics.length;
 
     // v1.14.2: Agrupar tópicos conforme topicsPerRequest (suporta 'all')
-    const topicGroups = [];
+    const topicGroups: Topic[][] = [];
     if (topicsPerRequestSetting === 'all') {
       topicGroups.push(topics);
     } else {
@@ -23300,7 +23505,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
                 instruction: topic.instruction || '',
                 includeComplementares: topic.includeComplementares || false,
                 isInitialGeneration: topic.isInitialGeneration || false,
-                documentsOverride: topic.documentsOverride || null
+                documentsOverride: (topic.documentsOverride && Object.keys(topic.documentsOverride).length > 0) ? topic.documentsOverride as AnalyzedDocuments : null
               }),
               3,
               topic.title,
@@ -23314,7 +23519,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
               () => generateMultipleMiniReports(group, {
                 includeComplementares: group[0]?.includeComplementares || false,
                 isInitialGeneration: group[0]?.isInitialGeneration || false,
-                documentsOverride: group[0]?.documentsOverride || null
+                documentsOverride: (group[0]?.documentsOverride && Object.keys(group[0].documentsOverride).length > 0) ? group[0].documentsOverride as AnalyzedDocuments : null
               }),
               2,
               group.map((t: Topic) => t.title).join(', '),
@@ -23385,7 +23590,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
   };
 
   const regenerateRelatorioWithInstruction = async () => {
-    if (!aiIntegration.relatorioInstruction.trim()) {
+    if (!aiIntegration.relatorioInstruction?.trim()) {
       setError('Digite uma instrução para regeração do mini-relatório');
       return;
     }
@@ -23396,7 +23601,10 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
     const cacheKey = `relatorioCustom_${editingTopic.title}_${aiIntegration.relatorioInstruction}_${JSON.stringify(analyzedDocuments)}`;
     const cachedRelatorio = apiCache.get(cacheKey);
     if (cachedRelatorio) {
-      setEditingTopic(prev => ({ ...prev, editedRelatorio: cachedRelatorio }));
+      setEditingTopic(prev => {
+        if (!prev) return prev;
+        return { ...prev, editedRelatorio: cachedRelatorio as string };
+      });
       closeModal('regenerateRelatorioCustom');
       return;
     }
@@ -23421,7 +23629,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
       setExtractedTopics(extractedTopics.map(t => t.title === editingTopic.title ? updatedTopic : t));
       aiIntegration.setRelatorioInstruction('');
     } catch (err) {
-      setError('Erro ao regerar mini-relatório: ' + err.message);
+      setError('Erro ao regerar mini-relatório: ' + (err as Error).message);
     } finally {
       aiIntegration.setRegeneratingRelatorio(false);
     }
@@ -23436,7 +23644,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
     setAnalysisProgress('🔄 Regenerando RELATÓRIO processual...');
     try {
       const contentArray = buildDocumentContentArray({ includeComplementares: true });
-      const instrucao = aiIntegration.relatorioInstruction.trim();
+      const instrucao = (aiIntegration.relatorioInstruction || '').trim();
       if (instrucao) {
         contentArray.push({ type: 'text', text: `⚠️ INSTRUÇÃO ADICIONAL DO USUÁRIO:\n${instrucao}` });
       }
@@ -23454,7 +23662,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
       aiIntegration.setRelatorioInstruction('');
       showToast('✅ RELATÓRIO processual regenerado!', 'success');
     } catch (err) {
-      setError('Erro ao regerar RELATÓRIO: ' + err.message);
+      setError('Erro ao regerar RELATÓRIO: ' + (err as Error).message);
       setAnalysisProgress('');
     } finally {
       aiIntegration.setRegeneratingRelatorio(false);
@@ -23489,7 +23697,7 @@ Se não houver informações específicas, indique: "Não foram localizadas info
         setError('Não foi possível gerar o mini-relatório para o tópico renomeado.');
       }
     } catch (err) {
-      setError('Erro ao renomear tópico: ' + err.message);
+      setError('Erro ao renomear tópico: ' + (err as Error).message);
     } finally {
       aiIntegration.setRegenerating(false);
     }
@@ -23536,7 +23744,7 @@ Unifique as informações de forma coerente e abrangente.`;
         setError('Não foi possível gerar o mini-relatório unificado. Tente novamente.');
       }
     } catch (err) {
-      setError('Erro ao unir tópicos: ' + err.message);
+      setError('Erro ao unir tópicos: ' + (err as Error).message);
     } finally {
       aiIntegration.setRegenerating(false);
     }
@@ -23582,7 +23790,7 @@ Se não houver informações específicas nos documentos, indique de forma clara
       remainingExtracted.splice(originalExtractedIndex, 0, ...newTopics);
       setExtractedTopics(remainingExtracted);
     } catch (err) {
-      setError('Erro ao separar tópico: ' + err.message);
+      setError('Erro ao separar tópico: ' + (err as Error).message);
     } finally {
       aiIntegration.setRegenerating(false);
     }
@@ -23592,36 +23800,37 @@ Se não houver informações específicas nos documentos, indique de forma clara
   };
 
   const handleCreateNewTopic = async () => {
-    if (!newTopicData.title.trim()) {
+    if (!newTopicData?.title?.trim()) {
       setError('Digite um título para o tópico');
       return;
     }
     const upperCaseTitle = newTopicData.title.trim().toUpperCase();
+    const category = newTopicData.category || 'MÉRITO';
     aiIntegration.setRegenerating(true);
     setError('');
     try {
-      let newRelatorio = newTopicData.relatorio.trim();
+      let newRelatorio = (newTopicData.relatorio || '').trim();
       if (!newRelatorio && (analyzedDocuments.peticoes?.length > 0 || analyzedDocuments.peticoesText?.length > 0)) {
         try {
           newRelatorio = await generateMiniReport({
             title: upperCaseTitle,
-            context: `Tópico criado manualmente na categoria "${newTopicData.category}". Se não houver informações específicas, indique que o tópico foi criado manualmente.`,
+            context: `Tópico criado manualmente na categoria "${category}". Se não houver informações específicas, indique que o tópico foi criado manualmente.`,
             includeComplementares: true
           });
         } catch (apiErr) {
-          setError('Não foi possível gerar automaticamente: ' + apiErr.message);
+          setError('Não foi possível gerar automaticamente: ' + (apiErr as Error).message);
           newRelatorio = plainTextToHtml(`Tópico "${upperCaseTitle}" criado manualmente.\n\nErro ao analisar documentos.`);
         }
       } else if (!newRelatorio) {
         newRelatorio = plainTextToHtml(`Tópico "${upperCaseTitle}" criado manualmente.\n\nNão há documentos para análise.`);
       }
-      const newTopic = { title: upperCaseTitle, category: newTopicData.category, relatorio: newRelatorio, editedContent: '' };
+      const newTopic: Topic = { title: upperCaseTitle, category, relatorio: newRelatorio, editedContent: '' };
       setExtractedTopics([...extractedTopics, newTopic]);
       closeModal('newTopic');
       setNewTopicData({ title: '', category: 'MÉRITO', relatorio: '' });
       setError('');
     } catch (err) {
-      setError('Erro ao criar tópico: ' + err.message);
+      setError('Erro ao criar tópico: ' + (err as Error).message);
     } finally {
       aiIntegration.setRegenerating(false);
     }
@@ -23631,7 +23840,7 @@ Se não houver informações específicas nos documentos, indique de forma clara
   // 🤖 FUNÇÕES: Geração de Texto com IA
 
   const generateAiText = async () => {
-    if (!aiIntegration.aiInstruction.trim()) {
+    if (!aiIntegration.aiInstruction?.trim()) {
       setError('Digite uma instrução para a IA');
       return;
     }
@@ -23650,7 +23859,7 @@ Se não houver informações específicas nos documentos, indique de forma clara
       // v1.19.2: Passar flag de anonimização
       // v1.21.5: Passar anonConfig para anonimizar texto
       const { proofDocuments, proofsContext, hasProofs } = await prepareProofsContext(
-        proofManager, editingTopic?.title, storage.fileToBase64, aiIntegration?.aiSettings?.anonymization?.enabled, aiIntegration?.aiSettings?.anonymization
+        proofManager, editingTopic?.title || '', storage.fileToBase64, aiIntegration?.aiSettings?.anonymization?.enabled, aiIntegration?.aiSettings?.anonymization
       );
       contentArray.push(...proofDocuments);
 
@@ -23764,28 +23973,28 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
       aiIntegration.setAiGeneratedText(textContent.trim());
       setError('');
     } catch (err) {
-      setError('Erro ao gerar texto com IA: ' + err.message);
+      setError('Erro ao gerar texto com IA: ' + (err as Error).message);
     } finally {
       aiIntegration.setGeneratingAi(false);
     }
   };
 
-  const insertAiText = (mode: ProcessingMode) => {
-    if (!aiIntegration.aiGeneratedText || !editorRef.current) return;
+  const insertAiText = (mode: InsertMode) => {
+    if (!aiIntegration.aiGeneratedText || !editorRef.current || !editingTopic) return;
 
-        const currentHtml = editorRef.current.root.innerHTML;
+    const currentHtml = editorRef.current.root.innerHTML;
     const normalizedAiText = normalizeHTMLSpacing(aiIntegration.aiGeneratedText);
-    let newHtml;
+    let newHtml: string;
 
     switch (mode) {
       case 'replace':
-        newHtml = sanitizeHTML(normalizedAiText);
+        newHtml = sanitizeHTML(normalizedAiText) || '';
         break;
       case 'append':
-        newHtml = sanitizeHTML(currentHtml + '<br>' + normalizedAiText);
+        newHtml = sanitizeHTML(currentHtml + '<br>' + normalizedAiText) || '';
         break;
       case 'prepend':
-        newHtml = sanitizeHTML(normalizedAiText + '<br>' + currentHtml);
+        newHtml = sanitizeHTML(normalizedAiText + '<br>' + currentHtml) || '';
         break;
     }
 
@@ -23816,7 +24025,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
     // v1.21.5: Passar anonConfig para anonimizar texto
     const prepareFunction = proofFilter === 'oral' ? prepareOralProofsContext : prepareProofsContext;
     const { proofDocuments, proofsContext, hasProofs } = await prepareFunction(
-      proofManager, editingTopic?.title, storage.fileToBase64, aiIntegration?.aiSettings?.anonymization?.enabled, aiIntegration?.aiSettings?.anonymization
+      proofManager, editingTopic?.title || '', storage.fileToBase64, aiIntegration?.aiSettings?.anonymization?.enabled, aiIntegration?.aiSettings?.anonymization
     );
     contentArray.push(...proofDocuments);
 
@@ -23904,26 +24113,26 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
   }, [analyzedDocuments, proofManager, editingTopic, topicContextScope, selectedTopics, aiIntegration?.aiSettings?.anonymization?.enabled]);
 
   // 🤖 v1.19.0: Handler para inserir resposta do chat no editor
-  const handleInsertChatResponse = React.useCallback((mode: ProcessingMode) => {
+  const handleInsertChatResponse = React.useCallback((mode: InsertMode) => {
     const response = chatAssistant.lastResponse;
-    if (!response || !editorRef.current) return;
+    if (!response || !editorRef.current || !editingTopic) return;
 
     const currentHtml = editorRef.current.root.innerHTML;
     const normalizedAiText = normalizeHTMLSpacing(response);
-    let newHtml;
+    let newHtml: string;
 
     switch (mode) {
       case 'replace':
-        newHtml = sanitizeHTML(normalizedAiText);
+        newHtml = sanitizeHTML(normalizedAiText) || '';
         break;
       case 'append':
-        newHtml = sanitizeHTML(currentHtml + '<br>' + normalizedAiText);
+        newHtml = sanitizeHTML(currentHtml + '<br>' + normalizedAiText) || '';
         break;
       case 'prepend':
-        newHtml = sanitizeHTML(normalizedAiText + '<br>' + currentHtml);
+        newHtml = sanitizeHTML(normalizedAiText + '<br>' + currentHtml) || '';
         break;
       default:
-        newHtml = sanitizeHTML(normalizedAiText);
+        newHtml = sanitizeHTML(normalizedAiText) || '';
     }
 
     editorRef.current.root.innerHTML = newHtml;
@@ -23948,7 +24157,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
       setError('Erro interno: sistema de IA não inicializado. Recarregue a página.');
       return;
     }
-    if (!aiIntegration.aiInstructionModel.trim()) {
+    if (!aiIntegration.aiInstructionModel?.trim()) {
       setError('Digite uma instrução para a IA');
       return;
     }
@@ -24011,13 +24220,13 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
       aiIntegration.setAiGeneratedTextModel(textContent);
       setError('');
     } catch (err) {
-      setError('Erro ao gerar texto com IA: ' + err.message);
+      setError('Erro ao gerar texto com IA: ' + (err as Error).message);
     } finally {
       aiIntegration.setGeneratingAiModel(false);
     }
   };
 
-  const insertAiTextModel = (mode: ProcessingMode) => {
+  const insertAiTextModel = (mode: InsertMode) => {
     if (!aiIntegration.aiGeneratedTextModel || !modelEditorRef.current) return;
 
     // Editor Quill - usar API do Quill
@@ -24031,7 +24240,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
         quillInstance.root.innerHTML = sanitizeQuillHTML(generatedText);
         break;
 
-      case 'append':
+      case 'append': {
         // Adicionar ao final
         const currentLength = quillInstance.getLength();
         quillInstance.insertText(currentLength - 1, '\n');
@@ -24040,6 +24249,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
           sanitizeQuillHTML(generatedText)
         );
         break;
+      }
 
       case 'prepend':
         // Adicionar no início
@@ -24064,14 +24274,14 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
   // ✏️ FUNÇÕES: Editor de Texto
 
   const applyFormat = (command: string, value: string | null = null) => {
-    document.execCommand(command, false, value);
+    document.execCommand(command, false, value ?? undefined);
     if (editorRef.current) {
       editorRef.current.focus();
     }
   };
 
   const applyModelFormat = (command: string, value: string | null = null) => {
-    document.execCommand(command, false, value);
+    document.execCommand(command, false, value ?? undefined);
     if (modelEditorRef.current) {
       modelEditorRef.current.focus();
     }
@@ -24257,7 +24467,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
       closeModal('deleteModel');
       modelLibrary.setModelToDelete(null);
     } catch (err) {
-      setError('Erro ao excluir modelo: ' + err.message);
+      setError('Erro ao excluir modelo: ' + (err as Error).message);
     }
   };
 
@@ -24283,7 +24493,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
       closeModal('deleteAllModels');
       modelLibrary.setDeleteAllConfirmText('');
     } catch (err) {
-      setError('Erro ao excluir todos os modelos: ' + err.message);
+      setError('Erro ao excluir todos os modelos: ' + (err as Error).message);
     }
   };
 
@@ -24295,7 +24505,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
       await new Promise(resolve => setTimeout(resolve, 50)); // yield para UI
 
       const modelId = generateModelId();
-      const duplicatedModel = {
+      const duplicatedModel: Model = {
         ...model,
         id: modelId,
         title: `${model.title} (Cópia)`,
@@ -24332,7 +24542,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
 
       showToast('✅ Modelo duplicado com sucesso!', 'success');
     } catch (err) {
-      setError('Erro ao duplicar modelo: ' + err.message);
+      setError('Erro ao duplicar modelo: ' + (err as Error).message);
     }
   };
 
@@ -24383,22 +24593,26 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
 
   const extractModelFromDecisionText = async () => {
     closeModal('extractModelConfirm');
+    if (!editorRef.current?.root || !editingTopic) {
+      setError('Editor ou tópico não disponível');
+      return;
+    }
     modelLibrary.setExtractingModelFromDecision(true);
     setError('');
 
-        const decisionText = editorRef.current.root ? editorRef.current.root.innerText : '';
+    const decisionText = editorRef.current.root.innerText || '';
 
     // 🚀 v1.8.2: Cache key baseado em texto + título + categoria do tópico
-    const cacheKey = `extractModel_${editingTopic?.title}_${editingTopic?.category}_${decisionText}`;
+    const cacheKey = `extractModel_${editingTopic.title}_${editingTopic.category}_${decisionText}`;
 
     // 🚀 v1.8.2: Verificar cache antes de chamar API
     const cachedModel = apiCache.get(cacheKey);
-    if (cachedModel) {
+    if (cachedModel && typeof cachedModel === 'string') {
       try {
         const parsedResponse = JSON.parse(cachedModel);
         if (parsedResponse.modelos && Array.isArray(parsedResponse.modelos) && parsedResponse.modelos.length > 0) {
           const modelo = parsedResponse.modelos[0];
-          modelLibrary.openCreateModelModal({
+          modelLibrary.setNewModel({
             title: modelo.titulo,
             category: modelo.categoria,
             keywords: modelo.palavrasChave,
@@ -24677,7 +24891,7 @@ ${decisionText}`;
 
 
     } catch (err) {
-      setError(`Erro ao extrair modelo: ${err.message}`);
+      setError(`Erro ao extrair modelo: ${(err as Error).message}`);
     } finally {
       modelLibrary.setExtractingModelFromDecision(false);
     }
@@ -24711,9 +24925,10 @@ ${decisionText}`;
       // v1.34.0: Rastrear update para sync
       if (cloudSync?.trackChange) cloudSync.trackChange('update', updatedModel);
     } else {
-      modelLibrary.setModels(prev => [...prev, modelData]);
+      const newModel: Model = { ...modelData, id: crypto.randomUUID(), updatedAt: new Date().toISOString() } as Model;
+      modelLibrary.setModels(prev => [...prev, newModel]);
       // v1.34.0: Rastrear create para sync
-      if (cloudSync?.trackChange) cloudSync.trackChange('create', modelData);
+      if (cloudSync?.trackChange) cloudSync.trackChange('create', newModel);
     }
     modelLibrary.setHasUnsavedChanges(true);
     TFIDFSimilarity.invalidate();
@@ -24731,10 +24946,15 @@ ${decisionText}`;
     }
 
     // 🔍 v1.13.1: Verificar similaridade com TF-IDF
-    const simResult = TFIDFSimilarity.findSimilar(modelLibrary.extractedModelPreview, modelLibrary.models, 0.80);
+    const previewAsModel: Model = {
+      ...modelLibrary.extractedModelPreview,
+      id: crypto.randomUUID(),
+      updatedAt: new Date().toISOString()
+    } as Model;
+    const simResult = TFIDFSimilarity.findSimilar(previewAsModel, modelLibrary.models, 0.80);
     if (simResult.hasSimilar) {
       modelLibrary.setSimilarityWarning({
-        newModel: modelLibrary.extractedModelPreview,
+        newModel: previewAsModel,
         similarModel: simResult.similarModel,
         similarity: simResult.similarity,
         context: 'saveExtractedModel'
@@ -24779,7 +24999,7 @@ ${decisionText}`;
   // 🔍 v1.14.1: Função única para processar fila de salvamento bulk
   // v1.20.2: Otimizado para evitar memory leak - usa mutação direta nos arrays
   // v1.27.02: Gera embeddings automaticamente se IA local estiver ativa
-  const processBulkSaveNext = async (queue: Array<{ title: string; content: string; keywords?: string; category?: string; embedding?: number[] }>, saved: Model[], skipped: Array<{ title: string; reason: string }>, replacements: Array<{ oldId: string; newModel: Model }>) => {
+  const processBulkSaveNext = async (queue: Array<{ title: string; content: string; keywords?: string | string[]; category?: string; embedding?: number[] }>, saved: Model[], skipped: number, replacements: Array<{ oldId: string; newModel: Model }>) => {
     if (queue.length === 0) {
       if (saved.length > 0 || replacements.length > 0) {
         // v1.27.02: Gerar embeddings para todos os modelos novos se IA local ativa E opção ativada
@@ -24808,7 +25028,7 @@ ${decisionText}`;
         }
 
         let updatedModels = [...modelLibrary.models];
-        const batchChanges = [];
+        const batchChanges: Array<{ operation: 'create' | 'update' | 'delete'; model: Partial<Model> & { id: string } }> = [];
         for (const { oldId, newModel } of replacements) {
           const replacedModel = { ...newModel, id: oldId, updatedAt: new Date().toISOString() };
           updatedModels = updatedModels.map(m => m.id === oldId ? replacedModel : m);
@@ -24834,12 +25054,14 @@ ${decisionText}`;
       return;
     }
     const [current, ...rest] = queue;
-    const simResult = TFIDFSimilarity.findSimilar(current, [...modelLibrary.models, ...saved], 0.80);
+    // Criar Model com id para verificação de similaridade e salvamento
+    const currentModel: Model = { ...current, id: crypto.randomUUID(), updatedAt: new Date().toISOString() } as Model;
+    const simResult = TFIDFSimilarity.findSimilar(currentModel, [...modelLibrary.models, ...saved], 0.80);
     if (simResult.hasSimilar) {
-      modelLibrary.setSimilarityWarning({ context: 'saveBulkModel', newModel: current, similarModel: simResult.similarModel, similarity: simResult.similarity, bulkQueue: rest, bulkSaved: saved, bulkSkipped: skipped, bulkReplacements: replacements });
+      modelLibrary.setSimilarityWarning({ context: 'saveBulkModel', newModel: currentModel, similarModel: simResult.similarModel, similarity: simResult.similarity, bulkQueue: rest, bulkSaved: saved, bulkSkipped: skipped, bulkReplacements: replacements });
     } else {
       // v1.20.2: Mutação direta para evitar cópias desnecessárias em recursão
-      saved.push(current);
+      saved.push(currentModel);
       await processBulkSaveNext(rest, saved, skipped, replacements);
     }
   };
@@ -24849,7 +25071,7 @@ ${decisionText}`;
     const w = modelLibrary.similarityWarning;
     if (w?.context === 'saveBulkModel') {
       modelLibrary.setSimilarityWarning(null);
-      setTimeout(() => processBulkSaveNext(w.bulkQueue, w.bulkSaved, w.bulkSkipped + 1, w.bulkReplacements), 0);
+      setTimeout(() => processBulkSaveNext(w.bulkQueue || [], w.bulkSaved || [], (w.bulkSkipped || 0) + 1, w.bulkReplacements || []), 0);
     } else {
       modelLibrary.setSimilarityWarning(null);
     }
@@ -24869,8 +25091,9 @@ ${decisionText}`;
       setSavingFromSimilarity(false);
       modelLibrary.setSimilarityWarning(null);
       // v1.20.2: Mutação direta para evitar cópias
-      w.bulkSaved.push(w.newModel);
-      setTimeout(() => processBulkSaveNext(w.bulkQueue, w.bulkSaved, w.bulkSkipped, w.bulkReplacements), 0);
+      const bulkSaved = w.bulkSaved || [];
+      bulkSaved.push(w.newModel);
+      setTimeout(() => processBulkSaveNext(w.bulkQueue || [], bulkSaved, w.bulkSkipped || 0, w.bulkReplacements || []), 0);
       return;
     }
     setSavingFromSimilarity(false);
@@ -24890,8 +25113,9 @@ ${decisionText}`;
       setSavingFromSimilarity(false);
       modelLibrary.setSimilarityWarning(null);
       // v1.20.2: Mutação direta para evitar cópias
-      w.bulkReplacements.push({ oldId: w.similarModel.id, newModel: w.newModel });
-      setTimeout(() => processBulkSaveNext(w.bulkQueue, w.bulkSaved, w.bulkSkipped, w.bulkReplacements), 0);
+      const bulkReplacements = w.bulkReplacements || [];
+      bulkReplacements.push({ oldId: w.similarModel.id, newModel: w.newModel });
+      setTimeout(() => processBulkSaveNext(w.bulkQueue || [], w.bulkSaved || [], w.bulkSkipped || 0, bulkReplacements), 0);
       return;
     }
     setSavingFromSimilarity(false);
@@ -24916,7 +25140,7 @@ ${decisionText}`;
 
       // 🚀 v1.8.2: Verificar cache antes de chamar API
       const cachedModels = apiCache.get(cacheKey);
-      if (cachedModels) {
+      if (cachedModels && typeof cachedModels === 'string') {
         return JSON.parse(cachedModels); // Retornar array de modelos cacheados
       }
 
@@ -25172,7 +25396,7 @@ ${textToAnalyze}`;
         maxTokens: 8000,
         useInstructions: true,
         timeout: 180000,  // 3 minutos (análise pode ser mais demorada)
-        abortSignal: abortSignal,  // Signal externo para cancelamento do usuário
+        abortSignal: abortSignal || undefined,  // Signal externo para cancelamento do usuário
         logMetrics: true,
         temperature: 0.3,
         topP: 0.9,
@@ -25220,17 +25444,18 @@ ${textToAnalyze}`;
 
       try {
         // Adicionar timeout para evitar requisições que travam
-        const timeoutPromise = new Promise((_, reject) =>
+        const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error(`Timeout: API não respondeu em ${Math.round(TIMEOUT_MS/1000)}s`)), TIMEOUT_MS)
         );
         return await Promise.race([fn(), timeoutPromise]);
       } catch (err) {
-        const isRetryable = err.message?.includes('Timeout') || err.status === 429 || err.status === 529 || err.status === 520 || err.status === 502 || err.message?.includes('rate limit') || err.message?.includes('429') || err.message?.includes('529') || err.message?.includes('520') || err.message?.includes('502') || err.message?.includes('Overloaded') || err.message?.includes('Failed to fetch') || err.message?.includes('parsear resposta');
+        const errWithStatus = err as Error & { status?: number };
+        const isRetryable = errWithStatus.message?.includes('Timeout') || errWithStatus.status === 429 || errWithStatus.status === 529 || errWithStatus.status === 520 || errWithStatus.status === 502 || errWithStatus.message?.includes('rate limit') || errWithStatus.message?.includes('429') || errWithStatus.message?.includes('529') || errWithStatus.message?.includes('520') || errWithStatus.message?.includes('502') || errWithStatus.message?.includes('Overloaded') || errWithStatus.message?.includes('Failed to fetch') || errWithStatus.message?.includes('parsear resposta');
         const isLastAttempt = attempt === maxRetries - 1;
         const attemptNum = attempt + 1;
 
         // Log de erro para debug
-        console.warn(`[callWithRetry] ❌ Erro na tentativa ${attemptNum}/${maxRetries}${fileName ? ` (${fileName})` : ''}:`, err.message || err);
+        console.warn(`[callWithRetry] ❌ Erro na tentativa ${attemptNum}/${maxRetries}${fileName ? ` (${fileName})` : ''}:`, (err as Error).message || err);
 
         if (isRetryable) {
           if (!isLastAttempt) {
@@ -25251,10 +25476,12 @@ ${textToAnalyze}`;
         }
 
         // Não é rate limit - propagar erro original
-        console.error(`[callWithRetry] ⚠️ Erro não-retryable${fileName ? ` (${fileName})` : ''}:`, err.message || err);
+        console.error(`[callWithRetry] ⚠️ Erro não-retryable${fileName ? ` (${fileName})` : ''}:`, (err as Error).message || err);
         throw err;
       }
     }
+    // TypeScript: se o loop terminar sem retorno, lançar erro
+    throw new Error(`Todas as ${maxRetries} tentativas falharam`);
   };
 
   const processFileWithProgress = async (file: File, index: number, abortSignal: AbortSignal | null) => {
@@ -25298,7 +25525,7 @@ ${textToAnalyze}`;
       return {
         file: file.name,
         status: 'error',
-        error: err.message,
+        error: (err as Error).message,
         duration
       };
     }
@@ -25326,10 +25553,10 @@ ${textToAnalyze}`;
       modelLibrary.setBulkCancelController(cancelController);
 
       // Processar em batches para evitar rate limit 429
-      const allResults = [];
-      const processedFiles = [];
-      const generatedModels = [];
-      const errors = [];
+      const allResults: PromiseSettledResult<{ file: string; status: string; modelsCount?: number; models?: Model[]; error?: string; duration: string }>[] = [];
+      const processedFiles: Array<{ file: string; status: string; modelsCount?: number; models?: Model[]; error?: string; duration: string }> = [];
+      const generatedModels: Model[] = [];
+      const errors: Array<{ file: string; status: string; error?: string; duration: string }> = [];
 
       for (let i = 0; i < modelLibrary.bulkFiles.length; i += BULK_BATCH_SIZE) {
         const batch = modelLibrary.bulkFiles.slice(i, i + BULK_BATCH_SIZE);
@@ -25339,12 +25566,12 @@ ${textToAnalyze}`;
         modelLibrary.setBulkCurrentBatch(batchNumber);
 
         // Criar promises para este batch
-        const promises = batch.map((file, batchIndex) => {
+        const promises = batch.map((bulkFile, batchIndex) => {
           const globalIndex = i + batchIndex;
           const startDelay = batchIndex * modelLibrary.bulkStaggerDelay;
 
           return new Promise(resolve => setTimeout(resolve, startDelay))
-            .then(() => processFileWithProgress(file, globalIndex, cancelController.signal));
+            .then(() => processFileWithProgress(bulkFile.file, globalIndex, cancelController.signal));
         });
 
         // Aguardar batch atual
@@ -25402,7 +25629,7 @@ ${textToAnalyze}`;
       openModal('bulkReview');
 
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
     } finally {
       modelLibrary.setBulkProcessing(false);
     }
@@ -25429,7 +25656,7 @@ ${textToAnalyze}`;
     ];
 
     const invalidFiles = files.filter(f => {
-      const ext = '.' + f.name.split('.').pop().toLowerCase();
+      const ext = '.' + (f.name.split('.').pop() || '').toLowerCase();
       return !validExtensions.includes(ext) && !validTypes.includes(f.type);
     });
 
@@ -25438,7 +25665,8 @@ ${textToAnalyze}`;
       return;
     }
 
-    modelLibrary.setBulkFiles(files);
+    const bulkFilesData = files.map(file => ({ file, name: file.name, size: file.size }));
+    modelLibrary.setBulkFiles(bulkFilesData);
   }, [showToast, modelLibrary.setBulkFiles]); // 🚀 v1.8.3: Memoizado (GRUPO C)
 
   // 🔍 v1.14.1: Salva modelos revisados com verificação de similaridade interativa
@@ -25458,8 +25686,8 @@ ${textToAnalyze}`;
 
   const toggleFavorite = async (modelId: string) => {
     try {
-      let updatedModel = null;
-      const updated = modelLibrary.models.map(m => {
+      let updatedModel: Model | null = null;
+      const updated = modelLibrary.models.map((m: Model) => {
         if (m.id === modelId) {
           updatedModel = { ...m, favorite: !m.favorite, updatedAt: new Date().toISOString() };
           return updatedModel;
@@ -25472,14 +25700,15 @@ ${textToAnalyze}`;
       modelLibrary.setHasUnsavedChanges(true);
       // Atualizar sugestões se modelo estiver nelas
       if (updatedModel && modelLibrary.suggestions?.length > 0) {
-        modelLibrary.setSuggestions(modelLibrary.suggestions.map(m => m.id === modelId ? updatedModel : m));
+        const finalUpdatedModel = updatedModel; // TypeScript narrowing helper
+        modelLibrary.setSuggestions(modelLibrary.suggestions.map(m => m.id === modelId ? finalUpdatedModel : m));
       }
       // Atualizar preview se modelo estiver aberto
       if (updatedModel && modelPreview.previewingModel?.id === modelId) {
         modelPreview.openPreview(updatedModel);
       }
     } catch (err) {
-      setError('Erro ao favoritar modelo: ' + err.message);
+      setError('Erro ao favoritar modelo: ' + (err as Error).message);
     }
   };
 
@@ -25518,7 +25747,7 @@ ${textToAnalyze}`;
     analyzeDocuments(nomes);
   };
 
-  const analyzeDocuments = async (nomesParaAnonimizar = []) => {
+  const analyzeDocuments = async (nomesParaAnonimizar: string[] = []) => {
 
     if (peticaoFiles.length === 0 && pastedPeticaoTexts.length === 0) {
       setError('Por favor, faça upload da petição inicial ou cole o texto');
@@ -25534,10 +25763,12 @@ ${textToAnalyze}`;
       // 🆕 v1.12.18: Processamento por modo individual (não mais global)
       // Cada documento é processado conforme seu modo em documentProcessingModes
 
-      let contentArray = [];
-      let extractedTextsData = { peticoes: [], contestacoes: [], complementares: [] };
-      let peticoesBase64 = [];
-      let peticoesTextFinal = [];
+      type ExtractedTextItem = { id: string; text: string; name: string };
+      type ContentArrayItem = { type: 'text' | 'document'; text?: string; source?: { type: 'base64'; media_type: 'application/pdf'; data: string }; cache_control?: { type: 'ephemeral' } };
+      let contentArray: ContentArrayItem[] = [];
+      let extractedTextsData: { peticoes: ExtractedTextItem[]; contestacoes: ExtractedTextItem[]; complementares: ExtractedTextItem[] } = { peticoes: [], contestacoes: [], complementares: [] };
+      let peticoesBase64: string[] = [];
+      let peticoesTextFinal: ExtractedTextItem[] = [];
 
       // Obter configuração global de OCR (disponível para todos os documentos)
       const globalOcrEngine = aiIntegration.aiSettings?.ocrEngine;
@@ -25599,8 +25830,9 @@ ${textToAnalyze}`;
 
               if (extractedText && extractedText.length > 100) {
                 const anonText = maybeAnonymize(extractedText);
-                extractedTextsData.peticoes[i] = { text: anonText, name: label };
-                peticoesTextFinal.push({ text: anonText, name: label });
+                const extractedItem = { id: crypto.randomUUID(), text: anonText, name: label };
+                extractedTextsData.peticoes[i] = extractedItem;
+                peticoesTextFinal.push(extractedItem);
                 contentArray.push({
                   type: 'text',
                   text: `${label.toUpperCase()}:\n\n${anonText}`,
@@ -25643,7 +25875,7 @@ ${textToAnalyze}`;
       // Textos colados de petição
       pastedPeticaoTexts.forEach((pastedItem, idx) => {
         const anonPasted = maybeAnonymize(pastedItem.text);
-        peticoesTextFinal.push({ text: anonPasted, name: pastedItem.name });
+        peticoesTextFinal.push({ id: pastedItem.id || crypto.randomUUID(), text: anonPasted, name: pastedItem.name });
         contentArray.push({
           type: 'text',
           text: `${pastedItem.name.toUpperCase()}:\n\n${anonPasted}`,
@@ -25653,8 +25885,8 @@ ${textToAnalyze}`;
 
       // === PROCESSAR CONTESTAÇÕES ===
       const totalContestacoes = contestacaoFiles.length + pastedContestacaoTexts.length;
-      let contestacoesBase64 = [];
-      let contestacoesTextFinal = [];
+      let contestacoesBase64: string[] = [];
+      let contestacoesTextFinal: ExtractedTextItem[] = [];
 
       if (contestacaoFiles.length > 0) {
         for (let i = 0; i < contestacaoFiles.length; i++) {
@@ -25687,7 +25919,7 @@ ${textToAnalyze}`;
                   setAnalysisProgress(`📑 Contestação ${i + 1} (Claude Vision) - página ${current}/${total}...`);
                 });
               } else if (mode === 'tesseract') {
-                extractedText = await documentServices.extractTextFromPDFWithTesseract(fileObj, (current, total, status) => {
+                extractedText = await documentServices.extractTextFromPDFWithTesseract(fileObj, (current: number, total: number, status?: string) => {
                   setAnalysisProgress(`📑 Contestação ${i + 1} (Tesseract) - página ${current}/${total} ${status || ''}`);
                 });
               } else {
@@ -25700,8 +25932,9 @@ ${textToAnalyze}`;
 
               if (extractedText && extractedText.length > 100) {
                 const anonText = maybeAnonymize(extractedText);
-                extractedTextsData.contestacoes[i] = { text: anonText, name: `Contestação ${i + 1}` };
-                contestacoesTextFinal.push({ text: anonText, name: `Contestação ${i + 1}` });
+                const extractedItem = { id: crypto.randomUUID(), text: anonText, name: `Contestação ${i + 1}` };
+                extractedTextsData.contestacoes[i] = extractedItem;
+                contestacoesTextFinal.push(extractedItem);
                 contentArray.push({
                   type: 'text',
                   text: `CONTESTAÇÃO ${i + 1}:\n\n${anonText}`
@@ -25751,8 +25984,8 @@ ${textToAnalyze}`;
 
       // === PROCESSAR DOCUMENTOS COMPLEMENTARES ===
       const totalComplementares = complementaryFiles.length + pastedComplementaryTexts.length;
-      let complementaryBase64 = [];
-      let complementaresTextFinal = [];
+      let complementaryBase64: string[] = [];
+      let complementaresTextFinal: ExtractedTextItem[] = [];
 
       if (complementaryFiles.length > 0) {
         for (let i = 0; i < complementaryFiles.length; i++) {
@@ -25785,7 +26018,7 @@ ${textToAnalyze}`;
                   setAnalysisProgress(`📎 Complementar ${i + 1} (Claude Vision) - página ${current}/${total}...`);
                 });
               } else if (mode === 'tesseract') {
-                extractedText = await documentServices.extractTextFromPDFWithTesseract(fileObj, (current, total, status) => {
+                extractedText = await documentServices.extractTextFromPDFWithTesseract(fileObj, (current: number, total: number, status?: string) => {
                   setAnalysisProgress(`📎 Complementar ${i + 1} (Tesseract) - página ${current}/${total} ${status || ''}`);
                 });
               } else {
@@ -25798,8 +26031,9 @@ ${textToAnalyze}`;
 
               if (extractedText && extractedText.length > 100) {
                 const anonText = maybeAnonymize(extractedText);
-                extractedTextsData.complementares[i] = { text: anonText, name: `Complementar ${i + 1}` };
-                complementaresTextFinal.push({ text: anonText, name: `Complementar ${i + 1}` });
+                const extractedItem = { id: crypto.randomUUID(), text: anonText, name: `Complementar ${i + 1}` };
+                extractedTextsData.complementares[i] = extractedItem;
+                complementaresTextFinal.push(extractedItem);
                 contentArray.push({
                   type: 'text',
                   text: `DOCUMENTO COMPLEMENTAR ${i + 1}:\n\n${anonText}`
@@ -25951,10 +26185,10 @@ Extraia e classifique todos os tópicos/pedidos em:
               IMPORTANTE: Retorne APENAS título e categoria de cada tópico. NÃO inclua o campo "relatorio" - os mini-relatórios serão gerados separadamente para cada tópico.`
       });
 
-      const messages = [
+      const messages: AIMessage[] = [
         {
-          role: 'user',
-          content: contentArray
+          role: 'user' as const,
+          content: contentArray as AIMessageContent[]
         }
       ];
 
@@ -26019,14 +26253,14 @@ Extraia e classifique todos os tópicos/pedidos em:
               try {
                 parsed = JSON.parse(fixedText);
               } catch (fixError) {
-                throw new Error(`Erro ao parsear resposta da IA. Resposta pode estar incompleta ou mal formatada. Detalhes: ${parseError.message}`);
+                throw new Error(`Erro ao parsear resposta da IA. Resposta pode estar incompleta ou mal formatada. Detalhes: ${(parseError as Error).message}`);
               }
             } else {
-              throw new Error(`Erro ao parsear resposta da IA. Resposta pode estar incompleta ou mal formatada. Detalhes: ${parseError.message}`);
+              throw new Error(`Erro ao parsear resposta da IA. Resposta pode estar incompleta ou mal formatada. Detalhes: ${(parseError as Error).message}`);
             }
           }
         } else {
-          throw new Error(`Não foi possível encontrar JSON válido na resposta da IA. Detalhes: ${parseError.message}`);
+          throw new Error(`Não foi possível encontrar JSON válido na resposta da IA. Detalhes: ${(parseError as Error).message}`);
         }
       }
 
@@ -26055,13 +26289,13 @@ Extraia e classifique todos os tópicos/pedidos em:
       // ═══════════════════════════════════════════════════════════════════════════
 
       // Criar contentArray para o relatório (será usado após confirmação)
-      const relatorioContentArray = [];
+      const relatorioContentArray: AIMessageContent[] = [];
 
       // Usar textos extraídos de petições se disponíveis, senão usar PDFs
       if (peticoesTextFinal.length > 0) {
         peticoesTextFinal.forEach((doc, idx) => {
           relatorioContentArray.push({
-            type: 'text',
+            type: 'text' as const,
             text: `${doc.name?.toUpperCase() || `PETIÇÃO ${idx + 1}`}:\n\n${doc.text}`
           });
         });
@@ -26069,8 +26303,8 @@ Extraia e classifique todos os tópicos/pedidos em:
       if (peticoesBase64.length > 0) {
         peticoesBase64.forEach((base64) => {
           relatorioContentArray.push({
-            type: 'document',
-            source: { type: 'base64', media_type: 'application/pdf', data: base64 }
+            type: 'document' as const,
+            source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 }
           });
         });
       }
@@ -26078,30 +26312,30 @@ Extraia e classifique todos os tópicos/pedidos em:
       // Adicionar contestações (texto extraído ou PDF)
       contestacoesTextFinal.forEach((contestacao, index) => {
         relatorioContentArray.push({
-          type: 'text',
+          type: 'text' as const,
           text: `CONTESTAÇÃO ${index + 1}:\n\n${contestacao.text}`
         });
       });
 
       contestacoesBase64.forEach((base64) => {
         relatorioContentArray.push({
-          type: 'document',
-          source: { type: 'base64', media_type: 'application/pdf', data: base64 }
+          type: 'document' as const,
+          source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 }
         });
       });
 
       // Adicionar documentos complementares (texto extraído ou PDF)
       complementaresTextFinal.forEach((doc, index) => {
         relatorioContentArray.push({
-          type: 'text',
+          type: 'text' as const,
           text: `DOCUMENTO COMPLEMENTAR ${index + 1}:\n\n${doc.text}`
         });
       });
 
       complementaryBase64.forEach((base64) => {
         relatorioContentArray.push({
-          type: 'document',
-          source: { type: 'base64', media_type: 'application/pdf', data: base64 }
+          type: 'document' as const,
+          source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 }
         });
       });
 
@@ -26187,7 +26421,7 @@ Extraia e classifique todos os tópicos/pedidos em:
       }));
       
       // Filtrar tópicos para remover qualquer "RELATÓRIO" que possa ter sido gerado pela IA
-      const topicsSemRelatorio = topics.filter(topic =>
+      const topicsSemRelatorio = topics.filter((topic: Topic) =>
         !topic.title || topic.title.toUpperCase() !== 'RELATÓRIO'
       );
 
@@ -26238,7 +26472,7 @@ Extraia e classifique todos os tópicos/pedidos em:
 
         // CRÍTICO: Passar documentsForBatch diretamente (não depende do estado React)
         const { results, errors } = await generateMiniReportsBatch(
-          topicsSemRelatorio.map(t => ({
+          topicsSemRelatorio.map((t: Topic) => ({
             title: t.title,
             category: t.category,
             isInitialGeneration: true,
@@ -26255,13 +26489,13 @@ Extraia e classifique todos os tópicos/pedidos em:
         );
 
         // Mesclar resultados com os tópicos originais
-        topicsComRelatorios = topicsSemRelatorio.map(topic => {
-          const resultado = results.find(r => r.title === topic.title);
-          if (resultado) {
+        topicsComRelatorios = topicsSemRelatorio.map((topic: Topic) => {
+          const resultado = results.find((r: { title: string; relatorio?: string }) => r.title === topic.title);
+          if (resultado && resultado.relatorio) {
             return { ...topic, relatorio: resultado.relatorio };
           }
           // Se falhou, usar placeholder
-          const erro = errors.find(e => e.title === topic.title);
+          const erro = errors.find((e: { title: string; error?: string }) => e.title === topic.title);
           return {
             ...topic,
             relatorio: `<p>Erro ao gerar mini-relatório${erro ? `: ${erro.error}` : ''}. Use "Gerar com IA" para tentar novamente.</p>`
@@ -26279,7 +26513,7 @@ Extraia e classifique todos os tópicos/pedidos em:
 
       // v1.19.2: Filtrar complementares que já existem nos tópicos gerados (case-insensitive)
       const titulosGeradosUpper = new Set(
-        topicsComRelatorios.map(t => (t.title || '').toUpperCase().trim())
+        topicsComRelatorios.map((t: Topic) => (t.title || '').toUpperCase().trim())
       );
       const topicosComplementaresUnicos = topicosComplementares.filter(
         t => !titulosGeradosUpper.has((t.title || '').toUpperCase().trim())
@@ -26294,7 +26528,7 @@ Extraia e classifique todos os tópicos/pedidos em:
           editedFundamentacao: relatorioHtml,
           order: 0
         },
-        ...topicsComRelatorios.map((topic, index) => ({ ...topic, order: index + 1 })),
+        ...topicsComRelatorios.map((topic: Topic, index: number) => ({ ...topic, order: index + 1 })),
         ...topicosComplementaresUnicos
       ];
 
@@ -26320,7 +26554,7 @@ Extraia e classifique todos os tópicos/pedidos em:
       closeModal('analysis');
       setActiveTab('topics');
     } catch (err) {
-      setError('Erro ao analisar documentos: ' + err.message);
+      setError('Erro ao analisar documentos: ' + (err as Error).message);
       closeModal('analysis');
     } finally {
       setAnalyzing(false);
@@ -26335,7 +26569,7 @@ Extraia e classifique todos os tópicos/pedidos em:
    * Continua o fluxo de análise após o usuário confirmar a curadoria de tópicos
    * @param {Array} curatedTopics - Tópicos após edição do usuário (reordenados, mesclados, etc.)
    */
-  const handleCurationConfirm = async (curatedTopics) => {
+  const handleCurationConfirm = async (curatedTopics: Topic[]) => {
     if (!pendingCurationData) {
       console.error('[handleCurationConfirm] pendingCurationData is null');
       return;
@@ -26372,7 +26606,7 @@ Extraia e classifique todos os tópicos/pedidos em:
       }));
 
       // Filtrar tópicos para remover qualquer "RELATÓRIO" que possa ter sido incluído
-      const topicsSemRelatorio = curatedTopics.filter(topic =>
+      const topicsSemRelatorio = curatedTopics.filter((topic: Topic) =>
         !topic.title || topic.title.toUpperCase() !== 'RELATÓRIO'
       );
 
@@ -26396,7 +26630,7 @@ Extraia e classifique todos os tópicos/pedidos em:
         setAnalysisProgress(`📝 Gerando mini-relatórios... 0/${topicsSemRelatorio.length}`);
 
         const { results, errors } = await generateMiniReportsBatch(
-          topicsSemRelatorio.map(t => ({
+          topicsSemRelatorio.map((t: Topic) => ({
             title: t.title,
             category: t.category,
             isInitialGeneration: true,
@@ -26413,12 +26647,12 @@ Extraia e classifique todos os tópicos/pedidos em:
         );
 
         // Mesclar resultados com os tópicos
-        topicsComRelatorios = topicsSemRelatorio.map(topic => {
-          const resultado = results.find(r => r.title === topic.title);
-          if (resultado) {
+        topicsComRelatorios = topicsSemRelatorio.map((topic: Topic) => {
+          const resultado = results.find((r: { title: string; relatorio?: string }) => r.title === topic.title);
+          if (resultado && resultado.relatorio) {
             return { ...topic, relatorio: resultado.relatorio };
           }
-          const erro = errors.find(e => e.title === topic.title);
+          const erro = errors.find((e: { title: string; error?: string }) => e.title === topic.title);
           return {
             ...topic,
             relatorio: `<p>Erro ao gerar mini-relatório${erro ? `: ${erro.error}` : ''}. Use "Gerar com IA" para tentar novamente.</p>`
@@ -26435,22 +26669,22 @@ Extraia e classifique todos os tópicos/pedidos em:
 
       // Filtrar complementares que já existem nos tópicos gerados
       const titulosGeradosUpper = new Set(
-        topicsComRelatorios.map(t => (t.title || '').toUpperCase().trim())
+        topicsComRelatorios.map((t: Topic) => (t.title || '').toUpperCase().trim())
       );
       const topicosComplementaresUnicos = topicosComplementares.filter(
-        t => !titulosGeradosUpper.has((t.title || '').toUpperCase().trim())
+        (t: { title: string }) => !titulosGeradosUpper.has((t.title || '').toUpperCase().trim())
       );
 
       // Montar lista final de tópicos
-      const allTopics = [
+      const allTopics: Topic[] = [
         {
           title: 'RELATÓRIO',
-          category: 'RELATÓRIO',
+          category: 'RELATÓRIO' as const,
           relatorio: relatorioHtml,
           editedFundamentacao: relatorioHtml,
           order: 0
         },
-        ...topicsComRelatorios.map((topic, index) => ({ ...topic, order: index + 1 })),
+        ...topicsComRelatorios.map((topic: Topic, index: number) => ({ ...topic, order: index + 1 })),
         ...topicosComplementaresUnicos
       ];
 
@@ -26487,7 +26721,7 @@ Extraia e classifique todos os tópicos/pedidos em:
       showToast('✅ Análise concluída com sucesso!', 'success');
 
     } catch (err) {
-      setError('Erro ao processar tópicos: ' + err.message);
+      setError('Erro ao processar tópicos: ' + (err as Error).message);
       closeModal('analysis');
     } finally {
       setAnalyzing(false);
@@ -26510,9 +26744,10 @@ Extraia e classifique todos os tópicos/pedidos em:
 
   // 🔍 FUNÇÕES: Sistema de Provas
 
-  const analyzeProof = async (proof, analysisType, customInstructions = '', useOnlyMiniRelatorios = false, includeLinkedTopics = false) => {
+  const analyzeProof = async (proof: Proof, analysisType: string, customInstructions = '', useOnlyMiniRelatorios = false, includeLinkedTopics = false) => {
+    const proofId = String(proof.id);
     try {
-      proofManager.addAnalyzingProof(proof.id);
+      proofManager.addAnalyzingProof(proofId);
       setError('');
 
       // v1.16.2: Anonimização de provas (ProcessingModeSelector já força PDF.js quando ativo)
@@ -26523,44 +26758,49 @@ Extraia e classifique todos os tópicos/pedidos em:
       const maybeAnonymize = (text: string) => shouldAnonymize ? anonymizeText(text, anonConfig, nomesParaAnonimizar) : text;
 
       // Preparar conteúdo da prova
-      let contentArray = [];
+      let contentArray: AIMessageContent[] = [];
 
       if (proof.isPdf) {
         // Prova em PDF - v1.21.2: Respeita modo de processamento escolhido
-        const proofMode = proofManager.proofProcessingModes?.[proof.id] || 'pdfjs';
+        const proofMode = proofManager.proofProcessingModes?.[proofId] || 'pdfjs';
 
         if (proofMode === 'pdf-puro') {
           // Usuário escolheu PDF puro explicitamente
           if (shouldAnonymize) {
             // v1.21.9: Fallback para texto extraído quando anonimização ativa
-            const extractedText = proofManager.extractedProofTexts[proof.id];
+            const extractedText = proofManager.extractedProofTexts[proofId];
             if (extractedText) {
               contentArray.push({
-                type: 'text',
+                type: 'text' as const,
                 text: `PROVA (texto extraído do PDF):\n\n${maybeAnonymize(extractedText)}`
               });
             } else {
-              proofManager.removeAnalyzingProof(proof.id);
+              proofManager.removeAnalyzingProof(proofId);
               showToast('❌ Anonimização ativa: extraia o texto primeiro.', 'error');
               return;
             }
           } else {
+            if (!proof.file) {
+              proofManager.removeAnalyzingProof(proofId);
+              showToast('❌ Arquivo PDF não encontrado.', 'error');
+              return;
+            }
             const base64 = await storage.fileToBase64(proof.file);
             contentArray.push({
-              type: 'document',
-              source: { type: 'base64', media_type: 'application/pdf', data: base64 }
+              type: 'document' as const,
+              source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 }
             });
           }
         } else {
           // Usuário escolheu modo de extração (pdfjs ou claude-vision)
-          const extractedText = proofManager.extractedProofTexts[proof.id];
+          const extractedText = proofManager.extractedProofTexts[proofId];
           if (extractedText) {
             contentArray.push({
-              type: 'text',
+              type: 'text' as const,
               text: `PROVA (texto extraído do PDF):\n\n${maybeAnonymize(extractedText)}`
             });
           } else {
-            proofManager.removeAnalyzingProof(proof.id);
+            proofManager.removeAnalyzingProof(proofId);
             showToast('❌ Texto não extraído. Extraia o texto da prova antes de analisar.', 'error');
             return;
           }
@@ -26568,13 +26808,13 @@ Extraia e classifique todos os tópicos/pedidos em:
       } else {
         // Prova em texto
         contentArray.push({
-          type: 'text',
-          text: `PROVA:\n\n${maybeAnonymize(proof.text)}`
+          type: 'text' as const,
+          text: `PROVA:\n\n${maybeAnonymize(proof.text || '')}`
         });
       }
 
       // Buscar tópicos vinculados a esta prova
-      const linkedTopicTitles = proofManager.proofTopicLinks[proof.id] || [];
+      const linkedTopicTitles = proofManager.proofTopicLinks[proofId] || [];
       const linkedTopics = selectedTopics.filter(t => linkedTopicTitles.includes(t.title));
 
       // Preparar prompt baseado no tipo de análise
@@ -26588,7 +26828,7 @@ Extraia e classifique todos os tópicos/pedidos em:
           ).join('\n\n---\n\n');
 
           contentArray.push({
-            type: 'text',
+            type: 'text' as const,
             text: `📚 TÓPICOS VINCULADOS:\n\n${topicsContext}`
           });
 
@@ -26612,7 +26852,7 @@ Extraia e classifique todos os tópicos/pedidos em:
           ).join('\n\n---\n\n');
 
           contentArray.push({
-            type: 'text',
+            type: 'text' as const,
             text: `📚 CONTEXTO DOS PEDIDOS VINCULADOS:\n\n${miniRelatoriosText}`
           });
         } else {
@@ -26707,7 +26947,7 @@ CONCLUSÃO:
       }
 
       contentArray.push({
-        type: 'text',
+        type: 'text' as const,
         text: prompt
       });
 
@@ -26727,29 +26967,29 @@ CONCLUSÃO:
       // Armazenar resultado
       proofManager.setProofAnalysisResults(prev => ({
         ...prev,
-        [proof.id]: {
-          type: analysisType,
+        [proofId]: {
+          type: analysisType as 'contextual' | 'livre',
           result: textContent.trim()
         }
       }));
 
     } catch (err) {
-      setError('Erro ao analisar prova: ' + err.message);
+      setError('Erro ao analisar prova: ' + (err as Error).message);
     } finally {
-      proofManager.removeAnalyzingProof(proof.id);
+      proofManager.removeAnalyzingProof(proofId);
     }
   };
 
-  const generateRelatorioProcessual = async (contentArray) => {
+  const generateRelatorioProcessual = async (contentArray: AIMessageContent[]) => {
     try {
       // Verificar se há modelo personalizado configurado
       const modeloPersonalizado = aiIntegration.aiSettings?.modeloTopicoRelatorio?.trim();
-      
+
       // Definir o modelo a ser usado
       const modeloBase = modeloPersonalizado || AI_PROMPTS.instrucoesRelatorioPadrao;
-      
+
       contentArray.push({
-        type: 'text',
+        type: 'text' as const,
         text: `Analise todos os documentos fornecidos (petição inicial, contestações e documentos complementares, se houver) e gere um RELATÓRIO PROCESSUAL completo seguindo o modelo abaixo.
 
 ${modeloPersonalizado ? 'MODELO PERSONALIZADO DO USUÁRIO:' : 'MODELO BASE:'}
@@ -26858,7 +27098,7 @@ DECIDE-SE.`;
     }
   };
 
-  const deleteTopic = (topicToDelete) => {
+  const deleteTopic = (topicToDelete: Topic) => {
     setTopicToDelete(topicToDelete);
     openModal('deleteTopic');
   };
@@ -26916,7 +27156,7 @@ DECIDE-SE.`;
     setSelectedTopics(newTopics);
   };
 
-  const moveTopicToPosition = (currentIndex, newPosition) => {
+  const moveTopicToPosition = (currentIndex: number, newPosition: number) => {
     if (newPosition < 1 || newPosition > selectedTopics.length) return;
     const newIndex = newPosition - 1;
     if (currentIndex === newIndex) return;
@@ -26947,7 +27187,7 @@ DECIDE-SE.`;
   ]);
 
   // Sistema de pontuação local para filtrar candidatos
-  const scoreModel = (model, topicTitle, topicCategory, topicRelatorio) => {
+  const scoreModel = (model: Model, topicTitle: string, topicCategory: string, topicRelatorio: string) => {
     let score = 0;
 
     const titleLower = topicTitle.toLowerCase();
@@ -26960,15 +27200,15 @@ DECIDE-SE.`;
       .filter((w: string) => w.length > 2 && !STOPWORDS.has(w));
 
     // 1. Correspondência exata de palavras (peso 10)
-    titleWords.forEach(titleWord => {
+    titleWords.forEach((titleWord: string) => {
       if (modelWords.includes(titleWord)) {
         score += 10;
       }
     });
 
     // 2. Correspondência parcial de palavras (peso 5)
-    titleWords.forEach(titleWord => {
-      modelWords.forEach(modelWord => {
+    titleWords.forEach((titleWord: string) => {
+      modelWords.forEach((modelWord: string) => {
         if (titleWord !== modelWord && (titleWord.includes(modelWord) || modelWord.includes(titleWord))) {
           score += 5;
         }
@@ -26977,7 +27217,8 @@ DECIDE-SE.`;
 
     // 3. Keywords (peso 12 - mais importante)
     if (model.keywords) {
-      const keywords = model.keywords.toLowerCase().split(',')
+      const kwStr = Array.isArray(model.keywords) ? model.keywords.join(',') : model.keywords;
+      const keywords = kwStr.toLowerCase().split(',')
         .map((k: string) => k.trim())
         .filter((k: string) => k.length > 0);
 
@@ -27008,7 +27249,7 @@ DECIDE-SE.`;
 
   // Refinamento semântico com IA (para top candidatos)
   // v1.35.8: useCallback para evitar re-criação a cada render (causa lag no textarea)
-  const refineWithAI = React.useCallback(async (topCandidates, topicTitle, topicCategory, topicRelatorio) => {
+  const refineWithAI = React.useCallback(async (topCandidates: Model[], topicTitle: string, topicCategory: string, topicRelatorio: string) => {
     if (topCandidates.length === 0) return [];
 
     try {
@@ -27020,7 +27261,7 @@ Categoria: ${topicCategory || 'Não especificada'}
 Mini-relatório: ${topicRelatorio || 'Não disponível'}
 
 MODELOS CANDIDATOS:
-${topCandidates.map((m, i: number) => `${i + 1}. [ID: ${m.id}] ${m.title}
+${topCandidates.map((m: Model, i: number) => `${i + 1}. [ID: ${m.id}] ${m.title}
    Categoria: ${m.category || 'N/A'}
    Keywords: ${m.keywords || 'N/A'}
    Resumo: ${m.content || 'N/A'}`).join('\n\n')}
@@ -27051,7 +27292,7 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
       try {
         // v1.21.26: Parametros deterministicos para ranking de modelos
         // v1.30: Removido model explícito - usa provider/modelo das configurações
-        textContent = await aiIntegration.callAI(apiRequest.messages, {
+        textContent = await aiIntegration.callAI(apiRequest.messages as AIMessage[], {
           maxTokens: 300,
           useInstructions: false,
           disableThinking: true,
@@ -27073,15 +27314,15 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
       const rankedIds = JSON.parse(jsonMatch[0]);
 
       // Reordenar modelos baseado no ranking da IA
-      const ranked = [];
-      rankedIds.forEach(id => {
-        const model = topCandidates.find(m => m.id === id);
+      const ranked: Model[] = [];
+      rankedIds.forEach((id: string) => {
+        const model = topCandidates.find((m: Model) => m.id === id);
         if (model) ranked.push(model);
       });
 
       // Adicionar modelos que não foram ranqueados pela IA (se houver)
-      topCandidates.forEach(m => {
-        if (!ranked.find(r => r.id === m.id)) {
+      topCandidates.forEach((m: Model) => {
+        if (!ranked.find((r: Model) => r.id === m.id)) {
           ranked.push(m);
         }
       });
@@ -27107,15 +27348,15 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
       const topicText = topic.title;
       const cacheKey = `suggestions_local_${topicText}`;
       const cached = apiCache.get(cacheKey);
-      if (cached) return JSON.parse(cached); // v1.28.05: cache já tem formato { suggestions, source }
+      if (cached && typeof cached === 'string') return JSON.parse(cached); // v1.28.05: cache já tem formato { suggestions, source }
       try {
         await new Promise(r => setTimeout(r, 0)); // v1.28.03: Yield para UI não congelar
         // v1.32.20: toLowerCase para E5 case-sensitive
         const qEmb = await AIModelService.getEmbedding(topicText.toLowerCase(), 'query');
-        const threshold = aiIntegration.aiSettings.modelSemanticThreshold / 100;
+        const threshold = (aiIntegration.aiSettings.modelSemanticThreshold || 60) / 100;
         const results = modelLibrary.models
           .filter(m => m.embedding?.length === 768)
-          .map(m => ({ ...m, similarity: AIModelService.cosineSimilarity(qEmb, m.embedding) }))
+          .map(m => ({ ...m, similarity: AIModelService.cosineSimilarity(qEmb, m.embedding || []) }))
           .filter(m => m.similarity >= threshold)
           .sort((a, b) => b.similarity - a.similarity)
           .slice(0, 5);
@@ -27137,7 +27378,7 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
 
     // 🚀 v1.8.2: Verificar cache antes de processar
     const cachedResult = apiCache.get(cacheKey);
-    if (cachedResult) {
+    if (cachedResult && typeof cachedResult === 'string') {
       return JSON.parse(cachedResult); // v1.28.04: já inclui { suggestions, source }
     }
 
@@ -27203,28 +27444,38 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
   };
 
   const insertModelContent = (content: string) => {
-    if (editorRef.current) {
+    if (editorRef.current && editingTopic) {
       const quill = editorRef.current;
 
       // Obter posição do cursor (ou fim do documento se não houver seleção)
-      const range = quill.getSelection(true);
+      const range = quill.getSelection();
       const position = range ? range.index : quill.getLength() - 1;
 
       // Sanitizar conteúdo antes de inserir
       const sanitizedContent = sanitizeHTML(content);
 
       // Inserir quebras de linha antes do conteúdo
-      quill.insertText(position, '\n\n', 'user');
+      quill.insertText(position, '\n\n');
 
       // Inserir HTML na posição do cursor + 2 (após as quebras)
       quill.clipboard.dangerouslyPasteHTML(position + 2, sanitizedContent);
 
       // Mover cursor para o final do conteúdo inserido
       try {
-        const delta = quill.clipboard.convert(sanitizedContent);
-        const insertedLength = delta.length ? delta.length() : 0;
+        const delta = quill.clipboard.convert(sanitizedContent) as QuillDelta | null;
+        // QuillDelta.length() é um método - calcular manualmente
+        let insertedLength = 0;
+        if (delta?.ops) {
+          for (const op of delta.ops) {
+            if (typeof op.insert === 'string') {
+              insertedLength += op.insert.length;
+            } else if (op.insert) {
+              insertedLength += 1;
+            }
+          }
+        }
         quill.setSelection(position + 2 + insertedLength);
-      } catch (e) {
+      } catch {
         // Fallback: mover para o final
         quill.setSelection(quill.getLength());
       }
@@ -27239,7 +27490,7 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
   };
 
   // Função para detectar automaticamente o resultado do julgamento usando IA
-  const detectResultadoAutomatico = async (topicTitle, decisionText, topicCategory) => {
+  const detectResultadoAutomatico = async (topicTitle: string, decisionText: string, topicCategory: string) => {
     // Não detectar para RELATÓRIO e DISPOSITIVO
     if (topicTitle.toUpperCase() === 'RELATÓRIO' || topicTitle.toUpperCase() === 'DISPOSITIVO') {
       return null;
@@ -27316,9 +27567,10 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
   };
 
   const saveTopicEdit = async () => {
+    if (!editingTopic) return;
     setSavingTopic(true);
     try {
-            const isRelatorio = editingTopic.title.toUpperCase() === 'RELATÓRIO';
+      const isRelatorio = editingTopic.title.toUpperCase() === 'RELATÓRIO';
       const isDispositivo = editingTopic.title.toUpperCase() === 'DISPOSITIVO';
 
       // Validar refs baseado no tipo de tópico
@@ -27347,9 +27599,9 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       // Isso permite re-detecção quando o usuário muda o texto da decisão
       if (!updatedTopic.resultadoManual) {
         const resultadoDetectado = await detectResultadoAutomatico(
-          updatedTopic.title,
+          updatedTopic.title || '',
           content,
-          updatedTopic.category
+          updatedTopic.category || ''
         );
 
         if (resultadoDetectado) {
@@ -27380,9 +27632,10 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
   };
 
   const saveTopicEditWithoutClosing = async () => {
+    if (!editingTopic) return;
     setSavingTopic(true);
     try {
-            const isRelatorio = editingTopic.title.toUpperCase() === 'RELATÓRIO';
+      const isRelatorio = editingTopic.title.toUpperCase() === 'RELATÓRIO';
       const isDispositivo = editingTopic.title.toUpperCase() === 'DISPOSITIVO';
 
       // Validar refs baseado no tipo de tópico
@@ -27600,7 +27853,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         }
       }
     } catch (err) {
-      setError('Erro ao exportar decisão: ' + err.message);
+      setError('Erro ao exportar decisão: ' + (err as Error).message);
     }
   };
 
@@ -27760,8 +28013,8 @@ CHECKLIST DE VERIFICAÇÃO FINAL:
 Responda APENAS com o texto completo do dispositivo em HTML, sem explicações adicionais.`;
 
       // Preparar contentArray APENAS com o prompt (sem documentos processuais)
-      const contentArray = [{
-        type: 'text',
+      const contentArray: AIMessageContent[] = [{
+        type: 'text' as const,
         text: promptText
       }];
 
@@ -27787,7 +28040,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
       openModal('dispositivo');
       aiIntegration.setGeneratingDispositivo(false);
     } catch (err) {
-      setError('Erro ao gerar dispositivo: ' + err.message);
+      setError('Erro ao gerar dispositivo: ' + (err as Error).message);
       aiIntegration.setGeneratingDispositivo(false);
     }
   };
@@ -27904,13 +28157,13 @@ Se o modelo personalizado contiver placeholders como [RECLAMANTE], [RECLAMADA], 
 Importante: Use o RESULTADO SELECIONADO PELO USUÁRIO para cada tópico.
 
 ═══════════════════════════════════════════════════════════════
-` : AI_PROMPTS.instrucoesDispositivoPadrao}${aiIntegration.dispositivoInstruction.trim() ? `
+` : AI_PROMPTS.instrucoesDispositivoPadrao}${(aiIntegration.dispositivoInstruction || '').trim() ? `
 
 ═══════════════════════════════════════════════════════════════
 ⚠️ INSTRUÇÃO ADICIONAL DO USUÁRIO (v1.5.8c):
 ═══════════════════════════════════════════════════════════════
 
-${aiIntegration.dispositivoInstruction.trim()}
+${(aiIntegration.dispositivoInstruction || '').trim()}
 
 Por favor, considere esta instrução adicional ao gerar o dispositivo, mantendo todas as demais regras e estruturas definidas acima.
 
@@ -27946,8 +28199,8 @@ CHECKLIST DE VERIFICAÇÃO FINAL:
 Responda APENAS com o texto completo do dispositivo em HTML, sem explicações adicionais.`;
 
       // Preparar contentArray APENAS com o prompt (sem documentos processuais)
-      const contentArray = [{
-        type: 'text',
+      const contentArray: AIMessageContent[] = [{
+        type: 'text' as const,
         text: promptText
       }];
 
@@ -27996,7 +28249,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
       showToast('✅ DISPOSITIVO regenerado com sucesso!', 'success');
 
     } catch (err) {
-      setError('Erro ao regenerar DISPOSITIVO: ' + err.message);
+      setError('Erro ao regenerar DISPOSITIVO: ' + (err as Error).message);
       setAnalysisProgress('');
     } finally {
       aiIntegration.setRegeneratingDispositivo(false);
@@ -28045,7 +28298,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
     setError('');
 
     try {
-      const contentArray = [];
+      const contentArray: AIMessageContent[] = [];
 
       // Se escopo inclui documentos, usar buildDocumentContentArray existente
       if (reviewScope === 'decisionWithDocs') {
@@ -28055,7 +28308,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 
       // Adicionar decisão completa
       contentArray.push({
-        type: 'text',
+        type: 'text' as const,
         text: `DECISÃO PARA REVISÃO:\n\n${buildDecisionText()}`
       });
 
@@ -28077,7 +28330,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
       closeModal('sentenceReview');
       openModal('sentenceReviewResult');
     } catch (err) {
-      setError('Erro ao revisar sentença: ' + err.message);
+      setError('Erro ao revisar sentença: ' + (err as Error).message);
     } finally {
       setGeneratingReview(false);
     }
@@ -28150,7 +28403,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
       return aiIntegration.aiSettings.modelSemanticEnabled; // Usa toggle global como fallback
     } catch { return false; }
   });
-  const [modelSemanticResults, setModelSemanticResults] = React.useState(null);
+  const [modelSemanticResults, setModelSemanticResults] = React.useState<Model[] | null>(null);
   const [searchingModelSemantics, setSearchingModelSemantics] = React.useState(false);
 
   // Busca semântica de modelos disponível se: toggle global ativo + modelo pronto + modelos com embedding
@@ -28165,7 +28418,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
     }
     setSearchingModelSemantics(true);
     try {
-      const threshold = aiIntegration.aiSettings.modelSemanticThreshold / 100;
+      const threshold = (aiIntegration.aiSettings.modelSemanticThreshold ?? 75) / 100;
       const results = await searchModelsBySimilarity(modelLibrary.models, query, { threshold, limit: 30 });
       setModelSemanticResults(results);
     } catch (err) {
@@ -28187,13 +28440,17 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
     } else {
       setModelSemanticResults(null);
     }
-    return () => clearTimeout(modelSemanticSearchTimeoutRef.current);
+    return () => {
+      if (modelSemanticSearchTimeoutRef.current) {
+        clearTimeout(modelSemanticSearchTimeoutRef.current);
+      }
+    };
   }, [modelLibrary.searchTerm, useModelSemanticSearch, modelSemanticAvailable, performModelSemanticSearch]);
 
   // 🚀 v1.4.3: Pré-calcular categorias e contagens (1 loop em vez de N+2)
   const { categories, categoryCounts } = React.useMemo(() => {
-    const cats = new Set();
-    const counts = {};
+    const cats = new Set<string>();
+    const counts: Record<string, number> = {};
     let withoutCategory = 0;
     let favorites = 0;
 
@@ -28320,7 +28577,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         await googleDrive.saveFile(fileName, projectJson);
                         setError({ type: 'success', message: `Projeto salvo no Google Drive: ${fileName}` });
                       } catch (err) {
-                        setError({ type: 'error', message: `Erro ao salvar no Drive: ${err.message}` });
+                        setError({ type: 'error', message: `Erro ao salvar no Drive: ${(err as Error).message}` });
                       }
                     }}
                     onLoadClick={async () => {
@@ -28329,7 +28586,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         setDriveFiles(files);
                         setDriveFilesModalOpen(true);
                       } catch (err) {
-                        setError({ type: 'error', message: `Erro ao listar arquivos: ${err.message}` });
+                        setError({ type: 'error', message: `Erro ao listar arquivos: ${(err as Error).message}` });
                       }
                     }}
                     // v1.35.51: Props para salvar/carregar local (consolidado no dropdown)
@@ -28360,7 +28617,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         documentProcessingModes,
                         tokenMetrics: aiIntegration.tokenMetrics
                       };
-                      storage.exportProject(allStatesWithAI, setError);
+                      storage.exportProject(allStatesWithAI, (err: string | null) => setError(err || ''));
                     }}
                     onLoadLocal={(e) => {
                       const callbacks = {
@@ -28392,8 +28649,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         setTokenMetrics: aiIntegration.setTokenMetrics
                       };
 
-                      const autoSaveFn = (allStates, setError) => {
-                        storage.autoSaveSession(allStates, setError, true);
+                      const autoSaveFn = (states: SessionState, setErrorFn: (err: string | null) => void, immediate: boolean) => {
+                        return storage.autoSaveSession(states, setErrorFn, immediate);
                       };
 
                       storage.importProject(e, callbacks, autoSaveFn);
@@ -28403,7 +28660,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     isDarkMode={appTheme === 'dark'}
                   />
                   {/* 🔄 v1.35.57: Botão Sair na mesma linha */}
-                  {cloudSync?.isAuthenticated && onLogout && (
+                  {cloudSync?.isAuthenticated && (
                     <button
                       onClick={() => openModal('logout')}
                       className="px-3 py-1 rounded text-xs flex items-center gap-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 transition-colors duration-200"
@@ -28496,7 +28753,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         accept=".pdf"
                         multiple
                         onChange={async (e) => {
-                          const files = Array.from(e.target.files);
+                          const files = Array.from(e.target.files || []);
                           if (files.length === 0) return;
 
                           handleUploadPeticao(files);
@@ -28511,13 +28768,13 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             try {
                               const numeroDetectado = await documentServices.autoDetectProcessoNumero({
                                 peticao: files[0],
-                                contestacoes: contestacaoFiles,
-                                complementares: complementaryFiles
+                                contestacoes: contestacaoFiles.map(f => f.file),
+                                complementares: complementaryFiles.map(f => f.file)
                               });
                               if (numeroDetectado) {
                                 setProcessoNumero(numeroDetectado);
                               }
-                            } catch (err) { }
+                            } catch { }
                           }
                         }}
                         className="hidden"
@@ -28653,7 +28910,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             }}
                             onKeyDown={(e) => {
                               if (e.ctrlKey && e.key === 'Enter') {
-                                const text = e.target.value;
+                                const text = (e.target as HTMLTextAreaElement).value;
                                 handlePastedText(text, 'peticao');
                               }
                             }}
@@ -28661,8 +28918,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           <div className="flex gap-2 mt-2">
                             <button
                               onClick={(e) => {
-                                const textarea = e.target.closest('.theme-bg-secondary-30').querySelector('textarea');
-                                handlePastedText(textarea.value, 'peticao');
+                                const textarea = (e.target as Element).closest('.theme-bg-secondary-30')?.querySelector('textarea');
+                                if (textarea) handlePastedText(textarea.value, 'peticao');
                               }}
                               className="hover-blue-700 flex-1 py-2 rounded text-sm bg-blue-600 text-white"
                             >
@@ -28693,7 +28950,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         accept=".pdf"
                         multiple
                         onChange={async (e) => {
-                          const files = Array.from(e.target.files);
+                          const files = Array.from(e.target.files || []);
                           if (files.length === 0) return;
 
                           // v1.13.7: Usar handleUploadContestacao para salvar no IndexedDB
@@ -28761,7 +29018,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             }}
                             onKeyDown={(e) => {
                               if (e.ctrlKey && e.key === 'Enter') {
-                                const text = e.target.value;
+                                const text = (e.target as HTMLTextAreaElement).value;
                                 handlePastedText(text, 'contestacao');
                               }
                             }}
@@ -28769,8 +29026,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           <div className="flex gap-2 mt-2">
                             <button
                               onClick={(e) => {
-                                const textarea = e.target.closest('.theme-bg-secondary\\/30').querySelector('textarea');
-                                handlePastedText(textarea.value, 'contestacao');
+                                const textarea = (e.target as Element).closest('.theme-bg-secondary\\/30')?.querySelector('textarea');
+                                if (textarea) handlePastedText(textarea.value, 'contestacao');
                               }}
                               className="hover-blue-700 flex-1 py-2 rounded text-sm bg-blue-600 text-white"
                             >
@@ -28904,7 +29161,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       accept=".pdf"
                       multiple
                       onChange={async (e) => {
-                        const files = Array.from(e.target.files);
+                        const files = Array.from(e.target.files || []);
                         if (files.length === 0) return;
 
                         // v1.13.7: Usar handleUploadComplementary para salvar no IndexedDB
@@ -28972,7 +29229,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           }}
                           onKeyDown={(e) => {
                             if (e.ctrlKey && e.key === 'Enter') {
-                              const text = e.target.value;
+                              const text = (e.target as HTMLTextAreaElement).value;
                               handlePastedText(text, 'complementary');
                             }
                           }}
@@ -28980,8 +29237,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         <div className="flex gap-2 mt-2">
                           <button
                             onClick={(e) => {
-                              const textarea = e.target.closest('.theme-bg-secondary\\/30').querySelector('textarea');
-                              handlePastedText(textarea.value, 'complementary');
+                              const textarea = (e.target as Element).closest('.theme-bg-secondary\\/30')?.querySelector('textarea');
+                              if (textarea) handlePastedText(textarea.value, 'complementary');
                             }}
                             className="hover-purple-700 flex-1 py-2 rounded text-sm bg-purple-600 text-white"
                           >
@@ -29290,7 +29547,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             {selectedTopics.map((topic, selectedIdx) => (
                               <SortableTopicCard
                                 key={topic.id || topic.title}
-                                id={topic.id || topic.title}
+                                id={String(topic.id || topic.title)}
                                 topic={topic}
                                 selectedIdx={selectedIdx}
                                 topicRefs={topicRefs}
@@ -29337,7 +29594,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                                         const newExtracted = [...extractedTopics];
                                         const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === topic.title);
                                         if (extractedIndex !== -1) {
-                                          newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], category: e.target.value };
+                                          newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], category: e.target.value as TopicCategory };
                                           setExtractedTopics(newExtracted);
                                         }
                                       }}
@@ -29436,7 +29693,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         accept="application/pdf"
                         multiple
                         onChange={(e) => {
-                          const files = Array.from(e.target.files);
+                          const files = Array.from(e.target.files || []);
                           if (files.length > 0) {
                             proofManager.handleUploadProofPdf(files);
                           }
@@ -29507,7 +29764,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
                             anonConfig={aiIntegration.aiSettings?.anonymization}
                             nomesParaAnonimizar={aiIntegration.aiSettings?.anonymization?.nomesUsuario || []}
-                            editorTheme={appTheme}
+                            editorTheme={appTheme as 'dark' | 'light' | undefined}
                             setTextPreview={setTextPreview}
                           />
                         ))}
@@ -29525,7 +29782,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
                             anonConfig={aiIntegration.aiSettings?.anonymization}
                             nomesParaAnonimizar={aiIntegration.aiSettings?.anonymization?.nomesUsuario || []}
-                            editorTheme={appTheme}
+                            editorTheme={appTheme as 'dark' | 'light' | undefined}
                             setTextPreview={setTextPreview}
                           />
                         ))}
@@ -29591,7 +29848,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         dispositivoInstruction={aiIntegration.dispositivoInstruction}
                         onDispositivoInstructionChange={aiIntegration.setDispositivoInstruction}
                         regeneratingDispositivo={aiIntegration.regeneratingDispositivo}
-                        editorTheme={editorTheme}
+                        editorTheme={editorTheme as 'dark' | 'light' | undefined}
                         toggleEditorTheme={toggleEditorTheme}
                         models={modelLibrary.models}
                         onInsertModel={insertModelContent}
@@ -29875,7 +30132,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           onSync={() => {
                             const initialPushDone = localStorage.getItem('sentencify-initial-push-done');
                             if (!initialPushDone && modelLibrary.models.length > 0) {
-                              cloudSync.pushAllModels(modelLibrary.models).then(result => {
+                              cloudSync.pushAllModels(modelLibrary.models).then((result: { success: boolean }) => {
                                 if (result.success) {
                                   localStorage.setItem('sentencify-initial-push-done', 'true');
                                 }
@@ -30323,10 +30580,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     </>
                   ) : (
                     /* 🚀 Visualização em LISTA - v1.7 FASE 1.4: Virtual Scrolling */
-                    <VirtualList
+                    <VirtualList<Model>
                       items={filteredModels}
                       itemHeight={90}
-                      renderItem={(model: Model) => (
+                      renderItem={(model) => (
                         <ModelCard
                           key={model.id}
                           model={model}
@@ -30523,7 +30780,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     setCopySuccess(true);
                     copyTimeoutRef.current = setTimeout(() => setCopySuccess(false), 3000);
                   } catch (err) {
-                    setError('Erro ao copiar: ' + err.message);
+                    setError('Erro ao copiar: ' + (err as Error).message);
                   }
                 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg ${copySuccess ? 'bg-green-600 text-white' : 'theme-bg-secondary hover-slate-600'}`}
@@ -30682,7 +30939,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         onClose={() => setDriveFilesModalOpen(false)}
         files={driveFiles}
         isLoading={googleDrive.isLoading}
-        onLoad={async (file: File) => {
+        onLoad={async (file: DriveFile) => {
           try {
             const projectData = await googleDrive.loadFile(file.id);
             // Simular evento de importação de arquivo
@@ -30714,31 +30971,31 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
               setDocumentProcessingModes,
               setTokenMetrics: aiIntegration.setTokenMetrics
             };
-            await storage.importProjectFromJson(projectData, callbacks, (allStates) => {
-              storage.autoSaveSession(allStates, setError, true);
+            await storage.importProjectFromJson(projectData as ImportedProject, callbacks, async (allStates) => {
+              await storage.autoSaveSession(allStates, (err) => err && setError(err), true);
             });
             setDriveFilesModalOpen(false);
             setError({ type: 'success', message: `Projeto carregado do Google Drive: ${file.name}` });
           } catch (err) {
-            setError({ type: 'error', message: `Erro ao carregar projeto: ${err.message}` });
+            setError({ type: 'error', message: `Erro ao carregar projeto: ${(err as Error).message}` });
           }
         }}
-        onDelete={async (file: File) => {
+        onDelete={async (file: DriveFile) => {
           try {
             await googleDrive.deleteFile(file.id);
             setDriveFiles(prev => prev.filter(f => f.id !== file.id));
             setError({ type: 'success', message: `Arquivo excluído: ${file.name}` });
           } catch (err) {
-            setError({ type: 'error', message: `Erro ao excluir: ${err.message}` });
+            setError({ type: 'error', message: `Erro ao excluir: ${(err as Error).message}` });
           }
         }}
         onShare={async (fileId, email, role) => {
           try {
-            await googleDrive.shareFile(fileId, email, role);
+            await googleDrive.shareFile(fileId, email, role as 'writer' | 'reader');
             const roleText = role === 'writer' ? 'edição' : 'visualização';
             setError({ type: 'success', message: `Compartilhado com ${email} (${roleText})` });
           } catch (err) {
-            setError({ type: 'error', message: `Erro ao compartilhar: ${err.message}` });
+            setError({ type: 'error', message: `Erro ao compartilhar: ${(err as Error).message}` });
           }
         }}
         onRefresh={async () => {
@@ -30746,7 +31003,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
             const files = await googleDrive.listFiles();
             setDriveFiles(files);
           } catch (err) {
-            setError({ type: 'error', message: `Erro ao atualizar: ${err.message}` });
+            setError({ type: 'error', message: `Erro ao atualizar: ${(err as Error).message}` });
           }
         }}
         onGetPermissions={googleDrive.getPermissions}
@@ -30762,7 +31019,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         targetField={modelGeneratorModal.targetField}
         onSave={handleModelGenerated}
         callAI={aiIntegration.callAI}
-        hardcodedPrompt={getHardcodedPrompt(modelGeneratorModal.targetField)}
+        hardcodedPrompt={modelGeneratorModal.targetField ? getHardcodedPrompt(modelGeneratorModal.targetField) : ''}
       />
 
       {modals.settings && (
@@ -31043,7 +31300,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     </p>
                     <select
                       value={aiIntegration.aiSettings.geminiThinkingLevel || 'high'}
-                      onChange={(e) => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, geminiThinkingLevel: e.target.value })}
+                      onChange={(e) => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, geminiThinkingLevel: e.target.value as GeminiThinkingLevel })}
                       className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
                     >
                       {aiIntegration.aiSettings.geminiModel?.includes('flash') && (
@@ -31452,7 +31709,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             <label key={key} className="flex items-center gap-2 text-xs theme-text-secondary cursor-pointer">
                               <input
                                 type="checkbox"
-                                checked={aiIntegration.aiSettings.anonymization?.[key] !== false}
+                                checked={(aiIntegration.aiSettings.anonymization as unknown as Record<string, boolean | undefined> | null)?.[key] !== false}
                                 onChange={(e) => aiIntegration.setAiSettings({
                                   ...aiIntegration.aiSettings,
                                   anonymization: { ...aiIntegration.aiSettings.anonymization, [key]: e.target.checked }
@@ -32027,8 +32284,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                 </div>
                 <button
                   onClick={() => {
-                    const newPrompt = {
+                    const newPrompt: QuickPrompt = {
                       id: `qp-${Date.now()}`,
+                      label: '',
                       name: '',
                       prompt: '',
                       icon: '📝'
@@ -32050,12 +32308,12 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                 const cacheRate = totalTokens > 0
                   ? Math.round(((tokenMetrics.totalCacheRead || 0) / totalTokens) * 100)
                   : 0;
-                const formatNumber = (n) => {
+                const formatNumber = (n: number) => {
                   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
                   if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
                   return (n || 0).toString();
                 };
-                const calculateCost = (m, prices) => {
+                const calculateCost = (m: { totalInput?: number; totalCacheCreation?: number; totalCacheRead?: number; totalOutput?: number }, prices: { input: number; cacheWrite: number; cacheRead: number; output: number }) => {
                   const inputCost = ((m.totalInput || 0) / 1000000) * prices.input;
                   const cacheWriteCost = ((m.totalCacheCreation || 0) / 1000000) * prices.cacheWrite;
                   const cacheReadCost = ((m.totalCacheRead || 0) / 1000000) * prices.cacheRead;
@@ -32073,7 +32331,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       📊 Uso de Tokens (Projeto Atual)
                     </label>
 
-                    {tokenMetrics.requestCount > 0 ? (
+                    {(tokenMetrics.requestCount ?? 0) > 0 ? (
                       <div className="theme-bg-secondary-30 rounded-lg p-4 border theme-border-input space-y-3">
                         <div className="flex justify-between items-center">
                           <span className="theme-text-secondary text-sm">Total de Tokens:</span>
@@ -32091,19 +32349,19 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         <div className="border-t theme-border-secondary pt-3 mt-3 space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="theme-text-muted">📥 Input:</span>
-                            <span className="font-mono theme-text-secondary">{formatNumber(tokenMetrics.totalInput)}</span>
+                            <span className="font-mono theme-text-secondary">{formatNumber(tokenMetrics.totalInput ?? 0)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="theme-text-muted">📤 Output:</span>
-                            <span className="font-mono theme-text-secondary">{formatNumber(tokenMetrics.totalOutput)}</span>
+                            <span className="font-mono theme-text-secondary">{formatNumber(tokenMetrics.totalOutput ?? 0)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-green-400">💾 Cache Read:</span>
-                            <span className="font-mono text-green-400">{formatNumber(tokenMetrics.totalCacheRead)}</span>
+                            <span className="font-mono text-green-400">{formatNumber(tokenMetrics.totalCacheRead ?? 0)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-yellow-400">🆕 Cache Write:</span>
-                            <span className="font-mono text-yellow-400">{formatNumber(tokenMetrics.totalCacheCreation)}</span>
+                            <span className="font-mono text-yellow-400">{formatNumber(tokenMetrics.totalCacheCreation ?? 0)}</span>
                           </div>
                         </div>
 
@@ -32147,7 +32405,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                   </p>
 
                   <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {aiIntegration.aiSettings.topicosComplementares.map((topico, idx) => (
+                    {(aiIntegration.aiSettings.topicosComplementares || []).map((topico, idx) => (
                       <div
                         key={topico.id}
                         draggable
@@ -32179,7 +32437,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           type="checkbox"
                           checked={topico.enabled}
                           onChange={(e) => {
-                            const updated = [...aiIntegration.aiSettings.topicosComplementares];
+                            const updated = [...(aiIntegration.aiSettings.topicosComplementares || [])];
                             updated[idx] = { ...updated[idx], enabled: e.target.checked };
                             aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, topicosComplementares: updated });
                           }}
@@ -32191,7 +32449,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         </div>
                         <button
                           onClick={() => {
-                            const updated = aiIntegration.aiSettings.topicosComplementares.filter((_, i: number) => i !== idx);
+                            const updated = (aiIntegration.aiSettings.topicosComplementares || []).filter((_, i: number) => i !== idx);
                             aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, topicosComplementares: updated });
                           }}
                           className="text-red-400 hover-text-red-300 transition-colors p-1"
@@ -32203,7 +32461,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     ))}
                   </div>
 
-                  {aiIntegration.aiSettings.topicosComplementares.length === 0 && (
+                  {(aiIntegration.aiSettings.topicosComplementares || []).length === 0 && (
                     <p className="text-xs theme-text-disabled text-center py-4">
                       Nenhum tópico complementar configurado
                     </p>
@@ -32230,24 +32488,25 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       </select>
                       <button
                         onClick={() => {
-                          const titleInput = document.getElementById('newComplementaryTitle');
-                          const categorySelect = document.getElementById('newComplementaryCategory');
-                          const title = titleInput.value.trim();
+                          const titleInput = document.getElementById('newComplementaryTitle') as HTMLInputElement | null;
+                          const categorySelect = document.getElementById('newComplementaryCategory') as HTMLSelectElement | null;
+                          const title = titleInput?.value.trim();
 
-                          if (title) {
-                            const newId = Math.max(0, ...aiIntegration.aiSettings.topicosComplementares.map(t => t.id)) + 1;
-                            const newOrdem = aiIntegration.aiSettings.topicosComplementares.length + 1;
-                            const newTopico = {
+                          if (title && titleInput && categorySelect) {
+                            const complementares = aiIntegration.aiSettings.topicosComplementares || [];
+                            const newId = Math.max(0, ...complementares.map(t => t.id)) + 1;
+                            const newOrdem = complementares.length + 1;
+                            const newTopico: TopicoComplementar = {
                               id: newId,
                               title: title,
-                              category: categorySelect.value,
+                              category: categorySelect.value as TopicCategory,
                               enabled: true,
                               ordem: newOrdem
                             };
 
                             aiIntegration.setAiSettings({
                               ...aiIntegration.aiSettings,
-                              topicosComplementares: [...aiIntegration.aiSettings.topicosComplementares, newTopico]
+                              topicosComplementares: [...complementares, newTopico]
                             });
 
                             titleInput.value = '';
@@ -32296,11 +32555,11 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                   <div>
                     Modelo atual: <span className="theme-text-secondary font-medium">
                       {aiIntegration.aiSettings.provider === 'gemini'
-                        ? aiIntegration.getModelDisplayName(aiIntegration.aiSettings.geminiModel)
-                        : aiIntegration.getModelDisplayName(aiIntegration.aiSettings.claudeModel || aiIntegration.aiSettings.model)}
+                        ? aiIntegration.getModelDisplayName(aiIntegration.aiSettings.geminiModel || '')
+                        : aiIntegration.getModelDisplayName(aiIntegration.aiSettings.claudeModel || aiIntegration.aiSettings.model || '')}
                     </span>
                     {aiIntegration.aiSettings.useExtendedThinking && <span className="ml-2 text-purple-400">• Pensamento prolongado ativo</span>}
-                    {aiIntegration.aiSettings.provider === 'gemini' && aiIntegration.aiSettings.geminiThinkingLevel && aiIntegration.aiSettings.geminiThinkingLevel !== 'none' && (
+                    {aiIntegration.aiSettings.provider === 'gemini' && aiIntegration.aiSettings.geminiThinkingLevel && (
                       <span className="ml-2 text-blue-400">• Thinking: {aiIntegration.aiSettings.geminiThinkingLevel}</span>
                     )}
                   </div>
@@ -32666,10 +32925,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         isOpen={modals.shareLibrary}
         onClose={() => closeModal('shareLibrary')}
         user={cloudSync?.user}
-        onRemoveSharedModels={(ownerId) => {
+        onRemoveSharedModels={(ownerId: string) => {
           // v1.35.23: Remover modelos compartilhados desse owner ao remover acesso
-          modelLibrary.setModels(prev => {
-            const filtered = prev.filter(m => !(m.isShared && m.ownerId === ownerId));
+          modelLibrary.setModels((prev: Model[]) => {
+            const filtered = prev.filter((m: Model) => !(m.isShared && m.ownerId === ownerId));
             console.log(`[Share] Removidos ${prev.length - filtered.length} modelos do owner ${ownerId}`);
             saveToIndexedDB(filtered);
             return filtered;
@@ -32985,11 +33244,11 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           proofManager.setPendingProofText(null);
           proofManager.setNewProofTextData({ name: '', text: '' });
         }}
-        onConfirm={(nomes) => {
+        onConfirm={(nomes: string[]) => {
           if (proofManager.pendingProofText) {
             const anonConfig = aiIntegration?.aiSettings?.anonymization;
             // Persistir nomes para uso futuro
-            aiIntegration.setAiSettings(prev => ({
+            aiIntegration.setAiSettings((prev: AISettings) => ({
               ...prev,
               anonymization: {
                 ...prev.anonymization,
@@ -32997,12 +33256,14 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
               }
             }));
             // Anonimizar e salvar prova
+            const pendingProof = proofManager.pendingProofText;
+            if (!pendingProof) return;
             const id = Date.now() + Math.random();
-            const anonText = anonymizeText(proofManager.pendingProofText.text, anonConfig, nomes);
-            proofManager.setProofTexts(prev => [...prev, {
+            const anonText = anonymizeText(pendingProof.text, anonConfig, nomes);
+            proofManager.setProofTexts((prev: ProofText[]) => [...prev, {
               id,
               text: anonText,
-              name: proofManager.pendingProofText.name,
+              name: pendingProof.name,
               type: 'text',
               uploadDate: new Date().toISOString()
             }]);
@@ -33031,10 +33292,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           closeModal('proofExtractionAnonymization');
           proofManager.setPendingExtraction(null);
         }}
-        onConfirm={(nomes) => {
+        onConfirm={(nomes: string[]) => {
           if (proofManager.pendingExtraction) {
             // Persistir nomes para uso futuro
-            aiIntegration.setAiSettings(prev => ({
+            aiIntegration.setAiSettings((prev: AISettings) => ({
               ...prev,
               anonymization: {
                 ...prev.anonymization,
@@ -33042,7 +33303,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
               }
             }));
             // Executar extração com nomes confirmados
-            proofManager.pendingExtraction.executeExtraction(nomes);
+            proofManager.pendingExtraction?.executeExtraction?.(nomes);
             closeModal('proofExtractionAnonymization');
             proofManager.setPendingExtraction(null);
             showToast('📝 Extraindo texto com anonimização...', 'info');
@@ -33101,7 +33362,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         editorTheme={editorTheme}
         onAnalyzeContextual={async () => {
           closeModal('proofAnalysis');
-          await analyzeProof(proofManager.proofToAnalyze, 'contextual', proofManager.proofAnalysisCustomInstructions, proofManager.useOnlyMiniRelatorios, false);
+          if (proofManager.proofToAnalyze) {
+            await analyzeProof(proofManager.proofToAnalyze, 'contextual', proofManager.proofAnalysisCustomInstructions, proofManager.useOnlyMiniRelatorios, false);
+          }
           proofManager.setProofToAnalyze(null);
           proofManager.setProofAnalysisCustomInstructions('');
           proofManager.setUseOnlyMiniRelatorios(false);
@@ -33109,7 +33372,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         }}
         onAnalyzeFree={async () => {
           closeModal('proofAnalysis');
-          await analyzeProof(proofManager.proofToAnalyze, 'livre', proofManager.proofAnalysisCustomInstructions, false, proofManager.includeLinkedTopicsInFree);
+          if (proofManager.proofToAnalyze) {
+            await analyzeProof(proofManager.proofToAnalyze, 'livre', proofManager.proofAnalysisCustomInstructions, false, proofManager.includeLinkedTopicsInFree);
+          }
           proofManager.setProofToAnalyze(null);
           proofManager.setProofAnalysisCustomInstructions('');
           proofManager.setUseOnlyMiniRelatorios(false);
@@ -33139,26 +33404,28 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         }}
         proofToDelete={proofManager.proofToDelete}
         onConfirmDelete={async () => {
-          if (proofManager.proofToDelete.isPdf) {
+          const proofToDelete = proofManager.proofToDelete;
+          if (!proofToDelete) return;
+          if (proofToDelete.isPdf) {
             // Limpar do IndexedDB antes de remover do estado
             try {
-              await removePdfFromIndexedDB(`proof-${proofManager.proofToDelete.id}`);
+              await removePdfFromIndexedDB(`proof-${proofToDelete.id}`);
             } catch (err) { }
             // Remover prova PDF
-            proofManager.setProofFiles(prev => prev.filter(p => p.id !== proofManager.proofToDelete.id));
+            proofManager.setProofFiles(prev => prev.filter(p => p.id !== proofToDelete.id));
             proofManager.setProofUsePdfMode(prev => {
               const newMode = { ...prev };
-              delete newMode[proofManager.proofToDelete.id];
+              delete newMode[proofToDelete.id];
               return newMode;
             });
             proofManager.setExtractedProofTexts(prev => {
               const newTexts = { ...prev };
-              delete newTexts[proofManager.proofToDelete.id];
+              delete newTexts[proofToDelete.id];
               return newTexts;
             });
           } else {
             // Remover prova texto
-            proofManager.setProofTexts(prev => prev.filter(p => p.id !== proofManager.proofToDelete.id));
+            proofManager.setProofTexts(prev => prev.filter(p => p.id !== proofToDelete.id));
           }
           closeModal('deleteProof');
           proofManager.setProofToDelete(null);
@@ -34560,8 +34827,8 @@ const ThemeStyles = () => (
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // 🛡️ ERROR BOUNDARY (v1.8.5) - Previne tela branca em erros
-class ErrorBoundary extends React.Component {
-  constructor(props) {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
       hasError: false,
@@ -34570,11 +34837,11 @@ class ErrorBoundary extends React.Component {
     };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: Error) {
     return { hasError: true };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
 
     this.setState({ error, errorInfo });
 
@@ -34624,7 +34891,7 @@ class ErrorBoundary extends React.Component {
 
       alert('✅ Dados exportados! Verifique seus downloads.');
     } catch (e) {
-      alert('❌ Erro ao exportar: ' + e.message);
+      alert('❌ Erro ao exportar: ' + (e as Error).message);
     }
   };
 
@@ -34725,13 +34992,13 @@ const SentencifyAI = () => {
   const shareMatch = window.location.pathname.match(/^\/share\/([a-f0-9]+)$/i);
 
   // v1.34.1: Estado para modelos recebidos do servidor (para merge)
-  const [receivedModels, setReceivedModels] = React.useState(null);
+  const [receivedModels, setReceivedModels] = React.useState<Model[] | null>(null);
   // v1.35.24: Lista de bibliotecas compartilhadas ativas (para filtrar modelos de owners revogados)
-  const [activeSharedLibraries, setActiveSharedLibraries] = React.useState(null);
+  const [activeSharedLibraries, setActiveSharedLibraries] = React.useState<Array<{ ownerId: string; ownerEmail: string }> | null>(null);
 
   // v1.35.1: Memoizar callbacks para evitar re-criação de pull/sync a cada render
   // v1.35.24: Receber sharedLibraries junto com models
-  const handleModelsReceived = React.useCallback((models, sharedLibraries) => {
+  const handleModelsReceived = React.useCallback((models: Model[], sharedLibraries: Array<{ ownerId: string; ownerEmail: string }>) => {
     setReceivedModels(models);
     setActiveSharedLibraries(sharedLibraries || []);
   }, []);
@@ -34779,7 +35046,7 @@ const SentencifyAI = () => {
             onClose={() => {}}
             onRequestLink={cloudSync.requestMagicLink}
             onVerify={cloudSync.verifyToken}
-            devLink={cloudSync.devLink}
+            devLink={cloudSync.devLink ?? undefined}
           />
         </div>
       );
@@ -34798,7 +35065,7 @@ const SentencifyAI = () => {
           onClose={() => {}} // Modal não pode ser fechado sem autenticar
           onRequestLink={cloudSync.requestMagicLink}
           onVerify={cloudSync.verifyToken}
-          devLink={cloudSync.devLink}
+          devLink={cloudSync.devLink ?? undefined}
         />
       </div>
     );

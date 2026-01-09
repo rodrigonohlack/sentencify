@@ -5,7 +5,7 @@
  * @version 1.35.76 - Migrado para TypeScript
  */
 import { useState, useCallback } from 'react';
-import type { ProcessingMode } from '../types';
+import type { ProcessingMode, Proof } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -49,10 +49,14 @@ export interface ProofAnalysisResultLocal {
 
 /** Prova pendente (para anonimização) */
 export interface PendingProof {
-  id: number;
+  id?: number;
   text?: string;
   file?: File;
-  name: string;
+  name?: string;
+  // Para extração com anonimização
+  proofId?: string | number;
+  proof?: Proof;
+  executeExtraction?: (nomes: string[]) => void;
 }
 
 /** Mensagem de chat pendente */

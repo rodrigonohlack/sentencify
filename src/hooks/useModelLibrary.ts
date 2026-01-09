@@ -5,25 +5,19 @@
  * @version 1.35.76 - Migrado para TypeScript
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { Model } from '../types';
+import type { Model, BulkFile, BulkGeneratedModel, BulkError, NewModelData } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// TIPOS
+// TIPOS (re-exports de types/index.ts)
 // ═══════════════════════════════════════════════════════════════════════════
+
+export type { BulkFile, BulkGeneratedModel, BulkError, NewModelData };
 
 /** Modo de visualização dos modelos */
 export type ModelViewMode = 'cards' | 'list';
 
 /** Fonte das sugestões */
 export type SuggestionsSource = 'local' | 'api' | null;
-
-/** Dados para novo modelo (formulário) */
-export interface NewModelData {
-  title: string;
-  content: string;
-  keywords: string;
-  category: string;
-}
 
 /** Aviso de similaridade */
 export interface SimilarityWarning {
@@ -32,28 +26,14 @@ export interface SimilarityWarning {
   message?: string;
 }
 
-/** Arquivo para processamento em lote */
-export interface BulkFile {
-  file: File;
-  name: string;
-  size: number;
-  status?: 'pending' | 'processing' | 'done' | 'error';
-  error?: string;
-}
-
-/** Modelo gerado no bulk processing */
-export interface BulkGeneratedModel {
-  title: string;
-  content: string;
-  keywords?: string;
-  category?: string;
-  sourceFile?: string;
-}
-
-/** Erro no processamento bulk */
-export interface BulkError {
+/** Resultado do processamento de arquivo bulk */
+export interface BulkProcessedFile {
   file: string;
-  error: string;
+  status: string;
+  modelsCount?: number;
+  models?: Model[];
+  error?: string;
+  duration: string;
 }
 
 /** Opções para busca de modelos */
@@ -128,8 +108,8 @@ export interface UseModelLibraryReturn {
   setBulkProcessing: React.Dispatch<React.SetStateAction<boolean>>;
   bulkCurrentFileIndex: number;
   setBulkCurrentFileIndex: React.Dispatch<React.SetStateAction<number>>;
-  bulkProcessedFiles: string[];
-  setBulkProcessedFiles: React.Dispatch<React.SetStateAction<string[]>>;
+  bulkProcessedFiles: BulkProcessedFile[];
+  setBulkProcessedFiles: React.Dispatch<React.SetStateAction<BulkProcessedFile[]>>;
   bulkGeneratedModels: BulkGeneratedModel[];
   setBulkGeneratedModels: React.Dispatch<React.SetStateAction<BulkGeneratedModel[]>>;
   bulkErrors: BulkError[];
@@ -279,7 +259,7 @@ const useModelLibrary = (): UseModelLibraryReturn => {
   const [bulkFiles, setBulkFiles] = useState<BulkFile[]>([]);
   const [bulkProcessing, setBulkProcessing] = useState<boolean>(false);
   const [bulkCurrentFileIndex, setBulkCurrentFileIndex] = useState<number>(0);
-  const [bulkProcessedFiles, setBulkProcessedFiles] = useState<string[]>([]);
+  const [bulkProcessedFiles, setBulkProcessedFiles] = useState<BulkProcessedFile[]>([]);
   const [bulkGeneratedModels, setBulkGeneratedModels] = useState<BulkGeneratedModel[]>([]);
   const [bulkErrors, setBulkErrors] = useState<BulkError[]>([]);
   const [bulkReviewModels, setBulkReviewModels] = useState<BulkGeneratedModel[]>([]);

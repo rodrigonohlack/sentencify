@@ -28,10 +28,10 @@ import {
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export type TopicCategory = 'PRELIMINAR' | 'PREJUDICIAL' | 'MÉRITO' | 'PROCESSUAL' | 'RELATÓRIO';
+export type TopicCategory = 'PRELIMINAR' | 'PREJUDICIAL' | 'MÉRITO' | 'PROCESSUAL' | 'RELATÓRIO' | 'DISPOSITIVO';
 
 export interface Topic {
-  id?: string;
+  id?: string | number;
   title: string;
   category: TopicCategory;
   content?: string;
@@ -67,7 +67,7 @@ interface TopicCurationModalProps {
   parallelRequests?: number;
   isDarkMode?: boolean;
   // Configurações de custo
-  provider?: 'anthropic' | 'gemini';
+  provider?: 'anthropic' | 'gemini' | 'claude';
   thinkingBudget?: string;
   useExtendedThinking?: boolean;
   geminiThinkingLevel?: 'minimal' | 'low' | 'medium' | 'high';
@@ -127,7 +127,10 @@ const getCategoryColors = (isDarkMode: boolean): Record<TopicCategory, string> =
     : 'bg-slate-200 text-slate-700 border border-slate-300',
   'RELATÓRIO': isDarkMode
     ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/30'
-    : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+    : 'bg-emerald-100 text-emerald-800 border border-emerald-300',
+  'DISPOSITIVO': isDarkMode
+    ? 'bg-cyan-600/30 text-cyan-300 border border-cyan-500/30'
+    : 'bg-cyan-100 text-cyan-800 border border-cyan-300'
 });
 
 const CATEGORIES: TopicCategory[] = ['PRELIMINAR', 'PREJUDICIAL', 'MÉRITO', 'PROCESSUAL'];
@@ -300,7 +303,7 @@ const TopicCardVisual: React.FC<TopicCardVisualProps> = ({
       } : undefined}
     >
       {isSpecial ? (
-        <Pin className="w-4 h-4 text-emerald-500 flex-shrink-0" title="Posição fixa" />
+        <Pin className="w-4 h-4 text-emerald-500 flex-shrink-0" aria-label="Posição fixa" />
       ) : (
         <div className={isOverlay ? 'cursor-grabbing' : 'cursor-grab'}>
           <GripVertical className="w-4 h-4 text-slate-500" />
@@ -422,7 +425,7 @@ const TopicPreviewCard = React.memo<TopicPreviewCardProps>(({
       `}
     >
       {isSpecial ? (
-        <Pin className="w-4 h-4 text-emerald-500 flex-shrink-0" title="Posição fixa" />
+        <Pin className="w-4 h-4 text-emerald-500 flex-shrink-0" aria-label="Posição fixa" />
       ) : (
         <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
           <GripVertical className="w-4 h-4 text-slate-500 hover:text-slate-300" />
@@ -887,8 +890,10 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
 
   const estimate = useMemo(() => {
     const topicsToGenerate = topics.filter(t => !isSpecialTopic(t)).length;
+    // Map 'claude' to 'anthropic' for EstimateOptions compatibility
+    const estimateProvider = provider === 'claude' ? 'anthropic' : provider;
     return estimateCostAndTime(topicsToGenerate, model, parallelRequests, {
-      provider,
+      provider: estimateProvider,
       thinkingBudget,
       useExtendedThinking,
       geminiThinkingLevel,

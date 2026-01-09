@@ -21,13 +21,7 @@ interface SanitizeConfig {
   ALLOWED_STYLES?: Record<string, Record<string, RegExp[]>>;
   KEEP_CONTENT: boolean;
   RETURN_TRUSTED_TYPE: boolean;
-}
-
-/** Window com DOMPurify */
-declare global {
-  interface Window {
-    DOMPurify?: DOMPurifyInstance;
-  }
+  [key: string]: unknown; // Index signature for Record<string, unknown> compatibility
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

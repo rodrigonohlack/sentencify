@@ -774,8 +774,8 @@ describe('TopicCurationModal - Tópicos Especiais', () => {
     const relatorioTitle = screen.getAllByText('RELATÓRIO')[0];
     const relatorioCard = relatorioTitle.closest('.flex');
 
-    // Deve ter ícone de pin
-    expect(within(relatorioCard).getByTitle('Posição fixa')).toBeInTheDocument();
+    // Deve ter ícone de pin (aria-label em vez de title)
+    expect(within(relatorioCard).getByLabelText('Posição fixa')).toBeInTheDocument();
   });
 });
 
