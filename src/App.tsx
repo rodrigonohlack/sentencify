@@ -201,7 +201,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.4'; // v1.36.4: Fix exportação - preserva alinhamento do usuário (center, right)
+const APP_VERSION = '1.36.5'; // v1.36.5: Fix exportação - converter classes ql-align-* do Quill para inline styles
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -24447,6 +24447,20 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
     // Limpar parágrafos vazios
     cleaned = cleaned.replace(/<p><\/p>/gi, '');
     cleaned = cleaned.replace(/<p>\s*<\/p>/gi, '');
+
+    // v1.36.5: Converter classes de alinhamento do Quill para inline styles
+    // Quill gera: <p class="ql-align-center">
+    // Google Docs precisa: <p style="text-align: center;">
+    cleaned = cleaned.replace(
+      /<(p|div|h[1-6])\s+class="ql-align-(center|right|justify)"([^>]*)>/gi,
+      (match: string, tag: string, align: string, rest: string) => {
+        // Se já tem style, adicionar text-align a ele
+        if (rest.includes('style="')) {
+          return `<${tag}${rest.replace('style="', `style="text-align: ${align}; `)}>`;
+        }
+        return `<${tag} style="text-align: ${align};"${rest}>`;
+      }
+    );
 
     // Adicionar estilos inline em parágrafos, preservando alinhamento do usuário
     cleaned = cleaned.replace(
