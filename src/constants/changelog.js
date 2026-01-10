@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.24', feature: 'Fix cache Confronto de Fatos no editor individual: handleOpenFactsComparisonIndividual recupera cache do IndexedDB antes de abrir modal' },
   { version: '1.36.23', feature: 'Fix scroll BaseModal: min-h-0 no content div permite flexbox shrink e scroll interno funcionar corretamente' },
   { version: '1.36.22', feature: 'Fix Confronto de Fatos: fallback para PDF binário quando texto não extraído + scroll no BaseModal (max-h-[90vh] flex flex-col)' },
   { version: '1.36.21', feature: 'Refatorar FactsComparisonModal para usar BaseModal (padrão do app) + Botão Confronto no editor individual de tópicos + diretriz #6 no CLAUDE.md sobre uso obrigatório de BaseModal' },

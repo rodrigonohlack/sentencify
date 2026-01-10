@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.23 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.24 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -117,6 +117,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.24 | Fix cache Confronto de Fatos no editor individual: handleOpenFactsComparisonIndividual recupera cache antes de abrir modal |
 | v1.36.23 | Fix scroll BaseModal: min-h-0 no content div permite flexbox shrink e scroll interno funcionar |
 | v1.36.22 | Fix Confronto de Fatos: fallback para PDF binário quando texto não extraído + scroll no BaseModal (max-h-[90vh] flex flex-col) |
 | v1.36.21 | Refatorar FactsComparisonModal para BaseModal + Botão Confronto no editor individual + diretriz #6 CLAUDE.md (sempre usar BaseModal) |

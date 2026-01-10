@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.23'; // v1.36.23: Fix scroll BaseModal - min-h-0 para flexbox shrink
+const APP_VERSION = '1.36.24'; // v1.36.24: Fix cache Confronto de Fatos no editor individual
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -24360,7 +24360,25 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
     }
   };
 
-  // v1.36.21: Handler para Confronto de Fatos (editor individual)
+  // v1.36.24: Handler para ABRIR modal de Confronto de Fatos (editor individual) com recuperação de cache
+  const handleOpenFactsComparisonIndividual = React.useCallback(async () => {
+    if (!editingTopic) return;
+
+    setFactsComparisonErrorIndividual(null);
+
+    // Verificar cache (usa factsComparisonCacheIndividual no editor individual)
+    const cached = await factsComparisonCacheIndividual.getComparison(editingTopic.title, 'mini-relatorio');
+    if (cached) {
+      setFactsComparisonResultIndividual(cached);
+    } else {
+      const cachedDocs = await factsComparisonCacheIndividual.getComparison(editingTopic.title, 'documentos-completos');
+      setFactsComparisonResultIndividual(cachedDocs);
+    }
+
+    openModal('factsComparisonIndividual');
+  }, [editingTopic, factsComparisonCacheIndividual, openModal]);
+
+  // v1.36.21: Handler para GERAR Confronto de Fatos (editor individual)
   // v1.36.22: Adicionado fallback para PDF binário
   const handleGenerateFactsComparisonIndividual = async (source: FactsComparisonSource) => {
     if (!aiIntegration || !editingTopic) return;
@@ -30762,7 +30780,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         onSlashCommand={openSlashMenu}
                         isDirty={isIndividualDirty}
                         versioning={fieldVersioning}
-                        onOpenFactsComparison={editingTopic?.title?.toUpperCase() !== 'DISPOSITIVO' && editingTopic?.title?.toUpperCase() !== 'RELATÓRIO' ? () => openModal('factsComparisonIndividual') : null}
+                        onOpenFactsComparison={editingTopic?.title?.toUpperCase() !== 'DISPOSITIVO' && editingTopic?.title?.toUpperCase() !== 'RELATÓRIO' ? handleOpenFactsComparisonIndividual : null}
                       />
                     </div>
 
