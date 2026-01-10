@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.38', feature: 'Aviso visual Grok na aba Provas: alerta laranja "Grok não suporta PDF binário" quando PDF sem texto extraído (similar ao aviso roxo de anonimização)' },
   { version: '1.36.37', feature: 'Fix bloqueio PDF com Grok: botão "Usar PDF" desabilitado no ProofCard, fallback para PDF completo bloqueado quando extração falha (anonimização/Grok), mensagem "extração obrigatória" em vermelho' },
   { version: '1.36.36', feature: 'Bloquear PDF Puro quando Grok selecionado: opção desabilitada nos seletores (Uploads e Provas), Claude Vision liberado' },
   { version: '1.36.35', feature: 'Fix estimativa de custo: mostrar modelo correto para OpenAI/Grok no TopicCurationModal (antes mostrava Claude)' },

@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.37'; // v1.36.37: Fix bloqueio PDF binário com Grok/anonimização
+const APP_VERSION = '1.36.38'; // v1.36.38: Aviso visual Grok na aba Provas (PDF binário não suportado)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -9443,6 +9443,20 @@ const ProofCard = React.memo(({
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <div>
                 <span className="font-medium">🔒 Anonimização ativa:</span> Extraia o texto antes de usar no Assistente IA
+              </div>
+            </div>
+          )}
+
+          {/* v1.36.38: Aviso para PDF com Grok selecionado (só mostra se anonimização não ativa) */}
+          {isPdf && grokEnabled && !anonymizationEnabled && !proofManager.extractedProofTexts[proof.id] && (
+            <div className={`mb-3 p-2 rounded text-xs flex items-start gap-2 ${
+              editorTheme === 'dark'
+                ? 'bg-orange-600/20 border border-orange-500/30 text-orange-300'
+                : 'bg-orange-100 border border-orange-300 text-orange-700'
+            }`}>
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <div>
+                <span className="font-medium">⚡ Grok selecionado:</span> Grok não suporta PDF binário. Extraia o texto primeiro.
               </div>
             </div>
           )}

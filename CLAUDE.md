@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.37 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.38 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -120,6 +120,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.38 | Aviso visual Grok na aba Provas: alerta laranja "Grok não suporta PDF binário" (similar ao aviso roxo de anonimização) |
 | v1.36.37 | Fix bloqueio PDF com Grok: botão "Usar PDF" desabilitado no ProofCard, fallback para PDF bloqueado quando extração falha, mensagem "extração obrigatória" em vermelho |
 | v1.36.36 | Bloquear PDF Puro quando Grok selecionado: opção desabilitada nos seletores (Uploads e Provas), Claude Vision liberado |
 | v1.36.35 | Fix estimativa de custo: mostrar modelo correto para OpenAI/Grok no TopicCurationModal (antes mostrava Claude) |
