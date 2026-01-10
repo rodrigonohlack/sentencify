@@ -202,7 +202,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.11'; // v1.36.11: UX: Indicador visual claro de thinking no Grok (badges Thinking Embutido / Sem Thinking)
+const APP_VERSION = '1.36.15'; // v1.36.15: Fix espaçamento checkbox Log thinking no console
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
