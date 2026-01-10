@@ -1833,6 +1833,7 @@ export interface JurisprudenciaCardProps {
   onCopy: (precedente: Precedente) => void;
   expanded: boolean;
   onToggleExpand: (id: string) => void;
+  copiedId?: string | null;  // v1.36.54: Feedback visual copiar
 }
 
 export interface ChatBubbleProps {

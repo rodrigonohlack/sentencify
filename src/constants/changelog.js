@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.54', feature: 'Feedback visual ao copiar tese na aba Jurisprudência: ícone Check verde por 2 segundos' },
   { version: '1.36.53', feature: 'Fix busca semântica jurisprudência: campo "text" vs "texto" - TypeScript usava nome português mas JSON usa inglês' },
   { version: '1.36.52', feature: 'Fix texto IRR vazio em busca semântica: fallback para fullText/texto quando tese/enunciado não disponível (embeddings)' },
   { version: '1.36.51', feature: 'Fix contraste Double Check no tema claro: badges "(em breve)" e aviso de custo legíveis em ambos os temas' },

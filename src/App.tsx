@@ -207,7 +207,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.53'; // v1.36.53: Fix campo text vs texto em JurisEmbedding (mismatch TypeScript/JSON)
+const APP_VERSION = '1.36.54'; // v1.36.54: Feedback visual ao copiar tese na aba Jurisprudência
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -7493,6 +7493,7 @@ const useJurisprudencia = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isLoading, setIsLoading] = React.useState(false);
   const [deleteAllConfirmText, setDeleteAllConfirmText] = React.useState('');
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);  // v1.36.54: Feedback visual copiar
   const itemsPerPage = 10;
   const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -7583,6 +7584,9 @@ const useJurisprudencia = () => {
     const conteudo = precedente.tese || precedente.enunciado || precedente.fullText || precedente.texto || '';
     const texto = `${tipo}${identificador ? ` - ${identificador}` : ''}${titulo}\n${conteudo}`;
     await navigator.clipboard.writeText(texto);
+    // v1.36.54: Feedback visual
+    setCopiedId(precedente.id);
+    setTimeout(() => setCopiedId(null), 2000);
   }, []);
 
   const handleClearAll = React.useCallback(async () => {
@@ -7624,7 +7628,8 @@ const useJurisprudencia = () => {
     handleImportJSON,
     handleCopyTese,
     handleClearAll,
-    reloadPrecedentes // v1.33.61: Para atualizar após download automático
+    reloadPrecedentes, // v1.33.61: Para atualizar após download automático
+    copiedId // v1.36.54: Feedback visual copiar
   };
 };
 
@@ -9803,9 +9808,10 @@ const ProofCard = React.memo(({
 // Display name para React DevTools
 ProofCard.displayName = 'ProofCard';
 
-const JurisprudenciaCard = React.memo(({ precedente, onCopy, expanded, onToggleExpand }: JurisprudenciaCardProps) => {
+const JurisprudenciaCard = React.memo(({ precedente, onCopy, expanded, onToggleExpand, copiedId }: JurisprudenciaCardProps) => {
   // v1.36.52: Adiciona fallback para fullText/texto (embeddings semânticos não têm tese/enunciado)
   const texto = precedente.tese || precedente.enunciado || precedente.fullText || precedente.texto || '';
+  const isCopied = copiedId === precedente.id;  // v1.36.54: Feedback visual
   const tesePreview = texto.length > 200 ? texto.slice(0, 200) + '...' : texto;
   const renderIdentificador = () => {
     if (precedente.tema) {
@@ -9845,8 +9851,12 @@ const JurisprudenciaCard = React.memo(({ precedente, onCopy, expanded, onToggleE
               {precedente.tribunal}
             </span>
           )}
-          <button onClick={() => onCopy(precedente)} className="p-1.5 rounded hover-icon-blue-scale" title="Copiar tese">
-            <Copy className="w-4 h-4" />
+          <button
+            onClick={() => onCopy(precedente)}
+            className={`p-1.5 rounded ${isCopied ? 'text-green-500' : 'hover-icon-blue-scale'}`}
+            title={isCopied ? 'Copiado!' : 'Copiar tese'}
+          >
+            {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           </button>
         </div>
       </div>
@@ -10264,6 +10274,7 @@ const JurisprudenciaTab = React.memo(({
               expanded={expandedIds.has(p.id)}
               onToggleExpand={handleToggleExpand}
               onCopy={jurisprudencia.handleCopyTese}
+              copiedId={jurisprudencia.copiedId}
             />
           ))
         )}
