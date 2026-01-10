@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.44'; // v1.36.44: Deletar testes/hooks duplicados (222 testes inúteis removidos)
+const APP_VERSION = '1.36.45'; // v1.36.45: Fix ESC no GlobalEditorModal - fecha sub-modais primeiro
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -16056,6 +16056,16 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
       const initialCollapsed: Record<number, boolean> = {};
       copy.forEach((_: Topic, idx: number) => { initialCollapsed[idx] = true; });
       setCollapsedSections(initialCollapsed);
+
+      // v1.36.45: Resetar estados dos sub-modais ao abrir (evita bug de ESC)
+      setShowAIAssistant(false);
+      setAiAssistantTopicIndex(null);
+      setShowJurisModal(false);
+      setJurisTopicIndex(null);
+      setShowFactsComparison(false);
+      setFactsComparisonTopicIndex(null);
+      setFactsComparisonResult(null);
+      setFactsComparisonError(null);
     }
 
     wasOpenRef.current = isOpen;
@@ -16931,16 +16941,38 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
         toggleSplitMode();
       }
 
-      // ESC: Fechar (com confirmação se dirty)
+      // ESC: Fechar sub-modais primeiro, depois o modal pai
+      // v1.36.45: Respeita hierarquia de modais
       if (e.key === 'Escape') {
         if (showCancelConfirm) return;
+
+        // Fechar sub-modais primeiro (hierarquia)
+        if (showJurisModal) {
+          setShowJurisModal(false);
+          setJurisTopicIndex(null);
+          return;
+        }
+        if (showAIAssistant) {
+          setShowAIAssistant(false);
+          setAiAssistantTopicIndex(null);
+          chatAssistantGlobal.clear();
+          return;
+        }
+        if (showFactsComparison) {
+          setShowFactsComparison(false);
+          setFactsComparisonTopicIndex(null);
+          setFactsComparisonResult(null);
+          setFactsComparisonError(null);
+          return;
+        }
+
         handleCancel();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isDirty, handleSaveOnly, toggleSplitMode, handleCancel, showCancelConfirm]);
+  }, [isOpen, isDirty, handleSaveOnly, toggleSplitMode, handleCancel, showCancelConfirm, showJurisModal, showAIAssistant, showFactsComparison, chatAssistantGlobal]);
 
   if (!isOpen) return null;
 
