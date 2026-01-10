@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.30'; // v1.36.30: Fix botão excluir prova (race condition DeleteProofModal)
+const APP_VERSION = '1.36.31'; // v1.36.31: Fix exclusão prova - String() na comparação de IDs
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -34653,8 +34653,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
             try {
               await removePdfFromIndexedDB(`proof-${proofToDelete.id}`);
             } catch (err) { }
-            // Remover prova PDF
-            proofManager.setProofFiles(prev => prev.filter(p => p.id !== proofToDelete.id));
+            // Remover prova PDF - v1.36.31: String() para evitar type mismatch number/string
+            proofManager.setProofFiles(prev => prev.filter(p => String(p.id) !== String(proofToDelete.id)));
             proofManager.setProofUsePdfMode(prev => {
               const newMode = { ...prev };
               delete newMode[proofToDelete.id];
@@ -34666,8 +34666,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
               return newTexts;
             });
           } else {
-            // Remover prova texto
-            proofManager.setProofTexts(prev => prev.filter(p => p.id !== proofToDelete.id));
+            // Remover prova texto - v1.36.31: String() para evitar type mismatch number/string
+            proofManager.setProofTexts(prev => prev.filter(p => String(p.id) !== String(proofToDelete.id)));
           }
           closeModal('deleteProof');
           proofManager.setProofToDelete(null);

@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.31', feature: 'Fix exclusão de prova: String() na comparação de IDs (type mismatch number/string)' },
   { version: '1.36.30', feature: 'Fix botão excluir prova: race condition isOpen && proofToDelete no DeleteProofModal' },
   { version: '1.36.29', feature: 'Suporte PDF para OpenAI (type: file) + aviso Grok não suporta PDF binário nas abas Upload e Provas' },
   { version: '1.36.28', feature: 'Fix análise de provas: isPdf não setado na criação + verificação robusta com type === pdf' },
