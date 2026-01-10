@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createHash } from 'crypto';
 
 const router = Router();
 
@@ -9,6 +10,8 @@ const router = Router();
  * Grok 4.1 modelos:
  * - grok-4-1-fast-reasoning: com reasoning embutido (2M contexto)
  * - grok-4-1-fast-non-reasoning: rápido, sem thinking
+ *
+ * v1.36.14: Adicionado x-grok-conv-id para melhorar cache hit rate
  */
 router.post('/chat', async (req, res) => {
   try {
@@ -23,24 +26,30 @@ router.post('/chat', async (req, res) => {
       });
     }
 
+    // v1.36.14: Gerar x-grok-conv-id baseado na API key
+    // Mesmo usuário = mesmo ID de sessão = melhor cache hit rate
+    const convId = createHash('md5').update(apiKey).digest('hex');
+
     // xAI usa formato OpenAI-compatible
     const response = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${apiKey}`,
+        'x-grok-conv-id': convId
       },
       body: JSON.stringify(req.body)
     });
 
     const data = await response.json();
 
-    // Log para debug
+    // Log para debug (v1.36.14: mostra cached tokens)
     if (process.env.NODE_ENV !== 'production') {
       const model = req.body.model || 'unknown';
       const usage = data.usage || {};
+      const cached = usage.prompt_tokens_details?.cached_tokens || 0;
       console.log(`[Grok] ${model} - ${response.status} - ` +
-        `${usage.prompt_tokens || 0} in / ${usage.completion_tokens || 0} out`);
+        `${usage.prompt_tokens || 0} in (${cached} cached) / ${usage.completion_tokens || 0} out`);
     }
 
     // Verificar erros específicos do Grok

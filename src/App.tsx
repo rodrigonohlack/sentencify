@@ -31990,8 +31990,8 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                   </div>
                 )}
 
-                {/* v1.32.40: Log Thinking no Console */}
-                <label className="flex items-center gap-3 p-3 rounded-lg theme-bg-secondary-30 border theme-border-input cursor-pointer hover:theme-bg-secondary transition-colors">
+                {/* v1.32.40: Log Thinking no Console (v1.36.15: fix espaçamento) */}
+                <label className="flex items-center gap-3 p-3 mt-4 rounded-lg theme-bg-secondary-30 border theme-border-input cursor-pointer hover:theme-bg-secondary transition-colors">
                   <input
                     type="checkbox"
                     checked={aiIntegration.aiSettings.logThinking || false}

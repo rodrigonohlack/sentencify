@@ -2,6 +2,8 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.15', feature: 'Fix espaçamento do checkbox "Log thinking no console" no Config IA Modal (mt-4)' },
+  { version: '1.36.14', feature: 'Grok cache hit rate: header x-grok-conv-id baseado na API key para manter sessão de cache, log de cached tokens no servidor' },
   { version: '1.36.13', feature: 'UX: Auto-scroll e focus no MergeConfirm do TopicCurationModal - ao clicar "Mesclar", scroll suave para o formulário + cursor no campo de título' },
   { version: '1.36.12', feature: 'OpenAI/Grok na estimativa de custo: seção "Uso de Tokens" mostra 6 modelos (Claude Sonnet/Opus, Gemini Pro/Flash, OpenAI GPT-5.2, Grok 4.1) + "Limites por API" com 4 providers (grid responsivo)' },
   { version: '1.36.11', feature: 'UX: Indicador visual claro de thinking no Grok - badges "Thinking Embutido" (roxo) e "Sem Thinking" (âmbar) na seção Pensamento Prolongado' },
