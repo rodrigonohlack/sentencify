@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.17', feature: 'Log thinking no console para Grok: toggle "Log thinking" agora funciona com Grok 4.1 Fast Thinking' },
   { version: '1.36.16', feature: 'Fix erro 502 Grok: formatar x-grok-conv-id como UUID4 válido (com hífens)' },
   { version: '1.36.15', feature: 'Fix espaçamento do checkbox "Log thinking no console" no Config IA Modal (mt-4)' },
   { version: '1.36.14', feature: 'Grok cache hit rate: header x-grok-conv-id baseado na API key para manter sessão de cache, log de cached tokens no servidor' },

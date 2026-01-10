@@ -202,7 +202,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.16'; // v1.36.16: Fix formato x-grok-conv-id para UUID4 válido
+const APP_VERSION = '1.36.17'; // v1.36.17: Log thinking no console para Grok
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -2787,6 +2787,19 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         }
 
         const data = await response.json();
+
+        // v1.36.17: Log thinking no console para Grok
+        if (aiSettings.logThinking) {
+          const choices = data.choices as Record<string, unknown>[] | undefined;
+          const message = choices?.[0]?.message as Record<string, unknown> | undefined;
+          // Grok pode retornar reasoning em diferentes campos
+          const reasoning = message?.reasoning || message?.reasoning_content || message?.thinking;
+          if (reasoning) {
+            console.group('[Grok] Thinking');
+            console.log(reasoning);
+            console.groupEnd();
+          }
+        }
 
         if (!response.ok) {
           const errorMsg = data.error?.message || `Grok API error: ${response.status}`;
