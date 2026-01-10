@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.42', feature: 'Build inclui tsc --noEmit: verificação de tipos antes do deploy (previne erros como ReferenceError)' },
   { version: '1.36.41', feature: 'Fix ReferenceError: usar documentServices.extractTextFromPDFWithMode (prefixo faltando)' },
   { version: '1.36.40', feature: 'Fix NER provas: usar extractTextFromPDFWithMode com modo selecionado (PDF.js ou Tesseract) ao invés de extractTextFromPDFPure' },
   { version: '1.36.39', feature: 'Fix NER em provas: "Detectar Nomes" agora extrai texto da PROVA (não da petição) - removido fallback incorreto' },

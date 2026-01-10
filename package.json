@@ -1,13 +1,13 @@
 {
   "name": "sentencify-standalone",
-  "version": "1.36.41",
+  "version": "1.36.42",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "client": "vite --port 3000",
     "server": "node server/index.js",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "start": "node server/index.js",
     "test": "vitest",

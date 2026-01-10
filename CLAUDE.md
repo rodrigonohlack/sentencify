@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.41 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.42 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -120,6 +120,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.42 | Build inclui tsc --noEmit: verificação de tipos antes do deploy |
 | v1.36.41 | Fix ReferenceError: usar documentServices.extractTextFromPDFWithMode (prefixo faltando) |
 | v1.36.40 | Fix NER provas: usar extractTextFromPDFWithMode com modo selecionado (Tesseract funciona) |
 | v1.36.39 | Fix NER em provas: "Detectar Nomes" extrai texto da PROVA (não da petição) - removido fallback incorreto |
