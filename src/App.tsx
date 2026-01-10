@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.31'; // v1.36.31: Fix exclusão prova - String() na comparação de IDs
+const APP_VERSION = '1.36.32'; // v1.36.32: Fix exclusão prova - usar handleDeleteProof do hook
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -34648,27 +34648,17 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         onConfirmDelete={async () => {
           const proofToDelete = proofManager.proofToDelete;
           if (!proofToDelete) return;
-          if (proofToDelete.isPdf) {
-            // Limpar do IndexedDB antes de remover do estado
+
+          // v1.36.32: Limpar IndexedDB se for PDF
+          if (proofToDelete.isPdf || ('type' in proofToDelete && proofToDelete.type === 'pdf')) {
             try {
               await removePdfFromIndexedDB(`proof-${proofToDelete.id}`);
             } catch (err) { }
-            // Remover prova PDF - v1.36.31: String() para evitar type mismatch number/string
-            proofManager.setProofFiles(prev => prev.filter(p => String(p.id) !== String(proofToDelete.id)));
-            proofManager.setProofUsePdfMode(prev => {
-              const newMode = { ...prev };
-              delete newMode[proofToDelete.id];
-              return newMode;
-            });
-            proofManager.setExtractedProofTexts(prev => {
-              const newTexts = { ...prev };
-              delete newTexts[proofToDelete.id];
-              return newTexts;
-            });
-          } else {
-            // Remover prova texto - v1.36.31: String() para evitar type mismatch number/string
-            proofManager.setProofTexts(prev => prev.filter(p => String(p.id) !== String(proofToDelete.id)));
           }
+
+          // v1.36.32: Usar handler existente do hook (tipagem correta, limpa todos os estados)
+          proofManager.handleDeleteProof(proofToDelete);
+
           closeModal('deleteProof');
           proofManager.setProofToDelete(null);
         }}
