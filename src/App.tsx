@@ -202,7 +202,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.18'; // v1.36.18: Fix botões prompt rápido + nota limitação Grok thinking
+const APP_VERSION = '1.36.19'; // v1.36.19: Fix UI edição prompts rápidos (name → label)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -32946,10 +32946,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         placeholder="📝"
                       />
                       <input
-                        value={qp.name}
+                        value={qp.label}
                         onChange={(e) => {
                           const updated = [...aiIntegration.aiSettings.quickPrompts];
-                          updated[idx] = { ...updated[idx], name: e.target.value };
+                          updated[idx] = { ...updated[idx], label: e.target.value };
                           aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, quickPrompts: updated });
                         }}
                         className="w-28 theme-bg-app border theme-border-input rounded p-1 text-sm"
@@ -32984,7 +32984,6 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     const newPrompt: QuickPrompt = {
                       id: `qp-${Date.now()}`,
                       label: '',
-                      name: '',
                       prompt: '',
                       icon: '📝'
                     };
