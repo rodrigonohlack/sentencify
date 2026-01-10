@@ -137,9 +137,12 @@ import { useGoogleDrive, GOOGLE_CLIENT_ID } from './hooks/useGoogleDrive';
 import { GoogleDriveButton, DriveFilesModal } from './components/GoogleDriveButton';
 import { VoiceButton } from './components/VoiceButton';
 import { ModelGeneratorModal } from './components/ModelGeneratorModal';
+import { FactsComparisonModal } from './components/FactsComparisonModal';
+import useFactsComparisonCache, { openFactsDB, FACTS_STORE_NAME } from './hooks/useFactsComparisonCache';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
 import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS } from './prompts';
+import { buildMiniRelatorioComparisonPrompt, buildDocumentosComparisonPrompt } from './prompts/facts-comparison-prompts';
 
 // v1.35.79: Tipos TypeScript centralizados (ETAPA 0 reorganização completa)
 import type {
@@ -164,6 +167,7 @@ import type {
   AIGenContextItem, AIGenContext, AIGenState, AIGenAction, AnonymizationSettings,
   QuickPrompt, AIMessage, AIMessageContent, AITextContent, AIDocumentContent, AICallOptions, AIProvider, GeminiRequest, GeminiGenerationConfig,
   OpenAIMessage, OpenAIMessagePart, OpenAIReasoningConfig, OpenAIReasoningLevel,
+  FactsComparisonSource, FactsComparisonResult,  // v1.36.12
   // MODAL PROPS (movido de App.tsx v1.35.79)
   ModelFormModalProps, ModelPreviewModalProps, RenameTopicModalProps, DeleteTopicModalProps, MergeTopicsModalProps, SplitTopicModalProps,
   NewTopicModalProps, DeleteModelModalProps, DeleteAllModelsModalProps, DeleteAllPrecedentesModalProps,
@@ -202,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.19'; // v1.36.19: Fix UI edição prompts rápidos (name → label)
+const APP_VERSION = '1.36.20'; // v1.36.20: Confronto de Fatos - comparação Petição vs Contestação vs Impugnação
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -4800,6 +4804,24 @@ const useLocalStorage = () => {
     // eslint-disable-next-line no-unused-vars
     const { apiKeys: _excluded, ...aiSettingsWithoutKeys } = aiSettings;
 
+    // v1.36.12: Exportar cache de confronto de fatos
+    let factsComparison: Record<string, FactsComparisonResult> = {};
+    try {
+      const db = await openFactsDB();
+      const store = db.transaction(FACTS_STORE_NAME).objectStore(FACTS_STORE_NAME);
+      const entries = await new Promise<Array<{ topicTitle: string; source: string; result: FactsComparisonResult }>>((resolve) => {
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => resolve([]);
+      });
+      db.close();
+      for (const entry of entries) {
+        factsComparison[`${entry.topicTitle}_${entry.source}`] = entry.result;
+      }
+    } catch (e) {
+      console.warn('[Export] Erro ao exportar factsComparison:', e);
+    }
+
     return {
       version: APP_VERSION,
       exportedAt: new Date().toISOString(),
@@ -4824,7 +4846,8 @@ const useLocalStorage = () => {
       proofConclusions: proofConclusions || {},
       proofSendFullContent: allStates.proofSendFullContent || {},
       documentProcessingModes: documentProcessingModes || { peticao: 'pdfjs', contestacoes: [], complementares: [] },
-      tokenMetrics: tokenMetrics || { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0, requestCount: 0, lastUpdated: null }
+      tokenMetrics: tokenMetrics || { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0, requestCount: 0, lastUpdated: null },
+      factsComparison  // v1.36.12
     };
   }, [fileToBase64]);
 
@@ -5094,6 +5117,40 @@ const useLocalStorage = () => {
         complementaryFiles: []
       };
       autoSaveSessionFn(allStates, (err) => err && setError(err), true);
+    }
+
+    // v1.36.12: Importar cache de confronto de fatos
+    if (project.factsComparison && typeof project.factsComparison === 'object') {
+      try {
+        const db = await openFactsDB();
+        const tx = db.transaction(FACTS_STORE_NAME, 'readwrite');
+        const store = tx.objectStore(FACTS_STORE_NAME);
+
+        for (const [key, result] of Object.entries(project.factsComparison as Record<string, FactsComparisonResult>)) {
+          const lastUnderscore = key.lastIndexOf('_');
+          if (lastUnderscore === -1) continue;
+
+          const topicTitle = key.substring(0, lastUnderscore);
+          const source = key.substring(lastUnderscore + 1) as FactsComparisonSource;
+
+          if (topicTitle && (source === 'mini-relatorio' || source === 'documentos-completos')) {
+            store.add({
+              topicTitle,
+              source,
+              result,
+              createdAt: Date.now()
+            });
+          }
+        }
+
+        await new Promise<void>((resolve) => {
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        });
+        db.close();
+      } catch (e) {
+        console.warn('[Import] Erro ao importar factsComparison:', e);
+      }
     }
   }, [base64ToFile, clearAllPdfsFromIndexedDB, savePdfToIndexedDB]);
 
@@ -15572,6 +15629,7 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
   onOpenAIAssistant = null,
   onOpenProofsModal = null,
   onOpenJurisModal = null,
+  onOpenFactsComparison = null,  // v1.36.12
   linkedProofsCount = 0,
   isCollapsed = false,
   onToggleCollapse = null,
@@ -15694,6 +15752,17 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
                       >
                         <Sparkles className="w-3 h-3" />
                         Assistente IA
+                      </button>
+                    )}
+                    {/* v1.36.12: Botão Confronto de Fatos */}
+                    {onOpenFactsComparison && (
+                      <button
+                        onClick={() => onOpenFactsComparison(topicIndex)}
+                        className="hover:bg-amber-700 px-2 py-1 text-white text-xs rounded flex items-center gap-1 bg-amber-600"
+                        title="Confronto de Fatos (Inicial vs Contestação)"
+                      >
+                        <Scale className="w-3 h-3" />
+                        Confronto
                       </button>
                     )}
                     {/* v1.35.65: VoiceButton ao lado do Assistente IA */}
@@ -15829,6 +15898,14 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   // ⚖️ v1.20.0: Jurisprudência contextual (usa componente JurisprudenciaModal)
   const [showJurisModal, setShowJurisModal] = React.useState(false);
   const [jurisTopicIndex, setJurisTopicIndex] = React.useState<number | null>(null);
+
+  // ⚖️ v1.36.12: Confronto de Fatos (Inicial vs Contestação)
+  const [showFactsComparison, setShowFactsComparison] = React.useState(false);
+  const [factsComparisonTopicIndex, setFactsComparisonTopicIndex] = React.useState<number | null>(null);
+  const [factsComparisonResult, setFactsComparisonResult] = React.useState<FactsComparisonResult | null>(null);
+  const [generatingFactsComparison, setGeneratingFactsComparison] = React.useState(false);
+  const [factsComparisonError, setFactsComparisonError] = React.useState<string | null>(null);
+  const factsComparisonCache = useFactsComparisonCache();
 
   // Ref para o container (drag do divisor)
   const containerRef = React.useRef<HTMLDivElement | null>(null);
@@ -16229,6 +16306,108 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     setProofsModalTopicIndex(topicIndex);
     setShowProofsModal(true);
   }, []);
+
+  // v1.36.12: Handler para abrir modal de confronto de fatos
+  const handleOpenFactsComparison = React.useCallback(async (topicIndex: number) => {
+    setFactsComparisonTopicIndex(topicIndex);
+    setFactsComparisonError(null);
+
+    // Verificar cache
+    const topic = localTopics[topicIndex];
+    if (topic) {
+      const cached = await factsComparisonCache.getComparison(topic.title, 'mini-relatorio');
+      if (cached) {
+        setFactsComparisonResult(cached);
+      } else {
+        // Tentar cache de documentos
+        const cachedDocs = await factsComparisonCache.getComparison(topic.title, 'documentos-completos');
+        setFactsComparisonResult(cachedDocs);
+      }
+    }
+
+    setShowFactsComparison(true);
+  }, [localTopics, factsComparisonCache]);
+
+  // v1.36.12: Handler para gerar confronto de fatos
+  const handleGenerateFactsComparison = React.useCallback(async (source: FactsComparisonSource) => {
+    if (!aiIntegration || factsComparisonTopicIndex === null) return;
+
+    const topic = localTopics[factsComparisonTopicIndex];
+    if (!topic) return;
+
+    setGeneratingFactsComparison(true);
+    setFactsComparisonError(null);
+
+    try {
+      let prompt: string;
+
+      if (source === 'mini-relatorio') {
+        const relatorio = topic.editedRelatorio || topic.relatorio || '';
+        if (!relatorio.trim()) {
+          throw new Error('Mini-relatório não disponível para este tópico.');
+        }
+        prompt = buildMiniRelatorioComparisonPrompt(topic.title, relatorio);
+      } else {
+        // Documentos completos
+        const peticao = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+        const contestacao = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+        const impugnacao = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
+
+        if (!peticao.trim() && !contestacao.trim()) {
+          throw new Error('Nenhum documento disponível (petição ou contestação).');
+        }
+        prompt = buildDocumentosComparisonPrompt(topic.title, peticao, contestacao, impugnacao);
+      }
+
+      const response = await aiIntegration.callAI([{
+        role: 'user',
+        content: [{ type: 'text', text: prompt }]
+      }], {
+        maxTokens: 8000,
+        useInstructions: false,
+        temperature: 0.3,
+        topP: 0.9,
+        topK: 40
+      });
+
+      // Extrair JSON da resposta (pode vir com markdown)
+      let jsonStr = response;
+      const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[1];
+      } else {
+        // Tentar encontrar JSON direto
+        const firstBrace = response.indexOf('{');
+        const lastBrace = response.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          jsonStr = response.substring(firstBrace, lastBrace + 1);
+        }
+      }
+
+      const parsed = JSON.parse(jsonStr);
+
+      const result: FactsComparisonResult = {
+        topicTitle: topic.title,
+        source,
+        generatedAt: new Date().toISOString(),
+        tabela: parsed.tabela || [],
+        fatosIncontroversos: parsed.fatosIncontroversos || [],
+        fatosControversos: parsed.fatosControversos || [],
+        pontosChave: parsed.pontosChave || [],
+        resumo: parsed.resumo || ''
+      };
+
+      // Salvar no cache
+      await factsComparisonCache.saveComparison(topic.title, source, result);
+
+      setFactsComparisonResult(result);
+    } catch (err) {
+      console.error('[FactsComparison] Erro:', err);
+      setFactsComparisonError(err instanceof Error ? err.message : 'Erro ao gerar análise. Tente novamente.');
+    } finally {
+      setGeneratingFactsComparison(false);
+    }
+  }, [aiIntegration, factsComparisonTopicIndex, localTopics, analyzedDocuments, factsComparisonCache]);
 
   // v1.12.14: Helper para calcular provas vinculadas a um tópico
   const getLinkedProofsForTopic = React.useCallback((topicTitle: string) => {
@@ -16748,6 +16927,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
                     setJurisTopicIndex(idx);
                     setShowJurisModal(true);
                   }}
+                  onOpenFactsComparison={handleOpenFactsComparison}
                   linkedProofsCount={getLinkedProofsForTopic(topic.title).length}
                   isCollapsed={collapsedSections[index] ?? false}
                   onToggleCollapse={(idx: number) => setCollapsedSections(prev => ({ ...prev, [idx]: !prev[idx] }))}
@@ -17018,6 +17198,25 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
         useLocalAI={useLocalAIForJuris && searchModelReady && jurisEmbeddingsCount > 0}
         jurisSemanticThreshold={jurisSemanticThreshold}
         jurisSemanticEnabled={searchModelReady && jurisEmbeddingsCount > 0}
+      />
+
+      {/* v1.36.12: Modal de Confronto de Fatos */}
+      <FactsComparisonModal
+        isOpen={showFactsComparison && factsComparisonTopicIndex !== null}
+        onClose={() => {
+          setShowFactsComparison(false);
+          setFactsComparisonTopicIndex(null);
+          setFactsComparisonResult(null);
+          setFactsComparisonError(null);
+        }}
+        topicTitle={factsComparisonTopicIndex !== null ? localTopics[factsComparisonTopicIndex]?.title || '' : ''}
+        topicRelatorio={factsComparisonTopicIndex !== null ? (localTopics[factsComparisonTopicIndex]?.editedRelatorio || localTopics[factsComparisonTopicIndex]?.relatorio) : undefined}
+        hasPeticao={(analyzedDocuments?.peticoesText?.length || 0) > 0 || !!analyzedDocuments?.peticao}
+        hasContestacao={(analyzedDocuments?.contestacoesText?.length || 0) > 0 || (analyzedDocuments?.contestacoes?.length || 0) > 0}
+        onGenerate={handleGenerateFactsComparison}
+        cachedResult={factsComparisonResult}
+        isGenerating={generatingFactsComparison}
+        error={factsComparisonError}
       />
     </div>
   );

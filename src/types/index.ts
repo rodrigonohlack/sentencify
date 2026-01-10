@@ -262,6 +262,58 @@ export interface OpenAIReasoningConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// FACTS COMPARISON TYPES (v1.36.12)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Fonte para análise de confronto de fatos */
+export type FactsComparisonSource = 'mini-relatorio' | 'documentos-completos';
+
+/** Linha da tabela de confronto de fatos */
+export interface FactsComparisonRow {
+  tema: string;
+  alegacaoReclamante: string;
+  alegacaoReclamada: string;
+  status: 'controverso' | 'incontroverso' | 'silencio';
+  relevancia: 'alta' | 'media' | 'baixa';
+  observacao?: string;
+}
+
+/** Resultado completo do confronto de fatos para um tópico */
+export interface FactsComparisonResult {
+  topicTitle: string;
+  source: FactsComparisonSource;
+  generatedAt: string;
+  tabela: FactsComparisonRow[];
+  fatosIncontroversos: string[];
+  fatosControversos: string[];
+  pontosChave: string[];
+  resumo?: string;
+}
+
+/** Entrada de cache para confronto de fatos */
+export interface FactsComparisonCacheEntry {
+  id?: number;
+  topicTitle: string;
+  source: FactsComparisonSource;
+  result: FactsComparisonResult;
+  createdAt: number;
+}
+
+/** Props para FactsComparisonModal */
+export interface FactsComparisonModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  topicTitle: string;
+  topicRelatorio?: string;
+  hasPeticao: boolean;
+  hasContestacao: boolean;
+  onGenerate: (source: FactsComparisonSource) => Promise<void>;
+  cachedResult: FactsComparisonResult | null;
+  isGenerating: boolean;
+  error: string | null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // USER & AUTH TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1415,7 +1467,7 @@ export interface FieldEditorRef {
   focus: () => void;
 }
 
-/** Props para GlobalEditorSection - v1.35.94 */
+/** Props para GlobalEditorSection - v1.36.12 */
 export interface GlobalEditorSectionProps {
   topic: Topic;
   topicIndex: number;
@@ -1428,6 +1480,7 @@ export interface GlobalEditorSectionProps {
   onOpenAIAssistant?: ((index: number) => void) | null;
   onOpenProofsModal?: ((index: number) => void) | null;
   onOpenJurisModal?: ((index: number) => void) | null;
+  onOpenFactsComparison?: ((index: number) => void) | null;  // v1.36.12
   linkedProofsCount?: number;
   isCollapsed?: boolean;
   onToggleCollapse?: ((index: number) => void) | null;
@@ -2047,6 +2100,7 @@ export interface ImportedProject {
   proofSendFullContent?: Record<string, boolean>;
   aiSettings?: AISettings;
   tokenMetrics?: TokenMetrics;
+  factsComparison?: Record<string, FactsComparisonResult>;
 }
 
 export interface ImportCallbacks {
