@@ -701,8 +701,11 @@ const MergeConfirm: React.FC<MergeConfirmProps> = ({ topics, onConfirm, onCancel
   const inputRef = useRef<HTMLInputElement>(null);
 
   // v1.36.13: Scroll suave para o topo e foca no input quando abre
+  // v1.36.43: Guard para JSDOM (testes) que não implementa scrollIntoView
   useEffect(() => {
-    mergeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (typeof mergeRef.current?.scrollIntoView === 'function') {
+      mergeRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
     inputRef.current?.focus();
   }, []);
 
