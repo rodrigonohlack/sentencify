@@ -4,7 +4,7 @@
  * Exibe tabela comparativa das alegações das partes para um tópico específico.
  * Destaca fatos incontroversos e controversos com badges coloridos.
  *
- * @version 1.36.21 - Refatorado para usar BaseModal
+ * @version 1.36.25 - Fix contraste badges no tema claro
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
@@ -20,10 +20,11 @@ const StatusBadge: React.FC<{ status: FactsComparisonRow['status']; relevancia: 
   status,
   relevancia
 }) => {
+  // v1.36.25: cores -600 para tema claro, -400 para tema escuro (melhor contraste)
   const statusConfig = {
-    controverso: { icon: AlertTriangle, bg: 'bg-red-500/20', text: 'text-red-400', label: 'Controverso' },
-    incontroverso: { icon: CheckCircle, bg: 'bg-green-500/20', text: 'text-green-400', label: 'Incontroverso' },
-    silencio: { icon: HelpCircle, bg: 'bg-yellow-500/20', text: 'text-yellow-400', label: 'Silêncio' }
+    controverso: { icon: AlertTriangle, bg: 'bg-red-500/20', text: 'text-red-600 dark:text-red-400', label: 'Controverso' },
+    incontroverso: { icon: CheckCircle, bg: 'bg-green-500/20', text: 'text-green-600 dark:text-green-400', label: 'Incontroverso' },
+    silencio: { icon: HelpCircle, bg: 'bg-yellow-500/20', text: 'text-yellow-600 dark:text-yellow-400', label: 'Silêncio' }
   };
 
   const relevanciaConfig = {

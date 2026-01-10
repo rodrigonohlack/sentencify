@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.24'; // v1.36.24: Fix cache Confronto de Fatos no editor individual
+const APP_VERSION = '1.36.25'; // v1.36.25: Fix contraste badges Confronto de Fatos no tema claro
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
