@@ -67,7 +67,7 @@ interface TopicCurationModalProps {
   parallelRequests?: number;
   isDarkMode?: boolean;
   // Configurações de custo
-  provider?: 'anthropic' | 'gemini' | 'claude';
+  provider?: 'anthropic' | 'gemini' | 'claude' | 'openai' | 'grok';
   thinkingBudget?: string;
   useExtendedThinking?: boolean;
   geminiThinkingLevel?: 'minimal' | 'low' | 'medium' | 'high';
@@ -890,10 +890,10 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
 
   const estimate = useMemo(() => {
     const topicsToGenerate = topics.filter(t => !isSpecialTopic(t)).length;
-    // Map 'claude' to 'anthropic' for EstimateOptions compatibility
-    const estimateProvider = provider === 'claude' ? 'anthropic' : provider;
+    // Map providers to EstimateOptions compatibility (openai/grok fallback to anthropic pricing)
+    const estimateProvider = provider === 'claude' || provider === 'openai' || provider === 'grok' ? 'anthropic' : provider;
     return estimateCostAndTime(topicsToGenerate, model, parallelRequests, {
-      provider: estimateProvider,
+      provider: estimateProvider as 'anthropic' | 'gemini' | undefined,
       thinkingBudget,
       useExtendedThinking,
       geminiThinkingLevel,

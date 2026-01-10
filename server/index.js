@@ -21,6 +21,8 @@ import { Readable } from 'stream';
 
 import claudeRoutes from './routes/claude.js';
 import geminiRoutes from './routes/gemini.js';
+import openaiRoutes from './routes/openai.js';
+import grokRoutes from './routes/grok.js';
 import authRoutes from './routes/auth.js';
 import authMagicRoutes from './routes/auth-magic.js';
 import modelsRoutes from './routes/models.js';
@@ -103,6 +105,8 @@ const generalLimiter = rateLimit({
 app.use('/api/auth', authLimiter);
 app.use('/api/claude', aiLimiter);
 app.use('/api/gemini', aiLimiter);
+app.use('/api/openai', aiLimiter);
+app.use('/api/grok', aiLimiter);
 app.use('/api', generalLimiter);
 
 // Rota de autenticação simples (v1.33.41)
@@ -124,6 +128,8 @@ app.use('/api/share', shareRoutes);
 // Rotas de proxy para APIs de IA
 app.use('/api/claude', claudeRoutes);
 app.use('/api/gemini', geminiRoutes);
+app.use('/api/openai', openaiRoutes);
+app.use('/api/grok', grokRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -200,7 +206,7 @@ app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════════╗
   ║                                                       ║
-  ║   SentencifyAI Server v1.35.50                       ║
+  ║   SentencifyAI Server v1.36.10                       ║
   ║   ────────────────────────────────────────────────   ║
   ║   Backend:  http://localhost:${PORT}                   ║
   ║   Frontend: http://localhost:3000                    ║
@@ -214,6 +220,8 @@ app.listen(PORT, () => {
   ║   • Sync:    /api/sync (push/pull)                   ║
   ║   • Claude:  /api/claude/messages                    ║
   ║   • Gemini:  /api/gemini/generate                    ║
+  ║   • OpenAI:  /api/openai/chat                        ║
+  ║   • Grok:    /api/grok/chat                          ║
   ║   • Health:  /api/health                             ║
   ║                                                       ║
   ╚═══════════════════════════════════════════════════════╝

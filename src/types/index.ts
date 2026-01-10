@@ -141,9 +141,10 @@ export interface ProofAnalysisResult {
 // AI SETTINGS TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
-export type AIProvider = 'claude' | 'gemini';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok';
 export type OCREngine = 'pdfjs' | 'tesseract' | 'pdf-puro' | 'claude-vision';
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
+export type OpenAIReasoningLevel = 'low' | 'medium' | 'high' | 'xhigh';
 
 /** Gemini API types - v1.35.95 */
 export interface GeminiGenerationConfig {
@@ -205,7 +206,10 @@ export interface AISettings {
   provider: AIProvider;
   claudeModel: string;
   geminiModel: string;
-  apiKeys: { claude: string; gemini: string };
+  openaiModel: 'gpt-5.2' | 'gpt-5.2-chat-latest';
+  openaiReasoningLevel: OpenAIReasoningLevel;
+  grokModel: 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning';
+  apiKeys: { claude: string; gemini: string; openai: string; grok: string };
   useExtendedThinking: boolean;
   thinkingBudget: string;
   geminiThinkingLevel: GeminiThinkingLevel;
@@ -233,6 +237,28 @@ export interface AISettings {
   useLocalAIForJuris?: boolean;
   quickPrompts: QuickPrompt[];
   logThinking?: boolean;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OPENAI/GROK TYPES (v1.35.97)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Parte de mensagem OpenAI/Grok (texto ou imagem) */
+export interface OpenAIMessagePart {
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: { url: string };
+}
+
+/** Mensagem OpenAI/Grok */
+export interface OpenAIMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string | OpenAIMessagePart[];
+}
+
+/** Config de reasoning OpenAI (não usado no Grok) */
+export interface OpenAIReasoningConfig {
+  effort: OpenAIReasoningLevel;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

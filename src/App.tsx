@@ -163,6 +163,7 @@ import type {
   BulkFile, BulkGeneratedModel, BulkError,
   AIGenContextItem, AIGenContext, AIGenState, AIGenAction, AnonymizationSettings,
   QuickPrompt, AIMessage, AIMessageContent, AITextContent, AIDocumentContent, AICallOptions, AIProvider, GeminiRequest, GeminiGenerationConfig,
+  OpenAIMessage, OpenAIMessagePart, OpenAIReasoningConfig, OpenAIReasoningLevel,
   // MODAL PROPS (movido de App.tsx v1.35.79)
   ModelFormModalProps, ModelPreviewModalProps, RenameTopicModalProps, DeleteTopicModalProps, MergeTopicsModalProps, SplitTopicModalProps,
   NewTopicModalProps, DeleteModelModalProps, DeleteAllModelsModalProps, DeleteAllPrecedentesModalProps,
@@ -201,7 +202,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.9'; // v1.36.9: Fix bullet list no Quill (override ::before para data-list="bullet")
+const APP_VERSION = '1.36.10'; // v1.36.10: feat(multi-provider): OpenAI GPT-5.2 + xAI Grok 4.1
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -1606,13 +1607,18 @@ const aiGenerationReducer = (state: AIGenState, action: AIGenAction): AIGenState
 
 const useAIIntegration = () => {
   const [aiSettings, setAiSettingsState] = React.useState<AISettings>({
-    // v1.30: Multi-provider support
-    provider: 'claude',  // 'claude' | 'gemini'
+    // v1.30: Multi-provider support (v1.35.97: +OpenAI +Grok)
+    provider: 'claude',  // 'claude' | 'gemini' | 'openai' | 'grok'
     claudeModel: 'claude-sonnet-4-20250514',
     geminiModel: 'gemini-3-flash-preview',  // v1.32.36: Removido suporte a Gemini 2.5
+    openaiModel: 'gpt-5.2-chat-latest',     // v1.35.97: GPT-5.2 Instant (rápido)
+    openaiReasoningLevel: 'medium',          // v1.35.97: low | medium | high | xhigh
+    grokModel: 'grok-4-1-fast-reasoning',    // v1.35.97: Grok 4.1 Fast (2M contexto)
     apiKeys: {
       claude: '',  // Chave Anthropic (sk-ant-...)
-      gemini: ''   // Chave Google (AIza...)
+      gemini: '',  // Chave Google (AIza...)
+      openai: '',  // Chave OpenAI (sk-...)
+      grok: ''     // Chave xAI (xai-...)
     },
     // Gemini 3 specific: thinking_level instead of thinking_budget
     geminiThinkingLevel: 'high',  // 'minimal' | 'low' | 'medium' | 'high'
@@ -1800,7 +1806,10 @@ const useAIIntegration = () => {
           if (!parsed.geminiModel || parsed.geminiModel.includes('2.5')) {
             parsed.geminiModel = 'gemini-3-flash-preview';
           }
-          if (!parsed.apiKeys) parsed.apiKeys = { claude: '', gemini: '' };
+          if (!parsed.apiKeys) parsed.apiKeys = { claude: '', gemini: '', openai: '', grok: '' };
+          // v1.36.10: Migrar apiKeys antigas para incluir openai e grok
+          if (!parsed.apiKeys.openai) parsed.apiKeys.openai = '';
+          if (!parsed.apiKeys.grok) parsed.apiKeys.grok = '';
           if (!parsed.geminiThinkingLevel) parsed.geminiThinkingLevel = 'high';
 
           // v1.16.0: Deep merge para anonymization (preserva defaults para usuários antigos)
@@ -2263,8 +2272,72 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     return result;
   }, []);
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // OPENAI/GROK FORMAT CONVERSION (v1.35.97)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Converte mensagens do formato Claude para formato OpenAI (também usado pelo Grok)
+   * @param claudeMessages - Array de mensagens no formato Claude (AIMessage[])
+   * @param systemPrompt - System prompt opcional (string ou array de objetos)
+   * @returns Array de mensagens no formato OpenAI (OpenAIMessage[])
+   */
+  const convertToOpenAIFormat = React.useCallback((claudeMessages: AIMessage[], systemPrompt: string | null = null): OpenAIMessage[] => {
+    const messages: OpenAIMessage[] = [];
+
+    // System prompt primeiro (se houver)
+    if (systemPrompt) {
+      const systemText = Array.isArray(systemPrompt)
+        ? systemPrompt.map((s: Record<string, unknown>) => s.text || s).join('\n\n')
+        : systemPrompt;
+      messages.push({ role: 'system', content: systemText });
+    }
+
+    // Converter mensagens
+    for (const msg of claudeMessages) {
+      if (Array.isArray(msg.content)) {
+        // Mensagem com múltiplos conteúdos (texto + imagem)
+        const parts: OpenAIMessagePart[] = [];
+
+        for (const c of msg.content as unknown as Record<string, unknown>[]) {
+          if (c.type === 'text') {
+            parts.push({ type: 'text', text: c.text as string });
+          } else if (c.type === 'image') {
+            // Converter formato Claude → OpenAI para imagens
+            const source = c.source as Record<string, unknown>;
+            const mediaType = source?.media_type || 'image/png';
+            const data = source?.data as string;
+            parts.push({
+              type: 'image_url',
+              image_url: { url: `data:${mediaType};base64,${data}` }
+            });
+          }
+          // Nota: PDFs não são suportados diretamente pela OpenAI/Grok API
+          // Serão ignorados (texto já extraído pelo Sentencify)
+        }
+
+        messages.push({ role: msg.role as 'user' | 'assistant', content: parts });
+      } else {
+        messages.push({ role: msg.role as 'user' | 'assistant', content: msg.content as string });
+      }
+    }
+
+    return messages;
+  }, []);
+
   // Extrair métricas de tokens da resposta (provider-aware)
   const extractTokenMetrics = React.useCallback((data: Record<string, unknown>, provider: AIProvider) => {
+    // v1.35.97: OpenAI e Grok usam mesmo formato (OpenAI-compatible)
+    if (provider === 'openai' || provider === 'grok') {
+      const usage = (data.usage || {}) as Record<string, unknown>;
+      const promptDetails = (usage.prompt_tokens_details || {}) as Record<string, number>;
+      return {
+        input: (usage.prompt_tokens as number) || 0,
+        output: (usage.completion_tokens as number) || 0,
+        cacheRead: promptDetails.cached_tokens || 0,
+        cacheCreation: 0
+      };
+    }
     if (provider === 'gemini') {
       const usage = (data.usageMetadata || {}) as Record<string, number>;
       return {
@@ -2286,6 +2359,27 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
   // Extrair texto da resposta (provider-aware)
   const extractResponseText = React.useCallback((data: Record<string, unknown>, provider: AIProvider) => {
+    // v1.35.97: OpenAI e Grok usam mesmo formato (OpenAI-compatible)
+    if (provider === 'openai' || provider === 'grok') {
+      const choices = data.choices as Record<string, unknown>[] | undefined;
+      const message = choices?.[0]?.message as Record<string, unknown> | undefined;
+
+      // Log reasoning se logThinking ativo (OpenAI apenas)
+      if (provider === 'openai' && aiSettings.logThinking && message?.reasoning_details) {
+        console.log('[OpenAI Reasoning]', message.reasoning_details);
+      }
+
+      // Verificar finish_reason para erros
+      const finishReason = choices?.[0]?.finish_reason;
+      if (finishReason === 'content_filter') {
+        throw new Error('Resposta bloqueada pelo filtro de conteúdo.');
+      }
+      if (finishReason === 'length') {
+        console.warn(`[${provider}] Resposta truncada por limite de tokens`);
+      }
+
+      return (message?.content as string) || '';
+    }
     if (provider === 'gemini') {
       const candidates = data.candidates as Record<string, unknown>[] | undefined;
       const candidate = candidates?.[0];
@@ -2313,7 +2407,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     // Claude (default)
     const content = data.content as Record<string, unknown>[] | undefined;
     return (content?.find((c: Record<string, unknown>) => c.type === 'text')?.text as string) || '';
-  }, []);
+  }, [aiSettings.logThinking]);
 
   // v1.32.37: Configurar thinking para Gemini 3 (removido suporte a 2.5)
   // Docs: https://ai.google.dev/gemini-api/docs/thinking
@@ -2497,9 +2591,263 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     throw lastError || new Error('Todas as tentativas falharam');
   }, [aiSettings, convertToGeminiFormat, extractTokenMetrics, extractResponseText, getGeminiThinkingConfig, setTokenMetrics, getAiInstructions]);
 
-  // Função unificada que escolhe Claude ou Gemini baseado no provider
+  // ═══════════════════════════════════════════════════════════════════════════
+  // OPENAI GPT-5.2 INTEGRATION (v1.35.97)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Códigos HTTP que disparam retry automático */
+  const OPENAI_RETRY_CODES = [429, 500, 502, 503, 529];
+
+  /** Configurações padrão OpenAI */
+  const OPENAI_CONFIG = {
+    MAX_TOKENS_DEFAULT: 4000,
+    REASONING_TIMEOUT_MS: 300000,  // 5 min para reasoning xhigh
+    RETRY_MAX_ATTEMPTS: 3,
+    RETRY_DELAY_MS: 5000
+  } as const;
+
+  /**
+   * Faz chamada à API OpenAI (GPT-5.2)
+   */
+  const callOpenAIAPI = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
+    const {
+      maxTokens = OPENAI_CONFIG.MAX_TOKENS_DEFAULT,
+      systemPrompt = null,
+      useInstructions = false,
+      model = aiSettings.openaiModel || 'gpt-5.2-chat-latest',
+      timeout = null,
+      abortSignal = null,
+      logMetrics = true,
+      extractText = true,
+      disableThinking = false
+    } = options;
+
+    // Resolver systemPrompt
+    let finalSystemPrompt = systemPrompt as string | null;
+    if (!finalSystemPrompt && useInstructions) {
+      const instructions = getAiInstructions();
+      finalSystemPrompt = Array.isArray(instructions)
+        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
+        : instructions;
+    }
+
+    // Timeout maior para reasoning xhigh
+    const reasoningLevel = aiSettings.openaiReasoningLevel || 'medium';
+    const effectiveTimeout = timeout || (
+      model === 'gpt-5.2' && reasoningLevel === 'xhigh'
+        ? OPENAI_CONFIG.REASONING_TIMEOUT_MS
+        : null
+    );
+
+    const internalController = effectiveTimeout ? new AbortController() : null;
+    const timeoutId = effectiveTimeout ? setTimeout(() => internalController?.abort(), effectiveTimeout) : null;
+    const signal = abortSignal || internalController?.signal;
+
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt < OPENAI_CONFIG.RETRY_MAX_ATTEMPTS; attempt++) {
+      try {
+        const openaiMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
+
+        const requestBody: Record<string, unknown> = {
+          model,
+          messages: openaiMessages,
+          max_tokens: maxTokens
+        };
+
+        // Adicionar reasoning apenas para gpt-5.2 (não gpt-5.2-chat-latest)
+        if (model === 'gpt-5.2' && !disableThinking) {
+          requestBody.reasoning = { effort: reasoningLevel };
+        }
+
+        const response = await fetch(`${API_BASE}/api/openai/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': aiSettings.apiKeys?.openai || ''
+          },
+          body: JSON.stringify(requestBody),
+          signal
+        });
+
+        if (timeoutId) clearTimeout(timeoutId);
+
+        if (OPENAI_RETRY_CODES.includes(response.status) && attempt < OPENAI_CONFIG.RETRY_MAX_ATTEMPTS - 1) {
+          console.warn(`[OpenAI] Retry ${attempt + 1}/${OPENAI_CONFIG.RETRY_MAX_ATTEMPTS} - status ${response.status}`);
+          await new Promise(r => setTimeout(r, OPENAI_CONFIG.RETRY_DELAY_MS * (attempt + 1)));
+          continue;
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const errorMsg = data.error?.message || `OpenAI API error: ${response.status}`;
+          throw new Error(errorMsg);
+        }
+
+        if (logMetrics) {
+          const metrics = extractTokenMetrics(data, 'openai');
+          setTokenMetrics(prev => ({
+            totalInput: (prev.totalInput || 0) + metrics.input,
+            totalOutput: (prev.totalOutput || 0) + metrics.output,
+            totalCacheRead: (prev.totalCacheRead || 0) + metrics.cacheRead,
+            totalCacheCreation: (prev.totalCacheCreation || 0) + metrics.cacheCreation,
+            requestCount: (prev.requestCount || 0) + 1,
+            lastUpdated: new Date().toISOString()
+          }));
+        }
+
+        if (extractText) {
+          return extractResponseText(data, 'openai');
+        }
+        return data;
+
+      } catch (err: unknown) {
+        lastError = err as Error;
+        if (timeoutId) clearTimeout(timeoutId);
+
+        if (lastError.name === 'AbortError') {
+          throw new Error('Requisição cancelada (timeout)');
+        }
+
+        if (attempt < OPENAI_CONFIG.RETRY_MAX_ATTEMPTS - 1) {
+          console.warn(`[OpenAI] Retry ${attempt + 1}/${OPENAI_CONFIG.RETRY_MAX_ATTEMPTS} - ${lastError.message}`);
+          await new Promise(r => setTimeout(r, OPENAI_CONFIG.RETRY_DELAY_MS * (attempt + 1)));
+          continue;
+        }
+        throw lastError;
+      }
+    }
+
+    throw lastError || new Error('OpenAI: todas as tentativas falharam');
+  }, [aiSettings, convertToOpenAIFormat, extractTokenMetrics, extractResponseText, setTokenMetrics, getAiInstructions]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // XAI GROK 4.1 INTEGRATION (v1.35.97)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Códigos HTTP que disparam retry automático (mesmo do OpenAI) */
+  const GROK_RETRY_CODES = [429, 500, 502, 503, 529];
+
+  /** Configurações padrão Grok */
+  const GROK_CONFIG = {
+    MAX_TOKENS_DEFAULT: 4000,
+    RETRY_MAX_ATTEMPTS: 3,
+    RETRY_DELAY_MS: 5000
+  } as const;
+
+  /**
+   * Faz chamada à API xAI Grok (OpenAI-compatible)
+   */
+  const callGrokAPI = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
+    const {
+      maxTokens = GROK_CONFIG.MAX_TOKENS_DEFAULT,
+      systemPrompt = null,
+      useInstructions = false,
+      model = aiSettings.grokModel || 'grok-4-1-fast-reasoning',
+      abortSignal = null,
+      logMetrics = true,
+      extractText = true
+    } = options;
+
+    let finalSystemPrompt = systemPrompt as string | null;
+    if (!finalSystemPrompt && useInstructions) {
+      const instructions = getAiInstructions();
+      finalSystemPrompt = Array.isArray(instructions)
+        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
+        : instructions;
+    }
+
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt < GROK_CONFIG.RETRY_MAX_ATTEMPTS; attempt++) {
+      try {
+        const grokMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
+
+        const requestBody = {
+          model,
+          messages: grokMessages,
+          max_tokens: maxTokens
+        };
+
+        const response = await fetch(`${API_BASE}/api/grok/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': aiSettings.apiKeys?.grok || ''
+          },
+          body: JSON.stringify(requestBody),
+          signal: abortSignal
+        });
+
+        if (GROK_RETRY_CODES.includes(response.status) && attempt < GROK_CONFIG.RETRY_MAX_ATTEMPTS - 1) {
+          console.warn(`[Grok] Retry ${attempt + 1}/${GROK_CONFIG.RETRY_MAX_ATTEMPTS} - status ${response.status}`);
+          await new Promise(r => setTimeout(r, GROK_CONFIG.RETRY_DELAY_MS * (attempt + 1)));
+          continue;
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const errorMsg = data.error?.message || `Grok API error: ${response.status}`;
+          throw new Error(errorMsg);
+        }
+
+        if (logMetrics) {
+          const metrics = extractTokenMetrics(data, 'grok');
+          setTokenMetrics(prev => ({
+            totalInput: (prev.totalInput || 0) + metrics.input,
+            totalOutput: (prev.totalOutput || 0) + metrics.output,
+            totalCacheRead: (prev.totalCacheRead || 0) + metrics.cacheRead,
+            totalCacheCreation: (prev.totalCacheCreation || 0) + metrics.cacheCreation,
+            requestCount: (prev.requestCount || 0) + 1,
+            lastUpdated: new Date().toISOString()
+          }));
+        }
+
+        if (extractText) {
+          return extractResponseText(data, 'grok');
+        }
+        return data;
+
+      } catch (err: unknown) {
+        lastError = err as Error;
+
+        if (lastError.name === 'AbortError') {
+          throw new Error('Requisição cancelada');
+        }
+
+        if (attempt < GROK_CONFIG.RETRY_MAX_ATTEMPTS - 1) {
+          console.warn(`[Grok] Retry ${attempt + 1}/${GROK_CONFIG.RETRY_MAX_ATTEMPTS} - ${lastError.message}`);
+          await new Promise(r => setTimeout(r, GROK_CONFIG.RETRY_DELAY_MS * (attempt + 1)));
+          continue;
+        }
+        throw lastError;
+      }
+    }
+
+    throw lastError || new Error('Grok: todas as tentativas falharam');
+  }, [aiSettings, convertToOpenAIFormat, extractTokenMetrics, extractResponseText, setTokenMetrics, getAiInstructions]);
+
+  // Função unificada que escolhe Claude, Gemini, OpenAI ou Grok baseado no provider
   const callAI = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
     const provider = aiSettings.provider || 'claude';
+
+    // v1.35.97: OpenAI GPT-5.2
+    if (provider === 'openai') {
+      return await callOpenAIAPI(messages, {
+        ...options,
+        model: options.model || aiSettings.openaiModel || 'gpt-5.2-chat-latest'
+      });
+    }
+
+    // v1.35.97: xAI Grok 4.1
+    if (provider === 'grok') {
+      return await callGrokAPI(messages, {
+        ...options,
+        model: options.model || aiSettings.grokModel || 'grok-4-1-fast-reasoning'
+      });
+    }
 
     if (provider === 'gemini') {
       return await callGeminiAPI(messages, {
@@ -2513,7 +2861,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       ...options,
       model: options.model || aiSettings.claudeModel || 'claude-sonnet-4-20250514'
     });
-  }, [aiSettings, callLLM, callGeminiAPI]);
+  }, [aiSettings, callLLM, callGeminiAPI, callOpenAIAPI, callGrokAPI]);
 
   // ========================================
   // END MULTI-PROVIDER SUPPORT
@@ -2526,7 +2874,13 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       'claude-opus-4-5-20251101': 'Claude Opus 4.5',
       // Gemini 3 (v1.32.36: removido 2.5)
       'gemini-3-flash-preview': 'Gemini 3 Flash',
-      'gemini-3-pro-preview': 'Gemini 3 Pro'
+      'gemini-3-pro-preview': 'Gemini 3 Pro',
+      // v1.35.97: OpenAI GPT-5.2
+      'gpt-5.2': 'GPT-5.2 Thinking',
+      'gpt-5.2-chat-latest': 'GPT-5.2 Instant',
+      // v1.35.97: xAI Grok 4.1
+      'grok-4-1-fast-reasoning': 'Grok 4.1 Fast',
+      'grok-4-1-fast-non-reasoning': 'Grok 4.1 Instant'
     };
     return models[modelId] || modelId;
   }, []);
@@ -2578,8 +2932,11 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
     // v1.30: Multi-provider support
     callGeminiAPI,
+    callOpenAIAPI,   // v1.35.97
+    callGrokAPI,     // v1.35.97
     callAI,
     convertToGeminiFormat,
+    convertToOpenAIFormat,  // v1.35.97
     extractTokenMetrics,
     extractResponseText,
 
@@ -4676,12 +5033,12 @@ const useLocalStorage = () => {
       };
 
       // Obter apiKeys ATUAIS do localStorage (nunca sobrescrever!)
-      let currentApiKeys = { claude: '', gemini: '' };
+      let currentApiKeys = { claude: '', gemini: '', openai: '', grok: '' };
       try {
         const saved = localStorage.getItem('sentencify-ai-settings');
         if (saved) {
           const parsed = JSON.parse(saved);
-          currentApiKeys = parsed.apiKeys || currentApiKeys;
+          currentApiKeys = { ...currentApiKeys, ...parsed.apiKeys };
         }
       } catch (e) { /* ignore */ }
 
@@ -19862,6 +20219,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.35.75: Feedback inline nos botões de teste de API Key
   const [claudeTestStatus, setClaudeTestStatus] = useState<'testing' | 'ok' | 'error' | null>(null); // null | 'testing' | 'ok' | 'error'
   const [geminiTestStatus, setGeminiTestStatus] = useState<'testing' | 'ok' | 'error' | null>(null);
+  // v1.35.97: OpenAI e Grok test status
+  const [openaiTestStatus, setOpenaiTestStatus] = useState<'testing' | 'ok' | 'error' | null>(null);
+  const [grokTestStatus, setGrokTestStatus] = useState<'testing' | 'ok' | 'error' | null>(null);
   const [semanticManualSearchResults, setSemanticManualSearchResults] = useState<Model[] | null>(null);
   const [semanticManualSearching, setSemanticManualSearching] = useState(false);
 
@@ -31014,7 +31374,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           : (aiIntegration.aiSettings?.model || 'claude-sonnet-4-20250514')}
         parallelRequests={aiIntegration.aiSettings?.parallelRequests || 5}
         isDarkMode={appTheme === 'dark'}
-        provider={aiIntegration.aiSettings?.provider || 'anthropic'}
+        provider={aiIntegration.aiSettings?.provider || 'claude'}
         thinkingBudget={aiIntegration.aiSettings?.thinkingBudget || '10000'}
         useExtendedThinking={aiIntegration.aiSettings?.useExtendedThinking ?? true}
         geminiThinkingLevel={aiIntegration.aiSettings?.geminiThinkingLevel || 'high'}
@@ -31135,39 +31495,71 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
             </div>
             
             <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
-              {/* v1.30: Provider Selection */}
+              {/* v1.30: Provider Selection (v1.35.97: +OpenAI +Grok) */}
               <div>
                 <label className="block text-sm font-medium theme-text-tertiary mb-3">Provedor de IA</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-4 gap-2">
                   <button
                     onClick={() => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, provider: 'claude' })}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      aiIntegration.aiSettings.provider !== 'gemini'
+                    className={`p-3 rounded-lg border-2 transition-all text-left ${
+                      aiIntegration.aiSettings.provider === 'claude'
                         ? 'bg-purple-600/20 border-purple-500'
                         : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-xl">🟣</span>
+                      <span className="text-lg">🟣</span>
                       <div>
-                        <div className="font-semibold theme-text-primary">Claude</div>
+                        <div className="font-semibold theme-text-primary text-sm">Claude</div>
                         <div className="text-xs theme-text-muted">Anthropic</div>
                       </div>
                     </div>
                   </button>
                   <button
                     onClick={() => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, provider: 'gemini' })}
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    className={`p-3 rounded-lg border-2 transition-all text-left ${
                       aiIntegration.aiSettings.provider === 'gemini'
                         ? 'bg-blue-600/20 border-blue-500'
                         : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-xl">🔵</span>
+                      <span className="text-lg">🔵</span>
                       <div>
-                        <div className="font-semibold theme-text-primary">Gemini</div>
+                        <div className="font-semibold theme-text-primary text-sm">Gemini</div>
                         <div className="text-xs theme-text-muted">Google</div>
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, provider: 'openai' })}
+                    className={`p-3 rounded-lg border-2 transition-all text-left ${
+                      aiIntegration.aiSettings.provider === 'openai'
+                        ? 'bg-emerald-600/20 border-emerald-500'
+                        : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🟢</span>
+                      <div>
+                        <div className="font-semibold theme-text-primary text-sm">OpenAI</div>
+                        <div className="text-xs theme-text-muted">GPT-5.2</div>
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, provider: 'grok' })}
+                    className={`p-3 rounded-lg border-2 transition-all text-left ${
+                      aiIntegration.aiSettings.provider === 'grok'
+                        ? 'bg-gray-600/20 border-gray-400'
+                        : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">𝕏</span>
+                      <div>
+                        <div className="font-semibold theme-text-primary text-sm">Grok</div>
+                        <div className="text-xs theme-text-muted">xAI</div>
                       </div>
                     </div>
                   </button>
@@ -31176,9 +31568,21 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                 {/* Model Selection based on provider */}
                 <div className="mt-3">
                   <label className="block text-xs theme-text-muted mb-1">
-                    Modelo {aiIntegration.aiSettings.provider === 'gemini' ? 'Gemini' : 'Claude'}:
+                    Modelo {aiIntegration.aiSettings.provider === 'claude' ? 'Claude' :
+                           aiIntegration.aiSettings.provider === 'gemini' ? 'Gemini' :
+                           aiIntegration.aiSettings.provider === 'openai' ? 'OpenAI' : 'Grok'}:
                   </label>
-                  {aiIntegration.aiSettings.provider === 'gemini' ? (
+                  {aiIntegration.aiSettings.provider === 'claude' && (
+                    <select
+                      value={aiIntegration.aiSettings.claudeModel || 'claude-sonnet-4-20250514'}
+                      onChange={(e) => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, claudeModel: e.target.value, model: e.target.value })}
+                      className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                    >
+                      <option value="claude-sonnet-4-20250514">Sonnet 4.5 ($3/$15 por 1M)</option>
+                      <option value="claude-opus-4-5-20251101">Opus 4.5 ($15/$75 por 1M)</option>
+                    </select>
+                  )}
+                  {aiIntegration.aiSettings.provider === 'gemini' && (
                     <select
                       value={aiIntegration.aiSettings.geminiModel || 'gemini-3-flash-preview'}
                       onChange={(e) => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, geminiModel: e.target.value })}
@@ -31188,14 +31592,27 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       <option value="gemini-3-flash-preview">Gemini 3 Flash ($0.50/$3.00 por 1M)</option>
                       <option value="gemini-3-pro-preview">Gemini 3 Pro ($2.00/$12 por 1M)</option>
                     </select>
-                  ) : (
+                  )}
+                  {/* v1.35.97: OpenAI Model Selection */}
+                  {aiIntegration.aiSettings.provider === 'openai' && (
                     <select
-                      value={aiIntegration.aiSettings.claudeModel || 'claude-sonnet-4-20250514'}
-                      onChange={(e) => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, claudeModel: e.target.value, model: e.target.value })}
+                      value={aiIntegration.aiSettings.openaiModel || 'gpt-5.2-chat-latest'}
+                      onChange={(e) => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, openaiModel: e.target.value as 'gpt-5.2' | 'gpt-5.2-chat-latest' })}
                       className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
                     >
-                      <option value="claude-sonnet-4-20250514">Sonnet 4.5 ($3/$15 por 1M)</option>
-                      <option value="claude-opus-4-5-20251101">Opus 4.5 ($15/$75 por 1M)</option>
+                      <option value="gpt-5.2-chat-latest">GPT-5.2 Instant ($1.75/$14 por 1M)</option>
+                      <option value="gpt-5.2">GPT-5.2 Thinking - com Reasoning ($1.75/$14 por 1M)</option>
+                    </select>
+                  )}
+                  {/* v1.35.97: Grok Model Selection */}
+                  {aiIntegration.aiSettings.provider === 'grok' && (
+                    <select
+                      value={aiIntegration.aiSettings.grokModel || 'grok-4-1-fast-reasoning'}
+                      onChange={(e) => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, grokModel: e.target.value as 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning' })}
+                      className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                    >
+                      <option value="grok-4-1-fast-reasoning">Grok 4.1 Fast ($0.20/$0.50 por 1M) - 2M contexto</option>
+                      <option value="grok-4-1-fast-non-reasoning">Grok 4.1 Instant ($0.20/$0.50 por 1M) - sem thinking</option>
                     </select>
                   )}
                 </div>
@@ -31288,6 +31705,94 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         {geminiTestStatus === 'testing' ? '...' :
                          geminiTestStatus === 'ok' ? '✓' :
                          geminiTestStatus === 'error' ? '✗' : 'Testar'}
+                      </button>
+                    </div>
+                  </div>
+                  {/* v1.35.97: OpenAI API Key */}
+                  <div>
+                    <label className="block text-xs theme-text-muted mb-1">OpenAI (GPT):</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="password"
+                        value={aiIntegration.aiSettings.apiKeys?.openai || ''}
+                        onChange={(e) => aiIntegration.setAiSettings({
+                          ...aiIntegration.aiSettings,
+                          apiKeys: { ...aiIntegration.aiSettings.apiKeys, openai: e.target.value }
+                        })}
+                        placeholder="sk-..."
+                        className="flex-1 px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                      />
+                      <button
+                        onClick={async () => {
+                          setOpenaiTestStatus('testing');
+                          try {
+                            const resp = await fetch(`${API_BASE}/api/openai/chat`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json', 'x-api-key': aiIntegration.aiSettings.apiKeys?.openai || '' },
+                              body: JSON.stringify({
+                                model: 'gpt-5.2-chat-latest',
+                                max_tokens: 10,
+                                messages: [{ role: 'user', content: 'Olá' }]
+                              })
+                            });
+                            setOpenaiTestStatus(resp.ok ? 'ok' : 'error');
+                          } catch { setOpenaiTestStatus('error'); }
+                          setTimeout(() => setOpenaiTestStatus(null), 2000);
+                        }}
+                        disabled={openaiTestStatus === 'testing'}
+                        className={`px-3 py-2 text-white rounded text-sm min-w-[60px] transition-colors ${
+                          openaiTestStatus === 'ok' ? 'bg-green-600' :
+                          openaiTestStatus === 'error' ? 'bg-red-600' :
+                          'bg-emerald-600 hover:bg-emerald-700'
+                        }`}
+                      >
+                        {openaiTestStatus === 'testing' ? '...' :
+                         openaiTestStatus === 'ok' ? '✓' :
+                         openaiTestStatus === 'error' ? '✗' : 'Testar'}
+                      </button>
+                    </div>
+                  </div>
+                  {/* v1.35.97: xAI Grok API Key */}
+                  <div>
+                    <label className="block text-xs theme-text-muted mb-1">xAI (Grok):</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="password"
+                        value={aiIntegration.aiSettings.apiKeys?.grok || ''}
+                        onChange={(e) => aiIntegration.setAiSettings({
+                          ...aiIntegration.aiSettings,
+                          apiKeys: { ...aiIntegration.aiSettings.apiKeys, grok: e.target.value }
+                        })}
+                        placeholder="xai-..."
+                        className="flex-1 px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                      />
+                      <button
+                        onClick={async () => {
+                          setGrokTestStatus('testing');
+                          try {
+                            const resp = await fetch(`${API_BASE}/api/grok/chat`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json', 'x-api-key': aiIntegration.aiSettings.apiKeys?.grok || '' },
+                              body: JSON.stringify({
+                                model: 'grok-4-1-fast-non-reasoning',
+                                max_tokens: 10,
+                                messages: [{ role: 'user', content: 'Olá' }]
+                              })
+                            });
+                            setGrokTestStatus(resp.ok ? 'ok' : 'error');
+                          } catch { setGrokTestStatus('error'); }
+                          setTimeout(() => setGrokTestStatus(null), 2000);
+                        }}
+                        disabled={grokTestStatus === 'testing'}
+                        className={`px-3 py-2 text-white rounded text-sm min-w-[60px] transition-colors ${
+                          grokTestStatus === 'ok' ? 'bg-green-600' :
+                          grokTestStatus === 'error' ? 'bg-red-600' :
+                          'bg-gray-600 hover:bg-gray-700'
+                        }`}
+                      >
+                        {grokTestStatus === 'testing' ? '...' :
+                         grokTestStatus === 'ok' ? '✓' :
+                         grokTestStatus === 'error' ? '✗' : 'Testar'}
                       </button>
                     </div>
                   </div>
@@ -31405,6 +31910,68 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         ? '💡 Gemini 3 Pro suporta apenas Low e High'
                         : '💡 Gemini 3 Flash suporta todos os níveis'
                       }
+                    </p>
+                  </div>
+                )}
+
+                {/* v1.35.97: OPENAI: Reasoning Config (só para gpt-5.2) */}
+                {aiIntegration.aiSettings.provider === 'openai' && aiIntegration.aiSettings.openaiModel === 'gpt-5.2' && (
+                  <div className="p-4 rounded-lg border-2 border-emerald-500/50 bg-emerald-500/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-emerald-400">🧠</span>
+                      <span className="font-semibold theme-text-primary">GPT-5.2 Reasoning</span>
+                    </div>
+                    <p className="text-xs theme-text-muted mb-3">
+                      O modelo pensa passo-a-passo antes de responder. Níveis mais altos produzem respostas mais elaboradas, mas custam mais tokens.
+                    </p>
+                    <select
+                      value={aiIntegration.aiSettings.openaiReasoningLevel || 'medium'}
+                      onChange={(e) => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, openaiReasoningLevel: e.target.value as 'low' | 'medium' | 'high' | 'xhigh' })}
+                      className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                    >
+                      <option value="low">Low - Rápido, menos detalhado</option>
+                      <option value="medium">Medium - Balanceado (Recomendado)</option>
+                      <option value="high">High - Mais detalhado</option>
+                      <option value="xhigh">Extra High - Máxima qualidade (lento)</option>
+                    </select>
+                    {aiIntegration.aiSettings.openaiReasoningLevel === 'xhigh' && (
+                      <p className="text-xs text-amber-400 mt-2">
+                        ⚠️ Nível xhigh pode demorar vários minutos. Timeout aumentado para 5 min.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* v1.35.97: OPENAI: Info para modo Instant */}
+                {aiIntegration.aiSettings.provider === 'openai' && aiIntegration.aiSettings.openaiModel === 'gpt-5.2-chat-latest' && (
+                  <div className="p-4 rounded-lg border-2 border-emerald-500/30 bg-emerald-500/5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-emerald-400">⚡</span>
+                      <span className="font-semibold theme-text-primary">GPT-5.2 Instant</span>
+                    </div>
+                    <p className="text-xs theme-text-muted">
+                      Modelo rápido sem reasoning. Ideal para tarefas simples e respostas imediatas.
+                      Não suporta thinking/reasoning.
+                    </p>
+                  </div>
+                )}
+
+                {/* v1.35.97: GROK: Info sobre modelos */}
+                {aiIntegration.aiSettings.provider === 'grok' && (
+                  <div className="p-4 rounded-lg border-2 border-gray-500/50 bg-gray-500/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">𝕏</span>
+                      <span className="font-semibold theme-text-primary">
+                        {aiIntegration.aiSettings.grokModel === 'grok-4-1-fast-reasoning' ? 'Grok 4.1 Fast Thinking' : 'Grok 4.1 Fast Instant'}
+                      </span>
+                    </div>
+                    <p className="text-xs theme-text-muted">
+                      {aiIntegration.aiSettings.grokModel === 'grok-4-1-fast-reasoning'
+                        ? 'Modelo da xAI com 2M de contexto e thinking embutido. Raciocínio integrado (não configurável).'
+                        : 'Modelo da xAI com 2M de contexto, modo instant sem thinking para respostas rápidas.'}
+                    </p>
+                    <p className="text-xs text-emerald-400 mt-2">
+                      💰 $0.20/1M input + $0.50/1M output = ~$0.35/1M total (96% mais barato que Claude)
                     </p>
                   </div>
                 )}
