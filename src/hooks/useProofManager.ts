@@ -245,13 +245,15 @@ const useProofManager = (): UseProofManagerReturn => {
 
     for (const file of filesArray) {
       const id = Date.now() + Math.random();
+      // v1.36.28: isPdf: true é obrigatório para analyzeProof discriminar corretamente
       const newProof: ProofFileLocal = {
         id,
         file,
         name: file.name,
         type: 'pdf',
         size: file.size,
-        uploadDate: new Date().toISOString()
+        uploadDate: new Date().toISOString(),
+        isPdf: true
       };
 
       setProofFiles((prev) => [...prev, newProof]);

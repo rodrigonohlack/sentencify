@@ -2,6 +2,8 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.28', feature: 'Fix análise de provas: isPdf não setado na criação + verificação robusta com type === pdf' },
+  { version: '1.36.27', feature: 'Fix background transparente no AIAssistantBase: adicionado overflow-y-auto flex-1 min-h-0 ao content' },
   { version: '1.36.26', feature: 'Fix stale cache Confronto ao trocar tópico: useEffect limpa resultado quando editingTopic muda' },
   { version: '1.36.25', feature: 'Fix contraste badges Confronto de Fatos no tema claro: cores -600 para tema claro, -400 para tema escuro' },
   { version: '1.36.24', feature: 'Fix cache Confronto de Fatos no editor individual: handleOpenFactsComparisonIndividual recupera cache do IndexedDB antes de abrir modal' },

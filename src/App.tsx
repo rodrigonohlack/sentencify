@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.26'; // v1.36.26: Fix stale cache Confronto ao trocar tópico (editor individual)
+const APP_VERSION = '1.36.28'; // v1.36.28: Fix análise de provas (isPdf não setado na criação)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -11928,8 +11928,8 @@ const AIAssistantBase = React.memo(({
         {/* Conteúdo extra (ex: seletor de escopo) */}
         {extraContent && <div className="px-6 pt-4">{extraContent}</div>}
 
-        {/* Content */}
-        <div className="p-6 space-y-4">
+        {/* Content - v1.36.27: overflow-y-auto flex-1 min-h-0 para scroll e background correto */}
+        <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
           {/* Área de Chat */}
           <div className="border theme-border-input rounded-lg">
             <div className="flex items-center justify-between px-4 py-2 border-b theme-border-input theme-bg-secondary">
@@ -27689,7 +27689,8 @@ Extraia e classifique todos os tópicos/pedidos em:
       // Preparar conteúdo da prova
       let contentArray: AIMessageContent[] = [];
 
-      if (proof.isPdf) {
+      // v1.36.28: Verificação robusta - usa type === 'pdf' para compatibilidade com provas existentes
+      if (proof.type === 'pdf' || proof.isPdf) {
         // Prova em PDF - v1.21.2: Respeita modo de processamento escolhido
         const proofMode = proofManager.proofProcessingModes?.[proofId] || 'pdfjs';
 

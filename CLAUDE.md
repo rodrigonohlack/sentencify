@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.26 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.28 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -117,6 +117,8 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.28 | Fix análise de provas: isPdf não setado na criação + verificação robusta com type === 'pdf' |
+| v1.36.27 | Fix background transparente no AIAssistantBase: adicionado overflow-y-auto flex-1 min-h-0 ao content |
 | v1.36.26 | Fix stale cache Confronto ao trocar tópico: useEffect limpa resultado quando editingTopic muda |
 | v1.36.25 | Fix contraste badges Confronto de Fatos no tema claro: cores -600/-400 com dark: variant |
 | v1.36.24 | Fix cache Confronto de Fatos no editor individual: handleOpenFactsComparisonIndividual recupera cache antes de abrir modal |
