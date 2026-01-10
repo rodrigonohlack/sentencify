@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.22', feature: 'Fix Confronto de Fatos: fallback para PDF binário quando texto não extraído + scroll no BaseModal (max-h-[90vh] flex flex-col)' },
   { version: '1.36.21', feature: 'Refatorar FactsComparisonModal para usar BaseModal (padrão do app) + Botão Confronto no editor individual de tópicos + diretriz #6 no CLAUDE.md sobre uso obrigatório de BaseModal' },
   { version: '1.36.20', feature: 'Confronto de Fatos: botão na toolbar do editor abre modal para comparar alegações Petição vs Contestação vs Impugnação por tópico, tabela com fatos controversos/incontroversos, cache IndexedDB com TTL infinito, export/import no projeto' },
   { version: '1.36.19', feature: 'Fix UI edição prompts rápidos: campo de texto e onChange usavam name em vez de label (bug da migração TS)' },

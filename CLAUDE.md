@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.21 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.22 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -117,6 +117,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.22 | Fix Confronto de Fatos: fallback para PDF binário quando texto não extraído + scroll no BaseModal (max-h-[90vh] flex flex-col) |
 | v1.36.21 | Refatorar FactsComparisonModal para BaseModal + Botão Confronto no editor individual + diretriz #6 CLAUDE.md (sempre usar BaseModal) |
 | v1.36.20 | Confronto de Fatos: botão na toolbar do editor abre modal para comparar alegações Petição vs Contestação vs Impugnação por tópico, tabela com fatos controversos/incontroversos, cache IndexedDB (TTL infinito), export/import no projeto |
 | v1.36.11 | UX: Indicador visual claro de thinking no Grok - badges "Thinking Embutido" (roxo) e "Sem Thinking" (âmbar) na seção Pensamento Prolongado |

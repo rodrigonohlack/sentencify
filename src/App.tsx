@@ -142,7 +142,7 @@ import useFactsComparisonCache, { openFactsDB, FACTS_STORE_NAME } from './hooks/
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
 import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS } from './prompts';
-import { buildMiniRelatorioComparisonPrompt, buildDocumentosComparisonPrompt } from './prompts/facts-comparison-prompts';
+import { buildMiniRelatorioComparisonPrompt, buildDocumentosComparisonPrompt, buildPdfComparisonPrompt } from './prompts/facts-comparison-prompts';
 
 // v1.35.79: Tipos TypeScript centralizados (ETAPA 0 reorganização completa)
 import type {
@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.21'; // v1.36.21: Refatorar FactsComparisonModal para BaseModal + Botão Confronto no editor individual
+const APP_VERSION = '1.36.22'; // v1.36.22: Fix Confronto de Fatos - fallback PDF binário + scroll modal
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -285,7 +285,7 @@ const extractPlainText = (html: string): string => {
 const CSS = {
   // Modal system - v1.33.43: usa variáveis de tema para suportar tema claro/escuro
   modalOverlay: "fixed inset-0 theme-modal-overlay backdrop-blur-sm flex items-center justify-center z-[90] p-4",
-  modalContainer: "theme-modal-container backdrop-blur-md rounded-2xl shadow-2xl theme-border-modal border theme-modal-glow",
+  modalContainer: "theme-modal-container backdrop-blur-md rounded-2xl shadow-2xl theme-border-modal border theme-modal-glow max-h-[90vh] flex flex-col",
   modalHeader: "p-5 border-b theme-border-modal",
   modalFooter: "flex gap-3 p-4 border-t theme-border-modal",
   // Input
@@ -10605,8 +10605,8 @@ const BaseModal = React.memo(({
         onClick={e => e.stopPropagation()}
         style={{ animation: 'modalFadeIn 0.2s ease-out' }}
       >
-        {/* Header com ícone em círculo e botão X */}
-        <div className={`${CSS.modalHeader} flex items-center justify-between`}>
+        {/* Header com ícone em círculo e botão X - v1.36.22: flex-shrink-0 para não encolher */}
+        <div className={`${CSS.modalHeader} flex items-center justify-between flex-shrink-0`}>
           <div className="flex items-center gap-3">
             {icon && (
               <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${iconGradients[iconColor] || iconGradients.blue} flex items-center justify-center shadow-lg`}>
@@ -10627,8 +10627,8 @@ const BaseModal = React.memo(({
             </button>
           )}
         </div>
-        {/* Content */}
-        <div className="p-5">
+        {/* Content - v1.36.22: overflow-y-auto + flex-1 para scroll quando conteúdo grande */}
+        <div className="p-5 overflow-y-auto flex-1">
           {children}
         </div>
         {/* Footer */}
@@ -16349,20 +16349,91 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
         }
         prompt = buildMiniRelatorioComparisonPrompt(topic.title, relatorio);
       } else {
-        // Documentos completos
-        const peticao = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-        const contestacao = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-        const impugnacao = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
+        // Documentos completos - priorizar texto, fallback para PDF binário
+        const peticaoText = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+        const contestacaoText = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+        const impugnacaoText = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
 
-        if (!peticao.trim() && !contestacao.trim()) {
+        const hasText = peticaoText.trim() || contestacaoText.trim();
+        // v1.36.22: PDFs base64 estão em analyzedDocuments?.peticoes (não em peticaoFiles)
+        const hasPdfs = (analyzedDocuments?.peticoes?.length || 0) > 0 || (analyzedDocuments?.contestacoes?.length || 0) > 0;
+
+        if (!hasText && !hasPdfs) {
           throw new Error('Nenhum documento disponível (petição ou contestação).');
         }
-        prompt = buildDocumentosComparisonPrompt(topic.title, peticao, contestacao, impugnacao);
+
+        if (hasText) {
+          // Caminho padrão: usar texto extraído
+          prompt = buildDocumentosComparisonPrompt(topic.title, peticaoText, contestacaoText, impugnacaoText);
+        } else {
+          // v1.36.22: Fallback para PDF binário (quando não há texto extraído)
+          prompt = buildPdfComparisonPrompt(topic.title);
+        }
+      }
+
+      // Construir mensagem - pode ser texto simples ou incluir PDFs binários
+      let messageContent: AIMessageContent[];
+
+      const peticaoTextFallback = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+      const contestacaoTextFallback = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+      const hasTextForMessage = peticaoTextFallback.trim() || contestacaoTextFallback.trim();
+
+      if (hasTextForMessage || source === 'mini-relatorio') {
+        // Texto simples
+        messageContent = [{ type: 'text', text: prompt }];
+      } else {
+        // v1.36.22: Incluir PDFs binários como fallback (de analyzedDocuments.peticoes/contestacoes/complementares)
+        messageContent = [{ type: 'text', text: prompt }];
+
+        // Adicionar petições como PDF
+        for (const base64 of (analyzedDocuments?.peticoes || [])) {
+          if (base64) {
+            messageContent.push({ type: 'text', text: '\n\n📄 PETIÇÃO INICIAL (documento PDF a seguir):' });
+            messageContent.push({
+              type: 'document',
+              source: {
+                type: 'base64',
+                media_type: 'application/pdf',
+                data: base64
+              }
+            } as AIDocumentContent);
+          }
+        }
+
+        // Adicionar contestações como PDF
+        for (const base64 of (analyzedDocuments?.contestacoes || [])) {
+          if (base64) {
+            messageContent.push({ type: 'text', text: '\n\n📄 CONTESTAÇÃO (documento PDF a seguir):' });
+            messageContent.push({
+              type: 'document',
+              source: {
+                type: 'base64',
+                media_type: 'application/pdf',
+                data: base64
+              }
+            } as AIDocumentContent);
+          }
+        }
+
+        // Adicionar complementares como PDF
+        for (const base64 of (analyzedDocuments?.complementares || [])) {
+          if (base64) {
+            messageContent.push({ type: 'text', text: '\n\n📄 DOCUMENTO COMPLEMENTAR (documento PDF a seguir):' });
+            messageContent.push({
+              type: 'document',
+              source: {
+                type: 'base64',
+                media_type: 'application/pdf',
+                data: base64
+              }
+            } as AIDocumentContent);
+          }
+        }
       }
 
       const response = await aiIntegration.callAI([{
         role: 'user',
-        content: [{ type: 'text', text: prompt }]
+        content: messageContent
       }], {
         maxTokens: 8000,
         useInstructions: false,
@@ -24290,6 +24361,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
   };
 
   // v1.36.21: Handler para Confronto de Fatos (editor individual)
+  // v1.36.22: Adicionado fallback para PDF binário
   const handleGenerateFactsComparisonIndividual = async (source: FactsComparisonSource) => {
     if (!aiIntegration || !editingTopic) return;
 
@@ -24306,20 +24378,84 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
         }
         prompt = buildMiniRelatorioComparisonPrompt(editingTopic.title, relatorio);
       } else {
-        // Documentos completos
-        const peticao = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-        const contestacao = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-        const impugnacao = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
+        // Documentos completos - priorizar texto, fallback para PDF binário
+        const peticaoText = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+        const contestacaoText = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+        const impugnacaoText = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
 
-        if (!peticao.trim() && !contestacao.trim()) {
+        const hasText = peticaoText.trim() || contestacaoText.trim();
+        const hasPdfs = (analyzedDocuments?.peticoes?.length || 0) > 0 || (analyzedDocuments?.contestacoes?.length || 0) > 0;
+
+        if (!hasText && !hasPdfs) {
           throw new Error('Nenhum documento disponível (petição ou contestação).');
         }
-        prompt = buildDocumentosComparisonPrompt(editingTopic.title, peticao, contestacao, impugnacao);
+
+        if (hasText) {
+          // Caminho padrão: usar texto extraído
+          prompt = buildDocumentosComparisonPrompt(editingTopic.title, peticaoText, contestacaoText, impugnacaoText);
+        } else {
+          // v1.36.22: Fallback para PDF binário (quando não há texto extraído)
+          prompt = buildPdfComparisonPrompt(editingTopic.title);
+        }
+      }
+
+      // Construir mensagem - pode ser texto simples ou incluir PDFs binários
+      let messageContent: AIMessageContent[];
+
+      const peticaoTextFallback = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+      const contestacaoTextFallback = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+      const hasTextForMessage = peticaoTextFallback.trim() || contestacaoTextFallback.trim();
+
+      if (hasTextForMessage || source === 'mini-relatorio') {
+        // Texto simples
+        messageContent = [{ type: 'text', text: prompt }];
+      } else {
+        // v1.36.22: Incluir PDFs binários como fallback
+        messageContent = [{ type: 'text', text: prompt }];
+
+        // Adicionar petições como PDF (analyzedDocuments.peticoes contém base64 strings)
+        for (const base64 of (analyzedDocuments?.peticoes || [])) {
+          messageContent.push({ type: 'text', text: '\n\n📄 PETIÇÃO INICIAL (documento PDF a seguir):' });
+          messageContent.push({
+            type: 'document',
+            source: {
+              type: 'base64',
+              media_type: 'application/pdf',
+              data: base64
+            }
+          } as AIDocumentContent);
+        }
+
+        // Adicionar contestações como PDF
+        for (const base64 of (analyzedDocuments?.contestacoes || [])) {
+          messageContent.push({ type: 'text', text: '\n\n📄 CONTESTAÇÃO (documento PDF a seguir):' });
+          messageContent.push({
+            type: 'document',
+            source: {
+              type: 'base64',
+              media_type: 'application/pdf',
+              data: base64
+            }
+          } as AIDocumentContent);
+        }
+
+        // Adicionar complementares como PDF
+        for (const base64 of (analyzedDocuments?.complementares || [])) {
+          messageContent.push({ type: 'text', text: '\n\n📄 DOCUMENTO COMPLEMENTAR (documento PDF a seguir):' });
+          messageContent.push({
+            type: 'document',
+            source: {
+              type: 'base64',
+              media_type: 'application/pdf',
+              data: base64
+            }
+          } as AIDocumentContent);
+        }
       }
 
       const response = await aiIntegration.callAI([{
         role: 'user',
-        content: [{ type: 'text', text: prompt }]
+        content: messageContent
       }], {
         maxTokens: 8000,
         useInstructions: false,
