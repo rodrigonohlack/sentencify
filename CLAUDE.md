@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.39 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.40 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -120,6 +120,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.40 | Fix NER provas: usar extractTextFromPDFWithMode com modo selecionado (Tesseract funciona) |
 | v1.36.39 | Fix NER em provas: "Detectar Nomes" extrai texto da PROVA (não da petição) - removido fallback incorreto |
 | v1.36.38 | Aviso visual Grok na aba Provas: alerta laranja "Grok não suporta PDF binário" (similar ao aviso roxo de anonimização) |
 | v1.36.37 | Fix bloqueio PDF com Grok: botão "Usar PDF" desabilitado no ProofCard, fallback para PDF bloqueado quando extração falha, mensagem "extração obrigatória" em vermelho |

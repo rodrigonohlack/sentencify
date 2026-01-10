@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.39'; // v1.36.39: Fix NER em provas - detectar nomes da prova, não da petição
+const APP_VERSION = '1.36.40'; // v1.36.40: Fix NER provas - usar extractTextFromPDFWithMode (Tesseract)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -34630,39 +34630,31 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         nerEnabled={nerEnabled}
         detectingNames={detectingNames}
         onDetectNames={async () => {
-          // v1.36.39: Fix - sempre extrair texto da PROVA (nunca fallback para petição)
+          // v1.36.40: Fix - usar extractTextFromPDFWithMode com modo selecionado (Tesseract, etc.)
           setDetectingNames(true);
           try {
+            const proofId = proofManager.pendingExtraction?.proofId;
             const proof = proofManager.pendingExtraction?.proof as ProofFile | undefined;
 
-            if (!proof) {
-              showToast('Prova não encontrada', 'error');
+            if (!proof || !proof.file) {
+              showToast('Prova não encontrada ou arquivo indisponível', 'error');
               setDetectingNames(false);
               return;
             }
 
-            let extractedText: string | null = null;
+            // Usar o modo de extração selecionado pelo usuário
+            const userMode = proofManager.proofProcessingModes[proofId as string] || 'pdfjs';
+            // Bloquear modos binários (anonimização sempre exige texto)
+            const blockedModes = ['claude-vision', 'pdf-puro'];
+            const selectedMode = blockedModes.includes(userMode) ? 'pdfjs' : userMode;
 
-            // Extrair texto da prova (file ou fileData base64)
-            if (proof.file) {
-              extractedText = await documentServices.extractTextFromPDFPure(proof.file);
-            } else if (proof.fileData) {
-              // Converter base64 para File (mesmo padrão usado em importProject)
-              const byteCharacters = atob(proof.fileData);
-              const byteNumbers = new Array(byteCharacters.length);
-              for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-              }
-              const byteArray = new Uint8Array(byteNumbers);
-              const blob = new Blob([byteArray], { type: 'application/pdf' });
-              const file = new File([blob], proof.name, { type: 'application/pdf' });
-              extractedText = await documentServices.extractTextFromPDFPure(file);
-            }
+            // Extrair texto com o modo correto (PDF.js ou Tesseract)
+            const extractedText = await extractTextFromPDFWithMode(proof.file, selectedMode, null);
 
             if (extractedText && extractedText.trim().length > 50) {
               await detectarNomesAutomaticamente(extractedText, true);
             } else {
-              showToast('Não foi possível extrair texto da prova para detecção', 'error');
+              showToast('PDF sem texto extraível. Tente modo Tesseract OCR.', 'error');
               setDetectingNames(false);
             }
           } catch (err) {
