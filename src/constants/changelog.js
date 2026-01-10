@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.26', feature: 'Fix stale cache Confronto ao trocar tópico: useEffect limpa resultado quando editingTopic muda' },
   { version: '1.36.25', feature: 'Fix contraste badges Confronto de Fatos no tema claro: cores -600 para tema claro, -400 para tema escuro' },
   { version: '1.36.24', feature: 'Fix cache Confronto de Fatos no editor individual: handleOpenFactsComparisonIndividual recupera cache do IndexedDB antes de abrir modal' },
   { version: '1.36.23', feature: 'Fix scroll BaseModal: min-h-0 no content div permite flexbox shrink e scroll interno funcionar corretamente' },

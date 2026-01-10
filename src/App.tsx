@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.25'; // v1.36.25: Fix contraste badges Confronto de Fatos no tema claro
+const APP_VERSION = '1.36.26'; // v1.36.26: Fix stale cache Confronto ao trocar tópico (editor individual)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -24359,6 +24359,12 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
       aiIntegration.setRegeneratingRelatorio(false);
     }
   };
+
+  // v1.36.26: Limpar resultado do Confronto quando tópico muda (evita mostrar cache do tópico anterior)
+  React.useEffect(() => {
+    setFactsComparisonResultIndividual(null);
+    setFactsComparisonErrorIndividual(null);
+  }, [editingTopic?.title]);
 
   // v1.36.24: Handler para ABRIR modal de Confronto de Fatos (editor individual) com recuperação de cache
   const handleOpenFactsComparisonIndividual = React.useCallback(async () => {
