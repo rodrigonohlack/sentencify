@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.28 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.30 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -117,6 +117,8 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.30 | Fix botão excluir prova: race condition isOpen && proofToDelete no DeleteProofModal |
+| v1.36.29 | Suporte PDF para OpenAI (type: file) + aviso Grok não suporta PDF binário (abas Upload e Provas) |
 | v1.36.28 | Fix análise de provas: isPdf não setado na criação + verificação robusta com type === 'pdf' |
 | v1.36.27 | Fix background transparente no AIAssistantBase: adicionado overflow-y-auto flex-1 min-h-0 ao content |
 | v1.36.26 | Fix stale cache Confronto ao trocar tópico: useEffect limpa resultado quando editingTopic muda |

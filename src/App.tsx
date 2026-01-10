@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.28'; // v1.36.28: Fix análise de provas (isPdf não setado na criação)
+const APP_VERSION = '1.36.29'; // v1.36.29: Suporte PDF para OpenAI + aviso Grok não suporta PDF binário
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -2316,9 +2316,20 @@ ${AI_INSTRUCTIONS_SAFETY}`;
               type: 'image_url',
               image_url: { url: `data:${mediaType};base64,${data}` }
             });
+          } else if (c.type === 'document') {
+            // v1.36.29: OpenAI suporta PDF via base64 (Grok não - requer Files API)
+            // Nota: Para Grok, UI mostra aviso para usar texto extraído
+            const source = c.source as Record<string, unknown>;
+            const mediaType = source?.media_type || 'application/pdf';
+            const data = source?.data as string;
+            parts.push({
+              type: 'file',
+              file: {
+                filename: 'document.pdf',
+                file_data: `data:${mediaType};base64,${data}`
+              }
+            });
           }
-          // Nota: PDFs não são suportados diretamente pela OpenAI/Grok API
-          // Serão ignorados (texto já extraído pelo Sentencify)
         }
 
         messages.push({ role: msg.role as 'user' | 'assistant', content: parts });
@@ -11385,21 +11396,23 @@ const LinkProofModal = React.memo(({
 LinkProofModal.displayName = 'LinkProofModal';
 
 // Modal: Excluir Prova (migrado para BaseModal)
+// v1.36.30: Fix race condition - isOpen && proofToDelete para evitar modal vazio
 const DeleteProofModal = React.memo(({ isOpen, onClose, proofToDelete, onConfirmDelete }: DeleteProofModalProps) => {
-  if (!proofToDelete) return null;
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} title="Confirmar Exclusão" icon={<Trash2 />} iconColor="red" size="md"
+    <BaseModal isOpen={isOpen && !!proofToDelete} onClose={onClose} title="Confirmar Exclusão" icon={<Trash2 />} iconColor="red" size="md"
       footer={<ModalFooter.Destructive onClose={onClose} onConfirm={onConfirmDelete} confirmText="Excluir Prova" />}>
-      <div className="space-y-4">
-        <p className="theme-text-tertiary">Deseja excluir a prova abaixo?</p>
-        <ModalContentPreview title={proofToDelete.name}>
-          <span className={`px-2 py-0.5 text-xs rounded ml-2 ${proofToDelete.isPdf ? 'theme-bg-red-accent theme-text-red' : 'theme-bg-blue-accent theme-text-blue'}`}>
-            {proofToDelete.isPdf ? 'PDF' : 'TEXTO'}
-          </span>
-          {!proofToDelete.isPdf && proofToDelete.text && <p className="text-xs theme-text-muted mt-2">{proofToDelete.text.substring(0, 200)}...</p>}
-        </ModalContentPreview>
-        <ModalWarningBox><strong>Atenção:</strong> Esta ação não pode ser desfeita.</ModalWarningBox>
-      </div>
+      {proofToDelete && (
+        <div className="space-y-4">
+          <p className="theme-text-tertiary">Deseja excluir a prova abaixo?</p>
+          <ModalContentPreview title={proofToDelete.name}>
+            <span className={`px-2 py-0.5 text-xs rounded ml-2 ${proofToDelete.isPdf ? 'theme-bg-red-accent theme-text-red' : 'theme-bg-blue-accent theme-text-blue'}`}>
+              {proofToDelete.isPdf ? 'PDF' : 'TEXTO'}
+            </span>
+            {!proofToDelete.isPdf && proofToDelete.text && <p className="text-xs theme-text-muted mt-2">{proofToDelete.text.substring(0, 200)}...</p>}
+          </ModalContentPreview>
+          <ModalWarningBox><strong>Atenção:</strong> Esta ação não pode ser desfeita.</ModalWarningBox>
+        </div>
+      )}
     </BaseModal>
   );
 });
@@ -29669,6 +29682,18 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           <div className="p-6">
             {activeTab === 'upload' && (
               <div className="space-y-6">
+                {/* v1.36.29: Aviso Grok não suporta PDF binário */}
+                {aiIntegration.aiSettings?.provider === 'grok' && (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        <strong>Grok não suporta PDF binário.</strong> Use o modo "Extrair texto" (PDF.js ou Tesseract) antes de gerar tópicos. O modo "PDF Puro" não funcionará.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-6">
                   <div className="space-y-3">
                     <label className="block text-sm font-medium theme-text-tertiary">
@@ -30598,6 +30623,18 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 
             {activeTab === 'proofs' && (
               <div className="space-y-6">
+                {/* v1.36.29: Aviso Grok não suporta PDF binário */}
+                {aiIntegration.aiSettings?.provider === 'grok' && (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        <strong>Grok não suporta PDF binário.</strong> Use o modo "Extrair texto" (PDF.js ou Tesseract) antes de analisar provas. O modo "PDF Puro" não funcionará.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="theme-gradient-card-50 rounded-lg p-6 border theme-border-secondary">
                   <div className="flex items-start justify-between mb-6">
                     <div>

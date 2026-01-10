@@ -243,11 +243,13 @@ export interface AISettings {
 // OPENAI/GROK TYPES (v1.35.97)
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** Parte de mensagem OpenAI/Grok (texto ou imagem) */
+/** Parte de mensagem OpenAI/Grok (texto, imagem ou arquivo PDF) */
+// v1.36.29: Adicionado 'file' para suporte a PDF via base64 (apenas OpenAI, Grok não suporta)
 export interface OpenAIMessagePart {
-  type: 'text' | 'image_url';
+  type: 'text' | 'image_url' | 'file';
   text?: string;
   image_url?: { url: string };
+  file?: { filename: string; file_data: string };
 }
 
 /** Mensagem OpenAI/Grok */
