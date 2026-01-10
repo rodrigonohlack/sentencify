@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.38'; // v1.36.38: Aviso visual Grok na aba Provas (PDF binário não suportado)
+const APP_VERSION = '1.36.39'; // v1.36.39: Fix NER em provas - detectar nomes da prova, não da petição
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -34630,15 +34630,40 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         nerEnabled={nerEnabled}
         detectingNames={detectingNames}
         onDetectNames={async () => {
-          // v1.28.09: Feedback visual imediato
+          // v1.36.39: Fix - sempre extrair texto da PROVA (nunca fallback para petição)
           setDetectingNames(true);
           try {
-            const file = proofManager.pendingExtraction?.proof?.file;
-            if (file) {
-              const extractedText = await documentServices.extractTextFromPDFPure(file);
+            const proof = proofManager.pendingExtraction?.proof as ProofFile | undefined;
+
+            if (!proof) {
+              showToast('Prova não encontrada', 'error');
+              setDetectingNames(false);
+              return;
+            }
+
+            let extractedText: string | null = null;
+
+            // Extrair texto da prova (file ou fileData base64)
+            if (proof.file) {
+              extractedText = await documentServices.extractTextFromPDFPure(proof.file);
+            } else if (proof.fileData) {
+              // Converter base64 para File (mesmo padrão usado em importProject)
+              const byteCharacters = atob(proof.fileData);
+              const byteNumbers = new Array(byteCharacters.length);
+              for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+              }
+              const byteArray = new Uint8Array(byteNumbers);
+              const blob = new Blob([byteArray], { type: 'application/pdf' });
+              const file = new File([blob], proof.name, { type: 'application/pdf' });
+              extractedText = await documentServices.extractTextFromPDFPure(file);
+            }
+
+            if (extractedText && extractedText.trim().length > 50) {
               await detectarNomesAutomaticamente(extractedText, true);
             } else {
-              await detectarNomesAutomaticamente(null, true);
+              showToast('Não foi possível extrair texto da prova para detecção', 'error');
+              setDetectingNames(false);
             }
           } catch (err) {
             console.error('[NER] Erro ao extrair PDF para NER:', err);
