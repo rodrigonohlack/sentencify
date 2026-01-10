@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.55', feature: 'Fix feedback visual copiar em busca semântica: Jurisprudência e Legislação agora mostram Check verde' },
   { version: '1.36.54', feature: 'Feedback visual ao copiar tese na aba Jurisprudência: ícone Check verde por 2 segundos' },
   { version: '1.36.53', feature: 'Fix busca semântica jurisprudência: campo "text" vs "texto" - TypeScript usava nome português mas JSON usa inglês' },
   { version: '1.36.52', feature: 'Fix texto IRR vazio em busca semântica: fallback para fullText/texto quando tese/enunciado não disponível (embeddings)' },

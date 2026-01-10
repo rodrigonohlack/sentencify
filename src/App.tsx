@@ -10239,10 +10239,10 @@ const JurisprudenciaTab = React.memo(({
                       titulo: result.titulo,
                       tese: result.fullText || result.text
                     })}
-                    className="p-1.5 rounded hover-icon-blue-scale"
-                    title="Copiar tese completa"
+                    className={`p-1.5 rounded ${jurisprudencia.copiedId === result.id ? 'text-green-500' : 'hover-icon-blue-scale'}`}
+                    title={jurisprudencia.copiedId === result.id ? 'Copiado!' : 'Copiar tese completa'}
                   >
-                    <Copy className="w-4 h-4" />
+                    {jurisprudencia.copiedId === result.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -10555,10 +10555,10 @@ const LegislacaoTab = React.memo(({
                     </div>
                     <button
                       onClick={() => legislacao.handleCopyArtigo(artigo)}
-                      className="p-1 text-blue-400 hover-text-blue-300"
-                      title="Copiar artigo completo"
+                      className={`p-1 ${legislacao.copiedId === artigo.id ? 'text-green-500' : 'text-blue-400 hover-text-blue-300'}`}
+                      title={legislacao.copiedId === artigo.id ? 'Copiado!' : 'Copiar artigo completo'}
                     >
-                      <Copy className="w-3 h-3" />
+                      {legislacao.copiedId === artigo.id ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                     </button>
                   </div>
                   <p className={`text-sm theme-text-secondary ${isMatchedType('caput') ? 'font-semibold bg-yellow-500/10 px-1 rounded' : ''}`}>
