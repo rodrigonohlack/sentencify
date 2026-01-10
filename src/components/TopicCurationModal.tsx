@@ -1,7 +1,7 @@
 /**
  * TopicCurationModal.tsx
  * Modal de curadoria de tópicos pré-geração de mini-relatórios
- * v1.35.49 - Fix contraste das tags de categoria no tema claro
+ * v1.36.13 - UX: Auto-scroll e focus no MergeConfirm quando abre
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -668,8 +668,18 @@ const MergeConfirm: React.FC<MergeConfirmProps> = ({ topics, onConfirm, onCancel
   const [mergedTitle, setMergedTitle] = useState(topics.map(t => t.title).join(' + '));
   const [category, setCategory] = useState<TopicCategory>(topics[0]?.category || 'MÉRITO');
 
+  // v1.36.13: Refs para auto-scroll e focus
+  const mergeRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // v1.36.13: Scroll suave para o topo e foca no input quando abre
+  useEffect(() => {
+    mergeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    inputRef.current?.focus();
+  }, []);
+
   return (
-    <div className={`
+    <div ref={mergeRef} className={`
       p-4 rounded-lg border mb-4
       ${isDarkMode ? 'bg-green-900/20 border-green-700/50' : 'bg-green-50 border-green-200'}
     `}>
@@ -690,6 +700,7 @@ const MergeConfirm: React.FC<MergeConfirmProps> = ({ topics, onConfirm, onCancel
       </div>
 
       <input
+        ref={inputRef}
         value={mergedTitle}
         onChange={(e) => setMergedTitle(e.target.value.toUpperCase())}
         placeholder="Título do tópico mesclado"

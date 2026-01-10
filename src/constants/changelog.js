@@ -2,6 +2,8 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.13', feature: 'UX: Auto-scroll e focus no MergeConfirm do TopicCurationModal - ao clicar "Mesclar", scroll suave para o formulário + cursor no campo de título' },
+  { version: '1.36.12', feature: 'OpenAI/Grok na estimativa de custo: seção "Uso de Tokens" mostra 6 modelos (Claude Sonnet/Opus, Gemini Pro/Flash, OpenAI GPT-5.2, Grok 4.1) + "Limites por API" com 4 providers (grid responsivo)' },
   { version: '1.36.11', feature: 'UX: Indicador visual claro de thinking no Grok - badges "Thinking Embutido" (roxo) e "Sem Thinking" (âmbar) na seção Pensamento Prolongado' },
   { version: '1.36.10', feature: 'feat(multi-provider): Integração OpenAI GPT-5.2 + xAI Grok 4.1 - 4 providers (Claude, Gemini, OpenAI, Grok), reasoning configurável, Grok 96% mais barato que Claude' },
   { version: '1.36.9', feature: 'Fix bullet list no Quill: override ::before para data-list="bullet" (CSS do CDN não tem regra para bullets em <ol>)' },

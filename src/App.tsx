@@ -32097,7 +32097,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                 {/* Texto explicativo com limites */}
                 <div className="mt-2 p-3 rounded-lg theme-bg-tertiary text-xs theme-text-muted">
                   <p className="font-semibold theme-text-secondary mb-1">Limites por API (RPM = requisições/minuto):</p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                     <div>
                       <span className="text-purple-400 font-medium">Claude:</span>
                       <ul className="ml-2 mt-0.5 space-y-0.5">
@@ -32110,6 +32110,21 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       <ul className="ml-2 mt-0.5 space-y-0.5">
                         <li>• Free: 5-10 RPM → usar 3</li>
                         <li>• Pago: 300+ RPM → 10-20</li>
+                      </ul>
+                    </div>
+                    {/* v1.36.12: OpenAI e Grok */}
+                    <div>
+                      <span className="text-green-400 font-medium">OpenAI:</span>
+                      <ul className="ml-2 mt-0.5 space-y-0.5">
+                        <li>• Tier 1: ~1000 RPM → 10-15</li>
+                        <li>• Tier 2+: 2000+ RPM → 15-20</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 font-medium">Grok:</span>
+                      <ul className="ml-2 mt-0.5 space-y-0.5">
+                        <li>• Pay-as-you-go: 480 RPM</li>
+                        <li>• Recomendado: 10-20</li>
                       </ul>
                     </div>
                   </div>
@@ -32993,6 +33008,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                 const opusPrices = { input: 5.00, output: 25.00, cacheWrite: 6.25, cacheRead: 0.50 };
                 const geminiPrices = { input: 2.00, output: 12.00, cacheWrite: 2.50, cacheRead: 0.20 };
                 const geminiFlashPrices = { input: 0.50, output: 3.00, cacheWrite: 0.625, cacheRead: 0.05 };
+                // v1.36.12: OpenAI e Grok
+                const openaiPrices = { input: 1.75, output: 14.00, cacheWrite: 1.75, cacheRead: 0.175 };
+                const grokPrices = { input: 0.20, output: 0.50, cacheWrite: 0.20, cacheRead: 0.05 };
 
                 return (
                   <div className="border-t theme-border-secondary pt-4 mt-4">
@@ -33051,6 +33069,15 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           <div className="flex justify-between items-center">
                             <span className="text-xs theme-text-muted">Gemini 3 Flash:</span>
                             <span className="font-mono text-sm text-cyan-400">${calculateCost(tokenMetrics, geminiFlashPrices).toFixed(4)}</span>
+                          </div>
+                          {/* v1.36.12: OpenAI e Grok */}
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs theme-text-muted">OpenAI GPT-5.2:</span>
+                            <span className="font-mono text-sm text-green-400">${calculateCost(tokenMetrics, openaiPrices).toFixed(4)}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs theme-text-muted">Grok 4.1 Fast:</span>
+                            <span className="font-mono text-sm text-gray-400">${calculateCost(tokenMetrics, grokPrices).toFixed(4)}</span>
                           </div>
                         </div>
                       </div>
