@@ -9319,14 +9319,22 @@ const ProofCard = React.memo(({
         proofManager.setProofExtractionFailed((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: false }));
       } else {
         proofManager.setProofExtractionFailed((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
-        proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
+        // v1.36.37: Só fazer fallback para PDF se NÃO estiver bloqueado (anon/Grok)
+        const pdfBinaryBlocked = anonymizationEnabled || grokEnabled;
+        if (!pdfBinaryBlocked) {
+          proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
+        }
       }
     } catch (err) {
       setExtractionProgress(null);
       proofManager.setProofExtractionFailed((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
-      proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
+      // v1.36.37: Só fazer fallback para PDF se NÃO estiver bloqueado (anon/Grok)
+      const pdfBinaryBlocked = anonymizationEnabled || grokEnabled;
+      if (!pdfBinaryBlocked) {
+        proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
+      }
     }
-  }, [proof.id, proof.file, proofManager, extractTextFromPDFWithMode, anonymizationEnabled, anonConfig]);
+  }, [proof.id, proof.file, proofManager, extractTextFromPDFWithMode, anonymizationEnabled, anonConfig, grokEnabled]);
 
   // Handler: Extrair texto do PDF
   // 🆕 v1.12.20: Usa modo específico da prova (proofProcessingModes)
@@ -9450,15 +9458,15 @@ const ProofCard = React.memo(({
               <div className={CSS.flexGap2}>
                 <button
                   onClick={handleSetPdfMode}
-                  disabled={proof.isPlaceholder || !!extractionProgress || anonymizationEnabled}
+                  disabled={proof.isPlaceholder || !!extractionProgress || anonymizationEnabled || grokEnabled}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                    proof.isPlaceholder || extractionProgress || anonymizationEnabled
+                    proof.isPlaceholder || extractionProgress || anonymizationEnabled || grokEnabled
                       ? 'theme-bg-tertiary-30 theme-text-disabled cursor-not-allowed'
                       : proofManager.proofUsePdfMode[proof.id]
                       ? 'bg-blue-600 text-white shadow-lg hover-blue-700-from-600'
                       : 'theme-bg-tertiary-50 theme-text-muted hover-slate-600'
                   }`}
-                  title={proof.isPlaceholder ? 'PDF original não disponível' : anonymizationEnabled ? '🔒 Anonimização ativa: PDF binário bloqueado' : ''}
+                  title={proof.isPlaceholder ? 'PDF original não disponível' : anonymizationEnabled ? '🔒 Anonimização ativa: PDF binário bloqueado' : grokEnabled ? '🔒 Grok não suporta PDF binário' : ''}
                 >
                   📄 Usar PDF
                 </button>
@@ -9516,11 +9524,15 @@ const ProofCard = React.memo(({
                 </div>
               )}
 
-              {/* Indicador de extração falhada */}
+              {/* Indicador de extração falhada - v1.36.37: mensagem diferente quando PDF bloqueado */}
               {proofManager.proofExtractionFailed[proof.id] && (
-                <div className="mt-2 text-xs text-amber-400 flex items-center gap-1">
+                <div className={`mt-2 text-xs flex items-center gap-1 ${
+                  (anonymizationEnabled || grokEnabled) ? 'text-red-400' : 'text-amber-400'
+                }`}>
                   <AlertCircle className="w-3 h-3" />
-                  PDF sem texto extraível (imagem) - usando PDF completo
+                  {(anonymizationEnabled || grokEnabled)
+                    ? 'PDF sem texto extraível - extração obrigatória (tente Tesseract OCR)'
+                    : 'PDF sem texto extraível (imagem) - usando PDF completo'}
                 </div>
               )}
             </div>
