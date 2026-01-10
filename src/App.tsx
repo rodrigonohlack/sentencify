@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.40'; // v1.36.40: Fix NER provas - usar extractTextFromPDFWithMode (Tesseract)
+const APP_VERSION = '1.36.41'; // v1.36.41: Fix ReferenceError - usar documentServices.extractTextFromPDFWithMode
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -34649,7 +34649,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
             const selectedMode = blockedModes.includes(userMode) ? 'pdfjs' : userMode;
 
             // Extrair texto com o modo correto (PDF.js ou Tesseract)
-            const extractedText = await extractTextFromPDFWithMode(proof.file, selectedMode, null);
+            const extractedText = await documentServices.extractTextFromPDFWithMode(proof.file, selectedMode, null);
 
             if (extractedText && extractedText.trim().length > 50) {
               await detectarNomesAutomaticamente(extractedText, true);

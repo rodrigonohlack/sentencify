@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.41', feature: 'Fix ReferenceError: usar documentServices.extractTextFromPDFWithMode (prefixo faltando)' },
   { version: '1.36.40', feature: 'Fix NER provas: usar extractTextFromPDFWithMode com modo selecionado (PDF.js ou Tesseract) ao invés de extractTextFromPDFPure' },
   { version: '1.36.39', feature: 'Fix NER em provas: "Detectar Nomes" agora extrai texto da PROVA (não da petição) - removido fallback incorreto' },
   { version: '1.36.38', feature: 'Aviso visual Grok na aba Provas: alerta laranja "Grok não suporta PDF binário" quando PDF sem texto extraído (similar ao aviso roxo de anonimização)' },
