@@ -33,6 +33,8 @@
 5. **NUNCA usar PowerShell para editar conteúdo de arquivos**: Corrompe encoding UTF-8 (acentuação quebrada). Use `sed`, `Edit` tool, ou `Write` tool.
 6. **Novos Modais**: SEMPRE usar `BaseModal` (App.tsx ~linha 10545). Nunca reimplementar ESC handler, scroll lock ou estrutura modal manualmente. Props: `isOpen`, `onClose`, `title`, `subtitle`, `icon`, `iconColor` (blue/red/green/yellow/purple/orange), `size` (sm/md/lg/xl/2xl), `children`, `footer`, `preventClose`.
 7. **Hooks em `src/hooks/` são para TESTES**: Os arquivos `.ts` em `src/hooks/` (ex: `useProofManager.ts`) são versões **simplificadas para testes unitários**. Os hooks REAIS de produção estão definidos **dentro do App.tsx**. Nunca confundir ao fazer manutenção - sempre verificar qual versão está sendo usada.
+8. **Versionamento (5 arquivos)**: Ao incrementar versão, atualizar TODOS: `CLAUDE.md` (linha 7 + Recent Changes), `src/App.tsx` (APP_VERSION ~linha 209), `src/constants/changelog.js`, `package.json`. **APP_VERSION no App.tsx é frequentemente esquecido após compactação de contexto!**
+9. **Temas Claro/Escuro**: TODA mudança de UI deve funcionar em AMBOS os temas. Usar classes `theme-*` ou variantes `dark:` do Tailwind. Testar visualmente nos dois temas antes de commitar.
 
 > **Nota**: Este projeto agora roda como aplicação standalone (fora do sandbox Claude.ai). Não há mais limite de tamanho de arquivo nem necessidade de minificação.
 
