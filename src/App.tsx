@@ -202,7 +202,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.10'; // v1.36.10: feat(multi-provider): OpenAI GPT-5.2 + xAI Grok 4.1
+const APP_VERSION = '1.36.11'; // v1.36.11: UX: Indicador visual claro de thinking no Grok (badges Thinking Embutido / Sem Thinking)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -31956,19 +31956,33 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                   </div>
                 )}
 
-                {/* v1.35.97: GROK: Info sobre modelos */}
-                {aiIntegration.aiSettings.provider === 'grok' && (
-                  <div className="p-4 rounded-lg border-2 border-gray-500/50 bg-gray-500/10">
+                {/* v1.36.11: GROK Thinking: Info sobre modelos com indicador visual claro */}
+                {aiIntegration.aiSettings.provider === 'grok' && aiIntegration.aiSettings.grokModel === 'grok-4-1-fast-reasoning' && (
+                  <div className="p-4 rounded-lg border-2 border-purple-500/50 bg-purple-500/10">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">𝕏</span>
-                      <span className="font-semibold theme-text-primary">
-                        {aiIntegration.aiSettings.grokModel === 'grok-4-1-fast-reasoning' ? 'Grok 4.1 Fast Thinking' : 'Grok 4.1 Fast Instant'}
-                      </span>
+                      <span className="text-purple-400">🧠</span>
+                      <span className="font-semibold theme-text-primary">Grok 4.1 Fast Thinking</span>
+                      <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded">Thinking Embutido</span>
                     </div>
                     <p className="text-xs theme-text-muted">
-                      {aiIntegration.aiSettings.grokModel === 'grok-4-1-fast-reasoning'
-                        ? 'Modelo da xAI com 2M de contexto e thinking embutido. Raciocínio integrado (não configurável).'
-                        : 'Modelo da xAI com 2M de contexto, modo instant sem thinking para respostas rápidas.'}
+                      Modelo da xAI com 2M de contexto e raciocínio integrado. O thinking é automático e não configurável.
+                    </p>
+                    <p className="text-xs text-emerald-400 mt-2">
+                      💰 $0.20/1M input + $0.50/1M output = ~$0.35/1M total (96% mais barato que Claude)
+                    </p>
+                  </div>
+                )}
+
+                {/* v1.36.11: GROK Instant: Sem suporte a thinking */}
+                {aiIntegration.aiSettings.provider === 'grok' && aiIntegration.aiSettings.grokModel === 'grok-4-1-fast-non-reasoning' && (
+                  <div className="p-4 rounded-lg border-2 border-amber-500/50 bg-amber-500/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-amber-400">⚡</span>
+                      <span className="font-semibold theme-text-primary">Grok 4.1 Fast Instant</span>
+                      <span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded">Sem Thinking</span>
+                    </div>
+                    <p className="text-xs theme-text-muted">
+                      Modelo da xAI com 2M de contexto, modo instant para respostas rápidas. Este modelo não suporta pensamento prolongado.
                     </p>
                     <p className="text-xs text-emerald-400 mt-2">
                       💰 $0.20/1M input + $0.50/1M output = ~$0.35/1M total (96% mais barato que Claude)

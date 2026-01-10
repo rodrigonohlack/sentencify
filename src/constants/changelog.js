@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.11', feature: 'UX: Indicador visual claro de thinking no Grok - badges "Thinking Embutido" (roxo) e "Sem Thinking" (âmbar) na seção Pensamento Prolongado' },
   { version: '1.36.10', feature: 'feat(multi-provider): Integração OpenAI GPT-5.2 + xAI Grok 4.1 - 4 providers (Claude, Gemini, OpenAI, Grok), reasoning configurável, Grok 96% mais barato que Claude' },
   { version: '1.36.9', feature: 'Fix bullet list no Quill: override ::before para data-list="bullet" (CSS do CDN não tem regra para bullets em <ol>)' },
   { version: '1.36.8', feature: 'Fix listas no Quill: list-style-type: none para evitar duplicação (Quill usa ::before para marcadores)' },

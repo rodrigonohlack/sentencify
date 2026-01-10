@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.10 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.11 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -116,6 +116,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.11 | UX: Indicador visual claro de thinking no Grok - badges "Thinking Embutido" (roxo) e "Sem Thinking" (âmbar) na seção Pensamento Prolongado |
 | v1.36.10 | feat(multi-provider): Integração OpenAI GPT-5.2 + xAI Grok 4.1 - 4 providers (Claude, Gemini, OpenAI, Grok), reasoning configurável, Grok 96% mais barato que Claude |
 | v1.36.9 | Fix bullet list no Quill: override `::before` para `data-list="bullet"` (CSS do CDN não tem regra para bullets em `<ol>`) |
 | v1.36.8 | Fix listas no Quill: `list-style-type: none` para evitar duplicação (Quill usa `::before` para marcadores) |
