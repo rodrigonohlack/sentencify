@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.22'; // v1.36.22: Fix Confronto de Fatos - fallback PDF binário + scroll modal
+const APP_VERSION = '1.36.23'; // v1.36.23: Fix scroll BaseModal - min-h-0 para flexbox shrink
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -10627,8 +10627,8 @@ const BaseModal = React.memo(({
             </button>
           )}
         </div>
-        {/* Content - v1.36.22: overflow-y-auto + flex-1 para scroll quando conteúdo grande */}
-        <div className="p-5 overflow-y-auto flex-1">
+        {/* Content - v1.36.23: min-h-0 permite flex shrink para scroll funcionar */}
+        <div className="p-5 overflow-y-auto flex-1 min-h-0">
           {children}
         </div>
         {/* Footer */}
