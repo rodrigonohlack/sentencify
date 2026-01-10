@@ -207,7 +207,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.50'; // v1.36.50: Double Check de respostas da IA (verificação secundária para extração de tópicos)
+const APP_VERSION = '1.36.52'; // v1.36.52: Fix texto IRR vazio em busca semântica + copiar tese
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -7579,7 +7579,8 @@ const useJurisprudencia = () => {
     const tipo = precedente.tipoProcesso || '';
     const identificador = precedente.tema ? `Tema ${precedente.tema}` : (precedente.numero ? `nº ${precedente.numero}` : '');
     const titulo = precedente.titulo ? `\n${precedente.titulo}` : '';
-    const conteudo = precedente.tese || precedente.enunciado || '';
+    // v1.36.52: Adiciona fallback para fullText/texto (embeddings semânticos não têm tese/enunciado)
+    const conteudo = precedente.tese || precedente.enunciado || precedente.fullText || precedente.texto || '';
     const texto = `${tipo}${identificador ? ` - ${identificador}` : ''}${titulo}\n${conteudo}`;
     await navigator.clipboard.writeText(texto);
   }, []);
@@ -9803,7 +9804,8 @@ const ProofCard = React.memo(({
 ProofCard.displayName = 'ProofCard';
 
 const JurisprudenciaCard = React.memo(({ precedente, onCopy, expanded, onToggleExpand }: JurisprudenciaCardProps) => {
-  const texto = precedente.tese || precedente.enunciado || '';
+  // v1.36.52: Adiciona fallback para fullText/texto (embeddings semânticos não têm tese/enunciado)
+  const texto = precedente.tese || precedente.enunciado || precedente.fullText || precedente.texto || '';
   const tesePreview = texto.length > 200 ? texto.slice(0, 200) + '...' : texto;
   const renderIdentificador = () => {
     if (precedente.tema) {
@@ -32994,14 +32996,14 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                           <input type="checkbox" disabled className="w-4 h-4 rounded border-gray-300" />
                           <div className="flex-1">
                             <span className="text-sm theme-text-primary">Análise de provas</span>
-                            <span className="text-xs text-amber-400 ml-2">(em breve)</span>
+                            <span className="text-xs text-amber-600 dark:text-amber-400 ml-2">(em breve)</span>
                           </div>
                         </label>
                         <label className="flex items-center gap-3 p-2 rounded-lg opacity-50 cursor-not-allowed">
                           <input type="checkbox" disabled className="w-4 h-4 rounded border-gray-300" />
                           <div className="flex-1">
                             <span className="text-sm theme-text-primary">Mini-relatórios</span>
-                            <span className="text-xs text-amber-400 ml-2">(em breve)</span>
+                            <span className="text-xs text-amber-600 dark:text-amber-400 ml-2">(em breve)</span>
                           </div>
                         </label>
                       </div>
@@ -33011,7 +33013,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
                       <div className="flex items-start gap-2">
                         <span className="text-amber-400">⚠️</span>
-                        <p className="text-xs text-amber-200">
+                        <p className="text-xs text-amber-700 dark:text-amber-200">
                           Double Check <strong>dobra o custo e tempo</strong> de cada operação selecionada.
                           Use apenas quando a precisão for crítica.
                         </p>

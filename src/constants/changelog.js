@@ -2,6 +2,8 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.52', feature: 'Fix texto IRR vazio em busca semântica: fallback para fullText/texto quando tese/enunciado não disponível (embeddings)' },
+  { version: '1.36.51', feature: 'Fix contraste Double Check no tema claro: badges "(em breve)" e aviso de custo legíveis em ambos os temas' },
   { version: '1.36.50', feature: 'Double Check de respostas da IA: verificação secundária para extração de tópicos (falsos positivos, omissões, categorização), provider/modelo configurável' },
   { version: '1.36.49', feature: 'Toggle "Log thinking" desabilitado para modelos sem reasoning (Grok e GPT-5.2 Instant)' },
   { version: '1.36.48', feature: 'Fix layout AIAssistantBase: aviso CNJ e seletor de escopo agora dentro da área de scroll' },
