@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.46', feature: 'Fix ESC no ConfigModal: não fecha se ModelGeneratorModal (Gerar a partir de exemplos) aberto, evita perda de scroll' },
   { version: '1.36.45', feature: 'Fix ESC no GlobalEditorModal: fecha sub-modais (Jurisprudência/Assistente IA/Confronto) primeiro, reseta estados ao abrir' },
   { version: '1.36.44', feature: 'Deletar 16 arquivos de testes/hooks duplicados: 222 testes inúteis removidos (testavam código que não roda em produção)' },
   { version: '1.36.43', feature: 'Fix test failure: guard scrollIntoView em TopicCurationModal (JSDOM não implementa)' },

@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.45'; // v1.36.45: Fix ESC no GlobalEditorModal - fecha sub-modais primeiro
+const APP_VERSION = '1.36.46'; // v1.36.46: Fix ESC no ConfigModal - não fecha se ModelGeneratorModal aberto
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -21310,9 +21310,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   }, [editingTopic, modals.modelForm]);
 
   // ESC para fechar modal de configurações
+  // v1.36.46: Não fechar se ModelGeneratorModal está aberto (respeitar hierarquia)
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && modals.settings) {
+      if (e.key === 'Escape' && modals.settings && !modelGeneratorModal.isOpen) {
         closeModal('settings');
       }
     };
@@ -21322,7 +21323,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     }
 
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [modals.settings, closeModal]);
+  }, [modals.settings, closeModal, modelGeneratorModal.isOpen]);
 
   // v1.35.64: Bloquear scroll do body quando modal de configurações aberto
   React.useEffect(() => {
