@@ -27,8 +27,10 @@ router.post('/chat', async (req, res) => {
     }
 
     // v1.36.14: Gerar x-grok-conv-id baseado na API key
+    // v1.36.16: Formatar como UUID4 válido (xAI espera formato uuid4)
     // Mesmo usuário = mesmo ID de sessão = melhor cache hit rate
-    const convId = createHash('md5').update(apiKey).digest('hex');
+    const hash = createHash('md5').update(apiKey).digest('hex');
+    const convId = `${hash.slice(0,8)}-${hash.slice(8,12)}-4${hash.slice(13,16)}-a${hash.slice(17,20)}-${hash.slice(20,32)}`;
 
     // xAI usa formato OpenAI-compatible
     const response = await fetch('https://api.x.ai/v1/chat/completions', {
