@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.48'; // v1.36.48: Fix layout AIAssistantBase - aviso/escopo agora dentro do scroll
+const APP_VERSION = '1.36.49'; // v1.36.49: Toggle logThinking desabilitado para modelos sem reasoning (Grok, GPT-5.2 Instant)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -32643,19 +32643,31 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                   </div>
                 )}
 
-                {/* v1.32.40: Log Thinking no Console (v1.36.15: fix espaçamento) */}
-                <label className="flex items-center gap-3 p-3 mt-4 rounded-lg theme-bg-secondary-30 border theme-border-input cursor-pointer hover:theme-bg-secondary transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={aiIntegration.aiSettings.logThinking || false}
-                    onChange={(e) => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, logThinking: e.target.checked })}
-                    className="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                  />
-                  <div className="flex-1">
-                    <span className="font-medium theme-text-primary text-sm">Log thinking no console</span>
-                    <p className="text-xs theme-text-muted mt-0.5">Exibe o raciocínio da IA no console (F12). Nota: Grok 4.x não expõe reasoning na API.</p>
-                  </div>
-                </label>
+                {/* v1.36.49: Log Thinking - desabilitado para modelos sem reasoning (Grok, GPT-5.2 Instant) */}
+                {(() => {
+                  const isDisabled = aiIntegration.aiSettings.provider === 'grok' ||
+                    (aiIntegration.aiSettings.provider === 'openai' && aiIntegration.aiSettings.openaiModel === 'gpt-5.2-chat-latest');
+                  return (
+                    <label className={`flex items-center gap-3 p-3 mt-4 rounded-lg theme-bg-secondary-30 border theme-border-input transition-colors ${
+                      isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:theme-bg-secondary'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={aiIntegration.aiSettings.logThinking || false}
+                        onChange={(e) => aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, logThinking: e.target.checked })}
+                        disabled={isDisabled}
+                        className="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      <div className="flex-1">
+                        <span className="font-medium theme-text-primary text-sm">Log thinking no console</span>
+                        <p className="text-xs theme-text-muted mt-0.5">
+                          Exibe o raciocínio da IA no console (F12).
+                          {isDisabled && <span className="text-amber-400"> Este modelo não expõe reasoning.</span>}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })()}
               </div>
 
               {/* Nível de Detalhe nos Mini-Relatórios */}
