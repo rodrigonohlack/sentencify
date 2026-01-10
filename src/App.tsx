@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.47'; // v1.36.47: Fix "Invalid Date" no modal compartilhar biblioteca
+const APP_VERSION = '1.36.48'; // v1.36.48: Fix layout AIAssistantBase - aviso/escopo agora dentro do scroll
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -11975,24 +11975,23 @@ const AIAssistantBase = React.memo(({
           </div>
         </div>
 
-        {/* Aviso CNJ */}
-        <div className="mx-6 mt-4 p-3 bg-amber-500/10 border border-amber-500/40 rounded-lg">
-          <div className="flex items-start gap-2">
-            <span className="text-amber-500">⚠️</span>
-            <div className="text-xs text-amber-700 dark:text-amber-200">
-              <span className="font-semibold">Lembre-se:</span> A IA pode gerar conteúdo impreciso. Revise todas as informações.
-              <span className="block mt-1 text-amber-600 dark:text-amber-300/80">
-                Revisão obrigatória conforme <span className="font-semibold">Resolução 615/2025 do CNJ</span>.
-              </span>
+        {/* Content - v1.36.48: Aviso CNJ e escopo agora dentro do scroll */}
+        <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
+          {/* Aviso CNJ */}
+          <div className="p-3 bg-amber-500/10 border border-amber-500/40 rounded-lg">
+            <div className="flex items-start gap-2">
+              <span className="text-amber-500">⚠️</span>
+              <div className="text-xs text-amber-700 dark:text-amber-200">
+                <span className="font-semibold">Lembre-se:</span> A IA pode gerar conteúdo impreciso. Revise todas as informações.
+                <span className="block mt-1 text-amber-600 dark:text-amber-300/80">
+                  Revisão obrigatória conforme <span className="font-semibold">Resolução 615/2025 do CNJ</span>.
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Conteúdo extra (ex: seletor de escopo) */}
-        {extraContent && <div className="px-6 pt-4">{extraContent}</div>}
-
-        {/* Content - v1.36.27: overflow-y-auto flex-1 min-h-0 para scroll e background correto */}
-        <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
+          {/* Conteúdo extra (ex: seletor de escopo) */}
+          {extraContent && <div>{extraContent}</div>}
           {/* Área de Chat */}
           <div className="border theme-border-input rounded-lg">
             <div className="flex items-center justify-between px-4 py-2 border-b theme-border-input theme-bg-secondary">
