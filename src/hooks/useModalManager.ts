@@ -14,13 +14,15 @@ import { useState, useCallback, useMemo } from 'react';
 export const MODAL_NAMES = [
   'modelForm', 'extractModelConfirm', 'extractedModelPreview',
   'export', 'import', 'exportModels', 'deleteModel', 'deleteAllModels',
-  'deleteAllPrecedentes', 'rename', 'merge', 'split', 'newTopic',
+  'deleteAllPrecedentes', 'deleteAllLegislacao', 'rename', 'merge', 'split', 'newTopic',
   'deleteTopic', 'aiAssistant', 'aiAssistantModel', 'analysis',
   'settings', 'dispositivo', 'restoreSession', 'clearProject',
   'bulkModel', 'bulkReview', 'bulkDiscardConfirm', 'confirmBulkCancel',
   'addProofText', 'deleteProof', 'linkProof', 'proofAnalysis',
   'globalEditor', 'jurisIndividual', 'proofTextAnonymization',
-  'proofExtractionAnonymization', 'sentenceReview', 'sentenceReviewResult'
+  'proofExtractionAnonymization', 'sentenceReview', 'sentenceReviewResult',
+  'logout', 'shareLibrary', 'changelog', 'topicCuration', 'modelGenerator',
+  'regenerateRelatorioCustom', 'bulkModal', 'factsComparisonIndividual'
 ] as const;
 
 /** Tipo derivado da lista de modais */

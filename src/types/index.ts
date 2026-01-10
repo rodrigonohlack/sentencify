@@ -402,7 +402,8 @@ export type ModalKey =
   | 'topicCuration'
   | 'modelGenerator'
   | 'regenerateRelatorioCustom'
-  | 'bulkModal';
+  | 'bulkModal'
+  | 'factsComparisonIndividual'; // v1.36.21: Confronto de Fatos (editor individual)
 
 export type ModalState = Record<ModalKey, boolean>;
 
@@ -1551,6 +1552,7 @@ export interface QuillDecisionEditorProps {
   isDirty?: boolean;
   versioning?: { saveVersion: (title: string, content: string) => void; getVersions: (title: string) => Promise<FieldVersion[]> } | null;
   onBlur?: ((html: string) => void) | null;
+  onOpenFactsComparison?: (() => void) | null; // v1.36.21: Confronto de Fatos
 }
 
 /** Props para QuillMiniRelatorioEditor - v1.35.94 */
@@ -1625,6 +1627,7 @@ export interface DecisionEditorContainerProps {
   onSlashCommand?: OnSlashCommandCallback;
   isDirty?: boolean;
   versioning?: { saveVersion: (title: string, content: string) => void; getVersions: (title: string) => Promise<FieldVersion[]> } | null;
+  onOpenFactsComparison?: (() => void) | null; // v1.36.21: Confronto de Fatos
 }
 
 /** Props para GlobalEditorModal - v1.35.95 */

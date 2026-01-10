@@ -137,7 +137,7 @@ import { useGoogleDrive, GOOGLE_CLIENT_ID } from './hooks/useGoogleDrive';
 import { GoogleDriveButton, DriveFilesModal } from './components/GoogleDriveButton';
 import { VoiceButton } from './components/VoiceButton';
 import { ModelGeneratorModal } from './components/ModelGeneratorModal';
-import { FactsComparisonModal } from './components/FactsComparisonModal';
+import { FactsComparisonModalContent } from './components/FactsComparisonModal';
 import useFactsComparisonCache, { openFactsDB, FACTS_STORE_NAME } from './hooks/useFactsComparisonCache';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.20'; // v1.36.20: Confronto de Fatos - comparação Petição vs Contestação vs Impugnação
+const APP_VERSION = '1.36.21'; // v1.36.21: Refatorar FactsComparisonModal para BaseModal + Botão Confronto no editor individual
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -1543,6 +1543,7 @@ const useModalManager = () => {
     proofAnalysis: false,
     globalEditor: false,
     jurisIndividual: false,
+    factsComparisonIndividual: false, // v1.36.21: Confronto de Fatos (editor individual)
     proofTextAnonymization: false,
     proofExtractionAnonymization: false,
     sentenceReview: false,
@@ -17200,8 +17201,8 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
         jurisSemanticEnabled={searchModelReady && jurisEmbeddingsCount > 0}
       />
 
-      {/* v1.36.12: Modal de Confronto de Fatos */}
-      <FactsComparisonModal
+      {/* v1.36.21: Modal de Confronto de Fatos (usando BaseModal) */}
+      <BaseModal
         isOpen={showFactsComparison && factsComparisonTopicIndex !== null}
         onClose={() => {
           setShowFactsComparison(false);
@@ -17209,15 +17210,24 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
           setFactsComparisonResult(null);
           setFactsComparisonError(null);
         }}
-        topicTitle={factsComparisonTopicIndex !== null ? localTopics[factsComparisonTopicIndex]?.title || '' : ''}
-        topicRelatorio={factsComparisonTopicIndex !== null ? (localTopics[factsComparisonTopicIndex]?.editedRelatorio || localTopics[factsComparisonTopicIndex]?.relatorio) : undefined}
-        hasPeticao={(analyzedDocuments?.peticoesText?.length || 0) > 0 || !!analyzedDocuments?.peticao}
-        hasContestacao={(analyzedDocuments?.contestacoesText?.length || 0) > 0 || (analyzedDocuments?.contestacoes?.length || 0) > 0}
-        onGenerate={handleGenerateFactsComparison}
-        cachedResult={factsComparisonResult}
-        isGenerating={generatingFactsComparison}
-        error={factsComparisonError}
-      />
+        title="Confronto de Fatos"
+        subtitle={factsComparisonTopicIndex !== null ? localTopics[factsComparisonTopicIndex]?.title || '' : ''}
+        icon={<Scale />}
+        iconColor="yellow"
+        size="xl"
+        preventClose={generatingFactsComparison}
+      >
+        <FactsComparisonModalContent
+          topicTitle={factsComparisonTopicIndex !== null ? localTopics[factsComparisonTopicIndex]?.title || '' : ''}
+          topicRelatorio={factsComparisonTopicIndex !== null ? (localTopics[factsComparisonTopicIndex]?.editedRelatorio || localTopics[factsComparisonTopicIndex]?.relatorio) : undefined}
+          hasPeticao={(analyzedDocuments?.peticoesText?.length || 0) > 0 || !!analyzedDocuments?.peticao}
+          hasContestacao={(analyzedDocuments?.contestacoesText?.length || 0) > 0 || (analyzedDocuments?.contestacoes?.length || 0) > 0}
+          onGenerate={handleGenerateFactsComparison}
+          cachedResult={factsComparisonResult}
+          isGenerating={generatingFactsComparison}
+          error={factsComparisonError}
+        />
+      </BaseModal>
     </div>
   );
 };
@@ -18104,7 +18114,8 @@ const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecisionEditorP
   onSlashCommand,
   isDirty = false,
   versioning = null,
-  onBlur = null
+  onBlur = null,
+  onOpenFactsComparison = null // v1.36.21: Confronto de Fatos
 }, ref) => {
   const { quillInstanceRef, customModules, handleQuillReady } = useQuillEditor({
     ref,
@@ -18261,6 +18272,18 @@ const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecisionEditorP
             >
               <Scale className="w-3.5 h-3.5" />
               Jurisprudência
+            </button>
+          )}
+
+          {/* v1.36.21: Botão Confronto de Fatos */}
+          {onOpenFactsComparison && (
+            <button
+              onClick={onOpenFactsComparison}
+              className="px-3 py-1.5 text-white text-xs rounded flex items-center gap-1 bg-amber-600 hover-amber-700"
+              title="Confronto de Fatos (Inicial vs Contestação)"
+            >
+              <Scale className="w-3.5 h-3.5" />
+              Confronto
             </button>
           )}
 
@@ -18670,7 +18693,8 @@ const DecisionEditorContainer = React.memo(React.forwardRef<HTMLDivElement, Deci
   findSuggestions,
   onSlashCommand,
   isDirty = false,
-  versioning = null
+  versioning = null,
+  onOpenFactsComparison = null // v1.36.21: Confronto de Fatos
 }, containerRef) => {
 
   const editorConfig = getTopicEditorConfig(topic.title);
@@ -18780,6 +18804,7 @@ const DecisionEditorContainer = React.memo(React.forwardRef<HTMLDivElement, Deci
         isDirty={isDirty}
         versioning={versioning}
         onBlur={(html: string) => versioning?.saveVersion(topic.title, html)}
+        onOpenFactsComparison={topic.title.toUpperCase() !== 'DISPOSITIVO' ? onOpenFactsComparison : null}
         {...editorConfig.editorConfig}
       />
       )}
@@ -19735,6 +19760,12 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const editingTopicRelatorio = topicManager.editingTopic?.editedRelatorio;
   const editingTopicContent = topicManager.editingTopic?.editedContent;
   const editingTopicCategory = topicManager.editingTopic?.category;
+
+  // v1.36.21: Estados para Confronto de Fatos (editor individual)
+  const [factsComparisonResultIndividual, setFactsComparisonResultIndividual] = React.useState<FactsComparisonResult | null>(null);
+  const [generatingFactsComparisonIndividual, setGeneratingFactsComparisonIndividual] = React.useState(false);
+  const [factsComparisonErrorIndividual, setFactsComparisonErrorIndividual] = React.useState<string | null>(null);
+  const factsComparisonCacheIndividual = useFactsComparisonCache();
 
   const isIndividualDirty = React.useMemo(() => {
     if (!editingTopicTitle) return false;
@@ -24255,6 +24286,84 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
       setAnalysisProgress('');
     } finally {
       aiIntegration.setRegeneratingRelatorio(false);
+    }
+  };
+
+  // v1.36.21: Handler para Confronto de Fatos (editor individual)
+  const handleGenerateFactsComparisonIndividual = async (source: FactsComparisonSource) => {
+    if (!aiIntegration || !editingTopic) return;
+
+    setGeneratingFactsComparisonIndividual(true);
+    setFactsComparisonErrorIndividual(null);
+
+    try {
+      let prompt: string;
+
+      if (source === 'mini-relatorio') {
+        const relatorio = editingTopic.editedRelatorio || editingTopic.relatorio || '';
+        if (!relatorio.trim()) {
+          throw new Error('Mini-relatório não disponível para este tópico.');
+        }
+        prompt = buildMiniRelatorioComparisonPrompt(editingTopic.title, relatorio);
+      } else {
+        // Documentos completos
+        const peticao = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+        const contestacao = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+        const impugnacao = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
+
+        if (!peticao.trim() && !contestacao.trim()) {
+          throw new Error('Nenhum documento disponível (petição ou contestação).');
+        }
+        prompt = buildDocumentosComparisonPrompt(editingTopic.title, peticao, contestacao, impugnacao);
+      }
+
+      const response = await aiIntegration.callAI([{
+        role: 'user',
+        content: [{ type: 'text', text: prompt }]
+      }], {
+        maxTokens: 8000,
+        useInstructions: false,
+        temperature: 0.3,
+        topP: 0.9,
+        topK: 40
+      });
+
+      // Extrair JSON da resposta (pode vir com markdown)
+      let jsonStr = response;
+      const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[1];
+      } else {
+        // Tentar encontrar JSON direto
+        const firstBrace = response.indexOf('{');
+        const lastBrace = response.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          jsonStr = response.substring(firstBrace, lastBrace + 1);
+        }
+      }
+
+      const parsed = JSON.parse(jsonStr);
+
+      const result: FactsComparisonResult = {
+        topicTitle: editingTopic.title,
+        source,
+        generatedAt: new Date().toISOString(),
+        tabela: parsed.tabela || [],
+        fatosIncontroversos: parsed.fatosIncontroversos || [],
+        fatosControversos: parsed.fatosControversos || [],
+        pontosChave: parsed.pontosChave || [],
+        resumo: parsed.resumo || ''
+      };
+
+      // Salvar no cache
+      await factsComparisonCacheIndividual.saveComparison(editingTopic.title, source, result);
+
+      setFactsComparisonResultIndividual(result);
+    } catch (err) {
+      console.error('[FactsComparison Individual] Erro:', err);
+      setFactsComparisonErrorIndividual(err instanceof Error ? err.message : 'Erro ao gerar análise. Tente novamente.');
+    } finally {
+      setGeneratingFactsComparisonIndividual(false);
     }
   };
 
@@ -30517,6 +30626,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                         onSlashCommand={openSlashMenu}
                         isDirty={isIndividualDirty}
                         versioning={fieldVersioning}
+                        onOpenFactsComparison={editingTopic?.title?.toUpperCase() !== 'DISPOSITIVO' && editingTopic?.title?.toUpperCase() !== 'RELATÓRIO' ? () => openModal('factsComparisonIndividual') : null}
                       />
                     </div>
 
@@ -31546,6 +31656,33 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         jurisSemanticThreshold={aiIntegration.aiSettings.jurisSemanticThreshold}
         jurisSemanticEnabled={searchModelReady && jurisEmbeddingsCount > 0}
       />
+
+      {/* v1.36.21: Modal Confronto de Fatos (editor individual) */}
+      <BaseModal
+        isOpen={modals.factsComparisonIndividual}
+        onClose={() => {
+          closeModal('factsComparisonIndividual');
+          setFactsComparisonResultIndividual(null);
+          setFactsComparisonErrorIndividual(null);
+        }}
+        title="Confronto de Fatos"
+        subtitle={editingTopic?.title || ''}
+        icon={<Scale />}
+        iconColor="yellow"
+        size="xl"
+        preventClose={generatingFactsComparisonIndividual}
+      >
+        <FactsComparisonModalContent
+          topicTitle={editingTopic?.title || ''}
+          topicRelatorio={editingTopic?.editedRelatorio || editingTopic?.relatorio || ''}
+          hasPeticao={!!(analyzedDocuments?.peticoesText?.length)}
+          hasContestacao={!!(analyzedDocuments?.contestacoesText?.length)}
+          onGenerate={handleGenerateFactsComparisonIndividual}
+          cachedResult={factsComparisonResultIndividual}
+          isGenerating={generatingFactsComparisonIndividual}
+          error={factsComparisonErrorIndividual}
+        />
+      </BaseModal>
 
       <AIAssistantModelModal
         isOpen={modals.aiAssistantModel}

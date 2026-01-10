@@ -4,12 +4,12 @@
  * Exibe tabela comparativa das alegações das partes para um tópico específico.
  * Destaca fatos incontroversos e controversos com badges coloridos.
  *
- * @version 1.36.12
+ * @version 1.36.21 - Refatorado para usar BaseModal
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Scale, X, Loader2, RefreshCw, CheckCircle, AlertTriangle, HelpCircle, FileText, BookOpen } from 'lucide-react';
-import type { FactsComparisonModalProps, FactsComparisonSource, FactsComparisonRow, FactsComparisonResult } from '../types';
+import { Scale, Loader2, RefreshCw, CheckCircle, AlertTriangle, HelpCircle, FileText, BookOpen } from 'lucide-react';
+import type { FactsComparisonModalProps, FactsComparisonSource, FactsComparisonRow } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPONENTES AUXILIARES
@@ -61,7 +61,7 @@ const IncontroversosSection: React.FC<{ fatos: string[] }> = ({ fatos }) => {
       <ul className="space-y-1">
         {fatos.map((fato, idx) => (
           <li key={idx} className="flex items-start gap-2 text-sm theme-text-secondary">
-            <span className="text-green-400 mt-0.5">\u2022</span>
+            <span className="text-green-400 mt-0.5">{'\u2022'}</span>
             {fato}
           </li>
         ))}
@@ -214,12 +214,16 @@ const SourceSelector: React.FC<{
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// COMPONENTE PRINCIPAL
+// COMPONENTE PRINCIPAL (usando BaseModal do App.tsx)
 // ═══════════════════════════════════════════════════════════════════════════
 
-export const FactsComparisonModal: React.FC<FactsComparisonModalProps> = ({
-  isOpen,
-  onClose,
+/**
+ * FactsComparisonModal - Renderiza conteúdo interno para BaseModal
+ *
+ * IMPORTANTE: Este componente deve ser renderizado DENTRO de um BaseModal no App.tsx
+ * Não gerencia ESC, scroll lock, overlay - BaseModal faz isso.
+ */
+export const FactsComparisonModalContent: React.FC<Omit<FactsComparisonModalProps, 'isOpen' | 'onClose'>> = ({
   topicTitle,
   topicRelatorio,
   hasPeticao,
@@ -244,173 +248,111 @@ export const FactsComparisonModal: React.FC<FactsComparisonModalProps> = ({
     }
   }, [hasMiniRelatorio, hasDocumentos]);
 
-  // ESC handler
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isGenerating) {
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    if (isOpen) {
-      window.addEventListener('keydown', handleEsc);
-    }
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen, isGenerating, onClose]);
-
-  // Bloquear scroll do body
-  useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [isOpen]);
-
   const handleGenerate = useCallback(async () => {
     await onGenerate(selectedSource);
   }, [onGenerate, selectedSource]);
-
-  if (!isOpen) return null;
 
   const canGenerate = (selectedSource === 'mini-relatorio' && hasMiniRelatorio) ||
                       (selectedSource === 'documentos-completos' && hasDocumentos);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={() => !isGenerating && onClose()}
-      />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-4xl max-h-[90vh] overflow-auto
-                      theme-bg-primary border theme-border rounded-xl shadow-2xl">
-
-        {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between p-4
-                        theme-bg-primary backdrop-blur-sm border-b theme-border">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-500/20 rounded-lg">
-              <Scale className="w-5 h-5 text-amber-400" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold theme-text-primary">
-                Confronto de Fatos
-              </h2>
-              <p className="text-sm theme-text-secondary">{topicTitle}</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
+    <div className="space-y-4">
+      {/* Seletor de fonte e botão gerar */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1">
+          <SourceSelector
+            selected={selectedSource}
+            onChange={setSelectedSource}
+            hasMiniRelatorio={hasMiniRelatorio}
+            hasDocumentos={hasDocumentos}
             disabled={isGenerating}
-            className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors disabled:opacity-50"
-          >
-            <X className="w-5 h-5 theme-text-secondary" />
-          </button>
+          />
         </div>
-
-        {/* Content */}
-        <div className="p-6">
-          {/* Seletor de fonte e botão gerar */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1">
-              <SourceSelector
-                selected={selectedSource}
-                onChange={setSelectedSource}
-                hasMiniRelatorio={hasMiniRelatorio}
-                hasDocumentos={hasDocumentos}
-                disabled={isGenerating}
-              />
-            </div>
-            <div className="flex flex-col justify-end gap-2">
-              <button
-                onClick={handleGenerate}
-                disabled={isGenerating || !canGenerate}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700
-                         text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Analisando...
-                  </>
-                ) : cachedResult ? (
-                  <>
-                    <RefreshCw className="w-4 h-4" />
-                    Atualizar
-                  </>
-                ) : (
-                  <>
-                    <Scale className="w-4 h-4" />
-                    Gerar Análise
-                  </>
-                )}
-              </button>
-              {cachedResult && (
-                <span className="text-xs theme-text-muted text-center">
-                  Gerado em: {new Date(cachedResult.generatedAt).toLocaleString('pt-BR')}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Aviso se não há fontes */}
-          {!hasMiniRelatorio && !hasDocumentos && (
-            <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg mb-4">
-              <p className="text-sm text-yellow-400">
-                Nenhuma fonte disponível. Adicione documentos ao processo ou gere o mini-relatório do tópico primeiro.
-              </p>
-            </div>
-          )}
-
-          {/* Erro */}
-          {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg mb-4">
-              <p className="text-sm text-red-400">{error}</p>
-            </div>
-          )}
-
-          {/* Resultado */}
-          {cachedResult && !isGenerating && (
-            <div className="space-y-4">
-              {/* Resumo */}
-              {cachedResult.resumo && (
-                <div className="p-3 theme-bg-secondary rounded-lg">
-                  <h4 className="text-sm font-semibold theme-text-primary mb-1">Resumo</h4>
-                  <p className="text-sm theme-text-secondary">{cachedResult.resumo}</p>
-                </div>
-              )}
-
-              {/* Fatos Incontroversos */}
-              <IncontroversosSection fatos={cachedResult.fatosIncontroversos} />
-
-              {/* Tabela */}
-              <div>
-                <h4 className="text-sm font-semibold theme-text-primary mb-2">Tabela Comparativa</h4>
-                <ComparisonTable rows={cachedResult.tabela} />
-              </div>
-
-              {/* Pontos-Chave */}
-              <PontosChaveSection pontos={cachedResult.pontosChave} />
-            </div>
-          )}
-
-          {/* Loading */}
-          {isGenerating && (
-            <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
-              <p className="theme-text-secondary">Analisando alegações das partes...</p>
-              <p className="text-xs theme-text-muted">Isso pode levar alguns segundos</p>
-            </div>
+        <div className="flex flex-col justify-end gap-2">
+          <button
+            onClick={handleGenerate}
+            disabled={isGenerating || !canGenerate}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700
+                     text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Analisando...
+              </>
+            ) : cachedResult ? (
+              <>
+                <RefreshCw className="w-4 h-4" />
+                Atualizar
+              </>
+            ) : (
+              <>
+                <Scale className="w-4 h-4" />
+                Gerar Análise
+              </>
+            )}
+          </button>
+          {cachedResult && (
+            <span className="text-xs theme-text-muted text-center">
+              Gerado em: {new Date(cachedResult.generatedAt).toLocaleString('pt-BR')}
+            </span>
           )}
         </div>
       </div>
+
+      {/* Aviso se não há fontes */}
+      {!hasMiniRelatorio && !hasDocumentos && (
+        <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+          <p className="text-sm text-yellow-400">
+            Nenhuma fonte disponível. Adicione documentos ao processo ou gere o mini-relatório do tópico primeiro.
+          </p>
+        </div>
+      )}
+
+      {/* Erro */}
+      {error && (
+        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <p className="text-sm text-red-400">{error}</p>
+        </div>
+      )}
+
+      {/* Resultado */}
+      {cachedResult && !isGenerating && (
+        <div className="space-y-4">
+          {/* Resumo */}
+          {cachedResult.resumo && (
+            <div className="p-3 theme-bg-secondary rounded-lg">
+              <h4 className="text-sm font-semibold theme-text-primary mb-1">Resumo</h4>
+              <p className="text-sm theme-text-secondary">{cachedResult.resumo}</p>
+            </div>
+          )}
+
+          {/* Fatos Incontroversos */}
+          <IncontroversosSection fatos={cachedResult.fatosIncontroversos} />
+
+          {/* Tabela */}
+          <div>
+            <h4 className="text-sm font-semibold theme-text-primary mb-2">Tabela Comparativa</h4>
+            <ComparisonTable rows={cachedResult.tabela} />
+          </div>
+
+          {/* Pontos-Chave */}
+          <PontosChaveSection pontos={cachedResult.pontosChave} />
+        </div>
+      )}
+
+      {/* Loading */}
+      {isGenerating && (
+        <div className="flex flex-col items-center justify-center py-12 gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
+          <p className="theme-text-secondary">Analisando alegações das partes...</p>
+          <p className="text-xs theme-text-muted">Isso pode levar alguns segundos</p>
+        </div>
+      )}
     </div>
   );
 };
 
-export default FactsComparisonModal;
+// Re-export para compatibilidade (será usado dentro de BaseModal no App.tsx)
+export const FactsComparisonModal = FactsComparisonModalContent;
+export default FactsComparisonModalContent;
