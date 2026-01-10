@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.29'; // v1.36.29: Suporte PDF para OpenAI + aviso Grok não suporta PDF binário
+const APP_VERSION = '1.36.30'; // v1.36.30: Fix botão excluir prova (race condition DeleteProofModal)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
