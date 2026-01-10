@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.36', feature: 'Bloquear PDF Puro quando Grok selecionado: opção desabilitada nos seletores (Uploads e Provas), Claude Vision liberado' },
   { version: '1.36.35', feature: 'Fix estimativa de custo: mostrar modelo correto para OpenAI/Grok no TopicCurationModal (antes mostrava Claude)' },
   { version: '1.36.34', feature: 'Tesseract OCR: mais logs de diagnóstico (canvas render, OCR batch, cada página) para identificar gargalo' },
   { version: '1.36.33', feature: 'Tesseract OCR fix: primeiro worker baixa modelo sozinho (cacheia), depois cria demais em paralelo + logs de diagnóstico' },

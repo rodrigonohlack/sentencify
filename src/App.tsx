@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.35'; // v1.36.35: Fix estimativa custo OpenAI/Grok + Tesseract diagnóstico
+const APP_VERSION = '1.36.36'; // v1.36.36: Bloquear PDF Puro quando Grok selecionado
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -8512,24 +8512,46 @@ ModelSearchPanel.displayName = 'ModelSearchPanel';
 // Componente reutilizável para selecionar como o PDF será processado antes de enviar para a IA
 // v1.14.1: Restaurado PDF Puro como opção (config global é apenas padrão, usuário pode mudar por arquivo)
 // v1.32.13: anonymizationEnabled bloqueia apenas modos que não extraem texto (claude-vision, pdf-puro)
-// PDF.js e Tesseract extraem texto → podem ser anonimizados
-const ProcessingModeSelector = React.memo(({ value, onChange, disabled = false, anonymizationEnabled = false, className = '' }: ProcessingModeSelectorProps) => {
-  const blockedModes = ['claude-vision', 'pdf-puro'];
-  const isValueBlocked = anonymizationEnabled && blockedModes.includes(value);
+// v1.36.36: grokEnabled bloqueia apenas pdf-puro (Grok não suporta binário, mas texto ok)
+const ProcessingModeSelector = React.memo(({ value, onChange, disabled = false, anonymizationEnabled = false, grokEnabled = false, className = '' }: ProcessingModeSelectorProps) => {
+  // Grok: só bloqueia pdf-puro | Anonimização: bloqueia pdf-puro E claude-vision
+  const isPdfPuroBlocked = anonymizationEnabled || grokEnabled;
+  const isClaudeVisionBlocked = anonymizationEnabled;
+
+  // Determinar valor efetivo (fallback para pdfjs se bloqueado)
+  const blockedModes = [
+    ...(isPdfPuroBlocked ? ['pdf-puro'] : []),
+    ...(isClaudeVisionBlocked ? ['claude-vision'] : [])
+  ];
+  const isValueBlocked = blockedModes.includes(value);
   const effectiveValue = isValueBlocked ? 'pdfjs' : (value || 'pdfjs');
+
+  // Labels com motivo do bloqueio
+  const getPdfPuroLabel = () => {
+    if (anonymizationEnabled) return '🔒 PDF Binário (anonimização)';
+    if (grokEnabled) return '🔒 PDF Binário (Grok)';
+    return 'PDF Puro (binário)';
+  };
+
+  const getTitle = () => {
+    if (anonymizationEnabled) return 'Anonimização ativa: modos binários bloqueados';
+    if (grokEnabled) return 'Grok não suporta PDF binário';
+    return undefined;
+  };
+
   return (
     <select
       value={effectiveValue}
       onChange={(e) => onChange(e.target.value as ProcessingMode)}
       disabled={disabled}
-      title={anonymizationEnabled ? 'Anonimização ativa: modos binários bloqueados' : undefined}
+      title={getTitle()}
       className={`text-xs theme-bg-secondary theme-border-input border rounded px-2 py-1 cursor-pointer theme-text-primary hover-border-blue-500 transition-colors ${className}`}
       onClick={(e) => e.stopPropagation()}
     >
       <option value="pdfjs" className="theme-bg-secondary theme-text-primary">PDF.js (Texto)</option>
       <option value="tesseract" className="theme-bg-secondary theme-text-primary">Tesseract OCR (Offline)</option>
-      <option value="claude-vision" className="theme-bg-secondary theme-text-primary" disabled={anonymizationEnabled}>{anonymizationEnabled ? '🔒 Claude Vision' : 'Claude Vision (API)'}</option>
-      <option value="pdf-puro" className="theme-bg-secondary theme-text-primary" disabled={anonymizationEnabled}>{anonymizationEnabled ? '🔒 PDF Binário' : 'PDF Puro (binário)'}</option>
+      <option value="claude-vision" className="theme-bg-secondary theme-text-primary" disabled={isClaudeVisionBlocked}>{isClaudeVisionBlocked ? '🔒 Claude Vision' : 'Claude Vision (API)'}</option>
+      <option value="pdf-puro" className="theme-bg-secondary theme-text-primary" disabled={isPdfPuroBlocked}>{getPdfPuroLabel()}</option>
     </select>
   );
 });
@@ -9228,6 +9250,7 @@ const ProofCard = React.memo(({
   setError,
   extractTextFromPDFWithMode,
   anonymizationEnabled = false,
+  grokEnabled = false, // v1.36.36: Bloquear PDF Puro quando Grok
   anonConfig = null,
   nomesParaAnonimizar = [],
   editorTheme = 'dark', // v1.21.7: Para contraste correto do aviso de anonimização
@@ -9465,6 +9488,7 @@ const ProofCard = React.memo(({
                   }))}
                   disabled={proofManager.isAnalyzingProof(String(proof.id)) || !!extractionProgress}
                   anonymizationEnabled={anonymizationEnabled}
+                  grokEnabled={grokEnabled}
                 />
               </div>
 
@@ -29715,17 +29739,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           <div className="p-6">
             {activeTab === 'upload' && (
               <div className="space-y-6">
-                {/* v1.36.29: Aviso Grok não suporta PDF binário */}
-                {aiIntegration.aiSettings?.provider === 'grok' && (
-                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-amber-600 dark:text-amber-400">
-                        <strong>Grok não suporta PDF binário.</strong> Use o modo "Extrair texto" (PDF.js ou Tesseract) antes de gerar tópicos. O modo "PDF Puro" não funcionará.
-                      </p>
-                    </div>
-                  </div>
-                )}
+                {/* v1.36.36: Aviso removido - bloqueio visual no seletor é suficiente */}
 
                 <div className="space-y-6">
                   <div className="space-y-3">
@@ -29799,6 +29813,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                               value={documentProcessingModes.peticoes?.[idx] || 'pdfjs'}
                               onChange={(mode: ProcessingMode) => setPeticaoMode(idx, mode)}
                               anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
+                              grokEnabled={aiIntegration.aiSettings?.provider === 'grok'}
                             />
                             <button
                               onClick={() => removePeticaoFile(idx)}
@@ -30048,6 +30063,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                               onChange={(mode: ProcessingMode) => setContestacaoMode(idx, mode)}
                               className="mx-2"
                               anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
+                              grokEnabled={aiIntegration.aiSettings?.provider === 'grok'}
                             />
                             <button
                               onClick={async () => {
@@ -30262,6 +30278,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             onChange={(mode: ProcessingMode) => setComplementarMode(idx, mode)}
                             className="mx-2"
                             anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
+                            grokEnabled={aiIntegration.aiSettings?.provider === 'grok'}
                           />
                           <button
                             onClick={async () => {
@@ -30656,17 +30673,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 
             {activeTab === 'proofs' && (
               <div className="space-y-6">
-                {/* v1.36.29: Aviso Grok não suporta PDF binário */}
-                {aiIntegration.aiSettings?.provider === 'grok' && (
-                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-amber-600 dark:text-amber-400">
-                        <strong>Grok não suporta PDF binário.</strong> Use o modo "Extrair texto" (PDF.js ou Tesseract) antes de analisar provas. O modo "PDF Puro" não funcionará.
-                      </p>
-                    </div>
-                  </div>
-                )}
+                {/* v1.36.36: Aviso removido - bloqueio visual no seletor é suficiente */}
 
                 <div className="theme-gradient-card-50 rounded-lg p-6 border theme-border-secondary">
                   <div className="flex items-start justify-between mb-6">
@@ -30762,6 +30769,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             setError={setError}
                             extractTextFromPDFWithMode={documentServices.extractTextFromPDFWithMode}
                             anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
+                            grokEnabled={aiIntegration.aiSettings?.provider === 'grok'}
                             anonConfig={aiIntegration.aiSettings?.anonymization}
                             nomesParaAnonimizar={aiIntegration.aiSettings?.anonymization?.nomesUsuario || []}
                             editorTheme={appTheme as 'dark' | 'light' | undefined}
@@ -30780,6 +30788,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             setError={setError}
                             extractTextFromPDFWithMode={documentServices.extractTextFromPDFWithMode}
                             anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
+                            grokEnabled={aiIntegration.aiSettings?.provider === 'grok'}
                             anonConfig={aiIntegration.aiSettings?.anonymization}
                             nomesParaAnonimizar={aiIntegration.aiSettings?.anonymization?.nomesUsuario || []}
                             editorTheme={appTheme as 'dark' | 'light' | undefined}

@@ -1758,6 +1758,7 @@ export interface ProofCardProps {
   setError: (error: string) => void;
   extractTextFromPDFWithMode: (file: File, mode: string, progressCallback?: ((page: number, total: number) => void) | null) => Promise<string | null>;
   anonymizationEnabled?: boolean;
+  grokEnabled?: boolean;  // v1.36.36: Bloquear PDF Puro quando Grok selecionado
   anonConfig?: AnonymizationSettings | null;
   nomesParaAnonimizar?: string[];
   editorTheme?: 'dark' | 'light' | string;
@@ -1815,6 +1816,7 @@ export interface ProcessingModeSelectorProps {
   onChange: (value: ProcessingMode) => void;
   disabled?: boolean;
   anonymizationEnabled?: boolean;
+  grokEnabled?: boolean;  // v1.36.36: Bloquear PDF Puro quando Grok selecionado
   className?: string;
 }
 
