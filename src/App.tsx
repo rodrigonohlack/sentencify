@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.43'; // v1.36.43: Fix test failure - guard scrollIntoView (JSDOM não implementa)
+const APP_VERSION = '1.36.44'; // v1.36.44: Deletar testes/hooks duplicados (222 testes inúteis removidos)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {

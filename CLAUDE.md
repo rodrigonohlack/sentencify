@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.43 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.44 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -120,6 +120,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.44 | Deletar 16 arquivos de testes/hooks duplicados: 222 testes inúteis removidos (testavam código que não roda em produção) |
 | v1.36.43 | Fix test failure: guard scrollIntoView em TopicCurationModal (JSDOM não implementa) |
 | v1.36.42 | Build inclui tsc --noEmit: verificação de tipos antes do deploy |
 | v1.36.41 | Fix ReferenceError: usar documentServices.extractTextFromPDFWithMode (prefixo faltando) |
