@@ -137,18 +137,36 @@ const CATEGORIES: TopicCategory[] = ['PRELIMINAR', 'PREJUDICIAL', 'MÉRITO', 'PR
 
 // Preços por 1M tokens (USD)
 const MODEL_PRICES: Record<string, { input: number; output: number }> = {
+  // Claude
   'claude-sonnet-4-20250514': { input: 3, output: 15 },
   'claude-opus-4-20250514': { input: 15, output: 75 },
+  'claude-opus-4-5-20251101': { input: 15, output: 75 },
+  // Gemini
   'gemini-3-flash-preview': { input: 0.50, output: 3.00 },
-  'gemini-3-pro-preview': { input: 2.00, output: 12.00 }
+  'gemini-3-pro-preview': { input: 2.00, output: 12.00 },
+  // OpenAI
+  'gpt-5.2': { input: 2.50, output: 10.00 },
+  'gpt-5.2-chat-latest': { input: 2.50, output: 10.00 },
+  // Grok (xAI) - v1.36.35
+  'grok-4-1-fast-reasoning': { input: 0.30, output: 1.50 },
+  'grok-4-1-fast-non-reasoning': { input: 0.15, output: 0.75 }
 };
 
 // Nomes amigáveis dos modelos
 const MODEL_NAMES: Record<string, string> = {
+  // Claude
   'claude-sonnet-4-20250514': 'Claude Sonnet 4',
   'claude-opus-4-20250514': 'Claude Opus 4',
+  'claude-opus-4-5-20251101': 'Claude Opus 4.5',
+  // Gemini
   'gemini-3-flash-preview': 'Gemini 3 Flash',
-  'gemini-3-pro-preview': 'Gemini 3 Pro'
+  'gemini-3-pro-preview': 'Gemini 3 Pro',
+  // OpenAI
+  'gpt-5.2': 'GPT-5.2',
+  'gpt-5.2-chat-latest': 'GPT-5.2 Instant',
+  // Grok (xAI)
+  'grok-4-1-fast-reasoning': 'Grok 4.1 Fast',
+  'grok-4-1-fast-non-reasoning': 'Grok 4.1 Lite'
 };
 
 // Estimativas de tokens para cálculo de custo (calibrado com dados reais)
@@ -171,11 +189,12 @@ const USD_TO_BRL = 5.50;
 // ═══════════════════════════════════════════════════════════════════════════════
 
 interface EstimateOptions {
-  provider?: 'anthropic' | 'gemini';
+  provider?: 'anthropic' | 'gemini' | 'openai' | 'grok';
   thinkingBudget?: string;
   useExtendedThinking?: boolean;
   geminiThinkingLevel?: string;
   topicsPerRequest?: number | 'all';
+  grokModel?: string;
 }
 
 const estimateCostAndTime = (
@@ -215,8 +234,17 @@ const estimateCostAndTime = (
   if (provider === 'gemini') {
     thinkingTokens = GEMINI_THINKING_TOKENS[geminiThinkingLevel] || 0;
     thinkingLabel = thinkingTokens > 0 ? `thinking ${geminiThinkingLevel}` : '';
+  } else if (provider === 'grok') {
+    // Grok: reasoning está embutido no modelo (sem budget separado)
+    const isReasoning = model.includes('reasoning');
+    thinkingLabel = isReasoning ? 'thinking embutido' : '';
+    thinkingTokens = 0; // Já incluso no preço do modelo
+  } else if (provider === 'openai') {
+    // OpenAI: sem thinking explícito
+    thinkingLabel = '';
+    thinkingTokens = 0;
   } else {
-    // Claude
+    // Claude (anthropic)
     thinkingTokens = useExtendedThinking ? parseInt(thinkingBudget || '0', 10) : 0;
     if (thinkingTokens > 0) {
       thinkingLabel = `${Math.round(thinkingTokens / 1000)}K tokens thinking`;
@@ -901,10 +929,10 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
 
   const estimate = useMemo(() => {
     const topicsToGenerate = topics.filter(t => !isSpecialTopic(t)).length;
-    // Map providers to EstimateOptions compatibility (openai/grok fallback to anthropic pricing)
-    const estimateProvider = provider === 'claude' || provider === 'openai' || provider === 'grok' ? 'anthropic' : provider;
+    // v1.36.35: Mapear providers corretamente (claude -> anthropic, demais mantém)
+    const estimateProvider = provider === 'claude' ? 'anthropic' : provider;
     return estimateCostAndTime(topicsToGenerate, model, parallelRequests, {
-      provider: estimateProvider as 'anthropic' | 'gemini' | undefined,
+      provider: estimateProvider as 'anthropic' | 'gemini' | 'openai' | 'grok',
       thinkingBudget,
       useExtendedThinking,
       geminiThinkingLevel,
