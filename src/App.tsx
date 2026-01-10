@@ -202,7 +202,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.17'; // v1.36.17: Log thinking no console para Grok
+const APP_VERSION = '1.36.18'; // v1.36.18: Fix botões prompt rápido + nota limitação Grok thinking
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -11917,7 +11917,7 @@ const AIAssistantBase = React.memo(({
                     }`}
                     title={isError ? qpError.message : resolvedPrompt}
                   >
-                    {isError ? <>⚠️ {qpError.message}</> : <>{qp.icon} {qp.name}</>}
+                    {isError ? <>⚠️ {qpError.message}</> : <>{qp.icon} {qp.label}</>}
                   </button>
                 );
               })}
@@ -32013,7 +32013,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                   />
                   <div className="flex-1">
                     <span className="font-medium theme-text-primary text-sm">Log thinking no console</span>
-                    <p className="text-xs theme-text-muted mt-0.5">Exibe o raciocínio da IA no console do navegador (F12) para debug</p>
+                    <p className="text-xs theme-text-muted mt-0.5">Exibe o raciocínio da IA no console (F12). Nota: Grok 4.x não expõe reasoning na API.</p>
                   </div>
                 </label>
               </div>

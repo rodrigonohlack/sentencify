@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.18', feature: 'Fix botões prompt rápido vazios (qp.name→qp.label) + nota sobre limitação Grok 4.x reasoning na API' },
   { version: '1.36.17', feature: 'Log thinking no console para Grok: toggle "Log thinking" agora funciona com Grok 4.1 Fast Thinking' },
   { version: '1.36.16', feature: 'Fix erro 502 Grok: formatar x-grok-conv-id como UUID4 válido (com hífens)' },
   { version: '1.36.15', feature: 'Fix espaçamento do checkbox "Log thinking no console" no Config IA Modal (mt-4)' },
