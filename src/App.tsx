@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.32'; // v1.36.32: Fix exclusão prova - usar handleDeleteProof do hook
+const APP_VERSION = '1.36.35'; // v1.36.35: Fix estimativa custo OpenAI/Grok + Tesseract diagnóstico
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
