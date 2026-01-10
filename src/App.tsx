@@ -19314,6 +19314,9 @@ INSTRUÇÕES IMPORTANTES:
         console.timeEnd(`[Tesseract] Remaining ${NUM_WORKERS - 1} workers (parallel)`);
       }
 
+      // v1.36.34: Mais diagnóstico - onde trava?
+      console.log('[Tesseract] Workers ready, starting batch processing...');
+
       // 2. Processar em batches (limita memória)
       const allResults = [];
       let completed = 0;
@@ -19325,7 +19328,10 @@ INSTRUÇÕES IMPORTANTES:
           (_, i: number) => batchStart + i + 1
         );
 
+        console.log(`[Tesseract] Processing batch: pages ${batchStart + 1}-${batchEnd}`);
+
         // 2a. Renderizar batch de páginas
+        console.time('[Tesseract] Canvas render');
         const canvases = await Promise.all(
           batchPages.map(async (pageNum) => {
             if (!pdf) throw new Error('PDF not loaded');
@@ -19337,16 +19343,21 @@ INSTRUÇÕES IMPORTANTES:
             const ctx = canvas.getContext('2d');
             if (!ctx) throw new Error('Canvas 2D context not available');
             await page.render({ canvasContext: ctx, viewport }).promise;
+            console.log(`[Tesseract] Page ${pageNum} rendered`);
             return { canvas, pageNum };
           })
         );
+        console.timeEnd('[Tesseract] Canvas render');
 
         // 2b. OCR batch em paralelo
         if (!scheduler) throw new Error('Tesseract scheduler not available');
         const activeScheduler = scheduler; // Capture non-null for closure
+        console.time('[Tesseract] OCR batch');
         const batchResults = await Promise.all(
           canvases.map(async ({ canvas, pageNum }) => {
+            console.log(`[Tesseract] Starting OCR page ${pageNum}...`);
             const { data: { text } } = await activeScheduler.addJob('recognize', canvas);
+            console.log(`[Tesseract] Page ${pageNum} OCR complete`);
             completed++;
             if (progressCallback) progressCallback(completed, totalPages, 'OCR...');
             // Cleanup imediato
@@ -19355,6 +19366,7 @@ INSTRUÇÕES IMPORTANTES:
             return { pageNum, text };
           })
         );
+        console.timeEnd('[Tesseract] OCR batch');
 
         allResults.push(...batchResults);
       }

@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.34', feature: 'Tesseract OCR: mais logs de diagnóstico (canvas render, OCR batch, cada página) para identificar gargalo' },
   { version: '1.36.33', feature: 'Tesseract OCR fix: primeiro worker baixa modelo sozinho (cacheia), depois cria demais em paralelo + logs de diagnóstico' },
   { version: '1.36.32', feature: 'Fix exclusão de prova: usar handleDeleteProof do hook (tipagem correta)' },
   { version: '1.36.31', feature: 'Fix exclusão de prova: String() na comparação de IDs (type mismatch number/string)' },
