@@ -32,6 +32,7 @@
 4. **z-index**: Base `z-50`, nested `+10` por nível
 5. **NUNCA usar PowerShell para editar conteúdo de arquivos**: Corrompe encoding UTF-8 (acentuação quebrada). Use `sed`, `Edit` tool, ou `Write` tool.
 6. **Novos Modais**: SEMPRE usar `BaseModal` (App.tsx ~linha 10545). Nunca reimplementar ESC handler, scroll lock ou estrutura modal manualmente. Props: `isOpen`, `onClose`, `title`, `subtitle`, `icon`, `iconColor` (blue/red/green/yellow/purple/orange), `size` (sm/md/lg/xl/2xl), `children`, `footer`, `preventClose`.
+7. **Hooks em `src/hooks/` são para TESTES**: Os arquivos `.ts` em `src/hooks/` (ex: `useProofManager.ts`) são versões **simplificadas para testes unitários**. Os hooks REAIS de produção estão definidos **dentro do App.tsx**. Nunca confundir ao fazer manutenção - sempre verificar qual versão está sendo usada.
 
 > **Nota**: Este projeto agora roda como aplicação standalone (fora do sandbox Claude.ai). Não há mais limite de tamanho de arquivo nem necessidade de minificação.
 
