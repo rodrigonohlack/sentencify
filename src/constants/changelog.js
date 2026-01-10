@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.50', feature: 'Double Check de respostas da IA: verificação secundária para extração de tópicos (falsos positivos, omissões, categorização), provider/modelo configurável' },
   { version: '1.36.49', feature: 'Toggle "Log thinking" desabilitado para modelos sem reasoning (Grok e GPT-5.2 Instant)' },
   { version: '1.36.48', feature: 'Fix layout AIAssistantBase: aviso CNJ e seletor de escopo agora dentro da área de scroll' },
   { version: '1.36.47', feature: 'Fix "Invalid Date" no modal compartilhar biblioteca: API retornava created_at (snake_case), frontend esperava createdAt' },

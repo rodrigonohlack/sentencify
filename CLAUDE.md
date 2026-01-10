@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.49 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.50 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -120,6 +120,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.50 | Double Check de respostas da IA: verificação secundária para extração de tópicos, detecta falsos positivos/omissões/categorização incorreta, provider/modelo configurável |
 | v1.36.49 | Toggle "Log thinking" desabilitado para modelos sem reasoning (Grok e GPT-5.2 Instant) |
 | v1.36.48 | Fix layout AIAssistantBase: aviso CNJ e seletor de escopo agora dentro da área de scroll (antes ocupavam metade do modal) |
 | v1.36.47 | Fix "Invalid Date" no modal compartilhar biblioteca: API retornava created_at (snake_case), frontend esperava createdAt |

@@ -168,6 +168,7 @@ import type {
   QuickPrompt, AIMessage, AIMessageContent, AITextContent, AIDocumentContent, AICallOptions, AIProvider, GeminiRequest, GeminiGenerationConfig,
   OpenAIMessage, OpenAIMessagePart, OpenAIReasoningConfig, OpenAIReasoningLevel,
   FactsComparisonSource, FactsComparisonResult,  // v1.36.12
+  DoubleCheckSettings, DoubleCheckOperations, DoubleCheckResult, DoubleCheckCorrection,  // v1.36.50
   // MODAL PROPS (movido de App.tsx v1.35.79)
   ModelFormModalProps, ModelPreviewModalProps, RenameTopicModalProps, DeleteTopicModalProps, MergeTopicsModalProps, SplitTopicModalProps,
   NewTopicModalProps, DeleteModelModalProps, DeleteAllModelsModalProps, DeleteAllPrecedentesModalProps,
@@ -206,7 +207,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.49'; // v1.36.49: Toggle logThinking desabilitado para modelos sem reasoning (Grok, GPT-5.2 Instant)
+const APP_VERSION = '1.36.50'; // v1.36.50: Double Check de respostas da IA (verificação secundária para extração de tópicos)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -1692,7 +1693,16 @@ const useAIIntegration = () => {
         label: 'Análise de Prova Oral',
         prompt: '**INSTRUÇÃO CRÍTICA**: Analise a prova oral EXCLUSIVAMENTE sobre "{TOPICO}".\n\nREGRAS OBRIGATÓRIAS:\n1. IGNORE 100% de qualquer trecho que NÃO trate de "{TOPICO}"\n2. NÃO mencione outros assuntos discutidos nos depoimentos\n3. Se um depoente falou sobre múltiplos temas, extraia APENAS o que se refere a "{TOPICO}"\n4. Se não houver NENHUMA menção a "{TOPICO}", responda: "Não há menção a {TOPICO} nesta prova oral."\n\nProduza um resumo estruturado APENAS com trechos relevantes a "{TOPICO}", com minutagem quando disponível:\n\nAUTOR: [afirmação sobre {TOPICO}] (mm:ss);\nPREPOSTO: [afirmação sobre {TOPICO}] (mm:ss);\nTestemunha [nome]: [afirmação sobre {TOPICO}] (mm:ss);\n\n⚠️ LEMBRE-SE: Analise SOMENTE "{TOPICO}". Outros assuntos devem ser COMPLETAMENTE ignorados.'
       }
-    ]
+    ],
+    // v1.36.50: Double Check de respostas da IA
+    doubleCheck: {
+      enabled: false,
+      provider: 'claude',
+      model: 'claude-sonnet-4-20250514',
+      operations: {
+        topicExtraction: false
+      }
+    }
   });
 
   // v1.20.3: Contador de tokens persistente por projeto
@@ -2914,6 +2924,99 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     return models[modelId] || modelId;
   }, []);
 
+  // ═══════════════════════════════════════════════════════════════
+  // DOUBLE CHECK - Verificação secundária de respostas da IA
+  // v1.36.50
+  // ═══════════════════════════════════════════════════════════════
+
+  /**
+   * Chama a API com provider/modelo específico (para double check)
+   * Ignora as configurações atuais de aiSettings.provider
+   */
+  const callDoubleCheckAPI = React.useCallback(async (
+    provider: AIProvider,
+    model: string,
+    prompt: string,
+    maxTokens: number = 8000
+  ): Promise<string> => {
+    const messages: AIMessage[] = [
+      { role: 'user', content: prompt }
+    ];
+
+    const options: AICallOptions = { maxTokens, model };
+
+    // Chamar a API específica do provider
+    if (provider === 'openai') {
+      return await callOpenAIAPI(messages, options);
+    }
+    if (provider === 'grok') {
+      return await callGrokAPI(messages, options);
+    }
+    if (provider === 'gemini') {
+      return await callGeminiAPI(messages, options);
+    }
+    // Default: Claude
+    return await callLLM(messages, options);
+  }, [callLLM, callGeminiAPI, callOpenAIAPI, callGrokAPI]);
+
+  /**
+   * Executa o double check em uma resposta da IA
+   * @param operation - Tipo de operação (topicExtraction, etc)
+   * @param originalResponse - Resposta original em JSON
+   * @param context - Documentos/contexto original
+   * @param onProgress - Callback de progresso opcional
+   */
+  const performDoubleCheck = React.useCallback(async (
+    operation: 'topicExtraction',
+    originalResponse: string,
+    context: string,
+    onProgress?: (msg: string) => void
+  ): Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string }> => {
+    const { doubleCheck } = aiSettings;
+
+    // Se double check desabilitado ou operação não selecionada, retornar original
+    if (!doubleCheck?.enabled || !doubleCheck.operations[operation]) {
+      return { verified: originalResponse, corrections: [], summary: '' };
+    }
+
+    onProgress?.('🔄 Verificando resposta com Double Check...');
+
+    try {
+      // Importar dinamicamente o prompt builder
+      const { buildDoubleCheckPrompt } = await import('./prompts/double-check-prompts');
+      const verificationPrompt = buildDoubleCheckPrompt(operation, originalResponse, context);
+
+      // Chamar API com o modelo de double check
+      const response = await callDoubleCheckAPI(
+        doubleCheck.provider,
+        doubleCheck.model,
+        verificationPrompt,
+        8000
+      );
+
+      // Parsear resposta JSON
+      const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
+                        response.match(/\{[\s\S]*"verifiedTopics"[\s\S]*\}/);
+
+      if (!jsonMatch) {
+        console.warn('[DoubleCheck] Resposta não contém JSON válido:', response.substring(0, 200));
+        return { verified: originalResponse, corrections: [], summary: 'Falha ao parsear resposta' };
+      }
+
+      const jsonStr = jsonMatch[1] || jsonMatch[0];
+      const result: DoubleCheckResult = JSON.parse(jsonStr);
+
+      return {
+        verified: JSON.stringify(result.verifiedTopics),
+        corrections: result.corrections || [],
+        summary: result.summary || ''
+      };
+    } catch (error) {
+      console.error('[DoubleCheck] Erro:', error);
+      return { verified: originalResponse, corrections: [], summary: 'Erro na verificação' };
+    }
+  }, [aiSettings, callDoubleCheckAPI]);
+
   return {
     // Estados
     aiSettings,
@@ -2968,6 +3071,9 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     convertToOpenAIFormat,  // v1.35.97
     extractTokenMetrics,
     extractResponseText,
+
+    // v1.36.50: Double Check
+    performDoubleCheck,
 
     // v1.20.3: Contador de tokens persistente
     tokenMetrics,
@@ -27323,6 +27429,57 @@ Extraia e classifique todos os tópicos/pedidos em:
 
       let topics = parsed.topics || [];
 
+      // ═══════════════════════════════════════════════════════════════════════════
+      // v1.36.50: DOUBLE CHECK - Verificação secundária da extração de tópicos
+      // ═══════════════════════════════════════════════════════════════════════════
+      if (aiIntegration.aiSettings.doubleCheck?.enabled &&
+          aiIntegration.aiSettings.doubleCheck?.operations.topicExtraction) {
+
+        setAnalysisProgress('🔄 Verificando extração com Double Check...');
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Reconstruir contexto dos documentos para verificação
+        const contextParts: string[] = [];
+        peticoesTextFinal.forEach((doc, idx) => {
+          contextParts.push(`PETIÇÃO ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
+        });
+        contestacoesTextFinal.forEach((doc, idx) => {
+          contextParts.push(`CONTESTAÇÃO ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
+        });
+        pastedPeticaoTexts.forEach((doc, idx) => {
+          contextParts.push(`PETIÇÃO COLADA ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
+        });
+        pastedContestacaoTexts.forEach((doc, idx) => {
+          contextParts.push(`CONTESTAÇÃO COLADA ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
+        });
+
+        const documentContext = contextParts.join('\n\n---\n\n');
+
+        try {
+          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+            'topicExtraction',
+            JSON.stringify(topics),
+            documentContext,
+            setAnalysisProgress
+          );
+
+          if (corrections.length > 0) {
+            // Parsear tópicos verificados
+            const verifiedTopics = JSON.parse(verified);
+            topics = verifiedTopics;
+
+            // Notificar sobre correções
+            showToast(`🔄 Double Check: ${corrections.length} correção(ões) - ${summary}`, 'info');
+            console.log('[DoubleCheck] Correções aplicadas:', corrections);
+          } else {
+            console.log('[DoubleCheck] Nenhuma correção necessária');
+          }
+        } catch (dcError) {
+          console.error('[DoubleCheck] Erro na verificação:', dcError);
+          // Continuar com tópicos originais em caso de erro
+        }
+      }
+
       // Armazenar informações das partes se disponíveis
       if (parsed.partes) {
         setPartesProcesso({
@@ -32668,6 +32825,200 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     </label>
                   );
                 })()}
+              </div>
+
+              {/* v1.36.50: Double Check de Respostas */}
+              <div>
+                <label className="block text-sm font-medium theme-text-tertiary mb-3">
+                  🔄 Double Check de Respostas
+                </label>
+
+                {/* Toggle principal */}
+                <button
+                  onClick={() => {
+                    const current = aiIntegration.aiSettings.doubleCheck || {
+                      enabled: false,
+                      provider: 'claude' as AIProvider,
+                      model: 'claude-sonnet-4-20250514',
+                      operations: { topicExtraction: false }
+                    };
+                    aiIntegration.setAiSettings({
+                      ...aiIntegration.aiSettings,
+                      doubleCheck: { ...current, enabled: !current.enabled }
+                    });
+                  }}
+                  className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                    aiIntegration.aiSettings.doubleCheck?.enabled
+                      ? 'bg-purple-600/20 border-purple-500'
+                      : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className={CSS.flexGap2}>
+                        <span className="font-semibold theme-text-primary">
+                          {aiIntegration.aiSettings.doubleCheck?.enabled ? '✓ Ativado' : 'Desativado'}
+                        </span>
+                        {aiIntegration.aiSettings.doubleCheck?.enabled && (
+                          <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded">Verificação Dupla</span>
+                        )}
+                      </div>
+                      <p className="text-xs theme-text-muted mt-1">
+                        Reanalisa respostas da IA para detectar falhas, omissões e falsos positivos.
+                      </p>
+                    </div>
+                    <div className={`w-12 h-6 rounded-full transition-colors relative ${
+                      aiIntegration.aiSettings.doubleCheck?.enabled ? 'bg-purple-500' : 'theme-bg-tertiary'
+                    }`}>
+                      <div className={`absolute w-5 h-5 rounded-full bg-white shadow top-0.5 transition-all ${
+                        aiIntegration.aiSettings.doubleCheck?.enabled ? 'right-0.5' : 'left-0.5'
+                      }`} />
+                    </div>
+                  </div>
+                </button>
+
+                {/* Opções expandidas quando ativado */}
+                {aiIntegration.aiSettings.doubleCheck?.enabled && (
+                  <div className="mt-4 space-y-4 p-4 rounded-lg theme-bg-secondary-30 border theme-border-input">
+                    {/* Seletor de Provider */}
+                    <div>
+                      <label className="block text-xs font-medium theme-text-tertiary mb-2">
+                        Provider para verificação
+                      </label>
+                      <select
+                        value={aiIntegration.aiSettings.doubleCheck?.provider || 'claude'}
+                        onChange={(e) => {
+                          const provider = e.target.value as AIProvider;
+                          const defaultModels: Record<AIProvider, string> = {
+                            claude: 'claude-sonnet-4-20250514',
+                            gemini: 'gemini-3-flash-preview',
+                            openai: 'gpt-5.2-chat-latest',
+                            grok: 'grok-4-1-fast-reasoning'
+                          };
+                          aiIntegration.setAiSettings({
+                            ...aiIntegration.aiSettings,
+                            doubleCheck: {
+                              ...aiIntegration.aiSettings.doubleCheck!,
+                              provider,
+                              model: defaultModels[provider]
+                            }
+                          });
+                        }}
+                        className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
+                      >
+                        <option value="claude">Claude (Anthropic)</option>
+                        <option value="gemini">Gemini (Google)</option>
+                        <option value="openai">GPT (OpenAI)</option>
+                        <option value="grok">Grok (xAI)</option>
+                      </select>
+                    </div>
+
+                    {/* Seletor de Modelo (dinâmico baseado no provider) */}
+                    <div>
+                      <label className="block text-xs font-medium theme-text-tertiary mb-2">
+                        Modelo para verificação
+                      </label>
+                      <select
+                        value={aiIntegration.aiSettings.doubleCheck?.model || 'claude-sonnet-4-20250514'}
+                        onChange={(e) => {
+                          aiIntegration.setAiSettings({
+                            ...aiIntegration.aiSettings,
+                            doubleCheck: {
+                              ...aiIntegration.aiSettings.doubleCheck!,
+                              model: e.target.value
+                            }
+                          });
+                        }}
+                        className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
+                      >
+                        {aiIntegration.aiSettings.doubleCheck?.provider === 'claude' && (
+                          <>
+                            <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+                            <option value="claude-opus-4-5-20251101">Claude Opus 4.5</option>
+                          </>
+                        )}
+                        {aiIntegration.aiSettings.doubleCheck?.provider === 'gemini' && (
+                          <>
+                            <option value="gemini-3-flash-preview">Gemini 3 Flash</option>
+                            <option value="gemini-3-pro-preview">Gemini 3 Pro</option>
+                          </>
+                        )}
+                        {aiIntegration.aiSettings.doubleCheck?.provider === 'openai' && (
+                          <>
+                            <option value="gpt-5.2-chat-latest">GPT-5.2 Instant</option>
+                            <option value="gpt-5.2">GPT-5.2 Thinking</option>
+                          </>
+                        )}
+                        {aiIntegration.aiSettings.doubleCheck?.provider === 'grok' && (
+                          <>
+                            <option value="grok-4-1-fast-reasoning">Grok 4.1 Fast Thinking</option>
+                            <option value="grok-4-1-fast-non-reasoning">Grok 4.1 Fast Instant</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+
+                    {/* Operações que usam Double Check */}
+                    <div>
+                      <label className="block text-xs font-medium theme-text-tertiary mb-2">
+                        Operações com verificação
+                      </label>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-3 p-2 rounded-lg hover:theme-bg-secondary cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={aiIntegration.aiSettings.doubleCheck?.operations.topicExtraction || false}
+                            onChange={(e) => {
+                              aiIntegration.setAiSettings({
+                                ...aiIntegration.aiSettings,
+                                doubleCheck: {
+                                  ...aiIntegration.aiSettings.doubleCheck!,
+                                  operations: {
+                                    ...aiIntegration.aiSettings.doubleCheck!.operations,
+                                    topicExtraction: e.target.checked
+                                  }
+                                }
+                              });
+                            }}
+                            className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500"
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm theme-text-primary">Extração de tópicos</span>
+                            <p className="text-xs theme-text-muted">
+                              Verifica falsos positivos, omissões e categorização incorreta
+                            </p>
+                          </div>
+                        </label>
+                        {/* Futuras operações (desabilitadas) */}
+                        <label className="flex items-center gap-3 p-2 rounded-lg opacity-50 cursor-not-allowed">
+                          <input type="checkbox" disabled className="w-4 h-4 rounded border-gray-300" />
+                          <div className="flex-1">
+                            <span className="text-sm theme-text-primary">Análise de provas</span>
+                            <span className="text-xs text-amber-400 ml-2">(em breve)</span>
+                          </div>
+                        </label>
+                        <label className="flex items-center gap-3 p-2 rounded-lg opacity-50 cursor-not-allowed">
+                          <input type="checkbox" disabled className="w-4 h-4 rounded border-gray-300" />
+                          <div className="flex-1">
+                            <span className="text-sm theme-text-primary">Mini-relatórios</span>
+                            <span className="text-xs text-amber-400 ml-2">(em breve)</span>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Aviso de custo */}
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                      <div className="flex items-start gap-2">
+                        <span className="text-amber-400">⚠️</span>
+                        <p className="text-xs text-amber-200">
+                          Double Check <strong>dobra o custo e tempo</strong> de cada operação selecionada.
+                          Use apenas quando a precisão for crítica.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Nível de Detalhe nos Mini-Relatórios */}

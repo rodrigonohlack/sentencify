@@ -237,6 +237,49 @@ export interface AISettings {
   useLocalAIForJuris?: boolean;
   quickPrompts: QuickPrompt[];
   logThinking?: boolean;
+  // v1.36.50: Double Check de respostas da IA
+  doubleCheck?: DoubleCheckSettings;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DOUBLE CHECK TYPES (v1.36.50)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Operações que podem usar Double Check */
+export interface DoubleCheckOperations {
+  topicExtraction: boolean;
+  // Futuras expansões:
+  // proofAnalysis: boolean;
+  // miniReports: boolean;
+  // fundamentacao: boolean;
+  // topicReorder: boolean;
+}
+
+/** Configurações de Double Check */
+export interface DoubleCheckSettings {
+  enabled: boolean;
+  provider: AIProvider;
+  model: string;
+  operations: DoubleCheckOperations;
+}
+
+/** Resultado do Double Check */
+export interface DoubleCheckResult {
+  verifiedTopics: unknown[];
+  corrections: DoubleCheckCorrection[];
+  confidence: number;
+  summary: string;
+}
+
+/** Correção identificada pelo Double Check */
+export interface DoubleCheckCorrection {
+  type: 'remove' | 'add' | 'merge' | 'reclassify';
+  topic?: string;
+  topics?: string[];
+  into?: string;
+  from?: string;
+  to?: string;
+  reason: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
