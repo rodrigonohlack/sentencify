@@ -765,7 +765,8 @@ export interface Artigo {
 /** Sugestão de jurisprudência */
 export interface JurisSuggestion {
   id: string;
-  texto: string;
+  texto?: string;  // v1.36.53: Opcional - dados textuais podem vir de 'texto' ou 'text'
+  text?: string;   // v1.36.53: Campo do JSON de embeddings
   tipo?: string;
   similarity: number;
   // Propriedades adicionais usadas no App.tsx
@@ -1024,7 +1025,7 @@ export interface LegislacaoEmbeddingItem {
 export interface JurisEmbeddingItem {
   id: string;
   tipo: string;
-  texto: string;
+  text: string;  // v1.36.53: Corrigido para corresponder ao JSON (era "texto")
   embedding: number[];
   tribunal?: string;
   fullText?: string;

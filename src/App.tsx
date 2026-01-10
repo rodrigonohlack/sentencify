@@ -207,7 +207,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.52'; // v1.36.52: Fix texto IRR vazio em busca semântica + copiar tese
+const APP_VERSION = '1.36.53'; // v1.36.53: Fix campo text vs texto em JurisEmbedding (mismatch TypeScript/JSON)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -10224,10 +10224,10 @@ const JurisprudenciaTab = React.memo(({
                       id: result.id,
                       tipo: result.tipo || result.tipoProcesso || '',
                       numero: result.numero || '',
-                      texto: result.texto || result.fullText || '',
+                      texto: result.text || result.fullText || '',
                       tipoProcesso: result.tipoProcesso,
                       titulo: result.titulo,
-                      tese: result.fullText || result.texto
+                      tese: result.fullText || result.text
                     })}
                     className="p-1.5 rounded hover-icon-blue-scale"
                     title="Copiar tese completa"
@@ -10240,7 +10240,7 @@ const JurisprudenciaTab = React.memo(({
                 <h4 className="font-semibold theme-text-primary text-sm mb-2 uppercase">{result.titulo}</h4>
               )}
               <p className="text-sm theme-text-secondary whitespace-pre-wrap">
-                {result.fullText || result.texto}
+                {result.fullText || result.text}
               </p>
             </div>
           ))
@@ -15550,8 +15550,10 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
     const partes: string[] = [];
     partes.push(`${tipo}${identificador ? ` ${identificador}` : ''}${p.tribunal ? ` - ${p.tribunal}` : ''}${p.orgao ? ` - ${p.orgao}` : ''}`);
     if (p.titulo) partes.push(`Título: ${p.titulo}`);
-    if (p.tese || p.enunciado) partes.push('');
-    partes.push(p.tese || p.enunciado || '');
+    // v1.36.53: Adiciona fallback para fullText/text (embeddings semânticos)
+    const conteudo = p.tese || p.enunciado || p.fullText || p.text || '';
+    if (conteudo) partes.push('');
+    partes.push(conteudo);
     await navigator.clipboard.writeText(partes.join('\n'));
     setCopiedId(p.id);
     setTimeout(() => setCopiedId(null), 2000);
@@ -15685,7 +15687,7 @@ const JurisprudenciaModal = React.memo(({ isOpen, onClose, topicTitle, topicRela
                   </div>
                 </div>
                 {p.titulo && <p className="text-xs font-medium theme-text-primary mb-1">{p.titulo}</p>}
-                <p className="text-sm theme-text-secondary mb-3 line-clamp-4">{p.tese || p.enunciado || p.fullText || p.texto}</p>
+                <p className="text-sm theme-text-secondary mb-3 line-clamp-4">{p.tese || p.enunciado || p.fullText || p.text}</p>
                 <button
                   onClick={() => handleCopy(p)}
                   className={`text-xs px-3 py-1.5 text-white rounded flex items-center gap-1 ${copiedId === p.id ? 'bg-green-600' : 'bg-purple-600 hover-purple-700'}`}
