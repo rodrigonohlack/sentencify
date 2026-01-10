@@ -19262,17 +19262,22 @@ INSTRUÇÕES IMPORTANTES:
     let scheduler: TesseractScheduler | null = null;
 
     try {
+      // v1.36.33: Diagnóstico de performance Tesseract
+      console.time('[Tesseract] Library load');
       const [pdfjsLib, Tesseract] = await Promise.all([
         loadPDFJS(),
         loadTesseract()
       ]);
+      console.timeEnd('[Tesseract] Library load');
 
+      console.time('[Tesseract] PDF parse');
       const arrayBuffer = await file.arrayBuffer();
       pdf = await pdfjsLib.getDocument({
         data: arrayBuffer,
         useSystemFonts: true,
         disableFontFace: true
       } as unknown as { data: ArrayBuffer }).promise;
+      console.timeEnd('[Tesseract] PDF parse');
 
       const totalPages = pdf.numPages;
 
@@ -19281,17 +19286,33 @@ INSTRUÇÕES IMPORTANTES:
 
       scheduler = Tesseract.createScheduler();
       const tesseractScheduler = scheduler; // Capture reference for closure
-      await Promise.all(
-        Array.from({ length: NUM_WORKERS }, async () => {
-          const worker = await Tesseract.createWorker('por');
-          // v1.32.15: PSM 6 (bloco único) + preservar espaços
-          await worker.setParameters({
-            tessedit_pageseg_mode: '6',
-            preserve_interword_spaces: '1'
-          });
-          tesseractScheduler.addWorker(worker);
-        })
-      );
+
+      // v1.36.33: Criar primeiro worker sozinho (cacheia modelo ~4MB)
+      // Depois os demais em paralelo (usam cache)
+      console.time('[Tesseract] First worker (downloads model)');
+      const firstWorker = await Tesseract.createWorker('por');
+      await firstWorker.setParameters({
+        tessedit_pageseg_mode: '6',
+        preserve_interword_spaces: '1'
+      });
+      tesseractScheduler.addWorker(firstWorker);
+      console.timeEnd('[Tesseract] First worker (downloads model)');
+
+      // Workers restantes em paralelo (modelo já cacheado)
+      if (NUM_WORKERS > 1) {
+        console.time(`[Tesseract] Remaining ${NUM_WORKERS - 1} workers (parallel)`);
+        await Promise.all(
+          Array.from({ length: NUM_WORKERS - 1 }, async () => {
+            const worker = await Tesseract.createWorker('por');
+            await worker.setParameters({
+              tessedit_pageseg_mode: '6',
+              preserve_interword_spaces: '1'
+            });
+            tesseractScheduler.addWorker(worker);
+          })
+        );
+        console.timeEnd(`[Tesseract] Remaining ${NUM_WORKERS - 1} workers (parallel)`);
+      }
 
       // 2. Processar em batches (limita memória)
       const allResults = [];
