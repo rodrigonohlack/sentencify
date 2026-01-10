@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.47', feature: 'Fix "Invalid Date" no modal compartilhar biblioteca: API retornava created_at (snake_case), frontend esperava createdAt' },
   { version: '1.36.46', feature: 'Fix ESC no ConfigModal: não fecha se ModelGeneratorModal (Gerar a partir de exemplos) aberto, evita perda de scroll' },
   { version: '1.36.45', feature: 'Fix ESC no GlobalEditorModal: fecha sub-modais (Jurisprudência/Assistente IA/Confronto) primeiro, reseta estados ao abrir' },
   { version: '1.36.44', feature: 'Deletar 16 arquivos de testes/hooks duplicados: 222 testes inúteis removidos (testavam código que não roda em produção)' },

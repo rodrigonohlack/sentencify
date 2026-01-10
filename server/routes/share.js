@@ -119,7 +119,7 @@ router.get('/library/my-shares', authMiddleware, (req, res) => {
         shareUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/share/${share.share_token}`,
         permission: share.permission,
         recipient_email: share.recipient_email,
-        created_at: share.created_at,
+        createdAt: share.created_at, // v1.36.47: camelCase para frontend
         recipients: recipients.map(r => ({
           id: r.id,
           email: r.recipient_email,

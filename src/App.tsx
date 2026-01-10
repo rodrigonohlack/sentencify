@@ -206,7 +206,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.46'; // v1.36.46: Fix ESC no ConfigModal - não fecha se ModelGeneratorModal aberto
+const APP_VERSION = '1.36.47'; // v1.36.47: Fix "Invalid Date" no modal compartilhar biblioteca
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
