@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.73 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.74 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.74 | useModelPreview extraído para src/hooks/ (~107 linhas removidas) |
 | v1.36.73 | useChatAssistant extraído para src/hooks/ (~115 linhas removidas) + MAX_CHAT_HISTORY_MESSAGES |
 | v1.36.72 | useJurisprudencia extraído para src/hooks/ (~210 linhas removidas) + helpers (IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, IndexedDB) |
 | v1.36.71 | useLegislacao extraído para src/hooks/ (~180 linhas removidas) + helpers (LEIS_METADATA, getLeiFromId, sortArtigosNatural, IndexedDB helpers) |

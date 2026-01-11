@@ -136,7 +136,8 @@ import { useProofManagerCompat } from './stores/useProofsStore';
 // v1.36.69: useIndexedDB (TIER 1), validateModel, sanitizeModel extraídos
 // v1.36.72: useJurisprudencia extraído
 // v1.36.73: useChatAssistant extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES } from './hooks';
+// v1.36.74: useModelPreview extraído
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview } from './hooks';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
 
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
@@ -225,7 +226,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.73'; // v1.36.71: useLegislacao extraído para src/hooks/ (~180 linhas removidas)
+const APP_VERSION = '1.36.74'; // v1.36.71: useLegislacao extraído para src/hooks/ (~180 linhas removidas)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -4369,112 +4370,7 @@ const searchModelsBySimilarity = async (models: Model[], query: string, options:
     .slice(0, limit);
 };
 
-// 🎣 CUSTOM HOOK: useModelPreview - Preview de modelos de texto
-const useModelPreview = () => {
-  const [previewingModel, setPreviewingModel] = React.useState<Model | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [editedContent, setEditedContent] = React.useState('');
-  // v1.15.2: Função de inserção contextual (para GlobalEditorModal)
-  // v1.33.25: Usar ref em vez de state para não causar recriação do objeto modelPreview
-  const contextualInsertFnRef = React.useRef<((content: string) => void) | null>(null);
-  const setContextualInsertFn = React.useCallback((fn: ((content: string) => void) | null) => {
-    contextualInsertFnRef.current = fn;
-  }, []);
-  // v1.15.3: Estado para "Salvar como Novo Modelo"
-  const [saveAsNewData, setSaveAsNewData] = React.useState<{ title: string; content: string; keywords?: string; category?: string } | null>(null);
-  // v1.19.2: Callback para notificar quando modelo é atualizado (sincroniza sugestões do GlobalEditor)
-  const onModelUpdatedRef = React.useRef<((model: Model) => void) | null>(null);
-
-  const openPreview = React.useCallback((model: Model) => {
-    if (!model || !model.content) {
-      return;
-    }
-
-    setPreviewingModel(model);
-    setIsPreviewOpen(true);
-  }, []);
-
-  const closePreview = React.useCallback(() => {
-    setIsPreviewOpen(false);
-    setIsEditing(false);
-    setEditedContent('');
-    // Delay para animação de saída
-    setTimeout(() => setPreviewingModel(null), 200);
-  }, []);
-
-  const startEditing = React.useCallback(() => {
-    if (previewingModel) {
-      setEditedContent(previewingModel.content);
-      setIsEditing(true);
-    }
-  }, [previewingModel]);
-
-  const cancelEditing = React.useCallback(() => {
-    setIsEditing(false);
-    setEditedContent('');
-  }, []);
-
-  // v1.15.3: Funções para "Salvar como Novo Modelo"
-  const openSaveAsNew = React.useCallback((content: string, originalModel: Model | null) => {
-    const keywords = originalModel?.keywords;
-    setSaveAsNewData({
-      title: '',
-      content: content,
-      keywords: Array.isArray(keywords) ? keywords.join(', ') : (keywords || ''),
-      category: originalModel?.category || 'Mérito'
-    });
-  }, []);
-
-  const closeSaveAsNew = React.useCallback(() => {
-    setSaveAsNewData(null);
-  }, []);
-
-  // Atalho Esc para fechar/cancelar edição
-  React.useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isPreviewOpen) {
-        if (isEditing) {
-          // Em modo edição: cancelar edição (volta para visualização)
-          cancelEditing();
-        } else {
-          // Em modo visualização: fechar modal
-          closePreview();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [isPreviewOpen, isEditing, cancelEditing, closePreview]);
-
-  // v1.33.22: useMemo para evitar novo objeto a cada render (causa infinite loop em GlobalEditorModal)
-  return React.useMemo(() => ({
-    previewingModel,
-    isPreviewOpen,
-    isEditing,
-    editedContent,
-    openPreview,
-    closePreview,
-    startEditing,
-    cancelEditing,
-    setEditedContent,
-    // v1.15.2: Função de inserção contextual
-    contextualInsertFnRef,
-    setContextualInsertFn,
-    // v1.15.3: Salvar como Novo Modelo
-    saveAsNewData,
-    setSaveAsNewData,
-    openSaveAsNew,
-    closeSaveAsNew,
-    // v1.19.2: Callback para sincronizar sugestões do GlobalEditor
-    onModelUpdatedRef,
-  }), [
-    previewingModel, isPreviewOpen, isEditing, editedContent,
-    openPreview, closePreview, startEditing, cancelEditing,
-    saveAsNewData, openSaveAsNew, closeSaveAsNew
-  ]);
-};
+// useModelPreview extraído para src/hooks/useModelPreview.ts (v1.36.74)
 
 // 🔧 UTILITY FUNCTIONS (v1.6.1)
 
