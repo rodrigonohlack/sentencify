@@ -134,7 +134,7 @@ import { useProofManagerCompat } from './stores/useProofsStore';
 
 // v1.36.66: Hooks TIER 0 extraídos para arquivos separados
 // v1.36.69: useIndexedDB (TIER 1), validateModel, sanitizeModel extraídos
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural } from './hooks';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
 
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
@@ -223,7 +223,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.70'; // v1.36.70: Testes REAIS para 9 hooks extraídos + regra #10 CLAUDE.md (testes devem importar código de produção)
+const APP_VERSION = '1.36.71'; // v1.36.71: useLegislacao extraído para src/hooks/ (~180 linhas removidas)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -2645,105 +2645,8 @@ const clearPrecedentesFromIndexedDB = async (): Promise<void> => {
   } catch { /* silenciado */ }
 };
 
-// ═══════════════════════════════════════════════════════════════
-// 📜 LEGISLAÇÃO - IndexedDB Storage
-// ═══════════════════════════════════════════════════════════════
-
-const LEGIS_DB_NAME = 'sentencify-legislacao';
-const LEGIS_STORE_NAME = 'artigos';
-
-const LEIS_METADATA: Record<string, { nome: string; nomeCompleto: string; numero: string }> = {
-  'clt': { nome: 'CLT', nomeCompleto: 'Consolidação das Leis do Trabalho', numero: 'Decreto-Lei 5.452/1943' },
-  'cf': { nome: 'CF/88', nomeCompleto: 'Constituição Federal', numero: 'CF 1988' },
-  'cpc': { nome: 'CPC', nomeCompleto: 'Código de Processo Civil', numero: 'Lei 13.105/2015' },
-  'cc': { nome: 'CC', nomeCompleto: 'Código Civil', numero: 'Lei 10.406/2002' },
-  'cdc': { nome: 'CDC', nomeCompleto: 'Código de Defesa do Consumidor', numero: 'Lei 8.078/1990' },
-  'l605': { nome: 'Lei 605', nomeCompleto: 'Repouso Semanal Remunerado', numero: 'Lei 605/1949' },
-  'l6019': { nome: 'Lei 6.019', nomeCompleto: 'Trabalho Temporário', numero: 'Lei 6.019/1974' },
-  'l9029': { nome: 'Lei 9.029', nomeCompleto: 'Práticas Discriminatórias', numero: 'Lei 9.029/1995' }
-};
-
-const getLeiFromId = (id: string) => {
-  const prefix = id?.split('-art-')[0] || id?.split('-')[0];
-  return LEIS_METADATA[prefix] || { nome: prefix?.toUpperCase() || '?', nomeCompleto: prefix, numero: '' };
-};
-
-const openLegisDB = (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
-  const request = indexedDB.open(LEGIS_DB_NAME, 1);
-  request.onerror = () => reject(request.error);
-  request.onsuccess = () => resolve(request.result);
-  request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
-    const db = (event.target as IDBOpenDBRequest).result;
-    if (!db.objectStoreNames.contains(LEGIS_STORE_NAME)) {
-      const store = db.createObjectStore(LEGIS_STORE_NAME, { keyPath: 'id' });
-      store.createIndex('byLei', 'lei', { unique: false });
-      store.createIndex('byNumero', 'numero', { unique: false });
-    }
-  };
-});
-
-const saveArtigosToIndexedDB = async (artigos: Artigo[]): Promise<void> => {
-  try {
-    const db = await openLegisDB();
-    const tx = db.transaction([LEGIS_STORE_NAME], 'readwrite');
-    const store = tx.objectStore(LEGIS_STORE_NAME);
-    for (const artigo of artigos) {
-      const lei = artigo.id?.split('-art-')[0] || artigo.id?.split('-')[0];
-      store.put({ ...artigo, lei });
-    }
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-    db.close();
-  } catch (err) { console.error('Erro ao salvar artigos:', err); }
-};
-
-const loadArtigosFromIndexedDB = async (): Promise<Artigo[]> => {
-  try {
-    const db = await openLegisDB();
-    const tx = db.transaction([LEGIS_STORE_NAME], 'readonly');
-    const store = tx.objectStore(LEGIS_STORE_NAME);
-    const result = await new Promise<Artigo[]>((resolve, reject) => {
-      const req = store.getAll() as IDBRequest<Artigo[]>;
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-    db.close();
-    return result;
-  } catch { return []; }
-};
-
-const clearArtigosFromIndexedDB = async (): Promise<void> => {
-  try {
-    const db = await openLegisDB();
-    const tx = db.transaction([LEGIS_STORE_NAME], 'readwrite');
-    const store = tx.objectStore(LEGIS_STORE_NAME);
-    await new Promise<void>((resolve, reject) => {
-      const req = store.clear();
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error);
-    });
-    db.close();
-  } catch { /* silenciado */ }
-};
-
-// useFieldVersioning extraído para src/hooks/useFieldVersioning.ts (v1.36.68)
-
-const sortArtigosNatural = (artigos: Artigo[]) => {
-  return [...artigos].sort((a, b) => {
-    const parseId = (id: string) => {
-      const match = id.match(/^(.+)-art-(\d+)(?:-([a-z]))?$/i);
-      if (!match) return { lei: id, num: 0, suffix: '' };
-      return { lei: match[1], num: parseInt(match[2]), suffix: match[3] || '' };
-    };
-    const pa = parseId(a.id);
-    const pb = parseId(b.id);
-    if (pa.lei !== pb.lei) return pa.lei.localeCompare(pb.lei);
-    if (pa.num !== pb.num) return pa.num - pb.num;
-    return pa.suffix.localeCompare(pb.suffix);
-  });
-};
+// useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB,
+// clearArtigosFromIndexedDB, sortArtigosNatural extraídos para src/hooks/useLegislacao.ts (v1.36.71)
 
 // 🎣 CUSTOM HOOK: useLocalStorage (persistência e localStorage)
 const useLocalStorage = () => {
@@ -5404,187 +5307,7 @@ const useJurisprudencia = () => {
   };
 };
 
-// ═══════════════════════════════════════════════════════════════
-// 📜 HOOK: useLegislacao - Gestão de artigos de leis
-// ═══════════════════════════════════════════════════════════════
-const useLegislacao = () => {
-  const [artigos, setArtigos] = React.useState<Artigo[]>([]);
-  const [leisDisponiveis, setLeisDisponiveis] = React.useState<string[]>([]);
-  const [leiAtiva, setLeiAtiva] = React.useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = React.useState('');
-  const [copiedId, setCopiedId] = React.useState<string | null>(null);
-
-  const ITEMS_PER_PAGE = 15;
-
-  const removeAccents = React.useCallback((str: string) => {
-    return str?.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() || '';
-  }, []);
-
-  const searchArtigos = React.useCallback((term: string, lista: Artigo[]) => {
-    if (!term?.trim()) return lista;
-    const termNorm = removeAccents(term.trim());
-    const terms = termNorm.split(/\s+/).filter(t => t.length > 1);
-    const numeroMatch = term.match(/\d+[º°]?(?:-[a-z])?/i);
-
-    return lista.map((artigo: Artigo) => {
-      let score = 0;
-      const caputNorm = removeAccents(artigo.caput || '');
-      const numeroNorm = removeAccents(artigo.numero || '');
-      const keywordsArr = Array.isArray(artigo.keywords) ? artigo.keywords : (artigo.keywords ? [artigo.keywords] : []);
-      const keywordsNorm = keywordsArr.map((k: string) => removeAccents(k));
-      // v1.21.1: Buscar também em parágrafos, incisos e alíneas
-      const paragrafosText = (artigo.paragrafos || []).map((p: { texto?: string }) => p.texto || '').join(' ');
-      const incisosText = (artigo.incisos || []).map((i: { texto?: string }) => i.texto || '').join(' ');
-      const alineasText = (artigo.alineas || []).map((a: { texto?: string }) => a.texto || '').join(' ');
-      const subTextoNorm = removeAccents(paragrafosText + ' ' + incisosText + ' ' + alineasText);
-
-      if (numeroMatch && numeroNorm.includes(removeAccents(numeroMatch[0]))) {
-        score += 50;
-      }
-
-      for (const t of terms) {
-        if (keywordsNorm.some((k: string) => k.includes(t))) score += 15;
-        if (caputNorm.includes(t)) score += 10;
-        if (subTextoNorm.includes(t)) score += 8; // parágrafos, incisos, alíneas
-        if (numeroNorm === t) score += 30;
-      }
-
-      return { artigo, score };
-    })
-    .filter(({ score }) => score > 0)
-    .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
-    .map(({ artigo }) => artigo);
-  }, [removeAccents]);
-
-  const filteredArtigos = React.useMemo(() => {
-    let result = artigos;
-    if (leiAtiva) {
-      result = result.filter(a => a.lei === leiAtiva || a.id?.startsWith(leiAtiva + '-'));
-    }
-    if (searchTerm?.trim()) {
-      result = searchArtigos(searchTerm, result);
-    }
-    return result;
-  }, [artigos, leiAtiva, searchTerm, searchArtigos]);
-
-  const totalPages = Math.ceil(filteredArtigos.length / ITEMS_PER_PAGE);
-
-  const paginatedArtigos = React.useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredArtigos.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredArtigos, currentPage]);
-
-  const handleImportJSON = React.useCallback(async (file: File) => {
-    setIsLoading(true);
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      const items = Array.isArray(data) ? data : (data.artigos || []);
-
-      if (items.length === 0) {
-        throw new Error('Arquivo não contém artigos válidos');
-      }
-
-      await saveArtigosToIndexedDB(items);
-      const allArtigos = await loadArtigosFromIndexedDB();
-      setArtigos(sortArtigosNatural(allArtigos));
-
-      const leis = [...new Set(allArtigos.map(a => a.lei || a.id?.split('-art-')[0] || a.id?.split('-')[0]))].filter(Boolean);
-      setLeisDisponiveis(leis.sort());
-      setCurrentPage(1);
-
-      return { success: true, count: items.length };
-    } catch (err) {
-      console.error('Erro ao importar JSON:', err);
-      return { success: false, error: (err as Error).message };
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const handleCopyArtigo = React.useCallback(async (artigo: Artigo) => {
-    try {
-      const lei = getLeiFromId(artigo.id);
-      let texto = `Art. ${artigo.numero} - ${lei.nome}\n${artigo.caput}`;
-
-      if (artigo.paragrafos && artigo.paragrafos.length > 0) {
-        texto += '\n';
-        for (const p of artigo.paragrafos) {
-          texto += `\n§ ${p.numero}º ${p.texto}`;
-        }
-      }
-
-      if (artigo.incisos && artigo.incisos.length > 0) {
-        texto += '\n';
-        for (const inc of artigo.incisos) {
-          texto += `\n${inc.numero} - ${inc.texto}`;
-        }
-      }
-
-      await navigator.clipboard.writeText(texto);
-      setCopiedId(artigo.id);
-      setTimeout(() => setCopiedId(null), 2000);
-      return true;
-    } catch (err) {
-      console.error('Erro ao copiar:', err);
-      return false;
-    }
-  }, []);
-
-  const handleClearAll = React.useCallback(async () => {
-    setArtigos([]);
-    setLeisDisponiveis([]);
-    setDeleteConfirmText('');
-    await clearArtigosFromIndexedDB();
-  }, []);
-
-  // v1.33.61: Recarregar artigos do IndexedDB (usado após download automático)
-  const reloadArtigos = React.useCallback(async () => {
-    const data = await loadArtigosFromIndexedDB();
-    setArtigos(sortArtigosNatural(data));
-    const leis = [...new Set(data.map(a => a.lei || a.id?.split('-art-')[0] || a.id?.split('-')[0]))].filter(Boolean);
-    setLeisDisponiveis(leis.sort());
-    return data.length;
-  }, []);
-
-  React.useEffect(() => {
-    loadArtigosFromIndexedDB().then(data => {
-      setArtigos(sortArtigosNatural(data));
-      const leis = [...new Set(data.map(a => a.lei || a.id?.split('-art-')[0] || a.id?.split('-')[0]))].filter(Boolean);
-      setLeisDisponiveis(leis.sort());
-    });
-  }, []);
-
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, leiAtiva]);
-
-  return {
-    artigos,
-    leisDisponiveis,
-    leiAtiva,
-    setLeiAtiva,
-    searchTerm,
-    setSearchTerm,
-    currentPage,
-    setCurrentPage,
-    totalPages,
-    isLoading,
-    filteredArtigos,
-    paginatedArtigos,
-    filteredCount: filteredArtigos.length,
-    deleteConfirmText,
-    setDeleteConfirmText,
-    copiedId,
-    handleImportJSON,
-    handleCopyArtigo,
-    handleClearAll,
-    reloadArtigos // v1.33.61: Para atualizar após download automático
-  };
-};
+// useLegislacao extraído para src/hooks/useLegislacao.ts (v1.36.71)
 
 // 💡 COMPONENTE: SpacingDropdown - Controle de espaçamento de parágrafos
 const SpacingDropdown = React.memo(({
@@ -8177,7 +7900,7 @@ const LegislacaoTab = React.memo(({
     for (const file of files) {
       const result = await legislacao.handleImportJSON(file);
       if (result.success) {
-        totalCount += result.count;
+        totalCount += result.count || 0;
       } else {
         errors.push(`${file.name}: ${result.error}`);
       }

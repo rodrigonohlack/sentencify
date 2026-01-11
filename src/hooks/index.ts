@@ -32,6 +32,18 @@ export type { UseFieldVersioningReturn } from './useFieldVersioning';
 export { useIndexedDB, validateModel, sanitizeModel } from './useIndexedDB';
 export type { UseIndexedDBReturn, SyncCallbackParams } from './useIndexedDB';
 
+// Legislação hook (TIER 0 - sem dependências)
+export {
+  useLegislacao,
+  LEIS_METADATA,
+  getLeiFromId,
+  saveArtigosToIndexedDB,
+  loadArtigosFromIndexedDB,
+  clearArtigosFromIndexedDB,
+  sortArtigosNatural
+} from './useLegislacao';
+export type { UseLegislacaoReturn } from './useLegislacao';
+
 // Cloud/Auth hooks (production - not test versions)
 export { useGoogleDrive } from './useGoogleDrive';
 export { useAuthMagicLink } from './useAuthMagicLink';
