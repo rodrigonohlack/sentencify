@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.65', feature: 'Zustand Migration Wave 3: useProofManager migrado para useProofsStore.ts (~290 linhas removidas do App.tsx)' },
   { version: '1.36.64', feature: 'Zustand Migration Wave 3: useTopicManager migrado para useTopicsStore.ts (~180 linhas removidas do App.tsx)' },
   { version: '1.36.63', feature: 'Zustand Migration Wave 3: useModelLibrary migrado para useModelsStore.ts (core data, busca, filtros, formulário)' },
   { version: '1.36.62', feature: 'Zustand Migration Wave 2: useAIIntegration config/tokenMetrics migrado para useAIStore.ts (~80 linhas removidas)' },

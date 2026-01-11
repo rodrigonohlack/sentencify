@@ -130,6 +130,7 @@ import { useModalManagerCompat } from './stores/useUIStore';
 import { useAISettingsCompat } from './stores/useAIStore';
 import { useModelLibraryCompat } from './stores/useModelsStore';
 import { useTopicManagerCompat } from './stores/useTopicsStore';
+import { useProofManagerCompat } from './stores/useProofsStore';
 
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
 import AdminPanel from './components/AdminPanel';
@@ -217,7 +218,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.64'; // v1.36.64: useTopicManager migrado para Zustand
+const APP_VERSION = '1.36.65'; // v1.36.65: useProofManager migrado para Zustand
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -5827,135 +5828,22 @@ const sanitizeModel = (model: Model): Model => {
   return sanitized as Model;
 };
 
-// 🎣 CUSTOM HOOK: useProofManager (v1.2.6) - Sistema de Provas
-const useProofManager = (documentServices: ReturnType<typeof useDocumentServices> | null = null) => {
-  // 📊 ESTADOS CORE DE DADOS (8 estados)
+// 🎣 CUSTOM HOOK: useProofManager (v1.36.65) - Sistema de Provas
+// v1.36.65: Estado migrado para Zustand (useProofsStore.ts)
+const useProofManager = (_documentServices: ReturnType<typeof useDocumentServices> | null = null) => {
+  // Delega estado e ações simples para o store Zustand
+  const storeState = useProofManagerCompat();
 
-  // Provas Principais
-  const [proofFiles, setProofFiles] = React.useState<ProofFile[]>([]);
-  // Array de { id, file, name, type: 'pdf', size, uploadDate }
-
-  const [proofTexts, setProofTexts] = React.useState<ProofText[]>([]);
-  // Array de { id, text, name, uploadDate }
-
-  // Controle de Visualização de PDFs
-  const [proofUsePdfMode, setProofUsePdfMode] = React.useState<Record<string, boolean>>({});
-  // { proofId: true/false } - true = enviar PDF completo, false = usar texto extraído
-
-  // Extração de Texto
-  const [extractedProofTexts, setExtractedProofTexts] = React.useState<Record<string, string>>({});
-  // { proofId: 'texto extraído via pdf.js' }
-
-  const [proofExtractionFailed, setProofExtractionFailed] = React.useState<Record<string, boolean>>({});
-  // { proofId: true } - marca PDFs que falharam na extração (PDFs de imagens)
-
-  // Vinculações e Análises
-  const [proofTopicLinks, setProofTopicLinks] = React.useState<Record<string, string[]>>({});
-  // { proofId: ['Tópico A', 'Tópico B'] } - Relação many-to-many
-
-  const [proofAnalysisResults, setProofAnalysisResults] = React.useState<Record<string, ProofAnalysisResult>>({});
-  // { proofId: { type: 'contextual' | 'livre', result: 'análise da IA' } }
-
-  const [proofConclusions, setProofConclusions] = React.useState<Record<string, string>>({});
-  // { proofId: 'conclusão manual do juiz sobre esta prova' }
-
-  // 🆕 v1.19.2: Flag para enviar conteúdo completo da prova à IA
-  const [proofSendFullContent, setProofSendFullContent] = React.useState<Record<string, boolean>>({});
-  // { proofId: true/false } - se true, envia texto completo da prova ao assistente IA
-
-  // 🎛️ ESTADOS DE UI/CONTROLE (7 estados) - ETAPA 6b
-
-  // Controle de Análise - v1.15.0: Suporte a múltiplas análises simultâneas
-  const [analyzingProofIds, setAnalyzingProofIds] = React.useState<Set<string | number>>(new Set());
-  // Set de IDs das provas sendo analisadas (para mostrar loader em cada uma)
-
-  const addAnalyzingProof = React.useCallback((id: string) => {
-    setAnalyzingProofIds(prev => new Set([...prev, id]));
-  }, []);
-
-  const removeAnalyzingProof = React.useCallback((id: string) => {
-    setAnalyzingProofIds(prev => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-  }, []);
-
-  const isAnalyzingProof = React.useCallback((id: string) => {
-    return analyzingProofIds.has(id);
-  }, [analyzingProofIds]);
-
-  const clearAnalyzingProofs = React.useCallback(() => {
-    setAnalyzingProofIds(new Set());
-  }, []);
-
-  // Controle de UI
-  const [showProofPanel, setShowProofPanel] = React.useState<boolean>(true);
-  // Controla visibilidade do painel lateral de provas no editor
-
-  // Formulário de Nova Prova Texto
-  const [newProofTextData, setNewProofTextData] = React.useState<NewProofTextData>({ name: '', text: '' });
-  // Dados do formulário para adicionar prova em texto
-
-  // Prova Selecionada para Ações
-  const [proofToDelete, setProofToDelete] = React.useState<Proof | null>(null);
-  // Prova selecionada para deletar (usado no modal de confirmação)
-
-  const [proofToLink, setProofToLink] = React.useState<Proof | null>(null);
-  // Prova selecionada para vincular a tópicos
-
-  const [proofToAnalyze, setProofToAnalyze] = React.useState<Proof | null>(null);
-  // Prova selecionada para análise com IA
-
-  // Configurações de Análise
-  const [proofAnalysisCustomInstructions, setProofAnalysisCustomInstructions] = React.useState<string>('');
-  // Instruções customizadas para análise da prova atual
-
-  const [useOnlyMiniRelatorios, setUseOnlyMiniRelatorios] = React.useState<boolean>(false);
-  // Toggle: usar apenas mini-relatórios na análise contextual (em vez de documentos completos)
-
-  const [includeLinkedTopicsInFree, setIncludeLinkedTopicsInFree] = React.useState<boolean>(false);
-
-  // 🆕 v1.12.20: Modo de processamento por prova PDF (v1.12.22: removido OCRAD)
-  const [proofProcessingModes, setProofProcessingModes] = React.useState<Record<string, ProcessingMode>>({});
-  // { proofId: 'pdfjs' | 'pdf-puro' | 'claude-vision' }
-  // Define qual método de extração de texto usar para cada prova PDF
-
-  // 🆕 v1.21.3: Texto de prova pendente aguardando confirmação de anonimização
-  const [pendingProofText, setPendingProofText] = React.useState<NewProofTextData | null>(null);
-  // { name: string, text: string } - guardado temporariamente até confirmar nomes
-
-  // 🆕 v1.21.5: Extração de PDF pendente aguardando confirmação de nomes
-  const [pendingExtraction, setPendingExtraction] = React.useState<{ proofId: string | number; proof: Proof; executeExtraction?: (nomes: string[]) => void } | null>(null);
-  // { proofId: number, proof: object } - guardado temporariamente até confirmar nomes
-
-  // 🆕 v1.21.6: Mensagem de chat pendente aguardando confirmação de nomes
-  const [pendingChatMessage, setPendingChatMessage] = React.useState<{ message: string; options: unknown; isGlobal: boolean; topicTitle: string } | null>(null);
-  // { message: string, options: object, isGlobal: boolean, topicTitle: string }
-
-  // 📊 HELPERS COMPUTADOS (ETAPA 6b)
-  const totalProofs = proofFiles.length + proofTexts.length;
-  const hasProofs = totalProofs > 0;
-
-  // 🔧 v1.14.1: Helpers utilitários para redução de código duplicado
-  const removeObjectKey = React.useCallback(<T extends Record<string, unknown>>(setter: React.Dispatch<React.SetStateAction<T>>, keyToRemove: string | number) => {
-    setter((prev: T) => {
-      const { [keyToRemove]: _, ...rest } = prev;
-      return rest as T;
-    });
-  }, []);
+  // 🔧 v1.14.1: Helpers utilitários (permanecem aqui pois são usados nos handlers abaixo)
   const removeById = React.useCallback(<T extends { id: string | number }>(arr: T[], id: string | number): T[] => arr.filter((item: T) => item.id !== id), []);
-  const isValidString = React.useCallback((str: unknown, minLength = 1) => str && typeof str === 'string' && str.trim().length >= minLength, []);
   const toFilesArray = React.useCallback((value: FileList | File[] | null) => Array.isArray(value) ? value : Array.from(value || []), []);
 
-  // 🔧 HANDLERS SIMPLES (ETAPA 6c)
-
-  // Handler: Upload de provas em PDF
+  // Handler: Upload de provas em PDF (usa savePdfToIndexedDB externo)
   const handleUploadProofPdf = React.useCallback(async (files: FileList | File[]) => {
     const filesArray = toFilesArray(files);
 
     for (const file of filesArray) {
-      const id = Date.now() + Math.random(); // ID único
+      const id = Date.now() + Math.random();
       const newProof: ProofFile = {
         id,
         file,
@@ -5965,9 +5853,9 @@ const useProofManager = (documentServices: ReturnType<typeof useDocumentServices
         uploadDate: new Date().toISOString()
       };
 
-      setProofFiles(prev => [...prev, newProof]);
-      setProofUsePdfMode(prev => ({ ...prev, [id]: true })); // Default: usar PDF completo
-      setProofProcessingModes(prev => ({ ...prev, [id]: 'pdfjs' })); // 🆕 v1.12.20: Default mode
+      storeState.setProofFiles(prev => [...prev, newProof]);
+      storeState.setProofUsePdfMode(prev => ({ ...prev, [id]: true }));
+      storeState.setProofProcessingModes(prev => ({ ...prev, [id]: 'pdfjs' }));
 
       // Salvar no IndexedDB para persistência entre reloads
       try {
@@ -5976,230 +5864,50 @@ const useProofManager = (documentServices: ReturnType<typeof useDocumentServices
         // Silently ignore - PDF won't persist but app continues working
       }
     }
-  }, []); // 🚀 v1.8.1: Memoizado (input file)
+  }, [toFilesArray, storeState]);
 
   // Handler: Adicionar prova em texto
   const handleAddProofText = React.useCallback(() => {
-    if (!newProofTextData.name.trim() || !newProofTextData.text.trim()) {
-      return; // Validação básica
+    if (!storeState.newProofTextData.name.trim() || !storeState.newProofTextData.text.trim()) {
+      return;
     }
 
     const id = Date.now() + Math.random();
     const newProof: ProofText = {
       id,
-      text: newProofTextData.text,
-      name: newProofTextData.name,
+      text: storeState.newProofTextData.text,
+      name: storeState.newProofTextData.name,
       type: 'text',
       uploadDate: new Date().toISOString()
     };
 
-    setProofTexts(prev => [...prev, newProof]);
-
-    // Limpar formulário
-    setNewProofTextData({ name: '', text: '' });
-  }, [newProofTextData]); // 🚀 v1.8.1: Memoizado (modal texto)
+    storeState.setProofTexts(prev => [...prev, newProof]);
+    storeState.setNewProofTextData({ name: '', text: '' });
+  }, [storeState]);
 
   // Handler: Deletar prova (PDF ou texto)
   const handleDeleteProof = React.useCallback((proof: Proof) => {
-    // Deletar da lista correta
     if (proof.isPdf || proof.type === 'pdf') {
-      setProofFiles(prev => removeById(prev, proof.id));
+      storeState.setProofFiles(prev => removeById(prev, proof.id));
     } else {
-      setProofTexts(prev => removeById(prev, proof.id));
+      storeState.setProofTexts(prev => removeById(prev, proof.id));
     }
     // Limpar dados relacionados
-    removeObjectKey(setProofUsePdfMode, proof.id);
-    removeObjectKey(setExtractedProofTexts, proof.id);
-    removeObjectKey(setProofExtractionFailed, proof.id);
-    removeObjectKey(setProofTopicLinks, proof.id);
-    removeObjectKey(setProofAnalysisResults, proof.id);
-    removeObjectKey(setProofConclusions, proof.id);
-    removeObjectKey(setProofProcessingModes, proof.id);
-  }, [removeObjectKey, removeById]); // 🚀 v1.8.1: Memoizado (renderizado em 2 loops - crítico!)
+    storeState.setProofUsePdfMode(prev => { const { [proof.id]: _, ...rest } = prev; return rest; });
+    storeState.setExtractedProofTexts(prev => { const { [proof.id]: _, ...rest } = prev; return rest; });
+    storeState.setProofExtractionFailed(prev => { const { [proof.id]: _, ...rest } = prev; return rest; });
+    storeState.setProofTopicLinks(prev => { const { [proof.id]: _, ...rest } = prev; return rest; });
+    storeState.setProofAnalysisResults(prev => { const { [proof.id]: _, ...rest } = prev; return rest; });
+    storeState.setProofConclusions(prev => { const { [proof.id]: _, ...rest } = prev; return rest; });
+    storeState.setProofProcessingModes(prev => { const { [proof.id]: _, ...rest } = prev; return rest; });
+  }, [removeById, storeState]);
 
-  const handleToggleProofMode = React.useCallback((proofId: string | number, usePdf: boolean) => {
-    setProofUsePdfMode(prev => ({
-      ...prev,
-      [proofId]: usePdf
-    }));
-  }, []); // 🚀 v1.8.1: Memoizado (cada prova PDF)
-
-  const handleLinkProof = React.useCallback((proofId: string | number, topicTitles: string[]) => {
-    setProofTopicLinks(prev => ({
-      ...prev,
-      [proofId]: topicTitles
-    }));
-  }, []); // 🚀 v1.8.1: Memoizado (modal vincular)
-
-  const handleUnlinkProof = React.useCallback((proofId: string | number, topicTitle: string) => {
-    setProofTopicLinks(prev => {
-      const currentLinks = prev[proofId] || [];
-      const newLinks = currentLinks.filter((t: string) => t !== topicTitle);
-
-      if (newLinks.length === 0) {
-        // Se não sobrou nenhum link, remover a chave
-        const { [proofId]: _, ...rest } = prev;
-        return rest;
-      }
-
-      return {
-        ...prev,
-        [proofId]: newLinks
-      };
-    });
-  }, []); // 🚀 v1.8.1: Memoizado (badges vínculo)
-
-  const handleSaveProofConclusion = React.useCallback((proofId: string | number, conclusion: string) => {
-    if (conclusion && conclusion.trim()) {
-      setProofConclusions(prev => ({
-        ...prev,
-        [proofId]: conclusion
-      }));
-    } else {
-      // Se conclusão vazia, remover
-      setProofConclusions(prev => {
-        const { [proofId]: _, ...rest } = prev;
-        return rest;
-      });
-    }
-  }, [setProofConclusions]); // 🚀 v1.8.1: Memoizado (onChange textarea - crítico!)
-
-  const serializeForPersistence = () => {
-    return {
-      proofFiles,        // Será processado por useLocalStorage (conversão para base64)
-      proofTexts,
-      proofUsePdfMode,
-      extractedProofTexts,
-      proofExtractionFailed,
-      proofTopicLinks,
-      proofAnalysisResults,
-      proofConclusions,
-      proofProcessingModes,  // 🆕 v1.12.20
-      proofSendFullContent   // 🆕 v1.19.2
-    };
-  };
-
-  const restoreFromPersistence = (data: Record<string, unknown> | null) => {
-    if (!data) return;
-
-    // Restaurar arrays de provas
-    if (data.proofFiles) setProofFiles(data.proofFiles as ProofFile[]);
-    if (data.proofTexts) setProofTexts(data.proofTexts as ProofText[]);
-
-    // Restaurar objetos de configuração
-    if (data.proofUsePdfMode) setProofUsePdfMode(data.proofUsePdfMode as Record<string, boolean>);
-    if (data.extractedProofTexts) setExtractedProofTexts(data.extractedProofTexts as Record<string, string>);
-    if (data.proofExtractionFailed) setProofExtractionFailed(data.proofExtractionFailed as Record<string, boolean>);
-
-    // Restaurar vinculações e análises
-    if (data.proofTopicLinks) setProofTopicLinks(data.proofTopicLinks as Record<string, string[]>);
-    if (data.proofAnalysisResults) setProofAnalysisResults(data.proofAnalysisResults as Record<string, ProofAnalysisResult>);
-    if (data.proofConclusions) setProofConclusions(data.proofConclusions as Record<string, string>);
-
-    // 🆕 v1.12.20: Restaurar modos de processamento
-    if (data.proofProcessingModes) setProofProcessingModes(data.proofProcessingModes as Record<string, ProcessingMode>);
-    // 🆕 v1.19.2: Restaurar flag de conteúdo completo
-    if (data.proofSendFullContent) setProofSendFullContent(data.proofSendFullContent as Record<string, boolean>);
-  };
-
-  const resetAll = () => {
-    // Resetar estados core de dados
-    setProofFiles([]);
-    setProofTexts([]);
-    setProofUsePdfMode({});
-    setExtractedProofTexts({});
-    setProofExtractionFailed({});
-    setProofTopicLinks({});
-    setProofAnalysisResults({});
-    setProofConclusions({});
-    setProofProcessingModes({});  // 🆕 v1.12.20
-    setProofSendFullContent({});  // 🆕 v1.19.2
-
-    // Resetar estados de UI/Controle
-    clearAnalyzingProofs();
-    setShowProofPanel(true);
-    setNewProofTextData({ name: '', text: '' });
-    setProofToDelete(null);
-    setProofToLink(null);
-    setProofToAnalyze(null);
-    setProofAnalysisCustomInstructions('');
-    setUseOnlyMiniRelatorios(false);
-  };
-
-  // 🎯 RETURN: Estados, Setters, Helpers, Handlers e Métodos de Persistência
+  // Retorno combinado: store + handlers com IO
   return {
-    // Estados Core de Dados (10) - +1 v1.12.20 +1 v1.19.2
-    proofFiles,
-    proofTexts,
-    proofUsePdfMode,
-    extractedProofTexts,
-    proofExtractionFailed,
-    proofTopicLinks,
-    proofAnalysisResults,
-    proofConclusions,
-    proofProcessingModes,  // 🆕 v1.12.20
-    proofSendFullContent,  // 🆕 v1.19.2
-    pendingProofText,      // 🆕 v1.21.3
-    pendingExtraction,     // 🆕 v1.21.5
-    pendingChatMessage,    // 🆕 v1.21.6
-
-    // Estados de UI/Controle (7) - ETAPA 6b - v1.15.0: Múltiplas análises
-    analyzingProofIds,
-    isAnalyzingProof,
-    showProofPanel,
-    newProofTextData,
-    proofToDelete,
-    proofToLink,
-    proofToAnalyze,
-    proofAnalysisCustomInstructions,
-    useOnlyMiniRelatorios,
-    includeLinkedTopicsInFree,
-
-    // Setters Core (10) - +1 v1.12.20 +1 v1.19.2
-    setProofFiles,
-    setProofTexts,
-    setProofUsePdfMode,
-    setExtractedProofTexts,
-    setProofExtractionFailed,
-    setProofTopicLinks,
-    setProofAnalysisResults,
-    setProofConclusions,
-    setProofProcessingModes,  // 🆕 v1.12.20
-    setProofSendFullContent,  // 🆕 v1.19.2
-    setPendingProofText,      // 🆕 v1.21.3
-    setPendingExtraction,     // 🆕 v1.21.5
-    setPendingChatMessage,    // 🆕 v1.21.6
-
-    // Setters UI/Controle (8) - ETAPA 6b - v1.15.0: Múltiplas análises
-    addAnalyzingProof,
-    removeAnalyzingProof,
-    clearAnalyzingProofs,
-    setShowProofPanel,
-    setNewProofTextData,
-    setProofToDelete,
-    setProofToLink,
-    setProofToAnalyze,
-    setProofAnalysisCustomInstructions,
-    setUseOnlyMiniRelatorios,
-    setIncludeLinkedTopicsInFree,
-
-    // Helpers (2) - ETAPA 6b
-    totalProofs,
-    hasProofs,
-
-    // Handlers (7) - ETAPA 6c
+    ...storeState,
     handleUploadProofPdf,
     handleAddProofText,
-    handleDeleteProof,
-    handleToggleProofMode,
-    handleLinkProof,
-    handleUnlinkProof,
-    handleSaveProofConclusion,
-
-    // Métodos de Persistência (3) - ETAPA 6d
-    serializeForPersistence,
-    restoreFromPersistence,
-    resetAll
+    handleDeleteProof
   };
 };
 
