@@ -16,7 +16,7 @@
  * ║    └─ EmbeddingsCDNService               │ 720-830         │ Download GitHub CDN       ║
  * ║                                          │                 │                           ║
  * ║ 3. HOOKS CUSTOMIZADOS                    │ 1325-8170       │ 21 hooks React            ║
- * ║    └─ useModalManager                    │ 1330-1390       │ Controle de modais        ║
+ * ║    └─ useModalManager                    │ stores/useUI    │ Zustand (v1.36.61)        ║
  * ║    └─ useAIIntegration                   │ 1424-2300       │ Claude/Gemini API         ║
  * ║    └─ useIndexedDB                       │ 2750-3165       │ Persistência modelos      ║
  * ║    └─ usePrimaryTabLock                  │ 3165-3525       │ Sincronização abas        ║
@@ -125,6 +125,9 @@ import useCloudSync, { type UseCloudSyncReturn, type SharedLibrary } from './hoo
 import LoginMagicModal from './components/LoginMagicModal';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 
+// v1.36.61: Zustand Stores - Estado global gerenciado
+import { useModalManagerCompat } from './stores/useUIStore';
+
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
 import AdminPanel from './components/AdminPanel';
 
@@ -211,7 +214,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.60'; // v1.36.60: Fix Double Check factsComparison não aplicava correções
+const APP_VERSION = '1.36.61'; // v1.36.61: useModalManager migrado para Zustand
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -1128,74 +1131,8 @@ const isDispositivo = (topic: Topic | null | undefined): boolean => topic?.title
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // 🎣 CUSTOM HOOK: useModalManager
-const useModalManager = () => {
-  const [modals, setModals] = useState<ModalState>({
-    modelForm: false,
-    extractModelConfirm: false,
-    extractedModelPreview: false,
-    export: false,
-    import: false,
-    exportModels: false,
-    deleteModel: false,
-    deleteAllModels: false,
-    deleteAllPrecedentes: false,
-    deleteAllLegislacao: false,
-    rename: false,
-    merge: false,
-    split: false,
-    newTopic: false,
-    deleteTopic: false,
-    aiAssistant: false,
-    aiAssistantModel: false,
-    analysis: false,
-    settings: false,
-    dispositivo: false,
-    restoreSession: false,
-    clearProject: false,
-    bulkModel: false,
-    bulkReview: false,
-    bulkDiscardConfirm: false,
-    confirmBulkCancel: false,
-    addProofText: false,
-    deleteProof: false,
-    linkProof: false,
-    proofAnalysis: false,
-    globalEditor: false,
-    jurisIndividual: false,
-    factsComparisonIndividual: false, // v1.36.21: Confronto de Fatos (editor individual)
-    proofTextAnonymization: false,
-    proofExtractionAnonymization: false,
-    sentenceReview: false,
-    sentenceReviewResult: false,
-    logout: false,  // v1.33.57
-    shareLibrary: false,  // v1.35.0
-    changelog: false,
-    topicCuration: false,
-    modelGenerator: false,
-    regenerateRelatorioCustom: false,
-    bulkModal: false
-  });
-
-  const [textPreview, setTextPreview] = useState<TextPreviewState>({ isOpen: false, title: '', text: '' });
-
-  const openModal = React.useCallback((modalName: keyof ModalState) => {
-    setModals(prev => ({ ...prev, [modalName]: true }));
-  }, []);
-
-  const closeModal = React.useCallback((modalName: keyof ModalState) => {
-    setModals(prev => ({ ...prev, [modalName]: false }));
-  }, []);
-
-  const closeAllModals = React.useCallback(() => {
-    setModals(prev => Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {} as ModalState));
-  }, []);
-
-  const isAnyModalOpen = React.useMemo(() => {
-    return Object.values(modals).some(value => value === true);
-  }, [modals]);
-
-  return { modals, openModal, closeModal, closeAllModals, isAnyModalOpen, textPreview, setTextPreview };
-};
+// v1.36.61: Migrado para Zustand - ver src/stores/useUIStore.ts
+const useModalManager = useModalManagerCompat;
 
 // 🎣 CUSTOM HOOK: useAIIntegration
 // 🔧 Reducer para estados de geração de IA (consolidado)
