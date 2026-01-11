@@ -4,11 +4,11 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.56 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.57 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
-**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`
+**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`
 
 **Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`, `GoogleDriveButton`, `ModelGeneratorModal`, `FactsComparisonModal`
 
@@ -22,6 +22,8 @@
 - `sentencify-legislacao-embeddings` (IndexedDB) → embeddings pré-computados da legislação
 - `sentencify-juris-embeddings` (IndexedDB) → embeddings pré-computados da jurisprudência
 - `sentencifySession` (localStorage) → metadados + textos
+- `sentencify-facts-comparison` (IndexedDB) → cache de confronto de fatos
+- `sentencify-sentence-review` (IndexedDB) → cache de revisão de sentença (v1.36.57)
 - Modelos NER/E5 (cache browser) → baixados automaticamente do HuggingFace CDN
 
 ## Critical Guidelines
@@ -120,6 +122,8 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.57 | Cache infinito para Revisar Sentença: persiste entre sessões (IndexedDB) e em export/import de projeto, badge de cache, botão regenerar |
+| v1.36.56 | Double Check: novas operações Dispositivo e Revisar Sentença + Config Thinking por modelo (Claude Sonnet/Opus, Gemini Flash/Pro, OpenAI, Grok) |
 | v1.36.51 | Fix contraste Double Check no tema claro: badges "(em breve)" e aviso de custo legíveis em ambos os temas |
 | v1.36.50 | Double Check de respostas da IA: verificação secundária para extração de tópicos, detecta falsos positivos/omissões/categorização incorreta, provider/modelo configurável |
 | v1.36.49 | Toggle "Log thinking" desabilitado para modelos sem reasoning (Grok e GPT-5.2 Instant) |

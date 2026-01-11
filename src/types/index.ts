@@ -345,6 +345,21 @@ export interface FactsComparisonCacheEntry {
   createdAt: number;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SENTENCE REVIEW CACHE TYPES (v1.36.57)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Escopo da revisão de sentença */
+export type ReviewScope = 'decisionOnly' | 'decisionWithDocs';
+
+/** Entrada de cache para revisão de sentença */
+export interface SentenceReviewCacheEntry {
+  id?: number;
+  scope: ReviewScope;
+  result: string;
+  createdAt: number;
+}
+
 /** Props para FactsComparisonModal */
 export interface FactsComparisonModalProps {
   isOpen: boolean;
@@ -2154,6 +2169,7 @@ export interface ImportedProject {
   aiSettings?: AISettings;
   tokenMetrics?: TokenMetrics;
   factsComparison?: Record<string, FactsComparisonResult>;
+  sentenceReviewCache?: Record<string, string>; // v1.36.57
 }
 
 export interface ImportCallbacks {

@@ -117,7 +117,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CHANGELOG } from './constants/changelog';
 import { EXPORT_STYLES } from './constants/export-styles';
-import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2, LogOut, Share2, Link, Users, Mail } from 'lucide-react';
+import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2, LogOut, Share2, Link, Users, Mail, RotateCcw } from 'lucide-react';
 import LoginScreen, { useAuth } from './components/LoginScreen';
 
 // v1.34.0: Cloud Sync - Magic Link Authentication + SQLite Sync
@@ -139,6 +139,7 @@ import { VoiceButton } from './components/VoiceButton';
 import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 import { FactsComparisonModalContent } from './components/FactsComparisonModal';
 import useFactsComparisonCache, { openFactsDB, FACTS_STORE_NAME } from './hooks/useFactsComparisonCache';
+import useSentenceReviewCache, { openReviewDB, REVIEW_STORE_NAME } from './hooks/useSentenceReviewCache';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
 import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS } from './prompts';
@@ -207,7 +208,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.54'; // v1.36.54: Feedback visual ao copiar tese na aba Jurisprudência
+const APP_VERSION = '1.36.57'; // v1.36.57: Cache infinito para Revisar Sentença
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -4973,6 +4974,24 @@ const useLocalStorage = () => {
       console.warn('[Export] Erro ao exportar factsComparison:', e);
     }
 
+    // v1.36.57: Exportar cache de revisão de sentença
+    let sentenceReviewCacheExport: Record<string, string> = {};
+    try {
+      const db = await openReviewDB();
+      const store = db.transaction(REVIEW_STORE_NAME).objectStore(REVIEW_STORE_NAME);
+      const entries = await new Promise<Array<{ scope: string; result: string }>>((resolve) => {
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => resolve([]);
+      });
+      db.close();
+      for (const entry of entries) {
+        sentenceReviewCacheExport[entry.scope] = entry.result;
+      }
+    } catch (e) {
+      console.warn('[Export] Erro ao exportar sentenceReviewCache:', e);
+    }
+
     return {
       version: APP_VERSION,
       exportedAt: new Date().toISOString(),
@@ -4998,7 +5017,8 @@ const useLocalStorage = () => {
       proofSendFullContent: allStates.proofSendFullContent || {},
       documentProcessingModes: documentProcessingModes || { peticao: 'pdfjs', contestacoes: [], complementares: [] },
       tokenMetrics: tokenMetrics || { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0, requestCount: 0, lastUpdated: null },
-      factsComparison  // v1.36.12
+      factsComparison,  // v1.36.12
+      sentenceReviewCache: sentenceReviewCacheExport  // v1.36.57
     };
   }, [fileToBase64]);
 
@@ -5301,6 +5321,33 @@ const useLocalStorage = () => {
         db.close();
       } catch (e) {
         console.warn('[Import] Erro ao importar factsComparison:', e);
+      }
+    }
+
+    // v1.36.57: Importar cache de revisão de sentença
+    if (project.sentenceReviewCache && typeof project.sentenceReviewCache === 'object') {
+      try {
+        const db = await openReviewDB();
+        const tx = db.transaction(REVIEW_STORE_NAME, 'readwrite');
+        const store = tx.objectStore(REVIEW_STORE_NAME);
+
+        for (const [scope, result] of Object.entries(project.sentenceReviewCache)) {
+          if (scope === 'decisionOnly' || scope === 'decisionWithDocs') {
+            store.add({
+              scope,
+              result,
+              createdAt: Date.now()
+            });
+          }
+        }
+
+        await new Promise<void>((resolve) => {
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        });
+        db.close();
+      } catch (e) {
+        console.warn('[Import] Erro ao importar sentenceReviewCache:', e);
       }
     }
   }, [base64ToFile, clearAllPdfsFromIndexedDB, savePdfToIndexedDB]);
@@ -20478,9 +20525,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   });
 
   // v1.21.21: Estados para revisão crítica de sentença
-  const [reviewScope, setReviewScope] = useState('decisionOnly');
+  const [reviewScope, setReviewScope] = useState<'decisionOnly' | 'decisionWithDocs'>('decisionOnly');
   const [reviewResult, setReviewResult] = useState('');
   const [generatingReview, setGeneratingReview] = useState(false);
+  const [reviewFromCache, setReviewFromCache] = useState(false); // v1.36.57: Indicar se veio do cache
+  const sentenceReviewCache = useSentenceReviewCache(); // v1.36.57: Cache de revisão de sentença
 
   // Scroll automático para o topo quando aparecer erro
   useEffect(() => {
@@ -29580,6 +29629,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
   }, [selectedTopics]);
 
   // v1.21.21: Função para revisar sentença buscando omissões, contradições e obscuridades
+  // v1.36.57: Cache persistente para revisão de sentença
   const reviewSentence = async () => {
     if (!canGenerateDispositivo.enabled) {
       setError('Complete todos os tópicos antes de revisar a sentença.');
@@ -29590,6 +29640,19 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
     setError('');
 
     try {
+      // v1.36.57: Verificar cache primeiro
+      const cachedReview = await sentenceReviewCache.getReview(reviewScope);
+      if (cachedReview) {
+        setReviewResult(cachedReview);
+        setReviewFromCache(true);
+        closeModal('sentenceReview');
+        openModal('sentenceReviewResult');
+        setGeneratingReview(false);
+        return;
+      }
+
+      // Não há cache, gerar com IA
+      setReviewFromCache(false);
       const contentArray: AIMessageContent[] = [];
 
       // Se escopo inclui documentos, usar buildDocumentContentArray existente
@@ -29643,6 +29706,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           // Continuar com revisão original em caso de erro
         }
       }
+
+      // v1.36.57: Salvar no cache após gerar
+      await sentenceReviewCache.saveReview(reviewScope, reviewFinal);
 
       setReviewResult(reviewFinal);
       closeModal('sentenceReview');
@@ -32071,7 +32137,15 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                   <Scale className="w-6 h-6 text-amber-400" />
                   <div>
                     <h3 className="text-xl font-bold text-amber-400">Revisão Crítica da Sentença</h3>
-                    <p className="text-sm theme-text-muted">Análise detalhada por IA - revise os apontamentos abaixo</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm theme-text-muted">Análise detalhada por IA - revise os apontamentos abaixo</p>
+                      {/* v1.36.57: Badge de cache */}
+                      {reviewFromCache && (
+                        <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">
+                          📦 Cache
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <button onClick={() => closeModal('sentenceReviewResult')} className="p-2 rounded-lg hover-slate-700">
@@ -32118,6 +32192,18 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                 ) : (
                   <><Copy className="w-4 h-4" /> Copiar Texto</>
                 )}
+              </button>
+              {/* v1.36.57: Botão Regenerar (limpa cache e gera novamente) */}
+              <button
+                onClick={async () => {
+                  await sentenceReviewCache.deleteReview(reviewScope);
+                  closeModal('sentenceReviewResult');
+                  openModal('sentenceReview');
+                }}
+                className="flex items-center gap-2 px-4 py-2 theme-bg-secondary hover-slate-600 rounded-lg"
+                title="Limpar cache e gerar nova revisão"
+              >
+                <RotateCcw className="w-4 h-4" /> Regenerar
               </button>
               <button
                 onClick={() => closeModal('sentenceReviewResult')}
