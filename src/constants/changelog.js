@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.63', feature: 'Zustand Migration Wave 3: useModelLibrary migrado para useModelsStore.ts (core data, busca, filtros, formulário)' },
   { version: '1.36.62', feature: 'Zustand Migration Wave 2: useAIIntegration config/tokenMetrics migrado para useAIStore.ts (~80 linhas removidas)' },
   { version: '1.36.61', feature: 'Zustand Migration: useModalManager migrado para store global (src/stores/useUIStore.ts), devtools habilitado para debug' },
   { version: '1.36.60', feature: 'Fix Double Check factsComparison: correções agora são aplicadas na tabela (faltava caso para verifiedResult no performDoubleCheck)' },

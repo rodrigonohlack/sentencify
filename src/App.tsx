@@ -22,7 +22,7 @@
  * ║    └─ usePrimaryTabLock                  │ 3165-3525       │ Sincronização abas        ║
  * ║    └─ useFieldVersioning                 │ 3625-3700       │ Histórico de versões      ║
  * ║    └─ useLocalStorage                    │ 3700-4680       │ Sessão (980 linhas)       ║
- * ║    └─ useModelLibrary                    │ 4680-5375       │ CRUD modelos              ║
+ * ║    └─ useModelLibrary                    │ stores/useMod   │ Zustand (v1.36.63)        ║
  * ║    └─ useProofManager                    │ 5615-6000       │ Gestão de provas          ║
  * ║    └─ useDocumentManager                 │ 6000-6390       │ Upload documentos         ║
  * ║    └─ useTopicManager                    │ 6390-6575       │ CRUD tópicos              ║
@@ -128,6 +128,7 @@ import SyncStatusIndicator from './components/SyncStatusIndicator';
 // v1.36.61+: Zustand Stores - Estado global gerenciado
 import { useModalManagerCompat } from './stores/useUIStore';
 import { useAISettingsCompat } from './stores/useAIStore';
+import { useModelLibraryCompat } from './stores/useModelsStore';
 
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
 import AdminPanel from './components/AdminPanel';
@@ -215,7 +216,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.62'; // v1.36.62: useAIIntegration config migrado para Zustand
+const APP_VERSION = '1.36.63'; // v1.36.63: useModelLibrary migrado para Zustand
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -4890,28 +4891,39 @@ const useLocalStorage = () => {
 const useModelLibrary = () => {
 
   // ===========================================================================
-  // SEÇÃO 1: DADOS CORE
+  // v1.36.63: Estado migrado para Zustand - ver src/stores/useModelsStore.ts
+  // Seções 1, 2 e 3 agora usam o store global
   // ===========================================================================
-  const [models, setModels] = React.useState<Model[]>([]);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
-  const [isLoadingModels, setIsLoadingModels] = React.useState(false);
-  const [persistenceError, setPersistenceError] = React.useState<string | null>(null);
-
-  // ===========================================================================
-  // SEÇÃO 2: BUSCA E FILTROS
-  // ===========================================================================
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [selectedCategory, setSelectedCategory] = React.useState('all');
-  const [showFavoritesOnly, setShowFavoritesOnly] = React.useState(false);
-  const [ownershipFilter, setOwnershipFilter] = React.useState('all'); // v1.35.0: 'all' | 'mine' | 'shared'
-  const [currentModelPage, setCurrentModelPage] = React.useState(1);
-  const [manualSearchTerm, setManualSearchTerm] = React.useState('');
-  const [manualSearchResults, setManualSearchResults] = React.useState<Model[]>([]);
-  const [suggestions, setSuggestions] = React.useState<Model[]>([]);
-  const [suggestionsSource, setSuggestionsSource] = React.useState<string | null>(null); // v1.28.04: 'local' ou 'api'
-  const [loadingSuggestions, setLoadingSuggestions] = React.useState(false);
-  const [modelViewMode, setModelViewMode] = React.useState('cards');
-  const modelsPerPage = 5;
+  const {
+    // Seção 1: Dados Core
+    models, setModels,
+    hasUnsavedChanges, setHasUnsavedChanges,
+    isLoadingModels, setIsLoadingModels,
+    persistenceError, setPersistenceError,
+    // Seção 2: Busca e Filtros
+    searchTerm, setSearchTerm,
+    selectedCategory, setSelectedCategory,
+    showFavoritesOnly, setShowFavoritesOnly,
+    ownershipFilter, setOwnershipFilter,
+    currentModelPage, setCurrentModelPage,
+    manualSearchTerm, setManualSearchTerm,
+    manualSearchResults, setManualSearchResults,
+    suggestions, setSuggestions,
+    suggestionsSource, setSuggestionsSource,
+    loadingSuggestions, setLoadingSuggestions,
+    modelViewMode, setModelViewMode,
+    modelsPerPage,
+    // Seção 3: Formulário
+    newModel, setNewModel,
+    editingModel, setEditingModel,
+    extractingModelFromDecision, setExtractingModelFromDecision,
+    showExtractModelButton, setShowExtractModelButton,
+    extractedModelPreview, setExtractedModelPreview,
+    exportedModelsText, setExportedModelsText,
+    modelToDelete, setModelToDelete,
+    similarityWarning, setSimilarityWarning,
+    resetForm, startEditingModel
+  } = useModelLibraryCompat();
 
   // --- Busca manual por termo (lógica encapsulada) ---
   const performManualSearch = React.useCallback((term: string) => {
@@ -4921,7 +4933,7 @@ const useModelLibrary = () => {
     }
     const results = searchModelsInLibrary(models, term, { limit: 10, includeContent: true });
     setManualSearchResults(results);
-  }, [models]);
+  }, [models, setManualSearchResults]);
 
   // --- Busca com debounce 300ms ---
   const debouncedSearchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -4929,37 +4941,6 @@ const useModelLibrary = () => {
     if (debouncedSearchTimeoutRef.current) clearTimeout(debouncedSearchTimeoutRef.current);
     debouncedSearchTimeoutRef.current = setTimeout(() => performManualSearch(term), 300);
   }, [performManualSearch]);
-
-  // ===========================================================================
-  // SEÇÃO 3: FORMULÁRIO E EDIÇÃO
-  // ===========================================================================
-  const [newModel, setNewModel] = React.useState<NewModelData>({ title: '', content: '', keywords: '', category: '' });
-  const [editingModel, setEditingModel] = React.useState<Model | null>(null);
-  const [extractingModelFromDecision, setExtractingModelFromDecision] = React.useState<boolean>(false);
-  const [showExtractModelButton, setShowExtractModelButton] = React.useState<boolean>(true);
-  const [extractedModelPreview, setExtractedModelPreview] = React.useState<NewModelData | null>(null);
-  const [exportedModelsText, setExportedModelsText] = React.useState<string>('');
-  const [modelToDelete, setModelToDelete] = React.useState<Model | null>(null);
-  const [similarityWarning, setSimilarityWarning] = React.useState<SimilarityWarningState | null>(null);
-
-  // --- Resetar formulário ---
-  const resetForm = React.useCallback(() => {
-    setNewModel({ title: '', content: '', keywords: '', category: '' });
-    setEditingModel(null);
-    setExtractedModelPreview(null);
-    setSimilarityWarning(null);
-  }, []);
-
-  // --- Iniciar edição de modelo ---
-  const startEditingModel = React.useCallback((model: Model) => {
-    setEditingModel(model);
-    setNewModel({
-      title: model.title || '',
-      content: model.content || '',
-      keywords: typeof model.keywords === 'string' ? model.keywords : (model.keywords || []).join(', '),
-      category: model.category || ''
-    });
-  }, []);
 
   // ===========================================================================
   // SEÇÃO 4: PROCESSAMENTO EM LOTE (BULK)
