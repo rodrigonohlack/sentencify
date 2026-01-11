@@ -111,3 +111,11 @@ export {
   SINONIMOS_JURIDICOS
 } from './useModelLibrary';
 export type { UseModelLibraryReturn } from './useModelLibrary';
+
+// Quill Editor hook (TIER 0 - sem dependências externas)
+export { useQuillEditor, sanitizeQuillHTML } from './useQuillEditor';
+export type { UseQuillEditorOptions, UseQuillEditorReturn } from './useQuillEditor';
+
+// Document Services hook (TIER 1 - dependências: useAIIntegration)
+export { useDocumentServices } from './useDocumentServices';
+export type { UseDocumentServicesReturn, AIIntegrationForDocuments } from './useDocumentServices';
