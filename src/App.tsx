@@ -208,7 +208,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.58'; // v1.36.58: Double Check para Confronto de Fatos
+const APP_VERSION = '1.36.59'; // v1.36.59: Fix indicação "Modelo atual" para OpenAI/Grok
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -34745,6 +34745,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     Modelo atual: <span className="theme-text-secondary font-medium">
                       {aiIntegration.aiSettings.provider === 'gemini'
                         ? aiIntegration.getModelDisplayName(aiIntegration.aiSettings.geminiModel || '')
+                        : aiIntegration.aiSettings.provider === 'openai'
+                        ? aiIntegration.getModelDisplayName(aiIntegration.aiSettings.openaiModel || 'gpt-5.2-chat-latest')
+                        : aiIntegration.aiSettings.provider === 'grok'
+                        ? aiIntegration.getModelDisplayName(aiIntegration.aiSettings.grokModel || 'grok-4-1-fast-reasoning')
                         : aiIntegration.getModelDisplayName(aiIntegration.aiSettings.claudeModel || aiIntegration.aiSettings.model || '')}
                     </span>
                     {aiIntegration.aiSettings.useExtendedThinking && <span className="ml-2 text-purple-400">• Pensamento prolongado ativo</span>}
