@@ -208,7 +208,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.59'; // v1.36.59: Fix indicação "Modelo atual" para OpenAI/Grok
+const APP_VERSION = '1.36.60'; // v1.36.60: Fix Double Check factsComparison não aplicava correções
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -3017,11 +3017,14 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       );
 
       // v1.36.56: Parsear resposta JSON baseado no tipo de operação
+      // v1.36.60: Adicionado factsComparison (verifiedResult)
       const verifiedFieldPattern = operation === 'topicExtraction'
         ? '"verifiedTopics"'
         : operation === 'dispositivo'
           ? '"verifiedDispositivo"'
-          : '"verifiedReview"';
+          : operation === 'factsComparison'
+            ? '"verifiedResult"'
+            : '"verifiedReview"';
 
       const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
                         response.match(new RegExp(`\\{[\\s\\S]*${verifiedFieldPattern}[\\s\\S]*\\}`));
@@ -3035,11 +3038,14 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       const result = JSON.parse(jsonStr);
 
       // Extrair campo verificado baseado na operação
+      // v1.36.60: Adicionado factsComparison (verifiedResult)
       const verified = operation === 'topicExtraction'
         ? JSON.stringify(result.verifiedTopics)
         : operation === 'dispositivo'
           ? result.verifiedDispositivo || originalResponse
-          : result.verifiedReview || originalResponse;
+          : operation === 'factsComparison'
+            ? JSON.stringify(result.verifiedResult) || originalResponse
+            : result.verifiedReview || originalResponse;
 
       return {
         verified,

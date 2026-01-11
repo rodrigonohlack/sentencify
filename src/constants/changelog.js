@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.60', feature: 'Fix Double Check factsComparison: correções agora são aplicadas na tabela (faltava caso para verifiedResult no performDoubleCheck)' },
   { version: '1.36.59', feature: 'Fix indicação "Modelo atual" na Config IA: agora exibe corretamente GPT-5.2/Grok 4.1 quando OpenAI ou Grok selecionado' },
   { version: '1.36.58', feature: 'Double Check para Confronto de Fatos: verifica completude, classificação e correção das alegações na tabela comparativa' },
   { version: '1.36.57', feature: 'Cache infinito para Revisar Sentença: persiste entre sessões (IndexedDB) e em export/import de projeto, badge de cache, botão regenerar' },
