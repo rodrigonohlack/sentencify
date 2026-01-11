@@ -38,6 +38,7 @@
 8. **Versionamento (5 arquivos)**: Ao incrementar versão, atualizar TODOS: `CLAUDE.md` (linha 7 + Recent Changes), `src/App.tsx` (APP_VERSION ~linha 209), `src/constants/changelog.js`, `package.json`. **APP_VERSION no App.tsx é frequentemente esquecido após compactação de contexto!**
 9. **Temas Claro/Escuro**: TODA mudança de UI deve funcionar em AMBOS os temas. Usar classes `theme-*` ou variantes `dark:` do Tailwind. Testar visualmente nos dois temas antes de commitar.
 10. **Testes DEVEM importar código de produção**: Todo teste deve importar e executar o código real, NUNCA definir constantes/funções duplicadas internamente. Teste que não importa do código de produção é **inútil**. Exemplo correto: `import { useIndexedDB } from './useIndexedDB';`. Exemplo ERRADO: definir `const DB_NAME = 'SentencifyAI'` dentro do teste ao invés de importar do hook real.
+11. **Caminhos relativos para arquivos (Windows)**: SEMPRE usar caminhos relativos (`src/App.tsx`) ao invés de absolutos (`C:\Users\...\src\App.tsx`). Caminhos absolutos causam erro "File has been unexpectedly modified" no Edit tool do Claude Code no Windows.
 
 > **Nota**: Este projeto agora roda como aplicação standalone (fora do sandbox Claude.ai). Não há mais limite de tamanho de arquivo nem necessidade de minificação.
 
