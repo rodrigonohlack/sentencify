@@ -248,11 +248,8 @@ export interface AISettings {
 /** Operações que podem usar Double Check */
 export interface DoubleCheckOperations {
   topicExtraction: boolean;
-  // Futuras expansões:
-  // proofAnalysis: boolean;
-  // miniReports: boolean;
-  // fundamentacao: boolean;
-  // topicReorder: boolean;
+  dispositivo: boolean;      // v1.36.56: Verificação do dispositivo
+  sentenceReview: boolean;   // v1.36.56: Verificação da revisão de sentença
 }
 
 /** Configurações de Double Check */
@@ -261,6 +258,10 @@ export interface DoubleCheckSettings {
   provider: AIProvider;
   model: string;
   operations: DoubleCheckOperations;
+  // v1.36.56: Thinking config específico para Double Check
+  claudeThinkingBudget?: number;        // 0 = desativado, 10000-62000 para Sonnet, 10000-30000 para Opus
+  geminiThinkingLevel?: GeminiThinkingLevel;  // minimal, low, medium, high
+  openaiReasoningLevel?: 'low' | 'medium' | 'high' | 'xhigh';
 }
 
 /** Resultado do Double Check */

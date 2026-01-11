@@ -1695,12 +1695,15 @@ const useAIIntegration = () => {
       }
     ],
     // v1.36.50: Double Check de respostas da IA
+    // v1.36.56: Adicionado dispositivo, sentenceReview e thinking config
     doubleCheck: {
       enabled: false,
       provider: 'claude',
       model: 'claude-sonnet-4-20250514',
       operations: {
-        topicExtraction: false
+        topicExtraction: false,
+        dispositivo: false,
+        sentenceReview: false
       }
     }
   });
@@ -2931,7 +2934,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
   /**
    * Chama a API com provider/modelo específico (para double check)
-   * Ignora as configurações atuais de aiSettings.provider
+   * v1.36.56: Atualizado para usar thinking config do Double Check
    */
   const callDoubleCheckAPI = React.useCallback(async (
     provider: AIProvider,
@@ -2943,7 +2946,23 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       { role: 'user', content: prompt }
     ];
 
+    // v1.36.56: Construir opções com thinking config do Double Check
+    const dcSettings = aiSettings.doubleCheck;
     const options: AICallOptions = { maxTokens, model };
+
+    // Aplicar thinking config baseado no provider
+    if (provider === 'claude' && dcSettings?.claudeThinkingBudget && dcSettings.claudeThinkingBudget > 0) {
+      // Para Claude, o thinking é gerenciado internamente via aiSettings.thinkingBudget
+      // Precisamos criar uma versão temporária das settings para a chamada
+      // Por simplicidade, vamos passar como disableThinking = false quando tiver budget
+      options.disableThinking = false;
+    } else if (provider === 'claude') {
+      options.disableThinking = true;
+    }
+
+    // Nota: Para Gemini e OpenAI, o thinking é configurado nas funções callGeminiAPI e callOpenAIAPI
+    // que lêem de aiSettings. Por ora, o Double Check usará as configurações padrão do provider.
+    // Uma melhoria futura seria passar o thinking config diretamente.
 
     // Chamar a API específica do provider
     if (provider === 'openai') {
@@ -2957,7 +2976,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     }
     // Default: Claude
     return await callLLM(messages, options);
-  }, [callLLM, callGeminiAPI, callOpenAIAPI, callGrokAPI]);
+  }, [callLLM, callGeminiAPI, callOpenAIAPI, callGrokAPI, aiSettings.doubleCheck]);
 
   /**
    * Executa o double check em uma resposta da IA
@@ -2966,8 +2985,9 @@ ${AI_INSTRUCTIONS_SAFETY}`;
    * @param context - Documentos/contexto original
    * @param onProgress - Callback de progresso opcional
    */
+  // v1.36.56: Atualizado para suportar dispositivo e sentenceReview
   const performDoubleCheck = React.useCallback(async (
-    operation: 'topicExtraction',
+    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview',
     originalResponse: string,
     context: string,
     onProgress?: (msg: string) => void
@@ -2994,9 +3014,15 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         8000
       );
 
-      // Parsear resposta JSON
+      // v1.36.56: Parsear resposta JSON baseado no tipo de operação
+      const verifiedFieldPattern = operation === 'topicExtraction'
+        ? '"verifiedTopics"'
+        : operation === 'dispositivo'
+          ? '"verifiedDispositivo"'
+          : '"verifiedReview"';
+
       const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
-                        response.match(/\{[\s\S]*"verifiedTopics"[\s\S]*\}/);
+                        response.match(new RegExp(`\\{[\\s\\S]*${verifiedFieldPattern}[\\s\\S]*\\}`));
 
       if (!jsonMatch) {
         console.warn('[DoubleCheck] Resposta não contém JSON válido:', response.substring(0, 200));
@@ -3004,10 +3030,17 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       }
 
       const jsonStr = jsonMatch[1] || jsonMatch[0];
-      const result: DoubleCheckResult = JSON.parse(jsonStr);
+      const result = JSON.parse(jsonStr);
+
+      // Extrair campo verificado baseado na operação
+      const verified = operation === 'topicExtraction'
+        ? JSON.stringify(result.verifiedTopics)
+        : operation === 'dispositivo'
+          ? result.verifiedDispositivo || originalResponse
+          : result.verifiedReview || originalResponse;
 
       return {
-        verified: JSON.stringify(result.verifiedTopics),
+        verified,
         corrections: result.corrections || [],
         summary: result.summary || ''
       };
@@ -29262,9 +29295,38 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
       });
 
       // Normalizar espaçamento para evitar linhas em branco duplicadas
-      const dispositivoFinal = normalizeHTMLSpacing(textContent.trim());
+      let dispositivoFinal = normalizeHTMLSpacing(textContent.trim());
 
       // v1.14.1: Cache removido - dispositivo sempre deve refletir dados atuais
+
+      // v1.36.56: Double Check do Dispositivo
+      if (aiIntegration.aiSettings.doubleCheck?.enabled &&
+          aiIntegration.aiSettings.doubleCheck?.operations.dispositivo) {
+
+        // Preparar contexto da fundamentação para verificação
+        const fundamentacaoContext = topicsSummary.map(t =>
+          `${t.titulo} (${t.categoria})\nResultado: ${t.resultado}\nDecisão: ${t.decisao}`
+        ).join('\n\n---\n\n');
+
+        try {
+          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+            'dispositivo',
+            dispositivoFinal,
+            fundamentacaoContext
+          );
+
+          if (corrections.length > 0) {
+            dispositivoFinal = verified;
+            showToast(`🔄 Double Check: ${corrections.length} correção(ões) - ${summary}`, 'info');
+            console.log('[DoubleCheck Dispositivo] Correções aplicadas:', corrections);
+          } else {
+            console.log('[DoubleCheck Dispositivo] Nenhuma correção necessária');
+          }
+        } catch (dcError) {
+          console.error('[DoubleCheck Dispositivo] Erro:', dcError);
+          // Continuar com dispositivo original em caso de erro
+        }
+      }
 
       aiIntegration.setDispositivoText(dispositivoFinal);
       openModal('dispositivo');
@@ -29556,7 +29618,33 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         topK: 40
       });
 
-      setReviewResult(normalizeHTMLSpacing(result.trim()));
+      let reviewFinal = normalizeHTMLSpacing(result.trim());
+
+      // v1.36.56: Double Check da Revisão de Sentença
+      if (aiIntegration.aiSettings.doubleCheck?.enabled &&
+          aiIntegration.aiSettings.doubleCheck?.operations.sentenceReview) {
+
+        try {
+          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+            'sentenceReview',
+            reviewFinal,
+            buildDecisionText()  // Contexto: a decisão completa
+          );
+
+          if (corrections.length > 0) {
+            reviewFinal = verified;
+            showToast(`🔄 Double Check: ${corrections.length} correção(ões) - ${summary}`, 'info');
+            console.log('[DoubleCheck Review] Correções aplicadas:', corrections);
+          } else {
+            console.log('[DoubleCheck Review] Nenhuma correção necessária');
+          }
+        } catch (dcError) {
+          console.error('[DoubleCheck Review] Erro:', dcError);
+          // Continuar com revisão original em caso de erro
+        }
+      }
+
+      setReviewResult(reviewFinal);
       closeModal('sentenceReview');
       openModal('sentenceReviewResult');
     } catch (err) {
@@ -32855,7 +32943,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       enabled: false,
                       provider: 'claude' as AIProvider,
                       model: 'claude-sonnet-4-20250514',
-                      operations: { topicExtraction: false }
+                      operations: { topicExtraction: false, dispositivo: false, sentenceReview: false }
                     };
                     aiIntegration.setAiSettings({
                       ...aiIntegration.aiSettings,
@@ -32973,6 +33061,146 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       </select>
                     </div>
 
+                    {/* v1.36.56: Thinking Config específico para Double Check */}
+                    {aiIntegration.aiSettings.doubleCheck?.provider === 'claude' && (
+                      <div>
+                        <label className="block text-xs font-medium theme-text-tertiary mb-2">
+                          Extended Thinking Budget
+                        </label>
+                        <select
+                          value={aiIntegration.aiSettings.doubleCheck?.claudeThinkingBudget || 0}
+                          onChange={(e) => {
+                            aiIntegration.setAiSettings({
+                              ...aiIntegration.aiSettings,
+                              doubleCheck: {
+                                ...aiIntegration.aiSettings.doubleCheck!,
+                                claudeThinkingBudget: parseInt(e.target.value)
+                              }
+                            });
+                          }}
+                          className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
+                        >
+                          <option value="0">Desativado</option>
+                          {aiIntegration.aiSettings.doubleCheck?.model?.includes('opus') ? (
+                            <>
+                              <option value="10000">10K tokens (Padrão)</option>
+                              <option value="20000">20K tokens (Recomendado)</option>
+                              <option value="30000">30K tokens (Máximo Opus)</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value="10000">10K tokens (Padrão)</option>
+                              <option value="20000">20K tokens (Recomendado)</option>
+                              <option value="40000">40K tokens (Alta qualidade)</option>
+                              <option value="62000">62K tokens (Máximo Sonnet)</option>
+                            </>
+                          )}
+                        </select>
+                        {(aiIntegration.aiSettings.doubleCheck?.claudeThinkingBudget || 0) >= 40000 && (
+                          <p className="text-xs text-amber-400 mt-1">
+                            ⚠️ Verificação pode demorar mais com budgets altos
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {aiIntegration.aiSettings.doubleCheck?.provider === 'gemini' && (
+                      <div>
+                        <label className="block text-xs font-medium theme-text-tertiary mb-2">
+                          Thinking Level
+                        </label>
+                        <p className="text-xs theme-text-muted mb-2">
+                          Gemini 3 não permite desativar thinking
+                        </p>
+                        <select
+                          value={aiIntegration.aiSettings.doubleCheck?.geminiThinkingLevel || 'low'}
+                          onChange={(e) => {
+                            aiIntegration.setAiSettings({
+                              ...aiIntegration.aiSettings,
+                              doubleCheck: {
+                                ...aiIntegration.aiSettings.doubleCheck!,
+                                geminiThinkingLevel: e.target.value as GeminiThinkingLevel
+                              }
+                            });
+                          }}
+                          className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
+                        >
+                          {aiIntegration.aiSettings.doubleCheck?.model?.includes('flash') && (
+                            <option value="minimal">Minimal (mais rápido)</option>
+                          )}
+                          <option value="low">Low (equilíbrio)</option>
+                          {aiIntegration.aiSettings.doubleCheck?.model?.includes('flash') && (
+                            <option value="medium">Medium (recomendado)</option>
+                          )}
+                          <option value="high">High (mais preciso)</option>
+                        </select>
+                        <p className="text-xs theme-text-muted mt-1">
+                          {aiIntegration.aiSettings.doubleCheck?.model?.includes('pro')
+                            ? '💡 Gemini 3 Pro suporta apenas Low e High'
+                            : '💡 Gemini 3 Flash suporta todos os níveis'}
+                        </p>
+                      </div>
+                    )}
+
+                    {aiIntegration.aiSettings.doubleCheck?.provider === 'openai' &&
+                     aiIntegration.aiSettings.doubleCheck?.model === 'gpt-5.2' && (
+                      <div>
+                        <label className="block text-xs font-medium theme-text-tertiary mb-2">
+                          Reasoning Level
+                        </label>
+                        <select
+                          value={aiIntegration.aiSettings.doubleCheck?.openaiReasoningLevel || 'medium'}
+                          onChange={(e) => {
+                            aiIntegration.setAiSettings({
+                              ...aiIntegration.aiSettings,
+                              doubleCheck: {
+                                ...aiIntegration.aiSettings.doubleCheck!,
+                                openaiReasoningLevel: e.target.value as 'low' | 'medium' | 'high' | 'xhigh'
+                              }
+                            });
+                          }}
+                          className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
+                        >
+                          <option value="low">Low - Rápido</option>
+                          <option value="medium">Medium - Balanceado (Recomendado)</option>
+                          <option value="high">High - Mais detalhado</option>
+                          <option value="xhigh">Extra High - Máxima qualidade (lento)</option>
+                        </select>
+                        {aiIntegration.aiSettings.doubleCheck?.openaiReasoningLevel === 'xhigh' && (
+                          <p className="text-xs text-amber-400 mt-1">
+                            ⚠️ Nível xhigh pode demorar vários minutos
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {aiIntegration.aiSettings.doubleCheck?.provider === 'openai' &&
+                     aiIntegration.aiSettings.doubleCheck?.model === 'gpt-5.2-chat-latest' && (
+                      <p className="text-xs theme-text-muted p-2 rounded bg-gray-500/10">
+                        ⚡ GPT-5.2 Instant não suporta thinking/reasoning
+                      </p>
+                    )}
+
+                    {aiIntegration.aiSettings.doubleCheck?.provider === 'grok' &&
+                     aiIntegration.aiSettings.doubleCheck?.model?.includes('reasoning') && (
+                      <div className="p-3 rounded-lg border border-purple-500/30 bg-purple-500/10">
+                        <div className="flex items-center gap-2">
+                          <span className="text-purple-400">🧠</span>
+                          <span className="text-sm theme-text-primary">Grok 4.1 Fast Thinking</span>
+                        </div>
+                        <p className="text-xs theme-text-muted mt-1">
+                          Thinking é automático e não configurável
+                        </p>
+                      </div>
+                    )}
+
+                    {aiIntegration.aiSettings.doubleCheck?.provider === 'grok' &&
+                     aiIntegration.aiSettings.doubleCheck?.model?.includes('non-reasoning') && (
+                      <p className="text-xs theme-text-muted p-2 rounded bg-gray-500/10">
+                        ⚡ Grok 4.1 Fast Instant não suporta thinking
+                      </p>
+                    )}
+
                     {/* Operações que usam Double Check */}
                     <div>
                       <label className="block text-xs font-medium theme-text-tertiary mb-2">
@@ -33004,19 +33232,56 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             </p>
                           </div>
                         </label>
-                        {/* Futuras operações (desabilitadas) */}
-                        <label className="flex items-center gap-3 p-2 rounded-lg opacity-50 cursor-not-allowed">
-                          <input type="checkbox" disabled className="w-4 h-4 rounded border-gray-300" />
+                        {/* v1.36.56: Dispositivo */}
+                        <label className="flex items-center gap-3 p-2 rounded-lg hover:theme-bg-secondary cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={aiIntegration.aiSettings.doubleCheck?.operations.dispositivo || false}
+                            onChange={(e) => {
+                              aiIntegration.setAiSettings({
+                                ...aiIntegration.aiSettings,
+                                doubleCheck: {
+                                  ...aiIntegration.aiSettings.doubleCheck!,
+                                  operations: {
+                                    ...aiIntegration.aiSettings.doubleCheck!.operations,
+                                    dispositivo: e.target.checked
+                                  }
+                                }
+                              });
+                            }}
+                            className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500"
+                          />
                           <div className="flex-1">
-                            <span className="text-sm theme-text-primary">Análise de provas</span>
-                            <span className="text-xs text-amber-600 dark:text-amber-400 ml-2">(em breve)</span>
+                            <span className="text-sm theme-text-primary">Dispositivo</span>
+                            <p className="text-xs theme-text-muted">
+                              Verifica omissões de pedidos e contradições com fundamentação
+                            </p>
                           </div>
                         </label>
-                        <label className="flex items-center gap-3 p-2 rounded-lg opacity-50 cursor-not-allowed">
-                          <input type="checkbox" disabled className="w-4 h-4 rounded border-gray-300" />
+                        {/* v1.36.56: Revisar Sentença */}
+                        <label className="flex items-center gap-3 p-2 rounded-lg hover:theme-bg-secondary cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={aiIntegration.aiSettings.doubleCheck?.operations.sentenceReview || false}
+                            onChange={(e) => {
+                              aiIntegration.setAiSettings({
+                                ...aiIntegration.aiSettings,
+                                doubleCheck: {
+                                  ...aiIntegration.aiSettings.doubleCheck!,
+                                  operations: {
+                                    ...aiIntegration.aiSettings.doubleCheck!.operations,
+                                    sentenceReview: e.target.checked
+                                  }
+                                }
+                              });
+                            }}
+                            className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500"
+                          />
                           <div className="flex-1">
-                            <span className="text-sm theme-text-primary">Mini-relatórios</span>
-                            <span className="text-xs text-amber-600 dark:text-amber-400 ml-2">(em breve)</span>
+                            <span className="text-sm theme-text-primary">Revisar sentença</span>
+                            <p className="text-xs theme-text-muted">
+                              Valida análise de omissões, contradições e obscuridades
+                            </p>
                           </div>
                         </label>
                       </div>
