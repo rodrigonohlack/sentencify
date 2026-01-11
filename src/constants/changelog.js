@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.62', feature: 'Zustand Migration Wave 2: useAIIntegration config/tokenMetrics migrado para useAIStore.ts (~80 linhas removidas)' },
   { version: '1.36.61', feature: 'Zustand Migration: useModalManager migrado para store global (src/stores/useUIStore.ts), devtools habilitado para debug' },
   { version: '1.36.60', feature: 'Fix Double Check factsComparison: correções agora são aplicadas na tabela (faltava caso para verifiedResult no performDoubleCheck)' },
   { version: '1.36.59', feature: 'Fix indicação "Modelo atual" na Config IA: agora exibe corretamente GPT-5.2/Grok 4.1 quando OpenAI ou Grok selecionado' },

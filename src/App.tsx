@@ -17,7 +17,7 @@
  * ║                                          │                 │                           ║
  * ║ 3. HOOKS CUSTOMIZADOS                    │ 1325-8170       │ 21 hooks React            ║
  * ║    └─ useModalManager                    │ stores/useUI    │ Zustand (v1.36.61)        ║
- * ║    └─ useAIIntegration                   │ 1424-2300       │ Claude/Gemini API         ║
+ * ║    └─ useAIIntegration                   │ stores/useAI    │ Zustand (v1.36.62)        ║
  * ║    └─ useIndexedDB                       │ 2750-3165       │ Persistência modelos      ║
  * ║    └─ usePrimaryTabLock                  │ 3165-3525       │ Sincronização abas        ║
  * ║    └─ useFieldVersioning                 │ 3625-3700       │ Histórico de versões      ║
@@ -125,8 +125,9 @@ import useCloudSync, { type UseCloudSyncReturn, type SharedLibrary } from './hoo
 import LoginMagicModal from './components/LoginMagicModal';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 
-// v1.36.61: Zustand Stores - Estado global gerenciado
+// v1.36.61+: Zustand Stores - Estado global gerenciado
 import { useModalManagerCompat } from './stores/useUIStore';
+import { useAISettingsCompat } from './stores/useAIStore';
 
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
 import AdminPanel from './components/AdminPanel';
@@ -214,7 +215,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.61'; // v1.36.61: useModalManager migrado para Zustand
+const APP_VERSION = '1.36.62'; // v1.36.62: useAIIntegration config migrado para Zustand
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -1167,112 +1168,8 @@ const aiGenerationReducer = (state: AIGenState, action: AIGenAction): AIGenState
 };
 
 const useAIIntegration = () => {
-  const [aiSettings, setAiSettingsState] = React.useState<AISettings>({
-    // v1.30: Multi-provider support (v1.35.97: +OpenAI +Grok)
-    provider: 'claude',  // 'claude' | 'gemini' | 'openai' | 'grok'
-    claudeModel: 'claude-sonnet-4-20250514',
-    geminiModel: 'gemini-3-flash-preview',  // v1.32.36: Removido suporte a Gemini 2.5
-    openaiModel: 'gpt-5.2-chat-latest',     // v1.35.97: GPT-5.2 Instant (rápido)
-    openaiReasoningLevel: 'medium',          // v1.35.97: low | medium | high | xhigh
-    grokModel: 'grok-4-1-fast-reasoning',    // v1.35.97: Grok 4.1 Fast (2M contexto)
-    apiKeys: {
-      claude: '',  // Chave Anthropic (sk-ant-...)
-      gemini: '',  // Chave Google (AIza...)
-      openai: '',  // Chave OpenAI (sk-...)
-      grok: ''     // Chave xAI (xai-...)
-    },
-    // Gemini 3 specific: thinking_level instead of thinking_budget
-    geminiThinkingLevel: 'high',  // 'minimal' | 'low' | 'medium' | 'high'
-    // Legacy model field (for backwards compatibility)
-    model: 'claude-sonnet-4-20250514',
-    useExtendedThinking: false,
-    thinkingBudget: '10000',
-    customPrompt: '',
-    modeloRelatorio: '',
-    modeloDispositivo: '',
-    modeloTopicoRelatorio: '',
-    topicosComplementares: [
-      { id: 1, title: 'HONORÁRIOS ADVOCATÍCIOS', category: 'MÉRITO', enabled: true, ordem: 1 },
-      { id: 2, title: 'HONORÁRIOS PERICIAIS', category: 'MÉRITO', enabled: true, ordem: 2 },
-      { id: 3, title: 'JUROS E CORREÇÃO MONETÁRIA', category: 'MÉRITO', enabled: true, ordem: 3 },
-      { id: 4, title: 'DEDUÇÕES DE NATUREZA PREVIDENCIÁRIA E FISCAL', category: 'MÉRITO', enabled: true, ordem: 4 },
-      { id: 5, title: 'COMPENSAÇÃO/DEDUÇÃO/ABATIMENTO', category: 'MÉRITO', enabled: true, ordem: 5 }
-    ],
-    ocrEngine: 'pdfjs',  // Valores: 'pdfjs' | 'tesseract' | 'pdf-puro' | 'claude-vision'
-    ocrLanguage: 'por',
-    detailedMiniReports: false,
-    topicsPerRequest: 1,
-    parallelRequests: 5,  // v1.33.11: Requisições paralelas configuráveis (3-20)
-    // v1.16.0: Anonimização de dados sensíveis (só funciona com ocrEngine: 'pdfjs')
-    anonymization: {
-      enabled: false,
-      cpf: true,
-      rg: true,
-      pis: true,
-      ctps: true,
-      telefone: true,
-      email: true,
-      contaBancaria: true,
-      valores: false,
-      nomes: true,
-      nomesUsuario: []
-    },
-    // v1.35.74: IA Local settings (antes em localStorage separado)
-    semanticSearchEnabled: false,
-    semanticThreshold: 50,
-    jurisSemanticEnabled: false,
-    jurisSemanticThreshold: 50,
-    modelSemanticEnabled: false,
-    modelSemanticThreshold: 40,
-    useLocalAIForSuggestions: false,
-    useLocalAIForJuris: false,
-    // v1.20.0: Prompts rápidos para o Assistente IA
-    quickPrompts: [
-      {
-        id: 'qp-1',
-        label: 'Avaliar Decisão',
-        prompt: 'Avalie criticamente a qualidade da decisão/fundamentação que redigi. IMPORTANTE: Não me bajule nem seja condescendente - quero uma avaliação genuinamente crítica que me ajude a melhorar efetivamente. Seja direto ao apontar problemas. Considere: (1) coerência com os fatos narrados nos documentos, (2) adequação jurídica aos pedidos, (3) clareza e objetividade da redação, (4) possíveis lacunas ou inconsistências. Priorize apontar o que precisa melhorar, não o que está bom.'
-      },
-      {
-        id: 'qp-2',
-        label: 'Sugerir Melhorias',
-        prompt: 'Sugira melhorias específicas para o texto da decisão que redigi, mantendo o mesmo entendimento jurídico mas aprimorando a redação, clareza e fundamentação.'
-      },
-      {
-        id: 'qp-3',
-        label: 'Verificar Omissões',
-        prompt: 'Verifique se há pedidos, argumentos ou provas relevantes nos documentos que não foram adequadamente abordados na minha decisão. Liste qualquer omissão encontrada.'
-      },
-      {
-        id: 'qp-4',
-        label: 'Análise de Prova Oral',
-        prompt: '**INSTRUÇÃO CRÍTICA**: Analise a prova oral EXCLUSIVAMENTE sobre "{TOPICO}".\n\nREGRAS OBRIGATÓRIAS:\n1. IGNORE 100% de qualquer trecho que NÃO trate de "{TOPICO}"\n2. NÃO mencione outros assuntos discutidos nos depoimentos\n3. Se um depoente falou sobre múltiplos temas, extraia APENAS o que se refere a "{TOPICO}"\n4. Se não houver NENHUMA menção a "{TOPICO}", responda: "Não há menção a {TOPICO} nesta prova oral."\n\nProduza um resumo estruturado APENAS com trechos relevantes a "{TOPICO}", com minutagem quando disponível:\n\nAUTOR: [afirmação sobre {TOPICO}] (mm:ss);\nPREPOSTO: [afirmação sobre {TOPICO}] (mm:ss);\nTestemunha [nome]: [afirmação sobre {TOPICO}] (mm:ss);\n\n⚠️ LEMBRE-SE: Analise SOMENTE "{TOPICO}". Outros assuntos devem ser COMPLETAMENTE ignorados.'
-      }
-    ],
-    // v1.36.50: Double Check de respostas da IA
-    // v1.36.56: Adicionado dispositivo, sentenceReview e thinking config
-    doubleCheck: {
-      enabled: false,
-      provider: 'claude',
-      model: 'claude-sonnet-4-20250514',
-      operations: {
-        topicExtraction: false,
-        dispositivo: false,
-        sentenceReview: false,
-        factsComparison: false  // v1.36.58
-      }
-    }
-  });
-
-  // v1.20.3: Contador de tokens persistente por projeto
-  const [tokenMetrics, setTokenMetrics] = React.useState<TokenMetrics>({
-    totalInput: 0,
-    totalOutput: 0,
-    totalCacheRead: 0,
-    totalCacheCreation: 0,
-    requestCount: 0,
-    lastUpdated: null
-  });
+  // v1.36.62: Estado migrado para Zustand - ver src/stores/useAIStore.ts
+  const { aiSettings, setAiSettings, tokenMetrics, setTokenMetrics, addTokenUsage } = useAISettingsCompat();
 
   // 🔧 Estado consolidado de geração de IA (useReducer)
   const [aiGeneration, dispatchAI] = React.useReducer(aiGenerationReducer, aiGenerationInitialState);
@@ -1365,116 +1262,22 @@ const useAIIntegration = () => {
     []
   );
 
-  // Load AI Settings
-  React.useEffect(() => {
-    const loadAiSettings = () => {
-      try {
-        const saved = localStorage.getItem('sentencify-ai-settings');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-
-          // v1.30: Migração para multi-provider (garante defaults para campos novos)
-          if (!parsed.provider) parsed.provider = 'claude';
-          if (!parsed.claudeModel) parsed.claudeModel = parsed.model || 'claude-sonnet-4-20250514';
-          // v1.32.36: Migrar Gemini 2.5 → Gemini 3
-          if (!parsed.geminiModel || parsed.geminiModel.includes('2.5')) {
-            parsed.geminiModel = 'gemini-3-flash-preview';
-          }
-          if (!parsed.apiKeys) parsed.apiKeys = { claude: '', gemini: '', openai: '', grok: '' };
-          // v1.36.10: Migrar apiKeys antigas para incluir openai e grok
-          if (!parsed.apiKeys.openai) parsed.apiKeys.openai = '';
-          if (!parsed.apiKeys.grok) parsed.apiKeys.grok = '';
-          if (!parsed.geminiThinkingLevel) parsed.geminiThinkingLevel = 'high';
-
-          // v1.16.0: Deep merge para anonymization (preserva defaults para usuários antigos)
-          if (parsed.anonymization) {
-            parsed.anonymization = {
-              enabled: false, cpf: true, rg: true, pis: true, ctps: true,
-              telefone: true, email: true, contaBancaria: true, valores: false, nomes: true, processo: true,
-              nomesUsuario: [],
-              ...parsed.anonymization
-            };
-          }
-
-          // v1.35.74: Adicionar defaults para campos novos de IA Local
-          const iaLocalDefaults = {
-            semanticSearchEnabled: false,
-            semanticThreshold: 50,
-            jurisSemanticEnabled: false,
-            jurisSemanticThreshold: 50,
-            modelSemanticEnabled: false,
-            modelSemanticThreshold: 40,
-            useLocalAIForSuggestions: false,
-            useLocalAIForJuris: false
-          };
-          // Merge: defaults primeiro, depois valores salvos sobrescrevem
-          Object.keys(iaLocalDefaults).forEach(key => {
-            if (parsed[key] === undefined) {
-              parsed[key] = (iaLocalDefaults as Record<string, unknown>)[key];
-            }
-          });
-
-          // v1.21.2: Merge inteligente de quickPrompts
-          // - Preserva quick prompts customizados do usuário (IDs que não são qp-1 a qp-4)
-          // - Atualiza quick prompts padrão com versões mais recentes do código
-          const defaultQpIds = ['qp-1', 'qp-2', 'qp-3', 'qp-4'];
-          const userCustomQps = (parsed.quickPrompts || []).filter((qp: QuickPrompt) => !defaultQpIds.includes(qp.id));
-          const { quickPrompts: _ignoredQp, ...parsedWithoutQp } = parsed;
-          setAiSettingsState(prev => ({
-            ...prev,
-            ...parsedWithoutQp,
-            quickPrompts: [
-              ...prev.quickPrompts.filter((qp: QuickPrompt) => defaultQpIds.includes(qp.id)), // defaults do código
-              ...userCustomQps // customizados do usuário
-            ]
-          }));
-        }
-      } catch (err) {
-        console.warn('[loadAiSettings] Erro ao carregar configurações:', err instanceof Error ? (err as Error).message : err);
-      }
-    };
-
-    loadAiSettings();
-  }, []);
-
-  // Save AI Settings - v1.21.13: suporta tanto objeto direto quanto função updater
-  const setAiSettings = React.useCallback((newSettingsOrUpdater: AISettings | ((prev: AISettings) => AISettings)) => {
-    if (typeof newSettingsOrUpdater === 'function') {
-      setAiSettingsState(prev => {
-        const newSettings = newSettingsOrUpdater(prev);
-        try {
-          localStorage.setItem('sentencify-ai-settings', JSON.stringify(newSettings));
-        } catch (err) {}
-        return newSettings;
-      });
-    } else {
-      setAiSettingsState(newSettingsOrUpdater);
-      try {
-        localStorage.setItem('sentencify-ai-settings', JSON.stringify(newSettingsOrUpdater));
-      } catch (err) {}
-    }
-  }, []);
+  // v1.36.62: Load/Save AI Settings agora é gerenciado pelo Zustand store (useAIStore.ts)
+  // A persistência acontece automaticamente via middleware 'persist'
 
   // Utilities
   // v1.20.3: Modificado para acumular tokens no estado persistente
+  // v1.36.62: Usa addTokenUsage do Zustand store
   const logCacheMetrics = React.useCallback((data: { usage?: { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number } }) => {
     if (data.usage) {
-      const input = data.usage.input_tokens || 0;
-      const output = data.usage.output_tokens || 0;
-      const cacheRead = data.usage.cache_read_input_tokens || 0;
-      const cacheCreation = data.usage.cache_creation_input_tokens || 0;
-
-      // Acumular no contador persistente
-      setTokenMetrics(prev => ({
-        totalInput: (prev.totalInput || 0) + input,
-        totalOutput: (prev.totalOutput || 0) + output,
-        totalCacheRead: (prev.totalCacheRead || 0) + cacheRead,
-        totalCacheCreation: (prev.totalCacheCreation || 0) + cacheCreation,
-        requestCount: (prev.requestCount || 0) + 1,
-        lastUpdated: new Date().toISOString()
-      }));
+      addTokenUsage({
+        input: data.usage.input_tokens || 0,
+        output: data.usage.output_tokens || 0,
+        cacheRead: data.usage.cache_read_input_tokens || 0,
+        cacheCreation: data.usage.cache_creation_input_tokens || 0
+      });
     }
-  }, []);
+  }, [addTokenUsage]);
 
   // Retorna array com cache_control para Prompt Caching
   // v1.35.76: Estilo personalizado SUBSTITUI (não complementa) o estilo default
