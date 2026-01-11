@@ -57,6 +57,10 @@ export {
 } from './useJurisprudencia';
 export type { UseJurisprudenciaReturn } from './useJurisprudencia';
 
+// Chat Assistant hook (TIER 0 - sem dependências)
+export { useChatAssistant, MAX_CHAT_HISTORY_MESSAGES } from './useChatAssistant';
+export type { UseChatAssistantReturn } from './useChatAssistant';
+
 // Cloud/Auth hooks (production - not test versions)
 export { useGoogleDrive } from './useGoogleDrive';
 export { useAuthMagicLink } from './useAuthMagicLink';

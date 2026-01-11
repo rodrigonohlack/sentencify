@@ -135,7 +135,8 @@ import { useProofManagerCompat } from './stores/useProofsStore';
 // v1.36.66: Hooks TIER 0 extraídos para arquivos separados
 // v1.36.69: useIndexedDB (TIER 1), validateModel, sanitizeModel extraídos
 // v1.36.72: useJurisprudencia extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB } from './hooks';
+// v1.36.73: useChatAssistant extraído
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES } from './hooks';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
 
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
@@ -224,7 +225,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.72'; // v1.36.71: useLegislacao extraído para src/hooks/ (~180 linhas removidas)
+const APP_VERSION = '1.36.73'; // v1.36.71: useLegislacao extraído para src/hooks/ (~180 linhas removidas)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -242,7 +243,7 @@ const API_BASE = getApiBase();
 const AUTO_SAVE_DEBOUNCE_MS = 5000;
 
 // v1.19.0: Limite de mensagens no chat do assistente IA
-const MAX_CHAT_HISTORY_MESSAGES = 20;
+// MAX_CHAT_HISTORY_MESSAGES extraído para src/hooks/useChatAssistant.ts (v1.36.73)
 
 // v1.19.3: Instrução reformulada - CONSULTAR DOCUMENTOS antes de perguntar
 const INSTRUCAO_NAO_PRESUMIR = `🚨 REGRA CRÍTICA - CONSULTAR DOCUMENTOS ANTES DE PERGUNTAR:
@@ -4989,119 +4990,7 @@ const useTopicManager = () => {
   return useTopicManagerCompat();
 };
 
-// 💬 HOOK: useChatAssistant (v1.19.0) - Gerenciador de chat interativo para assistente IA
-const useChatAssistant = (aiIntegration: { callAI?: CallAIFunction } | null) => {
-  const [history, setHistory] = React.useState<ChatMessage[]>([]);
-  const [generating, setGenerating] = React.useState(false);
-
-  // Limpa histórico
-  const clear = React.useCallback(() => setHistory([]), []);
-
-  // Última resposta da IA
-  const lastResponse = React.useMemo(() =>
-    [...history].reverse().find(m => m.role === 'assistant')?.content || null
-  , [history]);
-
-  // Envia mensagem e atualiza histórico
-  // 🆕 v1.19.5: Suporta contextBuilder assíncrono
-  const send = React.useCallback(async (message: string, contextBuilder: (msg: string) => AIMessageContent[] | string | Promise<AIMessageContent[] | string>) => {
-    if (!message?.trim()) return { success: false, error: 'Mensagem vazia' };
-    if (!aiIntegration?.callAI) return { success: false, error: 'IA não disponível' };
-
-    setGenerating(true);
-
-    try {
-      const apiMessages = [];
-      // 🆕 v1.19.5: Calcular contexto antes (suporta async)
-      let contextContent = null;
-
-      if (history.length === 0) {
-        // Primeira interação: contexto completo + mensagem
-        contextContent = await Promise.resolve(contextBuilder(message));
-        apiMessages.push({
-          role: 'user' as const,
-          content: contextContent || ''
-        });
-      } else {
-        // Interações seguintes: reconstrói histórico completo
-        // Primeira mensagem com contexto (para cache hit)
-        apiMessages.push({
-          role: 'user' as const,
-          content: history[0].contentForApi || ''
-        });
-
-        // Resto do histórico
-        for (let i = 1; i < history.length; i++) {
-          apiMessages.push({
-            role: history[i].role as 'user' | 'assistant',
-            content: history[i].content
-          });
-        }
-
-        // Nova mensagem
-        apiMessages.push({
-          role: 'user' as const,
-          content: message
-        });
-      }
-
-      // v1.21.26: Parametros para assistente interativo (criativo moderado)
-      // v1.32.26: maxTokens aumentado para 16000 (respostas longas no chat)
-      const response = await aiIntegration.callAI(apiMessages, {
-        maxTokens: 16000,
-        useInstructions: true,
-        logMetrics: true,
-        temperature: 0.5,
-        topP: 0.9,
-        topK: 80
-      });
-
-      const trimmedResponse = response.trim();
-
-      // Atualiza histórico (com limite)
-      setHistory(prev => {
-        let newHistory: ChatMessage[];
-        if (prev.length === 0) {
-          // Primeira interação: salvar content completo para cache
-          newHistory = [
-            { role: 'user', content: message, contentForApi: contextContent ?? undefined, ts: Date.now() },
-            { role: 'assistant', content: trimmedResponse, ts: Date.now() }
-          ];
-        } else {
-          // Interações seguintes
-          newHistory = [
-            ...prev,
-            { role: 'user', content: message, ts: Date.now() },
-            { role: 'assistant', content: trimmedResponse, ts: Date.now() }
-          ];
-        }
-
-        // Aplicar limite de mensagens (manter primeira msg com contexto + últimas N)
-        if (newHistory.length > MAX_CHAT_HISTORY_MESSAGES) {
-          const firstMsg = newHistory[0]; // Manter contexto
-          const recentMsgs = newHistory.slice(-(MAX_CHAT_HISTORY_MESSAGES - 1));
-          return [firstMsg, ...recentMsgs];
-        }
-
-        return newHistory;
-      });
-
-      return { success: true };
-
-    } catch (err) {
-      // Adiciona mensagem de erro ao histórico
-      setHistory(prev => [
-        ...prev,
-        { role: 'user', content: message, ts: Date.now(), error: (err as Error).message }
-      ]);
-      return { success: false, error: (err as Error).message };
-    } finally {
-      setGenerating(false);
-    }
-  }, [history, aiIntegration]);
-
-  return { history, generating, send, clear, lastResponse };
-};
+// useChatAssistant extraído para src/hooks/useChatAssistant.ts (v1.36.73)
 
 // useJurisprudencia extraído para src/hooks/useJurisprudencia.ts (v1.36.72)
 
