@@ -2,6 +2,11 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.70', feature: 'Testes REAIS para 9 hooks extraídos (411 testes passando), regra #10 CLAUDE.md (testes devem importar código de produção), deletados 6 testes inefetivos' },
+  { version: '1.36.69', feature: 'FASE 3 TIER 1: useIndexedDB extraído para src/hooks/ + validateModel, sanitizeModel (~527 linhas removidas)' },
+  { version: '1.36.68', feature: 'FASE 3 TIER 0 completo: useAPICache, usePrimaryTabLock, useFieldVersioning extraídos (~340 linhas removidas)' },
+  { version: '1.36.67', feature: 'FASE 3: useThrottledBroadcast extraído para src/hooks/ (~50 linhas removidas)' },
+  { version: '1.36.66', feature: 'FASE 3 Hooks TIER 0: useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags extraídos para src/hooks/ (~245 linhas removidas)' },
   { version: '1.36.65', feature: 'Zustand Migration Wave 3: useProofManager migrado para useProofsStore.ts (~290 linhas removidas do App.tsx)' },
   { version: '1.36.64', feature: 'Zustand Migration Wave 3: useTopicManager migrado para useTopicsStore.ts (~180 linhas removidas do App.tsx)' },
   { version: '1.36.63', feature: 'Zustand Migration Wave 3: useModelLibrary migrado para useModelsStore.ts (core data, busca, filtros, formulário)' },
