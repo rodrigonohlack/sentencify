@@ -129,7 +129,7 @@ import SyncStatusIndicator from './components/SyncStatusIndicator';
 import { useModalManagerCompat } from './stores/useUIStore';
 import { useAISettingsCompat } from './stores/useAIStore';
 import { useModelLibraryCompat } from './stores/useModelsStore';
-import { useTopicManagerCompat } from './stores/useTopicsStore';
+// useTopicManagerCompat movido para src/hooks/useTopicManager.ts (v1.36.77)
 import { useProofManagerCompat } from './stores/useProofsStore';
 
 // v1.36.66: Hooks TIER 0 extraídos para arquivos separados
@@ -139,7 +139,8 @@ import { useProofManagerCompat } from './stores/useProofsStore';
 // v1.36.74: useModelPreview extraído
 // v1.36.75: useLocalStorage extraído (inclui PDF IndexedDB helpers)
 // v1.36.76: useProofManager, useDocumentManager extraídos
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager } from './hooks';
+// v1.36.77: useTopicManager extraído
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager } from './hooks';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
 import { APP_VERSION } from './constants/app-version';
 
@@ -3183,12 +3184,7 @@ const generateModelId = () => {
 
 // useDocumentManager extraído para src/hooks/useDocumentManager.ts (v1.36.76)
 
-// 🎯 HOOK: useTopicManager (v1.36.64) - Gerenciador de tópicos de decisão
-// v1.36.64: Estado migrado para Zustand (useTopicsStore.ts)
-const useTopicManager = () => {
-  // Delega todo o estado e ações para o store Zustand
-  return useTopicManagerCompat();
-};
+// useTopicManager extraído para src/hooks/useTopicManager.ts (v1.36.77)
 
 // useChatAssistant extraído para src/hooks/useChatAssistant.ts (v1.36.73)
 

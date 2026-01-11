@@ -93,3 +93,7 @@ export type { UseProofManagerReturn } from './useProofManager';
 // Document Manager hook (TIER 1 - dependências: useLocalStorage)
 export { useDocumentManager } from './useDocumentManager';
 export type { UseDocumentManagerReturn } from './useDocumentManager';
+
+// Topic Manager hook (TIER 1 - dependências: Zustand stores)
+export { useTopicManager } from './useTopicManager';
+export type { UseTopicManagerReturn } from './useTopicManager';
