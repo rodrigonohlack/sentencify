@@ -250,6 +250,7 @@ export interface DoubleCheckOperations {
   topicExtraction: boolean;
   dispositivo: boolean;      // v1.36.56: Verificação do dispositivo
   sentenceReview: boolean;   // v1.36.56: Verificação da revisão de sentença
+  factsComparison: boolean;  // v1.36.58: Verificação do confronto de fatos
 }
 
 /** Configurações de Double Check */
@@ -281,6 +282,13 @@ export interface DoubleCheckCorrection {
   from?: string;
   to?: string;
   reason: string;
+}
+
+/** Retorno da função performDoubleCheck */
+export interface PerformDoubleCheckReturn {
+  verified: string;
+  corrections: DoubleCheckCorrection[];
+  summary: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1732,6 +1740,11 @@ export interface GlobalEditorModalProps {
   aiIntegration?: {
     aiSettings: AISettings;
     callAI: (messages: AIMessage[], options?: AICallOptions) => Promise<string>;
+    performDoubleCheck?: (
+      operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison',
+      originalResponse: string,
+      context: string
+    ) => Promise<PerformDoubleCheckReturn>;
   } | null;
   detectResultadoAutomatico?: ((topicTitle: string, fundamentacao: string, category: TopicCategory) => Promise<string | null>) | null;
   onSlashCommand?: OnSlashCommandCallback | null;

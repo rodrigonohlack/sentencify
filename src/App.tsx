@@ -208,7 +208,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.57'; // v1.36.57: Cache infinito para Revisar Sentença
+const APP_VERSION = '1.36.58'; // v1.36.58: Double Check para Confronto de Fatos
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -1704,7 +1704,8 @@ const useAIIntegration = () => {
       operations: {
         topicExtraction: false,
         dispositivo: false,
-        sentenceReview: false
+        sentenceReview: false,
+        factsComparison: false  // v1.36.58
       }
     }
   });
@@ -2986,9 +2987,9 @@ ${AI_INSTRUCTIONS_SAFETY}`;
    * @param context - Documentos/contexto original
    * @param onProgress - Callback de progresso opcional
    */
-  // v1.36.56: Atualizado para suportar dispositivo e sentenceReview
+  // v1.36.58: Atualizado para suportar factsComparison
   const performDoubleCheck = React.useCallback(async (
-    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview',
+    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison',
     originalResponse: string,
     context: string,
     onProgress?: (msg: string) => void
@@ -16731,15 +16732,58 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
 
       const parsed = JSON.parse(jsonStr);
 
+      // v1.36.58: Double Check do Confronto de Fatos
+      let verifiedParsed = parsed;
+      if (aiIntegration.aiSettings.doubleCheck?.enabled &&
+          aiIntegration.aiSettings.doubleCheck?.operations.factsComparison &&
+          aiIntegration.performDoubleCheck) {
+        try {
+          // Contexto depende do source usado
+          let contextText: string;
+          if (source === 'mini-relatorio') {
+            const relatorio = topic.editedRelatorio || topic.relatorio || '';
+            contextText = `MINI-RELATÓRIO DO TÓPICO "${topic.title}":\n${relatorio}`;
+          } else {
+            // documentos-completos
+            const peticaoText = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+            const contestacaoText = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+            const impugnacaoText = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
+
+            contextText = [
+              peticaoText && `PETIÇÃO INICIAL:\n${peticaoText}`,
+              contestacaoText && `CONTESTAÇÃO:\n${contestacaoText}`,
+              impugnacaoText && `IMPUGNAÇÃO/RÉPLICA:\n${impugnacaoText}`
+            ].filter(Boolean).join('\n\n---\n\n');
+          }
+
+          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+            'factsComparison',
+            JSON.stringify(parsed, null, 2),
+            contextText
+          );
+
+          if (corrections.length > 0) {
+            const verifiedObj = JSON.parse(verified);
+            // Extrair o resultado verificado (pode estar em verifiedResult ou ser o objeto inteiro)
+            verifiedParsed = verifiedObj.verifiedResult || verifiedObj;
+            showToast?.(`🔄 Double Check: ${corrections.length} correção(ões) - ${summary}`, 'info');
+            console.log('[DoubleCheck FactsComparison] Correções:', corrections);
+          }
+        } catch (dcError) {
+          console.error('[DoubleCheck FactsComparison] Erro:', dcError);
+          // Continuar com parsed original em caso de erro
+        }
+      }
+
       const result: FactsComparisonResult = {
         topicTitle: topic.title,
         source,
         generatedAt: new Date().toISOString(),
-        tabela: parsed.tabela || [],
-        fatosIncontroversos: parsed.fatosIncontroversos || [],
-        fatosControversos: parsed.fatosControversos || [],
-        pontosChave: parsed.pontosChave || [],
-        resumo: parsed.resumo || ''
+        tabela: verifiedParsed.tabela || [],
+        fatosIncontroversos: verifiedParsed.fatosIncontroversos || [],
+        fatosControversos: verifiedParsed.fatosControversos || [],
+        pontosChave: verifiedParsed.pontosChave || [],
+        resumo: verifiedParsed.resumo || ''
       };
 
       // Salvar no cache
@@ -24835,15 +24879,57 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
 
       const parsed = JSON.parse(jsonStr);
 
+      // v1.36.58: Double Check do Confronto de Fatos (Individual)
+      let verifiedParsed = parsed;
+      if (aiIntegration.aiSettings.doubleCheck?.enabled &&
+          aiIntegration.aiSettings.doubleCheck?.operations.factsComparison) {
+        try {
+          // Contexto depende do source usado
+          let contextText: string;
+          if (source === 'mini-relatorio') {
+            const relatorio = editingTopic.editedRelatorio || editingTopic.relatorio || '';
+            contextText = `MINI-RELATÓRIO DO TÓPICO "${editingTopic.title}":\n${relatorio}`;
+          } else {
+            // documentos-completos
+            const peticaoText = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+            const contestacaoText = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
+            const impugnacaoText = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
+
+            contextText = [
+              peticaoText && `PETIÇÃO INICIAL:\n${peticaoText}`,
+              contestacaoText && `CONTESTAÇÃO:\n${contestacaoText}`,
+              impugnacaoText && `IMPUGNAÇÃO/RÉPLICA:\n${impugnacaoText}`
+            ].filter(Boolean).join('\n\n---\n\n');
+          }
+
+          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+            'factsComparison',
+            JSON.stringify(parsed, null, 2),
+            contextText
+          );
+
+          if (corrections.length > 0) {
+            const verifiedObj = JSON.parse(verified);
+            // Extrair o resultado verificado (pode estar em verifiedResult ou ser o objeto inteiro)
+            verifiedParsed = verifiedObj.verifiedResult || verifiedObj;
+            showToast(`🔄 Double Check: ${corrections.length} correção(ões) - ${summary}`, 'info');
+            console.log('[DoubleCheck FactsComparison Individual] Correções:', corrections);
+          }
+        } catch (dcError) {
+          console.error('[DoubleCheck FactsComparison Individual] Erro:', dcError);
+          // Continuar com parsed original em caso de erro
+        }
+      }
+
       const result: FactsComparisonResult = {
         topicTitle: editingTopic.title,
         source,
         generatedAt: new Date().toISOString(),
-        tabela: parsed.tabela || [],
-        fatosIncontroversos: parsed.fatosIncontroversos || [],
-        fatosControversos: parsed.fatosControversos || [],
-        pontosChave: parsed.pontosChave || [],
-        resumo: parsed.resumo || ''
+        tabela: verifiedParsed.tabela || [],
+        fatosIncontroversos: verifiedParsed.fatosIncontroversos || [],
+        fatosControversos: verifiedParsed.fatosControversos || [],
+        pontosChave: verifiedParsed.pontosChave || [],
+        resumo: verifiedParsed.resumo || ''
       };
 
       // Salvar no cache
@@ -33029,7 +33115,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                       enabled: false,
                       provider: 'claude' as AIProvider,
                       model: 'claude-sonnet-4-20250514',
-                      operations: { topicExtraction: false, dispositivo: false, sentenceReview: false }
+                      operations: { topicExtraction: false, dispositivo: false, sentenceReview: false, factsComparison: false }
                     };
                     aiIntegration.setAiSettings({
                       ...aiIntegration.aiSettings,
@@ -33367,6 +33453,32 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                             <span className="text-sm theme-text-primary">Revisar sentença</span>
                             <p className="text-xs theme-text-muted">
                               Valida análise de omissões, contradições e obscuridades
+                            </p>
+                          </div>
+                        </label>
+                        {/* v1.36.58: Confronto de Fatos */}
+                        <label className="flex items-center gap-3 p-2 rounded-lg hover:theme-bg-secondary cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={aiIntegration.aiSettings.doubleCheck?.operations.factsComparison || false}
+                            onChange={(e) => {
+                              aiIntegration.setAiSettings({
+                                ...aiIntegration.aiSettings,
+                                doubleCheck: {
+                                  ...aiIntegration.aiSettings.doubleCheck!,
+                                  operations: {
+                                    ...aiIntegration.aiSettings.doubleCheck!.operations,
+                                    factsComparison: e.target.checked
+                                  }
+                                }
+                              });
+                            }}
+                            className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500"
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm theme-text-primary">Confronto de fatos</span>
+                            <p className="text-xs theme-text-muted">
+                              Verifica completude, classificação e correção das alegações
                             </p>
                           </div>
                         </label>

@@ -2,7 +2,7 @@
  * Prompts para Double Check de Respostas da IA
  * Verificação secundária para identificar falhas, omissões e falsos positivos
  *
- * @version 1.36.56 - Adicionado dispositivo e sentenceReview
+ * @version 1.36.58 - Adicionado factsComparison
  */
 
 import type { DoubleCheckOperations } from '../types';
@@ -183,7 +183,68 @@ Sua função é verificar se a análise crítica (revisão) está correta e úti
 IMPORTANTE:
 - Se a análise estiver correta, retorne corrections: [] e copie o original em verifiedReview
 - Foque em erros substanciais, não em preferências de redação
-- Use confidence entre 0.0 e 1.0 para indicar sua certeza`
+- Use confidence entre 0.0 e 1.0 para indicar sua certeza`,
+
+  // v1.36.58: Verificação do Confronto de Fatos
+  factsComparison: `## TAREFA: Verificação do Confronto de Fatos
+
+Você é um revisor jurídico especializado em análise comparativa de alegações trabalhistas.
+Sua função é verificar criticamente a tabela de confronto de fatos gerada.
+
+## DOCUMENTOS ORIGINAIS:
+{context}
+
+## CONFRONTO GERADO (a verificar):
+{originalResponse}
+
+## CRITÉRIOS DE VERIFICAÇÃO:
+
+### 1. COMPLETUDE DA TABELA
+- Todos os pontos fáticos relevantes foram incluídos?
+- Há omissões de alegações importantes de qualquer parte?
+- A tabela cobre os elementos essenciais do pedido?
+
+### 2. CORREÇÃO DAS ALEGAÇÕES
+- As alegações atribuídas ao reclamante estão corretas?
+- As alegações atribuídas à reclamada estão corretas?
+- Há distorções ou interpretações incorretas?
+
+### 3. CLASSIFICAÇÃO DE STATUS
+- "controverso": partes divergem sobre o fato
+- "incontroverso": partes concordam (expresso ou tácito)
+- "silencio": uma parte não se manifestou
+- A classificação está correta para cada linha?
+
+### 4. RELEVÂNCIA
+- A relevância (alta/média/baixa) está adequada?
+- Pontos centrais do litígio estão como "alta"?
+
+### 5. FATOS INCONTROVERSOS E CONTROVERSOS
+- As listas estão corretas e completas?
+- Há fatos classificados incorretamente?
+
+## FORMATO DE RESPOSTA (JSON estrito):
+
+\`\`\`json
+{
+  "corrections": [
+    { "type": "add_row", "row": {"tema": "...", "alegacaoReclamante": "...", "alegacaoReclamada": "...", "status": "...", "relevancia": "..."}, "reason": "Fato omitido" },
+    { "type": "fix_row", "tema": "TEMA", "field": "alegacaoReclamante|alegacaoReclamada|status|relevancia", "newValue": "...", "reason": "..." },
+    { "type": "remove_row", "tema": "TEMA", "reason": "..." },
+    { "type": "add_fato", "list": "fatosIncontroversos|fatosControversos", "fato": "...", "reason": "..." },
+    { "type": "remove_fato", "list": "fatosIncontroversos|fatosControversos", "fato": "...", "reason": "..." }
+  ],
+  "verifiedResult": { /* Objeto FactsComparisonResult corrigido ou original */ },
+  "confidence": 0.95,
+  "summary": "Resumo breve das alterações (ou 'Nenhuma correção necessária')"
+}
+\`\`\`
+
+IMPORTANTE:
+- Se o confronto estiver correto, retorne corrections: [] e copie o original em verifiedResult
+- Foque em erros substanciais (omissões, classificações erradas), não em estilo
+- Use confidence entre 0.0 e 1.0 para indicar sua certeza
+- O verifiedResult deve manter a estrutura: tabela, fatosIncontroversos, fatosControversos, pontosChave`
 };
 
 /**
@@ -219,5 +280,9 @@ export const DOUBLE_CHECK_OPERATION_LABELS: Record<DoubleCheckOperation, { label
   sentenceReview: {
     label: 'Revisar sentença',
     description: 'Valida análise de omissões, contradições e obscuridades'
+  },
+  factsComparison: {
+    label: 'Confronto de fatos',
+    description: 'Verifica completude, classificação e correção das alegações'
   }
 };

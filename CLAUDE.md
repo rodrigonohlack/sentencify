@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.57 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.58 | **File**: `src/App.tsx` (~1.3 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -122,6 +122,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.58 | Double Check para Confronto de Fatos: verifica completude, classificação e correção das alegações na tabela comparativa |
 | v1.36.57 | Cache infinito para Revisar Sentença: persiste entre sessões (IndexedDB) e em export/import de projeto, badge de cache, botão regenerar |
 | v1.36.56 | Double Check: novas operações Dispositivo e Revisar Sentença + Config Thinking por modelo (Claude Sonnet/Opus, Gemini Flash/Pro, OpenAI, Grok) |
 | v1.36.51 | Fix contraste Double Check no tema claro: badges "(em breve)" e aviso de custo legíveis em ambos os temas |
