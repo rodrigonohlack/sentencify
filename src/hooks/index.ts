@@ -65,6 +65,16 @@ export type { UseChatAssistantReturn } from './useChatAssistant';
 export { useModelPreview } from './useModelPreview';
 export type { UseModelPreviewReturn, SaveAsNewData } from './useModelPreview';
 
+// LocalStorage hook (TIER 0 - dependências: useFactsComparisonCache, useSentenceReviewCache)
+export {
+  useLocalStorage,
+  savePdfToIndexedDB,
+  getPdfFromIndexedDB,
+  removePdfFromIndexedDB,
+  clearAllPdfsFromIndexedDB
+} from './useLocalStorage';
+export type { UseLocalStorageReturn } from './useLocalStorage';
+
 // Cloud/Auth hooks (production - not test versions)
 export { useGoogleDrive } from './useGoogleDrive';
 export { useAuthMagicLink } from './useAuthMagicLink';
