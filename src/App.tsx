@@ -129,6 +129,7 @@ import SyncStatusIndicator from './components/SyncStatusIndicator';
 import { useModalManagerCompat } from './stores/useUIStore';
 import { useAISettingsCompat } from './stores/useAIStore';
 import { useModelLibraryCompat } from './stores/useModelsStore';
+import { useTopicManagerCompat } from './stores/useTopicsStore';
 
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
 import AdminPanel from './components/AdminPanel';
@@ -216,7 +217,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.63'; // v1.36.63: useModelLibrary migrado para Zustand
+const APP_VERSION = '1.36.64'; // v1.36.64: useTopicManager migrado para Zustand
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -6610,191 +6611,11 @@ const useDocumentManager = (clearPdfCache?: () => void) => {
   };
 };
 
-// 🎯 HOOK: useTopicManager (v1.2.7d) - Gerenciador de tópicos de decisão
+// 🎯 HOOK: useTopicManager (v1.36.64) - Gerenciador de tópicos de decisão
+// v1.36.64: Estado migrado para Zustand (useTopicsStore.ts)
 const useTopicManager = () => {
-
-  // 📊 ESTADOS (12) - ETAPA 7d
-
-  // Tópicos Principais (2)
-  const [extractedTopics, setExtractedTopics] = React.useState<Topic[]>([]);
-  const [selectedTopics, setSelectedTopics] = React.useState<Topic[]>([]);
-
-  // Estado de Edição (3)
-  const [editingTopic, setEditingTopic] = React.useState<Topic | null>(null);
-  const [lastEditedTopicTitle, setLastEditedTopicTitle] = React.useState<string | null>(null);
-  const [topicContextScope, setTopicContextScope] = React.useState('current');
-
-  // Estados de UI/Progresso (1)
-  const [savingTopic, setSavingTopic] = React.useState(false);
-
-  // Estados de Manipulação de Tópicos (7)
-  // Deleção
-  const [topicToDelete, setTopicToDelete] = React.useState<Topic | null>(null);
-
-  // Renomeação
-  const [topicToRename, setTopicToRename] = React.useState<Topic | null>(null);
-  const [newTopicName, setNewTopicName] = React.useState('');
-
-  // Merge (mesclagem)
-  const [topicsToMerge, setTopicsToMerge] = React.useState<Topic[]>([]);
-
-  // Split (divisão)
-  const [topicToSplit, setTopicToSplit] = React.useState<Topic | null>(null);
-  const [splitNames, setSplitNames] = React.useState(['', '']);
-
-  // Novo tópico
-  const [newTopicData, setNewTopicData] = React.useState<Partial<Topic> | null>(null);
-
-  // 🛠️ HANDLERS DE UI E PREPARAÇÃO (5) - ETAPA 7e
-
-  const prepareDeleteTopic = (topic: Topic) => {
-    setTopicToDelete(topic);
-  };
-
-  const prepareRenameTopic = (topic: Topic) => {
-    setTopicToRename(topic);
-    setNewTopicName(topic.title);
-  };
-
-  const prepareMergeTopics = (topics: Topic[]) => {
-    setTopicsToMerge(topics);
-  };
-
-  const prepareSplitTopic = (topic: Topic) => {
-    setTopicToSplit(topic);
-    setSplitNames(['', '']);
-  };
-
-  const prepareNewTopic = (category: TopicCategory = 'MÉRITO') => {
-    setNewTopicData({
-      title: '',
-      category,
-      relatorio: '',
-      fundamentacao: ''
-    });
-  };
-
-  // ✅ HANDLERS DE CONFIRMAÇÃO E OPERAÇÕES (3) - ETAPA 7e
-
-  const confirmDeleteTopic = () => {
-    if (!topicToDelete) return;
-
-    setSelectedTopics(prev =>
-      prev.filter(t => t.title !== topicToDelete.title)
-    );
-    setTopicToDelete(null);
-  };
-
-  const cancelOperation = () => {
-    setTopicToDelete(null);
-    setTopicToRename(null);
-    setNewTopicName('');
-    setTopicsToMerge([]);
-    setTopicToSplit(null);
-    setSplitNames(['', '']);
-    setNewTopicData(null);
-  };
-
-  const updateSelectedTopics = (topics: Topic[]) => {
-    setSelectedTopics(topics);
-  };
-
-  // 💾 MÉTODOS DE PERSISTÊNCIA (3) - ETAPA 7e
-
-  const serializeForPersistence = () => {
-    return {
-      extractedTopics,
-      selectedTopics,
-      editingTopic,
-      lastEditedTopicTitle
-    };
-  };
-
-  const restoreFromPersistence = (data: Record<string, unknown> | null) => {
-    if (!data) return;
-
-    if (data.extractedTopics) setExtractedTopics(data.extractedTopics as Topic[]);
-    if (data.selectedTopics) setSelectedTopics(data.selectedTopics as Topic[]);
-    if (data.editingTopic) setEditingTopic(data.editingTopic as Topic | null);
-    if (data.lastEditedTopicTitle) setLastEditedTopicTitle(data.lastEditedTopicTitle as string | null);
-  };
-
-  const clearAll = () => {
-    setExtractedTopics([]);
-    setSelectedTopics([]);
-    setEditingTopic(null);
-    setLastEditedTopicTitle(null);
-    setSavingTopic(false);
-    setTopicToDelete(null);
-    setTopicToRename(null);
-    setNewTopicName('');
-    setTopicsToMerge([]);
-    setTopicToSplit(null);
-    setSplitNames(['', '']);
-    setNewTopicData(null);
-  };
-
-  // 🎁 RETORNO DO HOOK
-  return {
-    // Estados Tópicos (2)
-    extractedTopics,
-    selectedTopics,
-
-    // Estados Edição (3)
-    editingTopic,
-    lastEditedTopicTitle,
-    topicContextScope,
-
-    // Estados UI (1)
-    savingTopic,
-
-    // Estados Manipulação (7)
-    topicToDelete,
-    topicToRename,
-    newTopicName,
-    topicsToMerge,
-    topicToSplit,
-    splitNames,
-    newTopicData,
-
-    // Setters Tópicos (2)
-    setExtractedTopics,
-    setSelectedTopics,
-
-    // Setters Edição (3)
-    setEditingTopic,
-    setLastEditedTopicTitle,
-    setTopicContextScope,
-
-    // Setters UI (1)
-    setSavingTopic,
-
-    // Setters Manipulação (7)
-    setTopicToDelete,
-    setTopicToRename,
-    setNewTopicName,
-    setTopicsToMerge,
-    setTopicToSplit,
-    setSplitNames,
-    setNewTopicData,
-
-    // Handlers de UI/Preparação (5) - ETAPA 7e
-    prepareDeleteTopic,
-    prepareRenameTopic,
-    prepareMergeTopics,
-    prepareSplitTopic,
-    prepareNewTopic,
-
-    // Handlers de Confirmação (3) - ETAPA 7e
-    confirmDeleteTopic,
-    cancelOperation,
-    updateSelectedTopics,
-
-    // Métodos de Persistência (3) - ETAPA 7e
-    serializeForPersistence,
-    restoreFromPersistence,
-    clearAll
-  };
+  // Delega todo o estado e ações para o store Zustand
+  return useTopicManagerCompat();
 };
 
 // 💬 HOOK: useChatAssistant (v1.19.0) - Gerenciador de chat interativo para assistente IA
