@@ -134,7 +134,8 @@ import { useProofManagerCompat } from './stores/useProofsStore';
 
 // v1.36.66: Hooks TIER 0 extraídos para arquivos separados
 // v1.36.69: useIndexedDB (TIER 1), validateModel, sanitizeModel extraídos
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural } from './hooks';
+// v1.36.72: useJurisprudencia extraído
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB } from './hooks';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
 
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
@@ -223,7 +224,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 
 // 🔧 VERSÃO DA APLICAÇÃO
-const APP_VERSION = '1.36.71'; // v1.36.71: useLegislacao extraído para src/hooks/ (~180 linhas removidas)
+const APP_VERSION = '1.36.72'; // v1.36.71: useLegislacao extraído para src/hooks/ (~180 linhas removidas)
 
 // v1.33.31: URL base da API (detecta host automaticamente: Render, Vercel, ou localhost)
 const getApiBase = () => {
@@ -2584,66 +2585,9 @@ const clearAllPdfsFromIndexedDB = async () => {
   }
 };
 
-// 📦 SERVIÇO IndexedDB para Jurisprudência
-const JURIS_DB_NAME = 'sentencify-jurisprudencia';
-const JURIS_STORE_NAME = 'precedentes';
-
-const openJurisDB = (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
-  const request = indexedDB.open(JURIS_DB_NAME, 2);
-  request.onerror = () => reject(request.error);
-  request.onsuccess = () => resolve(request.result);
-  request.onupgradeneeded = (e: IDBVersionChangeEvent) => {
-    const db = (e.target as IDBOpenDBRequest).result;
-    if (!db.objectStoreNames.contains(JURIS_STORE_NAME)) {
-      const store = db.createObjectStore(JURIS_STORE_NAME, { keyPath: 'id' });
-      store.createIndex('byCategory', 'category', { unique: false });
-      store.createIndex('byTipo', 'tipoProcesso', { unique: false });
-      store.createIndex('byTribunal', 'tribunal', { unique: false });
-    } else if (e.oldVersion < 2) {
-      const store = ((e.target as IDBOpenDBRequest).transaction as IDBTransaction).objectStore(JURIS_STORE_NAME);
-      if (!store.indexNames.contains('byTribunal')) {
-        store.createIndex('byTribunal', 'tribunal', { unique: false });
-      }
-    }
-  };
-});
-
-const savePrecedentesToIndexedDB = async (precedentes: Precedente[]): Promise<void> => {
-  const db = await openJurisDB();
-  const tx = db.transaction([JURIS_STORE_NAME], 'readwrite');
-  const store = tx.objectStore(JURIS_STORE_NAME);
-  for (const p of precedentes) store.put(p);
-  db.close();
-};
-
-const loadPrecedentesFromIndexedDB = async (): Promise<Precedente[]> => {
-  try {
-    const db = await openJurisDB();
-    const tx = db.transaction([JURIS_STORE_NAME], 'readonly');
-    const store = tx.objectStore(JURIS_STORE_NAME);
-    const result = await new Promise<Precedente[]>((resolve, reject) => {
-      const req = store.getAll() as IDBRequest<Precedente[]>;
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-    db.close();
-    return result;
-  } catch { return []; }
-};
-
-const clearPrecedentesFromIndexedDB = async (): Promise<void> => {
-  try {
-    const db = await openJurisDB();
-    const tx = db.transaction([JURIS_STORE_NAME], 'readwrite');
-    const store = tx.objectStore(JURIS_STORE_NAME);
-    await new Promise<void>((resolve, reject) => {
-      const req = store.clear();
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error);
-    });
-    db.close();
-  } catch { /* silenciado */ }
-};
+// useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS,
+// savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB
+// extraídos para src/hooks/useJurisprudencia.ts (v1.36.72)
 
 // useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB,
 // clearArtigosFromIndexedDB, sortArtigosNatural extraídos para src/hooks/useLegislacao.ts (v1.36.71)
@@ -3894,8 +3838,7 @@ const isStatusValido = (status: string | null | undefined) => {
   if (!status) return true;
   return !STATUS_INVALIDOS.has(status.toLowerCase());
 };
-const IRR_TYPES = new Set(['IRR', 'RR', 'RRAG', 'INCJULGRREMBREP', 'INCJULGRREPETITIVO']);
-const isIRRType = (tipo: string | null | undefined) => IRR_TYPES.has((tipo || '').toUpperCase().replace(/-/g, ''));
+// IRR_TYPES, isIRRType extraídos para src/hooks/useJurisprudencia.ts (v1.36.72)
 
 // Cache global para resultados de jurisprudência
 const jurisCache = new Map();
@@ -5160,152 +5103,7 @@ const useChatAssistant = (aiIntegration: { callAI?: CallAIFunction } | null) => 
   return { history, generating, send, clear, lastResponse };
 };
 
-const useJurisprudencia = () => {
-  const [precedentes, setPrecedentes] = React.useState<Precedente[]>([]);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filtros, setFiltros] = React.useState<FiltrosJuris>({ fonte: [], tipo: [] });
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [deleteAllConfirmText, setDeleteAllConfirmText] = React.useState('');
-  const [copiedId, setCopiedId] = React.useState<string | null>(null);  // v1.36.54: Feedback visual copiar
-  const itemsPerPage = 10;
-  const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const removeAccents = React.useCallback((str: string) =>
-    str.normalize('NFD').replace(/[\u0300-\u036f]/g, ''), []);
-
-  const searchPrecedentes = React.useCallback((term: string) => {
-    if (!term?.trim()) return precedentes;
-    const normalizedTerm = removeAccents(term.toLowerCase());
-    const terms = normalizedTerm.split(/\s+/).filter(t => t.length > 2);
-    return precedentes
-      .map(p => {
-        const teseNorm = removeAccents((p.tese || p.enunciado || '').toLowerCase());
-        const keywordsNorm = removeAccents(Array.isArray(p.keywords) ? p.keywords.join(' ').toLowerCase() : (p.keywords || '').toLowerCase());
-        const numeroNorm = (p.numeroProcesso || String(p.numero || '') || '').toLowerCase();
-        let score = 0;
-        for (const t of terms) {
-          if (keywordsNorm.includes(t)) score += 10;
-          if (teseNorm.includes(t)) score += 5;
-          if (numeroNorm.includes(t)) score += 15;
-        }
-        return { precedente: p, score };
-      })
-      .filter(({ score }) => score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map(({ precedente }) => precedente);
-  }, [precedentes, removeAccents]);
-
-  const filteredPrecedentes = React.useMemo(() => {
-    let result = searchTerm ? searchPrecedentes(searchTerm) : precedentes;
-    if (filtros.fonte.length > 0) {
-      result = result.filter(p => p.category && filtros.fonte.includes(p.category));
-    }
-    if (filtros.tipo.length > 0) {
-      result = result.filter(p => {
-        if (!p.tipoProcesso) return false;
-        if (filtros.tipo.includes('IRR') && isIRRType(p.tipoProcesso)) return true;
-        return filtros.tipo.includes(p.tipoProcesso);
-      });
-    }
-    if (filtros.tribunal && filtros.tribunal.length > 0) {
-      const tribunalFilter = filtros.tribunal;
-      result = result.filter(p => p.tribunal && tribunalFilter.includes(p.tribunal));
-    }
-    return result;
-  }, [precedentes, searchTerm, filtros, searchPrecedentes]);
-
-  const paginatedPrecedentes = React.useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredPrecedentes.slice(start, start + itemsPerPage);
-  }, [filteredPrecedentes, currentPage]);
-
-  const totalPages = Math.ceil(filteredPrecedentes.length / itemsPerPage);
-
-  const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const term = e.target.value;
-    setSearchTerm(term);
-    setCurrentPage(1);
-  }, []);
-
-  const handleImportJSON = React.useCallback(async (file: File) => {
-    setIsLoading(true);
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      const items = Array.isArray(data) ? data : (data.precedentes || []);
-      setPrecedentes(prev => {
-        const existingMap = new Map(prev.map(p => [p.id, p]));
-        for (const item of items) {
-          existingMap.set(item.id, item);
-        }
-        return Array.from(existingMap.values());
-      });
-      await savePrecedentesToIndexedDB(items);
-      return { success: true, count: items.length };
-    } catch (err) {
-      return { success: false, error: 'JSON inválido' };
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const handleCopyTese = React.useCallback(async (precedente: Precedente) => {
-    const tipo = precedente.tipoProcesso || '';
-    const identificador = precedente.tema ? `Tema ${precedente.tema}` : (precedente.numero ? `nº ${precedente.numero}` : '');
-    const titulo = precedente.titulo ? `\n${precedente.titulo}` : '';
-    // v1.36.52: Adiciona fallback para fullText/texto (embeddings semânticos não têm tese/enunciado)
-    const conteudo = precedente.tese || precedente.enunciado || precedente.fullText || precedente.texto || '';
-    const texto = `${tipo}${identificador ? ` - ${identificador}` : ''}${titulo}\n${conteudo}`;
-    await navigator.clipboard.writeText(texto);
-    // v1.36.54: Feedback visual
-    setCopiedId(precedente.id);
-    setTimeout(() => setCopiedId(null), 2000);
-  }, []);
-
-  const handleClearAll = React.useCallback(async () => {
-    setPrecedentes([]);
-    await clearPrecedentesFromIndexedDB();
-  }, []);
-
-  // v1.33.61: Recarregar precedentes do IndexedDB (usado após download automático)
-  const reloadPrecedentes = React.useCallback(async () => {
-    const data = await loadPrecedentesFromIndexedDB();
-    setPrecedentes(data);
-    return data.length;
-  }, []);
-
-  React.useEffect(() => {
-    loadPrecedentesFromIndexedDB().then(setPrecedentes);
-  }, []);
-
-  React.useEffect(() => {
-    return () => {
-      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    };
-  }, []);
-
-  return {
-    precedentes,
-    searchTerm,
-    filtros,
-    currentPage,
-    totalPages,
-    isLoading,
-    paginatedPrecedentes,
-    filteredCount: filteredPrecedentes.length,
-    deleteAllConfirmText,
-    setDeleteAllConfirmText,
-    setFiltros,
-    setCurrentPage,
-    handleSearchChange,
-    handleImportJSON,
-    handleCopyTese,
-    handleClearAll,
-    reloadPrecedentes, // v1.33.61: Para atualizar após download automático
-    copiedId // v1.36.54: Feedback visual copiar
-  };
-};
+// useJurisprudencia extraído para src/hooks/useJurisprudencia.ts (v1.36.72)
 
 // useLegislacao extraído para src/hooks/useLegislacao.ts (v1.36.71)
 
@@ -7555,7 +7353,7 @@ const JurisprudenciaTab = React.memo(({
     for (const file of files) {
       const result = await jurisprudencia.handleImportJSON(file);
       if (result.success) {
-        totalCount += result.count;
+        totalCount += result.count || 0;
       } else {
         errors.push(file.name);
       }
@@ -12951,8 +12749,7 @@ const LinkedProofsModal: React.FC<LinkedProofsModalProps> = ({
 };
 
 // ⚖️ v1.20.0: Modal de Jurisprudência Reutilizável
-const JURIS_TIPOS_DISPONIVEIS = ['IRR', 'IAC', 'IRDR', 'Súmula', 'OJ', 'RG', 'ADI/ADC/ADPF', 'Informativo'];
-const JURIS_TRIBUNAIS_DISPONIVEIS = ['TST', 'STF', 'STJ', 'TRT8'];
+// JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS extraídos para src/hooks/useJurisprudencia.ts (v1.36.72)
 
 // v1.32.18: Adicionado useLocalAI e jurisSemanticThreshold para busca semântica
 // v1.33.16: Adicionado jurisSemanticEnabled para toggle interno + badge IA Local

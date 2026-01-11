@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.72', feature: 'useJurisprudencia extraído para src/hooks/ (~210 linhas removidas) + helpers (IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, IndexedDB helpers)' },
   { version: '1.36.71', feature: 'useLegislacao extraído para src/hooks/ (~180 linhas removidas) + helpers (LEIS_METADATA, getLeiFromId, sortArtigosNatural, IndexedDB helpers)' },
   { version: '1.36.70', feature: 'Testes REAIS para 9 hooks extraídos (411 testes passando), regra #10 CLAUDE.md (testes devem importar código de produção), deletados 6 testes inefetivos' },
   { version: '1.36.69', feature: 'FASE 3 TIER 1: useIndexedDB extraído para src/hooks/ + validateModel, sanitizeModel (~527 linhas removidas)' },

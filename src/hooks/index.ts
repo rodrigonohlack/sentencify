@@ -44,6 +44,19 @@ export {
 } from './useLegislacao';
 export type { UseLegislacaoReturn } from './useLegislacao';
 
+// Jurisprudência hook (TIER 0 - sem dependências)
+export {
+  useJurisprudencia,
+  IRR_TYPES,
+  isIRRType,
+  JURIS_TIPOS_DISPONIVEIS,
+  JURIS_TRIBUNAIS_DISPONIVEIS,
+  savePrecedentesToIndexedDB,
+  loadPrecedentesFromIndexedDB,
+  clearPrecedentesFromIndexedDB
+} from './useJurisprudencia';
+export type { UseJurisprudenciaReturn } from './useJurisprudencia';
+
 // Cloud/Auth hooks (production - not test versions)
 export { useGoogleDrive } from './useGoogleDrive';
 export { useAuthMagicLink } from './useAuthMagicLink';
