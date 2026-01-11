@@ -85,3 +85,11 @@ export { useCloudSync } from './useCloudSync';
 export { useVoiceToText } from './useVoiceToText';
 export { default as useFactsComparisonCache } from './useFactsComparisonCache';
 export { default as useSentenceReviewCache } from './useSentenceReviewCache';
+
+// Proof Manager hook (TIER 1 - dependências: useLocalStorage, Zustand stores)
+export { useProofManager } from './useProofManager';
+export type { UseProofManagerReturn } from './useProofManager';
+
+// Document Manager hook (TIER 1 - dependências: useLocalStorage)
+export { useDocumentManager } from './useDocumentManager';
+export type { UseDocumentManagerReturn } from './useDocumentManager';

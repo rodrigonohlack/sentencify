@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.76', feature: 'useProofManager e useDocumentManager extraídos para src/hooks/ (~486 linhas removidas)' },
   { version: '1.36.75', feature: 'useLocalStorage extraído para src/hooks/ (~1070 linhas removidas) + PDF IndexedDB helpers + APP_VERSION centralizado' },
   { version: '1.36.74', feature: 'useModelPreview extraído para src/hooks/ (~107 linhas removidas)' },
   { version: '1.36.73', feature: 'useChatAssistant extraído para src/hooks/ (~115 linhas removidas) + MAX_CHAT_HISTORY_MESSAGES' },
