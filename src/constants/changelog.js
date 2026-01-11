@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.78', feature: 'useModalManager e useModelLibrary extraídos para src/hooks/ (~14KB removidos) + searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS' },
   { version: '1.36.77', feature: 'useTopicManager extraído para src/hooks/ (wrapper sobre Zustand store)' },
   { version: '1.36.76', feature: 'useProofManager e useDocumentManager extraídos para src/hooks/ (~486 linhas removidas)' },
   { version: '1.36.75', feature: 'useLocalStorage extraído para src/hooks/ (~1070 linhas removidas) + PDF IndexedDB helpers + APP_VERSION centralizado' },

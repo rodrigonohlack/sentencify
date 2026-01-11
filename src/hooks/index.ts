@@ -97,3 +97,17 @@ export type { UseDocumentManagerReturn } from './useDocumentManager';
 // Topic Manager hook (TIER 1 - dependências: Zustand stores)
 export { useTopicManager } from './useTopicManager';
 export type { UseTopicManagerReturn } from './useTopicManager';
+
+// Modal Manager hook (TIER 1 - dependências: Zustand stores)
+export { useModalManager } from './useModalManager';
+export type { UseModalManagerReturn } from './useModalManager';
+
+// Model Library hook (TIER 1 - dependências: Zustand stores)
+export {
+  useModelLibrary,
+  searchModelsInLibrary,
+  removeAccents,
+  SEARCH_STOPWORDS,
+  SINONIMOS_JURIDICOS
+} from './useModelLibrary';
+export type { UseModelLibraryReturn } from './useModelLibrary';
