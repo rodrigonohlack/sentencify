@@ -130,7 +130,7 @@ import { useModalManagerCompat } from './stores/useUIStore';
 import { useAISettingsCompat } from './stores/useAIStore';
 import { useModelLibraryCompat } from './stores/useModelsStore';
 // useTopicManagerCompat movido para src/hooks/useTopicManager.ts (v1.36.77)
-import { useProofManagerCompat } from './stores/useProofsStore';
+// useProofManagerCompat movido para src/hooks/useProofManager.ts (v1.36.76)
 
 // v1.36.66: Hooks TIER 0 extraídos para arquivos separados
 // v1.36.69: useIndexedDB (TIER 1), validateModel, sanitizeModel extraídos
