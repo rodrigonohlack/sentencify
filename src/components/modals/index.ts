@@ -31,5 +31,8 @@ export { AnalysisModal, ExportModal, AnonymizationNamesModal, LinkedProofsModal 
 // Advanced Modals (TIER 2)
 export { ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal } from './AdvancedModals';
 
+// Jurisprudencia Modal
+export { JurisprudenciaModal } from './JurisprudenciaModal';
+
 // Other Modals
 export { TextPreviewModal } from './TextPreviewModal';

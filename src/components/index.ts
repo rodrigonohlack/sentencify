@@ -24,3 +24,6 @@ export * from './modals';
 
 // AI Assistant Components
 export * from './ai';
+
+// Form Components
+export * from './forms';

@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.92 | **File**: `src/App.tsx` (~0.75 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.93 | **File**: `src/App.tsx` (~0.73 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.93 | TIER 3 componentes extraídos: ModelFormFields (forms/), SlashCommandMenu (ui/), JurisprudenciaModal (modals/) (~616 linhas removidas) |
 | v1.36.92 | TIER 2 modais extraídos para AdvancedModals.tsx: ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal (~1215 linhas removidas) |
 | v1.36.91 | TIER 1 modais extraídos para MiscModals.tsx: AnalysisModal, ExportModal, AnonymizationNamesModal, LinkedProofsModal (~288 linhas removidas) |
 | v1.36.90 | AI Assistant components extraídos para src/components/ai/: AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal, AIAssistantGlobalModal, AIAssistantModelModal + helpers (~685 linhas removidas) |

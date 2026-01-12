@@ -12,3 +12,5 @@ export type { FontSizeDropdownProps } from './FontSizeDropdown';
 
 export { ProcessingModeSelector } from './ProcessingModeSelector';
 export type { ProcessingModeSelectorProps } from './ProcessingModeSelector';
+
+export { SlashCommandMenu } from './SlashCommandMenu';
