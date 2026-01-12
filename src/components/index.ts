@@ -1,7 +1,7 @@
 /**
  * @file index.ts
  * @description Barrel export para todos os componentes
- * @version 1.36.87
+ * @version 1.36.90
  */
 
 // UI Components
@@ -21,3 +21,6 @@ export * from './chat';
 
 // Modal Components
 export * from './modals';
+
+// AI Assistant Components
+export * from './ai';

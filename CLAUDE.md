@@ -4,13 +4,13 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.89 | **File**: `src/App.tsx` (~0.83 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.90 | **File**: `src/App.tsx` (~0.81 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
 **Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`, `useFullscreen`, `useSpacingControl`, `useFontSizeControl`, `useFeatureFlags`, `useThrottledBroadcast`, `useAPICache`, `useIndexedDB`, `useLegislacao`
 
-**Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`, `GoogleDriveButton`, `ModelGeneratorModal`, `FactsComparisonModal`
+**Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`, `GoogleDriveButton`, `ModelGeneratorModal`, `FactsComparisonModal`, `AIAssistantBaseLegacy`, `AIAssistantBase`, `AIAssistantModal`, `AIAssistantGlobalModal`, `AIAssistantModelModal`
 
 **Storage**:
 - `SQLite` (Render Persistent Disk) → modelos sincronizados na nuvem (v1.34.0)
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.90 | AI Assistant components extraídos para src/components/ai/: AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal, AIAssistantGlobalModal, AIAssistantModelModal + helpers (~685 linhas removidas) |
 | v1.36.89 | Proof modals extraídos: ProofAnalysisModal, LinkProofModal (~230 linhas removidas) |
 | v1.36.88 | Model extraction modals extraídos: ExtractModelConfirmModal, ExtractedModelPreviewModal, SimilarityWarningModal (~290 linhas removidas) |
 | v1.36.87 | Panel components extraídos para src/components/panels/: FullscreenModelPanel, ModelSearchPanel, JurisprudenciaTab, LegislacaoTab (~1160 linhas removidas) |

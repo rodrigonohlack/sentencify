@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.90', feature: 'AI Assistant components extraídos para src/components/ai/: AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal, AIAssistantGlobalModal, AIAssistantModelModal + helpers (extractPlainText, isOralProof, hasOralProofsForTopic) (~685 linhas removidas)' },
   { version: '1.36.89', feature: 'Proof modals extraídos: ProofAnalysisModal, LinkProofModal adicionados a ProofModals.tsx (~230 linhas removidas)' },
   { version: '1.36.88', feature: 'Model extraction modals extraídos: ExtractModelConfirmModal, ExtractedModelPreviewModal, SimilarityWarningModal (~290 linhas removidas)' },
   { version: '1.36.87', feature: 'Panel components extraídos para src/components/panels/: FullscreenModelPanel, ModelSearchPanel, JurisprudenciaTab, LegislacaoTab (~1160 linhas removidas)' },
