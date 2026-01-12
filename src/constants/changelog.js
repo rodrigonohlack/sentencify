@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.92', feature: 'TIER 2 modais extraídos para AdvancedModals.tsx: ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal (~1215 linhas removidas)' },
   { version: '1.36.91', feature: 'TIER 1 modais extraídos para MiscModals.tsx: AnalysisModal, ExportModal, AnonymizationNamesModal, LinkedProofsModal (~288 linhas removidas)' },
   { version: '1.36.90', feature: 'AI Assistant components extraídos para src/components/ai/: AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal, AIAssistantGlobalModal, AIAssistantModelModal + helpers (extractPlainText, isOralProof, hasOralProofsForTopic) (~685 linhas removidas)' },
   { version: '1.36.89', feature: 'Proof modals extraídos: ProofAnalysisModal, LinkProofModal adicionados a ProofModals.tsx (~230 linhas removidas)' },

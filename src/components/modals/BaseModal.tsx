@@ -27,6 +27,7 @@ export const CSS = {
   btnGreen: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25",
   btnSuccess: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25",
   flexGap2: "flex items-center gap-2",
+  input: "w-full px-4 py-2.5 rounded-xl theme-bg-secondary border theme-border-modal theme-text-primary placeholder:theme-text-disabled focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500",
 };
 
 // BaseModal: Componente base reutilizável para modais

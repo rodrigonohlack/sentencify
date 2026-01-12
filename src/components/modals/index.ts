@@ -28,5 +28,8 @@ export { BulkDiscardConfirmModal, ConfirmBulkCancelModal } from './BulkModals';
 // Misc Modals (TIER 1)
 export { AnalysisModal, ExportModal, AnonymizationNamesModal, LinkedProofsModal } from './MiscModals';
 
+// Advanced Modals (TIER 2)
+export { ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal } from './AdvancedModals';
+
 // Other Modals
 export { TextPreviewModal } from './TextPreviewModal';
