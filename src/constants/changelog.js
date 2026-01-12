@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.87', feature: 'Panel components extraídos para src/components/panels/: FullscreenModelPanel, ModelSearchPanel, JurisprudenciaTab, LegislacaoTab (~1160 linhas removidas)' },
   { version: '1.36.86', feature: 'Card components extraidos para src/components/cards/: TopicCard, SortableTopicCard, ModelCard, ProofCard, VirtualList (~1140 linhas removidas)' },
   { version: '1.36.85', feature: 'Modais simples extraídos para src/components/modals/: BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview + TopicModals, ModelModals, ProofModals, SessionModals, BulkModals, TextPreviewModal (~580 linhas removidas)' },
   { version: '1.36.84', feature: 'Chat components extraídos: ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown para src/components/chat/ (~185 linhas removidas)' },
