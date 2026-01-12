@@ -119,3 +119,7 @@ export type { UseQuillEditorOptions, UseQuillEditorReturn } from './useQuillEdit
 // Document Services hook (TIER 1 - dependências: useAIIntegration)
 export { useDocumentServices } from './useDocumentServices';
 export type { UseDocumentServicesReturn, AIIntegrationForDocuments } from './useDocumentServices';
+
+// AI Integration hook (TIER 1 - dependências: Zustand stores, prompts)
+export { useAIIntegration } from './useAIIntegration';
+export type { UseAIIntegrationReturn } from './useAIIntegration';
