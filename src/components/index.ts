@@ -1,7 +1,7 @@
 /**
  * @file index.ts
  * @description Barrel export para todos os componentes
- * @version 1.36.90
+ * @version 1.36.94
  */
 
 // UI Components
@@ -27,3 +27,6 @@ export * from './ai';
 
 // Form Components
 export * from './forms';
+
+// Editor Components
+export * from './editors';

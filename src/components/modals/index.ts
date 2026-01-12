@@ -1,7 +1,7 @@
 /**
  * @file index.ts
  * @description Barrel export para todos os modais simples
- * @version 1.36.91
+ * @version 1.36.94
  */
 
 // BaseModal + helpers
@@ -36,3 +36,6 @@ export { JurisprudenciaModal } from './JurisprudenciaModal';
 
 // Other Modals
 export { TextPreviewModal } from './TextPreviewModal';
+
+// Preview Modals (TIER 3)
+export { ModelPreviewModal } from './PreviewModals';

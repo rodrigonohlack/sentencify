@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.94', feature: 'Quill Editors + TIER 3 pendências extraídos: QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor, AIRegenerationSection, FieldEditor, InlineFormattingToolbar, ModelFormModal, ModelPreviewModal (~1787 linhas removidas)' },
   { version: '1.36.93', feature: 'TIER 3 componentes extraídos: ModelFormFields (forms/), SlashCommandMenu (ui/), JurisprudenciaModal (modals/) (~616 linhas removidas)' },
   { version: '1.36.92', feature: 'TIER 2 modais extraídos para AdvancedModals.tsx: ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal (~1215 linhas removidas)' },
   { version: '1.36.91', feature: 'TIER 1 modais extraídos para MiscModals.tsx: AnalysisModal, ExportModal, AnonymizationNamesModal, LinkedProofsModal (~288 linhas removidas)' },

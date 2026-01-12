@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.93 | **File**: `src/App.tsx` (~0.73 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.94 | **File**: `src/App.tsx` (~0.68 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.94 | Quill Editors + TIER 3 pendências extraídos para src/components/editors/: QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor, AIRegenerationSection, FieldEditor, InlineFormattingToolbar + ModelFormModal, ModelPreviewModal (~1787 linhas removidas) |
 | v1.36.93 | TIER 3 componentes extraídos: ModelFormFields (forms/), SlashCommandMenu (ui/), JurisprudenciaModal (modals/) (~616 linhas removidas) |
 | v1.36.92 | TIER 2 modais extraídos para AdvancedModals.tsx: ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal (~1215 linhas removidas) |
 | v1.36.91 | TIER 1 modais extraídos para MiscModals.tsx: AnalysisModal, ExportModal, AnonymizationNamesModal, LinkedProofsModal (~288 linhas removidas) |
