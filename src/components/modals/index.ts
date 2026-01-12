@@ -1,7 +1,7 @@
 /**
  * @file index.ts
  * @description Barrel export para todos os modais simples
- * @version 1.36.89
+ * @version 1.36.91
  */
 
 // BaseModal + helpers
@@ -24,6 +24,9 @@ export { RestoreSessionModal, ClearProjectModal, LogoutConfirmModal } from './Se
 
 // Bulk Modals
 export { BulkDiscardConfirmModal, ConfirmBulkCancelModal } from './BulkModals';
+
+// Misc Modals (TIER 1)
+export { AnalysisModal, ExportModal, AnonymizationNamesModal, LinkedProofsModal } from './MiscModals';
 
 // Other Modals
 export { TextPreviewModal } from './TextPreviewModal';
