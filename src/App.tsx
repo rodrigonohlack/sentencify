@@ -161,7 +161,7 @@ import { GoogleDriveButton, DriveFilesModal } from './components/GoogleDriveButt
 import { VoiceButton } from './components/VoiceButton';
 import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 import { FactsComparisonModalContent } from './components/FactsComparisonModal';
-import { SuggestionCard, SplitDivider, SpacingDropdown, FontSizeDropdown, ProcessingModeSelector, VersionCompareModal, VersionSelect, JurisprudenciaCard, ArtigoCard, ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown } from './components';  // v1.36.82+: UI components extraídos
+import { SuggestionCard, SplitDivider, SpacingDropdown, FontSizeDropdown, ProcessingModeSelector, VersionCompareModal, VersionSelect, JurisprudenciaCard, ArtigoCard, ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown, BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview, RenameTopicModal, DeleteTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal, DeleteModelModal, DeleteAllModelsModal, DeleteAllPrecedentesModal, AddProofTextModal, DeleteProofModal, RestoreSessionModal, ClearProjectModal, LogoutConfirmModal, BulkDiscardConfirmModal, ConfirmBulkCancelModal, TextPreviewModal } from './components';  // v1.36.82+: UI components extraídos, v1.36.85: Modals extraídos
 import useFactsComparisonCache, { openFactsDB, FACTS_STORE_NAME } from './hooks/useFactsComparisonCache';
 import useSentenceReviewCache, { openReviewDB, REVIEW_STORE_NAME } from './hooks/useSentenceReviewCache';
 
@@ -2691,364 +2691,9 @@ LegislacaoTab.displayName = 'LegislacaoTab';
 // ~50 modais: RenameTopicModal, DeleteTopicModal, GlobalEditorModal, ConfigModal, etc.
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
-// 🔧 BaseModal: Componente base reutilizável para modais
-// v1.33.48: ESC handler centralizado (18 modais beneficiados)
-const BaseModal = React.memo(({
-  isOpen,
-  onClose,
-  title,
-  subtitle,
-  icon,
-  iconColor = 'blue',
-  size = 'md',
-  children,
-  footer,
-  preventClose = false // v1.33.62: Impedir fechamento (ESC, X, click fora)
-}: BaseModalProps) => {
-  // ESC handler - deve vir antes do early return para cleanup funcionar
-  React.useEffect(() => {
-    if (preventClose) return; // v1.33.62: Não registrar ESC se preventClose
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    if (isOpen) {
-      window.addEventListener('keydown', handleEsc);
-    }
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose, preventClose]);
-
-  // v1.35.63: Bloquear scroll do body quando modal aberto
-  React.useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  const sizes: Record<string, string> = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-    '2xl': 'max-w-5xl'
-  };
-
-  // Gradientes para o círculo do ícone
-  const iconGradients: Record<string, string> = {
-    blue: 'from-blue-500 to-cyan-500 shadow-blue-500/30',
-    red: 'from-red-500 to-orange-500 shadow-red-500/30',
-    green: 'from-green-500 to-emerald-500 shadow-green-500/30',
-    yellow: 'from-yellow-500 to-orange-500 shadow-yellow-500/30',
-    purple: 'from-purple-500 to-blue-500 shadow-purple-500/30',
-    orange: 'from-orange-500 to-red-500 shadow-orange-500/30'
-  };
-
-  return (
-    <div className={CSS.modalOverlay} onClick={preventClose ? undefined : onClose}>
-      <div
-        className={`${CSS.modalContainer} ${sizes[size] || sizes.md} w-full animate-modal`}
-        onClick={e => e.stopPropagation()}
-        style={{ animation: 'modalFadeIn 0.2s ease-out' }}
-      >
-        {/* Header com ícone em círculo e botão X - v1.36.22: flex-shrink-0 para não encolher */}
-        <div className={`${CSS.modalHeader} flex items-center justify-between flex-shrink-0`}>
-          <div className="flex items-center gap-3">
-            {icon && (
-              <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${iconGradients[iconColor] || iconGradients.blue} flex items-center justify-center shadow-lg`}>
-                {React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'w-4 h-4 text-white' })}
-              </div>
-            )}
-            <div>
-              <h2 className="font-semibold theme-text-primary">{title}</h2>
-              {subtitle && <p className="text-xs theme-text-secondary">{subtitle}</p>}
-            </div>
-          </div>
-          {!preventClose && (
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full theme-bg-secondary theme-hover-bg flex items-center justify-center theme-text-secondary transition-all border theme-border-modal hover:border-current"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-        {/* Content - v1.36.23: min-h-0 permite flex shrink para scroll funcionar */}
-        <div className="p-5 overflow-y-auto flex-1 min-h-0">
-          {children}
-        </div>
-        {/* Footer */}
-        {footer && (
-          <div className={CSS.modalFooter}>
-            {footer}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-});
-
-// 🔧 ModalFooter: Helpers para footers de modais
-const ModalFooter = {
-  // Footer com Cancelar + Confirmar (azul)
-  Standard: ({ onClose, onConfirm, confirmText = 'Confirmar', disabled = false, loading = false }: { onClose: () => void; onConfirm: () => void; confirmText?: string; disabled?: boolean; loading?: boolean }) => (
-    <>
-      <button onClick={onClose} className={CSS.btnSecondary} disabled={loading}>Cancelar</button>
-      <button onClick={onConfirm} disabled={disabled || loading} className={CSS.btnBlue}>
-        {loading ? 'Processando...' : confirmText}
-      </button>
-    </>
-  ),
-  // Footer com apenas Fechar
-  CloseOnly: ({ onClose, text = 'Fechar' }: { onClose: () => void; text?: string }) => (
-    <button onClick={onClose} className={CSS.btnSecondary}>{text}</button>
-  ),
-  // Footer com Cancelar + Ação Destrutiva (vermelho)
-  Destructive: ({ onClose, onConfirm, confirmText = 'Deletar', disabled = false }: { onClose: () => void; onConfirm: () => void; confirmText?: string; disabled?: boolean }) => (
-    <>
-      <button onClick={onClose} className={CSS.btnSecondary}>Cancelar</button>
-      <button onClick={onConfirm} disabled={disabled} className={CSS.btnRed}>{confirmText}</button>
-    </>
-  ),
-  // Footer com Cancelar + Confirmar (verde)
-  Success: ({ onClose, onConfirm, confirmText = 'Confirmar', disabled = false }: { onClose: () => void; onConfirm: () => void; confirmText?: string; disabled?: boolean }) => (
-    <>
-      <button onClick={onClose} className={CSS.btnSecondary}>Cancelar</button>
-      <button onClick={onConfirm} disabled={disabled} className={CSS.btnGreen}>{confirmText}</button>
-    </>
-  )
-};
-
-// 🔧 ModalWarningBox: Caixa de aviso vermelho para ações destrutivas (v1.18.3: suporta children complexos)
-const ModalWarningBox = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-red-900/20 border border-red-500/30 rounded-lg p-3 ${className}`}>
-    <div className="text-xs theme-text-red flex items-start gap-2">
-      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-      <div className="flex-1">{children}</div>
-    </div>
-  </div>
-);
-
-// 🔧 ModalInfoBox: Caixa de informação azul para dicas (v1.18.3: suporta children complexos)
-const ModalInfoBox = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <div className={`${CSS.infoBox} ${className}`}>
-    <div className="text-xs theme-text-blue">{children}</div>
-  </div>
-);
-
-// 🔧 ModalAmberBox: Caixa de aviso amarelo
-const ModalAmberBox = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <div className={`theme-warning-box p-4 ${className}`}>
-    {children}
-  </div>
-);
-
-// 🔧 ModalContentPreview: Preview de conteúdo em box
-const ModalContentPreview = ({ title, subtitle, badge, children, className = '' }: { title?: string; subtitle?: string; badge?: string; children?: React.ReactNode; className?: string }) => (
-  <div className={`theme-bg-app p-4 rounded-lg border theme-border-secondary ${className}`}>
-    {title && <p className="font-semibold theme-text-primary text-lg">{title}</p>}
-    {subtitle && <p className="text-sm theme-text-muted mt-1">{subtitle}</p>}
-    {badge && <span className="text-xs px-2 py-1 rounded theme-bg-purple-accent theme-text-purple border border-purple-500/30 inline-block mt-2">{badge}</span>}
-    {children}
-  </div>
-);
-
-// Modal: Renomear Tópico (migrado para BaseModal v1.18.3)
-const RenameTopicModal = React.memo(({ isOpen, onClose, topicToRename, setTopicToRename, newTopicName, setNewTopicName, handleRenameTopic, isRegenerating, hasDocuments }: RenameTopicModalProps) => {
-  const handleClose = () => { onClose(); setTopicToRename(null); setNewTopicName(''); };
-  return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title="Renomear Tópico" icon={<Edit2 />} iconColor="purple" size="lg"
-      footer={<>
-        <button onClick={() => handleRenameTopic(true)} disabled={isRegenerating || !newTopicName.trim()} className="flex-1 py-3 rounded-lg font-medium disabled:opacity-50 bg-purple-600 text-white hover-purple-700-from-600">
-          {isRegenerating ? <span className="flex items-center justify-center gap-2"><div className={CSS.spinner}></div>Regenerando...</span> : <span className="flex items-center justify-center gap-2"><Sparkles className="w-4 h-4" />Renomear e Regenerar</span>}
-        </button>
-        <button onClick={() => handleRenameTopic(false)} disabled={isRegenerating || !newTopicName.trim()} className="flex-1 py-3 rounded-lg font-medium disabled:opacity-50 bg-blue-600 text-white hover-blue-700-from-600">
-          {isRegenerating ? <span className="flex items-center justify-center gap-2"><div className={CSS.spinner}></div>Renomeando...</span> : <span className="flex items-center justify-center gap-2"><Edit className="w-4 h-4" />Apenas Renomear</span>}
-        </button>
-        <button onClick={handleClose} disabled={isRegenerating} className="px-6 py-3 rounded-lg disabled:opacity-50 theme-bg-tertiary hover-slate-500">Cancelar</button>
-      </>}>
-      <div className="space-y-4">
-        <div><label className={CSS.label}>Título Atual</label><p className="theme-text-muted theme-bg-app p-3 rounded">{topicToRename?.title}</p></div>
-        <div><label className={CSS.label}>Novo Título</label><input type="text" value={newTopicName} onChange={(e) => setNewTopicName(e.target.value)} className="w-full theme-bg-app border theme-border-primary rounded-lg p-3 theme-text-secondary" placeholder="Digite o novo título" /></div>
-        <ModalInfoBox>
-          💡 <strong>Escolha uma das opções:</strong>
-          <ul className="mt-2 ml-4 space-y-1 theme-text-tertiary">
-            <li>• <strong>Renomear e Regenerar:</strong> {hasDocuments ? 'Regerará com base nos documentos' : 'Regerará com IA'}</li>
-            <li>• <strong>Apenas Renomear:</strong> Mantém o mini-relatório atual</li>
-          </ul>
-        </ModalInfoBox>
-      </div>
-    </BaseModal>
-  );
-});
-RenameTopicModal.displayName = 'RenameTopicModal';
-
-// Modal: Excluir Tópico (migrado para BaseModal)
-const DeleteTopicModal = React.memo(({ isOpen, onClose, topicToDelete, setTopicToDelete, onConfirmDelete }: DeleteTopicModalProps) => (
-  <BaseModal
-    isOpen={isOpen}
-    onClose={() => { onClose(); setTopicToDelete(null); }}
-    title="Confirmar Exclusão"
-    icon={<Trash2 />}
-    iconColor="red"
-    size="md"
-    footer={<ModalFooter.Destructive onClose={() => { onClose(); setTopicToDelete(null); }} onConfirm={onConfirmDelete} confirmText="Sim, Excluir" />}
-  >
-    <div className="space-y-4">
-      <p className="theme-text-tertiary">Deseja realmente excluir o tópico abaixo?</p>
-      <ModalContentPreview title={topicToDelete?.title}>
-        {topicToDelete?.relatorio && <div className="text-sm theme-text-muted mt-2 max-h-48 overflow-y-auto">{topicToDelete.relatorio}</div>}
-      </ModalContentPreview>
-      <ModalWarningBox><strong>Atenção:</strong> Esta ação não pode ser desfeita. O tópico será removido permanentemente.</ModalWarningBox>
-    </div>
-  </BaseModal>
-));
-DeleteTopicModal.displayName = 'DeleteTopicModal';
-
-// Modal: Unir Tópicos (migrado para BaseModal v1.18.3)
-const MergeTopicsModal = React.memo(({ isOpen, onClose, topicsToMerge, onConfirmMerge, isRegenerating, hasDocuments }: MergeTopicsModalProps) => {
-  if (!topicsToMerge || topicsToMerge.length === 0) return null;
-  return (
-    <BaseModal isOpen={isOpen} onClose={onClose} title="Unir Tópicos" icon={<Merge />} iconColor="yellow" size="lg"
-      footer={<>
-        <button onClick={onConfirmMerge} disabled={isRegenerating} className="flex-1 py-3 rounded-lg font-medium disabled:opacity-50 bg-amber-600 text-white hover-amber-700-from-600">
-          {isRegenerating ? <span className="flex items-center justify-center gap-2"><div className={CSS.spinner}></div>{hasDocuments ? 'Regenerando...' : 'Unindo...'}</span> : 'Confirmar União'}
-        </button>
-        <button onClick={onClose} className="px-6 py-3 rounded-lg theme-bg-tertiary hover-slate-500">Cancelar</button>
-      </>}>
-      <div className="space-y-4">
-        <p className="theme-text-tertiary">Você está prestes a unir os seguintes tópicos:</p>
-        <div className="space-y-2">{topicsToMerge.map((t: Topic, i: number) => <div key={i} className="theme-bg-app p-3 rounded border theme-border-input"><p className="font-medium theme-text-primary">{i+1}. {t.title}</p></div>)}</div>
-        {hasDocuments ? <ModalInfoBox>✓ Um novo tópico unificado será criado e o mini-relatório será regenerado com base nos documentos originais.</ModalInfoBox> : <p className="text-xs theme-text-disabled">O mini-relatório será regenerado automaticamente.</p>}
-      </div>
-    </BaseModal>
-  );
-});
-MergeTopicsModal.displayName = 'MergeTopicsModal';
-
-// Modal: Separar Tópico (migrado para BaseModal v1.18.3)
-const SplitTopicModal = React.memo(({ isOpen, onClose, topicToSplit, setTopicToSplit, splitNames, setSplitNames, onConfirmSplit, isRegenerating, hasDocuments }: SplitTopicModalProps) => {
-  if (!splitNames) return null;
-  const handleClose = () => { onClose(); setTopicToSplit(null); setSplitNames(['', '']); };
-  return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title="Separar Tópico" icon={<Split />} iconColor="orange" size="lg"
-      footer={<>
-        <button onClick={onConfirmSplit} disabled={isRegenerating || splitNames.filter((n: string) => n.trim()).length < 2} className="flex-1 py-3 rounded-lg font-medium disabled:opacity-50 bg-orange-600 text-white hover-orange-700-from-600">
-          {isRegenerating ? <span className="flex items-center justify-center gap-2"><div className={CSS.spinner}></div>{hasDocuments ? 'Regenerando...' : 'Separando...'}</span> : 'Confirmar Separação'}
-        </button>
-        <button onClick={handleClose} className="px-6 py-3 rounded-lg theme-bg-tertiary hover-slate-500">Cancelar</button>
-      </>}>
-      <div className="space-y-4">
-        <div><label className={CSS.label}>Tópico Original</label><p className="theme-text-muted theme-bg-app p-3 rounded">{topicToSplit?.title}</p></div>
-        <p className="theme-text-tertiary">Separe em quantos subtópicos desejar:</p>
-        {splitNames.map((name: string, i: number) => <div key={i}><label className={CSS.label}>Subtópico {i+1}</label><input type="text" value={name} onChange={(e) => { const n=[...splitNames]; n[i]=e.target.value; setSplitNames(n); }} className="w-full theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary" placeholder={`Título do subtópico ${i+1}`} /></div>)}
-        <button onClick={() => setSplitNames([...splitNames, ''])} className="text-sm hover-text-blue-400-from-300">+ Adicionar mais um subtópico</button>
-        {hasDocuments ? <ModalInfoBox>✓ Cada subtópico terá seu mini-relatório regenerado com base nos documentos originais.</ModalInfoBox> : <p className="text-xs theme-text-disabled">O mini-relatório será regenerado com as informações relevantes.</p>}
-      </div>
-    </BaseModal>
-  );
-});
-SplitTopicModal.displayName = 'SplitTopicModal';
-
-// Modal: Criar Novo Tópico (migrado para BaseModal v1.18.3)
-const NewTopicModal = React.memo(({ isOpen, onClose, newTopicData, setNewTopicData, onConfirmCreate, isRegenerating, hasDocuments }: NewTopicModalProps) => {
-  const data = newTopicData || { title: '', category: 'MÉRITO', relatorio: '' };
-  const handleClose = () => { onClose(); setNewTopicData({ title: '', category: 'MÉRITO', relatorio: '' }); };
-  return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title="Criar Novo Tópico" icon={<PlusCircle />} iconColor="green" size="lg"
-      footer={<>
-        <button onClick={onConfirmCreate} disabled={isRegenerating || !(data.title || '').trim()} className="flex-1 py-3 rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2 bg-green-600 text-white hover-green-700-from-600">
-          {isRegenerating ? <><div className={CSS.spinner}></div>{hasDocuments ? 'Analisando...' : 'Criando...'}</> : 'Criar Tópico'}
-        </button>
-        <button onClick={handleClose} className="px-6 py-3 rounded-lg theme-bg-tertiary hover-slate-500">Cancelar</button>
-      </>}>
-      <div className="space-y-4">
-        <div><label className={CSS.label}>Título do Tópico</label><input type="text" value={data.title} onChange={(e) => setNewTopicData({...data, title: e.target.value})} className="w-full theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary" placeholder="Ex: Adicional de Periculosidade" /></div>
-        <div><label className={CSS.label}>Categoria</label><select value={data.category} onChange={(e) => setNewTopicData({...data, category: e.target.value as TopicCategory})} className="w-full theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary"><option value="PRELIMINAR">Preliminar</option><option value="PREJUDICIAL">Prejudicial</option><option value="MÉRITO">Mérito</option></select></div>
-        <div><label className={CSS.label}>Mini-relatório (opcional)</label><textarea value={data.relatorio} onChange={(e) => setNewTopicData({...data, relatorio: e.target.value})} className="w-full h-32 theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary resize-none" placeholder="Digite ou deixe em branco para gerar automaticamente" /></div>
-        {hasDocuments ? <ModalInfoBox>✓ Se deixar em branco, o mini-relatório será gerado com base nos documentos.</ModalInfoBox> : <p className="text-xs theme-text-disabled">Se deixar vazio, será gerado um texto padrão.</p>}
-      </div>
-    </BaseModal>
-  );
-});
-NewTopicModal.displayName = 'NewTopicModal';
-
-// Modal: Excluir Modelo (migrado para BaseModal)
-const DeleteModelModal = React.memo(({ isOpen, onClose, modelToDelete, setModelToDelete, onConfirmDelete }: DeleteModelModalProps) => {
-  if (!modelToDelete) return null;
-  const handleClose = () => { onClose(); setModelToDelete(null); };
-  return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title="Excluir Modelo" icon={<Trash2 />} iconColor="red" size="sm"
-      footer={<ModalFooter.Destructive onClose={handleClose} onConfirm={onConfirmDelete} confirmText="Excluir" />}>
-      <div className="space-y-4">
-        <p className="theme-text-tertiary">Tem certeza que deseja excluir o modelo:</p>
-        <ModalContentPreview title={modelToDelete.title} badge={modelToDelete.category}>
-          {modelToDelete.favorite && <span className="text-xl float-right">⭐</span>}
-        </ModalContentPreview>
-        <ModalWarningBox><strong>Atenção:</strong> O modelo será permanentemente removido e não poderá ser recuperado.</ModalWarningBox>
-      </div>
-    </BaseModal>
-  );
-});
-DeleteModelModal.displayName = 'DeleteModelModal';
-
-// Modal: Excluir Todos os Modelos (migrado para BaseModal v1.18.3)
-const DeleteAllModelsModal = React.memo(({ isOpen, onClose, totalModels, confirmText, setConfirmText, onConfirmDelete }: DeleteAllModelsModalProps) => {
-  const handleClose = () => { onClose(); setConfirmText(''); };
-  return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title="ATENÇÃO: Exclusão em Massa" icon={<AlertCircle />} iconColor="red" size="md"
-      footer={<>
-        <button onClick={handleClose} className={CSS.btnSecondary}>Cancelar</button>
-        <button onClick={onConfirmDelete} disabled={confirmText !== 'EXCLUIR'} className="flex-1 px-4 py-3 rounded-lg disabled:theme-bg-tertiary disabled:cursor-not-allowed font-medium bg-red-600 text-white hover-red-700-from-600">🗑️ Excluir Tudo</button>
-      </>}>
-      <div className="space-y-4">
-        <p className="theme-text-tertiary">Você está prestes a <strong className="text-red-400">excluir TODOS os {totalModels} modelo(s)</strong> da sua biblioteca.</p>
-        <ModalWarningBox>
-          ⚠️ <strong>ATENÇÃO:</strong> Todos os modelos serão permanentemente removidos. Esta ação não pode ser desfeita!
-          <ul className="mt-2 ml-4 list-disc space-y-1 theme-text-secondary">
-            <li>Todos os {totalModels} modelos serão excluídos</li>
-            <li>As sugestões automáticas não funcionarão mais</li>
-            <li>Você precisará recriar ou importar novos modelos</li>
-          </ul>
-        </ModalWarningBox>
-        <div>
-          <label className={CSS.label}>Para confirmar, digite <strong className="text-red-400">EXCLUIR</strong>:</label>
-          <input type="text" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} className="w-full theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary" placeholder="Digite EXCLUIR" autoFocus />
-          {confirmText && confirmText !== 'EXCLUIR' && <p className="text-xs text-red-400 mt-1">❌ Digite exatamente "EXCLUIR"</p>}
-        </div>
-      </div>
-    </BaseModal>
-  );
-});
-DeleteAllModelsModal.displayName = 'DeleteAllModelsModal';
-
-const DeleteAllPrecedentesModal = React.memo(({ isOpen, onClose, totalPrecedentes, confirmText, setConfirmText, onConfirmDelete }: DeleteAllPrecedentesModalProps) => {
-  const handleClose = () => { onClose(); setConfirmText(''); };
-  return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title="ATENÇÃO: Exclusão em Massa" icon={<AlertCircle />} iconColor="red" size="md"
-      footer={<>
-        <button onClick={handleClose} className={CSS.btnSecondary}>Cancelar</button>
-        <button onClick={onConfirmDelete} disabled={confirmText !== 'EXCLUIR'} className="flex-1 px-4 py-3 rounded-lg disabled:theme-bg-tertiary disabled:cursor-not-allowed font-medium bg-red-600 text-white hover-red-700-from-600">🗑️ Excluir Tudo</button>
-      </>}>
-      <div className="space-y-4">
-        <p className="theme-text-tertiary">Você está prestes a <strong className="text-red-400">excluir TODOS os {totalPrecedentes} precedente(s)</strong> da sua base.</p>
-        <ModalWarningBox>
-          ⚠️ <strong>ATENÇÃO:</strong> Todos os precedentes serão permanentemente removidos. Esta ação não pode ser desfeita!
-        </ModalWarningBox>
-        <div>
-          <label className={CSS.label}>Para confirmar, digite <strong className="text-red-400">EXCLUIR</strong>:</label>
-          <input type="text" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} className="w-full theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary" placeholder="Digite EXCLUIR" autoFocus />
-          {confirmText && confirmText !== 'EXCLUIR' && <p className="text-xs text-red-400 mt-1">❌ Digite exatamente "EXCLUIR"</p>}
-        </div>
-      </div>
-    </BaseModal>
-  );
-});
-DeleteAllPrecedentesModal.displayName = 'DeleteAllPrecedentesModal';
+// 🔧 BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview extraídos para src/components/modals/BaseModal.tsx (v1.36.85)
+// 🔧 RenameTopicModal, DeleteTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal extraídos para src/components/modals/TopicModals.tsx (v1.36.85)
+// 🔧 DeleteModelModal, DeleteAllModelsModal, DeleteAllPrecedentesModal extraídos para src/components/modals/ModelModals.tsx (v1.36.85)
 
 // Modal: Confirmar Extração de Modelo
 const ExtractModelConfirmModal = React.memo(({
@@ -3282,24 +2927,7 @@ const ExtractedModelPreviewModal = React.memo(({
 
 ExtractedModelPreviewModal.displayName = 'ExtractedModelPreviewModal';
 
-// Modal: Adicionar Prova (Texto) (migrado para BaseModal v1.18.3)
-const AddProofTextModal = React.memo(({ isOpen, onClose, newProofData, setNewProofData, onAddProof }: AddProofTextModalProps) => {
-  const data = newProofData || { name: '', text: '' };
-  const handleClose = () => { onClose(); setNewProofData({ name: '', text: '' }); };
-  return (
-    <BaseModal isOpen={isOpen} onClose={handleClose} title="Adicionar Prova (Texto)" icon={<FileText />} iconColor="blue" size="lg"
-      footer={<>
-        <button onClick={handleClose} className={CSS.btnSecondary}>Cancelar</button>
-        <button onClick={onAddProof} disabled={!data.text.trim()} className="px-6 py-2 rounded-lg disabled:opacity-50 bg-blue-600 text-white hover-blue-700-from-600">Adicionar Prova</button>
-      </>}>
-      <div className="space-y-4">
-        <div><label className={CSS.label}>Nome da Prova</label><input type="text" value={data.name} onChange={(e) => setNewProofData((prev: { name: string; text: string }) => ({...prev, name: e.target.value}))} placeholder="Ex: Contracheques, Ata de Audiência" className="w-full px-4 py-2 theme-bg-secondary border theme-border-input rounded-lg theme-text-secondary" /></div>
-        <div><label className={CSS.label}>Texto da Prova</label><textarea value={data.text} onChange={(e) => setNewProofData((prev: { name: string; text: string }) => ({...prev, text: e.target.value}))} placeholder="Cole aqui o texto da prova..." rows={12} className="w-full px-4 py-2 theme-bg-secondary border theme-border-input rounded-lg theme-text-secondary font-mono text-sm" /></div>
-      </div>
-    </BaseModal>
-  );
-});
-AddProofTextModal.displayName = 'AddProofTextModal';
+// 🔧 AddProofTextModal extraído para src/components/modals/ProofModals.tsx (v1.36.85)
 
 // v1.33.45: Migrado para BaseModal
 const ProofAnalysisModal = React.memo(({
@@ -3534,28 +3162,7 @@ const LinkProofModal = React.memo(({
 
 LinkProofModal.displayName = 'LinkProofModal';
 
-// Modal: Excluir Prova (migrado para BaseModal)
-// v1.36.30: Fix race condition - isOpen && proofToDelete para evitar modal vazio
-const DeleteProofModal = React.memo(({ isOpen, onClose, proofToDelete, onConfirmDelete }: DeleteProofModalProps) => {
-  return (
-    <BaseModal isOpen={isOpen && !!proofToDelete} onClose={onClose} title="Confirmar Exclusão" icon={<Trash2 />} iconColor="red" size="md"
-      footer={<ModalFooter.Destructive onClose={onClose} onConfirm={onConfirmDelete} confirmText="Excluir Prova" />}>
-      {proofToDelete && (
-        <div className="space-y-4">
-          <p className="theme-text-tertiary">Deseja excluir a prova abaixo?</p>
-          <ModalContentPreview title={proofToDelete.name}>
-            <span className={`px-2 py-0.5 text-xs rounded ml-2 ${proofToDelete.isPdf ? 'theme-bg-red-accent theme-text-red' : 'theme-bg-blue-accent theme-text-blue'}`}>
-              {proofToDelete.isPdf ? 'PDF' : 'TEXTO'}
-            </span>
-            {!proofToDelete.isPdf && proofToDelete.text && <p className="text-xs theme-text-muted mt-2">{proofToDelete.text.substring(0, 200)}...</p>}
-          </ModalContentPreview>
-          <ModalWarningBox><strong>Atenção:</strong> Esta ação não pode ser desfeita.</ModalWarningBox>
-        </div>
-      )}
-    </BaseModal>
-  );
-});
-DeleteProofModal.displayName = 'DeleteProofModal';
+// 🔧 DeleteProofModal extraído para src/components/modals/ProofModals.tsx (v1.36.85)
 
 // 💬 Chat components (ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown) extraídos para src/components/chat/ (v1.36.84)
 
@@ -4365,51 +3972,7 @@ const ExportModal = React.memo(({ isOpen, onClose, exportedText, exportedHtml, c
 });
 ExportModal.displayName = 'ExportModal';
 
-// Modal: Restaurar Sessão (migrado para BaseModal)
-// v1.33.62: preventClose - usuário deve escolher uma opção
-const RestoreSessionModal = React.memo(({ isOpen, onClose, sessionLastSaved, onRestoreSession, onStartNew }: RestoreSessionModalProps) => (
-  <BaseModal isOpen={isOpen} onClose={onClose} title="Sessão Anterior Encontrada" icon={<Save />} iconColor="blue" size="sm" preventClose
-    footer={<><button onClick={onRestoreSession} className={CSS.btnGreen}>✅ Continuar Sessão</button><button onClick={onStartNew} className={CSS.btnRed}>🗑️ Começar do Zero</button></>}>
-    <div className="space-y-4">
-      <p className="text-xs theme-text-muted">Última atualização: {sessionLastSaved ? new Date(sessionLastSaved).toLocaleString('pt-BR') : ''}</p>
-      <p className="theme-text-tertiary">Encontramos uma sessão salva. Deseja continuar ou começar uma nova sentença?</p>
-      <ModalInfoBox>💡 <strong>Dica:</strong> Use "Salvar Projeto" para fazer backup seguro.</ModalInfoBox>
-    </div>
-  </BaseModal>
-));
-RestoreSessionModal.displayName = 'RestoreSessionModal';
-
-// Modal: Limpar Projeto (migrado para BaseModal)
-const ClearProjectModal = React.memo(({ isOpen, onClose, onConfirmClear }: ClearProjectModalProps) => (
-  <BaseModal isOpen={isOpen} onClose={onClose} title="Limpar Projeto" icon={<Trash2 />} iconColor="red" size="sm"
-    footer={<ModalFooter.Destructive onClose={onClose} onConfirm={onConfirmClear} confirmText="Sim, Limpar Tudo" />}>
-    <div className="space-y-4">
-      <p className="theme-text-tertiary">Tem certeza que deseja <strong>limpar todos os dados</strong> do projeto?</p>
-      <ModalAmberBox>
-        <p className="text-xs theme-text-primary mb-2"><strong>⚠️ Atenção! Isto irá apagar:</strong></p>
-        <ul className="text-xs theme-text-secondary space-y-1 ml-4 list-disc">
-          <li>Todos os documentos (PDFs e textos)</li>
-          <li>Todos os tópicos e decisões</li>
-          <li>Todo o progresso da sentença</li>
-        </ul>
-      </ModalAmberBox>
-      <ModalInfoBox>💡 <strong>Dica:</strong> Se quiser manter seus dados, clique em "Salvar Projeto" antes.</ModalInfoBox>
-    </div>
-  </BaseModal>
-));
-ClearProjectModal.displayName = 'ClearProjectModal';
-
-// v1.33.57: Modal de confirmação de logout estilizado
-const LogoutConfirmModal = React.memo(({ isOpen, onClose, onConfirm }: LogoutConfirmModalProps) => (
-  <BaseModal isOpen={isOpen} onClose={onClose} title="Sair do Sistema" icon={<LogOut />} iconColor="red" size="sm"
-    footer={<ModalFooter.Destructive onClose={onClose} onConfirm={onConfirm} confirmText="Sim, Sair" />}>
-    <div className="space-y-4">
-      <p className="theme-text-tertiary">Deseja realmente sair do sistema?</p>
-      <ModalInfoBox>💾 Seus dados permanecerão salvos localmente.</ModalInfoBox>
-    </div>
-  </BaseModal>
-));
-LogoutConfirmModal.displayName = 'LogoutConfirmModal';
+// 🔧 RestoreSessionModal, ClearProjectModal, LogoutConfirmModal extraídos para src/components/modals/SessionModals.tsx (v1.36.85)
 
 // v1.35.1: Modal para compartilhar biblioteca de modelos (convite por email)
 // v1.35.23: Adicionado onRemoveSharedModels para limpar modelos ao remover acesso
@@ -4968,57 +4531,7 @@ const AnonymizationNamesModal = React.memo(({ isOpen, onClose, onConfirm, nomesT
 });
 AnonymizationNamesModal.displayName = 'AnonymizationNamesModal';
 
-// v1.21.16: Modal de preview de texto extraído
-const TextPreviewModal = React.memo(({ isOpen, onClose, title, text }: TextPreviewModalProps) => {
-  // v1.35.67: ESC handler
-  React.useEffect(() => {
-    if (!isOpen) return;
-    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
-
-  // v1.35.67: Scroll lock
-  React.useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = originalOverflow; };
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  return (
-    <div className={`${CSS.modalOverlay} overflow-y-auto`} style={{ alignItems: 'flex-start' }} onClick={onClose}>
-      <div
-        className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal w-full max-w-4xl my-8`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className={`${CSS.modalHeader} flex items-start justify-between`}>
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-blue-500/20">
-              <Eye className="w-6 h-6 text-blue-400" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold theme-text-primary">Preview: {title}</h3>
-              <p className="text-xs theme-text-muted">{text?.length?.toLocaleString() || 0} caracteres</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-2 rounded-xl theme-bg-secondary-50 theme-hover-bg transition-colors" title="Fechar">
-            <X className="w-5 h-5 theme-text-tertiary" />
-          </button>
-        </div>
-        <div className="p-4 max-h-[70vh] overflow-y-auto">
-          <pre className="whitespace-pre-wrap text-sm theme-text-secondary font-mono bg-black/20 p-4 rounded-lg">
-            {text || 'Sem conteúdo'}
-          </pre>
-        </div>
-      </div>
-    </div>
-  );
-});
-TextPreviewModal.displayName = 'TextPreviewModal';
+// 🔧 TextPreviewModal extraído para src/components/modals/TextPreviewModal.tsx (v1.36.85)
 
 const DispositivoModal: React.FC<DispositivoModalProps> = ({
   isOpen,
@@ -5298,29 +4811,7 @@ const DispositivoModal: React.FC<DispositivoModalProps> = ({
   );
 };
 
-// Modal: Descartar Modelos em Lote (migrado para BaseModal)
-const BulkDiscardConfirmModal = React.memo(({ isOpen, onClose, totalModels, onConfirm }: BulkDiscardConfirmModalProps) => (
-  <BaseModal isOpen={isOpen} onClose={onClose} title="Descartar Modelos?" icon={<AlertCircle />} iconColor="red" size="sm"
-    footer={<ModalFooter.Destructive onClose={onClose} onConfirm={onConfirm} confirmText="Sim, Descartar" />}>
-    <div className="space-y-4">
-      <p className="theme-text-tertiary">Descartar <strong className="theme-text-primary">{totalModels} modelo(s)</strong>?</p>
-      <p className="text-sm theme-text-muted">Todos serão perdidos e precisará processar novamente.</p>
-    </div>
-  </BaseModal>
-));
-BulkDiscardConfirmModal.displayName = 'BulkDiscardConfirmModal';
-
-// Modal: Cancelar Processamento em Lote (migrado para BaseModal)
-const ConfirmBulkCancelModal = React.memo(({ isOpen, onClose, filesInProgress, onConfirm }: ConfirmBulkCancelModalProps) => (
-  <BaseModal isOpen={isOpen} onClose={onClose} title="Cancelar Processamento?" icon={<AlertCircle />} iconColor="yellow" size="sm"
-    footer={<><button onClick={onClose} className={CSS.btnSecondary}>Continuar</button><button onClick={onConfirm} className="flex-1 px-4 py-3 rounded-lg font-medium bg-amber-600 text-white hover-amber-700-from-600">Sim, Cancelar</button></>}>
-    <div className="space-y-4">
-      <p className="theme-text-tertiary">Cancelar processamento de <strong className="theme-text-primary">{filesInProgress} arquivo(s)</strong>?</p>
-      <ModalInfoBox>ℹ️ Os modelos já gerados serão preservados.</ModalInfoBox>
-    </div>
-  </BaseModal>
-));
-ConfirmBulkCancelModal.displayName = 'ConfirmBulkCancelModal';
+// 🔧 BulkDiscardConfirmModal, ConfirmBulkCancelModal extraídos para src/components/modals/BulkModals.tsx (v1.36.85)
 
 const LockedTabOverlay = React.memo(({ isPrimaryTab, activeTab, setActiveTab }: LockedTabOverlayProps) => {
   const [controlTaken, setControlTaken] = React.useState(false);

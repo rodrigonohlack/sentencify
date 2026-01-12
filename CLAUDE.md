@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.84 | **File**: `src/App.tsx` (~1.1 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.85 | **File**: `src/App.tsx` (~1.0 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -33,7 +33,7 @@
 3. **API**: Use `buildApiRequest()` helper. Model: `claude-sonnet-4-20250514`
 4. **z-index**: Base `z-50`, nested `+10` por nível
 5. **NUNCA usar PowerShell para editar conteúdo de arquivos**: Corrompe encoding UTF-8 (acentuação quebrada). Use `sed`, `Edit` tool, ou `Write` tool.
-6. **Novos Modais**: SEMPRE usar `BaseModal` (App.tsx ~linha 10545). Nunca reimplementar ESC handler, scroll lock ou estrutura modal manualmente. Props: `isOpen`, `onClose`, `title`, `subtitle`, `icon`, `iconColor` (blue/red/green/yellow/purple/orange), `size` (sm/md/lg/xl/2xl), `children`, `footer`, `preventClose`.
+6. **Novos Modais**: SEMPRE usar `BaseModal` (src/components/modals/BaseModal.tsx). Nunca reimplementar ESC handler, scroll lock ou estrutura modal manualmente. Props: `isOpen`, `onClose`, `title`, `subtitle`, `icon`, `iconColor` (blue/red/green/yellow/purple/orange), `size` (sm/md/lg/xl/2xl), `children`, `footer`, `preventClose`.
 7. **Hooks em `src/hooks/` são código de PRODUÇÃO** (v1.36.70+): Os hooks extraídos em `src/hooks/` (useFullscreen, useIndexedDB, etc.) são o código REAL usado pelo App.tsx via barrel export (`./hooks/index.ts`). Hooks ainda não extraídos permanecem definidos dentro do App.tsx.
 8. **Versionamento (5 arquivos)**: Ao incrementar versão, atualizar TODOS: `CLAUDE.md` (linha 7 + Recent Changes), `src/App.tsx` (APP_VERSION ~linha 209), `src/constants/changelog.js`, `package.json`. **APP_VERSION no App.tsx é frequentemente esquecido após compactação de contexto!**
 9. **Temas Claro/Escuro**: TODA mudança de UI deve funcionar em AMBOS os temas. Usar classes `theme-*` ou variantes `dark:` do Tailwind. Testar visualmente nos dois temas antes de commitar.
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.85 | Modais simples extraídos para src/components/modals/: BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview + TopicModals, ModelModals, ProofModals, SessionModals, BulkModals, TextPreviewModal (~580 linhas removidas) |
 | v1.36.84 | Chat components extraídos: ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown para src/components/chat/ (~185 linhas removidas) |
 | v1.36.83 | Mais UI components extraídos: VersionCompareModal, VersionSelect para src/components/version/ + JurisprudenciaCard, ArtigoCard para src/components/cards/ (~460 linhas removidas) |
 | v1.36.82 | UI components extraídos: SuggestionCard, SplitDivider para src/components/cards/ + SpacingDropdown, FontSizeDropdown, ProcessingModeSelector para src/components/ui/ (~147 linhas removidas) |
