@@ -14,6 +14,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { enableMapSet } from 'immer';
 import type {
   ProofFile,
   ProofText,
@@ -210,6 +211,9 @@ interface ProofsStoreState {
 // ═══════════════════════════════════════════════════════════════════════════════
 // STORE
 // ═══════════════════════════════════════════════════════════════════════════════
+
+// Habilita suporte a Set/Map no Immer (necessário para analyzingProofIds)
+enableMapSet();
 
 export const useProofsStore = create<ProofsStoreState>()(
   devtools(
