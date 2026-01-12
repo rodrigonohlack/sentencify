@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.81', feature: 'Serviços e utilitários extraídos: EmbeddingsServices.ts (~540 linhas), jurisprudencia.ts (~420 linhas), text.ts (~200 linhas), models.ts (~30 linhas) - App.tsx reduzido para ~28,900 linhas' },
   { version: '1.36.80', feature: 'useAIIntegration extraído para src/hooks/ (~1310 linhas removidas) + API_BASE extraído para src/constants/api.ts' },
   { version: '1.36.79', feature: 'useQuillEditor e useDocumentServices extraídos para src/hooks/ (~30KB removidos) + sanitizeQuillHTML' },
   { version: '1.36.78', feature: 'useModalManager e useModelLibrary extraídos para src/hooks/ (~14KB removidos) + searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS' },
