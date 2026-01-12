@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.89', feature: 'Proof modals extraídos: ProofAnalysisModal, LinkProofModal adicionados a ProofModals.tsx (~230 linhas removidas)' },
   { version: '1.36.88', feature: 'Model extraction modals extraídos: ExtractModelConfirmModal, ExtractedModelPreviewModal, SimilarityWarningModal (~290 linhas removidas)' },
   { version: '1.36.87', feature: 'Panel components extraídos para src/components/panels/: FullscreenModelPanel, ModelSearchPanel, JurisprudenciaTab, LegislacaoTab (~1160 linhas removidas)' },
   { version: '1.36.86', feature: 'Card components extraidos para src/components/cards/: TopicCard, SortableTopicCard, ModelCard, ProofCard, VirtualList (~1140 linhas removidas)' },

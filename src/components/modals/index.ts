@@ -1,7 +1,7 @@
 /**
  * @file index.ts
  * @description Barrel export para todos os modais simples
- * @version 1.36.88
+ * @version 1.36.89
  */
 
 // BaseModal + helpers
@@ -17,7 +17,7 @@ export { DeleteModelModal, DeleteAllModelsModal, DeleteAllPrecedentesModal } fro
 export { ExtractModelConfirmModal, ExtractedModelPreviewModal, SimilarityWarningModal } from './ModelExtractionModals';
 
 // Proof Modals
-export { AddProofTextModal, DeleteProofModal } from './ProofModals';
+export { AddProofTextModal, DeleteProofModal, ProofAnalysisModal, LinkProofModal } from './ProofModals';
 
 // Session Modals
 export { RestoreSessionModal, ClearProjectModal, LogoutConfirmModal } from './SessionModals';
