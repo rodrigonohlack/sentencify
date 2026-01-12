@@ -5,16 +5,9 @@
  */
 
 import React from 'react';
-import type { ProcessingMode } from '../../types';
+import type { ProcessingMode, ProcessingModeSelectorProps } from '../../types';
 
-export interface ProcessingModeSelectorProps {
-  value: ProcessingMode;
-  onChange: (value: ProcessingMode) => void;
-  disabled?: boolean;
-  anonymizationEnabled?: boolean;
-  grokEnabled?: boolean;
-  className?: string;
-}
+export type { ProcessingModeSelectorProps };
 
 // v1.14.1: Restaurado PDF Puro como opção (config global é apenas padrão, usuário pode mudar por arquivo)
 // v1.32.13: anonymizationEnabled bloqueia apenas modos que não extraem texto (claude-vision, pdf-puro)

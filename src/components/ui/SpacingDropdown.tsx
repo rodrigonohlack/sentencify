@@ -6,12 +6,9 @@
 
 import React from 'react';
 import { SPACING_PRESETS } from '../../constants/presets';
+import type { SpacingDropdownProps } from '../../types';
 
-export interface SpacingDropdownProps {
-  value: 'compact' | 'normal' | 'wide';
-  onChange: (value: 'compact' | 'normal' | 'wide') => void;
-  ariaLabel?: string;
-}
+export type { SpacingDropdownProps };
 
 export const SpacingDropdown = React.memo(({
   value,

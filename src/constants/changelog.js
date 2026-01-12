@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.83', feature: 'Mais UI components extraídos: VersionCompareModal, VersionSelect para src/components/version/ + JurisprudenciaCard, ArtigoCard para src/components/cards/ (~460 linhas removidas)' },
   { version: '1.36.82', feature: 'UI components extraídos: SuggestionCard, SplitDivider para src/components/cards/ + SpacingDropdown, FontSizeDropdown, ProcessingModeSelector para src/components/ui/ (~147 linhas removidas)' },
   { version: '1.36.81', feature: 'Serviços e utilitários extraídos: EmbeddingsServices.ts (~540 linhas), jurisprudencia.ts (~420 linhas), text.ts (~200 linhas), models.ts (~30 linhas) - App.tsx reduzido para ~28,900 linhas' },
   { version: '1.36.80', feature: 'useAIIntegration extraído para src/hooks/ (~1310 linhas removidas) + API_BASE extraído para src/constants/api.ts' },

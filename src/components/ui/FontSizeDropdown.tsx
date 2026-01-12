@@ -6,12 +6,9 @@
 
 import React from 'react';
 import { FONTSIZE_PRESETS } from '../../constants/presets';
+import type { FontSizeDropdownProps } from '../../types';
 
-export interface FontSizeDropdownProps {
-  value: 'small' | 'normal' | 'large';
-  onChange: (value: 'small' | 'normal' | 'large') => void;
-  ariaLabel?: string;
-}
+export type { FontSizeDropdownProps };
 
 export const FontSizeDropdown = React.memo(({
   value,
