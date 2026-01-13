@@ -32,3 +32,11 @@ export {
 
 // Model utilities
 export { searchModelsBySimilarity } from './models';
+
+// Context helpers (v1.36.96)
+export {
+  prepareDocumentsContext,
+  prepareProofsContext,
+  prepareOralProofsContext,
+  fastHashUtil
+} from './context-helpers';
