@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.0 | **File**: `src/App.tsx` (~0.59 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.10 | **File**: `src/App.tsx` (~0.59 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,16 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.10 | Fix bug useModelGeneration: stale closure em setNewModel - usar functional updater (prev => ...) |
+| v1.37.9 | FASE 8: useEmbeddingsManagement extraído (~400 linhas removidas) |
+| v1.37.8 | FASE 7: useModelGeneration extraído (~100 linhas removidas) |
+| v1.37.7 | FASE 6: useTopicOperations extraído (~170 linhas removidas) |
+| v1.37.6 | FASE 5: useDragDropTopics extraído (~150 linhas removidas) |
+| v1.37.5 | FASE 4: useTopicOrdering extraído (~250 linhas removidas) |
+| v1.37.4 | FASE 3: useProofAnalysis extraído (~400 linhas removidas) |
+| v1.37.3 | FASE 2: useReportGeneration extraído (~300 linhas removidas) |
+| v1.37.2 | FASE 1: useDocumentAnalysis extraído (~400 linhas removidas) |
+| v1.37.1 | FASE 0: Planejamento refatoração LegalDecisionEditor (plano em ~/.claude/plans/) |
 | v1.37.0 | FASE 6 refatoração final: src/styles/ criado com GlobalHoverStyles e ThemeStyles (~1316 linhas removidas) |
 | v1.36.99 | FASE 5 refatoração final: GlobalEditorModal extraído para src/components/modals/ (~1572 linhas removidas) |
 | v1.36.98 | FASE 4 refatoração final: LockedTabOverlay extraído para src/components/ui/ (~261 linhas removidas) |

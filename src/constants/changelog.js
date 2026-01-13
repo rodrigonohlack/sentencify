@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.10', feature: 'Fix bug useModelGeneration: stale closure em setNewModel corrigida com functional updater (prev => ...) - botões "Gerar com IA" para título/keywords agora funcionam corretamente' },
   { version: '1.37.9', feature: 'FASE 8 LegalDecisionEditor: useEmbeddingsManagement extraído (~400 linhas removidas) - importação, download CDN, limpeza e geração de embeddings (legislação, jurisprudência, modelos)' },
   { version: '1.37.8', feature: 'FASE 7 LegalDecisionEditor: useModelGeneration extraído (~155 linhas removidas) - generateKeywordsWithAI, generateTitleWithAI para geração de keywords/título via IA' },
   { version: '1.37.7', feature: 'FASE 6 LegalDecisionEditor: useTopicOperations extraído (~165 linhas removidas) - handleRenameTopic, handleMergeTopics, handleSplitTopic, handleCreateNewTopic + plainTextToHtml para utils/text.ts' },

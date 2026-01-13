@@ -80,7 +80,8 @@ export function useModelGeneration({
     // Verificar cache antes de chamar API
     const cachedKeywords = apiCache.get(cacheKey);
     if (cachedKeywords && typeof cachedKeywords === 'string') {
-      modelLibrary.setNewModel({ ...modelLibrary.newModel, keywords: cachedKeywords });
+      // Usar functional updater para evitar stale closure
+      modelLibrary.setNewModel(prev => ({ ...prev, keywords: cachedKeywords }));
       return; // Retornar imediatamente com resultado cacheado
     }
 
@@ -126,7 +127,8 @@ Não adicione explicações, apenas as keywords separadas por vírgula.`;
       if (keywords) {
         // Armazenar resultado no cache
         apiCache.set(cacheKey, keywords);
-        modelLibrary.setNewModel({ ...modelLibrary.newModel, keywords: keywords });
+        // Usar functional updater para evitar stale closure
+        modelLibrary.setNewModel(prev => ({ ...prev, keywords }));
       } else {
         setError('Não foi possível gerar palavras-chave. Tente novamente.');
       }
@@ -155,7 +157,8 @@ Não adicione explicações, apenas as keywords separadas por vírgula.`;
     const cacheKey = `title_${modelLibrary.newModel.content.substring(0, 500)}`;
     const cachedTitle = apiCache.get(cacheKey);
     if (cachedTitle && typeof cachedTitle === 'string') {
-      modelLibrary.setNewModel({ ...modelLibrary.newModel, title: cachedTitle });
+      // Usar functional updater para evitar stale closure
+      modelLibrary.setNewModel(prev => ({ ...prev, title: cachedTitle }));
       return;
     }
 
@@ -205,7 +208,8 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
 
       if (title) {
         apiCache.set(cacheKey, title.trim());
-        modelLibrary.setNewModel({ ...modelLibrary.newModel, title: title.trim() });
+        // Usar functional updater para evitar stale closure
+        modelLibrary.setNewModel(prev => ({ ...prev, title: title.trim() }));
       } else {
         setError('Não foi possível gerar o título. Tente novamente.');
       }
