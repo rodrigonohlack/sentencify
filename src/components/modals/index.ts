@@ -1,11 +1,14 @@
 /**
  * @file index.ts
  * @description Barrel export para todos os modais simples
- * @version 1.36.94
+ * @version 1.36.99
  */
 
 // BaseModal + helpers
 export { BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview, CSS } from './BaseModal';
+
+// GlobalEditorModal (v1.36.99)
+export { GlobalEditorModal, AUTO_SAVE_DEBOUNCE_MS } from './GlobalEditorModal';
 
 // Topic Modals
 export { RenameTopicModal, DeleteTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal } from './TopicModals';

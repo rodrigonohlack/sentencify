@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.99', feature: 'FASE 5 refatoração final: GlobalEditorModal extraído para src/components/modals/ (~1572 linhas removidas)' },
   { version: '1.36.98', feature: 'FASE 4 refatoração final: LockedTabOverlay extraído para src/components/ui/ (~261 linhas removidas)' },
   { version: '1.36.97', feature: 'FASE 3 refatoração final: GlobalEditorSection e DecisionEditorContainer extraídos para src/components/editors/ (~370 linhas removidas)' },
   { version: '1.36.96', feature: 'FASE 2 refatoração final: prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext, fastHashUtil extraídos para src/utils/context-helpers.ts (~260 linhas removidas)' },
