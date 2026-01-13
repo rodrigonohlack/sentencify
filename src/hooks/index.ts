@@ -174,3 +174,13 @@ export type {
   AISettingsForDragDrop,
   AIIntegrationForDragDrop
 } from './useDragDropTopics';
+
+// Topic Operations hook (TIER 2 - dependências: useReportGeneration, topicManager)
+export { useTopicOperations } from './useTopicOperations';
+export type {
+  UseTopicOperationsProps,
+  UseTopicOperationsReturn,
+  TopicManagerForOperations,
+  AIIntegrationForOperations,
+  NewTopicData
+} from './useTopicOperations';

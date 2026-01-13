@@ -241,3 +241,25 @@ export const generateModelId = (): string => {
   const randomStr = Math.random().toString(36).substr(2, 9);
   return `model:${Date.now()}_${randomStr}`;
 };
+
+/**
+ * Converte texto puro em HTML preservando quebras de linha
+ * @param text - Texto puro a ser convertido
+ * @returns HTML com quebras de linha convertidas para <br>
+ */
+export const plainTextToHtml = (text: string): string => {
+  if (!text) return '';
+
+  // Converter texto puro em HTML, preservando quebras de linha
+  let html = text;
+
+  // Escapar caracteres HTML especiais
+  html = html.replace(/&/g, '&amp;');
+  html = html.replace(/</g, '&lt;');
+  html = html.replace(/>/g, '&gt;');
+
+  // Converter quebras de linha em <br>
+  html = html.replace(/\n/g, '<br>');
+
+  return html;
+};

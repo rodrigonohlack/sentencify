@@ -144,7 +144,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -1217,6 +1217,27 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     generateRelatorioProcessual,
     isGeneratingReport,
   } = reportGeneration;
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.7: useTopicOperations - Hook extraído para operações de tópicos
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const topicOperations = useTopicOperations({
+    aiIntegration,
+    topicManager,
+    analyzedDocuments,
+    generateMiniReport,
+    generateMiniReportsBatch,
+    setError: (error: string) => setError(error),
+    setAnalysisProgress,
+    closeModal: closeModal as (modalName: 'rename' | 'merge' | 'split' | 'newTopic') => void,
+  });
+
+  const {
+    handleRenameTopic,
+    handleMergeTopics,
+    handleSplitTopic,
+    handleCreateNewTopic,
+  } = topicOperations;
 
   // 📝 ESTADOS: Editor de Texto Rico
   const [exportedText, setExportedText] = useState('');
@@ -4807,172 +4828,8 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
   };
 
 
-  // 📋 FUNÇÕES: Gerenciamento de Tópicos
-
-  const handleRenameTopic = async (shouldRegenerate = true) => {
-    if (!newTopicName.trim() || !topicToRename) return;
-    const upperCaseTitle = newTopicName.trim().toUpperCase();
-    aiIntegration.setRegenerating(true);
-    setError('');
-    try {
-      let newRelatorio = topicToRename.relatorio;
-      if (shouldRegenerate) {
-        setAnalysisProgress(`🔄 Regenerando mini-relatório para "${upperCaseTitle}"...`);
-        const renameContext = `**CONTEXTO DE RENOMEAÇÃO:**
-Tópico ANTERIOR: "${topicToRename.title}"
-Tópico NOVO: "${upperCaseTitle}"
-**INSTRUÇÃO:** Busque informações ESPECÍFICAS sobre "${upperCaseTitle}" nos documentos.
-NÃO replique o conteúdo do tópico anterior "${topicToRename.title}".
-Se o novo título representa um aspecto DIFERENTE do anterior, extraia informações DIFERENTES.
-Se não houver informações específicas, indique: "Não foram localizadas informações específicas sobre ${upperCaseTitle} nas peças processuais."`;
-        newRelatorio = await generateMiniReport({ title: upperCaseTitle, context: renameContext });
-      }
-      if (newRelatorio) {
-        setSelectedTopics(selectedTopics.map(t => t.title === topicToRename.title ? { ...t, title: upperCaseTitle, relatorio: newRelatorio } : t));
-        setExtractedTopics(extractedTopics.map(t => t.title === topicToRename.title ? { ...t, title: upperCaseTitle, relatorio: newRelatorio } : t));
-      } else {
-        setError('Não foi possível gerar o mini-relatório para o tópico renomeado.');
-      }
-    } catch (err) {
-      setError('Erro ao renomear tópico: ' + (err as Error).message);
-    } finally {
-      aiIntegration.setRegenerating(false);
-    }
-    closeModal('rename');
-    setTopicToRename(null);
-    setNewTopicName('');
-  };
-
-  const handleMergeTopics = async () => {
-    if (topicsToMerge.length < 2) {
-      setError('Selecione pelo menos 2 tópicos para unir');
-      return;
-    }
-    aiIntegration.setRegenerating(true);
-    setError('');
-    try {
-      const mergedTitle = topicsToMerge.map(t => t.title).join(' e ');
-      setAnalysisProgress(`🔄 Gerando mini-relatório unificado para "${mergedTitle}"...`);
-      const topicsInfo = topicsToMerge.map((t, i: number) => `${i + 1}. ${t.title}`).join('\n');
-      const mergeContext = `**CONTEXTO DE UNIÃO DE TÓPICOS:**
-Os seguintes tópicos estão sendo unidos em um único tópico:
-${topicsInfo}
-**INSTRUÇÃO:** Crie um mini-relatório unificado que contemple TODOS os aspectos dos tópicos originais.
-Extraia informações relevantes para TODOS os tópicos sendo unidos.
-Unifique as informações de forma coerente e abrangente.`;
-      const newRelatorio = await generateMiniReport({ title: mergedTitle, context: mergeContext });
-      if (newRelatorio) {
-        const mergedTopic = { title: mergedTitle, category: topicsToMerge[0]?.category || 'MÉRITO', relatorio: newRelatorio, editedContent: '' };
-        const mergeSet = new Set(topicsToMerge.map(mt => mt.title));
-        // Calcular posição correta: contar quantos itens NÃO mesclados vêm ANTES do primeiro mesclado
-        const firstTopicIndex = selectedTopics.findIndex((t: Topic) => mergeSet.has(t.title));
-        const insertPosition = firstTopicIndex >= 0 ? selectedTopics.slice(0, firstTopicIndex).filter(t => !mergeSet.has(t.title)).length : 0;
-        const remainingTopics = selectedTopics.filter(t => !mergeSet.has(t.title));
-        remainingTopics.splice(insertPosition, 0, mergedTopic);
-        setSelectedTopics(remainingTopics);
-        const firstExtractedIndex = extractedTopics.findIndex((t: Topic) => mergeSet.has(t.title));
-        const extractInsertPosition = firstExtractedIndex >= 0 ? extractedTopics.slice(0, firstExtractedIndex).filter(t => !mergeSet.has(t.title)).length : 0;
-        const remainingExtracted = extractedTopics.filter(t => !mergeSet.has(t.title));
-        remainingExtracted.splice(extractInsertPosition, 0, mergedTopic);
-        setExtractedTopics(remainingExtracted);
-        closeModal('merge');
-        setTopicsToMerge([]);
-      } else {
-        setError('Não foi possível gerar o mini-relatório unificado. Tente novamente.');
-      }
-    } catch (err) {
-      setError('Erro ao unir tópicos: ' + (err as Error).message);
-    } finally {
-      aiIntegration.setRegenerating(false);
-    }
-  };
-
-  const handleSplitTopic = async () => {
-    if (!topicToSplit || splitNames.filter(n => n.trim()).length < 2) return;
-    const validNames = splitNames.filter(n => n.trim()).map(n => n.trim().toUpperCase());
-    aiIntegration.setRegenerating(true);
-    setError('');
-    try {
-      const splitContext = `**CONTEXTO DE DIVISÃO:**
-Tópico original: "${topicToSplit.title}"
-**INSTRUÇÃO:** Este é um subtópico derivado de "${topicToSplit.title}".
-Extraia APENAS informações relevantes para o subtópico específico.
-Se não houver informações específicas nos documentos, indique de forma clara.`;
-      const topicsToGenerate = validNames.map(name => ({
-        title: name,
-        category: topicToSplit.category,
-        context: splitContext,
-        includeComplementares: true
-      }));
-      const { results, errors } = await generateMiniReportsBatch(topicsToGenerate, {
-        batchSize: aiIntegration.aiSettings.parallelRequests || 5,
-        delayBetweenBatches: 1000,
-        onProgress: (current: number, total: number, batchNum: number, totalBatches: number) => {
-          setAnalysisProgress(`🚀 Gerando subtópicos... ${current}/${total} (Lote ${batchNum}/${totalBatches})`);
-        }
-      });
-      if (errors.length > 0) {
-        setError(`${errors.length} subtópico(s) falharam: ${errors.map(e => e.error).join('; ')}`);
-      }
-      const newTopics = results.map(r => ({ title: r.title, category: topicToSplit.category, relatorio: r.relatorio, editedContent: '' }));
-      if (newTopics.length === 0) {
-        throw new Error('Nenhum subtópico foi gerado com sucesso.');
-      }
-      const originalIndex = selectedTopics.findIndex((t: Topic) => t.title === topicToSplit.title);
-      const remainingTopics = selectedTopics.filter(t => t.title !== topicToSplit.title);
-      remainingTopics.splice(originalIndex, 0, ...newTopics);
-      setSelectedTopics(remainingTopics);
-      const originalExtractedIndex = extractedTopics.findIndex((t: Topic) => t.title === topicToSplit.title);
-      const remainingExtracted = extractedTopics.filter(t => t.title !== topicToSplit.title);
-      remainingExtracted.splice(originalExtractedIndex, 0, ...newTopics);
-      setExtractedTopics(remainingExtracted);
-    } catch (err) {
-      setError('Erro ao separar tópico: ' + (err as Error).message);
-    } finally {
-      aiIntegration.setRegenerating(false);
-    }
-    closeModal('split');
-    setTopicToSplit(null);
-    setSplitNames(['', '']);
-  };
-
-  const handleCreateNewTopic = async () => {
-    if (!newTopicData?.title?.trim()) {
-      setError('Digite um título para o tópico');
-      return;
-    }
-    const upperCaseTitle = newTopicData.title.trim().toUpperCase();
-    const category = newTopicData.category || 'MÉRITO';
-    aiIntegration.setRegenerating(true);
-    setError('');
-    try {
-      let newRelatorio = (newTopicData.relatorio || '').trim();
-      if (!newRelatorio && (analyzedDocuments.peticoes?.length > 0 || analyzedDocuments.peticoesText?.length > 0)) {
-        try {
-          newRelatorio = await generateMiniReport({
-            title: upperCaseTitle,
-            context: `Tópico criado manualmente na categoria "${category}". Se não houver informações específicas, indique que o tópico foi criado manualmente.`,
-            includeComplementares: true
-          });
-        } catch (apiErr) {
-          setError('Não foi possível gerar automaticamente: ' + (apiErr as Error).message);
-          newRelatorio = plainTextToHtml(`Tópico "${upperCaseTitle}" criado manualmente.\n\nErro ao analisar documentos.`);
-        }
-      } else if (!newRelatorio) {
-        newRelatorio = plainTextToHtml(`Tópico "${upperCaseTitle}" criado manualmente.\n\nNão há documentos para análise.`);
-      }
-      const newTopic: Topic = { title: upperCaseTitle, category, relatorio: newRelatorio, editedContent: '' };
-      setExtractedTopics([...extractedTopics, newTopic]);
-      closeModal('newTopic');
-      setNewTopicData({ title: '', category: 'MÉRITO', relatorio: '' });
-      setError('');
-    } catch (err) {
-      setError('Erro ao criar tópico: ' + (err as Error).message);
-    } finally {
-      aiIntegration.setRegenerating(false);
-    }
-  };
-
+  // 📋 v1.37.7: Funções de Gerenciamento de Tópicos extraídas para useTopicOperations hook
+  // (handleRenameTopic, handleMergeTopics, handleSplitTopic, handleCreateNewTopic)
 
   // 🤖 FUNÇÕES: Geração de Texto com IA
 
