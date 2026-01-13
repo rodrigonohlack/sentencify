@@ -40,3 +40,9 @@ export {
   prepareOralProofsContext,
   fastHashUtil
 } from './context-helpers';
+
+// Quill styles injector (v1.37.20)
+export {
+  injectQuillStyles,
+  injectQuillLightStyles
+} from './quill-styles-injector';
