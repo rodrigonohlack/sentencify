@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.36.94 | **File**: `src/App.tsx` (~0.68 MB) | **Runtime**: Standalone + Render
+**Version**: 1.36.97 | **File**: `src/App.tsx` (~0.68 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,9 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.36.97 | FASE 3 refatoração final: GlobalEditorSection e DecisionEditorContainer extraídos para src/components/editors/ (~370 linhas removidas) |
+| v1.36.96 | FASE 2 refatoração final: prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext, fastHashUtil extraídos para src/utils/context-helpers.ts (~260 linhas removidas) |
+| v1.36.95 | FASE 1 refatoração final: CSS, RESULTADO_STYLES extraídos para src/constants/styles.ts + INSTRUCAO_NAO_PRESUMIR extraído para src/prompts/instrucoes.ts (~90 linhas removidas) |
 | v1.36.94 | Quill Editors + TIER 3 pendências extraídos para src/components/editors/: QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor, AIRegenerationSection, FieldEditor, InlineFormattingToolbar + ModelFormModal, ModelPreviewModal (~1787 linhas removidas) |
 | v1.36.93 | TIER 3 componentes extraídos: ModelFormFields (forms/), SlashCommandMenu (ui/), JurisprudenciaModal (modals/) (~616 linhas removidas) |
 | v1.36.92 | TIER 2 modais extraídos para AdvancedModals.tsx: ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal (~1215 linhas removidas) |

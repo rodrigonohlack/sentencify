@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.36.97', feature: 'FASE 3 refatoração final: GlobalEditorSection e DecisionEditorContainer extraídos para src/components/editors/ (~370 linhas removidas)' },
   { version: '1.36.96', feature: 'FASE 2 refatoração final: prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext, fastHashUtil extraídos para src/utils/context-helpers.ts (~260 linhas removidas)' },
   { version: '1.36.95', feature: 'FASE 1 refatoração final: CSS, RESULTADO_STYLES extraídos para src/constants/styles.ts + INSTRUCAO_NAO_PRESUMIR extraído para src/prompts/instrucoes.ts (~90 linhas removidas)' },
   { version: '1.36.94', feature: 'Quill Editors + TIER 3 pendências extraídos: QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor, AIRegenerationSection, FieldEditor, InlineFormattingToolbar, ModelFormModal, ModelPreviewModal (~1787 linhas removidas)' },
