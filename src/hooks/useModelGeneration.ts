@@ -80,9 +80,13 @@ export function useModelGeneration({
     // Verificar cache antes de chamar API
     const cachedKeywords = apiCache.get(cacheKey);
     if (cachedKeywords && typeof cachedKeywords === 'string') {
-      // Usar functional updater para evitar stale closure
-      modelLibrary.setNewModel(prev => ({ ...prev, keywords: cachedKeywords }));
-      return; // Retornar imediatamente com resultado cacheado
+      // v1.37.12: Forçar mudança de estado para disparar useEffect no ModelFormModal
+      // Limpa primeiro, depois seta o valor cacheado (força re-render mesmo se valor for igual)
+      modelLibrary.setNewModel(prev => ({ ...prev, keywords: '' }));
+      setTimeout(() => {
+        modelLibrary.setNewModel(prev => ({ ...prev, keywords: cachedKeywords }));
+      }, 0);
+      return;
     }
 
     aiIntegration.setGeneratingKeywords(true);
@@ -157,8 +161,12 @@ Não adicione explicações, apenas as keywords separadas por vírgula.`;
     const cacheKey = `title_${modelLibrary.newModel.content.substring(0, 500)}`;
     const cachedTitle = apiCache.get(cacheKey);
     if (cachedTitle && typeof cachedTitle === 'string') {
-      // Usar functional updater para evitar stale closure
-      modelLibrary.setNewModel(prev => ({ ...prev, title: cachedTitle }));
+      // v1.37.12: Forçar mudança de estado para disparar useEffect no ModelFormModal
+      // Limpa primeiro, depois seta o valor cacheado (força re-render mesmo se valor for igual)
+      modelLibrary.setNewModel(prev => ({ ...prev, title: '' }));
+      setTimeout(() => {
+        modelLibrary.setNewModel(prev => ({ ...prev, title: cachedTitle }));
+      }, 0);
       return;
     }
 
