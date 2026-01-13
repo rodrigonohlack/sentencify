@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.23', feature: 'FASE 19: html-conversion.ts extraído para src/utils/ (~228 linhas removidas) - htmlToPlainText, htmlToFormattedText, plainTextToHtml, cleanHtmlForExport' },
   { version: '1.37.22', feature: 'FASE 16: useModelExtraction extraído para src/hooks/useModelExtraction.ts (~340 linhas removidas) - extractModelFromDecisionText, saveExtractedModel, cancelExtractedModel' },
   { version: '1.37.21', feature: 'FASE 15: useFactsComparison extraído para src/hooks/useFactsComparison.ts (~210 linhas removidas) - handleOpenFactsComparisonIndividual, handleGenerateFactsComparisonIndividual, estados e cache' },
   { version: '1.37.20', feature: 'FASE 14: injectQuillStyles + injectQuillLightStyles extraídos para src/utils/quill-styles-injector.ts (~390 linhas removidas)' },

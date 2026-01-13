@@ -46,3 +46,11 @@ export {
   injectQuillStyles,
   injectQuillLightStyles
 } from './quill-styles-injector';
+
+// HTML conversion utilities (v1.37.23)
+export {
+  htmlToPlainText,
+  htmlToFormattedText,
+  plainTextToHtml,
+  cleanHtmlForExport
+} from './html-conversion';
