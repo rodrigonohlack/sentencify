@@ -187,6 +187,25 @@ export const ModelFormModal = React.forwardRef<HTMLDivElement, ModelFormModalPro
     }
   }, [isOpen, editingModel]);
 
+  // v1.37.11: Sincronizar localModel quando IA gera título
+  React.useEffect(() => {
+    if (isOpen && newModel.title && newModel.title !== localModel.title) {
+      setLocalModel(prev => ({ ...prev, title: newModel.title }));
+    }
+  }, [isOpen, newModel.title]);
+
+  // v1.37.11: Sincronizar localModel quando IA gera keywords
+  React.useEffect(() => {
+    if (isOpen && newModel.keywords) {
+      const keywords = Array.isArray(newModel.keywords)
+        ? newModel.keywords.join(', ')
+        : (newModel.keywords || '');
+      if (keywords !== localModel.keywords) {
+        setLocalModel(prev => ({ ...prev, keywords }));
+      }
+    }
+  }, [isOpen, newModel.keywords]);
+
   // v1.35.3: Memoizar categorias para evitar recalculo a cada keystroke
   const categories = React.useMemo(() => {
     return [...new Set(models.map((m: Model) => m.category).filter((c: string | undefined | null): c is string => !!c && c.trim() !== ''))].sort();
