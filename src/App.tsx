@@ -44,7 +44,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -495,11 +495,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const editingTopicContent = topicManager.editingTopic?.editedContent;
   const editingTopicCategory = topicManager.editingTopic?.category;
 
-  // v1.36.21: Estados para Confronto de Fatos (editor individual)
-  const [factsComparisonResultIndividual, setFactsComparisonResultIndividual] = React.useState<FactsComparisonResult | null>(null);
-  const [generatingFactsComparisonIndividual, setGeneratingFactsComparisonIndividual] = React.useState(false);
-  const [factsComparisonErrorIndividual, setFactsComparisonErrorIndividual] = React.useState<string | null>(null);
-  const factsComparisonCacheIndividual = useFactsComparisonCache();
+  // v1.37.21: Estados para Confronto de Fatos movidos para useFactsComparison hook
+  // (factsComparisonResultIndividual, generatingFactsComparisonIndividual, factsComparisonErrorIndividual, factsComparisonCacheIndividual)
 
   const isIndividualDirty = React.useMemo(() => {
     if (!editingTopicTitle) return false;
@@ -3136,216 +3133,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     }
   };
 
-  // v1.36.26: Limpar resultado do Confronto quando tópico muda (evita mostrar cache do tópico anterior)
-  React.useEffect(() => {
-    setFactsComparisonResultIndividual(null);
-    setFactsComparisonErrorIndividual(null);
-  }, [editingTopic?.title]);
-
-  // v1.36.24: Handler para ABRIR modal de Confronto de Fatos (editor individual) com recuperação de cache
-  const handleOpenFactsComparisonIndividual = React.useCallback(async () => {
-    if (!editingTopic) return;
-
-    setFactsComparisonErrorIndividual(null);
-
-    // Verificar cache (usa factsComparisonCacheIndividual no editor individual)
-    const cached = await factsComparisonCacheIndividual.getComparison(editingTopic.title, 'mini-relatorio');
-    if (cached) {
-      setFactsComparisonResultIndividual(cached);
-    } else {
-      const cachedDocs = await factsComparisonCacheIndividual.getComparison(editingTopic.title, 'documentos-completos');
-      setFactsComparisonResultIndividual(cachedDocs);
-    }
-
-    openModal('factsComparisonIndividual');
-  }, [editingTopic, factsComparisonCacheIndividual, openModal]);
-
-  // v1.36.21: Handler para GERAR Confronto de Fatos (editor individual)
-  // v1.36.22: Adicionado fallback para PDF binário
-  const handleGenerateFactsComparisonIndividual = async (source: FactsComparisonSource) => {
-    if (!aiIntegration || !editingTopic) return;
-
-    setGeneratingFactsComparisonIndividual(true);
-    setFactsComparisonErrorIndividual(null);
-
-    try {
-      let prompt: string;
-
-      if (source === 'mini-relatorio') {
-        const relatorio = editingTopic.editedRelatorio || editingTopic.relatorio || '';
-        if (!relatorio.trim()) {
-          throw new Error('Mini-relatório não disponível para este tópico.');
-        }
-        prompt = buildMiniRelatorioComparisonPrompt(editingTopic.title, relatorio);
-      } else {
-        // Documentos completos - priorizar texto, fallback para PDF binário
-        const peticaoText = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-        const contestacaoText = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-        const impugnacaoText = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
-
-        const hasText = peticaoText.trim() || contestacaoText.trim();
-        const hasPdfs = (analyzedDocuments?.peticoes?.length || 0) > 0 || (analyzedDocuments?.contestacoes?.length || 0) > 0;
-
-        if (!hasText && !hasPdfs) {
-          throw new Error('Nenhum documento disponível (petição ou contestação).');
-        }
-
-        if (hasText) {
-          // Caminho padrão: usar texto extraído
-          prompt = buildDocumentosComparisonPrompt(editingTopic.title, peticaoText, contestacaoText, impugnacaoText);
-        } else {
-          // v1.36.22: Fallback para PDF binário (quando não há texto extraído)
-          prompt = buildPdfComparisonPrompt(editingTopic.title);
-        }
-      }
-
-      // Construir mensagem - pode ser texto simples ou incluir PDFs binários
-      let messageContent: AIMessageContent[];
-
-      const peticaoTextFallback = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-      const contestacaoTextFallback = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-      const hasTextForMessage = peticaoTextFallback.trim() || contestacaoTextFallback.trim();
-
-      if (hasTextForMessage || source === 'mini-relatorio') {
-        // Texto simples
-        messageContent = [{ type: 'text', text: prompt }];
-      } else {
-        // v1.36.22: Incluir PDFs binários como fallback
-        messageContent = [{ type: 'text', text: prompt }];
-
-        // Adicionar petições como PDF (analyzedDocuments.peticoes contém base64 strings)
-        for (const base64 of (analyzedDocuments?.peticoes || [])) {
-          messageContent.push({ type: 'text', text: '\n\n📄 PETIÇÃO INICIAL (documento PDF a seguir):' });
-          messageContent.push({
-            type: 'document',
-            source: {
-              type: 'base64',
-              media_type: 'application/pdf',
-              data: base64
-            }
-          } as AIDocumentContent);
-        }
-
-        // Adicionar contestações como PDF
-        for (const base64 of (analyzedDocuments?.contestacoes || [])) {
-          messageContent.push({ type: 'text', text: '\n\n📄 CONTESTAÇÃO (documento PDF a seguir):' });
-          messageContent.push({
-            type: 'document',
-            source: {
-              type: 'base64',
-              media_type: 'application/pdf',
-              data: base64
-            }
-          } as AIDocumentContent);
-        }
-
-        // Adicionar complementares como PDF
-        for (const base64 of (analyzedDocuments?.complementares || [])) {
-          messageContent.push({ type: 'text', text: '\n\n📄 DOCUMENTO COMPLEMENTAR (documento PDF a seguir):' });
-          messageContent.push({
-            type: 'document',
-            source: {
-              type: 'base64',
-              media_type: 'application/pdf',
-              data: base64
-            }
-          } as AIDocumentContent);
-        }
-      }
-
-      const response = await aiIntegration.callAI([{
-        role: 'user',
-        content: messageContent
-      }], {
-        maxTokens: 8000,
-        useInstructions: false,
-        temperature: 0.3,
-        topP: 0.9,
-        topK: 40
-      });
-
-      // Extrair JSON da resposta (pode vir com markdown)
-      let jsonStr = response;
-      const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
-      if (jsonMatch) {
-        jsonStr = jsonMatch[1];
-      } else {
-        // Tentar encontrar JSON direto
-        const firstBrace = response.indexOf('{');
-        const lastBrace = response.lastIndexOf('}');
-        if (firstBrace !== -1 && lastBrace !== -1) {
-          jsonStr = response.substring(firstBrace, lastBrace + 1);
-        }
-      }
-
-      const parsed = JSON.parse(jsonStr);
-
-      // v1.36.58: Double Check do Confronto de Fatos (Individual)
-      let verifiedParsed = parsed;
-      if (aiIntegration.aiSettings.doubleCheck?.enabled &&
-          aiIntegration.aiSettings.doubleCheck?.operations.factsComparison) {
-        try {
-          // Contexto depende do source usado
-          let contextText: string;
-          if (source === 'mini-relatorio') {
-            const relatorio = editingTopic.editedRelatorio || editingTopic.relatorio || '';
-            contextText = `MINI-RELATÓRIO DO TÓPICO "${editingTopic.title}":\n${relatorio}`;
-          } else {
-            // documentos-completos
-            const peticaoText = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-            const contestacaoText = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-            const impugnacaoText = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
-
-            contextText = [
-              peticaoText && `PETIÇÃO INICIAL:\n${peticaoText}`,
-              contestacaoText && `CONTESTAÇÃO:\n${contestacaoText}`,
-              impugnacaoText && `IMPUGNAÇÃO/RÉPLICA:\n${impugnacaoText}`
-            ].filter(Boolean).join('\n\n---\n\n');
-          }
-
-          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
-            'factsComparison',
-            JSON.stringify(parsed, null, 2),
-            contextText
-          );
-
-          if (corrections.length > 0) {
-            const verifiedObj = JSON.parse(verified);
-            // Extrair o resultado verificado (pode estar em verifiedResult ou ser o objeto inteiro)
-            verifiedParsed = verifiedObj.verifiedResult || verifiedObj;
-            showToast(`🔄 Double Check: ${corrections.length} correção(ões) - ${summary}`, 'info');
-            console.log('[DoubleCheck FactsComparison Individual] Correções:', corrections);
-          }
-        } catch (dcError) {
-          console.error('[DoubleCheck FactsComparison Individual] Erro:', dcError);
-          // Continuar com parsed original em caso de erro
-        }
-      }
-
-      const result: FactsComparisonResult = {
-        topicTitle: editingTopic.title,
-        source,
-        generatedAt: new Date().toISOString(),
-        tabela: verifiedParsed.tabela || [],
-        fatosIncontroversos: verifiedParsed.fatosIncontroversos || [],
-        fatosControversos: verifiedParsed.fatosControversos || [],
-        pontosChave: verifiedParsed.pontosChave || [],
-        resumo: verifiedParsed.resumo || ''
-      };
-
-      // Salvar no cache
-      await factsComparisonCacheIndividual.saveComparison(editingTopic.title, source, result);
-
-      setFactsComparisonResultIndividual(result);
-    } catch (err) {
-      console.error('[FactsComparison Individual] Erro:', err);
-      setFactsComparisonErrorIndividual(err instanceof Error ? err.message : 'Erro ao gerar análise. Tente novamente.');
-    } finally {
-      setGeneratingFactsComparisonIndividual(false);
-    }
-  };
-
-
   // 📋 v1.37.7: Funções de Gerenciamento de Tópicos extraídas para useTopicOperations hook
   // (handleRenameTopic, handleMergeTopics, handleSplitTopic, handleCreateNewTopic)
 
@@ -5651,6 +5438,30 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
   // v1.37.17: generateAiText, insertAiText, buildContextForChat, handleInsertChatResponse,
   // handleSendChatMessage, generateAiTextForModel, insertAiTextModel movidos para useDecisionTextGeneration
   // Código removido: ~430 linhas
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.21: useFactsComparison - Hook extraído para Confronto de Fatos
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const factsComparison = useFactsComparison({
+    editingTopic,
+    aiIntegration: aiIntegration as unknown as Parameters<typeof useFactsComparison>[0]['aiIntegration'],
+    analyzedDocuments,
+    openModal: openModal as (modalId: string) => void,
+    showToast,
+  });
+  const {
+    generatingFactsComparison: generatingFactsComparisonIndividual,
+    factsComparisonResult: factsComparisonResultIndividual,
+    factsComparisonError: factsComparisonErrorIndividual,
+    setFactsComparisonResult: setFactsComparisonResultIndividual,
+    setFactsComparisonError: setFactsComparisonErrorIndividual,
+    handleOpenFactsComparison: handleOpenFactsComparisonIndividual,
+    handleGenerateFactsComparison: handleGenerateFactsComparisonIndividual,
+    factsComparisonCache: factsComparisonCacheIndividual,
+  } = factsComparison;
+
+  // v1.37.21: handleOpenFactsComparisonIndividual e handleGenerateFactsComparisonIndividual
+  // movidos para useFactsComparison hook. Código removido: ~200 linhas
 
   // v1.21.21: Função para montar texto completo da decisão (RELATÓRIO + TÓPICOS + DISPOSITIVO)
   const buildDecisionText = React.useCallback(() => {

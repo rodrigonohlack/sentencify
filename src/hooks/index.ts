@@ -86,6 +86,10 @@ export { useVoiceToText } from './useVoiceToText';
 export { default as useFactsComparisonCache } from './useFactsComparisonCache';
 export { default as useSentenceReviewCache } from './useSentenceReviewCache';
 
+// Facts Comparison hook (v1.37.21)
+export { useFactsComparison } from './useFactsComparison';
+export type { UseFactsComparisonProps, UseFactsComparisonReturn, AIIntegrationForFactsComparison } from './useFactsComparison';
+
 // Proof Manager hook (TIER 1 - dependências: useLocalStorage, Zustand stores)
 export { useProofManager } from './useProofManager';
 export type { UseProofManagerReturn } from './useProofManager';
