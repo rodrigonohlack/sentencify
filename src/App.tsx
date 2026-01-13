@@ -55,7 +55,7 @@
  * ║ 8. LEGALDECISIONEDITOR                   │ 18425-33700     │ Componente principal      ║
  * ║    └─ reorderTopicsViaLLM                │ 22449           │ Ordenação IA (Art.337)    ║
  * ║    └─ handleAnalyzeDocuments             │ 25045           │ Análise inicial           ║
- * ║    └─ analyzeProof                       │ 25828           │ Análise de provas         ║
+ * ║    └─ analyzeProof                       │ useProofAnalysis│ Análise de provas (hook)  ║
  * ║    └─ generateDispositivo                │ 26921           │ Gerar dispositivo         ║
  * ║                                          │                 │                           ║
  * ║ 9. ERROR BOUNDARY & EXPORT               │ 33700-33959     │ Tratamento de erros       ║
@@ -81,7 +81,7 @@
  *
  * 📋 ANÁLISE DE PROVAS:
  *    analyzeProof() → extractText() → anonimizar() → callAI()
- *    Linha inicial: ~25500
+ *    Hook: useProofAnalysis (src/hooks/useProofAnalysis.ts)
  *
  * ═══════════════════════════════════════════════════════════════════════════════════════════
  * HOOKS DISPONÍVEIS (ordem alfabética)
@@ -144,7 +144,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -393,7 +393,8 @@ const AUTO_SAVE_DEBOUNCE_MS = 5000;
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // ⚖️ SEÇÃO 8: LEGALDECISIONEDITOR
 // Componente principal da aplicação (~13.000 linhas)
-// Contém: reorderTopicsViaLLM, handleAnalyzeDocuments, analyzeProof, generateDispositivo
+// Contém: reorderTopicsViaLLM, handleAnalyzeDocuments, generateDispositivo
+// analyzeProof extraído para useProofAnalysis hook (v1.36.73)
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // 📦 COMPONENTE PRINCIPAL: LegalDecisionEditor
@@ -7205,245 +7206,6 @@ ${textToAnalyze}`;
   // - documentAnalyzing (alias de analyzing)
   // - documentAnalysisProgress (alias de analysisProgress)
 
-  // 🔍 FUNÇÕES: Sistema de Provas
-
-  const analyzeProof = async (proof: Proof, analysisType: string, customInstructions = '', useOnlyMiniRelatorios = false, includeLinkedTopics = false) => {
-    const proofId = String(proof.id);
-    try {
-      proofManager.addAnalyzingProof(proofId);
-      setError('');
-
-      // v1.16.2: Anonimização de provas (ProcessingModeSelector já força PDF.js quando ativo)
-      // v1.21.3: Adicionado nomesUsuario para anonimizar nomes customizados
-      const anonConfig = aiIntegration?.aiSettings?.anonymization;
-      const shouldAnonymize = anonConfig?.enabled;
-      const nomesParaAnonimizar = anonConfig?.nomesUsuario || [];
-      const maybeAnonymize = (text: string) => shouldAnonymize ? anonymizeText(text, anonConfig, nomesParaAnonimizar) : text;
-
-      // Preparar conteúdo da prova
-      let contentArray: AIMessageContent[] = [];
-
-      // v1.36.28: Verificação robusta - usa type === 'pdf' para compatibilidade com provas existentes
-      if (proof.type === 'pdf' || proof.isPdf) {
-        // Prova em PDF - v1.21.2: Respeita modo de processamento escolhido
-        const proofMode = proofManager.proofProcessingModes?.[proofId] || 'pdfjs';
-
-        if (proofMode === 'pdf-puro') {
-          // Usuário escolheu PDF puro explicitamente
-          if (shouldAnonymize) {
-            // v1.21.9: Fallback para texto extraído quando anonimização ativa
-            const extractedText = proofManager.extractedProofTexts[proofId];
-            if (extractedText) {
-              contentArray.push({
-                type: 'text' as const,
-                text: `PROVA (texto extraído do PDF):\n\n${maybeAnonymize(extractedText)}`
-              });
-            } else {
-              proofManager.removeAnalyzingProof(proofId);
-              showToast('❌ Anonimização ativa: extraia o texto primeiro.', 'error');
-              return;
-            }
-          } else {
-            if (!proof.file) {
-              proofManager.removeAnalyzingProof(proofId);
-              showToast('❌ Arquivo PDF não encontrado.', 'error');
-              return;
-            }
-            const base64 = await storage.fileToBase64(proof.file);
-            contentArray.push({
-              type: 'document' as const,
-              source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 }
-            });
-          }
-        } else {
-          // Usuário escolheu modo de extração (pdfjs ou claude-vision)
-          const extractedText = proofManager.extractedProofTexts[proofId];
-          if (extractedText) {
-            contentArray.push({
-              type: 'text' as const,
-              text: `PROVA (texto extraído do PDF):\n\n${maybeAnonymize(extractedText)}`
-            });
-          } else {
-            proofManager.removeAnalyzingProof(proofId);
-            showToast('❌ Texto não extraído. Extraia o texto da prova antes de analisar.', 'error');
-            return;
-          }
-        }
-      } else {
-        // Prova em texto
-        contentArray.push({
-          type: 'text' as const,
-          text: `PROVA:\n\n${maybeAnonymize(proof.text || '')}`
-        });
-      }
-
-      // Buscar tópicos vinculados a esta prova
-      const linkedTopicTitles = proofManager.proofTopicLinks[proofId] || [];
-      const linkedTopics = selectedTopics.filter(t => linkedTopicTitles.includes(t.title));
-
-      // Preparar prompt baseado no tipo de análise
-      let prompt = '';
-
-      if (analysisType === 'livre') {
-        if (includeLinkedTopics && linkedTopics.length > 0) {
-          // Adicionar tópicos vinculados e mini-relatórios ao contexto
-          const topicsContext = linkedTopics.map((topic, idx) =>
-            `📋 TÓPICO ${idx + 1}: ${topic.title} (${topic.category})\n\n${topic.relatorio || 'Mini-relatório não disponível'}`
-          ).join('\n\n---\n\n');
-
-          contentArray.push({
-            type: 'text' as const,
-            text: `📚 TÓPICOS VINCULADOS:\n\n${topicsContext}`
-          });
-
-          prompt = customInstructions
-            ? `Analise a prova a seguir considerando os tópicos vinculados fornecidos.\n\nInstruções do usuário:\n${customInstructions}`
-            : `Analise a prova a seguir considerando os tópicos vinculados fornecidos. Seja objetivo e direto.`;
-        } else {
-          // Análise livre simples - apenas prova + instruções
-          prompt = customInstructions
-            ? `Analise a prova a seguir conforme estas instruções:\n\n${customInstructions}`
-            : `Analise a prova a seguir e forneça insights relevantes. Seja objetivo e direto.`;
-        }
-      } else {
-        // Análise contextual - Escolher entre documentos completos ou apenas mini-relatórios
-
-        // Se useOnlyMiniRelatorios estiver ativado E houver tópicos vinculados, usar apenas mini-relatórios
-        if (useOnlyMiniRelatorios && linkedTopics.length > 0) {
-          // Adicionar apenas mini-relatórios dos tópicos vinculados
-          const miniRelatoriosText = linkedTopics.map((topic, idx) =>
-            `📋 TÓPICO ${idx + 1}: ${topic.title} (${topic.category})\n\n${topic.relatorio || 'Mini-relatório não disponível'}`
-          ).join('\n\n---\n\n');
-
-          contentArray.push({
-            type: 'text' as const,
-            text: `📚 CONTEXTO DOS PEDIDOS VINCULADOS:\n\n${miniRelatoriosText}`
-          });
-        } else {
-          // Comportamento padrão: usar helper para documentos (evita duplicação)
-          const docsArray = buildDocumentContentArray({ includeComplementares: true });
-          contentArray.push(...docsArray);
-        }
-
-        // Construir resumo do contexto para o prompt
-        const totalPeticoes = (analyzedDocuments.peticoes?.length || 0) + (analyzedDocuments.peticoesText?.length || 0);
-        const peticaoSummary = useOnlyMiniRelatorios && linkedTopics.length > 0 ?
-          'Não enviado (usando apenas mini-relatórios)' :
-          (totalPeticoes > 0 ?
-            `${totalPeticoes} documento${totalPeticoes > 1 ? 's' : ''} do autor fornecido${totalPeticoes > 1 ? 's' : ''} (veja acima)` :
-            'Petição inicial não disponível');
-
-        const totalContestacoes = (analyzedDocuments.contestacoes?.length || 0) + (analyzedDocuments.contestacoesText?.length || 0);
-        const contestacoesSummary = useOnlyMiniRelatorios && linkedTopics.length > 0 ?
-          'Não enviado (usando apenas mini-relatórios)' :
-          (totalContestacoes > 0 ?
-            `${totalContestacoes} contestação${totalContestacoes > 1 ? 'ões' : ''} fornecida${totalContestacoes > 1 ? 's' : ''} (veja acima)` :
-            'Nenhuma contestação disponível');
-
-        const totalComplementares = (analyzedDocuments.complementares?.length || 0) + (analyzedDocuments.complementaresText?.length || 0);
-        const complementaresSummary = useOnlyMiniRelatorios && linkedTopics.length > 0 ?
-          'Não enviado (usando apenas mini-relatórios)' :
-          (totalComplementares > 0 ?
-            `${totalComplementares} documento${totalComplementares > 1 ? 's' : ''} complementar${totalComplementares > 1 ? 'es' : ''} fornecido${totalComplementares > 1 ? 's' : ''} (veja acima)` :
-            'Nenhum documento complementar disponível');
-
-        prompt = `${customInstructions ? `**INSTRUÇÕES ESPECÍFICAS PARA ESTA PROVA:**\n${customInstructions}\n\n` : ''}Você está analisando uma prova no contexto de um processo trabalhista.
-
-CONTEXTO DO PROCESSO:
-- Petição inicial: ${peticaoSummary}
-- Contestações: ${contestacoesSummary}
-- Documentos complementares: ${complementaresSummary}
-
-${linkedTopics.length > 0 ? `
-🎯 **PEDIDOS ESPECÍFICOS VINCULADOS A ESTA PROVA:**
-
-Esta prova foi vinculada aos seguintes pedidos/tópicos do processo:
-
-${linkedTopics.map((topic, idx) => `
-${idx + 1}. **${topic.title}** (${topic.category})
-
-   O que as partes alegaram sobre este pedido:
-   ${topic.relatorio || 'Mini-relatório não disponível - verifique a petição e contestação acima'}
-
-   ${topic.editedContent ? `Fundamentação parcial já escrita (considere ao analisar):
-   ${topic.editedContent}
-   ` : 'Fundamentação ainda não iniciada para este pedido'}
-   Resultado parcial: ${topic.resultado || 'Ainda não definido'}
-`).join('\n---\n')}
-
-**IMPORTANTE:** Ao analisar esta prova no contexto do processo, PRIORIZE sua relação com os pedidos vinculados acima.
-
-Para cada pedido vinculado, indique ESPECIFICAMENTE:
-- Como esta prova impacta este pedido em particular
-- Se a prova favorece o autor ou réu neste ponto específico
-- Qual conclusão a prova sugere para este pedido
-
-` : `
-⚠️ Esta prova não foi vinculada a nenhum pedido específico. A análise será genérica em relação a todo o processo.
-
-`}
-Analise a prova fornecida e responda:
-
-1. **O que esta prova demonstra?** Descreva objetivamente o conteúdo probatório
-2. **Relação com alegações do autor**: Esta prova confirma, refuta ou é neutra em relação às alegações da petição inicial?
-3. **Relação com defesa**: Esta prova confirma, refuta ou é neutra em relação aos argumentos de defesa?
-4. **Força probatória**: Avalie a qualidade e relevância desta prova para o deslinde do feito
-5. **Conclusão**: De forma resumida, qual a contribuição desta prova para a formação do convencimento?
-
-Seja objetivo, técnico e imparcial. Base-se exclusivamente no conteúdo da prova.
-
-Formato da resposta (use quebras de linha entre seções):
-
-CONTEÚDO DA PROVA:
-[descreva o que a prova demonstra]
-
-RELAÇÃO COM ALEGAÇÕES DO AUTOR:
-[análise]
-
-RELAÇÃO COM A DEFESA:
-[análise]
-
-FORÇA PROBATÓRIA:
-[avaliação]
-
-CONCLUSÃO:
-[síntese]`;
-      }
-
-      contentArray.push({
-        type: 'text' as const,
-        text: prompt
-      });
-
-      // Fazer chamada à API
-      // v1.21.26: Parametros para analise critica de provas
-      const textContent = await aiIntegration.callAI([{
-        role: 'user',
-        content: contentArray
-      }], {
-        maxTokens: 20000,
-        useInstructions: true,
-        temperature: 0.3,
-        topP: 0.9,
-        topK: 50
-      });
-
-      // Armazenar resultado
-      proofManager.setProofAnalysisResults(prev => ({
-        ...prev,
-        [proofId]: {
-          type: analysisType as 'contextual' | 'livre',
-          result: textContent.trim()
-        }
-      }));
-
-    } catch (err) {
-      setError('Erro ao analisar prova: ' + (err as Error).message);
-    } finally {
-      proofManager.removeAnalyzingProof(proofId);
-    }
-  };
-
   // v1.36.73: generateRelatorioProcessual MOVIDO para useReportGeneration hook
   // (src/hooks/useReportGeneration.ts)
 
@@ -7493,6 +7255,22 @@ CONCLUSÃO:
     setAnalyzing: setDocumentAnalyzing,
     setAnalysisProgress: setDocumentAnalysisProgress,
   } = documentAnalysis;
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.36.73: useProofAnalysis - Hook extraído para análise de provas
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const proofAnalysis = useProofAnalysis({
+    aiIntegration,
+    proofManager,
+    documentServices,
+    storage,
+    selectedTopics,
+    analyzedDocuments,
+    setError,
+    showToast,
+  });
+
+  const { analyzeProof } = proofAnalysis;
 
   // v1.19.2: Normalizar comparações case-insensitive
   const toggleTopicSelection = (topic: Topic) => {

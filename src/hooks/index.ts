@@ -146,3 +146,14 @@ export type {
   BatchResult,
   AIIntegrationForReports
 } from './useReportGeneration';
+
+// Proof Analysis hook (TIER 2 - dependências: useAIIntegration, useProofManager)
+export { useProofAnalysis } from './useProofAnalysis';
+export type {
+  UseProofAnalysisProps,
+  UseProofAnalysisReturn,
+  AIIntegrationForProofs,
+  ProofManagerForAnalysis,
+  DocumentServicesForProofs,
+  StorageForProofs
+} from './useProofAnalysis';

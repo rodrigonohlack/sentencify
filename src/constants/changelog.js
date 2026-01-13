@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.4', feature: 'FASE 3 LegalDecisionEditor: useProofAnalysis extraído (~222 linhas removidas)' },
   { version: '1.37.3', feature: 'FASE 2 LegalDecisionEditor: useReportGeneration extraído (~314 linhas removidas)' },
   { version: '1.37.2', feature: 'FASE 1 LegalDecisionEditor: useDocumentAnalysis extraído (~1036 linhas removidas) - analyzeDocuments, handleCurationConfirm, etc.' },
   { version: '1.37.1', feature: 'FASE 7 refatoração final: ErrorBoundary extraído para src/components/ErrorBoundary.tsx (~152 linhas removidas)' },
