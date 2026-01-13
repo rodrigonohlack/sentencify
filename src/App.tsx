@@ -144,7 +144,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -168,7 +168,8 @@ import useFactsComparisonCache, { openFactsDB, FACTS_STORE_NAME } from './hooks/
 import useSentenceReviewCache, { openReviewDB, REVIEW_STORE_NAME } from './hooks/useSentenceReviewCache';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
-import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS, INSTRUCAO_NAO_PRESUMIR } from './prompts';
+// v1.37.18: buildDocumentContentArray, buildMiniReportPrompt, buildBatchMiniReportPrompt extraídos
+import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS, INSTRUCAO_NAO_PRESUMIR, buildDocumentContentArray, buildMiniReportPromptCore, buildMiniReportPrompt, buildBatchMiniReportPrompt } from './prompts';
 
 // v1.36.95: Estilos centralizados
 import { CSS, RESULTADO_STYLES, getResultadoStyle } from './constants/styles';
@@ -3522,260 +3523,14 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   };
 
   // ============================================================================
-  // HELPERS PARA GERAÇÃO DE MINI-RELATÓRIOS (v1.15)
+  // v1.37.18: HELPERS PARA GERAÇÃO DE MINI-RELATÓRIOS EXTRAÍDOS
   // ============================================================================
-
-  // Helper: Constrói array de documentos para envio à API (elimina duplicação)
-  interface BuildDocumentOptions {
-    includePeticao?: boolean;
-    includeContestacoes?: boolean;
-    includeComplementares?: boolean;
-    documentsOverride?: AnalyzedDocuments | null;
-  }
-  const buildDocumentContentArray = (options: BuildDocumentOptions = {}) => {
-    const {
-      includePeticao = true,
-      includeContestacoes = true,
-      includeComplementares = false,
-      documentsOverride = null // Permite passar documentos diretamente (bypass do estado React)
-    } = options;
-
-    // Usar documentsOverride se fornecido, senão usar analyzedDocuments (estado React)
-    const docs = documentsOverride || analyzedDocuments;
-    const contentArray: (AITextContent | AIDocumentContent)[] = [];
-
-    // v1.16.6: Anonimização já aplicada em analyzeDocuments (não duplicar aqui)
-
-    // 1. Petições (múltiplas) - v1.21: Suporte a petição inicial + emendas
-    if (includePeticao) {
-      // Primeiro: textos extraídos (PDF.JS ou Claude Vision)
-      if (docs.peticoesText?.length > 0) {
-        docs.peticoesText.forEach((doc: { name?: string; text: string }, idx: number) => {
-          contentArray.push({
-            type: 'text',
-            text: `${doc.name?.toUpperCase() || `PETIÇÃO ${idx + 1}`}:\n\n${doc.text}`,
-            cache_control: doc.text.length > 2000 ? { type: "ephemeral" } : undefined
-          });
-        });
-      }
-      // Depois: PDFs binários (modo pdf-puro ou fallback)
-      // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
-      if (docs.peticoes?.length > 0) {
-        const textCount = docs.peticoesText?.length || 0;
-        docs.peticoes.forEach((base64: string, index: number) => {
-          const label = index === 0 && textCount === 0 ? 'PETIÇÃO INICIAL' : `PETIÇÃO ${textCount + index + 1}`;
-          contentArray.push({ type: 'text', text: `${label} (documento PDF a seguir):` });
-          contentArray.push({
-            type: 'document',
-            source: { type: 'base64', media_type: 'application/pdf', data: base64 },
-            cache_control: base64.length > 100000 ? { type: "ephemeral" } : undefined
-          });
-        });
-      }
-    }
-
-    // 2. Contestações - v1.14.1: Suporte a modos mistos (envia textos E PDFs)
-    // v1.25: Adicionado cache_control para otimização de tokens
-    if (includeContestacoes) {
-      // Primeiro: textos extraídos (PDF.JS ou Claude Vision)
-      if (docs.contestacoesText?.length > 0) {
-        docs.contestacoesText.forEach((contestacao: { text: string }, index: number) => {
-          contentArray.push({
-            type: 'text',
-            text: `CONTESTAÇÃO ${index + 1}:\n\n${contestacao.text}`,
-            cache_control: contestacao.text.length > 2000 ? { type: "ephemeral" } : undefined
-          });
-        });
-      }
-      // Depois: PDFs não extraídos (modo PDF Puro ou fallback)
-      // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
-      if (docs.contestacoes?.length > 0) {
-        const textCount = docs.contestacoesText?.length || 0;
-        docs.contestacoes.forEach((base64: string, index: number) => {
-          contentArray.push({ type: 'text', text: `CONTESTAÇÃO ${textCount + index + 1} (documento PDF a seguir):` });
-          contentArray.push({
-            type: 'document',
-            source: { type: 'base64', media_type: 'application/pdf', data: base64 },
-            cache_control: base64.length > 100000 ? { type: "ephemeral" } : undefined
-          });
-        });
-      }
-    }
-
-    // 3. Documentos Complementares - v1.14.1: Suporte a modos mistos (envia textos E PDFs)
-    // v1.25: Adicionado cache_control para otimização de tokens
-    if (includeComplementares) {
-      // Primeiro: textos extraídos (PDF.JS ou Claude Vision)
-      if (docs.complementaresText?.length > 0) {
-        docs.complementaresText.forEach((doc: { text: string }, index: number) => {
-          contentArray.push({
-            type: 'text',
-            text: `DOCUMENTO COMPLEMENTAR ${index + 1}:\n\n${doc.text}`,
-            cache_control: doc.text.length > 2000 ? { type: "ephemeral" } : undefined
-          });
-        });
-      }
-      // Depois: PDFs não extraídos (modo PDF Puro ou fallback)
-      // v1.35.14: Adicionar label antes de cada PDF para identificação explícita
-      if (docs.complementares?.length > 0) {
-        const textCount = docs.complementaresText?.length || 0;
-        docs.complementares.forEach((base64: string, index: number) => {
-          contentArray.push({ type: 'text', text: `DOCUMENTO COMPLEMENTAR ${textCount + index + 1} (documento PDF a seguir):` });
-          contentArray.push({
-            type: 'document',
-            source: { type: 'base64', media_type: 'application/pdf', data: base64 },
-            cache_control: base64.length > 100000 ? { type: "ephemeral" } : undefined
-          });
-        });
-      }
-    }
-
-    return contentArray;
-  };
-
-  // v1.37.5: reorderTopicsViaLLM extraído para useTopicOrdering hook
-  // (src/hooks/useTopicOrdering.ts)
-
-  // v1.21.27: Função base que retorna componentes reutilizáveis para prompts de mini-relatório
-  const buildMiniReportPromptCore = (options: { isInitialGeneration?: boolean } = {}) => {
-    const { isInitialGeneration = false } = options;
-
-    const totalContestacoes = (analyzedDocuments.contestacoes?.length || 0) +
-                              (analyzedDocuments.contestacoesText?.length || 0);
-
-    const modeloPersonalizado = aiIntegration.aiSettings?.modeloRelatorio?.trim();
-
-    const modeloBase = modeloPersonalizado || `PRIMEIRO PARÁGRAFO (alegações do autor):
-"O reclamante narra [resumo]. Sustenta [argumentos]. Indica que [situação]. Em decorrência, postula [pedido]."
-
-SEGUNDO PARÁGRAFO (primeira defesa):
-${totalContestacoes > 0 ? '"A primeira reclamada, em defesa, alega [argumentos]. Sustenta que [posição]."' : '"Não houve apresentação de contestação."'}
-
-${totalContestacoes > 1 ? `TERCEIRO PARÁGRAFO (segunda defesa):
-"A segunda ré, por sua vez, nega [posição]. Aduz [argumentos]."` : ''}
-
-${totalContestacoes > 2 ? `QUARTO PARÁGRAFO (terceira defesa):
-"A terceira reclamada também contesta [argumentos]. Sustenta [posição]."` : ''}`;
-
-    const numeracaoPrompt = isInitialGeneration
-      ? AI_PROMPTS.numeracaoReclamadasInicial
-      : AI_PROMPTS.numeracaoReclamadas;
-
-    let partesInfo = '';
-    if (partesProcesso?.reclamadas?.length > 0) {
-      partesInfo = `\nPARTES DO PROCESSO:
-- Reclamante: ${partesProcesso.reclamante || 'Não identificado'}
-${partesProcesso.reclamadas.map((r, i: number) => `- ${i + 1}ª Reclamada: ${r}`).join('\n')}
-`;
-    }
-
-    return {
-      totalContestacoes,
-      modeloBase,
-      modeloPersonalizado,
-      numeracaoPrompt,
-      partesInfo,
-      formatacaoHTML: AI_PROMPTS.formatacaoHTML("O <strong>reclamante</strong> narra que..."),
-      formatacaoParagrafos: AI_PROMPTS.formatacaoParagrafos("<p>O reclamante narra...</p><p>A primeira reclamada, em defesa...</p>"),
-      nivelDetalhe: aiIntegration.aiSettings?.detailedMiniReports ? `⚠️ NÍVEL DE DETALHE - FATOS:
-Gere com alto nível de detalhe em relação aos FATOS alegados pelas partes.
-A descrição fática (postulatória e defensiva) deve ter alto nível de detalhe.
-` : '',
-      estiloRedacao: AI_PROMPTS.estiloRedacao,
-      preservarAnonimizacao: AI_PROMPTS.preservarAnonimizacao,
-      proibicaoMetaComentarios: AI_PROMPTS.proibicaoMetaComentarios // v1.35.29
-    };
-  };
-
-  // v1.21.27: Helper para prompt de mini-relatório INDIVIDUAL (usa Core)
-  const buildMiniReportPrompt = (options: {
-    title?: string;
-    context?: string;
-    instruction?: string;
-    currentRelatorio?: string;
-    isInitialGeneration?: boolean;
-  } = {}) => {
-    const {
-      title,
-      context = '',
-      instruction = '',
-      currentRelatorio = '',
-      isInitialGeneration = false
-    } = options;
-
-    const core = buildMiniReportPromptCore({ isInitialGeneration });
-
-    return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestação${core.totalContestacoes > 1 ? 'ões' : ''})` : ' (petição inicial)'}, gere um mini-relatório narrativo para o tópico "${title}".
-
-${instruction ? `INSTRUÇÃO DO USUÁRIO:\n${instruction}\n` : ''}
-
-${context ? `CONTEXTO:\n${context}\n` : ''}
-
-${currentRelatorio ? `MINI-RELATÓRIO ATUAL:\n${currentRelatorio}\n` : ''}
-
-${core.modeloPersonalizado ? `MODELO PERSONALIZADO:\n${core.modeloBase}` : `FORMATO PADRÃO:\n${core.modeloBase}`}
-${core.partesInfo}
-${core.numeracaoPrompt}
-
-${core.formatacaoHTML}
-
-${core.formatacaoParagrafos}
-
-${core.nivelDetalhe}
-
-${core.estiloRedacao}
-
-${core.preservarAnonimizacao}
-
-${core.proibicaoMetaComentarios}
-
-Responda APENAS com o texto do mini-relatório formatado em HTML, sem JSON, sem markdown, sem prefixo.`;
-  };
-
-  // v1.21.27: Helper para prompt de mini-relatórios BATCH (usa Core)
-  const buildBatchMiniReportPrompt = (topics: Topic[], options: { isInitialGeneration?: boolean } = {}) => {
-    const { isInitialGeneration = false } = options;
-
-    const core = buildMiniReportPromptCore({ isInitialGeneration });
-    const topicsList = topics.map((t: Topic, i: number) => `${i + 1}. "${t.title}"`).join('\n');
-
-    return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestação${core.totalContestacoes > 1 ? 'ões' : ''})` : ' (petição inicial)'}, gere mini-relatórios narrativos para os seguintes ${topics.length} tópicos:
-
-${topicsList}
-
-FORMATO DE CADA MINI-RELATÓRIO:
-${core.modeloBase}
-${core.partesInfo}
-${core.numeracaoPrompt}
-
-${core.formatacaoHTML}
-
-${core.formatacaoParagrafos}
-
-${core.nivelDetalhe}
-
-${core.estiloRedacao}
-
-${core.preservarAnonimizacao}
-
-${core.proibicaoMetaComentarios}
-
-IMPORTANTE: Responda APENAS com um JSON válido no formato:
-{
-  "reports": [
-    { "title": "TÍTULO DO TÓPICO 1", "relatorio": "<p>Mini-relatório HTML...</p>" },
-    { "title": "TÍTULO DO TÓPICO 2", "relatorio": "<p>Mini-relatório HTML...</p>" }
-  ]
-}
-
-Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado, na mesma ordem.`;
-  };
-
-  // v1.36.73: generateMiniReport, generateMultipleMiniReports, generateMiniReportsBatch
-  // MOVIDOS para useReportGeneration hook (src/hooks/useReportGeneration.ts)
-
-  // ============================================================================
-  // FIM DOS HELPERS
+  // buildDocumentContentArray → src/prompts/promptBuilders.ts (importado acima)
+  // buildMiniReportPromptCore → useReportGeneration hook (tem própria versão)
+  // buildMiniReportPrompt → useReportGeneration hook (tem própria versão)
+  // buildBatchMiniReportPrompt → useReportGeneration hook (tem própria versão)
+  // generateMiniReport, generateMultipleMiniReports, generateMiniReportsBatch → useReportGeneration hook
+  // reorderTopicsViaLLM → useTopicOrdering hook
   // ============================================================================
 
   const regenerateRelatorio = async (topicTitle: string, topicContext: string) => {
@@ -3846,7 +3601,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
     aiIntegration.setRegeneratingRelatorio(true);
     setAnalysisProgress('🔄 Regenerando RELATÓRIO processual...');
     try {
-      const contentArray = buildDocumentContentArray({ includeComplementares: true });
+      const contentArray = buildDocumentContentArray(analyzedDocuments, { includeComplementares: true });
       const instrucao = (aiIntegration.relatorioInstruction || '').trim();
       if (instrucao) {
         contentArray.push({ type: 'text', text: `⚠️ INSTRUÇÃO ADICIONAL DO USUÁRIO:\n${instrucao}` });
@@ -4085,439 +3840,9 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
   // 📋 v1.37.7: Funções de Gerenciamento de Tópicos extraídas para useTopicOperations hook
   // (handleRenameTopic, handleMergeTopics, handleSplitTopic, handleCreateNewTopic)
 
-  // 🤖 FUNÇÕES: Geração de Texto com IA
-
-  const generateAiText = async () => {
-    if (!aiIntegration.aiInstruction?.trim()) {
-      setError('Digite uma instrução para a IA');
-      return;
-    }
-
-    aiIntegration.setGeneratingAi(true);
-    aiIntegration.setAiGeneratedText('');
-
-    try {
-      const currentContent = editorRef.current?.root?.innerText || '';
-
-      // Preparar documentos usando helper
-      const { contentArray, flags } = prepareDocumentsContext(analyzedDocuments);
-      const { hasPeticao, hasContestacoes, hasComplementares } = flags;
-
-      // 🆕 v1.19.5: Usar função centralizada para provas
-      // v1.19.2: Passar flag de anonimização
-      // v1.21.5: Passar anonConfig para anonimizar texto
-      const { proofDocuments, proofsContext, hasProofs } = await prepareProofsContext(
-        proofManager, editingTopic?.title || '', storage.fileToBase64, aiIntegration?.aiSettings?.anonymization?.enabled, aiIntegration?.aiSettings?.anonymization
-      );
-      contentArray.push(...proofDocuments);
-
-      // Preparar contexto baseado no escopo selecionado
-      let decisionContext = '';
-
-      if (topicContextScope === 'current') {
-        // Apenas o tópico atual
-        decisionContext = `📋 CONTEXTO DO TÓPICO:
-Título: ${editingTopic?.title || 'Não especificado'}
-Categoria: ${editingTopic?.category || 'Não especificada'}
-
-📝 MINI-RELATÓRIO DO TÓPICO:
-${editingTopic?.relatorio || 'Não disponível'}
-
-✍️ CONTEÚDO JÁ ESCRITO DA DECISÃO:
-${currentContent || 'Ainda não foi escrito nada'}`;
-      } else {
-        // Toda a decisão (todos os tópicos)
-        decisionContext = '📋 CONTEXTO COMPLETO DA DECISÃO:\n\n';
-
-        selectedTopics.forEach((t, index) => {
-          const titleUpper = t.title.toUpperCase();
-          if (titleUpper === 'RELATÓRIO') {
-            decisionContext += `📄 RELATÓRIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
-          } else if (titleUpper === 'DISPOSITIVO') {
-            decisionContext += `⚖️ DISPOSITIVO:\n${t.editedContent || ''}\n\n---\n\n`;
-          } else {
-            decisionContext += `📋 TÓPICO ${index}: ${t.title} (${t.category || 'Sem categoria'})
-Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
-Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
-
----
-
-`;
-          }
-        });
-
-        decisionContext += `\n🎯 TÓPICO SENDO EDITADO: ${editingTopic?.title}
-✍️ CONTEÚDO JÁ ESCRITO NESTE TÓPICO:
-${currentContent || 'Ainda não foi escrito nada'}`;
-      }
-
-      // 8. Adicionar instrução de texto
-      contentArray.push({
-        type: 'text',
-        text: `Você está auxiliando na redação de uma DECISÃO JUDICIAL TRABALHISTA.
-
-${decisionContext}
-
-${hasPeticao || hasContestacoes || hasComplementares || hasProofs ? `
-📚 DOCUMENTOS DISPONÍVEIS PARA CONSULTA:
-${hasPeticao ? '✓ Petição inicial' : ''}
-${hasContestacoes ? '✓ Contestação(ões)' : ''}
-${hasComplementares ? '✓ Documento(s) complementar(es)' : ''}
-${hasProofs ? '✓ Prova(s) vinculada(s) a este tópico' : ''}
-
-Os documentos foram anexados acima. Você pode e DEVE consultá-los para fundamentar sua decisão, especialmente:
-- Para identificar alegações e argumentos das partes
-- Para verificar provas mencionadas
-- Para fundamentar sua decisão com base no que foi apresentado nos autos
-${hasProofs ? '- Para analisar as provas vinculadas e suas respectivas análises/conclusões' : ''}
-` : ''}
-${proofsContext}
-🎯 INSTRUÇÃO DO USUÁRIO:
-${aiIntegration.aiInstruction}
-
-⚠️ IMPORTANTE - NÃO INCLUIR MINI-RELATÓRIO:
-- O mini-relatório já foi fornecido acima apenas como CONTEXTO
-- NÃO repita ou resuma os fatos no texto gerado
-- NÃO inicie com "Trata-se de...", "Cuida-se de...", "O reclamante postula..."
-- Vá DIRETO para a análise jurídica, fundamentação e conclusão
-
-${AI_PROMPTS.estiloRedacao}
-
-Com base em TODOS os elementos acima (contexto do tópico, documentos processuais e instrução do usuário), gere o texto solicitado.
-
-O texto deve:
-- Ser adequado para uma decisão judicial trabalhista
-- Usar SEMPRE a primeira pessoa
-- Manter linguagem formal, mas acessível
-- Evitar latinismos desnecessários
-- Ser claro e objetivo
-- Considerar o contexto do tópico e o que já foi escrito
-- FUNDAMENTAR-SE nos documentos processuais (petição, contestações, provas)
-- Citar fatos específicos dos autos quando relevante
-- Aplicar bases legais quando apropriado
-
-${AI_PROMPTS.formatacaoHTML("A <strong>CLT</strong> estabelece que...")}
-
-${AI_PROMPTS.formatacaoParagrafos("<p>Passo a analisar...</p><p>A CLT estabelece...</p>")}
-
-${AI_PROMPTS.numeracaoReclamadas}
-
-Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Gere texto pronto para ser inserido na decisão.`
-      });
-
-      // v1.21.26: Parametros para assistente interativo (criativo moderado)
-      const textContent = await aiIntegration.callAI([{
-        role: 'user',
-        content: contentArray
-      }], {
-        maxTokens: 4000,
-        useInstructions: true,
-        logMetrics: true,
-        temperature: 0.5,
-        topP: 0.9,
-        topK: 80
-      });
-
-      aiIntegration.setAiGeneratedText(textContent.trim());
-      setError('');
-    } catch (err) {
-      setError('Erro ao gerar texto com IA: ' + (err as Error).message);
-    } finally {
-      aiIntegration.setGeneratingAi(false);
-    }
-  };
-
-  const insertAiText = (mode: InsertMode) => {
-    if (!aiIntegration.aiGeneratedText || !editorRef.current || !editingTopic) return;
-
-    const currentHtml = editorRef.current.root.innerHTML;
-    const normalizedAiText = normalizeHTMLSpacing(aiIntegration.aiGeneratedText);
-    let newHtml: string;
-
-    switch (mode) {
-      case 'replace':
-        newHtml = sanitizeHTML(normalizedAiText) || '';
-        break;
-      case 'append':
-        newHtml = sanitizeHTML(currentHtml + '<br>' + normalizedAiText) || '';
-        break;
-      case 'prepend':
-        newHtml = sanitizeHTML(normalizedAiText + '<br>' + currentHtml) || '';
-        break;
-    }
-
-    editorRef.current.root.innerHTML = newHtml;
-
-    setEditingTopic({
-      ...editingTopic,
-      editedFundamentacao: newHtml
-    });
-
-    closeModal('aiAssistant');
-    aiIntegration.setAiInstruction('');
-    aiIntegration.setAiGeneratedText('');
-  };
-
-  // 🤖 v1.19.0: Constrói contexto completo para chat do assistente IA (Editor Individual)
-  // 🆕 v1.19.5: Agora assíncrono para suportar PDFs binários
-  const buildContextForChat = React.useCallback(async (userMessage: string, options: { proofFilter?: string } = {}) => {
-    const currentContent = editorRef.current?.root?.innerText || '';
-    const { proofFilter } = options;
-
-    // Preparar documentos usando helper
-    const { contentArray, flags } = prepareDocumentsContext(analyzedDocuments);
-    const { hasPeticao, hasContestacoes, hasComplementares } = flags;
-
-    // 🆕 v1.21.1: Usar função de provas orais se filtro ativo
-    // v1.19.2: Passar flag de anonimização
-    // v1.21.5: Passar anonConfig para anonimizar texto
-    const prepareFunction = proofFilter === 'oral' ? prepareOralProofsContext : prepareProofsContext;
-    const { proofDocuments, proofsContext, hasProofs } = await prepareFunction(
-      proofManager, editingTopic?.title || '', storage.fileToBase64, aiIntegration?.aiSettings?.anonymization?.enabled, aiIntegration?.aiSettings?.anonymization
-    );
-    contentArray.push(...proofDocuments);
-
-    // Contexto baseado no escopo selecionado
-    let decisionContext = '';
-    if (topicContextScope === 'current') {
-      decisionContext = `📋 CONTEXTO DO TÓPICO:
-Título: ${editingTopic?.title || 'Não especificado'}
-Categoria: ${editingTopic?.category || 'Não especificada'}
-
-📝 MINI-RELATÓRIO DO TÓPICO:
-${editingTopic?.relatorio || 'Não disponível'}
-
-✍️ CONTEÚDO JÁ ESCRITO DA DECISÃO:
-${currentContent || 'Ainda não foi escrito nada'}`;
-    } else {
-      decisionContext = '📋 CONTEXTO COMPLETO DA DECISÃO:\n\n';
-      selectedTopics.forEach((t, index) => {
-        const titleUpper = t.title.toUpperCase();
-        if (titleUpper === 'RELATÓRIO') {
-          decisionContext += `📄 RELATÓRIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
-        } else if (titleUpper === 'DISPOSITIVO') {
-          decisionContext += `⚖️ DISPOSITIVO:\n${t.editedContent || ''}\n\n---\n\n`;
-        } else {
-          decisionContext += `📋 TÓPICO ${index}: ${t.title} (${t.category || 'Sem categoria'})
-Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
-Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
-
----
-
-`;
-        }
-      });
-      decisionContext += `\n🎯 TÓPICO SENDO EDITADO: ${editingTopic?.title}
-✍️ CONTEÚDO JÁ ESCRITO NESTE TÓPICO:
-${currentContent || 'Ainda não foi escrito nada'}`;
-    }
-
-    // Verificar se anonimização está ativada
-    const anonymizationEnabled = aiIntegration?.aiSettings?.anonymization?.enabled;
-
-    // Montar prompt completo
-    contentArray.push({
-      type: 'text',
-      text: `Você está auxiliando na redação de uma DECISÃO JUDICIAL TRABALHISTA.
-
-${decisionContext}
-
-${hasPeticao || hasContestacoes || hasComplementares || hasProofs ? `
-📚 DOCUMENTOS DISPONÍVEIS PARA CONSULTA:
-${hasPeticao ? '✓ Petição inicial' : ''}
-${hasContestacoes ? '✓ Contestação(ões)' : ''}
-${hasComplementares ? '✓ Documento(s) complementar(es)' : ''}
-${hasProofs ? '✓ Prova(s) vinculada(s) a este tópico' : ''}
-
-Os documentos foram anexados acima. Você pode e DEVE consultá-los para fundamentar sua decisão.
-${hasProofs ? '- Analise as provas vinculadas e suas respectivas análises/conclusões' : ''}
-` : ''}
-${proofsContext}
-
-${INSTRUCAO_NAO_PRESUMIR}
-
-${AI_PROMPTS.estiloRedacao}
-${AI_PROMPTS.numeracaoReclamadas}
-${anonymizationEnabled ? AI_PROMPTS.preservarAnonimizacao : ''}
-
-⚠️ NÃO INCLUIR MINI-RELATÓRIO no texto gerado.
-
-🎯 INSTRUÇÃO DO USUÁRIO:
-${userMessage}
-
-Quando faltar informação expressa necessária à redação, PERGUNTE ao usuário antes de redigir. Prefira perguntar a presumir.
-
-⚠️ ANTES DE REDIGIR QUALQUER TEXTO DE DECISÃO:
-Liste as informações/conclusões que você precisa confirmar com o usuário.
-Só prossiga com a redação APÓS receber as respostas.
-Se não houver nada a confirmar, indique "Nenhuma informação pendente" e prossiga.
-
-Quando gerar texto para a decisão, responda em HTML.
-${AI_PROMPTS.formatacaoHTML("A <strong>CLT</strong> estabelece...")}
-${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágrafo.</p>")}`
-    });
-
-    return contentArray;
-  }, [analyzedDocuments, proofManager, editingTopic, topicContextScope, selectedTopics, aiIntegration?.aiSettings?.anonymization?.enabled]);
-
-  // 🤖 v1.19.0: Handler para inserir resposta do chat no editor
-  const handleInsertChatResponse = React.useCallback((mode: InsertMode) => {
-    const response = chatAssistant.lastResponse;
-    if (!response || !editorRef.current || !editingTopic) return;
-
-    const currentHtml = editorRef.current.root.innerHTML;
-    const normalizedAiText = normalizeHTMLSpacing(response);
-    let newHtml: string;
-
-    switch (mode) {
-      case 'replace':
-        newHtml = sanitizeHTML(normalizedAiText) || '';
-        break;
-      case 'append':
-        newHtml = sanitizeHTML(currentHtml + '<br>' + normalizedAiText) || '';
-        break;
-      case 'prepend':
-        newHtml = sanitizeHTML(normalizedAiText + '<br>' + currentHtml) || '';
-        break;
-      default:
-        newHtml = sanitizeHTML(normalizedAiText) || '';
-    }
-
-    editorRef.current.root.innerHTML = newHtml;
-    setEditingTopic({
-      ...editingTopic,
-      editedFundamentacao: newHtml
-    });
-  }, [chatAssistant.lastResponse, editingTopic, setEditingTopic]);
-
-  // 🤖 v1.19.0: Handler para enviar mensagem no chat
-  // v1.21.1: Aceita options (ex: { proofFilter: 'oral' }) para filtrar provas
-  // v1.21.13: Removido modal de anonimização - provas CONFLITO são filtradas em prepareProofsContext
-  const handleSendChatMessage = React.useCallback(async (message: string, options: { proofFilter?: string } = {}) => {
-    const contextBuilderWithOptions = (msg: string) => buildContextForChat(msg, options);
-    await chatAssistant.send(message, contextBuilderWithOptions);
-  }, [chatAssistant, buildContextForChat]);
-
-  const generateAiTextForModel = async () => {
-    // Verificação defensiva
-    if (!aiIntegration?.callAI) {
-      console.error('[generateAiTextForModel] aiIntegration.callAI undefined');
-      setError('Erro interno: sistema de IA não inicializado. Recarregue a página.');
-      return;
-    }
-    if (!aiIntegration.aiInstructionModel?.trim()) {
-      setError('Digite uma instrução para a IA');
-      return;
-    }
-
-    aiIntegration.setGeneratingAiModel(true);
-    aiIntegration.setAiGeneratedTextModel('');
-
-    try {
-      // FASE 4: Obter conteúdo atual do editor (Quill ou contentEditable)
-      let currentContent = '';
-      if (modelEditorRef.current) {
-        // Editor Quill - obter texto via root.innerText
-        currentContent = modelEditorRef.current.root ? modelEditorRef.current.root.innerText : '';
-      }
-
-      const prompt = `Você está auxiliando na criação de um modelo de texto para decisões judiciais trabalhistas.
-
-CONTEXTO DO MODELO:
-Título: ${modelLibrary.newModel.title || 'Não especificado'}
-Categoria: ${modelLibrary.newModel.category || 'Não especificada'}
-
-CONTEÚDO JÁ ESCRITO:
-${currentContent || 'Ainda não foi escrito nada'}
-
-INSTRUÇÃO DO USUÁRIO:
-${aiIntegration.aiInstructionModel}
-
-⚠️ IMPORTANTE - NÃO INCLUIR MINI-RELATÓRIO:
-- Este é um MODELO genérico de decisão, não um caso específico
-- NÃO inicie com resumo de fatos ou mini-relatório
-- NÃO use "Trata-se de...", "Cuida-se de...", "O reclamante postula..."
-- Vá DIRETO para a análise jurídica, fundamentação e conclusão
-- Use termos genéricos ("o reclamante", "a reclamada", "os documentos dos autos")
-
-${AI_PROMPTS.estiloRedacao}
-
-Baseado no contexto acima e na instrução do usuário, gere o texto solicitado. O texto deve:
-- Ser adequado para um modelo reutilizável de decisão judicial trabalhista
-- Usar SEMPRE a primeira pessoa
-- Manter linguagem formal, mas acessível
-- Evitar latinismos desnecessários
-- Ser claro e objetivo
-- Ser genérico o suficiente para ser adaptável a diferentes casos similares
-- Fundamentar em bases legais quando apropriado
-
-Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdown. Gere texto pronto para ser inserido no modelo.`;
-
-      // v1.21.26: Parametros para assistente de modelos (mais criativo)
-      const textContent = await aiIntegration.callAI([{
-        role: 'user',
-        content: [{ type: 'text', text: prompt }]
-      }], {
-        maxTokens: 4000,
-        useInstructions: true,
-        temperature: 0.6,
-        topP: 0.9,
-        topK: 100
-      });
-
-      aiIntegration.setAiGeneratedTextModel(textContent);
-      setError('');
-    } catch (err) {
-      setError('Erro ao gerar texto com IA: ' + (err as Error).message);
-    } finally {
-      aiIntegration.setGeneratingAiModel(false);
-    }
-  };
-
-  const insertAiTextModel = (mode: InsertMode) => {
-    if (!aiIntegration.aiGeneratedTextModel || !modelEditorRef.current) return;
-
-    // Editor Quill - usar API do Quill
-
-    const quillInstance = modelEditorRef.current;
-    const generatedText = normalizeHTMLSpacing(aiIntegration.aiGeneratedTextModel);
-
-    switch (mode) {
-      case 'replace':
-        // Substituir todo o conteúdo
-        quillInstance.root.innerHTML = sanitizeQuillHTML(generatedText);
-        break;
-
-      case 'append': {
-        // Adicionar ao final
-        const currentLength = quillInstance.getLength();
-        quillInstance.insertText(currentLength - 1, '\n');
-        quillInstance.clipboard.dangerouslyPasteHTML(
-          quillInstance.getLength(),
-          sanitizeQuillHTML(generatedText)
-        );
-        break;
-      }
-
-      case 'prepend':
-        // Adicionar no início
-        quillInstance.clipboard.dangerouslyPasteHTML(0, sanitizeQuillHTML(generatedText + '\n'));
-        break;
-    }
-
-    // Atualizar estado com o HTML do Quill
-    const newContent = sanitizeQuillHTML(quillInstance.root.innerHTML);
-    modelLibrary.setNewModel({
-      ...modelLibrary.newModel,
-      content: newContent
-    });
-
-
-    closeModal('aiAssistantModel');
-    aiIntegration.setAiInstructionModel('');
-    aiIntegration.setAiGeneratedTextModel('');
-  };
-
+  // 🤖 v1.37.17: Funções de Geração de Texto com IA extraídas para useDecisionTextGeneration
+  // (generateAiText, insertAiText, buildContextForChat, handleInsertChatResponse,
+  //  handleSendChatMessage, generateAiTextForModel, insertAiTextModel)
 
   // ✏️ FUNÇÕES: Editor de Texto
 
@@ -6784,6 +6109,40 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
   // v1.37.16: generateDispositivo e regenerateDispositivoWithInstruction movidos para useDispositivoGeneration
   // Código removido: ~425 linhas (generateDispositivo + regenerateDispositivoWithInstruction)
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.17: useDecisionTextGeneration - Hook extraído para geração de texto de decisão
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const decisionTextGeneration = useDecisionTextGeneration({
+    aiIntegration: aiIntegration as unknown as Parameters<typeof useDecisionTextGeneration>[0]['aiIntegration'],
+    proofManager: proofManager as unknown as Parameters<typeof useDecisionTextGeneration>[0]['proofManager'],
+    chatAssistant: chatAssistant as unknown as Parameters<typeof useDecisionTextGeneration>[0]['chatAssistant'],
+    modelLibrary: modelLibrary as unknown as Parameters<typeof useDecisionTextGeneration>[0]['modelLibrary'],
+    analyzedDocuments,
+    editorRef,
+    modelEditorRef,
+    editingTopic,
+    setEditingTopic,
+    selectedTopics,
+    topicContextScope: topicContextScope as 'current' | 'all',
+    storage,
+    closeModal: closeModal as (modalId: string) => void,
+    setError,
+    sanitizeHTML,
+  });
+  const {
+    generateAiText,
+    insertAiText,
+    buildContextForChat,
+    handleInsertChatResponse,
+    handleSendChatMessage,
+    generateAiTextForModel,
+    insertAiTextModel,
+  } = decisionTextGeneration;
+
+  // v1.37.17: generateAiText, insertAiText, buildContextForChat, handleInsertChatResponse,
+  // handleSendChatMessage, generateAiTextForModel, insertAiTextModel movidos para useDecisionTextGeneration
+  // Código removido: ~430 linhas
+
   // v1.21.21: Função para montar texto completo da decisão (RELATÓRIO + TÓPICOS + DISPOSITIVO)
   const buildDecisionText = React.useCallback(() => {
     const parts = [];
@@ -6844,7 +6203,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
 
       // Se escopo inclui documentos, usar buildDocumentContentArray existente
       if (reviewScope === 'decisionWithDocs') {
-        const docsArray = buildDocumentContentArray({ includeComplementares: true });
+        const docsArray = buildDocumentContentArray(analyzedDocuments, { includeComplementares: true });
         contentArray.push(...docsArray);
       }
 

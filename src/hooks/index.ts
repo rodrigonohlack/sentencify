@@ -223,3 +223,15 @@ export type {
   UseDispositivoGenerationReturn,
   AIIntegrationForDispositivo
 } from './useDispositivoGeneration';
+
+// Decision Text Generation hook (TIER 2 - dependências: aiIntegration, editor, chat)
+export { useDecisionTextGeneration } from './useDecisionTextGeneration';
+export type {
+  UseDecisionTextGenerationProps,
+  UseDecisionTextGenerationReturn,
+  AIIntegrationForDecisionText,
+  ProofManagerForDecisionText,
+  ChatAssistantForDecisionText,
+  ModelLibraryForDecisionText,
+  AnalyzedDocuments
+} from './useDecisionTextGeneration';

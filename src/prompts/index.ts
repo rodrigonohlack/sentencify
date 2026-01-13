@@ -18,3 +18,17 @@ export {
   DOUBLE_CHECK_OPERATION_LABELS
 } from './double-check-prompts';
 export { INSTRUCAO_NAO_PRESUMIR } from './instrucoes';
+export {
+  buildDocumentContentArray,
+  buildMiniReportPromptCore,
+  buildMiniReportPrompt,
+  buildBatchMiniReportPrompt
+} from './promptBuilders';
+export type {
+  AnalyzedDocumentsForPrompt,
+  BuildDocumentOptions,
+  AISettingsForPrompt,
+  PartesProcesso,
+  MiniReportPromptCore,
+  BuildMiniReportPromptOptions
+} from './promptBuilders';
