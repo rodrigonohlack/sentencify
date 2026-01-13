@@ -268,3 +268,10 @@ export type {
   AIIntegrationForExportImport,
   CloudSyncForExportImport
 } from './useExportImport';
+
+// Decision Export hook (TIER 1 - dependências: html-conversion utils, export-styles)
+export { useDecisionExport } from './useDecisionExport';
+export type {
+  UseDecisionExportProps,
+  UseDecisionExportReturn
+} from './useDecisionExport';

@@ -44,7 +44,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -4224,170 +4224,18 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
     }
   };
 
-  const exportDecision = async () => {
-    if (selectedTopics.length === 0) {
-      setError('Nenhum tópico selecionado para exportar');
-      return;
-    }
-
-    setError('');
-    
-    try {
-      let plainText = 'SENTENÇA\n\n';
-
-      // HTML otimizado para Google Docs e Word
-      let htmlText = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<style>
-  body { 
-    font-family: 'Times New Roman', Times, serif; 
-    font-size: 12pt; 
-    line-height: 1.5; 
-    margin: 2.54cm;
-  }
-  h1 { 
-    text-align: center; 
-    font-size: 14pt; 
-    font-weight: bold; 
-    margin-bottom: 20px;
-    text-transform: uppercase;
-  }
-  h2 { 
-    font-size: 12pt; 
-    font-weight: bold; 
-    margin-top: 20px; 
-    margin-bottom: 10px;
-    text-transform: uppercase;
-  }
-  p { 
-    margin: 0 0 12px 0; 
-    text-align: justify; 
-    text-indent: 0;
-  }
-  ul, ol { 
-    margin: 10px 0; 
-    padding-left: 40px; 
-  }
-  li { 
-    margin-bottom: 6px; 
-  }
-  b, strong { 
-    font-weight: bold; 
-  }
-  i, em { 
-    font-style: italic; 
-  }
-  u { 
-    text-decoration: underline; 
-  }
-  .section { 
-    margin-bottom: 30px; 
-  }
-  .fundamentacao-header {
-    text-align: left;
-    font-weight: bold;
-    font-size: 12pt;
-    margin: 30px 0 20px 0;
-    text-transform: uppercase;
-  }
-</style>
-</head>
-<body>
-<h1 style="${EXPORT_STYLES.h1}">SENTENÇA</h1>
-`;
-
-      selectedTopics.forEach((topic, index) => {
-        // Remover numeração romana do título
-        let topicTitle = topic.title.toUpperCase();
-        topicTitle = topicTitle.replace(/^I\s*[-–]\s*/i, '');
-        topicTitle = topicTitle.replace(/^II\s*[-–]\s*/i, '');
-        topicTitle = topicTitle.replace(/^III\s*[-–]\s*/i, '');
-        topicTitle = topicTitle.replace(/^IV\s*[-–]\s*/i, '');
-        topicTitle = topicTitle.replace(/^V\s*[-–]\s*/i, '');
-
-        plainText += `\n${topicTitle}\n\n`;
-
-        htmlText += `<div style="${EXPORT_STYLES.section}">`;
-        htmlText += `<h2 style="${EXPORT_STYLES.h2}">${topicTitle}</h2>`;
-        
-                const isRelatorio = topic.title.toUpperCase() === 'RELATÓRIO';
-        const isDispositivo = topic.title.toUpperCase() === 'DISPOSITIVO';
-
-        if (isRelatorio) {
-          // RELATÓRIO: apenas editedRelatorio
-          const relatorioHtml = topic.editedRelatorio || topic.relatorio || '';
-          if (relatorioHtml) {
-            htmlText += cleanHtmlForExport(relatorioHtml);
-            plainText += htmlToFormattedText(relatorioHtml) + '\n\n';
-          }
-        } else if (isDispositivo) {
-          // DISPOSITIVO: apenas editedContent
-          if (topic.editedContent) {
-            htmlText += cleanHtmlForExport(topic.editedContent);
-            plainText += htmlToFormattedText(topic.editedContent) + '\n\n';
-          }
-        } else {
-          // Tópicos normais: mini-relatório + fundamentação
-          const relatorioHtml = topic.editedRelatorio || topic.relatorio || '';
-          if (relatorioHtml) {
-            htmlText += cleanHtmlForExport(relatorioHtml);
-            plainText += htmlToFormattedText(relatorioHtml) + '\n\n';
-          }
-          if (topic.editedFundamentacao) {
-            htmlText += cleanHtmlForExport(topic.editedFundamentacao);
-            plainText += htmlToFormattedText(topic.editedFundamentacao) + '\n\n';
-          }
-        }
-        
-        htmlText += `</div>`;
-        
-        // Adicionar "FUNDAMENTAÇÃO" após o primeiro tópico (RELATÓRIO)
-        if (index === 0) {
-          plainText += '\nFUNDAMENTAÇÃO\n\n';
-          htmlText += `<div style="${EXPORT_STYLES.fundamentacaoHeader}">FUNDAMENTAÇÃO</div>`;
-        }
-      });
-
-      htmlText += `
-</body>
-</html>`;
-
-      setExportedText(plainText);
-      setExportedHtml(htmlText);
-      openModal('export');
-      
-      try {
-        // Tentar copiar com formatação rica
-        const htmlBlob = new Blob([htmlText], { type: 'text/html' });
-        const textBlob = new Blob([plainText], { type: 'text/plain' });
-        
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            'text/html': htmlBlob,
-            'text/plain': textBlob
-          })
-        ]);
-        
-        if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
-        setCopySuccess(true);
-        copyTimeoutRef.current = setTimeout(() => setCopySuccess(false), 3000);
-      } catch (clipErr) {
-        // Fallback: formato rico falhou, tentar texto simples
-        try {
-          await navigator.clipboard.writeText(plainText);
-          if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
-          setCopySuccess(true);
-          copyTimeoutRef.current = setTimeout(() => setCopySuccess(false), 3000);
-        } catch (err2) {
-          setError('Não foi possível copiar automaticamente. Use o botão "Copiar Novamente" no modal.');
-        }
-      }
-    } catch (err) {
-      setError('Erro ao exportar decisão: ' + (err as Error).message);
-    }
-  };
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.26: useDecisionExport - Hook extraído para exportação da decisão
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const { exportDecision } = useDecisionExport({
+    selectedTopics,
+    setError,
+    openModal: openModal as (modalId: string) => void,
+    setExportedText,
+    setExportedHtml,
+    setCopySuccess,
+    copyTimeoutRef
+  });
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // v1.37.16: useDispositivoGeneration - Hook extraído para geração do DISPOSITIVO
