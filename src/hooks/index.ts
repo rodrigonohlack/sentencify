@@ -204,3 +204,14 @@ export type {
   ModelLibraryForEmbeddings,
   IndexedDBForEmbeddings
 } from './useEmbeddingsManagement';
+
+// Model Save hook (TIER 1 - dependências: modelLibrary, cloudSync, apiCache, services)
+export { useModelSave } from './useModelSave';
+export type {
+  UseModelSaveProps,
+  UseModelSaveReturn,
+  ModelLibraryForSave,
+  CloudSyncForSave,
+  APICacheForSave,
+  ModelPreviewForSave
+} from './useModelSave';

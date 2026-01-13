@@ -144,7 +144,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -909,9 +909,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [error, setError] = useState<string | { type: string; message: string }>('');
   const [copySuccess, setCopySuccess] = useState(false);
   const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [modelSaved, setModelSaved] = useState(false);
-  const [savingModel, setSavingModel] = useState(false); // v1.27.02: Feedback visual durante geração de embedding
-  const [savingFromSimilarity, setSavingFromSimilarity] = useState(false); // v1.33.3: Feedback no modal de similaridade
+  // v1.37.14: Estados savingModel, modelSaved, savingFromSimilarity movidos para useModelSave hook
 
   // v1.17.0: Estado para texto de nomes no modal de anonimização
   // NOTA: showAnonymizationModal, showTopicCurationModal e pendingCurationData agora vêm do useDocumentAnalysis (v1.36.81)
@@ -2721,6 +2719,38 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   };
 
   // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.14: useModelSave - Hook extraído para salvamento de modelos
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const modelSave = useModelSave({
+    modelLibrary,
+    aiSettings: aiIntegration.aiSettings,
+    searchModelReady,
+    cloudSync,
+    apiCache,
+    showToast,
+    modelEditorRef,
+    closeModal: closeModal as (modalId: string) => void,
+    modelPreview,
+    sanitizeHTML,
+    setError: (error: string) => setError(error),
+  });
+
+  const {
+    savingModel,
+    modelSaved,
+    savingFromSimilarity,
+    saveModel,
+    saveModelWithoutClosing,
+    executeSaveModel,
+    executeSaveAsNew,
+    executeExtractedModelSave,
+    processBulkSaveNext,
+    handleSimilarityCancel,
+    handleSimilaritySaveNew,
+    handleSimilarityReplace,
+  } = modelSave;
+
+  // ═══════════════════════════════════════════════════════════════════════════════
   // v1.37.9: useEmbeddingsManagement - Hook extraído para gerenciamento de embeddings
   // ═══════════════════════════════════════════════════════════════════════════════
   const embeddingsManagement = useEmbeddingsManagement({
@@ -3144,217 +3174,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 📚 FUNÇÕES: Gerenciamento de Modelos
   // Hook useModelLibrary já gerencia persistência via 'sentencify-models'
   // v1.37.8: generateKeywordsWithAI e generateTitleWithAI movidos para useModelGeneration hook
-
-  // 🔍 v1.13.1: Executa salvamento do modelo (chamado após verificação de similaridade)
-  // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
-  const executeSaveModel = async (modelData: Partial<Model> & { id: string; title: string; content: string; embedding?: number[] }, isReplace = false, replaceId: string | null = null) => {
-    // Gerar embedding se modelo de busca estiver pronto E opção ativada
-    if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-      try {
-        const stripHTML = (html: string) => {
-          const div = document.createElement('div');
-          div.innerHTML = html || '';
-          return div.textContent || div.innerText || '';
-        };
-        const text = [modelData.title, modelData.keywords, stripHTML(modelData.content).slice(0, 2000)].filter(Boolean).join(' ');
-        modelData.embedding = await AIModelService.getEmbedding(text, 'passage');
-      } catch (err) {
-        console.warn('[MODEL-EMBED] Erro ao gerar embedding:', err);
-      }
-    } else if (!aiIntegration.aiSettings.modelSemanticEnabled && modelData.embedding) {
-      delete modelData.embedding;
-    }
-
-    if (isReplace && replaceId) {
-      const updatedModel = { ...modelData, id: replaceId, updatedAt: new Date().toISOString() };
-      const updated = modelLibrary.models.map(m => m.id === replaceId ? updatedModel : m);
-      modelLibrary.setModels(updated);
-      // v1.34.0: Rastrear update para sync
-      if (cloudSync?.trackChange) cloudSync.trackChange('update', updatedModel);
-      TFIDFSimilarity.invalidate();
-      apiCache.invalidate('suggestions_');
-    } else {
-      modelLibrary.setModels(prev => [...prev, modelData]);
-      // v1.34.0: Rastrear create para sync
-      if (cloudSync?.trackChange) cloudSync.trackChange('create', modelData);
-      TFIDFSimilarity.invalidate();
-      apiCache.invalidate('suggestions_');
-    }
-    modelLibrary.setHasUnsavedChanges(true);
-    setModelSaved(true);
-    setTimeout(() => {
-      modelLibrary.setNewModel({ title: '', content: '', keywords: '', category: '' });
-      if (modelEditorRef.current?.root) modelEditorRef.current.root.innerHTML = '';
-      closeModal('modelForm');
-      setError('');
-      setModelSaved(false);
-    }, 1200);
-  };
-
-  const saveModel = async (formData?: NewModelData) => {
-    // v1.36.1: Aceita dados do formulário diretamente para evitar race condition
-    const effectiveModel = formData || modelLibrary.newModel;
-    const currentContent = modelEditorRef.current?.root
-      ? sanitizeHTML(modelEditorRef.current.root.innerHTML)
-      : effectiveModel.content;
-
-    if (!effectiveModel.title || !currentContent) {
-      setError('Título e conteúdo são obrigatórios');
-      return;
-    }
-
-    setSavingModel(true);
-    // Yield para React renderizar "Salvando..." antes da operação pesada
-    await new Promise(resolve => setTimeout(resolve, 50));
-    try {
-      const editingModel = modelLibrary.editingModel;
-      if (editingModel) {
-        // Edição de modelo existente - sem verificação de similaridade
-        const modelData: Model = {
-          ...editingModel,
-          title: effectiveModel.title,
-          content: currentContent,
-          keywords: effectiveModel.keywords,
-          category: effectiveModel.category,
-          updatedAt: new Date().toISOString()
-        };
-
-        // v1.27.02: Regenerar embedding se IA local estiver ativa
-        if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
-          try {
-            const stripHTML = (html: string) => {
-              const div = document.createElement('div');
-              div.innerHTML = html || '';
-              return div.textContent || div.innerText || '';
-            };
-            const text = [modelData.title, modelData.keywords, stripHTML(modelData.content).slice(0, 2000)].filter(Boolean).join(' ');
-            modelData.embedding = await AIModelService.getEmbedding(text, 'passage');
-          } catch (err) {
-            console.warn('[MODEL-EMBED] Erro ao regenerar embedding:', err);
-          }
-        } else if (modelData.embedding) {
-          // Limpar embedding desatualizado para regenerar depois
-          delete modelData.embedding;
-        }
-
-        const updated = modelLibrary.models.map(m => m.id === editingModel.id ? modelData : m);
-        modelLibrary.setModels(updated);
-        // v1.34.0: Rastrear update para sync
-        if (cloudSync?.trackChange) cloudSync.trackChange('update', modelData);
-        modelLibrary.setHasUnsavedChanges(true);
-        TFIDFSimilarity.invalidate();
-        apiCache.invalidate('suggestions_');
-        modelLibrary.setEditingModel(null);
-        setModelSaved(true);
-        setTimeout(() => {
-          modelLibrary.setNewModel({ title: '', content: '', keywords: '', category: '' });
-          if (modelEditorRef.current?.root) modelEditorRef.current.root.innerHTML = '';
-          closeModal('modelForm');
-          setError('');
-          setModelSaved(false);
-        }, 1200);
-      } else {
-        // Novo modelo - verificar similaridade
-        const modelId = generateModelId();
-        const modelData: Model = {
-          id: modelId,
-          title: effectiveModel.title,
-          content: currentContent,
-          keywords: effectiveModel.keywords,
-          category: effectiveModel.category,
-          createdAt: new Date().toISOString()
-        };
-
-        // 🔍 v1.13.1: Verificar similaridade com TF-IDF
-        const simResult = TFIDFSimilarity.findSimilar(modelData, modelLibrary.models, 0.80);
-        if (simResult.hasSimilar) {
-          modelLibrary.setSimilarityWarning({
-            newModel: modelData,
-            similarModel: simResult.similarModel,
-            similarity: simResult.similarity,
-            context: 'saveModel'
-          } as SimilarityWarningState);
-          return;
-        }
-
-        await executeSaveModel(modelData);
-      }
-    } catch (err) {
-      setError('Erro ao salvar modelo: ' + (err as Error).message);
-    } finally {
-      setSavingModel(false);
-    }
-  };
-
-  const saveModelWithoutClosing = async (formData?: NewModelData) => {
-    // v1.36.1: Aceita dados do formulário diretamente para evitar race condition
-    const effectiveModel = formData || modelLibrary.newModel;
-    // 🔧 BUGFIX: Capturar conteúdo diretamente do editor Quill (igual saveTopicEditWithoutClosing)
-    // Previne problema onde state pode estar desatualizado ao apertar Ctrl+S
-    const currentContent = modelEditorRef.current?.root
-      ? sanitizeHTML(modelEditorRef.current.root.innerHTML)
-      : effectiveModel.content;
-
-    if (!effectiveModel.title || !currentContent) {
-      setError('Título e conteúdo são obrigatórios');
-      return;
-    }
-
-    try {
-      const editingModel = modelLibrary.editingModel;
-      if (editingModel) {
-        const modelData: Model = {
-          ...editingModel,
-          title: effectiveModel.title,
-          content: currentContent,  // 🔧 BUGFIX: Usar conteúdo atual do editor
-          keywords: effectiveModel.keywords,
-          category: effectiveModel.category,
-          updatedAt: new Date().toISOString()
-        };
-
-        const updated = modelLibrary.models.map(m => m.id === editingModel.id ? modelData : m);
-        modelLibrary.setModels(updated);
-        // v1.34.0: Rastrear update para sync
-        if (cloudSync?.trackChange) cloudSync.trackChange('update', modelData);
-        modelLibrary.setHasUnsavedChanges(true);
-        modelLibrary.setEditingModel(modelData);
-
-        // 🔧 BUGFIX: Atualizar também o newModel.content para manter state sincronizado
-        modelLibrary.setNewModel({ ...effectiveModel, content: currentContent });
-      } else {
-        const modelId = generateModelId();
-        const modelData: Model = {
-          id: modelId,
-          title: effectiveModel.title,
-          content: currentContent,  // 🔧 BUGFIX: Usar conteúdo atual do editor
-          keywords: effectiveModel.keywords,
-          category: effectiveModel.category,
-          createdAt: new Date().toISOString()
-        };
-
-        modelLibrary.setModels(prev => [...prev, modelData]);
-        // v1.34.0: Rastrear create para sync
-        if (cloudSync?.trackChange) cloudSync.trackChange('create', modelData);
-        modelLibrary.setHasUnsavedChanges(true);
-        modelLibrary.setEditingModel(modelData);
-
-        // 🔧 BUGFIX: Atualizar também o newModel.content para manter state sincronizado
-        modelLibrary.setNewModel({ ...effectiveModel, content: currentContent });
-      }
-
-      setError('');
-
-      // Feedback visual temporário
-      const successMsg = document.createElement('div');
-      successMsg.className = 'fixed top-4 left-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-pulse';
-      successMsg.innerHTML = '<span>✓</span> Modelo salvo!';
-      document.body.appendChild(successMsg);
-      setTimeout(() => successMsg.remove(), 2000);
-    } catch (err) {
-      setError('Erro ao salvar modelo: ' + (err as Error).message);
-    }
-  };
+  // v1.37.14: executeSaveModel, saveModel, saveModelWithoutClosing movidos para useModelSave hook
 
   // Salva edições rápidas de um modelo
   // v1.27.02: Regenerar embedding se IA local estiver ativa
@@ -3506,47 +3326,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     modelPreview.closePreview();
   };
 
-  // v1.15.3: Executa salvamento de "Salvar como Novo" (chamado após confirmação de similaridade)
-  // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
-  const executeSaveAsNew = async (modelData: Partial<Model> & { id: string; title: string; content: string; embedding?: number[] }, isReplace = false, replaceId: string | null = null) => {
-    // Gerar embedding se modelo de busca estiver pronto E opção ativada
-    if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-      try {
-        const stripHTML = (html: string) => {
-          const div = document.createElement('div');
-          div.innerHTML = html || '';
-          return div.textContent || div.innerText || '';
-        };
-        const text = [modelData.title, modelData.keywords, stripHTML(modelData.content).slice(0, 2000)].filter(Boolean).join(' ');
-        modelData.embedding = await AIModelService.getEmbedding(text, 'passage');
-      } catch (err) {
-        console.warn('[MODEL-EMBED] Erro ao gerar embedding:', err);
-      }
-    } else if (!aiIntegration.aiSettings.modelSemanticEnabled && modelData.embedding) {
-      delete modelData.embedding;
-    }
-
-    if (isReplace && replaceId) {
-      const updatedModel = { ...modelData, id: replaceId, updatedAt: new Date().toISOString() };
-      const updated = modelLibrary.models.map(m =>
-        m.id === replaceId ? updatedModel : m
-      );
-      modelLibrary.setModels(updated);
-      // v1.34.0: Rastrear update para sync
-      if (cloudSync?.trackChange) cloudSync.trackChange('update', updatedModel);
-    } else {
-      modelLibrary.setModels(prev => [...prev, modelData]);
-      // v1.34.0: Rastrear create para sync
-      if (cloudSync?.trackChange) cloudSync.trackChange('create', modelData);
-    }
-    modelLibrary.setHasUnsavedChanges(true);
-    TFIDFSimilarity.invalidate();
-    apiCache.invalidate('suggestions_');
-    showToast('Novo modelo criado com sucesso!', 'success');
-    modelPreview.closeSaveAsNew();
-    modelPreview.closePreview();
-  };
+  // v1.37.14: executeSaveAsNew movido para useModelSave hook
 
   const startEditingModel = (model: Model) => {
     modelLibrary.setEditingModel(model);
@@ -5433,46 +5213,7 @@ ${decisionText}`;
     }
   };
 
-  // 🔍 v1.13.1: Executa salvamento de modelo extraído (chamado após verificação de similaridade)
-  // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
-  const executeExtractedModelSave = async (modelData: Partial<Model> & { title: string; content: string; embedding?: number[] }, isReplace = false, replaceId: string | null = null) => {
-    // Gerar embedding se modelo de busca estiver pronto E opção ativada
-    if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-      try {
-        const stripHTML = (html: string) => {
-          const div = document.createElement('div');
-          div.innerHTML = html || '';
-          return div.textContent || div.innerText || '';
-        };
-        const text = [modelData.title, modelData.keywords, stripHTML(modelData.content).slice(0, 2000)].filter(Boolean).join(' ');
-        modelData.embedding = await AIModelService.getEmbedding(text, 'passage');
-      } catch (err) {
-        console.warn('[MODEL-EMBED] Erro ao gerar embedding:', err);
-      }
-    } else if (!aiIntegration.aiSettings.modelSemanticEnabled && modelData.embedding) {
-      delete modelData.embedding;
-    }
-
-    if (isReplace && replaceId) {
-      const updatedModel = { ...modelData, id: replaceId, updatedAt: new Date().toISOString() };
-      const updated = modelLibrary.models.map(m => m.id === replaceId ? updatedModel : m);
-      modelLibrary.setModels(updated);
-      // v1.34.0: Rastrear update para sync
-      if (cloudSync?.trackChange) cloudSync.trackChange('update', updatedModel);
-    } else {
-      const newModel: Model = { ...modelData, id: crypto.randomUUID(), updatedAt: new Date().toISOString() } as Model;
-      modelLibrary.setModels(prev => [...prev, newModel]);
-      // v1.34.0: Rastrear create para sync
-      if (cloudSync?.trackChange) cloudSync.trackChange('create', newModel);
-    }
-    modelLibrary.setHasUnsavedChanges(true);
-    TFIDFSimilarity.invalidate();
-    apiCache.invalidate('suggestions_');
-    showToast(`✅ Modelo "${modelData.title}" ${isReplace ? 'substituído' : 'salvo'} com sucesso!`, 'success');
-    closeModal('extractedModelPreview');
-    modelLibrary.setExtractedModelPreview(null);
-  };
+  // v1.37.14: executeExtractedModelSave movido para useModelSave hook
 
   // Salva o modelo extraído após revisão/edição pelo usuário
   const saveExtractedModel = () => {
@@ -5532,131 +5273,8 @@ ${decisionText}`;
     }
   }, [closeModal, modelLibrary.bulkCancelController, modelLibrary.setBulkProcessing, modelLibrary.setBulkCurrentBatch, modelLibrary.setBulkCancelController]);
 
-  // 🔍 v1.14.1: Função única para processar fila de salvamento bulk
-  // v1.20.2: Otimizado para evitar memory leak - usa mutação direta nos arrays
-  // v1.27.02: Gera embeddings automaticamente se IA local estiver ativa
-  const processBulkSaveNext = async (queue: Array<{ title: string; content: string; keywords?: string | string[]; category?: string; embedding?: number[] }>, saved: Model[], skipped: number, replacements: Array<{ oldId: string; newModel: Model }>) => {
-    if (queue.length === 0) {
-      if (saved.length > 0 || replacements.length > 0) {
-        // v1.27.02: Gerar embeddings para todos os modelos novos se IA local ativa E opção ativada
-        if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
-          const stripHTML = (html: string) => {
-            const div = document.createElement('div');
-            div.innerHTML = html || '';
-            return div.textContent || div.innerText || '';
-          };
-          for (const model of saved) {
-            if (!model.embedding) {
-              try {
-                const text = [model.title, model.keywords, stripHTML(model.content).slice(0, 2000)].filter(Boolean).join(' ');
-                model.embedding = await AIModelService.getEmbedding(text, 'passage');
-              } catch (err) { /* ignore */ }
-            }
-          }
-          for (const { newModel } of replacements) {
-            if (!newModel.embedding) {
-              try {
-                const text = [newModel.title, newModel.keywords, stripHTML(newModel.content).slice(0, 2000)].filter(Boolean).join(' ');
-                newModel.embedding = await AIModelService.getEmbedding(text, 'passage');
-              } catch (err) { /* ignore */ }
-            }
-          }
-        }
-
-        let updatedModels = [...modelLibrary.models];
-        const batchChanges: Array<{ operation: 'create' | 'update' | 'delete'; model: Partial<Model> & { id: string } }> = [];
-        for (const { oldId, newModel } of replacements) {
-          const replacedModel = { ...newModel, id: oldId, updatedAt: new Date().toISOString() };
-          updatedModels = updatedModels.map(m => m.id === oldId ? replacedModel : m);
-          // v1.35.23: Acumular para batch
-          batchChanges.push({ operation: 'update', model: replacedModel });
-        }
-        modelLibrary.setModels([...updatedModels, ...saved]);
-        // v1.35.23: Usar trackChangeBatch para bulk upload eficiente
-        saved.forEach((model: Model) => batchChanges.push({ operation: 'create', model }));
-        if (cloudSync?.trackChangeBatch && batchChanges.length > 0) {
-          cloudSync.trackChangeBatch(batchChanges);
-        }
-        modelLibrary.setHasUnsavedChanges(true);
-        TFIDFSimilarity.invalidate();
-        apiCache.invalidate('suggestions_');
-      }
-      closeModal('bulkReview');
-      closeModal('bulkModal');
-      modelLibrary.resetBulkState();
-      const total = saved.length + replacements.length;
-      const msg = skipped > 0 ? `✅ ${total} modelo(s) adicionado(s). ${skipped} ignorado(s).` : `✅ ${total} modelo(s) adicionado(s) com sucesso!`;
-      showToast(msg, 'success');
-      return;
-    }
-    const [current, ...rest] = queue;
-    // Criar Model com id para verificação de similaridade e salvamento
-    const currentModel: Model = { ...current, id: crypto.randomUUID(), updatedAt: new Date().toISOString() } as Model;
-    const simResult = TFIDFSimilarity.findSimilar(currentModel, [...modelLibrary.models, ...saved], 0.80);
-    if (simResult.hasSimilar) {
-      modelLibrary.setSimilarityWarning({ context: 'saveBulkModel', newModel: currentModel, similarModel: simResult.similarModel, similarity: simResult.similarity, bulkQueue: rest, bulkSaved: saved, bulkSkipped: skipped, bulkReplacements: replacements });
-    } else {
-      // v1.20.2: Mutação direta para evitar cópias desnecessárias em recursão
-      saved.push(currentModel);
-      await processBulkSaveNext(rest, saved, skipped, replacements);
-    }
-  };
-
-  // 🔍 v1.13.1: Handlers para SimilarityWarningModal
-  const handleSimilarityCancel = () => {
-    const w = modelLibrary.similarityWarning;
-    if (w?.context === 'saveBulkModel') {
-      modelLibrary.setSimilarityWarning(null);
-      setTimeout(() => processBulkSaveNext(w.bulkQueue || [], w.bulkSaved || [], (w.bulkSkipped || 0) + 1, w.bulkReplacements || []), 0);
-    } else {
-      modelLibrary.setSimilarityWarning(null);
-    }
-  };
-  // v1.33.3: Feedback visual "Salvando..." no modal de similaridade
-  const handleSimilaritySaveNew = async () => {
-    const w = modelLibrary.similarityWarning;
-    if (!w) return;
-
-    setSavingFromSimilarity(true);
-    await new Promise(resolve => setTimeout(resolve, 50)); // yield para UI
-
-    if (w.context === 'saveModel') await executeSaveModel(w.newModel);
-    else if (w.context === 'saveExtractedModel') await executeExtractedModelSave(w.newModel);
-    else if (w.context === 'saveAsNew') await executeSaveAsNew(w.newModel);
-    else if (w.context === 'saveBulkModel') {
-      setSavingFromSimilarity(false);
-      modelLibrary.setSimilarityWarning(null);
-      // v1.20.2: Mutação direta para evitar cópias
-      const bulkSaved = w.bulkSaved || [];
-      bulkSaved.push(w.newModel);
-      setTimeout(() => processBulkSaveNext(w.bulkQueue || [], bulkSaved, w.bulkSkipped || 0, w.bulkReplacements || []), 0);
-      return;
-    }
-    setSavingFromSimilarity(false);
-    modelLibrary.setSimilarityWarning(null);
-  };
-  const handleSimilarityReplace = async () => {
-    const w = modelLibrary.similarityWarning;
-    if (!w) return;
-
-    setSavingFromSimilarity(true);
-    await new Promise(resolve => setTimeout(resolve, 50)); // yield para UI
-
-    if (w.context === 'saveModel') await executeSaveModel(w.newModel, true, w.similarModel.id);
-    else if (w.context === 'saveExtractedModel') await executeExtractedModelSave(w.newModel, true, w.similarModel.id);
-    else if (w.context === 'saveAsNew') await executeSaveAsNew(w.newModel, true, w.similarModel.id);
-    else if (w.context === 'saveBulkModel') {
-      setSavingFromSimilarity(false);
-      modelLibrary.setSimilarityWarning(null);
-      // v1.20.2: Mutação direta para evitar cópias
-      const bulkReplacements = w.bulkReplacements || [];
-      bulkReplacements.push({ oldId: w.similarModel.id, newModel: w.newModel });
-      setTimeout(() => processBulkSaveNext(w.bulkQueue || [], w.bulkSaved || [], w.bulkSkipped || 0, bulkReplacements), 0);
-      return;
-    }
-    setSavingFromSimilarity(false);
-    modelLibrary.setSimilarityWarning(null);
-  };
+  // v1.37.14: processBulkSaveNext, handleSimilarityCancel, handleSimilaritySaveNew, handleSimilarityReplace
+  // movidos para useModelSave hook
 
   // 🚀 v1.8.2: Gera múltiplos modelos a partir do conteúdo de um arquivo usando IA (COM CACHE)
   const generateModelsFromFileContent = async (textContent: string, fileName: string, abortSignal: AbortSignal | null = null) => {
@@ -9625,7 +9243,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
                     if (modelEditorRef.current?.root) {
                       modelEditorRef.current.root.innerHTML = '';
                     }
-                    setModelSaved(false);
+                    // v1.37.14: modelSaved agora é gerenciado pelo useModelSave hook
                   }}
                   onGenerateKeywords={generateKeywordsWithAI}
                   generatingKeywords={aiIntegration.generatingKeywords}

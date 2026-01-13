@@ -4,11 +4,11 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.13 | **File**: `src/App.tsx` (~0.59 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.14 | **File**: `src/App.tsx` (~0.56 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
-**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`, `useFullscreen`, `useSpacingControl`, `useFontSizeControl`, `useFeatureFlags`, `useThrottledBroadcast`, `useAPICache`, `useIndexedDB`, `useLegislacao`
+**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`, `useFullscreen`, `useSpacingControl`, `useFontSizeControl`, `useFeatureFlags`, `useThrottledBroadcast`, `useAPICache`, `useIndexedDB`, `useLegislacao`, `useModelSave`
 
 **Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`, `GoogleDriveButton`, `ModelGeneratorModal`, `FactsComparisonModal`, `AIAssistantBaseLegacy`, `AIAssistantBase`, `AIAssistantModal`, `AIAssistantGlobalModal`, `AIAssistantModelModal`
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.14 | FASE 10: useModelSave extraído (~380 linhas removidas) - saveModel, saveModelWithoutClosing, executeSaveModel, executeSaveAsNew, executeExtractedModelSave, processBulkSaveNext, handlers de similaridade |
 | v1.37.13 | Remove cache de "Gerar com IA" (título/keywords) - cada clique gera nova resposta |
 | v1.37.12 | (revertido em v1.37.13) Fix cache hit com clear→set |
 | v1.37.11 | Fix "Gerar com IA" sync: ModelFormModal agora sincroniza localModel quando Zustand newModel.title/keywords mudam |

@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.14', feature: 'FASE 10: useModelSave extraído (~380 linhas removidas) - saveModel, saveModelWithoutClosing, executeSaveModel, executeSaveAsNew, executeExtractedModelSave, processBulkSaveNext, handlers de similaridade movidos para src/hooks/useModelSave.ts' },
   { version: '1.37.13', feature: 'Remove cache de "Gerar com IA" (título/keywords) - cada clique gera nova resposta da IA (se o usuário clica de novo, é porque quer resposta diferente)' },
   { version: '1.37.12', feature: '(revertido em v1.37.13) Fix cache hit com clear→setTimeout→set' },
   { version: '1.37.11', feature: 'Fix "Gerar com IA" sync: ModelFormModal agora sincroniza localModel quando Zustand newModel.title/keywords mudam' },
