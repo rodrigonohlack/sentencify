@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.19', feature: 'Índice desatualizado removido do App.tsx (~95 linhas) - header simplificado aponta para estrutura modular (src/hooks, src/stores, src/components, etc.)' },
   { version: '1.37.18', feature: 'FASE 12-13: useDecisionTextGeneration + promptBuilders extraídos (~680 linhas removidas) - generateAiText, insertAiText, buildContextForChat, handleSendChatMessage, generateAiTextForModel + buildDocumentContentArray, buildMiniReportPrompt' },
   { version: '1.37.16', feature: 'FASE 11: useDispositivoGeneration extraído (~425 linhas removidas) - generateDispositivo, regenerateDispositivoWithInstruction movidos para src/hooks/useDispositivoGeneration.ts' },
   { version: '1.37.15', feature: 'Fix "Gerar com IA" (título/keywords): useModelGeneration agora lê conteúdo diretamente do Quill editor via modelEditorRef (antes usava modelLibrary.newModel.content que não sincroniza em tempo real)' },

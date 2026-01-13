@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.18 | **File**: `src/App.tsx` (~0.52 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.19 | **File**: `src/App.tsx` (~0.52 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.19 | Índice desatualizado removido (~95 linhas) - header simples aponta para estrutura modular |
 | v1.37.18 | FASE 12-13: useDecisionTextGeneration + promptBuilders extraídos (~680 linhas removidas) |
 | v1.37.16 | FASE 11: useDispositivoGeneration extraído (~425 linhas removidas) - generateDispositivo, regenerateDispositivoWithInstruction |
 | v1.37.15 | Fix "Gerar com IA" (título/keywords): useModelGeneration agora lê conteúdo diretamente do Quill editor via modelEditorRef (antes usava state não sincronizado) |
