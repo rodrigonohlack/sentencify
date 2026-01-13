@@ -215,3 +215,11 @@ export type {
   APICacheForSave,
   ModelPreviewForSave
 } from './useModelSave';
+
+// Dispositivo Generation hook (TIER 2 - dependências: aiIntegration, topics)
+export { useDispositivoGeneration } from './useDispositivoGeneration';
+export type {
+  UseDispositivoGenerationProps,
+  UseDispositivoGenerationReturn,
+  AIIntegrationForDispositivo
+} from './useDispositivoGeneration';
