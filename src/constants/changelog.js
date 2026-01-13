@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.27', feature: 'FASE 25: useSlashMenu extraído para src/hooks/ (~99 linhas removidas) - openSlashMenu, closeSlashMenu, navigateSlashMenu, selectModelFromSlash, updateSlashSearchTerm + useEffects' },
   { version: '1.37.26', feature: 'FASE 21: useDecisionExport extraído para src/hooks/ (~152 linhas removidas) - exportDecision para exportação da sentença com clipboard e HTML' },
   { version: '1.37.25', feature: 'FASE 18: useExportImport extraído para src/hooks/ (~204 linhas removidas) - exportAiSettings, importAiSettings, exportModels, importModels, checkDuplicate' },
   { version: '1.37.24', feature: 'FASE 17: useDetectEntities extraído para src/hooks/ (~243 linhas removidas) - detectarNomesAutomaticamente, constantes NER (STOP_WORDS_*, GENTILIC_WORDS, ORG_STOP_WORDS)' },

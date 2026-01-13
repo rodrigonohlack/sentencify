@@ -44,7 +44,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -823,15 +823,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     }
   }, [aiIntegration?.aiSettings?.anonymization?.nomesUsuario]);
 
-  // v1.15.3: Estado para Slash Menu (acesso rápido a modelos com /)
-  const [slashMenu, setSlashMenu] = React.useState<SlashMenuStateExtended>({
-    isOpen: false,
-    position: { top: 0, left: 0 },
-    searchTerm: '',
-    selectedIndex: 0,
-    quillInstance: null,
-    triggerPosition: 0
-  });
+  // v1.37.27: slashMenu movido para useSlashMenu hook (instanciado após showToast)
 
   // v1.21.21: Estados para revisão crítica de sentença
   const [reviewScope, setReviewScope] = useState<'decisionOnly' | 'decisionWithDocs'>('decisionOnly');
@@ -1906,6 +1898,21 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   };
 
   // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.27: useSlashMenu - Hook extraído para acesso rápido a modelos com \
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const {
+    slashMenu,
+    openSlashMenu,
+    closeSlashMenu,
+    navigateSlashMenu,
+    selectModelFromSlash,
+    updateSlashSearchTerm
+  } = useSlashMenu({
+    sanitizeHTML,
+    showToast
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════════
   // v1.37.24: useDetectEntities - Hook extraído para detecção de entidades NER
   // ═══════════════════════════════════════════════════════════════════════════════
   const { detectarNomesAutomaticamente } = useDetectEntities({
@@ -2037,115 +2044,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     generateModelEmbeddings,
   } = embeddingsManagement;
 
-  // v1.15.3: Funções para Slash Menu (acesso rápido a modelos com \)
-  const findSlashPosition = (text: string, triggerPos: number) => {
-    if (text[triggerPos] === '\\') return triggerPos;
-    if (text[triggerPos + 1] === '\\') return triggerPos + 1;
-    if (triggerPos > 0 && text[triggerPos - 1] === '\\') return triggerPos - 1;
-    return -1;
-  };
-
-  const openSlashMenu = React.useCallback((data: { position: { top: number; left: number }; quillInstance: QuillInstance | null; triggerPosition: number }) => {
-    setSlashMenu({
-      isOpen: true,
-      position: data.position,
-      searchTerm: '',
-      selectedIndex: 0,
-      quillInstance: data.quillInstance,
-      triggerPosition: data.triggerPosition
-    });
-  }, []);
-
-  const closeSlashMenu = React.useCallback((removeSlash = false) => {
-    setSlashMenu(prev => {
-      if (removeSlash && prev.quillInstance && typeof prev.triggerPosition === 'number') {
-        try {
-          const quill = prev.quillInstance;
-          const text = quill.getText();
-          const slashPos = findSlashPosition(text, prev.triggerPosition);
-          if (slashPos >= 0) {
-            quill.deleteText(slashPos, 1);
-            setTimeout(() => {
-              quill.focus();
-              quill.setSelection(slashPos, 0);
-            }, 0);
-          }
-        } catch (e) { /* Quill pode estar indisponível */ }
-      }
-      return { ...prev, isOpen: false };
-    });
-  }, []);
-
-  const navigateSlashMenu = React.useCallback((direction: 'up' | 'down', maxItems: number = 10) => {
-    setSlashMenu(prev => {
-      if (direction === 'down') {
-        return { ...prev, selectedIndex: Math.min(prev.selectedIndex + 1, maxItems - 1) };
-      } else {
-        return { ...prev, selectedIndex: Math.max(prev.selectedIndex - 1, 0) };
-      }
-    });
-  }, []);
-
-  const selectModelFromSlash = React.useCallback((model: Model) => {
-    const { quillInstance, triggerPosition } = slashMenu;
-    if (!quillInstance || !model) {
-      closeSlashMenu();
-      return;
-    }
-
-    try {
-      const text = quillInstance.getText();
-      const slashPos = findSlashPosition(text, triggerPosition);
-      if (slashPos < 0) { closeSlashMenu(); return; }
-
-      const currentPos = quillInstance.getSelection()?.index || slashPos + 1;
-      const deleteLength = currentPos - slashPos;
-      if (deleteLength > 0) quillInstance.deleteText(slashPos, deleteLength);
-
-      const sanitizedContent = sanitizeHTML(model.content);
-      quillInstance.clipboard.dangerouslyPasteHTML(slashPos, sanitizedContent);
-
-      closeSlashMenu();
-      showToast(`Modelo "${model.title}" inserido`, 'success');
-    } catch (err) {
-      closeSlashMenu();
-    }
-  }, [slashMenu, closeSlashMenu, showToast]);
-
-  const updateSlashSearchTerm = React.useCallback((term: string) => {
-    setSlashMenu(prev => ({ ...prev, searchTerm: term, selectedIndex: 0 }));
-  }, []);
-
-  // v1.15.4: ESC global para fechar slash menu
-  React.useEffect(() => {
-    if (!slashMenu.isOpen) return;
-
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopPropagation();
-        closeSlashMenu(true);
-      }
-    };
-
-    document.addEventListener('keydown', handleGlobalKeyDown, true);
-    return () => document.removeEventListener('keydown', handleGlobalKeyDown, true);
-  }, [slashMenu.isOpen, closeSlashMenu]);
-
-  // v1.15.4: Click fora do menu fecha
-  React.useEffect(() => {
-    if (!slashMenu.isOpen) return;
-
-    const handleClickOutside = (e: MouseEvent) => {
-      const menuEl = document.querySelector('.slash-command-menu');
-      if (menuEl && !menuEl.contains(e.target as Node)) {
-        closeSlashMenu(true);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [slashMenu.isOpen, closeSlashMenu]);
+  // v1.37.27: Funções do Slash Menu movidas para useSlashMenu hook
+  // findSlashPosition, openSlashMenu, closeSlashMenu, navigateSlashMenu,
+  // selectModelFromSlash, updateSlashSearchTerm + useEffects (ESC e click outside)
 
   useEffect(() => {
     if (editingTopic) {

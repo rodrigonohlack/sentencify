@@ -275,3 +275,10 @@ export type {
   UseDecisionExportProps,
   UseDecisionExportReturn
 } from './useDecisionExport';
+
+// Slash Menu hook (TIER 0 - gerencia estado interno do slash menu)
+export { useSlashMenu } from './useSlashMenu';
+export type {
+  UseSlashMenuProps,
+  UseSlashMenuReturn
+} from './useSlashMenu';
