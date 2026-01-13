@@ -134,3 +134,15 @@ export type {
   StorageForAnalysis,
   AIIntegrationForAnalysis
 } from './useDocumentAnalysis';
+
+// Report Generation hook (TIER 2 - dependências: useAIIntegration)
+export { useReportGeneration } from './useReportGeneration';
+export type {
+  UseReportGenerationProps,
+  UseReportGenerationReturn,
+  GenerateMiniReportOptions,
+  MultipleReportsOptions,
+  BatchOptions,
+  BatchResult,
+  AIIntegrationForReports
+} from './useReportGeneration';

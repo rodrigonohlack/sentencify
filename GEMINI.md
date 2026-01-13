@@ -41,6 +41,7 @@
 *   **Test UI:** `npm run test:ui` / `npm run test:e2e:ui`.
 
 ### Key Conventions
+0.  **Strict Modification Rule:** NEVER modify, create, or delete any file unless the user EXPLICITAMENTE determines so in a specific command. Evaluation, planning, and auditing do not imply permission to execute changes.
 1.  **Conventions:** Follow the patterns in `App.jsx`. If adding a new small component, it might belong inside `App.jsx` unless a refactor is planned.
 2.  **State Management:** Heavy reliance on custom hooks (`useAIIntegration`, `useLocalStorage`, `useModalManager`) managed within `App.jsx`.
 3.  **Styling:** Tailwind CSS is used extensively.

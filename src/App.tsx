@@ -144,7 +144,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -1184,6 +1184,21 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // 💾 ESTADOS: Sessão e Persistência
   const [partesProcesso, setPartesProcesso] = useState<PartesProcesso>({ reclamante: '', reclamadas: [] });
+
+  // 📊 v1.36.73: Hook de geração de relatórios ────────────────────────────────
+  const reportGeneration = useReportGeneration({
+    aiIntegration,
+    analyzedDocuments,
+    partesProcesso,
+  });
+
+  const {
+    generateMiniReport,
+    generateMultipleMiniReports,
+    generateMiniReportsBatch,
+    generateRelatorioProcessual,
+    isGeneratingReport,
+  } = reportGeneration;
 
   // 📝 ESTADOS: Editor de Texto Rico
   const [exportedText, setExportedText] = useState('');
@@ -4747,260 +4762,8 @@ IMPORTANTE: Responda APENAS com um JSON válido no formato:
 Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado, na mesma ordem.`;
   };
 
-  // Função unificada: Gera um mini-relatório individual
-  const generateMiniReport = async (options: {
-    title?: string;
-    context?: string;
-    instruction?: string;
-    currentRelatorio?: string;
-    includeComplementares?: boolean;
-    isInitialGeneration?: boolean;
-    maxTokens?: number;
-    documentsOverride?: AnalyzedDocuments | null;
-  } = {}) => {
-    const {
-      title,
-      context = '',
-      instruction = '',
-      currentRelatorio = '',
-      includeComplementares = false,
-      isInitialGeneration = false,
-      maxTokens = 4000,
-      documentsOverride = null // Permite passar documentos diretamente (bypass do estado React)
-    } = options;
-
-    // 1. Construir array de documentos
-    const contentArray = buildDocumentContentArray({
-      includePeticao: true,
-      includeContestacoes: true,
-      includeComplementares,
-      documentsOverride
-    });
-
-    // 2. Construir e adicionar prompt
-    const prompt = buildMiniReportPrompt({
-      title,
-      context,
-      instruction,
-      currentRelatorio,
-      isInitialGeneration
-    });
-
-    contentArray.push({ type: 'text', text: prompt });
-
-    // 3. Chamar API
-    // v1.21.26: Parametros para texto juridico (balanceado)
-    const result = await aiIntegration.callAI([{
-      role: 'user',
-      content: contentArray
-    }], {
-      maxTokens,
-      useInstructions: true,
-      temperature: 0.4,
-      topP: 0.9,
-      topK: 60
-    });
-
-    // 4. Normalizar e retornar (v1.35.29: remove meta-comentários de revisão)
-    return removeMetaComments(normalizeHTMLSpacing(result));
-  };
-
-  // v1.14.1: Função para gerar múltiplos mini-relatórios em UMA requisição
-  // v1.21.27: Refatorado para usar buildBatchMiniReportPrompt centralizado
-  const generateMultipleMiniReports = async (topics: Topic[], options: { includeComplementares?: boolean; isInitialGeneration?: boolean; documentsOverride?: AnalyzedDocuments | null } = {}) => {
-    const {
-      includeComplementares = false,
-      isInitialGeneration = false,
-      documentsOverride = null
-    } = options;
-
-    // 1. Construir array de documentos (apenas 1x para todos os tópicos)
-    const contentArray = buildDocumentContentArray({
-      includePeticao: true,
-      includeContestacoes: true,
-      includeComplementares,
-      documentsOverride
-    });
-
-    // 2. Usar builder centralizado (v1.21.27)
-    const prompt = buildBatchMiniReportPrompt(topics, { isInitialGeneration });
-    contentArray.push({ type: 'text', text: prompt });
-
-    // 3. Chamar API com maxTokens escalado (v1.14.2: aumentado cap para 24K/48K)
-    // v1.21.26: Parametros para texto juridico (balanceado)
-    const isAllInOne = aiIntegration.aiSettings?.topicsPerRequest === 'all';
-    const tokenCap = isAllInOne ? 48000 : 24000;
-    const maxTokens = Math.min(4000 * topics.length, tokenCap);
-    const result = await aiIntegration.callAI([{
-      role: 'user',
-      content: contentArray
-    }], {
-      maxTokens,
-      useInstructions: true,
-      extractText: false,
-      temperature: 0.4,
-      topP: 0.9,
-      topK: 60
-    });
-
-    // 6. Parsear resposta JSON (provider-aware)
-    const provider = aiIntegration.aiSettings.provider || 'claude';
-    const textContent = aiIntegration.extractResponseText(result, provider);
-    let cleanText = textContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
-    try {
-      const parsed = JSON.parse(cleanText);
-      if (parsed.reports && Array.isArray(parsed.reports)) {
-        // v1.35.29: remove meta-comentários de revisão
-        return parsed.reports.map((r: { title: string; relatorio?: string }) => ({
-          title: r.title,
-          relatorio: removeMetaComments(normalizeHTMLSpacing(r.relatorio || ''))
-        }));
-      }
-      throw new Error('Formato de resposta inválido');
-    } catch (parseError) {
-      // Tentar extrair JSON de dentro do texto
-      const jsonMatch = cleanText.match(/\{[\s\S]*"reports"[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          const parsed = JSON.parse(jsonMatch[0]);
-          if (parsed.reports && Array.isArray(parsed.reports)) {
-            // v1.35.29: remove meta-comentários de revisão
-            return parsed.reports.map((r: { title: string; relatorio?: string }) => ({
-              title: r.title,
-              relatorio: removeMetaComments(normalizeHTMLSpacing(r.relatorio || ''))
-            }));
-          }
-        } catch (innerParseError) {
-          // JSON extraído também é inválido, continuar para o throw abaixo
-        }
-      }
-      throw new Error(`Erro ao parsear resposta de múltiplos tópicos: ${(parseError as Error).message}`);
-    }
-  };
-
-  // Função batch: Gera múltiplos mini-relatórios em paralelo (batches de 3)
-  // v1.14.1: Suporta múltiplos tópicos por requisição via topicsPerRequest
-  const generateMiniReportsBatch = async (topics: Topic[], options: { batchSize?: number; delayBetweenBatches?: number; onProgress?: ((current: number, total: number, batchNum: number, totalBatches: number) => void) | null } = {}) => {
-    const {
-      batchSize = 3,
-      delayBetweenBatches = 1000,
-      onProgress = null // callback(current, total, batchNum)
-    } = options;
-
-    // v1.14.1: Obter configuração de tópicos por requisição
-    const topicsPerRequestSetting = aiIntegration.aiSettings?.topicsPerRequest || 1;
-
-    const results: Array<{ title: string; relatorio?: string; status?: string }> = [];
-    const errors: Array<{ title: string; error?: string; status?: string }> = [];
-    const totalTopics = topics.length;
-
-    // v1.14.2: Agrupar tópicos conforme topicsPerRequest (suporta 'all')
-    const topicGroups: Topic[][] = [];
-    if (topicsPerRequestSetting === 'all') {
-      topicGroups.push(topics);
-    } else {
-      const perReq = topicsPerRequestSetting;
-      for (let i = 0; i < totalTopics; i += perReq) {
-        topicGroups.push(topics.slice(i, i + perReq));
-      }
-    }
-
-    const totalGroups = topicGroups.length;
-    const totalBatches = Math.ceil(totalGroups / batchSize);
-    let processedTopics = 0;
-
-    // v1.14.3: Timeout maior para "Todos" (10 min vs 3 min)
-    const timeoutMs = topicsPerRequestSetting === 'all' ? 600000 : 360000;
-
-    for (let i = 0; i < totalGroups; i += batchSize) {
-      const batch = topicGroups.slice(i, i + batchSize);
-      const batchNum = Math.floor(i / batchSize) + 1;
-
-      // Notificar progresso
-      if (onProgress) {
-        onProgress(processedTopics, totalTopics, batchNum, totalBatches);
-      }
-
-      // Processar batch de grupos em paralelo, atualizando progresso a cada resposta
-      const promises = batch.map(async (group) => {
-        try {
-          let groupResults;
-          if (group.length === 1) {
-            // Grupo com 1 tópico: usar função individual (comportamento original)
-            const topic = group[0];
-            const result = await callWithRetry(
-              () => generateMiniReport({
-                title: topic.title,
-                context: topic.context || '',
-                instruction: topic.instruction || '',
-                includeComplementares: topic.includeComplementares || false,
-                isInitialGeneration: topic.isInitialGeneration || false,
-                documentsOverride: (topic.documentsOverride && Object.keys(topic.documentsOverride).length > 0) ? topic.documentsOverride as AnalyzedDocuments : null
-              }),
-              3,
-              topic.title,
-              null,
-              timeoutMs
-            );
-            groupResults = [{ title: topic.title, relatorio: result, status: 'success' }];
-          } else {
-            // Grupo com múltiplos tópicos: usar nova função
-            const multiResults = await callWithRetry(
-              () => generateMultipleMiniReports(group, {
-                includeComplementares: group[0]?.includeComplementares || false,
-                isInitialGeneration: group[0]?.isInitialGeneration || false,
-                documentsOverride: (group[0]?.documentsOverride && Object.keys(group[0].documentsOverride).length > 0) ? group[0].documentsOverride as AnalyzedDocuments : null
-              }),
-              2,
-              group.map((t: Topic) => t.title).join(', '),
-              null,
-              timeoutMs
-            );
-            groupResults = multiResults.map((r: { title: string; relatorio?: string }) => ({ ...r, status: 'success' }));
-          }
-          // Atualizar progresso imediatamente ao receber resposta
-          groupResults.forEach((r: { title: string; relatorio?: string; status?: string }) => {
-            processedTopics++;
-            if (r.status === 'success') {
-              results.push(r);
-            } else {
-              errors.push(r);
-            }
-            if (onProgress) {
-              onProgress(processedTopics, totalTopics, batchNum, totalBatches);
-            }
-          });
-          return groupResults;
-        } catch (err) {
-          // Se falhar, retornar erro para cada tópico do grupo
-          const errorResults = group.map((t: Topic) => ({ title: t.title, error: (err as Error).message, status: 'error' }));
-          errorResults.forEach((r: { title: string; error?: string; status: string }) => {
-            processedTopics++;
-            errors.push(r);
-            if (onProgress) {
-              onProgress(processedTopics, totalTopics, batchNum, totalBatches);
-            }
-          });
-          return errorResults;
-        }
-      });
-
-      await Promise.all(promises);
-
-      // Delay entre batches (evitar rate limit)
-      if (i + batchSize < totalGroups) {
-        await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
-      }
-    }
-
-    // Notificar conclusão
-    if (onProgress) {
-      onProgress(totalTopics, totalTopics, totalBatches, totalBatches);
-    }
-
-    return { results, errors };
-  };
+  // v1.36.73: generateMiniReport, generateMultipleMiniReports, generateMiniReportsBatch
+  // MOVIDOS para useReportGeneration hook (src/hooks/useReportGeneration.ts)
 
   // ============================================================================
   // FIM DOS HELPERS
@@ -7681,85 +7444,8 @@ CONCLUSÃO:
     }
   };
 
-  const generateRelatorioProcessual = async (contentArray: AIMessageContent[]) => {
-    try {
-      // Verificar se há modelo personalizado configurado
-      const modeloPersonalizado = aiIntegration.aiSettings?.modeloTopicoRelatorio?.trim();
-
-      // Definir o modelo a ser usado
-      const modeloBase = modeloPersonalizado || AI_PROMPTS.instrucoesRelatorioPadrao;
-
-      contentArray.push({
-        type: 'text' as const,
-        text: `Analise todos os documentos fornecidos (petição inicial, contestações e documentos complementares, se houver) e gere um RELATÓRIO PROCESSUAL completo seguindo o modelo abaixo.
-
-${modeloPersonalizado ? 'MODELO PERSONALIZADO DO USUÁRIO:' : 'MODELO BASE:'}
-${modeloBase}
-
-INSTRUÇÕES IMPORTANTES:
-
-1. ADAPTE o modelo conforme as informações REAIS encontradas nos documentos
-2. Se uma informação NÃO existir nos documentos, NÃO a inclua no relatório
-3. Se houver informações nos documentos que não estão no modelo, adicione-as de forma apropriada
-4. Mantenha a estrutura e formatação do modelo
-5. Use primeira pessoa quando apropriado
-6. Seja objetivo e factual
-7. Extraia informações precisas:
-   - Nomes completos das partes
-   - Período de trabalho (datas)
-   - Função exercida
-   - Remuneração
-   - Valor da causa
-   - Pedidos principais
-   - Defesas apresentadas
-   - Provas produzidas (perícias, testemunhas, documentos)
-   - Audiências realizadas
-   - Tentativas de conciliação
-
-8. Se houver múltiplas reclamadas, adapte o texto (primeira reclamada, segunda reclamada, etc.)
-9. Se não houver contestação, adapte o texto correspondente
-10. Se não houver prova pericial, omita esse parágrafo
-11. Se não houver testemunhas, adapte o texto
-12. Mantenha sempre "DECIDE-SE." no final
-
-${AI_PROMPTS.numeracaoReclamadas}
-
-${AI_PROMPTS.formatacaoHTML("<strong>JOÃO DA SILVA</strong>, qualificado na inicial...")}
-
-${AI_PROMPTS.formatacaoParagrafos("<p>JOÃO DA SILVA, qualificado na inicial...</p><p>Em defesa, a reclamada...</p>")}
-
-${AI_PROMPTS.estiloRedacao}
-
-${AI_PROMPTS.preservarAnonimizacao}
-
-Responda APENAS com o texto do relatório formatado em HTML, pronto para ser inserido na sentença. Não adicione explicações ou comentários.`
-      });
-
-      // v1.21.26: Parametros para texto juridico (balanceado)
-      const textContent = await aiIntegration.callAI([{
-        role: 'user',
-        content: contentArray
-      }], {
-        maxTokens: 8000,
-        useInstructions: true,
-        logMetrics: true,
-        temperature: 0.4,
-        topP: 0.9,
-        topK: 60
-      });
-
-      // Normalizar espaçamento para evitar linhas em branco duplicadas
-      return normalizeHTMLSpacing(textContent.trim());
-    } catch (err) {
-      return `SENTENÇA
-
-I - RELATÓRIO
-
-Relatório processual não pôde ser gerado automaticamente. Por favor, edite este tópico manualmente.
-
-DECIDE-SE.`;
-    }
-  };
+  // v1.36.73: generateRelatorioProcessual MOVIDO para useReportGeneration hook
+  // (src/hooks/useReportGeneration.ts)
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // v1.36.81: useDocumentAnalysis - Hook extraído para análise de documentos
