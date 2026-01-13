@@ -17,3 +17,4 @@ export {
   buildDoubleCheckPrompt,
   DOUBLE_CHECK_OPERATION_LABELS
 } from './double-check-prompts';
+export { INSTRUCAO_NAO_PRESUMIR } from './instrucoes';

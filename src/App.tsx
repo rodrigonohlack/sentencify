@@ -166,7 +166,10 @@ import useFactsComparisonCache, { openFactsDB, FACTS_STORE_NAME } from './hooks/
 import useSentenceReviewCache, { openReviewDB, REVIEW_STORE_NAME } from './hooks/useSentenceReviewCache';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
-import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS } from './prompts';
+import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS, INSTRUCAO_NAO_PRESUMIR } from './prompts';
+
+// v1.36.95: Estilos centralizados
+import { CSS, RESULTADO_STYLES, getResultadoStyle } from './constants/styles';
 import { buildMiniRelatorioComparisonPrompt, buildDocumentosComparisonPrompt, buildPdfComparisonPrompt } from './prompts/facts-comparison-prompts';
 
 // v1.36.60: AIModelService extraído para src/services/
@@ -254,99 +257,8 @@ const AUTO_SAVE_DEBOUNCE_MS = 5000;
 // v1.19.0: Limite de mensagens no chat do assistente IA
 // MAX_CHAT_HISTORY_MESSAGES extraído para src/hooks/useChatAssistant.ts (v1.36.73)
 
-// v1.19.3: Instrução reformulada - CONSULTAR DOCUMENTOS antes de perguntar
-const INSTRUCAO_NAO_PRESUMIR = `🚨 REGRA CRÍTICA - CONSULTAR DOCUMENTOS ANTES DE PERGUNTAR:
-
-📚 VOCÊ TEM ACESSO AOS DOCUMENTOS DO PROCESSO (petição inicial, contestação, provas).
-SEMPRE consulte os documentos anexados no contexto ANTES de fazer qualquer pergunta.
-
-✅ SE A INFORMAÇÃO ESTIVER NOS DOCUMENTOS ANEXADOS:
-- Use-a diretamente para fundamentar a decisão
-- NÃO pergunte ao usuário o que já está documentado
-- Cite a fonte: "Conforme narrado na petição inicial..." ou "A contestação alega que..."
-
-❓ PERGUNTE AO USUÁRIO (REGRA IMPORTANTE):
-Sempre que uma informação necessária à redação NÃO estiver EXPRESSAMENTE indicada no contexto, você DEVE perguntar ao usuário antes de redigir. Não presuma, não infira, não deduza.
-
-PERGUNTE QUANDO:
-- A informação NÃO estiver nos documentos anexados
-- Precisar da CONCLUSÃO ou INTERPRETAÇÃO do juiz sobre uma prova
-- O resultado de um pedido não estiver definido (procedente/improcedente)
-- Houver ambiguidade que só o magistrado pode resolver
-- O documento mencionar prova que não foi anexada (ex: "conforme perícia...")
-- Faltar dado essencial: valor, período, percentual, conclusão sobre prova
-
-PREFERIR PERGUNTAR a presumir. Na dúvida, pergunte.
-
-❌ VOCÊ NÃO PODE, EM HIPÓTESE ALGUMA:
-1. INVENTAR fatos que NÃO estão nos documentos (testemunhas, valores, datas, percentuais)
-2. PRESUMIR controvérsia/incontroversia sem verificar a contestação anexada
-3. CONCLUIR o que uma prova "demonstra" sem análise expressa do juiz
-4. AFIRMAR autoria de documentos sem essa informação estar no contexto
-
-✅ VOCÊ PODE REDIGIR SEM PERGUNTAR:
-- Fatos expressamente narrados nos documentos anexados
-- Teses da petição inicial e argumentos da contestação (quando anexadas)
-- Fundamentação jurídica (lei, súmulas, OJs, jurisprudência)
-- Conclusões de premissas JÁ FORNECIDAS pelo juiz
-- Estrutura e formatação da decisão`;
-
-
-// 🎨 CSS CLASSES CENTRALIZADAS (v1.12.5 - Classes utilitárias consolidadas)
-// v1.33.43: Fix tema claro - usa variáveis CSS de tema
-const CSS = {
-  // Modal system - v1.33.43: usa variáveis de tema para suportar tema claro/escuro
-  modalOverlay: "fixed inset-0 theme-modal-overlay backdrop-blur-sm flex items-center justify-center z-[90] p-4",
-  modalContainer: "theme-modal-container backdrop-blur-md rounded-2xl shadow-2xl theme-border-modal border theme-modal-glow max-h-[90vh] flex flex-col",
-  modalHeader: "p-5 border-b theme-border-modal",
-  modalFooter: "flex gap-3 p-4 border-t theme-border-modal",
-  // Input
-  inputField: "w-full px-4 py-3 theme-input border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
-  inputBase: "w-full theme-bg-secondary border theme-border-input rounded-lg theme-text-primary theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
-  input: "w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text-primary theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
-  // Info boxes
-  infoBox: "theme-info-box",
-  spinner: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin",
-  // Text
-  label: "block text-sm font-medium theme-text-tertiary mb-2",
-  textMuted: "text-xs theme-text-muted",
-  // Flex
-  flexCenter: "flex items-center",
-  flexGap1: "flex items-center gap-1",
-  flexGap2: "flex items-center gap-2",
-  flexGap3: "flex items-center gap-3",
-  flexBetween: "flex items-center justify-between",
-  flexCenterJustify: "flex items-center justify-center gap-2",
-  // Buttons - v1.33.43: cores que funcionam em ambos os temas
-  btnBase: "rounded-xl font-medium transition-all",
-  btnPrimary: "px-4 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-lg shadow-purple-500/25",
-  btnSecondary: "px-4 py-2.5 rounded-xl font-medium theme-bg-secondary theme-hover-bg border theme-border-modal theme-text-primary transition-all",
-  btnDanger: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-lg shadow-red-500/25",
-  btnSuccess: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25",
-  btnBlue: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-lg shadow-blue-500/25",
-  btnRed: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-lg shadow-red-500/25",
-  btnGreen: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25",
-  btnSmall: "px-2 py-1 rounded text-xs",
-  // Cards
-  cardBase: "rounded-lg border theme-border-input theme-bg-secondary",
-  // Common
-  hoverSlate: "theme-bg-tertiary hover-slate-500",
-  roundedLg: "rounded-lg",
-  textXs: "text-xs",
-  textSm: "text-sm",
-};
-
-// 🎨 ESTILOS DE RESULTADO (cores por tipo de decisão)
-const RESULTADO_STYLES = {
-  PROCEDENTE: { borderColor: '#10b981', color: 'var(--result-green)' },
-  IMPROCEDENTE: { borderColor: '#ef4444', color: 'var(--result-red)' },
-  'PARCIALMENTE PROCEDENTE': { borderColor: '#f59e0b', color: 'var(--result-amber)' },
-  ACOLHIDO: { borderColor: '#10b981', color: 'var(--result-green)' },
-  REJEITADO: { borderColor: '#ef4444', color: 'var(--result-red)' },
-  'SEM RESULTADO': { borderColor: '#64748b', color: 'var(--result-muted)' },
-  default: { borderColor: '#64748b', color: 'var(--result-muted)' }
-};
-const getResultadoStyle = (r: string | null | undefined) => RESULTADO_STYLES[r as keyof typeof RESULTADO_STYLES] || RESULTADO_STYLES.default;
+// v1.36.95: INSTRUCAO_NAO_PRESUMIR movido para src/prompts/instrucoes.ts
+// v1.36.95: CSS, RESULTADO_STYLES, getResultadoStyle movidos para src/constants/styles.ts
 
 // v1.32.00: LocalAIProcessingOverlay removido - IA agora roda em Web Worker (não bloqueia UI)
 
