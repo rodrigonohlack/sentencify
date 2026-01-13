@@ -194,3 +194,14 @@ export type {
   ModelLibraryForModelGen,
   APICacheForModelGen
 } from './useModelGeneration';
+
+// Embeddings Management hook (TIER 2 - dependências: services, legislacao, jurisprudencia)
+export { useEmbeddingsManagement } from './useEmbeddingsManagement';
+export type {
+  UseEmbeddingsManagementProps,
+  UseEmbeddingsManagementReturn,
+  LegislacaoForEmbeddings,
+  JurisprudenciaForEmbeddings,
+  ModelLibraryForEmbeddings,
+  IndexedDBForEmbeddings
+} from './useEmbeddingsManagement';

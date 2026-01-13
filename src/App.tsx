@@ -144,7 +144,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -1285,8 +1285,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [searchModelReady, setSearchModelReady] = useState(false);
   const [searchInitializing, setSearchInitializing] = useState(false);
   const [searchDownloadProgress, setSearchDownloadProgress] = useState(0);
-  const [embeddingsCount, setEmbeddingsCount] = useState(0);
-  const [embeddingsProgress, setEmbeddingsProgress] = useState<ProgressState>({ current: 0, total: 0 });
   // v1.28.00: Toggle MASTER que controla carregamento do modelo E5
   const [searchEnabled, setSearchEnabled] = useState(() => {
     try {
@@ -1298,35 +1296,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   });
   // v1.35.74: semanticSearchEnabled, semanticThreshold, jurisSemanticEnabled, jurisSemanticThreshold
   // movidos para aiSettings (agora em aiIntegration.aiSettings.X)
-  const [jurisEmbeddingsCount, setJurisEmbeddingsCount] = useState(0);
-  const [jurisEmbeddingsProgress, setJurisEmbeddingsProgress] = useState<ProgressState>({ current: 0, total: 0 });
+  // v1.37.9: embeddingsCount, jurisEmbeddingsCount, embeddingsProgress, jurisEmbeddingsProgress,
+  // embeddingsDownloadStatus, dataDownloadStatus, generatingModelEmbeddings, modelEmbeddingsProgress
+  // movidos para useEmbeddingsManagement hook
   const jurisEmbeddingsFileInputRef = useRef<HTMLInputElement | null>(null);
-
-  // 🌐 v1.33.0: Estados para download automático de embeddings via CDN
-  const [showEmbeddingsDownloadModal, setShowEmbeddingsDownloadModal] = useState(false);
-  const [embeddingsDownloadStatus, setEmbeddingsDownloadStatus] = useState<EmbeddingsDownloadStatusExtended>({
-    legislacao: { needed: null, downloading: false, progress: 0, error: null },
-    jurisprudencia: { needed: null, downloading: false, progress: 0, error: null }
-  });
-  const [dismissedEmbeddingsPrompt, setDismissedEmbeddingsPrompt] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('dismissedEmbeddingsPrompt') || 'false'); } catch { return false; }
-  });
-
-  // 📥 v1.33.61: Estados para download automático de DADOS (legislação e jurisprudência)
-  const [showDataDownloadModal, setShowDataDownloadModal] = useState(false);
-  const [dataDownloadStatus, setDataDownloadStatus] = useState<DataDownloadStatusExtended>({
-    legislacao: { needed: null, downloading: false, progress: 0, error: null, completed: false },
-    jurisprudencia: { needed: null, downloading: false, progress: 0, error: null, completed: false }
-  });
-  const [dismissedDataPrompt, setDismissedDataPrompt] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('dismissedDataPrompt') || 'false'); } catch { return false; }
-  });
-
-  // 📦 v1.27.01: Estados para busca semântica de MODELOS (embeddings inline)
-  // v1.35.74: modelSemanticEnabled, modelSemanticThreshold, useLocalAIForSuggestions
-  // movidos para aiSettings (agora em aiIntegration.aiSettings.X)
-  const [generatingModelEmbeddings, setGeneratingModelEmbeddings] = useState(false);
-  const [modelEmbeddingsProgress, setModelEmbeddingsProgress] = useState<ProgressState>({ current: 0, total: 0 });
   // v1.32.18: Jurisprudência via IA Local nos editores
   // v1.35.74: useLocalAIForJuris movido para aiSettings
 
@@ -1346,6 +1319,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // 📜 v1.26.02: Hook de legislação para geração de embeddings
   const legislacao = useLegislacao();
+
+  // 📚 v1.27.00: Hook de jurisprudência para acessar precedentes
+  // v1.37.9: Movido de dentro da seção de embeddings para cá
+  const jurisprudencia = useJurisprudencia();
 
   // 🎯 REFS
   const bulkFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -2305,13 +2282,12 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 🔍 v1.32.00: HANDLERS: Busca Semântica (E5-base) - Simplificado
   const searchInitStartedRef = useRef(false);
 
-  // v1.32.00: Verificar status e contar embeddings ao montar
+  // v1.32.00: Verificar status do modelo de busca ao montar
+  // v1.37.9: embeddingsCount agora gerenciado pelo useEmbeddingsManagement hook
   React.useEffect(() => {
     const checkSearchModel = async () => {
       try {
         setSearchModelReady(AIModelService.isReady('search'));
-        const count = await EmbeddingsService.getCount();
-        setEmbeddingsCount(count);
       } catch (err) {
         console.warn('[Search] Erro ao verificar:', err);
       }
@@ -2398,416 +2374,13 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     if (newEnabled) localStorage.setItem('modelSemanticMode', 'true');
   };
 
-  // Limpar todos os embeddings
-  const clearEmbeddings = async () => {
-    try {
-      await EmbeddingsService.clearAll();
-      setEmbeddingsCount(0);
-      showToast('Embeddings removidos', 'info');
-    } catch (err) {
-      showToast('Erro ao limpar embeddings: ' + (err as Error).message, 'error');
-    }
-  };
-
-  // v1.26.04: Importar embeddings de arquivo JSON (gerado pelo script Python)
-  const embeddingsFileInputRef = useRef<HTMLInputElement | null>(null);
-  const [importingEmbeddings, setImportingEmbeddings] = useState(false);
-
-  const handleImportEmbeddings = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setImportingEmbeddings(true);
-    try {
-      const text = await file.text();
-      const items = JSON.parse(text);
-
-      if (!Array.isArray(items) || items.length === 0) {
-        throw new Error('Arquivo inválido: deve ser um array de embeddings');
-      }
-
-      // Verificar estrutura
-      const first = items[0];
-      if (!first.id || !first.embedding || !Array.isArray(first.embedding)) {
-        throw new Error('Formato inválido: cada item deve ter id e embedding');
-      }
-
-      // Salvar em batches
-      const BATCH_SIZE = 100;
-      for (let i = 0; i < items.length; i += BATCH_SIZE) {
-        const batch = items.slice(i, i + BATCH_SIZE);
-        await EmbeddingsService.saveEmbeddingsBatch(batch);
-        setEmbeddingsProgress({ current: Math.min(i + BATCH_SIZE, items.length), total: items.length });
-      }
-
-      const count = await EmbeddingsService.getCount();
-      setEmbeddingsCount(count);
-      showToast(`${items.length} embeddings importados com sucesso!`, 'success');
-    } catch (err) {
-      showToast('Erro ao importar: ' + (err as Error).message, 'error');
-      console.error('Import error:', err);
-    } finally {
-      setImportingEmbeddings(false);
-      setEmbeddingsProgress({ current: 0, total: 0 });
-      event.target.value = '';
-    }
-  };
-
-  // ═══════════════════════════════════════════════════════════════
-  // 📚 v1.27.00: FUNÇÕES DE EMBEDDINGS PARA JURISPRUDÊNCIA
-  // ═══════════════════════════════════════════════════════════════
-
-  // Hook de jurisprudência para acessar precedentes
-  const jurisprudencia = useJurisprudencia();
-
-  // Limpar embeddings de jurisprudência
-  const clearJurisEmbeddings = async () => {
-    try {
-      await JurisEmbeddingsService.clearAll();
-      setJurisEmbeddingsCount(0);
-      showToast('Embeddings de jurisprudência removidos', 'info');
-    } catch (err) {
-      showToast('Erro ao limpar embeddings: ' + (err as Error).message, 'error');
-    }
-  };
-
-  // 📦 v1.27.01: Gerar embeddings para modelos (inline)
-  const generateModelEmbeddings = async () => {
-    if (!searchModelReady) {
-      showToast('Modelo de busca não está pronto', 'error');
-      return;
-    }
-    if (generatingModelEmbeddings) return;
-
-    const modelsWithoutEmbedding = modelLibrary.models.filter(m => !m.embedding || m.embedding.length !== 768);
-    if (!modelsWithoutEmbedding.length) {
-      showToast('Todos os modelos já têm embeddings', 'info');
-      return;
-    }
-
-    setGeneratingModelEmbeddings(true);
-    setModelEmbeddingsProgress({ current: 0, total: modelsWithoutEmbedding.length });
-
-    // v1.27.03: Yield para React renderizar estado de loading
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    try {
-      const stripHTML = (html: string) => {
-        const div = document.createElement('div');
-        div.innerHTML = html || '';
-        return div.textContent || div.innerText || '';
-      };
-
-      for (let i = 0; i < modelsWithoutEmbedding.length; i++) {
-        const model = modelsWithoutEmbedding[i];
-        const text = [model.title, model.keywords, stripHTML(model.content).slice(0, 2000)].filter(Boolean).join(' ');
-        const embedding = await AIModelService.getEmbedding(text, 'passage');
-        model.embedding = embedding;
-        setModelEmbeddingsProgress({ current: i + 1, total: modelsWithoutEmbedding.length });
-        // Yield to event loop para permitir que React renderize o progresso
-        await new Promise(resolve => setTimeout(resolve, 0));
-      }
-
-      // Salvar modelos atualizados
-      await indexedDB.saveModels(modelLibrary.models);
-      // v1.27.03: Trigger re-render para atualizar contador
-      modelLibrary.setModels([...modelLibrary.models]);
-      showToast(`${modelsWithoutEmbedding.length} embeddings de modelos gerados`, 'success');
-    } catch (err) {
-      showToast('Erro ao gerar embeddings: ' + (err as Error).message, 'error');
-      console.error('[MODEL-SEARCH] Erro:', err);
-    } finally {
-      setGeneratingModelEmbeddings(false);
-      setModelEmbeddingsProgress({ current: 0, total: 0 });
-    }
-  };
-
-  // Limpar embeddings dos modelos
-  const clearModelEmbeddings = async () => {
-    try {
-      const updatedModels = modelLibrary.models.map(m => {
-        const { embedding, ...rest } = m;
-        return rest;
-      });
-      await indexedDB.saveModels(updatedModels);
-      showToast('Embeddings dos modelos removidos', 'info');
-    } catch (err) {
-      showToast('Erro ao limpar embeddings: ' + (err as Error).message, 'error');
-    }
-  };
-
-  // Importar embeddings de jurisprudência de arquivo JSON
-  const [importingJurisEmbeddings, setImportingJurisEmbeddings] = useState(false);
-
-  const handleImportJurisEmbeddings = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setImportingJurisEmbeddings(true);
-    try {
-      const text = await file.text();
-      const items = JSON.parse(text);
-
-      if (!Array.isArray(items) || items.length === 0) {
-        throw new Error('Arquivo inválido: deve ser um array de embeddings');
-      }
-
-      const first = items[0];
-      if (!first.id || !first.embedding || !Array.isArray(first.embedding)) {
-        throw new Error('Formato inválido: cada item deve ter id e embedding');
-      }
-
-      const BATCH_SIZE = 100;
-      for (let i = 0; i < items.length; i += BATCH_SIZE) {
-        const batch = items.slice(i, i + BATCH_SIZE);
-        await JurisEmbeddingsService.saveEmbeddingsBatch(batch);
-        setJurisEmbeddingsProgress({ current: Math.min(i + BATCH_SIZE, items.length), total: items.length });
-      }
-
-      const count = await JurisEmbeddingsService.getCount();
-      setJurisEmbeddingsCount(count);
-      showToast(`${items.length} embeddings de jurisprudência importados!`, 'success');
-    } catch (err) {
-      showToast('Erro ao importar: ' + (err as Error).message, 'error');
-      console.error('[JURIS-SEARCH] Import error:', err);
-    } finally {
-      setImportingJurisEmbeddings(false);
-      setJurisEmbeddingsProgress({ current: 0, total: 0 });
-      event.target.value = '';
-    }
-  };
-
-  // Inicializar contagem de embeddings de jurisprudência
-  React.useEffect(() => {
-    JurisEmbeddingsService.getCount().then(setJurisEmbeddingsCount).catch(() => {});
-  }, []);
-
-  // 🌐 v1.33.0: Verificar se embeddings precisam ser baixados do CDN
-  React.useEffect(() => {
-    const checkEmbeddingsNeeded = async () => {
-      try {
-        const legCount = await EmbeddingsService.getCount();
-        const jurisCount = await JurisEmbeddingsService.getCount();
-
-        const legNeeded = legCount === 0;
-        const jurisNeeded = jurisCount === 0;
-
-        setEmbeddingsDownloadStatus(prev => ({
-          legislacao: { ...prev.legislacao, needed: legNeeded },
-          jurisprudencia: { ...prev.jurisprudencia, needed: jurisNeeded }
-        }));
-
-        // Mostrar modal se algum embedding estiver faltando e usuário não dismissou
-        if ((legNeeded || jurisNeeded) && !dismissedEmbeddingsPrompt) {
-          // Delay para não bloquear renderização inicial
-          setTimeout(() => setShowEmbeddingsDownloadModal(true), 2000);
-        }
-      } catch (err) {
-        console.warn('[CDN] Erro ao verificar embeddings:', err);
-      }
-    };
-
-    checkEmbeddingsNeeded();
-  }, [dismissedEmbeddingsPrompt]);
-
-  // 📥 v1.33.61: Verificar se dados (legislação/jurisprudência) precisam ser baixados do CDN
-  React.useEffect(() => {
-    const checkDataNeeded = async () => {
-      try {
-        const legNeeded = await EmbeddingsCDNService.needsDataDownload('legislacao');
-        const jurisNeeded = await EmbeddingsCDNService.needsDataDownload('jurisprudencia');
-
-        setDataDownloadStatus(prev => ({
-          legislacao: { ...prev.legislacao, needed: legNeeded },
-          jurisprudencia: { ...prev.jurisprudencia, needed: jurisNeeded }
-        }));
-
-        // Mostrar modal se algum dado estiver faltando e usuário não dismissou
-        if ((legNeeded || jurisNeeded) && !dismissedDataPrompt) {
-          // Delay para não bloquear renderização inicial
-          setTimeout(() => setShowDataDownloadModal(true), 1500);
-        }
-      } catch (err) {
-        console.warn('[CDN] Erro ao verificar dados:', err);
-      }
-    };
-
-    checkDataNeeded();
-  }, [dismissedDataPrompt]);
-
-  // 📥 v1.33.61: Handler para iniciar download de dados do CDN
-  const handleStartDataDownload = async () => {
-    if (!navigator.onLine) {
-      showToast('Sem conexão com a internet', 'error');
-      return;
-    }
-
-    const { legislacao: legStatus, jurisprudencia: jurisStatus } = dataDownloadStatus;
-
-    // Download legislação se necessário
-    if (legStatus.needed && !legStatus.downloading && !legStatus.completed) {
-      setDataDownloadStatus(prev => ({
-        ...prev,
-        legislacao: { ...prev.legislacao, downloading: true, error: null }
-      }));
-
-      try {
-        const count = await EmbeddingsCDNService.downloadLegislacaoData(
-          (progress) => {
-            setDataDownloadStatus(prev => ({
-              ...prev,
-              legislacao: { ...prev.legislacao, progress }
-            }));
-          }
-        );
-
-        // Atualizar artigos no hook de legislação
-        await legislacao.reloadArtigos();
-
-        setDataDownloadStatus(prev => ({
-          ...prev,
-          legislacao: { needed: false, downloading: false, progress: 1, error: null, completed: true }
-        }));
-        showToast(`${count} artigos de legislação baixados!`, 'success');
-      } catch (err) {
-        setDataDownloadStatus(prev => ({
-          ...prev,
-          legislacao: { ...prev.legislacao, downloading: false, error: (err as Error).message }
-        }));
-        showToast('Erro ao baixar legislação: ' + (err as Error).message, 'error');
-      }
-    }
-
-    // Download jurisprudência se necessário
-    if (jurisStatus.needed && !jurisStatus.downloading && !jurisStatus.completed) {
-      setDataDownloadStatus(prev => ({
-        ...prev,
-        jurisprudencia: { ...prev.jurisprudencia, downloading: true, error: null }
-      }));
-
-      try {
-        const count = await EmbeddingsCDNService.downloadJurisprudenciaData(
-          (progress) => {
-            setDataDownloadStatus(prev => ({
-              ...prev,
-              jurisprudencia: { ...prev.jurisprudencia, progress }
-            }));
-          }
-        );
-
-        // Atualizar precedentes no state via hook
-        await jurisprudencia.reloadPrecedentes();
-
-        setDataDownloadStatus(prev => ({
-          ...prev,
-          jurisprudencia: { needed: false, downloading: false, progress: 1, error: null, completed: true }
-        }));
-        showToast(`${count} precedentes baixados!`, 'success');
-      } catch (err) {
-        setDataDownloadStatus(prev => ({
-          ...prev,
-          jurisprudencia: { ...prev.jurisprudencia, downloading: false, error: (err as Error).message }
-        }));
-        showToast('Erro ao baixar jurisprudência: ' + (err as Error).message, 'error');
-      }
-    }
-  };
-
-  // 📥 v1.33.61: Dismiss data download modal
-  const handleDismissDataPrompt = () => {
-    setShowDataDownloadModal(false);
-    setDismissedDataPrompt(true);
-    localStorage.setItem('dismissedDataPrompt', 'true');
-  };
-
-  // 🌐 v1.33.0: Handler para iniciar download de embeddings do CDN
-  const handleStartEmbeddingsDownload = async () => {
-    if (!navigator.onLine) {
-      showToast('Sem conexão com a internet', 'error');
-      return;
-    }
-
-    const { legislacao, jurisprudencia } = embeddingsDownloadStatus;
-
-    // Download legislação se necessário
-    if (legislacao.needed && !legislacao.downloading) {
-      setEmbeddingsDownloadStatus(prev => ({
-        ...prev,
-        legislacao: { ...prev.legislacao, downloading: true, error: null }
-      }));
-
-      try {
-        await EmbeddingsCDNService.downloadLegislacao(
-          (progress) => {
-            setEmbeddingsDownloadStatus(prev => ({
-              ...prev,
-              legislacao: { ...prev.legislacao, progress }
-            }));
-          }
-        );
-
-        const count = await EmbeddingsService.getCount();
-        setEmbeddingsCount(count);
-        setEmbeddingsDownloadStatus(prev => ({
-          ...prev,
-          legislacao: { needed: false, downloading: false, progress: 1, error: null }
-        }));
-        showToast('Legislação baixada com sucesso!', 'success');
-      } catch (err) {
-        setEmbeddingsDownloadStatus(prev => ({
-          ...prev,
-          legislacao: { ...prev.legislacao, downloading: false, error: (err as Error).message }
-        }));
-        showToast('Erro ao baixar legislação: ' + (err as Error).message, 'error');
-      }
-    }
-
-    // Download jurisprudência se necessário
-    if (jurisprudencia.needed && !jurisprudencia.downloading) {
-      setEmbeddingsDownloadStatus(prev => ({
-        ...prev,
-        jurisprudencia: { ...prev.jurisprudencia, downloading: true, error: null }
-      }));
-
-      try {
-        await EmbeddingsCDNService.downloadJurisprudencia(
-          (progress) => {
-            setEmbeddingsDownloadStatus(prev => ({
-              ...prev,
-              jurisprudencia: { ...prev.jurisprudencia, progress }
-            }));
-          }
-        );
-
-        const count = await JurisEmbeddingsService.getCount();
-        setJurisEmbeddingsCount(count);
-        setEmbeddingsDownloadStatus(prev => ({
-          ...prev,
-          jurisprudencia: { needed: false, downloading: false, progress: 1, error: null }
-        }));
-        showToast('Jurisprudência baixada com sucesso!', 'success');
-      } catch (err) {
-        setEmbeddingsDownloadStatus(prev => ({
-          ...prev,
-          jurisprudencia: { ...prev.jurisprudencia, downloading: false, error: (err as Error).message }
-        }));
-        showToast('Erro ao baixar jurisprudência: ' + (err as Error).message, 'error');
-      }
-    }
-
-    // Fechar modal após ambos terminarem (ou se nenhum precisava)
-    const finalStatus = embeddingsDownloadStatus;
-    if (!finalStatus.legislacao.downloading && !finalStatus.jurisprudencia.downloading) {
-      setShowEmbeddingsDownloadModal(false);
-    }
-  };
-
-  // 🌐 v1.33.0: Handler para dismissar o prompt de download
-  const handleDismissEmbeddingsPrompt = () => {
-    setShowEmbeddingsDownloadModal(false);
-    setDismissedEmbeddingsPrompt(true);
-    localStorage.setItem('dismissedEmbeddingsPrompt', 'true');
-  };
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.9: Embeddings functions movidos para useEmbeddingsManagement hook
+  // Funções extraídas: clearEmbeddings, handleImportEmbeddings, clearJurisEmbeddings,
+  // generateModelEmbeddings, clearModelEmbeddings, handleImportJurisEmbeddings,
+  // handleStartDataDownload, handleStartEmbeddingsDownload, handleDismissDataPrompt,
+  // handleDismissEmbeddingsPrompt + useEffects de inicialização
+  // ═══════════════════════════════════════════════════════════════════════════════
 
   // v1.32.00: Removido SEARCH_FILES_REQUIRED (modelos são baixados automaticamente)
 
@@ -3146,6 +2719,47 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       setToast({ show: false, message: '', type: 'success' });
     }, 4000); // Auto-hide after 4 seconds
   };
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.9: useEmbeddingsManagement - Hook extraído para gerenciamento de embeddings
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const embeddingsManagement = useEmbeddingsManagement({
+    showToast,
+    modelLibrary,
+    legislacao,
+    jurisprudencia,
+    indexedDB,
+    searchModelReady,
+  });
+
+  const {
+    embeddingsCount,
+    jurisEmbeddingsCount,
+    embeddingsProgress,
+    jurisEmbeddingsProgress,
+    importingEmbeddings,
+    importingJurisEmbeddings,
+    generatingModelEmbeddings,
+    modelEmbeddingsProgress,
+    showDataDownloadModal,
+    setShowDataDownloadModal,
+    dataDownloadStatus,
+    setDataDownloadStatus,
+    showEmbeddingsDownloadModal,
+    setShowEmbeddingsDownloadModal,
+    embeddingsDownloadStatus,
+    embeddingsFileInputRef,
+    handleImportEmbeddings,
+    handleImportJurisEmbeddings,
+    handleStartDataDownload,
+    handleStartEmbeddingsDownload,
+    handleDismissDataPrompt,
+    handleDismissEmbeddingsPrompt,
+    clearEmbeddings,
+    clearJurisEmbeddings,
+    clearModelEmbeddings,
+    generateModelEmbeddings,
+  } = embeddingsManagement;
 
   // v1.15.3: Funções para Slash Menu (acesso rápido a modelos com \)
   const findSlashPosition = (text: string, triggerPos: number) => {
