@@ -44,7 +44,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -1896,69 +1896,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.37.24: detectarNomesAutomaticamente movido para useDetectEntities hook (instanciado após showToast)
   // Constantes STOP_WORDS_*, GENTILIC_WORDS, ORG_STOP_WORDS também movidas para useDetectEntities
 
-  const exportAiSettings = async () => {
-    const dataStr = JSON.stringify(aiIntegration.aiSettings, null, 2);
-    
-    try {
-      await navigator.clipboard.writeText(dataStr);
-      
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'sentencify-configuracoes-' + new Date().toISOString().split('T')[0] + '.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      showToast('Configurações exportadas com sucesso! Arquivo baixado e copiado para área de transferência.', 'success');
-    } catch (err) {
-      showToast('Erro ao exportar configurações: ' + (err as Error).message, 'error');
-    }
-  };
-
-  const importAiSettings = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      const importedSettings = JSON.parse(text);
-      
-      if (typeof importedSettings !== 'object') {
-        showToast('Arquivo inválido.', 'error');
-        return;
-      }
-
-      const mergedSettings = {
-        model: importedSettings.model || 'claude-sonnet-4-20250514',
-        useExtendedThinking: importedSettings.useExtendedThinking || false,
-        customPrompt: importedSettings.customPrompt || '',
-        modeloRelatorio: importedSettings.modeloRelatorio || '',
-        modeloDispositivo: importedSettings.modeloDispositivo || '',
-        modeloTopicoRelatorio: importedSettings.modeloTopicoRelatorio || '',
-        // v1.12.25: autoExtractPDFText removido - usa apenas ocrEngine
-        topicosComplementares: importedSettings.topicosComplementares || [
-          { id: 1, title: 'HONORÁRIOS ADVOCATÍCIOS', category: 'MÉRITO', enabled: true, ordem: 1 },
-          { id: 2, title: 'HONORÁRIOS PERICIAIS', category: 'MÉRITO', enabled: true, ordem: 2 },
-          { id: 3, title: 'JUROS E CORREÇÃO MONETÁRIA', category: 'MÉRITO', enabled: true, ordem: 3 },
-          { id: 4, title: 'DEDUÇÕES DE NATUREZA PREVIDENCIÁRIA E FISCAL', category: 'MÉRITO', enabled: true, ordem: 4 },
-          { id: 5, title: 'COMPENSAÇÃO/DEDUÇÃO/ABATIMENTO', category: 'MÉRITO', enabled: true, ordem: 5 }
-        ]
-      };
-
-      aiIntegration.setAiSettings(prev => ({
-        ...prev,
-        ...mergedSettings
-      }));
-      showToast('Configurações importadas com sucesso!', 'success');
-      event.target.value = '';
-    } catch (err) {
-      showToast('Erro ao importar: ' + (err as Error).message, 'error');
-      event.target.value = '';
-    }
-  };
+  // v1.37.25: exportAiSettings, importAiSettings movidos para useExportImport hook
 
   const showToast = (message: string, type: 'error' | 'success' | 'info' | 'warning' = 'success') => {
     setToast({ show: true, message, type });
@@ -1983,6 +1921,25 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     extractedTexts,
     documentServices: documentServices as Parameters<typeof useDetectEntities>[0]['documentServices'],
     showToast,
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.25: useExportImport - Hook extraído para exportar/importar configurações e modelos
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const {
+    exportAiSettings,
+    importAiSettings,
+    exportModels,
+    importModels,
+    checkDuplicate
+  } = useExportImport({
+    modelLibrary: modelLibrary as Parameters<typeof useExportImport>[0]['modelLibrary'],
+    aiIntegration: aiIntegration as Parameters<typeof useExportImport>[0]['aiIntegration'],
+    cloudSync,
+    searchModelReady,
+    showToast,
+    setError,
+    generateModelId
   });
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -2644,168 +2601,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     }, 200);
   };
 
-  const exportModels = async () => {
-    try {
-      const modelsToExport = modelLibrary.selectedCategory === 'all'
-        ? modelLibrary.models
-        : modelLibrary.models.filter(m => m.category === modelLibrary.selectedCategory);
-
-      const dataStr = JSON.stringify(modelsToExport, null, 2);
-
-      // Copiar para clipboard
-      await navigator.clipboard.writeText(dataStr);
-
-      // Download do arquivo
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const categoryName = modelLibrary.selectedCategory === 'all' ? 'todos' : modelLibrary.selectedCategory.toLowerCase().replace(/\s+/g, '-');
-      a.download = `sentencify-modelos-${categoryName}-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      modelLibrary.setHasUnsavedChanges(false);
-      showToast(`✅ Modelos exportados com sucesso!\n\n${modelsToExport.length} modelo(s) exportado(s).\nArquivo baixado e copiado para área de transferência.`, 'success');
-    } catch (err) {
-      showToast('Erro ao exportar modelos: ' + (err as Error).message, 'error');
-    }
-  };
-
-  // Detecta modelos duplicados no arquivo de importação
-  const checkDuplicate = (newModel: { title: string; content: string; category?: string }, existingModels: Model[]) => {
-    // Level 1: Exact title + category match
-    const exactMatch = existingModels.find(
-      (existing: Model) => existing.title === newModel.title &&
-                  existing.category === (newModel.category || '')
-    );
-
-    if (exactMatch) {
-      return {
-        isDuplicate: true,
-        reason: 'Mesmo título e categoria',
-        existingId: exactMatch.id
-      };
-    }
-
-    // Level 2: Exact content match (normalized)
-    const normalizeContent = (text: string) => {
-      return text.toLowerCase().trim().replace(/\s+/g, ' ');
-    };
-
-    const contentA = normalizeContent(newModel.content);
-    const contentMatch = existingModels.find(
-      (existing: Model) => normalizeContent(existing.content) === contentA
-    );
-
-    if (contentMatch) {
-      return {
-        isDuplicate: true,
-        reason: 'Conteúdo idêntico (título diferente)',
-        existingId: contentMatch.id
-      };
-    }
-
-    return { isDuplicate: false };
-  };
-
-  // v1.27.02: Gera embeddings para modelos importados sem embedding
-  const importModels = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      const importedModels = JSON.parse(text);
-
-      if (!Array.isArray(importedModels)) {
-        setError('Arquivo inválido. Deve conter um array de modelos.');
-        return;
-      }
-
-      let importCount = 0;
-      let duplicateCount = 0;
-      const newModels: Model[] = [];
-      const duplicates: Array<{ title: string; reason: string; existingId: string }> = [];
-
-      for (const model of importedModels) {
-        if (model.title && model.content) {
-          const dupCheck = checkDuplicate(model, modelLibrary.models);
-
-          if (dupCheck.isDuplicate) {
-            duplicateCount++;
-            duplicates.push({
-              title: model.title,
-              reason: dupCheck.reason || 'duplicado',
-              existingId: dupCheck.existingId || ''
-            });
-            continue; // SKIP this model
-          }
-
-          const modelId = `${generateModelId()}_import${importCount}`;
-          const modelData: Model = {
-            id: modelId,
-            title: model.title as string,
-            content: model.content as string,
-            keywords: model.keywords || '',
-            category: model.category || '',
-            createdAt: new Date().toISOString(),
-            embedding: model.embedding
-          };
-          newModels.push(modelData);
-          importCount++;
-        }
-      }
-
-      // v1.27.02: Gerar embeddings para modelos sem embedding se IA local estiver ativa E opção ativada
-      if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && newModels.length > 0) {
-        const modelsWithoutEmbedding = newModels.filter(m => !m.embedding || m.embedding.length !== 768);
-        if (modelsWithoutEmbedding.length > 0) {
-          const stripHTML = (html: string) => {
-            const div = document.createElement('div');
-            div.innerHTML = html || '';
-            return div.textContent || div.innerText || '';
-          };
-          for (const model of modelsWithoutEmbedding) {
-            try {
-              const text = [model.title, model.keywords, stripHTML(model.content).slice(0, 2000)].filter(Boolean).join(' ');
-              model.embedding = await AIModelService.getEmbedding(text, 'passage');
-              // Yield para não travar UI
-              await new Promise(resolve => setTimeout(resolve, 0));
-            } catch (err) {
-              console.warn('[MODEL-EMBED] Erro ao gerar embedding para modelo importado:', err);
-            }
-          }
-        }
-      }
-
-      if (newModels.length > 0) {
-        modelLibrary.setModels(prev => [...prev, ...newModels]);
-        // v1.35.23: Usar trackChangeBatch para importação eficiente (não 100 chamadas individuais)
-        if (cloudSync?.trackChangeBatch) {
-          cloudSync.trackChangeBatch(newModels.map(model => ({ operation: 'create', model })));
-        }
-        modelLibrary.setHasUnsavedChanges(true);
-      }
-
-      setError('');
-
-      // Enhanced notification
-      if (duplicateCount > 0) {
-        showToast(
-          `${importCount} modelo(s) importado(s) com sucesso!\n⚠️ ${duplicateCount} duplicata(s) ignorada(s)`,
-          importCount > 0 ? 'success' : 'warning'
-        );
-      } else {
-        showToast(`${importCount} modelo(s) importado(s) com sucesso!`, 'success');
-      }
-
-    } catch (err) {
-      setError('Erro ao importar modelos: ' + (err as Error).message);
-    }
-  };
+  // v1.37.25: exportModels, importModels, checkDuplicate movidos para useExportImport hook
 
   // ============================================================================
   // v1.37.18: HELPERS PARA GERAÇÃO DE MINI-RELATÓRIOS EXTRAÍDOS

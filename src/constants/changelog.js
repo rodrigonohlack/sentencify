@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.25', feature: 'FASE 18: useExportImport extraído para src/hooks/ (~204 linhas removidas) - exportAiSettings, importAiSettings, exportModels, importModels, checkDuplicate' },
   { version: '1.37.24', feature: 'FASE 17: useDetectEntities extraído para src/hooks/ (~243 linhas removidas) - detectarNomesAutomaticamente, constantes NER (STOP_WORDS_*, GENTILIC_WORDS, ORG_STOP_WORDS)' },
   { version: '1.37.23', feature: 'FASE 19: html-conversion.ts extraído para src/utils/ (~228 linhas removidas) - htmlToPlainText, htmlToFormattedText, plainTextToHtml, cleanHtmlForExport' },
   { version: '1.37.22', feature: 'FASE 16: useModelExtraction extraído para src/hooks/useModelExtraction.ts (~340 linhas removidas) - extractModelFromDecisionText, saveExtractedModel, cancelExtractedModel' },

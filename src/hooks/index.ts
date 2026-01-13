@@ -258,3 +258,13 @@ export type {
   DocumentServicesForNER,
   ExtractedTextsForNER
 } from './useDetectEntities';
+
+// Export/Import hook (TIER 2 - dependências: modelLibrary, aiIntegration, cloudSync, AIModelService)
+export { useExportImport } from './useExportImport';
+export type {
+  UseExportImportProps,
+  UseExportImportReturn,
+  ModelLibraryForExportImport,
+  AIIntegrationForExportImport,
+  CloudSyncForExportImport
+} from './useExportImport';
