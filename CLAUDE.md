@@ -4,11 +4,11 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.21 | **File**: `src/App.tsx` (~0.49 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.22 | **File**: `src/App.tsx` (~0.48 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
-**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`, `useFullscreen`, `useSpacingControl`, `useFontSizeControl`, `useFeatureFlags`, `useThrottledBroadcast`, `useAPICache`, `useIndexedDB`, `useLegislacao`, `useModelSave`, `useDispositivoGeneration`, `useDecisionTextGeneration`
+**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`, `useFullscreen`, `useSpacingControl`, `useFontSizeControl`, `useFeatureFlags`, `useThrottledBroadcast`, `useAPICache`, `useIndexedDB`, `useLegislacao`, `useModelSave`, `useDispositivoGeneration`, `useDecisionTextGeneration`, `useFactsComparison`, `useModelExtraction`
 
 **Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`, `GoogleDriveButton`, `ModelGeneratorModal`, `FactsComparisonModal`, `AIAssistantBaseLegacy`, `AIAssistantBase`, `AIAssistantModal`, `AIAssistantGlobalModal`, `AIAssistantModelModal`
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.22 | FASE 16: useModelExtraction extraído (~340 linhas) - extractModelFromDecisionText, saveExtractedModel, cancelExtractedModel |
 | v1.37.21 | FASE 15: useFactsComparison extraído (~210 linhas) - handleOpen/handleGenerate + estados e cache |
 | v1.37.20 | FASE 14: injectQuillStyles + injectQuillLightStyles extraídos para src/utils/quill-styles-injector.ts (~390 linhas) |
 | v1.37.19 | Índice desatualizado removido (~95 linhas) - header simples aponta para estrutura modular |

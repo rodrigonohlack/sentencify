@@ -239,3 +239,13 @@ export type {
   ModelLibraryForDecisionText,
   AnalyzedDocuments
 } from './useDecisionTextGeneration';
+
+// Model Extraction hook (TIER 2 - dependências: aiIntegration, modelLibrary, apiCache)
+export { useModelExtraction } from './useModelExtraction';
+export type {
+  UseModelExtractionProps,
+  UseModelExtractionReturn,
+  AIIntegrationForModelExtraction,
+  ModelLibraryForModelExtraction,
+  APICacheForModelExtraction
+} from './useModelExtraction';
