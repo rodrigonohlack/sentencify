@@ -184,3 +184,13 @@ export type {
   AIIntegrationForOperations,
   NewTopicData
 } from './useTopicOperations';
+
+// Model Generation hook (TIER 2 - dependências: useAIIntegration, useModelLibrary)
+export { useModelGeneration } from './useModelGeneration';
+export type {
+  UseModelGenerationProps,
+  UseModelGenerationReturn,
+  AIIntegrationForModelGen,
+  ModelLibraryForModelGen,
+  APICacheForModelGen
+} from './useModelGeneration';

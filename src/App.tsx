@@ -144,7 +144,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -1238,6 +1238,18 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     handleSplitTopic,
     handleCreateNewTopic,
   } = topicOperations;
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.8: useModelGeneration - Hook extraído para geração de keywords/título
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const modelGeneration = useModelGeneration({
+    aiIntegration,
+    modelLibrary,
+    apiCache,
+    setError: (error: string) => setError(error),
+  });
+
+  const { generateKeywordsWithAI, generateTitleWithAI } = modelGeneration;
 
   // 📝 ESTADOS: Editor de Texto Rico
   const [exportedText, setExportedText] = useState('');
@@ -3516,163 +3528,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   }, []);
 
   // 📚 FUNÇÕES: Gerenciamento de Modelos
-
-    // Hook useModelLibrary já gerencia persistência via 'sentencify-models'
-
-  // 🚀 v1.8.2: Gerar keywords automaticamente com IA (COM CACHE)
-  const generateKeywordsWithAI = async () => {
-    // Verificação defensiva
-    if (!aiIntegration?.callAI) {
-      console.error('[generateKeywordsWithAI] aiIntegration.callAI undefined');
-      setError('Erro interno: sistema de IA não inicializado. Recarregue a página.');
-      return;
-    }
-    if (!modelLibrary.newModel.title && !modelLibrary.newModel.content) {
-      setError('Preencha ao menos o título ou conteúdo para gerar palavras-chave');
-      return;
-    }
-
-    // 🚀 v1.8.2: Gerar cache key baseado em título + categoria + conteúdo
-    const cacheKey = `keywords_${modelLibrary.newModel.title}_${modelLibrary.newModel.category}_${modelLibrary.newModel.content}`;
-
-    // 🚀 v1.8.2: Verificar cache antes de chamar API
-    const cachedKeywords = apiCache.get(cacheKey);
-    if (cachedKeywords && typeof cachedKeywords === 'string') {
-      modelLibrary.setNewModel({ ...modelLibrary.newModel, keywords: cachedKeywords });
-      return; // Retornar imediatamente com resultado cacheado
-    }
-
-    aiIntegration.setGeneratingKeywords(true);
-    setError('');
-
-    try {
-      const prompt = `${AI_PROMPTS.roles.analiseDoc}
-
-MODELO DE DECISÃO:
-Título: ${modelLibrary.newModel.title || 'Não fornecido'}
-Categoria: ${modelLibrary.newModel.category || 'Não especificada'}
-Conteúdo: ${modelLibrary.newModel.content || 'Não fornecido'}
-
-TAREFA:
-Analise o modelo acima e gere palavras-chave (keywords) relevantes que ajudem a identificar e encontrar este modelo.
-
-CRITÉRIOS:
-1. Identifique os principais conceitos jurídicos mencionados
-2. Extraia termos técnicos relevantes
-3. Identifique pedidos ou temas tratados (ex: "horas extras", "adicional noturno", "danos morais")
-4. Inclua sinônimos e variações (ex: "sobrejornada" para "horas extras")
-5. Limite a 5-8 palavras-chave mais relevantes
-6. Use termos que um usuário provavelmente buscaria
-
-Responda APENAS com as palavras-chave separadas por vírgula, sem explicações.
-Exemplo de resposta válida: horas extras, sobrejornada, adicional, jornada de trabalho, hora extra
-
-Não adicione explicações, apenas as keywords separadas por vírgula.`;
-
-      // v1.21.26: Parametros semi-deterministicos para keywords
-      const keywords = await aiIntegration.callAI([{
-        role: 'user',
-        content: [{ type: 'text', text: prompt }]
-      }], {
-        maxTokens: 500,
-        useInstructions: false,
-        temperature: 0.2,
-        topP: 0.9,
-        topK: 50
-      });
-
-      if (keywords) {
-        // 🚀 v1.8.2: Armazenar resultado no cache
-        apiCache.set(cacheKey, keywords);
-
-        modelLibrary.setNewModel({ ...modelLibrary.newModel, keywords: keywords });
-      } else {
-        setError('Não foi possível gerar palavras-chave. Tente novamente.');
-      }
-
-    } catch (err) {
-      setError('Erro ao gerar palavras-chave: ' + (err as Error).message);
-    } finally {
-      aiIntegration.setGeneratingKeywords(false);
-    }
-  };
-
-  const generateTitleWithAI = async () => {
-    // Verificação defensiva
-    if (!aiIntegration?.callAI) {
-      console.error('[generateTitleWithAI] aiIntegration.callAI undefined');
-      setError('Erro interno: sistema de IA não inicializado. Recarregue a página.');
-      return;
-    }
-    if (!modelLibrary.newModel.content) {
-      setError('Preencha o conteúdo do modelo para gerar o título');
-      return;
-    }
-
-    // Cache key baseado nos primeiros 500 caracteres do conteúdo
-    const cacheKey = `title_${modelLibrary.newModel.content.substring(0, 500)}`;
-    const cachedTitle = apiCache.get(cacheKey);
-    if (cachedTitle && typeof cachedTitle === 'string') {
-      modelLibrary.setNewModel({ ...modelLibrary.newModel, title: cachedTitle });
-      return;
-    }
-
-    aiIntegration.setGeneratingTitle(true);
-    setError('');
-
-    try {
-      const prompt = `${AI_PROMPTS.roles.classificacao}
-
-CONTEÚDO DO MODELO:
-${modelLibrary.newModel.content}
-
-TAREFA:
-Analise o conteúdo acima e gere um TÍTULO padronizado para este modelo de decisão.
-
-FORMATO OBRIGATÓRIO:
-TEMA - SUBTEMA - RESULTADO (PROCEDENTE/IMPROCEDENTE)
-
-EXEMPLOS VÁLIDOS:
-- HORAS EXTRAS - SOBREJORNADA HABITUAL - PROCEDENTE
-- RESCISÃO INDIRETA - ATRASO SALARIAL - PROCEDENTE
-- DANOS MORAIS - ASSÉDIO MORAL - IMPROCEDENTE
-- ADICIONAL DE INSALUBRIDADE - GRAU MÉDIO - PARCIALMENTE PROCEDENTE
-- VÍNCULO EMPREGATÍCIO - PEJOTIZAÇÃO - PROCEDENTE
-- EQUIPARAÇÃO SALARIAL - IDENTIDADE DE FUNÇÕES - IMPROCEDENTE
-
-REGRAS:
-1. TEMA: Assunto principal (ex: HORAS EXTRAS, DANOS MORAIS, VÍNCULO)
-2. SUBTEMA: Especificação do tema (ex: SOBREJORNADA, ASSÉDIO, PEJOTIZAÇÃO)
-3. RESULTADO: PROCEDENTE, IMPROCEDENTE ou PARCIALMENTE PROCEDENTE
-4. Sempre em MAIÚSCULAS
-5. Separar com " - " (hífen com espaços)
-
-Responda APENAS com o título no formato especificado, sem explicações.`;
-
-      // v1.21.26: Parametros semi-deterministicos para titulo padronizado
-      const title = await aiIntegration.callAI([{
-        role: 'user',
-        content: [{ type: 'text', text: prompt }]
-      }], {
-        maxTokens: 100,
-        useInstructions: false,
-        temperature: 0.1,
-        topP: 0.9,
-        topK: 40
-      });
-
-      if (title) {
-        apiCache.set(cacheKey, title.trim());
-        modelLibrary.setNewModel({ ...modelLibrary.newModel, title: title.trim() });
-      } else {
-        setError('Não foi possível gerar o título. Tente novamente.');
-      }
-    } catch (err) {
-      setError('Erro ao gerar título: ' + (err as Error).message);
-    } finally {
-      aiIntegration.setGeneratingTitle(false);
-    }
-  };
+  // Hook useModelLibrary já gerencia persistência via 'sentencify-models'
+  // v1.37.8: generateKeywordsWithAI e generateTitleWithAI movidos para useModelGeneration hook
 
   // 🔍 v1.13.1: Executa salvamento do modelo (chamado após verificação de similaridade)
   // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
