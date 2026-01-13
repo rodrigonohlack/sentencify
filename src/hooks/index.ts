@@ -123,3 +123,14 @@ export type { UseDocumentServicesReturn, AIIntegrationForDocuments } from './use
 // AI Integration hook (TIER 1 - dependências: Zustand stores, prompts)
 export { useAIIntegration } from './useAIIntegration';
 export type { UseAIIntegrationReturn } from './useAIIntegration';
+
+// Document Analysis hook (TIER 2 - dependências: useAIIntegration, useDocumentServices, useUIStore)
+export { useDocumentAnalysis } from './useDocumentAnalysis';
+export type {
+  UseDocumentAnalysisProps,
+  UseDocumentAnalysisReturn,
+  CurationData,
+  DocumentServicesForAnalysis,
+  StorageForAnalysis,
+  AIIntegrationForAnalysis
+} from './useDocumentAnalysis';
