@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.1', feature: 'FASE 7 refatoração final: ErrorBoundary extraído para src/components/ErrorBoundary.tsx (~152 linhas removidas)' },
   { version: '1.37.0', feature: 'FASE 6 refatoração final: src/styles/ criado com GlobalHoverStyles e ThemeStyles (~1316 linhas removidas)' },
   { version: '1.36.99', feature: 'FASE 5 refatoração final: GlobalEditorModal extraído para src/components/modals/ (~1572 linhas removidas)' },
   { version: '1.36.98', feature: 'FASE 4 refatoração final: LockedTabOverlay extraído para src/components/ui/ (~261 linhas removidas)' },

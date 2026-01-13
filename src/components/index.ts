@@ -30,3 +30,6 @@ export * from './forms';
 
 // Editor Components
 export * from './editors';
+
+// ErrorBoundary (v1.37.1)
+export { ErrorBoundary } from './ErrorBoundary';
