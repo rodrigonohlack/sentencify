@@ -1241,9 +1241,12 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.37.8: useModelGeneration - Hook extraído para geração de keywords/título
   // ═══════════════════════════════════════════════════════════════════════════════
   // v1.37.13: apiCache removido - cada clique gera nova resposta
+  // v1.37.15: modelEditorRef movido para antes do hook (precisa ler conteúdo do editor)
+  const modelEditorRef = useRef<QuillInstance | null>(null);
   const modelGeneration = useModelGeneration({
     aiIntegration,
     modelLibrary,
+    modelEditorRef,
     setError: (error: string) => setError(error),
   });
 
@@ -1326,7 +1329,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const bulkFileInputRef = useRef<HTMLInputElement | null>(null);
   const bulkEditorRef = useRef<QuillInstance | null>(null); // v1.35.92: Tipar como QuillInstance
   const editorRef = useRef<QuillInstance | null>(null); // v1.35.92: Tipar como QuillInstance
-  const modelEditorRef = useRef<QuillInstance | null>(null); // v1.35.92: Tipar como QuillInstance
+  // v1.37.15: modelEditorRef movido para antes de useModelGeneration
   const modelFormRef = useRef<HTMLDivElement | null>(null);
   const relatorioRef = useRef<QuillInstance | null>(null); // v1.35.92: Tipar como QuillInstance
   const fileInputRef = useRef<HTMLInputElement | null>(null);

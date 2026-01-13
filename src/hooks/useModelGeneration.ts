@@ -5,7 +5,7 @@
  * v1.37.13: Removido cache - cada clique gera nova resposta da IA
  */
 
-import { useCallback } from 'react';
+import React, { useCallback } from 'react';
 import type { AIMessage, AICallOptions, NewModelData } from '../types';
 import { AI_PROMPTS } from '../prompts';
 
@@ -27,6 +27,7 @@ export interface ModelLibraryForModelGen {
 export interface UseModelGenerationProps {
   aiIntegration: AIIntegrationForModelGen;
   modelLibrary: ModelLibraryForModelGen;
+  modelEditorRef: React.RefObject<{ root?: HTMLElement } | null>;
   setError: (error: string) => void;
 }
 
@@ -55,6 +56,7 @@ export interface UseModelGenerationReturn {
 export function useModelGeneration({
   aiIntegration,
   modelLibrary,
+  modelEditorRef,
   setError,
 }: UseModelGenerationProps): UseModelGenerationReturn {
 
@@ -66,7 +68,11 @@ export function useModelGeneration({
       setError('Erro interno: sistema de IA não inicializado. Recarregue a página.');
       return;
     }
-    if (!modelLibrary.newModel.title && !modelLibrary.newModel.content) {
+
+    // v1.37.15: Ler conteúdo diretamente do editor Quill (não sincroniza com state em tempo real)
+    const editorContent = modelEditorRef.current?.root?.innerHTML || '';
+
+    if (!modelLibrary.newModel.title && !editorContent) {
       setError('Preencha ao menos o título ou conteúdo para gerar palavras-chave');
       return;
     }
@@ -80,7 +86,7 @@ export function useModelGeneration({
 MODELO DE DECISÃO:
 Título: ${modelLibrary.newModel.title || 'Não fornecido'}
 Categoria: ${modelLibrary.newModel.category || 'Não especificada'}
-Conteúdo: ${modelLibrary.newModel.content || 'Não fornecido'}
+Conteúdo: ${editorContent || 'Não fornecido'}
 
 TAREFA:
 Analise o modelo acima e gere palavras-chave (keywords) relevantes que ajudem a identificar e encontrar este modelo.
@@ -120,7 +126,7 @@ Não adicione explicações, apenas as keywords separadas por vírgula.`;
     } finally {
       aiIntegration.setGeneratingKeywords(false);
     }
-  }, [aiIntegration, modelLibrary, setError]);
+  }, [aiIntegration, modelLibrary, modelEditorRef, setError]);
 
   // Gerar título automaticamente com IA
   const generateTitleWithAI = useCallback(async () => {
@@ -130,7 +136,11 @@ Não adicione explicações, apenas as keywords separadas por vírgula.`;
       setError('Erro interno: sistema de IA não inicializado. Recarregue a página.');
       return;
     }
-    if (!modelLibrary.newModel.content) {
+
+    // v1.37.15: Ler conteúdo diretamente do editor Quill (não sincroniza com state em tempo real)
+    const editorContent = modelEditorRef.current?.root?.innerHTML || '';
+
+    if (!editorContent) {
       setError('Preencha o conteúdo do modelo para gerar o título');
       return;
     }
@@ -142,7 +152,7 @@ Não adicione explicações, apenas as keywords separadas por vírgula.`;
       const prompt = `${AI_PROMPTS.roles.classificacao}
 
 CONTEÚDO DO MODELO:
-${modelLibrary.newModel.content}
+${editorContent}
 
 TAREFA:
 Analise o conteúdo acima e gere um TÍTULO padronizado para este modelo de decisão.
@@ -188,7 +198,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     } finally {
       aiIntegration.setGeneratingTitle(false);
     }
-  }, [aiIntegration, modelLibrary, setError]);
+  }, [aiIntegration, modelLibrary, modelEditorRef, setError]);
 
   return {
     generateKeywordsWithAI,
