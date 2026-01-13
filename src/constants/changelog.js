@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.6', feature: 'FASE 5 LegalDecisionEditor: useDragDropTopics extraído (~183 linhas removidas) - handlers de drag & drop para tópicos principais e complementares' },
   { version: '1.37.5', feature: 'FASE 4 LegalDecisionEditor: useTopicOrdering extraído (~107 linhas removidas) - reorderTopicsViaLLM (Art. 337 CPC)' },
   { version: '1.37.4', feature: 'FASE 3 LegalDecisionEditor: useProofAnalysis extraído (~222 linhas removidas)' },
   { version: '1.37.3', feature: 'FASE 2 LegalDecisionEditor: useReportGeneration extraído (~314 linhas removidas)' },

@@ -144,7 +144,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -997,6 +997,25 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     // Não fazemos destructuring deles para evitar conflitos
   } = topicManager;
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.6: useDragDropTopics - Hook extraído para drag and drop de tópicos
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const dragDrop = useDragDropTopics({
+    selectedTopics,
+    setSelectedTopics,
+    aiIntegration,
+  });
+
+  // Destructure para uso mais fácil
+  const {
+    draggedIndex, dragOverIndex, draggedComplementaryIndex, dragOverComplementaryIndex,
+    setDraggedIndex, setDragOverIndex, setDraggedComplementaryIndex, setDragOverComplementaryIndex,
+    specialTopicIds, customCollisionDetection,
+    handleDndDragEnd, handleDragStart, handleDragEnd, handleDragOver, handleDragLeave, handleDrop,
+    handleComplementaryDragStart, handleComplementaryDragEnd, handleComplementaryDragOver,
+    handleComplementaryDragLeave, handleComplementaryDrop,
+  } = dragDrop;
+
   // 🆕 v1.12.18: Helper para determinar modo padrão baseado nas configurações globais
   // v1.12.22: Simplificado - agora usa diretamente ocrEngine (pdfjs | pdf-puro | claude-vision)
   // v1.12.25: Removido autoExtractPDFText - usa apenas ocrEngine
@@ -1178,11 +1197,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     }
   }, [peticaoFiles, contestacaoFiles, complementaryFiles, extractedTexts, documentProcessingModes]);
 
-  // 🖱️ ESTADOS: Drag & Drop
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [draggedComplementaryIndex, setDraggedComplementaryIndex] = useState<number | null>(null);
-  const [dragOverComplementaryIndex, setDragOverComplementaryIndex] = useState<number | null>(null);
+  // 🖱️ v1.37.6: Estados de Drag & Drop agora em useDragDropTopics hook
+  // (draggedIndex, dragOverIndex, draggedComplementaryIndex, dragOverComplementaryIndex)
 
   // 💾 ESTADOS: Sessão e Persistência
   const [partesProcesso, setPartesProcesso] = useState<PartesProcesso>({ reclamante: '', reclamadas: [] });
@@ -3384,189 +3400,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     })
   );
 
-  // v1.33.60: Set pré-computado para lookup O(1) no collision detection
-  const specialTopicIds = React.useMemo(() => {
-    return new Set(
-      selectedTopics
-        .filter(t => isSpecialTopic(t))
-        .map(t => t.id || t.title)
-    );
-  }, [selectedTopics]);
-
-  // v1.33.60: Collision detection otimizado - O(n) ao invés de O(n²)
-  // Ignora RELATÓRIO e DISPOSITIVO para evitar feedback visual enganoso
-  const customCollisionDetection = React.useCallback((args: Parameters<typeof closestCenter>[0]) => {
-    const { droppableContainers, ...rest } = args;
-
-    // Filtrar usando Set (O(1) por lookup)
-    const filteredContainers = droppableContainers.filter(
-      container => !specialTopicIds.has(container.id)
-    );
-
-    return closestCenter({ ...rest, droppableContainers: filteredContainers });
-  }, [specialTopicIds]);
-
-  const handleDndDragEnd = React.useCallback((event: { active: { id: string | number }; over: { id: string | number } | null }) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = selectedTopics.findIndex((t: Topic) => (t.id || t.title) === active.id);
-    const newIndex = selectedTopics.findIndex((t: Topic) => (t.id || t.title) === over.id);
-
-    // Proteger tópicos especiais (RELATÓRIO e DISPOSITIVO)
-    if (isSpecialTopic(selectedTopics[oldIndex]) || isSpecialTopic(selectedTopics[newIndex])) {
-      return;
-    }
-
-    const reordered = arrayMove(selectedTopics, oldIndex, newIndex);
-    setSelectedTopics(reordered);
-  }, [selectedTopics, setSelectedTopics]);
-
-  // v1.33.58: Handlers HTML5 antigos mantidos temporariamente para complementares
-  const handleDragStart = React.useCallback((e: React.DragEvent<HTMLElement>, index: number) => {
-    // Bloquear drag de RELATÓRIO e DISPOSITIVO
-    const topic = selectedTopics[index];
-    if (isSpecialTopic(topic)) {
-      e.preventDefault();
-      return;
-    }
-
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-    // Adiciona um pequeno delay para permitir o visual do drag
-    (e.currentTarget as HTMLElement).style.opacity = '0.5';
-  }, [selectedTopics]);
-
-  const handleDragEnd = React.useCallback((e: React.DragEvent<HTMLElement>) => {
-    (e.currentTarget as HTMLElement).style.opacity = '1';
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  }, []);
-
-  const handleDragOver = React.useCallback((e: React.DragEvent<HTMLElement>, index: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-
-    if (draggedIndex !== null && draggedIndex !== index) {
-      setDragOverIndex(index);
-    }
-
-    // 🆕 Auto-scroll quando arrastar perto das bordas
-    const scrollThreshold = 150; // Área maior para detectar (150px da borda)
-    const scrollSpeed = 25; // Scroll mais rápido
-    const viewportHeight = window.innerHeight;
-    const mouseY = e.clientY;
-
-    // Scroll para baixo quando mouse está perto da borda inferior
-    if (mouseY > viewportHeight - scrollThreshold) {
-      window.scrollBy({
-        top: scrollSpeed,
-        behavior: 'auto'
-      });
-    }
-    // Scroll para cima quando mouse está perto da borda superior
-    else if (mouseY < scrollThreshold) {
-      window.scrollBy({
-        top: -scrollSpeed,
-        behavior: 'auto'
-      });
-    }
-  }, [draggedIndex]);
-
-  const handleDragLeave = React.useCallback((e: React.DragEvent<HTMLElement>) => {
-    // Só limpa se realmente sair do elemento
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setDragOverIndex(null);
-    }
-  }, []);
-
-  const handleDrop = React.useCallback((e: React.DragEvent<HTMLElement>, dropIndex: number) => {
-    e.preventDefault();
-
-    if (draggedIndex === null || draggedIndex === dropIndex) {
-      setDraggedIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    // Bloquear drop em posições de RELATÓRIO (0) e DISPOSITIVO (última posição)
-    const draggedTopic = selectedTopics[draggedIndex];
-    const dropTopic = selectedTopics[dropIndex];
-
-    // Não permitir mover RELATÓRIO ou DISPOSITIVO
-    if (isSpecialTopic(draggedTopic)) {
-      setDraggedIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    // Não permitir drop na posição de RELATÓRIO ou DISPOSITIVO
-    if (isSpecialTopic(dropTopic)) {
-      setDraggedIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    const newTopics = [...selectedTopics];
-    const [draggedTopicItem] = newTopics.splice(draggedIndex, 1);
-    newTopics.splice(dropIndex, 0, draggedTopicItem);
-
-    setSelectedTopics(newTopics);
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  }, [draggedIndex, selectedTopics]);
-
-  // 🚀 OTIMIZAÇÃO v1.4.1: Funções de drag and drop para tópicos complementares com useCallback
-  const handleComplementaryDragStart = React.useCallback((e: React.DragEvent<HTMLElement>, index: number) => {
-    setDraggedComplementaryIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-    (e.currentTarget as HTMLElement).style.opacity = '0.5';
-  }, []);
-
-  const handleComplementaryDragEnd = React.useCallback((e: React.DragEvent<HTMLElement>) => {
-    (e.currentTarget as HTMLElement).style.opacity = '1';
-    setDraggedComplementaryIndex(null);
-    setDragOverComplementaryIndex(null);
-  }, []);
-
-  const handleComplementaryDragOver = React.useCallback((e: React.DragEvent<HTMLElement>, index: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-
-    if (draggedComplementaryIndex !== null && index !== draggedComplementaryIndex) {
-      setDragOverComplementaryIndex(index);
-    }
-  }, [draggedComplementaryIndex]);
-
-  const handleComplementaryDragLeave = React.useCallback((e: React.DragEvent<HTMLElement>) => {
-    if (e.currentTarget === e.target) {
-      setDragOverComplementaryIndex(null);
-    }
-  }, []);
-
-  const handleComplementaryDrop = React.useCallback((e: React.DragEvent<HTMLElement>, dropIndex: number) => {
-    e.preventDefault();
-
-    if (draggedComplementaryIndex === null || draggedComplementaryIndex === dropIndex) {
-      setDraggedComplementaryIndex(null);
-      setDragOverComplementaryIndex(null);
-      return;
-    }
-
-    const updatedTopics = [...(aiIntegration.aiSettings.topicosComplementares || [])];
-    const [draggedTopic] = updatedTopics.splice(draggedComplementaryIndex, 1);
-    updatedTopics.splice(dropIndex, 0, draggedTopic);
-
-    // Recalcular ordem
-    const reorderedTopics = updatedTopics.map((topic, idx) => ({
-      ...topic,
-      ordem: idx + 1
-    }));
-
-    aiIntegration.setAiSettings({ ...aiIntegration.aiSettings, topicosComplementares: reorderedTopics });
-    setDraggedComplementaryIndex(null);
-    setDragOverComplementaryIndex(null);
-  }, [draggedComplementaryIndex, aiIntegration.aiSettings.topicosComplementares, aiIntegration.setAiSettings]);
+  // v1.37.6: Handlers de Drag & Drop extraídos para useDragDropTopics hook
+  // (specialTopicIds, customCollisionDetection, handleDndDragEnd, handleDragStart, handleDragEnd,
+  //  handleDragOver, handleDragLeave, handleDrop, handleComplementaryDragStart, handleComplementaryDragEnd,
+  //  handleComplementaryDragOver, handleComplementaryDragLeave, handleComplementaryDrop)
 
   // 🎯 v1.4.6.3: OPT-06 - Handlers Memoizados para Editor de Decisões
   // Estes handlers são passados como props para DecisionEditorContainer.

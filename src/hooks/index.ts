@@ -165,3 +165,12 @@ export type {
   UseTopicOrderingReturn,
   AIIntegrationForOrdering
 } from './useTopicOrdering';
+
+// Drag Drop Topics hook (TIER 2 - dependências: Zustand stores)
+export { useDragDropTopics } from './useDragDropTopics';
+export type {
+  UseDragDropTopicsProps,
+  UseDragDropTopicsReturn,
+  AISettingsForDragDrop,
+  AIIntegrationForDragDrop
+} from './useDragDropTopics';
