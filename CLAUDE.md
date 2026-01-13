@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.12 | **File**: `src/App.tsx` (~0.59 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.13 | **File**: `src/App.tsx` (~0.59 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,7 +124,8 @@
 
 | Version | Feature |
 |---------|---------|
-| v1.37.12 | Fix "Gerar com IA" cache hit: força mudança de estado (clear→set) para disparar useEffect no segundo clique |
+| v1.37.13 | Remove cache de "Gerar com IA" (título/keywords) - cada clique gera nova resposta |
+| v1.37.12 | (revertido em v1.37.13) Fix cache hit com clear→set |
 | v1.37.11 | Fix "Gerar com IA" sync: ModelFormModal agora sincroniza localModel quando Zustand newModel.title/keywords mudam |
 | v1.37.10 | Fix parcial useModelGeneration: stale closure em setNewModel - usar functional updater (prev => ...) |
 | v1.37.9 | FASE 8: useEmbeddingsManagement extraído (~400 linhas removidas) |

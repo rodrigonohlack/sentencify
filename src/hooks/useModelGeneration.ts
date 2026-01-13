@@ -2,6 +2,7 @@
  * @file useModelGeneration.ts
  * @description Hook para geração de keywords e títulos de modelos via IA
  * Extraído do App.tsx v1.37.8 - FASE 7 LegalDecisionEditor refactoring
+ * v1.37.13: Removido cache - cada clique gera nova resposta da IA
  */
 
 import { useCallback } from 'react';
@@ -23,15 +24,9 @@ export interface ModelLibraryForModelGen {
   setNewModel: (model: NewModelData | ((prev: NewModelData) => NewModelData)) => void;
 }
 
-export interface APICacheForModelGen {
-  get: (key: string) => unknown;
-  set: (key: string, value: unknown) => void;
-}
-
 export interface UseModelGenerationProps {
   aiIntegration: AIIntegrationForModelGen;
   modelLibrary: ModelLibraryForModelGen;
-  apiCache: APICacheForModelGen;
   setError: (error: string) => void;
 }
 
@@ -51,17 +46,19 @@ export interface UseModelGenerationReturn {
  * - Keywords: palavras-chave para busca do modelo
  * - Título: título padronizado no formato TEMA - SUBTEMA - RESULTADO
  *
+ * Nota: Sem cache - cada clique gera nova resposta (se o usuário clica de novo,
+ * é porque quer uma resposta diferente)
+ *
  * @param props - Propriedades do hook
  * @returns Funções para gerar keywords e título
  */
 export function useModelGeneration({
   aiIntegration,
   modelLibrary,
-  apiCache,
   setError,
 }: UseModelGenerationProps): UseModelGenerationReturn {
 
-  // Gerar keywords automaticamente com IA (COM CACHE)
+  // Gerar keywords automaticamente com IA
   const generateKeywordsWithAI = useCallback(async () => {
     // Verificação defensiva
     if (!aiIntegration?.callAI) {
@@ -71,21 +68,6 @@ export function useModelGeneration({
     }
     if (!modelLibrary.newModel.title && !modelLibrary.newModel.content) {
       setError('Preencha ao menos o título ou conteúdo para gerar palavras-chave');
-      return;
-    }
-
-    // Cache key baseado em título + categoria + conteúdo
-    const cacheKey = `keywords_${modelLibrary.newModel.title}_${modelLibrary.newModel.category}_${modelLibrary.newModel.content}`;
-
-    // Verificar cache antes de chamar API
-    const cachedKeywords = apiCache.get(cacheKey);
-    if (cachedKeywords && typeof cachedKeywords === 'string') {
-      // v1.37.12: Forçar mudança de estado para disparar useEffect no ModelFormModal
-      // Limpa primeiro, depois seta o valor cacheado (força re-render mesmo se valor for igual)
-      modelLibrary.setNewModel(prev => ({ ...prev, keywords: '' }));
-      setTimeout(() => {
-        modelLibrary.setNewModel(prev => ({ ...prev, keywords: cachedKeywords }));
-      }, 0);
       return;
     }
 
@@ -116,7 +98,6 @@ Exemplo de resposta válida: horas extras, sobrejornada, adicional, jornada de t
 
 Não adicione explicações, apenas as keywords separadas por vírgula.`;
 
-      // Parametros semi-deterministicos para keywords
       const keywords = await aiIntegration.callAI([{
         role: 'user',
         content: [{ type: 'text', text: prompt }]
@@ -129,9 +110,6 @@ Não adicione explicações, apenas as keywords separadas por vírgula.`;
       });
 
       if (keywords) {
-        // Armazenar resultado no cache
-        apiCache.set(cacheKey, keywords);
-        // Usar functional updater para evitar stale closure
         modelLibrary.setNewModel(prev => ({ ...prev, keywords }));
       } else {
         setError('Não foi possível gerar palavras-chave. Tente novamente.');
@@ -142,7 +120,7 @@ Não adicione explicações, apenas as keywords separadas por vírgula.`;
     } finally {
       aiIntegration.setGeneratingKeywords(false);
     }
-  }, [aiIntegration, modelLibrary, apiCache, setError]);
+  }, [aiIntegration, modelLibrary, setError]);
 
   // Gerar título automaticamente com IA
   const generateTitleWithAI = useCallback(async () => {
@@ -154,19 +132,6 @@ Não adicione explicações, apenas as keywords separadas por vírgula.`;
     }
     if (!modelLibrary.newModel.content) {
       setError('Preencha o conteúdo do modelo para gerar o título');
-      return;
-    }
-
-    // Cache key baseado nos primeiros 500 caracteres do conteúdo
-    const cacheKey = `title_${modelLibrary.newModel.content.substring(0, 500)}`;
-    const cachedTitle = apiCache.get(cacheKey);
-    if (cachedTitle && typeof cachedTitle === 'string') {
-      // v1.37.12: Forçar mudança de estado para disparar useEffect no ModelFormModal
-      // Limpa primeiro, depois seta o valor cacheado (força re-render mesmo se valor for igual)
-      modelLibrary.setNewModel(prev => ({ ...prev, title: '' }));
-      setTimeout(() => {
-        modelLibrary.setNewModel(prev => ({ ...prev, title: cachedTitle }));
-      }, 0);
       return;
     }
 
@@ -202,7 +167,6 @@ REGRAS:
 
 Responda APENAS com o título no formato especificado, sem explicações.`;
 
-      // Parametros semi-deterministicos para titulo padronizado
       const title = await aiIntegration.callAI([{
         role: 'user',
         content: [{ type: 'text', text: prompt }]
@@ -215,8 +179,6 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
       });
 
       if (title) {
-        apiCache.set(cacheKey, title.trim());
-        // Usar functional updater para evitar stale closure
         modelLibrary.setNewModel(prev => ({ ...prev, title: title.trim() }));
       } else {
         setError('Não foi possível gerar o título. Tente novamente.');
@@ -226,7 +188,7 @@ Responda APENAS com o título no formato especificado, sem explicações.`;
     } finally {
       aiIntegration.setGeneratingTitle(false);
     }
-  }, [aiIntegration, modelLibrary, apiCache, setError]);
+  }, [aiIntegration, modelLibrary, setError]);
 
   return {
     generateKeywordsWithAI,

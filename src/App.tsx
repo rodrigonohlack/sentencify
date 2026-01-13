@@ -1242,10 +1242,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // ═══════════════════════════════════════════════════════════════════════════════
   // v1.37.8: useModelGeneration - Hook extraído para geração de keywords/título
   // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.13: apiCache removido - cada clique gera nova resposta
   const modelGeneration = useModelGeneration({
     aiIntegration,
     modelLibrary,
-    apiCache,
     setError: (error: string) => setError(error),
   });
 

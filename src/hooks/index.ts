@@ -191,8 +191,7 @@ export type {
   UseModelGenerationProps,
   UseModelGenerationReturn,
   AIIntegrationForModelGen,
-  ModelLibraryForModelGen,
-  APICacheForModelGen
+  ModelLibraryForModelGen
 } from './useModelGeneration';
 
 // Embeddings Management hook (TIER 2 - dependências: services, legislacao, jurisprudencia)

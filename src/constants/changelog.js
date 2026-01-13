@@ -2,7 +2,8 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
-  { version: '1.37.12', feature: 'Fix "Gerar com IA" cache hit: força mudança de estado (clear→setTimeout→set) para disparar useEffect no segundo clique com mesmo conteúdo' },
+  { version: '1.37.13', feature: 'Remove cache de "Gerar com IA" (título/keywords) - cada clique gera nova resposta da IA (se o usuário clica de novo, é porque quer resposta diferente)' },
+  { version: '1.37.12', feature: '(revertido em v1.37.13) Fix cache hit com clear→setTimeout→set' },
   { version: '1.37.11', feature: 'Fix "Gerar com IA" sync: ModelFormModal agora sincroniza localModel quando Zustand newModel.title/keywords mudam' },
   { version: '1.37.10', feature: 'Fix parcial useModelGeneration: stale closure em setNewModel corrigida com functional updater (prev => ...)' },
   { version: '1.37.9', feature: 'FASE 8 LegalDecisionEditor: useEmbeddingsManagement extraído (~400 linhas removidas) - importação, download CDN, limpeza e geração de embeddings (legislação, jurisprudência, modelos)' },
