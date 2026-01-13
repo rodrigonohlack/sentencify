@@ -42,3 +42,6 @@ export { TextPreviewModal } from './TextPreviewModal';
 
 // Preview Modals (TIER 3)
 export { ModelPreviewModal } from './PreviewModals';
+
+// Config Modal (v1.37.30)
+export { ConfigModal } from './ConfigModal';

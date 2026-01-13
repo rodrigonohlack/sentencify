@@ -4,13 +4,13 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.29 | **File**: `src/App.tsx` (~0.45 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.30 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
 **Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`, `useFullscreen`, `useSpacingControl`, `useFontSizeControl`, `useFeatureFlags`, `useThrottledBroadcast`, `useAPICache`, `useIndexedDB`, `useLegislacao`, `useModelSave`, `useDispositivoGeneration`, `useDecisionTextGeneration`, `useFactsComparison`, `useModelExtraction`, `useDetectEntities`, `useExportImport`, `useDecisionExport`, `useSlashMenu`, `useFileHandling`
 
-**Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`, `GoogleDriveButton`, `ModelGeneratorModal`, `FactsComparisonModal`, `AIAssistantBaseLegacy`, `AIAssistantBase`, `AIAssistantModal`, `AIAssistantGlobalModal`, `AIAssistantModelModal`
+**Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`, `GoogleDriveButton`, `ModelGeneratorModal`, `FactsComparisonModal`, `ConfigModal`, `AIAssistantBaseLegacy`, `AIAssistantBase`, `AIAssistantModal`, `AIAssistantGlobalModal`, `AIAssistantModelModal`
 
 **Storage**:
 - `SQLite` (Render Persistent Disk) → modelos sincronizados na nuvem (v1.34.0)
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.30 | FASE 26: ConfigModal extraído para src/components/modals/ConfigModal.tsx (~2.154 linhas removidas) - 18 seções (providers, API keys, thinking, double check, PDF, NER, embeddings, prompts customizados) |
 | v1.37.29 | Fix z-index SimilarityWarningModal (60→100) + mover bulk-prompts.ts para src/prompts/ (organização correta) |
 | v1.37.28 | FASE 20: useFileHandling extraído para src/hooks/ (~594 linhas removidas) - getBulkPendingFilesCount, handleConfirmBulkCancel, generateModelsFromFileContent, processBulkFiles, handleBulkFileUpload, saveBulkModels, removeBulkReviewModel, toggleFavorite + bulk-prompts.ts |
 | v1.37.27 | FASE 25: useSlashMenu extraído para src/hooks/ (~99 linhas removidas) - openSlashMenu, closeSlashMenu, navigateSlashMenu, selectModelFromSlash, updateSlashSearchTerm |

@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.30', feature: 'FASE 26: ConfigModal extraído para src/components/modals/ConfigModal.tsx (~2.154 linhas removidas) - modal de configurações com 18 seções (providers, API keys, thinking, double check, PDF, NER, embeddings, etc.)' },
   { version: '1.37.29', feature: 'Fix z-index SimilarityWarningModal (60→100) - modal agora aparece na frente do BulkReviewModal + mover bulk-prompts.ts para src/prompts/' },
   { version: '1.37.28', feature: 'FASE 20: useFileHandling extraído para src/hooks/ (~594 linhas removidas) - getBulkPendingFilesCount, handleConfirmBulkCancel, generateModelsFromFileContent, processBulkFiles, handleBulkFileUpload, saveBulkModels, removeBulkReviewModel, toggleFavorite + bulk-prompts.ts' },
   { version: '1.37.27', feature: 'FASE 25: useSlashMenu extraído para src/hooks/ (~99 linhas removidas) - openSlashMenu, closeSlashMenu, navigateSlashMenu, selectModelFromSlash, updateSlashSearchTerm + useEffects' },
