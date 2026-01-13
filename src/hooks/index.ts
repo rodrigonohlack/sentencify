@@ -249,3 +249,12 @@ export type {
   ModelLibraryForModelExtraction,
   APICacheForModelExtraction
 } from './useModelExtraction';
+
+// Detect Entities hook (TIER 2 - dependências: AIModelService, documentServices)
+export { useDetectEntities } from './useDetectEntities';
+export type {
+  UseDetectEntitiesProps,
+  UseDetectEntitiesReturn,
+  DocumentServicesForNER,
+  ExtractedTextsForNER
+} from './useDetectEntities';
