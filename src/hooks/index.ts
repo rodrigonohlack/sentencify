@@ -282,3 +282,16 @@ export type {
   UseSlashMenuProps,
   UseSlashMenuReturn
 } from './useSlashMenu';
+
+// File Handling hook (TIER 2 - dependências: modelLibrary, aiIntegration, apiCache, documentServices)
+export { useFileHandling } from './useFileHandling';
+export type {
+  UseFileHandlingProps,
+  UseFileHandlingReturn,
+  ModelLibraryForFileHandling,
+  AIIntegrationForFileHandling,
+  APICacheForFileHandling,
+  DocumentServicesForFileHandling,
+  CloudSyncForFileHandling,
+  ModelPreviewForFileHandling
+} from './useFileHandling';

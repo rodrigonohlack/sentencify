@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.28', feature: 'FASE 20: useFileHandling extraído para src/hooks/ (~594 linhas removidas) - getBulkPendingFilesCount, handleConfirmBulkCancel, generateModelsFromFileContent, processBulkFiles, handleBulkFileUpload, saveBulkModels, removeBulkReviewModel, toggleFavorite + bulk-prompts.ts' },
   { version: '1.37.27', feature: 'FASE 25: useSlashMenu extraído para src/hooks/ (~99 linhas removidas) - openSlashMenu, closeSlashMenu, navigateSlashMenu, selectModelFromSlash, updateSlashSearchTerm + useEffects' },
   { version: '1.37.26', feature: 'FASE 21: useDecisionExport extraído para src/hooks/ (~152 linhas removidas) - exportDecision para exportação da sentença com clipboard e HTML' },
   { version: '1.37.25', feature: 'FASE 18: useExportImport extraído para src/hooks/ (~204 linhas removidas) - exportAiSettings, importAiSettings, exportModels, importModels, checkDuplicate' },

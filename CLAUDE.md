@@ -4,11 +4,11 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.27 | **File**: `src/App.tsx` (~0.45 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.28 | **File**: `src/App.tsx` (~0.45 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
-**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`, `useFullscreen`, `useSpacingControl`, `useFontSizeControl`, `useFeatureFlags`, `useThrottledBroadcast`, `useAPICache`, `useIndexedDB`, `useLegislacao`, `useModelSave`, `useDispositivoGeneration`, `useDecisionTextGeneration`, `useFactsComparison`, `useModelExtraction`, `useDetectEntities`, `useExportImport`, `useDecisionExport`, `useSlashMenu`
+**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`, `useFullscreen`, `useSpacingControl`, `useFontSizeControl`, `useFeatureFlags`, `useThrottledBroadcast`, `useAPICache`, `useIndexedDB`, `useLegislacao`, `useModelSave`, `useDispositivoGeneration`, `useDecisionTextGeneration`, `useFactsComparison`, `useModelExtraction`, `useDetectEntities`, `useExportImport`, `useDecisionExport`, `useSlashMenu`, `useFileHandling`
 
 **Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`, `GoogleDriveButton`, `ModelGeneratorModal`, `FactsComparisonModal`, `AIAssistantBaseLegacy`, `AIAssistantBase`, `AIAssistantModal`, `AIAssistantGlobalModal`, `AIAssistantModelModal`
 
@@ -124,6 +124,12 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.28 | FASE 20: useFileHandling extraído para src/hooks/ (~594 linhas removidas) - getBulkPendingFilesCount, handleConfirmBulkCancel, generateModelsFromFileContent, processBulkFiles, handleBulkFileUpload, saveBulkModels, removeBulkReviewModel, toggleFavorite + bulk-prompts.ts |
+| v1.37.27 | FASE 25: useSlashMenu extraído para src/hooks/ (~99 linhas removidas) - openSlashMenu, closeSlashMenu, navigateSlashMenu, selectModelFromSlash, updateSlashSearchTerm |
+| v1.37.26 | FASE 21: useDecisionExport extraído para src/hooks/ (~152 linhas removidas) - exportDecision para exportação da sentença com clipboard e HTML |
+| v1.37.25 | FASE 18: useExportImport extraído para src/hooks/ (~204 linhas removidas) - exportAiSettings, importAiSettings, exportModels, importModels, checkDuplicate |
+| v1.37.24 | FASE 17: useDetectEntities extraído para src/hooks/ (~243 linhas removidas) - detectarNomesAutomaticamente, constantes NER |
+| v1.37.23 | FASE 19: html-conversion.ts extraído para src/utils/ (~228 linhas removidas) - htmlToPlainText, htmlToFormattedText, plainTextToHtml, cleanHtmlForExport |
 | v1.37.22 | FASE 16: useModelExtraction extraído (~340 linhas) - extractModelFromDecisionText, saveExtractedModel, cancelExtractedModel |
 | v1.37.21 | FASE 15: useFactsComparison extraído (~210 linhas) - handleOpen/handleGenerate + estados e cache |
 | v1.37.20 | FASE 14: injectQuillStyles + injectQuillLightStyles extraídos para src/utils/quill-styles-injector.ts (~390 linhas) |
