@@ -157,3 +157,11 @@ export type {
   DocumentServicesForProofs,
   StorageForProofs
 } from './useProofAnalysis';
+
+// Topic Ordering hook (TIER 2 - dependências: useAIIntegration)
+export { useTopicOrdering } from './useTopicOrdering';
+export type {
+  UseTopicOrderingProps,
+  UseTopicOrderingReturn,
+  AIIntegrationForOrdering
+} from './useTopicOrdering';
