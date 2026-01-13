@@ -32,3 +32,12 @@ export type {
   MiniReportPromptCore,
   BuildMiniReportPromptOptions
 } from './promptBuilders';
+export {
+  buildBulkAnalysisPrompt,
+  BULK_AI_CONFIG,
+  INTER_BATCH_DELAY,
+  BULK_API_TIMEOUT_MS,
+  VALID_FILE_EXTENSIONS,
+  VALID_FILE_TYPES,
+  MAX_BULK_FILES
+} from './bulk-prompts';

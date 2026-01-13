@@ -19,8 +19,8 @@
 import React from 'react';
 import { Model, AISettings } from '../types';
 import { TFIDFSimilarity } from '../services/EmbeddingsServices';
-import { AI_PROMPTS } from '../prompts';
 import {
+  AI_PROMPTS,
   buildBulkAnalysisPrompt,
   BULK_AI_CONFIG,
   INTER_BATCH_DELAY,
@@ -28,7 +28,7 @@ import {
   VALID_FILE_EXTENSIONS,
   VALID_FILE_TYPES,
   MAX_BULK_FILES
-} from '../constants/bulk-prompts';
+} from '../prompts';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS E INTERFACES

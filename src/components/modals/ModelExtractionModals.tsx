@@ -267,7 +267,7 @@ export const SimilarityWarningModal = React.memo(({
   const pct = Math.round(similarity * 100);
 
   return (
-    <div className={CSS.modalOverlay} style={{zIndex:60}}>
+    <div className={CSS.modalOverlay} style={{zIndex:100}}>
       <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-5xl w-full`}>
         <div className={CSS.modalHeader}>
           <div className="flex items-center justify-between w-full">
