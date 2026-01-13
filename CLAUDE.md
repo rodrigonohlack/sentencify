@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.28 | **File**: `src/App.tsx` (~0.45 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.29 | **File**: `src/App.tsx` (~0.45 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.29 | Fix z-index SimilarityWarningModal (60→100) + mover bulk-prompts.ts para src/prompts/ (organização correta) |
 | v1.37.28 | FASE 20: useFileHandling extraído para src/hooks/ (~594 linhas removidas) - getBulkPendingFilesCount, handleConfirmBulkCancel, generateModelsFromFileContent, processBulkFiles, handleBulkFileUpload, saveBulkModels, removeBulkReviewModel, toggleFavorite + bulk-prompts.ts |
 | v1.37.27 | FASE 25: useSlashMenu extraído para src/hooks/ (~99 linhas removidas) - openSlashMenu, closeSlashMenu, navigateSlashMenu, selectModelFromSlash, updateSlashSearchTerm |
 | v1.37.26 | FASE 21: useDecisionExport extraído para src/hooks/ (~152 linhas removidas) - exportDecision para exportação da sentença com clipboard e HTML |
@@ -275,5 +276,5 @@
 | v1.35.49 | UX Polish: compartilhamento Drive sempre cópia, texto sync mais claro, fix contraste tags |
 
 
-**Last Updated**: 2026-01-08
+**Last Updated**: 2026-01-13
 - sempre atualize a versão nas alterações realizadas
