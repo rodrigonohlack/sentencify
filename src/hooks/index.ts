@@ -58,6 +58,9 @@ export type { UseEditorHandlersProps, UseEditorHandlersReturn, TopicEditorConfig
 export { useReviewSentence } from './useReviewSentence';
 export type { UseReviewSentenceProps, UseReviewSentenceReturn, ReviewScope, AIIntegrationForReview } from './useReviewSentence';
 
+export { useSemanticSearchHandlers } from './useSemanticSearchHandlers';
+export type { UseSemanticSearchHandlersProps, UseSemanticSearchHandlersReturn } from './useSemanticSearchHandlers';
+
 // TIER 1 hooks (dependem de TIER 0)
 export { useIndexedDB, validateModel, sanitizeModel } from './useIndexedDB';
 export type { UseIndexedDBReturn, SyncCallbackParams } from './useIndexedDB';

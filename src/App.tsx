@@ -44,7 +44,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers, useReviewSentence } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers, useReviewSentence, useSemanticSearchHandlers } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -1068,8 +1068,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.35.97: OpenAI e Grok test status
   const [openaiTestStatus, setOpenaiTestStatus] = useState<'testing' | 'ok' | 'error' | null>(null);
   const [grokTestStatus, setGrokTestStatus] = useState<'testing' | 'ok' | 'error' | null>(null);
-  const [semanticManualSearchResults, setSemanticManualSearchResults] = useState<Model[] | null>(null);
-  const [semanticManualSearching, setSemanticManualSearching] = useState(false);
 
   // 📜 v1.26.02: Hook de legislação para geração de embeddings
   const legislacao = useLegislacao();
@@ -3191,58 +3189,25 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
     modelLibrary.models.filter(m => m.embedding?.length === 768).length,
     [modelLibrary.models]
   );
-  // v1.28.01: Usa toggle global como padrão se não houver valor no localStorage
-  // v1.35.74: Usa aiSettings unificado
-  const [useModelSemanticSearch, setUseModelSemanticSearch] = React.useState(() => {
-    try {
-      const stored = localStorage.getItem('modelSemanticMode');
-      if (stored !== null) return stored === 'true';
-      return aiIntegration.aiSettings.modelSemanticEnabled; // Usa toggle global como fallback
-    } catch { return false; }
+
+  // v1.37.44: FASE 52 - Hook de busca semântica extraído
+  const {
+    semanticManualSearchResults,
+    setSemanticManualSearchResults,
+    semanticManualSearching,
+    setSemanticManualSearching,
+    useModelSemanticSearch,
+    setUseModelSemanticSearch,
+    modelSemanticResults,
+    setModelSemanticResults,
+    searchingModelSemantics,
+    modelSemanticAvailable,
+    performModelSemanticSearch,
+  } = useSemanticSearchHandlers({
+    aiSettings: aiIntegration.aiSettings,
+    searchModelReady,
+    modelEmbeddingsCount,
   });
-  const [modelSemanticResults, setModelSemanticResults] = React.useState<Model[] | null>(null);
-  const [searchingModelSemantics, setSearchingModelSemantics] = React.useState(false);
-
-  // Busca semântica de modelos disponível se: toggle global ativo + modelo pronto + modelos com embedding
-  const modelSemanticAvailable = aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && modelEmbeddingsCount > 0;
-
-  // Handler para busca semântica de modelos
-  // v1.35.74: Usa aiSettings unificado
-  const performModelSemanticSearch = React.useCallback(async (query: string) => {
-    if (!query || query.length < 3 || !modelSemanticAvailable) {
-      setModelSemanticResults(null);
-      return;
-    }
-    setSearchingModelSemantics(true);
-    try {
-      const threshold = (aiIntegration.aiSettings.modelSemanticThreshold ?? 75) / 100;
-      const results = await searchModelsBySimilarity(modelLibrary.models, query, { threshold, limit: 30 });
-      setModelSemanticResults(results);
-    } catch (err) {
-      console.error('[Model Semantic] Erro na busca:', err);
-      setModelSemanticResults(null);
-    } finally {
-      setSearchingModelSemantics(false);
-    }
-  }, [modelSemanticAvailable, aiIntegration.aiSettings.modelSemanticThreshold, modelLibrary.models]);
-
-  // Debounce para busca semântica de modelos
-  const modelSemanticSearchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  React.useEffect(() => {
-    if (useModelSemanticSearch && modelSemanticAvailable && modelLibrary.searchTerm) {
-      if (modelSemanticSearchTimeoutRef.current) clearTimeout(modelSemanticSearchTimeoutRef.current);
-      modelSemanticSearchTimeoutRef.current = setTimeout(() => {
-        performModelSemanticSearch(modelLibrary.searchTerm);
-      }, 500);
-    } else {
-      setModelSemanticResults(null);
-    }
-    return () => {
-      if (modelSemanticSearchTimeoutRef.current) {
-        clearTimeout(modelSemanticSearchTimeoutRef.current);
-      }
-    };
-  }, [modelLibrary.searchTerm, useModelSemanticSearch, modelSemanticAvailable, performModelSemanticSearch]);
 
   // 🚀 v1.4.3: Pré-calcular categorias e contagens (1 loop em vez de N+2)
   const { categories, categoryCounts } = React.useMemo(() => {
