@@ -34,6 +34,15 @@ export type { UseThemeManagementReturn, AppTheme } from './useThemeManagement';
 export { useTabbedInterface, TABS, READONLY_TABS } from './useTabbedInterface';
 export type { UseTabbedInterfaceReturn, TabId, TabDefinition } from './useTabbedInterface';
 
+export { useNERManagement } from './useNERManagement';
+export type { UseNERManagementReturn } from './useNERManagement';
+
+export { useChangeDetectionHashes } from './useChangeDetectionHashes';
+export type { UseChangeDetectionHashesReturn, ProofManagerData } from './useChangeDetectionHashes';
+
+export { useSemanticSearchManagement } from './useSemanticSearchManagement';
+export type { UseSemanticSearchManagementReturn } from './useSemanticSearchManagement';
+
 // TIER 1 hooks (dependem de TIER 0)
 export { useIndexedDB, validateModel, sanitizeModel } from './useIndexedDB';
 export type { UseIndexedDBReturn, SyncCallbackParams } from './useIndexedDB';

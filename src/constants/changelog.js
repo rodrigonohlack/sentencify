@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.41', feature: 'FASE 40-42: useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement extraídos para src/hooks/ (~160 linhas removidas do App.tsx) - estados NER, hashes de detecção de mudanças, busca semântica E5' },
   { version: '1.37.40', feature: 'Fix encoding UTF-8 em GlobalEditorModal, useDocumentAnalysis, ModelsTab, FullscreenModelPanel - ~40 strings/comentários com acentos perdidos (Sugestões, Tópicos, Decisão, Visualização, etc.)' },
   { version: '1.37.39', feature: 'Fix encoding UTF-8 em ProofCard.tsx - ~25 strings com acentos perdidos (Tópicos, Análise, extração, binário, anonimização, etc.)' },
   { version: '1.37.38', feature: 'FASE 29: Toast system migrado para useUIStore - toast, showToast, clearToast centralizados no Zustand (~12 linhas removidas do App.tsx)' },

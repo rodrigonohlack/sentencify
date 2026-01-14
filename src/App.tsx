@@ -44,7 +44,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -548,6 +548,22 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 🎨 v1.37.37: Sistema de Tema - extraído para useThemeManagement (FASE 35)
   const { appTheme, isDarkMode, editorTheme, toggleAppTheme, toggleEditorTheme } = useThemeManagement();
 
+  // 🧠 v1.37.41: Estados NER - extraído para useNERManagement (FASE 40)
+  const {
+    nerFilesStored, nerModelReady, nerInitializing, nerDownloadProgress,
+    detectingNames, nerEnabled, nerIncludeOrg,
+    setNerFilesStored, setNerModelReady, setNerInitializing, setNerDownloadProgress,
+    setDetectingNames, setNerEnabled, setNerIncludeOrg
+  } = useNERManagement();
+
+  // 🔍 v1.37.43: Busca Semântica - extraído para useSemanticSearchManagement (FASE 42)
+  const {
+    searchFilesStored, searchModelReady, searchInitializing, searchDownloadProgress,
+    searchEnabled,
+    setSearchFilesStored, setSearchModelReady, setSearchInitializing, setSearchDownloadProgress,
+    setSearchEnabled
+  } = useSemanticSearchManagement();
+
   // v1.32.24: Modal de changelog
   const [showChangelogModal, setShowChangelogModal] = React.useState(false);
 
@@ -869,6 +885,13 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     // Não fazemos destructuring deles para evitar conflitos
   } = topicManager;
 
+  // 🔄 v1.37.42: Hashes de detecção de mudanças - extraído para useChangeDetectionHashes (FASE 41)
+  const { extractedTopicsHash, selectedTopicsHash, proofsHash } = useChangeDetectionHashes(
+    extractedTopics,
+    selectedTopics,
+    proofManager
+  );
+
   // ═══════════════════════════════════════════════════════════════════════════════
   // v1.37.6: useDragDropTopics - Hook extraído para drag and drop de tópicos
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -895,139 +918,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     return aiIntegration.aiSettings?.ocrEngine || 'pdfjs';
   }, [aiIntegration.aiSettings.ocrEngine]);
 
-  // 🔄 v1.9.1: HASHES para detectar edições (não apenas add/remove)
-
-  // Hash de extractedTopics (detecta edições de campos)
-  // v1.13.8: Usar fastHashUtil no texto completo (não apenas preview)
-  const extractedTopicsHash = React.useMemo(() => {
-    if (!extractedTopics || extractedTopics.length === 0) return 'empty';
-
-    try {
-      const signature = extractedTopics
-        .map((t, idx) => {
-          const id = t?.id || '';
-          const title = t?.title || '';
-          const category = t?.category || '';
-          const resultado = t?.resultado || '';
-          // v1.13.8: Hash do conteúdo completo para detectar qualquer mudança
-          const contentHash = fastHashUtil(t?.content || '');
-          const fundamentacaoHash = fastHashUtil(t?.fundamentacao || '');
-          const editedFundHash = fastHashUtil(t?.editedFundamentacao || '');
-          const editedRelHash = fastHashUtil(t?.editedRelatorio || '');
-          const editedContentHash = fastHashUtil(t?.editedContent || '');
-          return `${idx}:${id}-${title}-${category}-${contentHash}-${fundamentacaoHash}-${editedFundHash}-${editedRelHash}-${editedContentHash}-${resultado}`;
-        })
-        .join('||');
-
-      return fastHashUtil(signature);
-    } catch (err) {
-      return 'error';
-    }
-  }, [extractedTopics]);
-
-  // Hash de selectedTopics
-  // v1.13.8: Usar fastHashUtil no texto completo (não apenas preview)
-  const selectedTopicsHash = React.useMemo(() => {
-    if (!selectedTopics || selectedTopics.length === 0) return 'empty';
-
-    try {
-      const signature = selectedTopics
-        .map((t, idx) => {
-          const id = t?.id || '';
-          const title = t?.title || '';
-          const category = t?.category || '';
-          const resultado = t?.resultado || '';
-          // v1.13.8: Hash do conteúdo completo para detectar qualquer mudança
-          const contentHash = fastHashUtil(t?.content || '');
-          const fundamentacaoHash = fastHashUtil(t?.fundamentacao || '');
-          const editedFundHash = fastHashUtil(t?.editedFundamentacao || '');
-          const editedRelHash = fastHashUtil(t?.editedRelatorio || '');
-          const editedContentHash = fastHashUtil(t?.editedContent || '');
-          return `${idx}:${id}-${title}-${category}-${contentHash}-${fundamentacaoHash}-${editedFundHash}-${editedRelHash}-${editedContentHash}-${resultado}`;
-        })
-        .join('||');
-
-      return fastHashUtil(signature);
-    } catch (err) {
-      return 'error';
-    }
-  }, [selectedTopics]);
-
-  // Hash de provas (detecta edições)
-  const proofsHash = React.useMemo(() => {
-    try {
-      const proofFilesSig = (proofManager.proofFiles || [])
-        .map(p => `${p?.id || ''}-${p?.name || ''}-${p?.size || 0}`)
-        .join('|');
-
-      const proofTextsSig = (proofManager.proofTexts || [])
-        .map(p => {
-          const id = p?.id || '';
-          const name = p?.name || '';
-          const text = p?.text || '';
-          const textPreview = typeof text === 'string' ? text.substring(0, 50) : '';
-          return `${id}-${name}-${textPreview}`;
-        })
-        .join('|');
-
-      const extractedTexts = proofManager.extractedProofTexts || {};
-      const extractedSig = Object.keys(extractedTexts)
-        .map(id => {
-          const text = extractedTexts[id] || '';
-          const textPreview = typeof text === 'string' ? text.substring(0, 50) : '';
-          return `${id}-${textPreview}`;
-        })
-        .join('|');
-
-      // v1.13.5: Incluir conclusões no hash para detectar edições
-      const conclusions = proofManager.proofConclusions || {};
-      const conclusionsSig = Object.keys(conclusions)
-        .map(id => {
-          const text = conclusions[id] || '';
-          const textPreview = typeof text === 'string' ? text.substring(0, 50) : '';
-          return `${id}-${textPreview}`;
-        })
-        .join('|');
-
-      // v1.13.5: Incluir vínculos prova-tópico no hash para detectar alterações
-      const topicLinks = proofManager.proofTopicLinks || {};
-      const topicLinksSig = Object.keys(topicLinks)
-        .map(id => {
-          const links = topicLinks[id] || [];
-          return `${id}:[${links.join(',')}]`;
-        })
-        .join('|');
-
-      // v1.13.5: Incluir resultados de análise IA no hash
-      const analysisResults = proofManager.proofAnalysisResults || {};
-      const analysisResultsSig = Object.keys(analysisResults)
-        .map(id => {
-          const analysis = analysisResults[id] || {};
-          const type = analysis.type || '';
-          const result = analysis.result || '';
-          const resultPreview = typeof result === 'string' ? result.substring(0, 50) : '';
-          return `${id}:${type}:${resultPreview}`;
-        })
-        .join('|');
-
-      // v1.19.2: Incluir flags de modo PDF e enviar conteúdo completo
-      const pdfModeSig = JSON.stringify(proofManager.proofUsePdfMode || {});
-      const sendFullContentSig = JSON.stringify(proofManager.proofSendFullContent || {});
-      const signature = `${proofFilesSig}||${proofTextsSig}||${extractedSig}||${conclusionsSig}||${topicLinksSig}||${analysisResultsSig}||${pdfModeSig}||${sendFullContentSig}`;
-      return fastHashUtil(signature);
-    } catch (err) {
-      return 'error';
-    }
-  }, [
-    proofManager.proofFiles,
-    proofManager.proofTexts,
-    proofManager.extractedProofTexts,
-    proofManager.proofConclusions,   // v1.13.5: Detectar edições nas conclusões
-    proofManager.proofTopicLinks,    // v1.13.5: Detectar alterações nos vínculos
-    proofManager.proofAnalysisResults, // v1.13.5: Detectar resultados de análise IA
-    proofManager.proofUsePdfMode,      // v1.19.2: Detectar mudanças no modo PDF
-    proofManager.proofSendFullContent  // v1.19.2: Detectar mudanças na flag enviar conteúdo completo
-  ]);
+  // 🔄 v1.37.42: Hashes (extractedTopicsHash, selectedTopicsHash, proofsHash) movidos para useChangeDetectionHashes (FASE 41)
 
   // v1.13.6: Hash para detectar mudanças em Upload (arquivos, extractedTexts, documentProcessingModes)
   const uploadHash = React.useMemo(() => {
@@ -1140,35 +1031,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [quillError, setQuillError] = useState<Error | null>(null);
   const [quillRetryCount, setQuillRetryCount] = useState(0);
 
-  // 🧠 v1.32.00: ESTADOS: IA Offline (NER)
-  const [nerFilesStored, setNerFilesStored] = useState<string[]>([]); // Legado - não mais usado
-  const [nerModelReady, setNerModelReady] = useState(false);
-  const [nerInitializing, setNerInitializing] = useState(false);
-  const [nerDownloadProgress, setNerDownloadProgress] = useState(0);
-  const [detectingNames, setDetectingNames] = useState(false);
-  // v1.32.00: Toggle master para NER
-  const [nerEnabled, setNerEnabled] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('nerEnabled') || 'false'); } catch { return false; }
-  });
-  // v1.29: Estado para incluir ORG (empresas) na detecção
-  const [nerIncludeOrg, setNerIncludeOrg] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('nerIncludeOrg') || 'false'); } catch { return false; }
-  });
+  // 🧠 v1.37.41: Estados NER movidos para useNERManagement (FASE 40)
 
-  // 🔍 v1.26.00: ESTADOS: Busca Semântica (E5-base)
-  const [searchFilesStored, setSearchFilesStored] = useState<string[]>([]);
-  const [searchModelReady, setSearchModelReady] = useState(false);
-  const [searchInitializing, setSearchInitializing] = useState(false);
-  const [searchDownloadProgress, setSearchDownloadProgress] = useState(0);
-  // v1.28.00: Toggle MASTER que controla carregamento do modelo E5
-  const [searchEnabled, setSearchEnabled] = useState(() => {
-    try {
-      // Migração: se searchEnabled não existe, usa semanticSearchEnabled como fallback
-      const stored = localStorage.getItem('searchEnabled');
-      if (stored !== null) return JSON.parse(stored);
-      return JSON.parse(localStorage.getItem('semanticSearchEnabled') || 'false');
-    } catch { return false; }
-  });
+  // 🔍 v1.37.43: Estados Busca Semântica (E5-base) movidos para useSemanticSearchManagement (FASE 42)
   // v1.35.74: semanticSearchEnabled, semanticThreshold, jurisSemanticEnabled, jurisSemanticThreshold
   // movidos para aiSettings (agora em aiIntegration.aiSettings.X)
   // v1.37.9: embeddingsCount, jurisEmbeddingsCount, embeddingsProgress, jurisEmbeddingsProgress,

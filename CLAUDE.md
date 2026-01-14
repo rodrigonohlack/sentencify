@@ -4,11 +4,11 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.40 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.41 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
-**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`, `useFullscreen`, `useSpacingControl`, `useFontSizeControl`, `useFeatureFlags`, `useThrottledBroadcast`, `useAPICache`, `useIndexedDB`, `useLegislacao`, `useModelSave`, `useDispositivoGeneration`, `useDecisionTextGeneration`, `useFactsComparison`, `useModelExtraction`, `useDetectEntities`, `useExportImport`, `useDecisionExport`, `useSlashMenu`, `useFileHandling`
+**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`, `useFullscreen`, `useSpacingControl`, `useFontSizeControl`, `useFeatureFlags`, `useThrottledBroadcast`, `useAPICache`, `useIndexedDB`, `useLegislacao`, `useModelSave`, `useDispositivoGeneration`, `useDecisionTextGeneration`, `useFactsComparison`, `useModelExtraction`, `useDetectEntities`, `useExportImport`, `useDecisionExport`, `useSlashMenu`, `useFileHandling`, `useNERManagement`, `useChangeDetectionHashes`, `useSemanticSearchManagement`
 
 **Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`, `GoogleDriveButton`, `ModelGeneratorModal`, `FactsComparisonModal`, `ConfigModal`, `AIAssistantBaseLegacy`, `AIAssistantBase`, `AIAssistantModal`, `AIAssistantGlobalModal`, `AIAssistantModelModal`
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.41 | FASE 40-42: useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement extraídos (~160 linhas removidas) |
 | v1.37.40 | Fix encoding UTF-8 em GlobalEditorModal, useDocumentAnalysis, ModelsTab, FullscreenModelPanel - ~40 strings/comentários com acentos perdidos (Sugestões, Tópicos, Decisão, Visualização, etc.) |
 | v1.37.39 | Fix encoding UTF-8 em ProofCard.tsx - ~25 strings com acentos perdidos (Tópicos, Análise, extração, binário, anonimização, etc.) |
 | v1.37.38 | FASE 29: Toast system migrado para useUIStore - toast, showToast, clearToast centralizados no Zustand (~12 linhas removidas) |
