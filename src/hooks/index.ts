@@ -55,6 +55,9 @@ export type { UseKeyboardShortcutsProps, UseKeyboardShortcutsReturn } from './us
 export { useEditorHandlers } from './useEditorHandlers';
 export type { UseEditorHandlersProps, UseEditorHandlersReturn, TopicEditorConfig } from './useEditorHandlers';
 
+export { useReviewSentence } from './useReviewSentence';
+export type { UseReviewSentenceProps, UseReviewSentenceReturn, ReviewScope, AIIntegrationForReview } from './useReviewSentence';
+
 // TIER 1 hooks (dependem de TIER 0)
 export { useIndexedDB, validateModel, sanitizeModel } from './useIndexedDB';
 export type { UseIndexedDBReturn, SyncCallbackParams } from './useIndexedDB';
