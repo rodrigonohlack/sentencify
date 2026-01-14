@@ -405,10 +405,10 @@ export const ProofCard = React.memo(({
             </div>
           )}
 
-          {/* Conclusoes Manuais */}
+          {/* Conclusões Manuais */}
           <div className="mt-3">
             <label className="block text-xs font-medium theme-text-muted mb-2">
-              Minhas Conclusoes:
+              Minhas Conclusões:
             </label>
             <textarea
               value={proofManager.proofConclusions[proof.id] || ''}

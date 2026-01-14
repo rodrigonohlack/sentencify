@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.48', feature: 'Fix encoding UTF-8: "Minhas Conclusões" na aba Provas (ProofCard.tsx)' },
   { version: '1.37.47', feature: 'Fix Vite warning: imports dinâmicos removidos em QuillEditors.tsx (FullscreenModelPanel, VersionSelect) - já estavam no bundle via barrel export' },
   { version: '1.37.46', feature: 'FASE 51: useMultiTabSync extraído para src/hooks/ (~52 linhas removidas) - sincronização multi-tab simplificada com Zustand getState() eliminando refs' },
   { version: '1.37.45', feature: 'FASE 47: useModelSuggestions extraído para src/hooks/ (~216 linhas removidas) - findSuggestions, refineWithAI, scoreModel com estratégia Zustand (useModelsStore.getState())' },
