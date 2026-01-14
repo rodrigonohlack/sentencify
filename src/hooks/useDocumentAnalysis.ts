@@ -880,9 +880,9 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         isComplementar: true
       }));
 
-      // Filtrar tópicos para remover qualquer "RELATORIO" que possa ter sido incluido
+      // Filtrar tópicos para remover qualquer "RELATÓRIO" que possa ter sido incluído
       const topicsSemRelatorio = curatedTopics.filter((topic: Topic) =>
-        !topic.title || topic.title.toUpperCase() !== 'RELATORIO'
+        !topic.title || topic.title.toUpperCase() !== 'RELATÓRIO'
       );
 
       // Construir objeto de documentos
