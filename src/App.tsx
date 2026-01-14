@@ -44,7 +44,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers, useReviewSentence, useSemanticSearchHandlers, useModelSuggestions } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers, useReviewSentence, useSemanticSearchHandlers, useModelSuggestions, useMultiTabSync } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -646,64 +646,12 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     });
   }, []);
 
-  // 🔄 MULTI-TAB SYNC: Registrar callback (v1.7 BUGFIX) ───────────────────
-  // Refs para evitar closure stale (sempre acessar versão mais recente)
-  const indexedDBRef = React.useRef(indexedDB);
-  const modelLibraryRef = React.useRef(modelLibrary);
-  const featureFlagsRef = React.useRef(featureFlags);
-
-  // Atualizar refs quando os objetos mudarem
-  React.useEffect(() => {
-    indexedDBRef.current = indexedDB;
-    modelLibraryRef.current = modelLibrary;
-    featureFlagsRef.current = featureFlags;
-  }, [indexedDB, modelLibrary, featureFlags]);
-
-  React.useEffect(() => {
-    // Registrar callback para receber notificações de sync de outras tabs
-    const handleSync = async ({ action, timestamp }: { action: string; timestamp: number }) => {
-
-      // Usar refs para acessar versão sempre atualizada (evitar closure stale)
-      const currentIndexedDB = indexedDBRef.current;
-      const currentModelLibrary = modelLibraryRef.current;
-      const currentFeatureFlags = featureFlagsRef.current;
-
-      // Skip if IndexedDB feature flag is disabled
-      if (!currentFeatureFlags.isEnabled('useIndexedDB')) {
-        return;
-      }
-
-      // Skip if IndexedDB não está disponível
-      if (!currentIndexedDB.isAvailable) {
-        return;
-      }
-
-      try {
-        // Recarregar modelos do IndexedDB (cache já foi invalidado pelo hook)
-        const reloadedModels = await currentIndexedDB.loadModels();
-
-
-        // Atualizar state React com modelos sincronizados
-        currentModelLibrary.setModels(reloadedModels);
-
-        // Atualizar ref para evitar save loop
-        lastSavedModelsRef.current = JSON.stringify(reloadedModels);
-
-      } catch (err) {
-        currentModelLibrary.setPersistenceError(`Erro ao sincronizar com outra tab: ${(err as Error).message}`);
-      }
-    };
-
-    // Registrar callback no hook useIndexedDB
-    indexedDB.setSyncCallback(handleSync);
-
-
-    // Cleanup: remover callback
-    return () => {
-      indexedDB.setSyncCallback(null);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // ⚠️ Array vazio OK: handleSync usa refs (sempre atualizadas) ao invés de closure
+  // 🔄 MULTI-TAB SYNC: v1.37.46 - Hook extraído
+  useMultiTabSync({
+    indexedDB,
+    featureFlags,
+    lastSavedModelsRef,
+  });
 
   // Load Models no mount
   React.useEffect(() => {
