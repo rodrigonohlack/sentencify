@@ -27,7 +27,9 @@ import SyncStatusIndicator from './components/SyncStatusIndicator';
 
 // v1.36.61+: Zustand Stores - Estado global gerenciado
 // useModalManagerCompat movido para src/hooks/useModalManager.ts (v1.36.78)
-import { useAISettingsCompat } from './stores/useAIStore';
+import { useAISettingsCompat, useAIStore } from './stores/useAIStore';
+import { useUIStore } from './stores/useUIStore';
+import { useModelsStore } from './stores/useModelsStore';
 // useModelLibraryCompat movido para src/hooks/useModelLibrary.ts (v1.36.78)
 // useTopicManagerCompat movido para src/hooks/useTopicManager.ts (v1.36.77)
 // useProofManagerCompat movido para src/hooks/useProofManager.ts (v1.36.76)
@@ -412,21 +414,30 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // ☁️ v1.35.40: Google Drive - Salvar/Carregar projetos
   const googleDrive = useGoogleDrive();
-  const [driveFilesModalOpen, setDriveFilesModalOpen] = React.useState(false);
-  const [driveFiles, setDriveFiles] = React.useState<DriveFile[]>([]);
+  // v1.37.49: driveFilesModalOpen e driveFiles migrados para useUIStore
+  const driveFilesModalOpen = useUIStore((s) => s.modals.driveFiles);
+  const setDriveFilesModalOpen = React.useCallback((open: boolean) => {
+    if (open) useUIStore.getState().openModal('driveFiles');
+    else useUIStore.getState().closeModal('driveFiles');
+  }, []);
+  const driveFiles = useUIStore((s) => s.driveFilesList);
+  const setDriveFiles = useUIStore((s) => s.setDriveFilesList);
 
   // 🪄 v1.35.69: Gerador de Modelo a partir de Exemplos (v1.35.77: +estiloRedacao)
-  const [modelGeneratorModal, setModelGeneratorModal] = React.useState<ModelGeneratorModalState>({
-    isOpen: false,
-    targetField: null // 'modeloRelatorio' | 'modeloDispositivo' | 'modeloTopicoRelatorio' | 'estiloRedacao'
-  });
+  // v1.37.49: modelGeneratorModal migrado para useUIStore
+  const modelGeneratorModalOpen = useUIStore((s) => s.modals.modelGenerator);
+  const modelGeneratorTargetField = useUIStore((s) => s.modelGeneratorTargetField) as TargetField | null;
+  const modelGeneratorModal = React.useMemo(() => ({
+    isOpen: modelGeneratorModalOpen,
+    targetField: modelGeneratorTargetField
+  }), [modelGeneratorModalOpen, modelGeneratorTargetField]);
 
   const openModelGenerator = React.useCallback((targetField: TargetField) => {
-    setModelGeneratorModal({ isOpen: true, targetField });
+    useUIStore.getState().openModelGenerator(targetField);
   }, []);
 
   const closeModelGenerator = React.useCallback(() => {
-    setModelGeneratorModal({ isOpen: false, targetField: null });
+    useUIStore.getState().closeModelGenerator();
   }, []);
 
   const handleModelGenerated = React.useCallback((generatedPrompt: string) => {
@@ -439,8 +450,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         [settingKey]: generatedPrompt
       }));
     }
-    setModelGeneratorModal({ isOpen: false, targetField: null });
-  }, [modelGeneratorModal.targetField, aiIntegration.setAiSettings]);
+    closeModelGenerator();
+  }, [modelGeneratorModal.targetField, aiIntegration.setAiSettings, closeModelGenerator]);
 
   const getHardcodedPrompt = React.useCallback((targetField: string) => {
     const prompts: Record<string, string> = {
@@ -571,7 +582,12 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   } = useQuillInitialization();
 
   // v1.32.24: Modal de changelog
-  const [showChangelogModal, setShowChangelogModal] = React.useState(false);
+  // v1.37.49: showChangelogModal migrado para useUIStore
+  const showChangelogModal = useUIStore((s) => s.modals.changelog);
+  const setShowChangelogModal = React.useCallback((open: boolean) => {
+    if (open) useUIStore.getState().openModal('changelog');
+    else useUIStore.getState().closeModal('changelog');
+  }, []);
 
   // 💾 PERSISTÊNCIA AUTOMÁTICA: Load/Save modelos (v1.7)
 
@@ -608,7 +624,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   }, [modelLibrary.models, fastHash]); // 🐛 BUGFIX: models completo (detecta edições), não só length
 
   // 🚀 OTIMIZAÇÃO v1.7: Auto-save com dirty tracking (FASE 1.1) ──────────────
-  const [autoSaveDirty, setAutoSaveDirty] = React.useState(false);
+  // v1.37.49: autoSaveDirty migrado para useUIStore
+  const autoSaveDirty = useUIStore((s) => s.autoSaveDirty);
+  const setAutoSaveDirty = useUIStore((s) => s.setAutoSaveDirty);
   const lastAutoSaveSnapshotRef = React.useRef<string | null>(null);
   const autoSaveTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -617,7 +635,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // Helper: marcar sessão como dirty (needs save)
   const markSessionDirty = React.useCallback(() => {
-    setAutoSaveDirty(true);
+    useUIStore.getState().setAutoSaveDirty(true);
   }, []);
 
   // 🚀 OTIMIZAÇÃO v1.7 (FASE 1.3): Batch DOM updates para evitar múltiplos reflows
@@ -758,20 +776,25 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 🎨 v1.37.37: Navegação - extraído para useTabbedInterface (FASE 32)
   const { activeTab, setActiveTab, goToTopics, goToEditor, goToModels } = useTabbedInterface();
   // 🔔 v1.37.38: toast e showToast extraídos para useUIStore (vem do useModalManager acima)
-  const [error, setError] = useState<string | { type: string; message: string }>('');
-  const [copySuccess, setCopySuccess] = useState(false);
+  // v1.37.49: error, copySuccess migrados para useUIStore
+  const error = useUIStore((s) => s.error);
+  const setError = useUIStore((s) => s.setError);
+  const copySuccess = useUIStore((s) => s.copySuccess);
+  const setCopySuccess = useUIStore((s) => s.setCopySuccess);
   const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   // v1.37.14: Estados savingModel, modelSaved, savingFromSimilarity movidos para useModelSave hook
 
   // v1.17.0: Estado para texto de nomes no modal de anonimização
   // NOTA: showAnonymizationModal, showTopicCurationModal e pendingCurationData agora vêm do useDocumentAnalysis (v1.36.81)
-  const [anonymizationNamesText, setAnonymizationNamesText] = useState('');
+  // v1.37.49: anonymizationNamesText migrado para useUIStore
+  const anonymizationNamesText = useUIStore((s) => s.anonymizationNamesText);
+  const setAnonymizationNamesText = useUIStore((s) => s.setAnonymizationNamesText);
 
   // v1.21.14: Sincronizar nomes do modal com aiSettings persistido
   useEffect(() => {
     const nomesUsuario = aiIntegration?.aiSettings?.anonymization?.nomesUsuario;
     if (Array.isArray(nomesUsuario) && nomesUsuario.length > 0) {
-      setAnonymizationNamesText(nomesUsuario.join('\n'));
+      useUIStore.getState().setAnonymizationNamesText(nomesUsuario.join('\n'));
     }
   }, [aiIntegration?.aiSettings?.anonymization?.nomesUsuario]);
 
@@ -930,7 +953,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // (draggedIndex, dragOverIndex, draggedComplementaryIndex, dragOverComplementaryIndex)
 
   // 💾 ESTADOS: Sessão e Persistência
-  const [partesProcesso, setPartesProcesso] = useState<PartesProcesso>({ reclamante: '', reclamadas: [] });
+  // v1.37.49: partesProcesso migrado para useUIStore
+  const partesProcesso = useUIStore((s) => s.partesProcesso);
+  const setPartesProcesso = useUIStore((s) => s.setPartesProcesso);
 
   // 📊 v1.36.73: Hook de geração de relatórios ────────────────────────────────
   const reportGeneration = useReportGeneration({
@@ -984,11 +1009,16 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const { generateKeywordsWithAI, generateTitleWithAI } = modelGeneration;
 
   // 📝 ESTADOS: Editor de Texto Rico
-  const [exportedText, setExportedText] = useState('');
-  const [exportedHtml, setExportedHtml] = useState('');
-    
+  // v1.37.49: exportedText, exportedHtml migrados para useUIStore
+  const exportedText = useUIStore((s) => s.exportedText);
+  const setExportedText = useUIStore((s) => s.setExportedText);
+  const exportedHtml = useUIStore((s) => s.exportedHtml);
+  const setExportedHtml = useUIStore((s) => s.setExportedHtml);
+
   // 📋 ESTADO: Informações do Processo (v1.3.5.1)
-  const [processoNumero, setProcessoNumero] = useState('');
+  // v1.37.49: processoNumero migrado para useUIStore
+  const processoNumero = useUIStore((s) => s.processoNumero);
+  const setProcessoNumero = useUIStore((s) => s.setProcessoNumero);
   // Número do processo trabalhista (ex: ATOrd 0000313-98.2025.5.08.0110)
 
   // 🔧 v1.37.42: Estados Quill/DOMPurify movidos para useQuillInitialization (FASE 43)
@@ -1008,14 +1038,28 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.33.19: Toggle para busca semântica na busca manual de modelos (editores individual e global)
   // v1.33.20: Inicializa com modelSemanticEnabled (respeitando config IA)
   // v1.35.74: Agora usa aiIntegration.aiSettings.modelSemanticEnabled
-  const [useSemanticManualSearch, setUseSemanticManualSearch] = useState(() => aiIntegration.aiSettings.modelSemanticEnabled);
+  // v1.37.49: useSemanticManualSearch migrado para useModelsStore
+  const useSemanticManualSearch = useModelsStore((s) => s.useSemanticManualSearch);
+  const setUseSemanticManualSearch = useModelsStore((s) => s.setUseSemanticManualSearch);
+
+  // Sincronizar useSemanticManualSearch com aiSettings.modelSemanticEnabled na inicialização
+  React.useEffect(() => {
+    useModelsStore.getState().setUseSemanticManualSearch(aiIntegration.aiSettings.modelSemanticEnabled ?? false);
+  }, [aiIntegration.aiSettings.modelSemanticEnabled]);
 
   // v1.35.75: Feedback inline nos botões de teste de API Key
-  const [claudeTestStatus, setClaudeTestStatus] = useState<'testing' | 'ok' | 'error' | null>(null); // null | 'testing' | 'ok' | 'error'
-  const [geminiTestStatus, setGeminiTestStatus] = useState<'testing' | 'ok' | 'error' | null>(null);
-  // v1.35.97: OpenAI e Grok test status
-  const [openaiTestStatus, setOpenaiTestStatus] = useState<'testing' | 'ok' | 'error' | null>(null);
-  const [grokTestStatus, setGrokTestStatus] = useState<'testing' | 'ok' | 'error' | null>(null);
+  // v1.37.49: apiTestStatuses migrado para useAIStore
+  const apiTestStatuses = useAIStore((s) => s.apiTestStatuses);
+  const setApiTestStatus = useAIStore((s) => s.setApiTestStatus);
+  // Compat aliases para código existente
+  const claudeTestStatus = apiTestStatuses.claude;
+  const geminiTestStatus = apiTestStatuses.gemini;
+  const openaiTestStatus = apiTestStatuses.openai;
+  const grokTestStatus = apiTestStatuses.grok;
+  const setClaudeTestStatus = React.useCallback((status: 'testing' | 'ok' | 'error' | null) => setApiTestStatus('claude', status), [setApiTestStatus]);
+  const setGeminiTestStatus = React.useCallback((status: 'testing' | 'ok' | 'error' | null) => setApiTestStatus('gemini', status), [setApiTestStatus]);
+  const setOpenaiTestStatus = React.useCallback((status: 'testing' | 'ok' | 'error' | null) => setApiTestStatus('openai', status), [setApiTestStatus]);
+  const setGrokTestStatus = React.useCallback((status: 'testing' | 'ok' | 'error' | null) => setApiTestStatus('grok', status), [setApiTestStatus]);
 
   // 📜 v1.26.02: Hook de legislação para geração de embeddings
   const legislacao = useLegislacao();
@@ -3884,7 +3928,9 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
                           {searchModelReady && (
                             <button
                               onClick={() => {
-                                setUseSemanticManualSearch(prev => !prev);
+                                // v1.37.49: useModelsStore não aceita função, usar getState()
+                                const current = useModelsStore.getState().useSemanticManualSearch;
+                                setUseSemanticManualSearch(!current);
                                 // Limpar resultados ao alternar modo
                                 modelLibrary.setManualSearchResults([]);
                                 setSemanticManualSearchResults(null);
@@ -4481,7 +4527,9 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         onDelete={async (file: DriveFile) => {
           try {
             await googleDrive.deleteFile(file.id);
-            setDriveFiles(prev => prev.filter(f => f.id !== file.id));
+            // v1.37.49: useUIStore não aceita função, usar getState()
+            const currentFiles = useUIStore.getState().driveFilesList;
+            setDriveFiles(currentFiles.filter(f => f.id !== file.id));
             setError({ type: 'success', message: `Arquivo excluído: ${file.name}` });
           } catch (err) {
             setError({ type: 'error', message: `Erro ao excluir: ${(err as Error).message}` });
@@ -5532,19 +5580,22 @@ const SentencifyAI = () => {
   const shareMatch = window.location.pathname.match(/^\/share\/([a-f0-9]+)$/i);
 
   // v1.34.1: Estado para modelos recebidos do servidor (para merge)
-  const [receivedModels, setReceivedModels] = React.useState<Model[] | null>(null);
+  // v1.37.49: receivedModels e activeSharedLibraries migrados para useModelsStore
+  const receivedModels = useModelsStore((s) => s.receivedModels);
+  const setReceivedModels = useModelsStore((s) => s.setReceivedModels);
   // v1.35.24: Lista de bibliotecas compartilhadas ativas (para filtrar modelos de owners revogados)
-  const [activeSharedLibraries, setActiveSharedLibraries] = React.useState<Array<{ ownerId: string; ownerEmail: string }> | null>(null);
+  const activeSharedLibraries = useModelsStore((s) => s.activeSharedLibraries);
+  const setActiveSharedLibraries = useModelsStore((s) => s.setActiveSharedLibraries);
 
   // v1.35.1: Memoizar callbacks para evitar re-criação de pull/sync a cada render
   // v1.35.24: Receber sharedLibraries junto com models
   const handleModelsReceived = React.useCallback((models: Model[], sharedLibraries: Array<{ ownerId: string; ownerEmail: string }>) => {
-    setReceivedModels(models);
-    setActiveSharedLibraries(sharedLibraries || []);
+    useModelsStore.getState().setReceivedModels(models);
+    useModelsStore.getState().setActiveSharedLibraries(sharedLibraries || []);
   }, []);
   const clearReceivedModels = React.useCallback(() => {
-    setReceivedModels(null);
-    setActiveSharedLibraries(null);
+    useModelsStore.getState().setReceivedModels(null);
+    useModelsStore.getState().setActiveSharedLibraries(null);
   }, []);
 
   const cloudSync = useCloudSync({

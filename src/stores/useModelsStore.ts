@@ -1,7 +1,7 @@
 /**
  * @file useModelsStore.ts
  * @description Store Zustand para biblioteca de modelos (CRUD, busca, filtros)
- * @version 1.36.63
+ * @version 1.37.49
  *
  * Este store centraliza o estado da biblioteca de modelos que antes estava
  * no hook useModelLibrary.
@@ -28,6 +28,12 @@ export type OwnershipFilter = 'all' | 'mine' | 'shared';
 
 /** Modo de visualização dos modelos */
 export type ModelViewMode = 'cards' | 'list';
+
+/** Biblioteca compartilhada ativa (v1.37.49) */
+export interface SharedLibraryInfo {
+  ownerId: string;
+  ownerEmail: string;
+}
 
 /** Estado inicial do formulário de modelo */
 const initialNewModel: NewModelData = {
@@ -64,6 +70,11 @@ interface ModelsStoreState {
   // Busca manual
   manualSearchTerm: string;
   manualSearchResults: Model[];
+  useSemanticManualSearch: boolean; // v1.37.49: Toggle de busca semântica manual
+
+  // Modelos compartilhados (v1.37.49)
+  receivedModels: Model[] | null;
+  activeSharedLibraries: SharedLibraryInfo[] | null;
 
   // Sugestões
   suggestions: Model[];
@@ -105,6 +116,12 @@ interface ModelsStoreState {
   setModelViewMode: (mode: ModelViewMode) => void;
   setManualSearchTerm: (term: string) => void;
   setManualSearchResults: (results: Model[]) => void;
+  setUseSemanticManualSearch: (value: boolean) => void; // v1.37.49
+
+  // Actions - Modelos compartilhados (v1.37.49)
+  setReceivedModels: (models: Model[] | null) => void;
+  setActiveSharedLibraries: (libraries: SharedLibraryInfo[] | null) => void;
+
   setSuggestions: (suggestions: Model[]) => void;
   setSuggestionsSource: (source: 'local' | 'api' | null) => void;
   setLoadingSuggestions: (loading: boolean) => void;
@@ -166,6 +183,12 @@ export const useModelsStore = create<ModelsStoreState>()(
       modelsPerPage: 5,
       manualSearchTerm: '',
       manualSearchResults: [],
+      useSemanticManualSearch: false, // v1.37.49
+
+      // Modelos compartilhados (v1.37.49)
+      receivedModels: null,
+      activeSharedLibraries: null,
+
       suggestions: [],
       suggestionsSource: null,
       loadingSuggestions: false,
@@ -356,6 +379,37 @@ export const useModelsStore = create<ModelsStoreState>()(
           'setManualSearchResults'
         ),
 
+      setUseSemanticManualSearch: (value) =>
+        set(
+          (state) => {
+            state.useSemanticManualSearch = value;
+          },
+          false,
+          `setUseSemanticManualSearch/${value}`
+        ),
+
+      // ─────────────────────────────────────────────────────────────────────
+      // ACTIONS - MODELOS COMPARTILHADOS (v1.37.49)
+      // ─────────────────────────────────────────────────────────────────────
+
+      setReceivedModels: (models) =>
+        set(
+          (state) => {
+            state.receivedModels = models;
+          },
+          false,
+          'setReceivedModels'
+        ),
+
+      setActiveSharedLibraries: (libraries) =>
+        set(
+          (state) => {
+            state.activeSharedLibraries = libraries;
+          },
+          false,
+          'setActiveSharedLibraries'
+        ),
+
       setSuggestions: (suggestions) =>
         set(
           (state) => {
@@ -543,6 +597,18 @@ export const selectModelById = (id: string) => (state: ModelsStoreState): Model 
 export const selectIsEditing = (state: ModelsStoreState): boolean =>
   state.editingModel !== null;
 
+/** Selector: Retorna se busca semântica manual está ativa (v1.37.49) */
+export const selectUseSemanticManualSearch = (state: ModelsStoreState): boolean =>
+  state.useSemanticManualSearch;
+
+/** Selector: Retorna modelos recebidos de bibliotecas compartilhadas (v1.37.49) */
+export const selectReceivedModels = (state: ModelsStoreState): Model[] | null =>
+  state.receivedModels;
+
+/** Selector: Retorna bibliotecas compartilhadas ativas (v1.37.49) */
+export const selectActiveSharedLibraries = (state: ModelsStoreState): SharedLibraryInfo[] | null =>
+  state.activeSharedLibraries;
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SEÇÃO 5: HOOKS DE COMPATIBILIDADE
 // ═══════════════════════════════════════════════════════════════════════════
@@ -578,6 +644,15 @@ export function useModelLibraryCompat() {
   const setManualSearchTerm = useModelsStore((s) => s.setManualSearchTerm);
   const manualSearchResults = useModelsStore((s) => s.manualSearchResults);
   const setManualSearchResults = useModelsStore((s) => s.setManualSearchResults);
+  const useSemanticManualSearch = useModelsStore((s) => s.useSemanticManualSearch);
+  const setUseSemanticManualSearch = useModelsStore((s) => s.setUseSemanticManualSearch);
+
+  // Modelos compartilhados (v1.37.49)
+  const receivedModels = useModelsStore((s) => s.receivedModels);
+  const setReceivedModels = useModelsStore((s) => s.setReceivedModels);
+  const activeSharedLibraries = useModelsStore((s) => s.activeSharedLibraries);
+  const setActiveSharedLibraries = useModelsStore((s) => s.setActiveSharedLibraries);
+
   const suggestions = useModelsStore((s) => s.suggestions);
   const setSuggestions = useModelsStore((s) => s.setSuggestions);
   const suggestionsSource = useModelsStore((s) => s.suggestionsSource);
@@ -623,6 +698,9 @@ export function useModelLibraryCompat() {
     currentModelPage, setCurrentModelPage,
     manualSearchTerm, setManualSearchTerm,
     manualSearchResults, setManualSearchResults,
+    useSemanticManualSearch, setUseSemanticManualSearch,
+    receivedModels, setReceivedModels,
+    activeSharedLibraries, setActiveSharedLibraries,
     suggestions, setSuggestions,
     suggestionsSource, setSuggestionsSource,
     loadingSuggestions, setLoadingSuggestions,

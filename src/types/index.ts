@@ -472,7 +472,8 @@ export type ModalKey =
   | 'modelGenerator'
   | 'regenerateRelatorioCustom'
   | 'bulkModal'
-  | 'factsComparisonIndividual'; // v1.36.21: Confronto de Fatos (editor individual)
+  | 'factsComparisonIndividual' // v1.36.21: Confronto de Fatos (editor individual)
+  | 'driveFiles'; // v1.37.49: Modal de arquivos do Google Drive
 
 export type ModalState = Record<ModalKey, boolean>;
 
@@ -2204,7 +2205,7 @@ export interface ImportCallbacks {
   setProofSendFullContent: (content: Record<string, boolean>) => void;
   setAiSettings: (settings: AISettings) => void;
   setActiveTab: (tab: string) => void;
-  setError: React.Dispatch<React.SetStateAction<string | { type: string; message: string }>>;
+  setError: (error: string | { type: string; message: string } | null) => void; // v1.37.49: Simplificado para compatibilidade com Zustand
   setProcessoNumero: (numero: string) => void;
   setPeticaoFiles?: (files: UploadedFile[]) => void;
   setContestacaoFiles?: (files: UploadedFile[]) => void;
@@ -2221,7 +2222,7 @@ export interface RestoreSessionCallbacks extends Omit<ImportCallbacks, 'setAiSet
 }
 
 export interface ImportProjectCallbacks {
-  setError: React.Dispatch<React.SetStateAction<string | { type: string; message: string }>>;
+  setError: (error: string | { type: string; message: string } | null) => void; // v1.37.49: Simplificado para compatibilidade com Zustand
 }
 
 export interface ClearProjectCallbacks extends Omit<ImportCallbacks, 'setAiSettings' | 'setSelectedTopics' | 'setProofFiles'> {

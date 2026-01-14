@@ -1,7 +1,7 @@
 /**
  * @file useAIStore.ts
  * @description Store Zustand para configurações de IA (providers, modelos, tokens)
- * @version 1.36.62
+ * @version 1.37.49
  *
  * Este store centraliza o estado de configuração de IA que antes estava
  * no hook useAIIntegration.
@@ -92,6 +92,29 @@ const DEFAULT_DOUBLE_CHECK: DoubleCheckSettings = {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SEÇÃO 1.1: TIPOS AUXILIARES (v1.37.49)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Status de teste de API */
+export type ApiTestStatus = 'testing' | 'ok' | 'error' | null;
+
+/** Estado de testes de API para todos os providers */
+export interface ApiTestStatuses {
+  claude: ApiTestStatus;
+  gemini: ApiTestStatus;
+  openai: ApiTestStatus;
+  grok: ApiTestStatus;
+}
+
+/** Estado inicial dos testes de API */
+const initialApiTestStatuses: ApiTestStatuses = {
+  claude: null,
+  gemini: null,
+  openai: null,
+  grok: null,
+};
+
 /** Estado inicial do AISettings */
 const initialAISettings: AISettings = {
   provider: 'claude',
@@ -154,6 +177,9 @@ interface AIStoreState {
   aiSettings: AISettings;
   tokenMetrics: TokenMetrics;
 
+  // Estado - API Test (v1.37.49)
+  apiTestStatuses: ApiTestStatuses;
+
   // Actions - Settings
   setAiSettings: (settings: AISettings | ((prev: AISettings) => AISettings)) => void;
   setProvider: (provider: AIProvider) => void;
@@ -180,6 +206,10 @@ interface AIStoreState {
 
   // Actions - Reset
   resetSettings: () => void;
+
+  // Actions - API Test (v1.37.49)
+  setApiTestStatus: (provider: AIProvider, status: ApiTestStatus) => void;
+  resetApiTestStatuses: () => void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -206,6 +236,9 @@ export const useAIStore = create<AIStoreState>()(
         // Estado inicial
         aiSettings: initialAISettings,
         tokenMetrics: initialTokenMetrics,
+
+        // Estado - API Test (v1.37.49)
+        apiTestStatuses: initialApiTestStatuses,
 
         // ─────────────────────────────────────────────────────────────────────
         // Actions - Settings Completo
@@ -445,6 +478,28 @@ export const useAIStore = create<AIStoreState>()(
             false,
             'resetSettings'
           ),
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Actions - API Test (v1.37.49)
+        // ─────────────────────────────────────────────────────────────────────
+
+        setApiTestStatus: (provider, status) =>
+          set(
+            (state) => {
+              state.apiTestStatuses[provider] = status;
+            },
+            false,
+            `setApiTestStatus/${provider}/${status}`
+          ),
+
+        resetApiTestStatuses: () =>
+          set(
+            (state) => {
+              state.apiTestStatuses = initialApiTestStatuses;
+            },
+            false,
+            'resetApiTestStatuses'
+          ),
       })),
       {
         name: 'sentencify-ai-store',
@@ -519,6 +574,14 @@ export const selectAnonymization = (state: AIStoreState): AnonymizationSettings 
 /** Selector: Retorna configurações de Double Check */
 export const selectDoubleCheck = (state: AIStoreState): DoubleCheckSettings | undefined =>
   state.aiSettings.doubleCheck;
+
+/** Selector: Retorna status de teste de API (v1.37.49) */
+export const selectApiTestStatuses = (state: AIStoreState): ApiTestStatuses =>
+  state.apiTestStatuses;
+
+/** Selector: Retorna status de teste de um provider específico (v1.37.49) */
+export const selectApiTestStatus = (provider: AIProvider) => (state: AIStoreState): ApiTestStatus =>
+  state.apiTestStatuses[provider];
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SEÇÃO 5: HOOKS DE COMPATIBILIDADE

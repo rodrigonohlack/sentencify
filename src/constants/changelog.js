@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.49', feature: 'Zustand Migration: 18 useState migrados para stores (useUIStore, useAIStore, useModelsStore) - driveFiles, modelGenerator, changelog, autoSaveDirty, error, copySuccess, anonymizationNamesText, partesProcesso, exportedText/Html, processoNumero, apiTestStatuses, useSemanticManualSearch, receivedModels, activeSharedLibraries' },
   { version: '1.37.48', feature: 'Fix encoding UTF-8: "Minhas Conclusões" na aba Provas (ProofCard.tsx)' },
   { version: '1.37.47', feature: 'Fix Vite warning: imports dinâmicos removidos em QuillEditors.tsx (FullscreenModelPanel, VersionSelect) - já estavam no bundle via barrel export' },
   { version: '1.37.46', feature: 'FASE 51: useMultiTabSync extraído para src/hooks/ (~52 linhas removidas) - sincronização multi-tab simplificada com Zustand getState() eliminando refs' },
