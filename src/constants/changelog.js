@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.32', feature: 'FASE 28: UploadTab extraído para src/components/tabs/UploadTab.tsx (~630 linhas) - aba de Upload com 3 seções (Petição, Contestação, Complementares) + paste text + ProcessingModeSelector' },
   { version: '1.37.31', feature: 'FASE 27: ModelsTab extraído para src/components/tabs/ModelsTab.tsx (~512 linhas) - aba Banco de Modelos com 8 seções (banner, header, ModelFormModal, filtros, semântica, grid/lista, paginação, empty states)' },
   { version: '1.37.30', feature: 'FASE 26: ConfigModal extraído para src/components/modals/ConfigModal.tsx (~2.154 linhas removidas) - modal de configurações com 18 seções (providers, API keys, thinking, double check, PDF, NER, embeddings, etc.)' },
   { version: '1.37.29', feature: 'Fix z-index SimilarityWarningModal (60→100) - modal agora aparece na frente do BulkReviewModal + mover bulk-prompts.ts para src/prompts/' },

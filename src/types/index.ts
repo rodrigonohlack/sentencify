@@ -2472,6 +2472,74 @@ export interface ModelsTabProps {
   savingModel: boolean;
 }
 
+/** Props da aba Upload extraída do App.tsx (v1.37.32) */
+export interface UploadTabProps {
+  // File states
+  peticaoFiles: UploadedFile[];
+  contestacaoFiles: UploadedFile[];
+  complementaryFiles: UploadedFile[];
+  setContestacaoFiles: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
+  setComplementaryFiles: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
+
+  // Pasted texts
+  pastedPeticaoTexts: PastedText[];
+  pastedContestacaoTexts: PastedText[];
+  pastedComplementaryTexts: PastedText[];
+
+  // Analyzed documents
+  analyzedDocuments: AnalyzedDocuments;
+  setAnalyzedDocuments: React.Dispatch<React.SetStateAction<AnalyzedDocuments>>;
+
+  // Processing modes
+  documentProcessingModes: DocumentProcessingModes;
+  setDocumentProcessingModes: React.Dispatch<React.SetStateAction<DocumentProcessingModes>>;
+  getDefaultProcessingMode: () => ProcessingMode;
+  setPeticaoMode: (idx: number, mode: ProcessingMode) => void;
+  setContestacaoMode: (idx: number, mode: ProcessingMode) => void;
+  setComplementarMode: (idx: number, mode: ProcessingMode) => void;
+
+  // Processo número
+  processoNumero: string;
+  setProcessoNumero: (num: string) => void;
+
+  // Upload handlers
+  handleUploadPeticao: (files: File[]) => void;
+  handleUploadContestacao: (files: File[]) => void;
+  handleUploadComplementary: (files: File[]) => void;
+
+  // Remove handlers
+  removePeticaoFile: (index: number) => void;
+  removePastedText: (type: string, index: number) => void;
+
+  // Paste area state
+  showPasteArea: Record<string, boolean>;
+  setShowPasteArea: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  handlePastedText: (text: string, type: string) => void;
+
+  // Text preview
+  setTextPreview: (preview: TextPreviewState) => void;
+
+  // Document analysis
+  documentAnalyzing: boolean;
+  handleAnalyzeDocuments: () => void;
+
+  // AI settings (for provider detection)
+  aiIntegration: {
+    aiSettings: {
+      provider?: string;
+      anonymization?: { enabled?: boolean };
+    };
+  };
+
+  // Document services
+  documentServices: {
+    autoDetectProcessoNumero: (docs: { peticao?: File; contestacoes?: File[]; complementares?: File[] }) => Promise<string | null>;
+  };
+
+  // IndexedDB helpers
+  removePdfFromIndexedDB: (key: string) => Promise<void>;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // GLOBAL TYPE AUGMENTATIONS
 // ═══════════════════════════════════════════════════════════════════════════
