@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.30 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.31 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.31 | FASE 27: ModelsTab extraído para src/components/tabs/ModelsTab.tsx (~512 linhas) - aba Banco de Modelos com 8 seções (banner, header, ModelFormModal, filtros, semântica, grid/lista, paginação, empty states) |
 | v1.37.30 | FASE 26: ConfigModal extraído para src/components/modals/ConfigModal.tsx (~2.154 linhas removidas) - 18 seções (providers, API keys, thinking, double check, PDF, NER, embeddings, prompts customizados) |
 | v1.37.29 | Fix z-index SimilarityWarningModal (60→100) + mover bulk-prompts.ts para src/prompts/ (organização correta) |
 | v1.37.28 | FASE 20: useFileHandling extraído para src/hooks/ (~594 linhas removidas) - getBulkPendingFilesCount, handleConfirmBulkCancel, generateModelsFromFileContent, processBulkFiles, handleBulkFileUpload, saveBulkModels, removeBulkReviewModel, toggleFavorite + bulk-prompts.ts |

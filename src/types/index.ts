@@ -2369,6 +2369,110 @@ export interface ErrorBoundaryState {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// MODELS TAB PROPS (v1.37.31)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Category counts computed from models */
+export interface CategoryCounts {
+  counts: Record<string, number>;
+  withoutCategory: number;
+  favorites: number;
+}
+
+/** Props da aba Models extraída do App.tsx */
+export interface ModelsTabProps {
+  // Modal Management
+  modals: ModalState;
+  openModal: (key: ModalKey) => void;
+  closeModal: (key: ModalKey) => void;
+
+  // Model Library
+  modelLibrary: {
+    models: Model[];
+    searchTerm: string;
+    selectedCategory: string;
+    showFavoritesOnly: boolean;
+    ownershipFilter: 'all' | 'mine' | 'shared';
+    modelViewMode: 'cards' | 'list';
+    currentModelPage: number;
+    modelsPerPage: number;
+    newModel: NewModelData;
+    editingModel: Model | null;
+    hasUnsavedChanges: boolean;
+    setSearchTerm: (term: string) => void;
+    setSelectedCategory: (category: string) => void;
+    setShowFavoritesOnly: (show: boolean) => void;
+    setOwnershipFilter: (filter: 'all' | 'mine' | 'shared') => void;
+    setModelViewMode: (mode: 'cards' | 'list') => void;
+    setCurrentModelPage: (page: number | ((prev: number) => number)) => void;
+    setNewModel: React.Dispatch<React.SetStateAction<NewModelData>>;
+    setEditingModel: (model: Model | null) => void;
+  };
+
+  // Cloud Sync (optional)
+  cloudSync: {
+    isAuthenticated: boolean;
+    syncStatus: string;
+    pendingCount: number;
+    lastSyncAt: string | null;
+    user: { email: string; profilePicture?: string } | null;
+    pushAllModels: (models: Model[]) => Promise<{ success: boolean }>;
+    sync: () => void;
+  };
+
+  // AI Integration (may be undefined when not active)
+  aiIntegration: {
+    generatingKeywords: boolean | undefined;
+    generatingTitle: boolean | undefined;
+  };
+
+  // Semantic Search (may be undefined from aiSettings)
+  useModelSemanticSearch: boolean | undefined;
+  setUseModelSemanticSearch: React.Dispatch<React.SetStateAction<boolean | undefined>>;
+  modelSemanticResults: Model[] | null;
+  setModelSemanticResults: React.Dispatch<React.SetStateAction<Model[] | null>>;
+  searchingModelSemantics: boolean | undefined;
+  modelSemanticAvailable: boolean | undefined;
+
+  // Computed values
+  filteredModels: Model[];
+  currentModels: Model[];
+  totalModelPages: number;
+  indexOfFirstModel: number;
+  indexOfLastModel: number;
+  categories: string[];
+  categoryCounts: CategoryCounts;
+
+  // Model Operations
+  exportModels: () => void;
+  importModels: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  saveModel: () => Promise<void>;
+  saveModelWithoutClosing: () => Promise<void>;
+  generateKeywordsWithAI: () => Promise<void>;
+  generateTitleWithAI: () => Promise<void>;
+  startEditingModel: (model: Model) => void;
+  toggleFavorite: (modelId: string) => void;
+  duplicateModel: (model: Model) => Promise<void>;
+  confirmDeleteModel: (model: Model) => void;
+
+  // Utilities
+  sanitizeHTML: (html: string | null | undefined) => string;
+
+  // Refs
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  modelFormRef: React.RefObject<HTMLDivElement | null>;
+  modelEditorRef: React.RefObject<QuillInstance | null>;
+
+  // Editor state
+  quillReady: boolean;
+  quillError: Error | null;
+  editorTheme: string;
+  toggleEditorTheme: () => void;
+  modelSaved: boolean;
+  savingModel: boolean;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // GLOBAL TYPE AUGMENTATIONS
 // ═══════════════════════════════════════════════════════════════════════════
 

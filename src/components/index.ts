@@ -31,5 +31,11 @@ export * from './forms';
 // Editor Components
 export * from './editors';
 
+// Tab Components (v1.37.31)
+export * from './tabs';
+
 // ErrorBoundary (v1.37.1)
 export { ErrorBoundary } from './ErrorBoundary';
+
+// SyncStatusIndicator (v1.37.31)
+export { default as SyncStatusIndicator, SyncStatusIcon } from './SyncStatusIndicator';
