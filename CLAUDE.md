@@ -32,7 +32,7 @@
 2. **File Rename (Windows)**: Use `powershell -Command "Rename-Item..."` (APENAS para renomear)
 3. **API**: Use `buildApiRequest()` helper. Model: `claude-sonnet-4-20250514`
 4. **z-index**: Base `z-50`, nested `+10` por nível
-5. **NUNCA usar PowerShell para editar conteúdo de arquivos**: Corrompe encoding UTF-8 (acentuação quebrada). Use `sed`, `Edit` tool, ou `Write` tool.
+5. **NUNCA usar Bash/PowerShell para editar conteúdo de arquivos**: Comandos como `sed`, `awk`, `cat`, `echo >`, heredocs (`<<EOF`), e qualquer redirecionamento de shell CORROMPEM encoding UTF-8 (acentuação quebrada: "Posição" → "Posicao", "RELATÓRIO" → "RELATORIO"). **SEMPRE usar APENAS `Edit` tool ou `Write` tool** para criar/modificar arquivos. Bash é permitido APENAS para comandos de sistema (git, npm, tsc, etc.), NUNCA para manipular conteúdo de arquivos.
 6. **Novos Modais**: SEMPRE usar `BaseModal` (src/components/modals/BaseModal.tsx). Nunca reimplementar ESC handler, scroll lock ou estrutura modal manualmente. Props: `isOpen`, `onClose`, `title`, `subtitle`, `icon`, `iconColor` (blue/red/green/yellow/purple/orange), `size` (sm/md/lg/xl/2xl), `children`, `footer`, `preventClose`.
 7. **Hooks em `src/hooks/` são código de PRODUÇÃO** (v1.36.70+): Os hooks extraídos em `src/hooks/` (useFullscreen, useIndexedDB, etc.) são o código REAL usado pelo App.tsx via barrel export (`./hooks/index.ts`). Hooks ainda não extraídos permanecem definidos dentro do App.tsx.
 8. **Versionamento (5 arquivos)**: Ao incrementar versão, atualizar TODOS: `CLAUDE.md` (linha 7 + Recent Changes), `src/App.tsx` (APP_VERSION ~linha 209), `src/constants/changelog.js`, `package.json`. **APP_VERSION no App.tsx é frequentemente esquecido após compactação de contexto!**
