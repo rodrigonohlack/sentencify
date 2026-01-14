@@ -44,7 +44,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -544,30 +544,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     return () => clearInterval(interval);
   }, []);
 
-  // 🎨 v1.9.13: Sistema de Tema Claro/Escuro GLOBAL ─────────────────────────
-  const [appTheme, setAppTheme] = React.useState(() =>
-    localStorage.getItem('sentencify-app-theme') || 'dark'
-  );
-
-  // Aplicar tema no documento e salvar no localStorage
-  React.useEffect(() => {
-    // Aplicar data-theme no HTML root para CSS Variables
-    document.documentElement.setAttribute('data-theme', appTheme);
-    // Persistir no localStorage
-    localStorage.setItem('sentencify-app-theme', appTheme);
-  }, [appTheme]);
-
-  // Toggle tema global
-  const toggleAppTheme = React.useCallback(() => {
-    setAppTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  }, []);
+  // 🎨 v1.37.37: Sistema de Tema - extraído para useThemeManagement (FASE 35)
+  const { appTheme, isDarkMode, editorTheme, toggleAppTheme, toggleEditorTheme } = useThemeManagement();
 
   // v1.32.24: Modal de changelog
   const [showChangelogModal, setShowChangelogModal] = React.useState(false);
-
-  // Alias para compatibilidade com editores Quill existentes
-  const editorTheme = appTheme;
-  const toggleEditorTheme = toggleAppTheme;
 
   // 💾 PERSISTÊNCIA AUTOMÁTICA: Load/Save modelos (v1.7)
 
@@ -803,8 +784,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     return () => clearTimeout(timeoutId);
   }, [currentModelsHash, modelLibrary.isLoadingModels]); // Hash ao invés de models array
 
-  // 🎨 ESTADOS: Navegação e UI
-  const [activeTab, setActiveTab] = useState('upload');
+  // 🎨 v1.37.37: Navegação - extraído para useTabbedInterface (FASE 32)
+  const { activeTab, setActiveTab, goToTopics, goToEditor, goToModels } = useTabbedInterface();
   const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' }); // 'success', 'error', 'info'
   const [error, setError] = useState<string | { type: string; message: string }>('');
   const [copySuccess, setCopySuccess] = useState(false);

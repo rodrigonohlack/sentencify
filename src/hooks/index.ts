@@ -28,6 +28,12 @@ export type { UsePrimaryTabLockReturn } from './usePrimaryTabLock';
 export { useFieldVersioning } from './useFieldVersioning';
 export type { UseFieldVersioningReturn } from './useFieldVersioning';
 
+export { useThemeManagement } from './useThemeManagement';
+export type { UseThemeManagementReturn, AppTheme } from './useThemeManagement';
+
+export { useTabbedInterface, TABS, READONLY_TABS } from './useTabbedInterface';
+export type { UseTabbedInterfaceReturn, TabId, TabDefinition } from './useTabbedInterface';
+
 // TIER 1 hooks (dependem de TIER 0)
 export { useIndexedDB, validateModel, sanitizeModel } from './useIndexedDB';
 export type { UseIndexedDBReturn, SyncCallbackParams } from './useIndexedDB';
