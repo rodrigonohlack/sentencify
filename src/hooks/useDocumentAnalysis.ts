@@ -11,7 +11,7 @@
 import { useState, useCallback } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import { anonymizeText, normalizeHTMLSpacing } from '../utils/text';
-import { AI_PROMPTS } from '../prompts';
+import { AI_PROMPTS, buildAnalysisPrompt } from '../prompts';
 import type {
   AIMessage,
   AIMessageContent,
@@ -1055,106 +1055,5 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
     setPendingCurationData,
   };
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// FUNCAO AUXILIAR: CONSTRUIR PROMPT DE ANALISE
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function buildAnalysisPrompt(
-  totalContestacoes: number,
-  totalComplementares: number,
-  aiSettings: AISettings
-): string {
-  return `Analise a peticao inicial ${totalContestacoes > 0 ? `e as ${totalContestacoes} contestação${totalContestacoes > 1 ? 'es' : ''} fornecida${totalContestacoes > 1 ? 's' : ''}` : '(não há contestação fornecida)'}.
-
-TOPICO OBRIGATÓRIO "RELATORIO":
-Você DEVE criar um tópico especial chamado "RELATORIO" (categoria PRELIMINAR) que descreva o histórico processual.
-${totalComplementares > 0 ? `Ha ${totalComplementares} documento${totalComplementares > 1 ? 's' : ''} complementar${totalComplementares > 1 ? 'es' : ''} disponível${totalComplementares > 1 ? 'eis' : ''} (atas, provas, documentos adicionais) que devem ser usados APENAS neste tópico RELATORIO.` : 'Como não há documentos complementares, base o relatório apenas nas informações da peticao inicial e contestações sobre o andamento do processo.'}
-
-Extraia e classifique todos os tópicos/pedidos em:
-
-1. QUESTÕES PROCESSUAIS (impugnação aos cálculos, regularidade de representação processual, impugnação aos documentos, gratuidade de justiça, etc.)
-2. PRELIMINARES (prescrição, inépcia, ilegitimidade, incompetência, litispendência, coisa julgada, etc.)
-3. PREJUDICIAIS (questoes que impedem análise do mérito - prescrição bienal, prescrição quinquenal, etc.)
-4. MÉRITO (pedidos principais - verbas rescisórias, horas extras, danos morais, vínculo empregaticio, grupo econômico, etc.)
-
-Para cada tópico, crie um mini-relatório em formato NARRATIVO, seguindo EXATAMENTE este modelo com PARÁGRAFOS SEPARADOS:
-
-${aiSettings.modeloRelatorio ? `
-MODELO PERSONALIZADO DO USUARIO:
-${aiSettings.modeloRelatorio}
-
-Use este modelo como referência, mas mantenha a estrutura de parágrafos separados.
-` : `
-MODELO PADRAO:
-PRIMEIRO PARAGRAFO (alegações do autor):
-"O reclamante narra [resumo dos fatos]. Sustenta [argumentos]. Indica que [situação]. Em decorrência, postula [pedido específico]."
-
-SEGUNDO PARAGRAFO (primeira defesa):
-${totalContestacoes > 0 ? '"A primeira reclamada, em defesa, alega [argumentos]. Sustenta que [posição]."' : '"Não houve apresentação de contestação."'}
-
-${totalContestacoes > 1 ? 'TERCEIRO PARAGRAFO (segunda defesa):\n"A segunda ré, por sua vez, nega [posição]. Aduz [argumentos]."' : ''}
-
-${totalContestacoes > 2 ? 'QUARTO PARAGRAFO (terceira defesa):\n"A terceira reclamada também contesta [argumentos]. Sustenta [posição]."' : ''}
-`}
-
-TOPICO ESPECIAL "RELATORIO" (OBRIGATÓRIO):
-O tópico "RELATORIO" deve resumir o histórico processual:
-${totalComplementares > 0 ?
-`"A presente reclamação foi distribuída em [data se constar]. Realizou-se audiência em [data], na qual [ocorrências]. Foram juntados aos autos [documentos]. As partes apresentaram [manifestações]. O processo encontra-se [situação atual]."`
-:
-`"A presente reclamação foi ajuizada em [data se constar]. ${totalContestacoes > 0 ? 'Foram apresentadas contestações.' : 'Não houve apresentação de contestação.'} ${totalContestacoes > 0 ? 'As partes manifestaram-se nos autos.' : ''} O processo encontra-se em fase de sentença."`
-}
-
-${AI_PROMPTS.formatacaoParagrafos("<p>O reclamante narra...</p><p>A primeira reclamada, em defesa...</p>")}
-
-${aiSettings.detailedMiniReports ? `NÍVEL DE DETALHE - FATOS:
-Gere com alto nível de detalhe em relação aos FATOS alegados pelas partes.
-A descrição fática (postulatória e defensiva) deve ter alto nível de detalhe.
-` : ''}
-
-ESTRUTURA DOS PARÁGRAFOS:
-- PRIMEIRO PARAGRAFO (<p>): apenas alegações do reclamante
-- PARÁGRAFOS SEGUINTES (<p>): uma defesa por parágrafo
-- Use "O reclamante narra...", "Sustenta...", "Postula..."
-- Para defesas use: "A primeira reclamada, em defesa...", "A segunda ré, por sua vez...", "A terceira reclamada..."
-- O tópico "RELATORIO" e OBRIGATÓRIO e deve sempre ser o primeiro da lista
-${totalComplementares > 0 ? '- Documentos complementares devem ser usados APENAS no tópico "RELATORIO"' : '- Como não há documentos complementares, o RELATORIO deve ser baseado apenas em peticao e contestações'}
-
-${AI_PROMPTS.numeracaoReclamadasInicial}
-
-IDENTIFICAÇÃO DAS PARTES:
-Extraia também os nomes das partes do processo:
-- Nome completo do RECLAMANTE (autor da ação)
-- Nomes completos de todas as RECLAMADAS (res)
-
-FORMATO DO TITULO DOS TOPICOS (v1.32.23):
-Use o formato "PEDIDO - CAUSA DE PEDIR" quando a causa de pedir for especifica e distintiva.
-Exemplos com causa especifica:
-- RESCISAO INDIRETA - ASSEDIO MORAL (nãoapenas "RESCISAO INDIRETA")
-- ADICIONAL DE PERICULOSIDADE - ELETRICIDADE (nãoapenas "ADICIONAL DE PERICULOSIDADE")
-- HORAS EXTRAS - NULIDADE DOS CARTOES DE PONTO
-- DANO MORAL - ACIDENTE DE TRABALHO
-- VINCULO EMPREGATICIO - FRAUDE A CLT (PJ)
-Exemplos que NÃO precisam de complemento (causa óbvia ou única):
-- FERIAS, DECIMO TERCEIRO SALARIO (verbas simples)
-- INEPCIA DA INICIAL, GRATUIDADE DE JUSTICA (preliminares genéricas)
-
-Responda APENAS com um JSON válido, sem markdown, no seguinte formato:
-{
-  "partes": {
-    "reclamante": "Nome completo do reclamante",
-    "reclamadas": ["Nome da primeira reclamada", "Nome da segunda reclamada"]
-  },
-  "topics": [
-    {
-      "title": "PEDIDO - CAUSA ESPECIFICA (quando relevante)",
-      "category": "QUESTÃO PROCESSUAL | PRELIMINAR | PREJUDICIAL | MÉRITO"
-    }
-  ]
-}
-
-IMPORTANTE: Retorne APENAS título e categoria de cada tópico. NÃO inclua o campo "relatório" - os mini-relatórios serão gerados separadamente para cada tópico.`;
-}
 
 export default useDocumentAnalysis;

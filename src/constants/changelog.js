@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.36', feature: 'Fix RELATÓRIO duplicado: buildAnalysisPrompt extraído para src/prompts/ com acentos corretos (~95 linhas removidas de useDocumentAnalysis)' },
   { version: '1.37.35', feature: 'Fix RELATÓRIO não reconhecido como tópico especial: título/categoria criados sem acento não batiam com SPECIAL_TOPICS (corrigido em 3 arquivos)' },
   { version: '1.37.34', feature: 'Fix bug RELATÓRIO duplicado: acento perdido no filtro (linha 885 useDocumentAnalysis) causava comparação "RELATÓRIO" !== "RELATORIO" sempre true' },
   { version: '1.37.33', feature: 'HOTFIX: Corrigir encoding UTF-8 em ~30 arquivos - acentos perdidos em strings de usuário (Posição Fixa, Gerando relatório, etc.) + sinônimos jurídicos + mensagens de progresso' },

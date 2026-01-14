@@ -41,3 +41,4 @@ export {
   VALID_FILE_TYPES,
   MAX_BULK_FILES
 } from './bulk-prompts';
+export { buildAnalysisPrompt } from './document-analysis-prompts';
