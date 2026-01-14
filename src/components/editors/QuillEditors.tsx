@@ -13,6 +13,8 @@ import { VoiceButton } from '../VoiceButton';
 import { SpacingDropdown, FontSizeDropdown } from '../ui';
 import { useQuillEditor, sanitizeQuillHTML } from '../../hooks/useQuillEditor';
 import { useSpacingControl, useFontSizeControl, useFullscreen } from '../../hooks';
+import { FullscreenModelPanel } from '../panels';
+import { VersionSelect } from '../version';
 import type {
   QuillInstance,
   QuillEditorBaseProps,
@@ -591,7 +593,7 @@ SplitDivider.displayName = 'SplitDivider';
 // COMPONENTE: QuillDecisionEditor
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// Note: FullscreenModelPanel e VersionSelect são importados dinamicamente
+// Note: FullscreenModelPanel e VersionSelect são importados estaticamente (v1.37.47)
 // para evitar dependências circulares
 
 /**
@@ -717,26 +719,8 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
     isSplitMode ? { width: `${100 - splitPosition}%` } : undefined
   , [isSplitMode, splitPosition]);
 
-  // Lazy import para evitar dependência circular
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [FullscreenModelPanel, setFullscreenModelPanel] = React.useState<React.ComponentType<any> | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [VersionSelect, setVersionSelect] = React.useState<React.ComponentType<any> | null>(null);
-
-  React.useEffect(() => {
-    // Dynamic imports para evitar circular dependencies
-    import('../panels').then(mod => {
-      if (mod.FullscreenModelPanel) {
-        setFullscreenModelPanel(() => mod.FullscreenModelPanel as React.ComponentType<any>);
-      }
-    }).catch(() => {});
-
-    import('../version').then(mod => {
-      if (mod.VersionSelect) {
-        setVersionSelect(() => mod.VersionSelect as React.ComponentType<any>);
-      }
-    }).catch(() => {});
-  }, []);
+  // v1.37.47: Imports estáticos (antes eram dinâmicos para evitar circular deps,
+  // mas já estão no bundle via src/components/index.ts)
 
   return (
     <div ref={containerRef} className={`${isFullscreen ? 'editor-fullscreen' : ''} ${isSplitMode ? 'editor-fullscreen-split' : ''}`}>
@@ -873,7 +857,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
             )}
           </button>
 
-          {VersionSelect && versioning && topicTitle && (
+          {versioning && topicTitle && (
             <VersionSelect
               topicTitle={topicTitle}
               versioning={versioning}
@@ -941,7 +925,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
         <SplitDivider onDragStart={startDrag} />
       )}
 
-      {isSplitMode && FullscreenModelPanel && (
+      {isSplitMode && (
         <div
           className="split-editor-pane"
           style={modelPaneStyle}

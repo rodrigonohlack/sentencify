@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.46 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.47 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.47 | Fix Vite warning: imports dinâmicos removidos em QuillEditors.tsx (FullscreenModelPanel, VersionSelect) - já estavam no bundle via barrel export |
 | v1.37.46 | FASE 51: useMultiTabSync extraído para src/hooks/ (~52 linhas removidas) - sincronização multi-tab simplificada com Zustand getState() eliminando refs |
 | v1.37.45 | FASE 47: useModelSuggestions extraído para src/hooks/ (~216 linhas removidas) - findSuggestions, refineWithAI, scoreModel com estratégia Zustand (useModelsStore.getState()) |
 | v1.37.44 | FASE 52: useSemanticSearchHandlers extraído para src/hooks/ (~35 linhas removidas) - performModelSemanticSearch, performManualSemanticSearch com estratégia Zustand |
