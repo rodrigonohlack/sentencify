@@ -1,10 +1,10 @@
 /**
  * @file useDocumentAnalysis.ts
- * @description Hook para analise de documentos (peticao, contestacao, complementares)
+ * @description Hook para análise de documentos (petição, contestação, complementares)
  * @version 1.36.73
  *
  * Extraido do App.tsx linhas ~7451-8521
- * Funcoes: handleAnalyzeDocuments, handleAnonymizationConfirm, analyzeDocuments,
+ * Funções: handleAnalyzeDocuments, handleAnonymizationConfirm, analyzeDocuments,
  *          handleCurationConfirm, handleCurationCancel
  */
 
@@ -55,16 +55,16 @@ interface ContentArrayItem {
 export interface CurationData {
   topics: Topic[];
   partes: { reclamante: string; reclamadas: string[] };
-  relatorioContentArray: AIMessageContent[];
+  relatórioContentArray: AIMessageContent[];
   documents: {
     peticoesText: ExtractedTextItem[];
     contestacoesText: ExtractedTextItem[];
     complementaresText: ExtractedTextItem[];
     peticoesBase64: string[];
-    contestacoesBase64: string[];
+    contestaçõesBase64: string[];
     complementaryBase64: string[];
-    contestacoesExtraidasDePDF: ExtractedTextItem[];
-    contestacoesJaColadas: ExtractedTextItem[];
+    contestaçõesExtraidasDePDF: ExtractedTextItem[];
+    contestaçõesJaColadas: ExtractedTextItem[];
     complementaresExtraidasDePDF: ExtractedTextItem[];
     complementaresJaColadas: ExtractedTextItem[];
     peticoesExtraidasDePDF: ExtractedTextItem[];
@@ -218,7 +218,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
   const analyzeDocuments = useCallback(async (nomesParaAnonimizar: string[] = []) => {
     if (peticaoFiles.length === 0 && pastedPeticaoTexts.length === 0) {
-      setError('Por favor, faca upload da peticao inicial ou cole o texto');
+      setError('Por favor, faça upload da petição inicial ou cole o texto');
       return;
     }
 
@@ -228,7 +228,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
     await new Promise(resolve => setTimeout(resolve, 100)); // Aguardar modal abrir
 
     try {
-      // Processamento por modo individual (nao mais global)
+      // Processamento por modo individual (nãomais global)
       let contentArray: ContentArrayItem[] = [];
       const extractedTextsData: { peticoes: ExtractedTextItem[]; contestacoes: ExtractedTextItem[]; complementares: ExtractedTextItem[] } = {
         peticoes: [],
@@ -238,7 +238,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       const peticoesBase64: string[] = [];
       const peticoesTextFinal: ExtractedTextItem[] = [];
 
-      // Obter configuracao global de OCR
+      // Obter configuração global de OCR
       const globalOcrEngine = aiIntegration.aiSettings?.ocrEngine;
       const anonConfig = aiIntegration.aiSettings?.anonymization;
       const anonymizationEnabled = anonConfig?.enabled;
@@ -256,7 +256,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       if (peticaoFiles.length > 0) {
         for (let i = 0; i < peticaoFiles.length; i++) {
           const peticaoMode = getEffectiveMode(documentProcessingModes.peticoes?.[i]);
-          const label = i === 0 ? 'Peticao Inicial' : `Documento do Autor ${i + 1}`;
+          const label = i === 0 ? 'Petição Inicial' : `Documento do Autor ${i + 1}`;
           setAnalysisProgress(`Processando ${label} (${i + 1}/${peticaoFiles.length}) - ${peticaoMode}...`);
           await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -277,20 +277,20 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
               if (peticaoMode === 'pdfjs') {
                 extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current: number, total: number) => {
-                  setAnalysisProgress(`${label} (PDF.js) - pagina ${current}/${total}...`);
+                  setAnalysisProgress(`${label} (PDF.js) - página ${current}/${total}...`);
                 });
               } else if (peticaoMode === 'claude-vision') {
                 extractedText = await documentServices.extractTextFromPDFWithClaudeVision(fileObj, (current: number, total: number) => {
-                  setAnalysisProgress(`${label} (Claude Vision) - pagina ${current}/${total}...`);
+                  setAnalysisProgress(`${label} (Claude Vision) - página ${current}/${total}...`);
                 });
               } else if (peticaoMode === 'tesseract') {
                 extractedText = await documentServices.extractTextFromPDFWithTesseract(fileObj, (current: number, total: number, status?: string) => {
-                  setAnalysisProgress(`${label} (Tesseract) - pagina ${current}/${total} ${status || ''}`);
+                  setAnalysisProgress(`${label} (Tesseract) - página ${current}/${total} ${status || ''}`);
                 });
               } else {
                 console.warn(`[analyzeDocuments] Modo desconhecido '${peticaoMode}', usando PDF.js`);
                 extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current: number, total: number) => {
-                  setAnalysisProgress(`${label} (PDF.js) - pagina ${current}/${total}...`);
+                  setAnalysisProgress(`${label} (PDF.js) - página ${current}/${total}...`);
                 });
               }
 
@@ -306,10 +306,10 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
                 });
               } else {
                 if (anonymizationEnabled) {
-                  console.warn(`[analyzeDocuments] Extracao falhou em ${label}, PDF bloqueado (anonimizacao ativa)`);
-                  showToast(`Nao foi possivel extrair texto de ${label}. Com anonimizacao ativa, PDF binario nao pode ser usado.`, 'error');
+                  console.warn(`[analyzeDocuments] Extração falhou em ${label}, PDF bloqueado (anonimização ativa)`);
+                  showToast(`Nao foi possível extrair texto de ${label}. Com anonimização ativa, PDF binario nãopode ser usado.`, 'error');
                 } else {
-                  console.warn(`[analyzeDocuments] Extracao falhou em ${label}, usando PDF puro`);
+                  console.warn(`[analyzeDocuments] Extração falhou em ${label}, usando PDF puro`);
                   const base64 = await storage.fileToBase64(fileObj);
                   peticoesBase64.push(base64);
                   contentArray.push({ type: 'text', text: `${label.toUpperCase()} (documento PDF a seguir):` });
@@ -321,7 +321,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
               }
             } catch (extractErr) {
               if (anonymizationEnabled) {
-                console.warn(`[analyzeDocuments] Erro na extracao de ${label}, PDF bloqueado (anonimizacao ativa)`);
+                console.warn(`[analyzeDocuments] Erro na extração de ${label}, PDF bloqueado (anonimização ativa)`);
               } else {
                 const base64 = await storage.fileToBase64(fileObj);
                 peticoesBase64.push(base64);
@@ -336,7 +336,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         }
       }
 
-      // Textos colados de peticao
+      // Textos colados de petição
       pastedPeticaoTexts.forEach((pastedItem) => {
         const anonPasted = maybeAnonymize(pastedItem.text);
         peticoesTextFinal.push({ id: pastedItem.id || crypto.randomUUID(), text: anonPasted, name: pastedItem.name });
@@ -349,21 +349,21 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
       // === PROCESSAR CONTESTACOES ===
       const totalContestacoes = contestacaoFiles.length + pastedContestacaoTexts.length;
-      const contestacoesBase64: string[] = [];
+      const contestaçõesBase64: string[] = [];
       const contestacoesTextFinal: ExtractedTextItem[] = [];
 
       if (contestacaoFiles.length > 0) {
         for (let i = 0; i < contestacaoFiles.length; i++) {
           const mode = getEffectiveMode(documentProcessingModes.contestacoes?.[i]);
-          setAnalysisProgress(`Processando contestacao ${i + 1}/${contestacaoFiles.length} (${mode})...`);
+          setAnalysisProgress(`Processando contestação ${i + 1}/${contestacaoFiles.length} (${mode})...`);
           await new Promise(resolve => setTimeout(resolve, 100));
 
           const fileObj = contestacaoFiles[i].file || (contestacaoFiles[i] as unknown as File);
 
           if (mode === 'pdf-puro') {
             const base64 = await storage.fileToBase64(fileObj);
-            contestacoesBase64.push(base64);
-            contentArray.push({ type: 'text', text: `CONTESTACAO ${i + 1} (documento PDF a seguir):` });
+            contestaçõesBase64.push(base64);
+            contentArray.push({ type: 'text', text: `CONTESTAÇÃO ${i + 1} (documento PDF a seguir):` });
             contentArray.push({
               type: 'document',
               source: { type: 'base64', media_type: 'application/pdf', data: base64 }
@@ -374,40 +374,40 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
               if (mode === 'pdfjs') {
                 extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current: number, total: number) => {
-                  setAnalysisProgress(`Contestacao ${i + 1} (PDF.js) - pagina ${current}/${total}...`);
+                  setAnalysisProgress(`Contestação ${i + 1} (PDF.js) - página ${current}/${total}...`);
                 });
               } else if (mode === 'claude-vision') {
                 extractedText = await documentServices.extractTextFromPDFWithClaudeVision(fileObj, (current: number, total: number) => {
-                  setAnalysisProgress(`Contestacao ${i + 1} (Claude Vision) - pagina ${current}/${total}...`);
+                  setAnalysisProgress(`Contestação ${i + 1} (Claude Vision) - página ${current}/${total}...`);
                 });
               } else if (mode === 'tesseract') {
                 extractedText = await documentServices.extractTextFromPDFWithTesseract(fileObj, (current: number, total: number, status?: string) => {
-                  setAnalysisProgress(`Contestacao ${i + 1} (Tesseract) - pagina ${current}/${total} ${status || ''}`);
+                  setAnalysisProgress(`Contestação ${i + 1} (Tesseract) - página ${current}/${total} ${status || ''}`);
                 });
               } else {
-                console.warn(`[analyzeDocuments] Contestacao - modo desconhecido '${mode}', usando PDF.js`);
+                console.warn(`[analyzeDocuments] Contestação - modo desconhecido '${mode}', usando PDF.js`);
                 extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current: number, total: number) => {
-                  setAnalysisProgress(`Contestacao ${i + 1} (PDF.js) - pagina ${current}/${total}...`);
+                  setAnalysisProgress(`Contestação ${i + 1} (PDF.js) - página ${current}/${total}...`);
                 });
               }
 
               if (extractedText && extractedText.length > 100) {
                 const anonText = maybeAnonymize(extractedText);
-                const extractedItem = { id: crypto.randomUUID(), text: anonText, name: `Contestacao ${i + 1}` };
+                const extractedItem = { id: crypto.randomUUID(), text: anonText, name: `Contestação ${i + 1}` };
                 extractedTextsData.contestacoes[i] = extractedItem;
                 contestacoesTextFinal.push(extractedItem);
                 contentArray.push({
                   type: 'text',
-                  text: `CONTESTACAO ${i + 1}:\n\n${anonText}`
+                  text: `CONTESTAÇÃO ${i + 1}:\n\n${anonText}`
                 });
               } else {
                 if (anonymizationEnabled) {
-                  showToast(`Nao foi possivel extrair texto da contestacao ${i + 1}. PDF bloqueado (anonimizacao ativa).`, 'error');
+                  showToast(`Nao foi possível extrair texto da contestação ${i + 1}. PDF bloqueado (anonimização ativa).`, 'error');
                 } else {
-                  showToast(`Texto insuficiente na contestacao ${i + 1}. Usando documento original.`, 'warning');
+                  showToast(`Texto insuficiente na contestação ${i + 1}. Usando documento original.`, 'warning');
                   const base64 = await storage.fileToBase64(fileObj);
-                  contestacoesBase64.push(base64);
-                  contentArray.push({ type: 'text', text: `CONTESTACAO ${i + 1} (documento PDF a seguir):` });
+                  contestaçõesBase64.push(base64);
+                  contentArray.push({ type: 'text', text: `CONTESTAÇÃO ${i + 1} (documento PDF a seguir):` });
                   contentArray.push({
                     type: 'document',
                     source: { type: 'base64', media_type: 'application/pdf', data: base64 }
@@ -416,11 +416,11 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
               }
             } catch (extractErr) {
               if (anonymizationEnabled) {
-                showToast(`Erro ao extrair texto da contestacao ${i + 1}. PDF bloqueado (anonimizacao ativa).`, 'error');
+                showToast(`Erro ao extrair texto da contestação ${i + 1}. PDF bloqueado (anonimização ativa).`, 'error');
               } else {
                 const base64 = await storage.fileToBase64(fileObj);
-                contestacoesBase64.push(base64);
-                contentArray.push({ type: 'text', text: `CONTESTACAO ${i + 1} (documento PDF a seguir):` });
+                contestaçõesBase64.push(base64);
+                contentArray.push({ type: 'text', text: `CONTESTAÇÃO ${i + 1} (documento PDF a seguir):` });
                 contentArray.push({
                   type: 'document',
                   source: { type: 'base64', media_type: 'application/pdf', data: base64 }
@@ -431,13 +431,13 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         }
       }
 
-      // Contestacoes coladas como texto
-      pastedContestacaoTexts.forEach((contestacao, index) => {
-        const anonText = maybeAnonymize(contestacao.text);
-        contestacoesTextFinal.push({ ...contestacao, text: anonText });
+      // Contestações coladas como texto
+      pastedContestacaoTexts.forEach((contestação, index) => {
+        const anonText = maybeAnonymize(contestação.text);
+        contestacoesTextFinal.push({ ...contestação, text: anonText });
         contentArray.push({
           type: 'text',
-          text: `CONTESTACAO ${index + 1 + contestacaoFiles.length}:\n\n${anonText}`
+          text: `CONTESTAÇÃO ${index + 1 + contestacaoFiles.length}:\n\n${anonText}`
         });
       });
 
@@ -468,20 +468,20 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
               if (mode === 'pdfjs') {
                 extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current: number, total: number) => {
-                  setAnalysisProgress(`Complementar ${i + 1} (PDF.js) - pagina ${current}/${total}...`);
+                  setAnalysisProgress(`Complementar ${i + 1} (PDF.js) - página ${current}/${total}...`);
                 });
               } else if (mode === 'claude-vision') {
                 extractedText = await documentServices.extractTextFromPDFWithClaudeVision(fileObj, (current: number, total: number) => {
-                  setAnalysisProgress(`Complementar ${i + 1} (Claude Vision) - pagina ${current}/${total}...`);
+                  setAnalysisProgress(`Complementar ${i + 1} (Claude Vision) - página ${current}/${total}...`);
                 });
               } else if (mode === 'tesseract') {
                 extractedText = await documentServices.extractTextFromPDFWithTesseract(fileObj, (current: number, total: number, status?: string) => {
-                  setAnalysisProgress(`Complementar ${i + 1} (Tesseract) - pagina ${current}/${total} ${status || ''}`);
+                  setAnalysisProgress(`Complementar ${i + 1} (Tesseract) - página ${current}/${total} ${status || ''}`);
                 });
               } else {
                 console.warn(`[analyzeDocuments] Complementar - modo desconhecido '${mode}', usando PDF.js`);
                 extractedText = await documentServices.extractTextFromPDFPure(fileObj, (current: number, total: number) => {
-                  setAnalysisProgress(`Complementar ${i + 1} (PDF.js) - pagina ${current}/${total}...`);
+                  setAnalysisProgress(`Complementar ${i + 1} (PDF.js) - página ${current}/${total}...`);
                 });
               }
 
@@ -496,7 +496,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
                 });
               } else {
                 if (anonymizationEnabled) {
-                  showToast(`Nao foi possivel extrair texto do complementar ${i + 1}. PDF bloqueado (anonimizacao ativa).`, 'error');
+                  showToast(`Nao foi possível extrair texto do complementar ${i + 1}. PDF bloqueado (anonimização ativa).`, 'error');
                 } else {
                   showToast(`Texto insuficiente no documento complementar ${i + 1}. Usando original.`, 'warning');
                   const base64 = await storage.fileToBase64(fileObj);
@@ -510,7 +510,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
               }
             } catch (extractErr) {
               if (anonymizationEnabled) {
-                showToast(`Erro ao extrair texto do complementar ${i + 1}. PDF bloqueado (anonimizacao ativa).`, 'error');
+                showToast(`Erro ao extrair texto do complementar ${i + 1}. PDF bloqueado (anonimização ativa).`, 'error');
               } else {
                 const base64 = await storage.fileToBase64(fileObj);
                 complementaryBase64.push(base64);
@@ -538,10 +538,10 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         });
       });
 
-      setAnalysisProgress('Enviando documentos para analise com IA...');
+      setAnalysisProgress('Enviando documentos para análise com IA...');
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Construir prompt de analise
+      // Construir prompt de análise
       contentArray.push({
         type: 'text',
         text: buildAnalysisPrompt(totalContestacoes, totalComplementares, aiIntegration.aiSettings)
@@ -554,9 +554,9 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         }
       ];
 
-      setAnalysisProgress('Aguardando analise da IA (isso pode levar alguns minutos)...');
+      setAnalysisProgress('Aguardando análise da IA (isso pode levar alguns minutos)...');
 
-      // Chamar IA com parametros para analise critica
+      // Chamar IA com parametros para análise critica
       const data = await aiIntegration.callAI(messages, {
         maxTokens: 16000,
         useInstructions: true,
@@ -573,16 +573,16 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         : data.stop_reason === 'max_tokens';
 
       if (isTruncated) {
-        throw new Error('O documento e muito extenso e a analise foi truncada. Tente: 1) Dividir o PDF em partes menores, 2) Usar documentos com menos paginas, ou 3) Colar apenas trechos relevantes do texto.');
+        throw new Error('O documento e muito extenso e a análise foi truncada. Tente: 1) Dividir o PDF em partes menores, 2) Usar documentos com menos páginas, ou 3) Colar apenas trechos relevantes do texto.');
       }
 
       const textContent = aiIntegration.extractResponseText(data, provider);
 
       if (!textContent) {
-        throw new Error('Nenhum conteudo de texto encontrado na resposta da API');
+        throw new Error('Nenhum conteúdo de texto encontrado na resposta da API');
       }
 
-      setAnalysisProgress('Extraindo topicos identificados...');
+      setAnalysisProgress('Extraindo tópicos identificados...');
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // Limpar markdown e espacos
@@ -613,33 +613,33 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
             }
           }
         } else {
-          throw new Error(`Nao foi possivel encontrar JSON valido na resposta da IA. Detalhes: ${(parseError as Error).message}`);
+          throw new Error(`Nao foi possível encontrar JSON válido na resposta da IA. Detalhes: ${(parseError as Error).message}`);
         }
       }
 
       let topics = parsed.topics || [];
 
-      // Double Check - Verificacao secundaria da extracao de topicos
+      // Double Check - Verificação secundaria da extração de tópicos
       if (aiIntegration.aiSettings.doubleCheck?.enabled &&
           aiIntegration.aiSettings.doubleCheck?.operations.topicExtraction &&
           aiIntegration.performDoubleCheck) {
 
-        setAnalysisProgress('Verificando extracao com Double Check...');
+        setAnalysisProgress('Verificando extração com Double Check...');
         await new Promise(resolve => setTimeout(resolve, 300));
 
-        // Reconstruir contexto dos documentos para verificacao
+        // Reconstruir contexto dos documentos para verificação
         const contextParts: string[] = [];
         peticoesTextFinal.forEach((doc, idx) => {
-          contextParts.push(`PETICAO ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
+          contextParts.push(`PETIÇÃO ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
         });
         contestacoesTextFinal.forEach((doc, idx) => {
-          contextParts.push(`CONTESTACAO ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
+          contextParts.push(`CONTESTAÇÃO ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
         });
         pastedPeticaoTexts.forEach((doc, idx) => {
-          contextParts.push(`PETICAO COLADA ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
+          contextParts.push(`PETIÇÃO COLADA ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
         });
         pastedContestacaoTexts.forEach((doc, idx) => {
-          contextParts.push(`CONTESTACAO COLADA ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
+          contextParts.push(`CONTESTAÇÃO COLADA ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
         });
 
         const documentContext = contextParts.join('\n\n---\n\n');
@@ -655,17 +655,17 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
           if (corrections.length > 0) {
             const verifiedTopics = JSON.parse(verified);
             topics = verifiedTopics;
-            showToast(`Double Check: ${corrections.length} correcao(oes) - ${summary}`, 'info');
-            console.log('[DoubleCheck] Correcoes aplicadas:', corrections);
+            showToast(`Double Check: ${corrections.length} correção(oes) - ${summary}`, 'info');
+            console.log('[DoubleCheck] Correções aplicadas:', corrections);
           } else {
-            console.log('[DoubleCheck] Nenhuma correcao necessaria');
+            console.log('[DoubleCheck] Nenhuma correção necessária');
           }
         } catch (dcError) {
-          console.error('[DoubleCheck] Erro na verificacao:', dcError);
+          console.error('[DoubleCheck] Erro na verificação:', dcError);
         }
       }
 
-      // Armazenar informacoes das partes se disponiveis
+      // Armazenar informações das partes se disponíveis
       if (parsed.partes) {
         setPartesProcesso({
           reclamante: parsed.partes.reclamante || '',
@@ -673,44 +673,44 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         });
       }
 
-      // Reordenar topicos via LLM
-      setAnalysisProgress('Ordenando topicos por categoria processual...');
+      // Reordenar tópicos via LLM
+      setAnalysisProgress('Ordenando tópicos por categoria processual...');
       await new Promise(resolve => setTimeout(resolve, 300));
       topics = await reorderTopicsViaLLM(topics);
 
-      setAnalysisProgress(`${topics.length} topico${topics.length !== 1 ? 's' : ''} identificado${topics.length !== 1 ? 's' : ''}! Revisando...`);
+      setAnalysisProgress(`${topics.length} tópico${topics.length !== 1 ? 's' : ''} identificado${topics.length !== 1 ? 's' : ''}! Revisando...`);
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      // Preparar contentArray para o relatorio (sera usado apos confirmacao)
-      const relatorioContentArray: AIMessageContent[] = [];
+      // Preparar contentArray para o relatório (seráusado apos confirmação)
+      const relatórioContentArray: AIMessageContent[] = [];
 
-      // Usar textos extraidos de peticoes se disponiveis
+      // Usar textos extraidos de peticoes se disponíveis
       if (peticoesTextFinal.length > 0) {
         peticoesTextFinal.forEach((doc, idx) => {
-          relatorioContentArray.push({
+          relatórioContentArray.push({
             type: 'text' as const,
-            text: `${doc.name?.toUpperCase() || `PETICAO ${idx + 1}`}:\n\n${doc.text}`
+            text: `${doc.name?.toUpperCase() || `PETIÇÃO ${idx + 1}`}:\n\n${doc.text}`
           });
         });
       }
       if (peticoesBase64.length > 0) {
         peticoesBase64.forEach((base64) => {
-          relatorioContentArray.push({
+          relatórioContentArray.push({
             type: 'document' as const,
             source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 }
           });
         });
       }
 
-      // Adicionar contestacoes
-      contestacoesTextFinal.forEach((contestacao, index) => {
-        relatorioContentArray.push({
+      // Adicionar contestações
+      contestacoesTextFinal.forEach((contestação, index) => {
+        relatórioContentArray.push({
           type: 'text' as const,
-          text: `CONTESTACAO ${index + 1}:\n\n${contestacao.text}`
+          text: `CONTESTAÇÃO ${index + 1}:\n\n${contestação.text}`
         });
       });
-      contestacoesBase64.forEach((base64) => {
-        relatorioContentArray.push({
+      contestaçõesBase64.forEach((base64) => {
+        relatórioContentArray.push({
           type: 'document' as const,
           source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 }
         });
@@ -718,23 +718,23 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
       // Adicionar documentos complementares
       complementaresTextFinal.forEach((doc, index) => {
-        relatorioContentArray.push({
+        relatórioContentArray.push({
           type: 'text' as const,
           text: `DOCUMENTO COMPLEMENTAR ${index + 1}:\n\n${doc.text}`
         });
       });
       complementaryBase64.forEach((base64) => {
-        relatorioContentArray.push({
+        relatórioContentArray.push({
           type: 'document' as const,
           source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 }
         });
       });
 
-      // Separar textos extraidos de PDFs dos textos ja colados
-      const contestacoesExtraidasDePDF = contestacoesTextFinal.filter(c =>
+      // Separar textos extraidos de PDFs dos textos jácolados
+      const contestaçõesExtraidasDePDF = contestacoesTextFinal.filter(c =>
         !pastedContestacaoTexts.some(p => p.text === c.text)
       );
-      const contestacoesJaColadas = contestacoesTextFinal.filter(c =>
+      const contestaçõesJaColadas = contestacoesTextFinal.filter(c =>
         pastedContestacaoTexts.some(p => p.text === c.text)
       );
 
@@ -756,16 +756,16 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       const curationData: CurationData = {
         topics: topics,
         partes: parsed.partes || { reclamante: '', reclamadas: [] },
-        relatorioContentArray: relatorioContentArray,
+        relatórioContentArray: relatórioContentArray,
         documents: {
           peticoesText: peticoesTextFinal,
           contestacoesText: contestacoesTextFinal,
           complementaresText: complementaresTextFinal,
           peticoesBase64,
-          contestacoesBase64,
+          contestaçõesBase64,
           complementaryBase64,
-          contestacoesExtraidasDePDF,
-          contestacoesJaColadas,
+          contestaçõesExtraidasDePDF,
+          contestaçõesJaColadas,
           complementaresExtraidasDePDF,
           complementaresJaColadas,
           peticoesExtraidasDePDF,
@@ -779,7 +779,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       setAnalyzing(false);
       setAnalysisProgress('');
 
-      // PAUSA: O fluxo continua em handleCurationConfirm() apos o usuario confirmar
+      // PAUSA: O fluxo continua em handleCurationConfirm() após o usuário confirmar
 
     } catch (err) {
       setError('Erro ao analisar documentos: ' + (err as Error).message);
@@ -812,7 +812,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
   const handleAnalyzeDocuments = useCallback(() => {
     if (peticaoFiles.length === 0 && pastedPeticaoTexts.length === 0) {
-      setError('Por favor, faca upload da peticao inicial ou cole o texto');
+      setError('Por favor, faça upload da petição inicial ou cole o texto');
       return;
     }
 
@@ -855,22 +855,22 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       setAnalyzing(true);
       openModal('analysis');
 
-      const { relatorioContentArray, documents, partes } = pendingCurationData;
+      const { relatórioContentArray, documents, partes } = pendingCurationData;
 
-      // Gerar relatorio processual
-      setAnalysisProgress('Gerando relatorio processual...');
+      // Gerar relatório processual
+      setAnalysisProgress('Gerando relatório processual...');
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      const relatorioProcessual = await generateRelatorioProcessual(relatorioContentArray);
-      const relatorioHtml = normalizeHTMLSpacing(relatorioProcessual.trim());
+      const relatórioProcessual = await generateRelatorioProcessual(relatórioContentArray);
+      const relatórioHtml = normalizeHTMLSpacing(relatórioProcessual.trim());
 
-      // Buscar topicos complementares configurados pelo usuario
+      // Buscar tópicos complementares configurados pelo usuário
       const topicosComplementaresConfig = aiIntegration.aiSettings?.topicosComplementares || [];
       const topicosComplementaresAtivos = topicosComplementaresConfig
         .filter((t: TopicoComplementar) => t.enabled)
         .sort((a: TopicoComplementar, b: TopicoComplementar) => a.ordem - b.ordem);
 
-      // Gerar topicos complementares baseados na configuracao
+      // Gerar tópicos complementares baseados na configuração
       const topicosComplementares = topicosComplementaresAtivos.map((config: TopicoComplementar, idx: number) => ({
         title: config.title,
         category: config.category,
@@ -880,7 +880,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         isComplementar: true
       }));
 
-      // Filtrar topicos para remover qualquer "RELATORIO" que possa ter sido incluido
+      // Filtrar tópicos para remover qualquer "RELATORIO" que possa ter sido incluido
       const topicsSemRelatorio = curatedTopics.filter((topic: Topic) =>
         !topic.title || topic.title.toUpperCase() !== 'RELATORIO'
       );
@@ -889,8 +889,8 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       const documentsForBatch = {
         peticoes: documents.peticoesBase64,
         peticoesText: [...documents.peticoesExtraidasDePDF, ...documents.peticoesJaColadas],
-        contestacoes: documents.contestacoesBase64,
-        contestacoesText: [...documents.contestacoesExtraidasDePDF, ...documents.contestacoesJaColadas],
+        contestacoes: documents.contestaçõesBase64,
+        contestacoesText: [...documents.contestaçõesExtraidasDePDF, ...documents.contestaçõesJaColadas],
         complementares: documents.complementaryBase64,
         complementaresText: [...documents.complementaresExtraidasDePDF, ...documents.complementaresJaColadas]
       };
@@ -898,11 +898,11 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       // Salvar no estado
       setAnalyzedDocuments(documentsForBatch);
 
-      // Gerar mini-relatorios em batches
+      // Gerar mini-relatórios em batches
       let topicsComRelatorios = topicsSemRelatorio;
 
       if (topicsSemRelatorio.length > 0) {
-        setAnalysisProgress(`Gerando mini-relatorios... 0/${topicsSemRelatorio.length}`);
+        setAnalysisProgress(`Gerando mini-relatórios... 0/${topicsSemRelatorio.length}`);
 
         const { results, errors } = await generateMiniReportsBatch(
           topicsSemRelatorio.map((t: Topic) => ({
@@ -916,12 +916,12 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
             batchSize: aiIntegration.aiSettings.parallelRequests || 5,
             delayBetweenBatches: 1000,
             onProgress: (current: number, total: number, batchNum: number, totalBatches: number) => {
-              setAnalysisProgress(`Gerando mini-relatorios... ${current}/${total} (Lote ${batchNum}/${totalBatches})`);
+              setAnalysisProgress(`Gerando mini-relatórios... ${current}/${total} (Lote ${batchNum}/${totalBatches})`);
             }
           }
         );
 
-        // Mesclar resultados com os topicos
+        // Mesclar resultados com os tópicos
         topicsComRelatorios = topicsSemRelatorio.map((topic: Topic) => {
           const resultado = results.find((r: { title: string; relatorio?: string }) => r.title === topic.title);
           if (resultado && resultado.relatorio) {
@@ -930,33 +930,33 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
           const erro = errors.find((e: { title: string; error?: string }) => e.title === topic.title);
           return {
             ...topic,
-            relatorio: `<p>Erro ao gerar mini-relatorio${erro ? `: ${erro.error}` : ''}. Use "Gerar com IA" para tentar novamente.</p>`
+            relatorio: `<p>Erro ao gerar mini-relatório${erro ? `: ${erro.error}` : ''}. Use "Gerar com IA" para tentar novamente.</p>`
           };
         });
 
         if (errors.length > 0) {
-          showToast(`${errors.length} topico(s) falharam na geracao. Voce pode regenera-los individualmente.`, 'warning');
+          showToast(`${errors.length} tópico(s) falharam na geração. Você pode regenera-los individualmente.`, 'warning');
         }
 
-        setAnalysisProgress(`Mini-relatorios gerados! ${results.length}/${topicsSemRelatorio.length} com sucesso`);
+        setAnalysisProgress(`Mini-relatórios gerados! ${results.length}/${topicsSemRelatorio.length} com sucesso`);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      // Filtrar complementares que ja existem nos topicos gerados
-      const titulosGeradosUpper = new Set(
+      // Filtrar complementares que jáexistem nos tópicos gerados
+      const títulosGeradosUpper = new Set(
         topicsComRelatorios.map((t: Topic) => (t.title || '').toUpperCase().trim())
       );
       const topicosComplementaresUnicos = topicosComplementares.filter(
-        (t: { title: string }) => !titulosGeradosUpper.has((t.title || '').toUpperCase().trim())
+        (t: { title: string }) => !títulosGeradosUpper.has((t.title || '').toUpperCase().trim())
       );
 
-      // Montar lista final de topicos
+      // Montar lista final de tópicos
       const allTopics: Topic[] = [
         {
           title: 'RELATORIO',
           category: 'RELATORIO' as TopicCategory,
-          relatorio: relatorioHtml,
-          editedFundamentacao: relatorioHtml,
+          relatorio: relatórioHtml,
+          editedFundamentacao: relatórioHtml,
         },
         ...topicsComRelatorios.map((topic: Topic, index: number) => ({ ...topic, order: index + 1 })),
         ...topicosComplementaresUnicos
@@ -964,11 +964,11 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
       setExtractedTopics(allTopics);
 
-      // Selecionar apenas RELATORIO e os topicos analisados
-      const topicosInicialmenteSelecionados = allTopics.filter((_, index) => index < topicsComRelatorios.length + 1);
-      setSelectedTopics(topicosInicialmenteSelecionados);
+      // Selecionar apenas RELATORIO e os tópicos analisados
+      const tópicosInicialmenteSelecionados = allTopics.filter((_, index) => index < topicsComRelatorios.length + 1);
+      setSelectedTopics(tópicosInicialmenteSelecionados);
 
-      // Atualizar partes do processo se disponiveis
+      // Atualizar partes do processo se disponíveis
       if (partes) {
         setPartesProcesso({
           reclamante: partes.reclamante || '',
@@ -976,11 +976,11 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         });
       }
 
-      // Limpar PDFs originais apos extracao
+      // Limpar PDFs originais apos extração
       if (documents.peticoesText?.length > 0 && peticaoFiles.length > 0) {
         setPeticaoFiles([]);
       }
-      if (documents.contestacoesExtraidasDePDF?.length > 0) {
+      if (documents.contestaçõesExtraidasDePDF?.length > 0) {
         setContestacaoFiles([]);
       }
       if (documents.complementaresExtraidasDePDF?.length > 0) {
@@ -992,10 +992,10 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
       closeModal('analysis');
       setActiveTab('topics');
-      showToast('Analise concluida com sucesso!', 'success');
+      showToast('Analise concluída com sucesso!', 'success');
 
     } catch (err) {
-      setError('Erro ao processar topicos: ' + (err as Error).message);
+      setError('Erro ao processar tópicos: ' + (err as Error).message);
       closeModal('analysis');
     } finally {
       setAnalyzing(false);
@@ -1028,7 +1028,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
     setShowTopicCurationModal(false);
     setPendingCurationData(null);
     setAnalysisProgress('');
-    showToast('Analise cancelada. Voce pode reiniciar quando quiser.', 'info');
+    showToast('Analise cancelada. Você pode reiniciar quando quiser.', 'info');
   }, [showToast]);
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1065,82 +1065,82 @@ function buildAnalysisPrompt(
   totalComplementares: number,
   aiSettings: AISettings
 ): string {
-  return `Analise a peticao inicial ${totalContestacoes > 0 ? `e as ${totalContestacoes} contestacao${totalContestacoes > 1 ? 'es' : ''} fornecida${totalContestacoes > 1 ? 's' : ''}` : '(nao ha contestacao fornecida)'}.
+  return `Analise a peticao inicial ${totalContestacoes > 0 ? `e as ${totalContestacoes} contestação${totalContestacoes > 1 ? 'es' : ''} fornecida${totalContestacoes > 1 ? 's' : ''}` : '(não há contestação fornecida)'}.
 
-TOPICO OBRIGATORIO "RELATORIO":
-Voce DEVE criar um topico especial chamado "RELATORIO" (categoria PRELIMINAR) que descreva o historico processual.
-${totalComplementares > 0 ? `Ha ${totalComplementares} documento${totalComplementares > 1 ? 's' : ''} complementar${totalComplementares > 1 ? 'es' : ''} disponivel${totalComplementares > 1 ? 'eis' : ''} (atas, provas, documentos adicionais) que devem ser usados APENAS neste topico RELATORIO.` : 'Como nao ha documentos complementares, base o relatorio apenas nas informacoes da peticao inicial e contestacoes sobre o andamento do processo.'}
+TOPICO OBRIGATÓRIO "RELATORIO":
+Você DEVE criar um tópico especial chamado "RELATORIO" (categoria PRELIMINAR) que descreva o histórico processual.
+${totalComplementares > 0 ? `Ha ${totalComplementares} documento${totalComplementares > 1 ? 's' : ''} complementar${totalComplementares > 1 ? 'es' : ''} disponível${totalComplementares > 1 ? 'eis' : ''} (atas, provas, documentos adicionais) que devem ser usados APENAS neste tópico RELATORIO.` : 'Como não há documentos complementares, base o relatório apenas nas informações da peticao inicial e contestações sobre o andamento do processo.'}
 
-Extraia e classifique todos os topicos/pedidos em:
+Extraia e classifique todos os tópicos/pedidos em:
 
-1. QUESTOES PROCESSUAIS (impugnacao aos calculos, regularidade de representacao processual, impugnacao aos documentos, gratuidade de justica, etc.)
-2. PRELIMINARES (prescricao, inepcia, ilegitimidade, incompetencia, litispendencia, coisa julgada, etc.)
-3. PREJUDICIAIS (questoes que impedem analise do merito - prescricao bienal, prescricao quinquenal, etc.)
-4. MERITO (pedidos principais - verbas rescisorias, horas extras, danos morais, vinculo empregaticio, grupo economico, etc.)
+1. QUESTÕES PROCESSUAIS (impugnação aos cálculos, regularidade de representação processual, impugnação aos documentos, gratuidade de justiça, etc.)
+2. PRELIMINARES (prescrição, inépcia, ilegitimidade, incompetência, litispendência, coisa julgada, etc.)
+3. PREJUDICIAIS (questoes que impedem análise do mérito - prescrição bienal, prescrição quinquenal, etc.)
+4. MÉRITO (pedidos principais - verbas rescisórias, horas extras, danos morais, vínculo empregaticio, grupo econômico, etc.)
 
-Para cada topico, crie um mini-relatorio em formato NARRATIVO, seguindo EXATAMENTE este modelo com PARAGRAFOS SEPARADOS:
+Para cada tópico, crie um mini-relatório em formato NARRATIVO, seguindo EXATAMENTE este modelo com PARÁGRAFOS SEPARADOS:
 
 ${aiSettings.modeloRelatorio ? `
 MODELO PERSONALIZADO DO USUARIO:
 ${aiSettings.modeloRelatorio}
 
-Use este modelo como referencia, mas mantenha a estrutura de paragrafos separados.
+Use este modelo como referência, mas mantenha a estrutura de parágrafos separados.
 ` : `
 MODELO PADRAO:
-PRIMEIRO PARAGRAFO (alegacoes do autor):
-"O reclamante narra [resumo dos fatos]. Sustenta [argumentos]. Indica que [situacao]. Em decorrencia, postula [pedido especifico]."
+PRIMEIRO PARAGRAFO (alegações do autor):
+"O reclamante narra [resumo dos fatos]. Sustenta [argumentos]. Indica que [situação]. Em decorrência, postula [pedido específico]."
 
 SEGUNDO PARAGRAFO (primeira defesa):
-${totalContestacoes > 0 ? '"A primeira reclamada, em defesa, alega [argumentos]. Sustenta que [posicao]."' : '"Nao houve apresentacao de contestacao."'}
+${totalContestacoes > 0 ? '"A primeira reclamada, em defesa, alega [argumentos]. Sustenta que [posição]."' : '"Não houve apresentação de contestação."'}
 
-${totalContestacoes > 1 ? 'TERCEIRO PARAGRAFO (segunda defesa):\n"A segunda re, por sua vez, nega [posicao]. Aduz [argumentos]."' : ''}
+${totalContestacoes > 1 ? 'TERCEIRO PARAGRAFO (segunda defesa):\n"A segunda ré, por sua vez, nega [posição]. Aduz [argumentos]."' : ''}
 
-${totalContestacoes > 2 ? 'QUARTO PARAGRAFO (terceira defesa):\n"A terceira reclamada tambem contesta [argumentos]. Sustenta [posicao]."' : ''}
+${totalContestacoes > 2 ? 'QUARTO PARAGRAFO (terceira defesa):\n"A terceira reclamada também contesta [argumentos]. Sustenta [posição]."' : ''}
 `}
 
-TOPICO ESPECIAL "RELATORIO" (OBRIGATORIO):
-O topico "RELATORIO" deve resumir o historico processual:
+TOPICO ESPECIAL "RELATORIO" (OBRIGATÓRIO):
+O tópico "RELATORIO" deve resumir o histórico processual:
 ${totalComplementares > 0 ?
-`"A presente reclamacao foi distribuida em [data se constar]. Realizou-se audiencia em [data], na qual [ocorrencias]. Foram juntados aos autos [documentos]. As partes apresentaram [manifestacoes]. O processo encontra-se [situacao atual]."`
+`"A presente reclamação foi distribuída em [data se constar]. Realizou-se audiência em [data], na qual [ocorrências]. Foram juntados aos autos [documentos]. As partes apresentaram [manifestações]. O processo encontra-se [situação atual]."`
 :
-`"A presente reclamacao foi ajuizada em [data se constar]. ${totalContestacoes > 0 ? 'Foram apresentadas contestacoes.' : 'Nao houve apresentacao de contestacao.'} ${totalContestacoes > 0 ? 'As partes manifestaram-se nos autos.' : ''} O processo encontra-se em fase de sentenca."`
+`"A presente reclamação foi ajuizada em [data se constar]. ${totalContestacoes > 0 ? 'Foram apresentadas contestações.' : 'Não houve apresentação de contestação.'} ${totalContestacoes > 0 ? 'As partes manifestaram-se nos autos.' : ''} O processo encontra-se em fase de sentença."`
 }
 
 ${AI_PROMPTS.formatacaoParagrafos("<p>O reclamante narra...</p><p>A primeira reclamada, em defesa...</p>")}
 
-${aiSettings.detailedMiniReports ? `NIVEL DE DETALHE - FATOS:
-Gere com alto nivel de detalhe em relacao aos FATOS alegados pelas partes.
-A descricao fatica (postulatoria e defensiva) deve ter alto nivel de detalhe.
+${aiSettings.detailedMiniReports ? `NÍVEL DE DETALHE - FATOS:
+Gere com alto nível de detalhe em relação aos FATOS alegados pelas partes.
+A descrição fática (postulatória e defensiva) deve ter alto nível de detalhe.
 ` : ''}
 
-ESTRUTURA DOS PARAGRAFOS:
-- PRIMEIRO PARAGRAFO (<p>): apenas alegacoes do reclamante
-- PARAGRAFOS SEGUINTES (<p>): uma defesa por paragrafo
+ESTRUTURA DOS PARÁGRAFOS:
+- PRIMEIRO PARAGRAFO (<p>): apenas alegações do reclamante
+- PARÁGRAFOS SEGUINTES (<p>): uma defesa por parágrafo
 - Use "O reclamante narra...", "Sustenta...", "Postula..."
-- Para defesas use: "A primeira reclamada, em defesa...", "A segunda re, por sua vez...", "A terceira reclamada..."
-- O topico "RELATORIO" e OBRIGATORIO e deve sempre ser o primeiro da lista
-${totalComplementares > 0 ? '- Documentos complementares devem ser usados APENAS no topico "RELATORIO"' : '- Como nao ha documentos complementares, o RELATORIO deve ser baseado apenas em peticao e contestacoes'}
+- Para defesas use: "A primeira reclamada, em defesa...", "A segunda ré, por sua vez...", "A terceira reclamada..."
+- O tópico "RELATORIO" e OBRIGATÓRIO e deve sempre ser o primeiro da lista
+${totalComplementares > 0 ? '- Documentos complementares devem ser usados APENAS no tópico "RELATORIO"' : '- Como não há documentos complementares, o RELATORIO deve ser baseado apenas em peticao e contestações'}
 
 ${AI_PROMPTS.numeracaoReclamadasInicial}
 
-IDENTIFICACAO DAS PARTES:
-Extraia tambem os nomes das partes do processo:
-- Nome completo do RECLAMANTE (autor da acao)
+IDENTIFICAÇÃO DAS PARTES:
+Extraia também os nomes das partes do processo:
+- Nome completo do RECLAMANTE (autor da ação)
 - Nomes completos de todas as RECLAMADAS (res)
 
 FORMATO DO TITULO DOS TOPICOS (v1.32.23):
 Use o formato "PEDIDO - CAUSA DE PEDIR" quando a causa de pedir for especifica e distintiva.
 Exemplos com causa especifica:
-- RESCISAO INDIRETA - ASSEDIO MORAL (nao apenas "RESCISAO INDIRETA")
-- ADICIONAL DE PERICULOSIDADE - ELETRICIDADE (nao apenas "ADICIONAL DE PERICULOSIDADE")
+- RESCISAO INDIRETA - ASSEDIO MORAL (nãoapenas "RESCISAO INDIRETA")
+- ADICIONAL DE PERICULOSIDADE - ELETRICIDADE (nãoapenas "ADICIONAL DE PERICULOSIDADE")
 - HORAS EXTRAS - NULIDADE DOS CARTOES DE PONTO
 - DANO MORAL - ACIDENTE DE TRABALHO
 - VINCULO EMPREGATICIO - FRAUDE A CLT (PJ)
-Exemplos que NAO precisam de complemento (causa obvia ou unica):
+Exemplos que NÃO precisam de complemento (causa óbvia ou única):
 - FERIAS, DECIMO TERCEIRO SALARIO (verbas simples)
-- INEPCIA DA INICIAL, GRATUIDADE DE JUSTICA (preliminares genericas)
+- INEPCIA DA INICIAL, GRATUIDADE DE JUSTICA (preliminares genéricas)
 
-Responda APENAS com um JSON valido, sem markdown, no seguinte formato:
+Responda APENAS com um JSON válido, sem markdown, no seguinte formato:
 {
   "partes": {
     "reclamante": "Nome completo do reclamante",
@@ -1149,12 +1149,12 @@ Responda APENAS com um JSON valido, sem markdown, no seguinte formato:
   "topics": [
     {
       "title": "PEDIDO - CAUSA ESPECIFICA (quando relevante)",
-      "category": "QUESTAO PROCESSUAL | PRELIMINAR | PREJUDICIAL | MERITO"
+      "category": "QUESTÃO PROCESSUAL | PRELIMINAR | PREJUDICIAL | MÉRITO"
     }
   ]
 }
 
-IMPORTANTE: Retorne APENAS titulo e categoria de cada topico. NAO inclua o campo "relatorio" - os mini-relatorios serao gerados separadamente para cada topico.`;
+IMPORTANTE: Retorne APENAS título e categoria de cada tópico. NÃO inclua o campo "relatório" - os mini-relatórios serão gerados separadamente para cada tópico.`;
 }
 
 export default useDocumentAnalysis;

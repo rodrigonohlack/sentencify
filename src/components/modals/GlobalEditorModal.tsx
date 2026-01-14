@@ -1,10 +1,10 @@
 /**
  * @file GlobalEditorModal.tsx
- * @description Modal de edicao global da sentenca - permite editar todos os topicos em uma unica interface
+ * @description Modal de edição global da sentença - permite editar todos os topicos em uma unica interface
  * @version 1.36.99
  *
  * Extraido do App.tsx (linhas 361-1930) como parte da refatoracao de componentes.
- * Este componente gerencia a edicao em tela cheia de todos os topicos selecionados,
+ * Este componente gerencia a edição em tela cheia de todos os tópicos selecionados,
  * com suporte a sugestoes de modelos, assistente IA, jurisprudencia e confronto de fatos.
  */
 
@@ -69,9 +69,9 @@ const AUTO_SAVE_DEBOUNCE_MS = 5000;
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 /**
- * Modal de edicao global da sentenca
+ * Modal de edição global da sentença
  *
- * Permite editar todos os topicos selecionados em uma unica interface,
+ * Permite editar todos os tópicos selecionados em uma unica interface,
  * com suporte a:
  * - Sugestoes automaticas de modelos
  * - Busca manual de modelos (textual e semantica)
@@ -115,7 +115,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   searchModelsBySimilarity = null,
   modelSemanticEnabled = false
 }) => {
-  // Estado local para os topicos (copia para edicao)
+  // Estado local para os tópicos (cópia para edição)
   const [localTopics, setLocalTopics] = React.useState<Topic[]>([]);
   const [isDirty, setIsDirty] = React.useState(false);
   const [originalTopics, setOriginalTopics] = React.useState<Topic[]>([]);
@@ -442,7 +442,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     );
 
     setIsDirty(false);
-    showToast?.('Alteracoes salvas!', 'success');
+    showToast?.('Alterações salvas!', 'success');
   }, [localTopics, setSelectedTopics, setExtractedTopics, showToast]);
 
   // v1.13.8: Auto-save com debounce no Editor Global
@@ -485,7 +485,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   const handleSaveAndClose = React.useCallback(async () => {
     // v1.13: Identificar topicos que precisam de analise de resultado:
     // - Foram editados (campo decisao)
-    // - Nao tem resultadoManual (usuario nao escolheu manualmente)
+    // - Nao tem resultadoManual (usuário não escolheu manualmente)
     // - Nao sao RELATORIO ou DISPOSITIVO
     const topicsToAnalyze = detectResultadoAutomatico ? localTopics.filter(t =>
       editedTopicTitles.has(t.title) &&
@@ -547,7 +547,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
       setIsAnalyzingResults(false);
     }
 
-    // Aplicar alteracoes aos topicos selecionados
+    // Aplicar alteracoes aos tópicos selecionados
     setSelectedTopics(updatedTopics);
 
     // Sincronizar com extractedTopics
@@ -558,7 +558,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
       })
     );
 
-    showToast?.('Alteracoes salvas com sucesso!', 'success');
+    showToast?.('Alterações salvas com sucesso!', 'success');
     setEditedTopicTitles(new Set()); // Limpar rastreamento
     onClose();
   }, [localTopics, editedTopicTitles, setSelectedTopics, setExtractedTopics, showToast, onClose, detectResultadoAutomatico, aiIntegration?.aiSettings?.parallelRequests]);
@@ -774,7 +774,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
             // Extrair o resultado verificado (pode estar em verifiedResult ou ser o objeto inteiro)
             verifiedParsed = verifiedObj.verifiedResult || verifiedObj;
             showToast?.(`Double Check: ${corrections.length} correcao(oes) - ${summary}`, 'info');
-            console.log('[DoubleCheck FactsComparison] Correcoes:', corrections);
+            console.log('[DoubleCheck FactsComparison] Correções:', corrections);
           }
         } catch (dcError) {
           console.error('[DoubleCheck FactsComparison] Erro:', dcError);
@@ -848,10 +848,10 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
         decisionContext = `
 CONTEXTO DO TOPICO:
 Titulo: ${topic.title}
-Categoria: ${topic.category || 'Nao especificada'}
+Categoria: ${topic.category || 'Não especificada'}
 
 MINI-RELATORIO DO TOPICO:
-${topic.editedRelatorio || topic.relatorio || 'Nao disponivel'}
+${topic.editedRelatorio || topic.relatorio || 'Não disponível'}
 
 DECISAO JA ESCRITA:
 ${topic.editedFundamentacao || topic.fundamentacao || 'Ainda nao foi escrito nada'}
@@ -863,13 +863,13 @@ ${topic.editedFundamentacao || topic.fundamentacao || 'Ainda nao foi escrito nad
         localTopics.forEach((t, index) => {
           const titleUpper = t.title.toUpperCase();
           if (titleUpper === 'RELATORIO') {
-            decisionContext += `RELATORIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Nao disponivel'}\n\n---\n\n`;
+            decisionContext += `RELATORIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
           } else if (titleUpper === 'DISPOSITIVO') {
             decisionContext += `DISPOSITIVO:\n${t.editedContent || ''}\n\n---\n\n`;
           } else {
             decisionContext += `TOPICO ${index}: ${t.title} (${t.category || 'Sem categoria'})
-Mini-relatorio: ${t.editedRelatorio || t.relatorio || 'Nao disponivel'}
-Decisao: ${t.editedFundamentacao || t.fundamentacao || 'Nao escrita'}
+Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
+Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
 
 ---
 
@@ -880,7 +880,7 @@ Decisao: ${t.editedFundamentacao || t.fundamentacao || 'Nao escrita'}
         decisionContext += `\nTOPICO SENDO EDITADO: ${topic.title}`;
       }
 
-      // 8. Adicionar instrucao final (mesmo prompt do assistente individual)
+      // 8. Adicionar instrução final (mesmo prompt do assistente individual)
       contentArray.push({
         type: 'text',
         text: `Voce esta auxiliando na redacao de uma DECISAO JUDICIAL TRABALHISTA.
@@ -912,7 +912,7 @@ IMPORTANTE - NAO INCLUIR MINI-RELATORIO:
 
 ${AI_PROMPTS.estiloRedacao}
 
-Com base em TODOS os elementos acima (contexto do topico, documentos processuais e instrucao do usuario), gere o texto solicitado.
+Com base em TODOS os elementos acima (contexto do tópico, documentos processuais e instrução do usuário), gere o texto solicitado.
 
 O texto deve:
 - Ser adequado para uma decisao judicial trabalhista
@@ -1020,10 +1020,10 @@ Responda APENAS com o texto gerado em HTML, sem prefacio, sem explicacoes. Gere 
       decisionContext = `
 CONTEXTO DO TOPICO:
 Titulo: ${topic.title}
-Categoria: ${topic.category || 'Nao especificada'}
+Categoria: ${topic.category || 'Não especificada'}
 
 MINI-RELATORIO DO TOPICO:
-${topic.editedRelatorio || topic.relatorio || 'Nao disponivel'}
+${topic.editedRelatorio || topic.relatorio || 'Não disponível'}
 
 DECISAO JA ESCRITA:
 ${topic.editedFundamentacao || topic.fundamentacao || 'Ainda nao foi escrito nada'}
@@ -1033,13 +1033,13 @@ ${topic.editedFundamentacao || topic.fundamentacao || 'Ainda nao foi escrito nad
       localTopics.forEach((t, index) => {
         const titleUpper = t.title.toUpperCase();
         if (titleUpper === 'RELATORIO') {
-          decisionContext += `RELATORIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Nao disponivel'}\n\n---\n\n`;
+          decisionContext += `RELATORIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
         } else if (titleUpper === 'DISPOSITIVO') {
           decisionContext += `DISPOSITIVO:\n${t.editedContent || ''}\n\n---\n\n`;
         } else {
           decisionContext += `TOPICO ${index}: ${t.title} (${t.category || 'Sem categoria'})
-Mini-relatorio: ${t.editedRelatorio || t.relatorio || 'Nao disponivel'}
-Decisao: ${t.editedFundamentacao || t.fundamentacao || 'Nao escrita'}
+Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
+Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
 
 ---
 
@@ -1082,10 +1082,10 @@ NAO INCLUIR MINI-RELATORIO no texto gerado.
 INSTRUCAO DO USUARIO:
 ${userMessage}
 
-Quando faltar informacao expressa necessaria a redacao, PERGUNTE ao usuario antes de redigir. Prefira perguntar a presumir.
+Quando faltar informação expressa necessária à redação, PERGUNTE ao usuário antes de redigir. Prefira perguntar a presumir.
 
 ANTES DE REDIGIR QUALQUER TEXTO DE DECISAO:
-Liste as informacoes/conclusoes que voce precisa confirmar com o usuario.
+Liste as informações/conclusões que você precisa confirmar com o usuário.
 So prossiga com a redacao APOS receber as respostas.
 Se nao houver nada a confirmar, indique "Nenhuma informacao pendente" e prossiga.
 

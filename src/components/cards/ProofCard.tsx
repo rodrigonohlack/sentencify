@@ -286,7 +286,7 @@ export const ProofCard = React.memo(({
                   <span>
                     {extractionProgress.mode === 'claude-vision' ? '' : ''}
                     {extractionProgress.total > 0
-                      ? ` Extraindo... ${extractionProgress.current}/${extractionProgress.total} paginas`
+                      ? ` Extraindo... ${extractionProgress.current}/${extractionProgress.total} páginas`
                       : ' Iniciando extracao...'}
                   </span>
                 </div>

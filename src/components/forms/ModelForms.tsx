@@ -144,7 +144,7 @@ ModelFormFields.displayName = 'ModelFormFields';
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Container para edicao de modelos
+ * Container para edição de modelos
  * v1.35.10: Estado local bufferizado para evitar re-render
  * v1.35.92: Tipagem correta com ModelFormModalProps
  */
@@ -285,7 +285,7 @@ export const ModelFormModal = React.forwardRef<HTMLDivElement, ModelFormModalPro
           }}
           className={`flex-1 px-6 py-3 rounded-lg font-medium text-white ${(modelSaved || savingModel) ? '' : 'hover-gradient-blue-purple'}`}
         >
-          {modelSaved ? '✓ Alteracoes Salvas' : (savingModel ? 'Salvando...' : (editingModel ? 'Salvar Alteracoes' : 'Salvar Modelo'))}
+          {modelSaved ? '✓ Alterações Salvas' : (savingModel ? 'Salvando...' : (editingModel ? 'Salvar Alterações' : 'Salvar Modelo'))}
         </button>
       </div>
     </div>

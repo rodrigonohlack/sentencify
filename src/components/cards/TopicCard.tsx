@@ -154,7 +154,7 @@ export const TopicCard = React.memo(({
         {isRelatorioOrDispositivo && (
           <div className="flex items-center gap-2 px-3 py-2 theme-bg-purple-accent border border-purple-500/30 rounded-lg">
             <span className="text-xs theme-text-purple font-medium">
-              Posicao Fixa
+              Posição Fixa
             </span>
           </div>
         )}
@@ -186,7 +186,7 @@ export const TopicCard = React.memo(({
                 >
                   <option value="PRELIMINAR">Preliminar</option>
                   <option value="PREJUDICIAL">Prejudicial</option>
-                  <option value="MERITO">Merito</option>
+                  <option value="MERITO">Mérito</option>
                   <option value="PROCESSUAL">Processual</option>
                 </select>
               )}

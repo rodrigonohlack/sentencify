@@ -210,9 +210,9 @@ export const useProofAnalysis = ({
    *
    * @param proof - Prova a ser analisada (PDF ou texto)
    * @param analysisType - Tipo de analise ('livre' ou 'contextual')
-   * @param customInstructions - Instrucoes personalizadas do usuario
-   * @param useOnlyMiniRelatorios - Usar apenas mini-relatorios ao inves de documentos completos
-   * @param includeLinkedTopics - Incluir topicos vinculados na analise livre
+   * @param customInstructions - Instruções personalizadas do usuário
+   * @param useOnlyMiniRelatorios - Usar apenas mini-relatórios ao inves de documentos completos
+   * @param includeLinkedTopics - Incluir tópicos vinculados na analise livre
    */
   const analyzeProof = useCallback(async (
     proof: Proof,
@@ -290,7 +290,7 @@ export const useProofAnalysis = ({
         });
       }
 
-      // Buscar topicos vinculados a esta prova
+      // Buscar tópicos vinculados a esta prova
       const linkedTopicTitles = proofManager.proofTopicLinks[proofId] || [];
       const linkedTopics = selectedTopics.filter(t => linkedTopicTitles.includes(t.title));
 
@@ -299,7 +299,7 @@ export const useProofAnalysis = ({
 
       if (analysisType === 'livre') {
         if (includeLinkedTopics && linkedTopics.length > 0) {
-          // Adicionar topicos vinculados e mini-relatorios ao contexto
+          // Adicionar tópicos vinculados e mini-relatórios ao contexto
           const topicsContext = linkedTopics.map((topic, idx) =>
             `TOPICO ${idx + 1}: ${topic.title} (${topic.category})\n\n${topic.relatorio || 'Mini-relatorio nao disponivel'}`
           ).join('\n\n---\n\n');
@@ -310,20 +310,20 @@ export const useProofAnalysis = ({
           });
 
           prompt = customInstructions
-            ? `Analise a prova a seguir considerando os topicos vinculados fornecidos.\n\nInstrucoes do usuario:\n${customInstructions}`
-            : `Analise a prova a seguir considerando os topicos vinculados fornecidos. Seja objetivo e direto.`;
+            ? `Analise a prova a seguir considerando os tópicos vinculados fornecidos.\n\nInstruções do usuário:\n${customInstructions}`
+            : `Analise a prova a seguir considerando os tópicos vinculados fornecidos. Seja objetivo e direto.`;
         } else {
-          // Analise livre simples - apenas prova + instrucoes
+          // Análise livre simples - apenas prova + instruções
           prompt = customInstructions
-            ? `Analise a prova a seguir conforme estas instrucoes:\n\n${customInstructions}`
+            ? `Analise a prova a seguir conforme estas instruções:\n\n${customInstructions}`
             : `Analise a prova a seguir e forneca insights relevantes. Seja objetivo e direto.`;
         }
       } else {
-        // Analise contextual - Escolher entre documentos completos ou apenas mini-relatorios
+        // Analise contextual - Escolher entre documentos completos ou apenas mini-relatórios
 
-        // Se useOnlyMiniRelatorios estiver ativado E houver topicos vinculados, usar apenas mini-relatorios
+        // Se useOnlyMiniRelatorios estiver ativado E houver tópicos vinculados, usar apenas mini-relatórios
         if (useOnlyMiniRelatorios && linkedTopics.length > 0) {
-          // Adicionar apenas mini-relatorios dos topicos vinculados
+          // Adicionar apenas mini-relatórios dos tópicos vinculados
           const miniRelatoriosText = linkedTopics.map((topic, idx) =>
             `TOPICO ${idx + 1}: ${topic.title} (${topic.category})\n\n${topic.relatorio || 'Mini-relatorio nao disponivel'}`
           ).join('\n\n---\n\n');
@@ -341,21 +341,21 @@ export const useProofAnalysis = ({
         // Construir resumo do contexto para o prompt
         const totalPeticoes = (analyzedDocuments.peticoes?.length || 0) + (analyzedDocuments.peticoesText?.length || 0);
         const peticaoSummary = useOnlyMiniRelatorios && linkedTopics.length > 0 ?
-          'Nao enviado (usando apenas mini-relatorios)' :
+          'Não enviado (usando apenas mini-relatórios)' :
           (totalPeticoes > 0 ?
             `${totalPeticoes} documento${totalPeticoes > 1 ? 's' : ''} do autor fornecido${totalPeticoes > 1 ? 's' : ''} (veja acima)` :
             'Peticao inicial nao disponivel');
 
         const totalContestacoes = (analyzedDocuments.contestacoes?.length || 0) + (analyzedDocuments.contestacoesText?.length || 0);
         const contestacoesSummary = useOnlyMiniRelatorios && linkedTopics.length > 0 ?
-          'Nao enviado (usando apenas mini-relatorios)' :
+          'Não enviado (usando apenas mini-relatórios)' :
           (totalContestacoes > 0 ?
             `${totalContestacoes} contestacao${totalContestacoes > 1 ? 'oes' : ''} fornecida${totalContestacoes > 1 ? 's' : ''} (veja acima)` :
             'Nenhuma contestacao disponivel');
 
         const totalComplementares = (analyzedDocuments.complementares?.length || 0) + (analyzedDocuments.complementaresText?.length || 0);
         const complementaresSummary = useOnlyMiniRelatorios && linkedTopics.length > 0 ?
-          'Nao enviado (usando apenas mini-relatorios)' :
+          'Não enviado (usando apenas mini-relatórios)' :
           (totalComplementares > 0 ?
             `${totalComplementares} documento${totalComplementares > 1 ? 's' : ''} complementar${totalComplementares > 1 ? 'es' : ''} fornecido${totalComplementares > 1 ? 's' : ''} (veja acima)` :
             'Nenhum documento complementar disponivel');
