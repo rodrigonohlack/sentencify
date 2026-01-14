@@ -44,7 +44,7 @@ import { useAISettingsCompat } from './stores/useAIStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
@@ -564,6 +564,12 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     setSearchEnabled
   } = useSemanticSearchManagement();
 
+  // 📝 v1.37.42: Quill/DOMPurify - extraído para useQuillInitialization (FASE 43)
+  const {
+    domPurifyReady, quillReady, quillError, quillRetryCount,
+    sanitizeHTML
+  } = useQuillInitialization();
+
   // v1.32.24: Modal de changelog
   const [showChangelogModal, setShowChangelogModal] = React.useState(false);
 
@@ -892,6 +898,24 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     proofManager
   );
 
+  // ✅ v1.37.42: Validação de tópicos - extraído para useTopicValidation (FASE 49)
+  const {
+    isTopicDecidido, topicsDecididos, topicsPendentes,
+    topicsSemDecisao, topicsSemResultado, topicsParaDispositivo,
+    unselectedTopics, canGenerateDispositivo, selectedTopicTitles
+  } = useTopicValidation(selectedTopics, extractedTopics);
+
+  // ✅ v1.37.42: Handlers de editor - extraído para useEditorHandlers (FASE 50)
+  const {
+    handleFundamentacaoChange, handleRelatorioChange,
+    handleCategoryChange, getTopicEditorConfig
+  } = useEditorHandlers({
+    editingTopicTitle: editingTopic?.title,
+    setEditingTopic,
+    setSelectedTopics,
+    setExtractedTopics,
+  });
+
   // ═══════════════════════════════════════════════════════════════════════════════
   // v1.37.6: useDragDropTopics - Hook extraído para drag and drop de tópicos
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -1025,11 +1049,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [processoNumero, setProcessoNumero] = useState('');
   // Número do processo trabalhista (ex: ATOrd 0000313-98.2025.5.08.0110)
 
-  // 🔧 ESTADOS: Utilitários
-  const [domPurifyReady, setDomPurifyReady] = useState(false);
-  const [quillReady, setQuillReady] = useState(false);
-  const [quillError, setQuillError] = useState<Error | null>(null);
-  const [quillRetryCount, setQuillRetryCount] = useState(0);
+  // 🔧 v1.37.42: Estados Quill/DOMPurify movidos para useQuillInitialization (FASE 43)
 
   // 🧠 v1.37.41: Estados NER movidos para useNERManagement (FASE 40)
 
@@ -1140,30 +1160,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     proofManager, setActiveTab, closeModal, setError, setProcessoNumero
   ]);
 
-  useEffect(() => {
-    // Verificar se já está carregado
-    if (window.DOMPurify) {
-      setDomPurifyReady(true);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js';
-    script.async = true;
-    script.onload = () => {
-      setDomPurifyReady(true);
-    };
-    script.onerror = () => {
-    };
-
-    document.head.appendChild(script);
-
-    return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
-  }, []);
+  // 📝 v1.37.42: DOMPurify loader movido para useQuillInitialization (FASE 43)
 
   // v1.33.19: Effect para busca semântica manual de modelos
   useEffect(() => {
@@ -1189,92 +1186,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     return () => clearTimeout(timeoutId);
   }, [useSemanticManualSearch, modelLibrary.manualSearchTerm, searchModelReady, modelLibrary.models]);
 
-  // 📝 Quill.js Loader (FASE 4 - Rich Text Editor)
-  // v1.37.20: injectQuillStyles e injectQuillLightStyles movidos para src/utils/quill-styles-injector.ts
-  useEffect(() => {
-    const MAX_RETRIES = 3;
-    const RETRY_DELAY = 2000; // 2 segundos
-    let styleDelayTimeout: ReturnType<typeof setTimeout> | null = null;
-    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
-    let isMounted = true;
-
-    // Verificar se já existe script carregando/carregado
-    const existingScript = document.getElementById('quill-library-js');
-    const existingCSS = document.getElementById('quill-theme-css');
-
-    // Se Quill já está disponível e scripts existem, apenas inicializar estilos
-    if (window.Quill && existingScript && existingCSS) {
-      styleDelayTimeout = setTimeout(() => {
-        if (isMounted) {
-          injectQuillStyles();
-          injectQuillLightStyles();
-          setQuillReady(true);
-          setQuillError(null);
-        }
-      }, 100);
-      return () => { isMounted = false; if (styleDelayTimeout) clearTimeout(styleDelayTimeout); };
-    }
-
-    // Remover scripts antigos apenas se não houver Quill ativo
-    if (!window.Quill) {
-      if (existingScript) existingScript.remove();
-      if (existingCSS) existingCSS.remove();
-    }
-
-    // Carregar CSS primeiro
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css';
-    link.id = 'quill-theme-css';
-
-    link.onerror = () => {
-      if (isMounted) setQuillError(new Error('Falha ao carregar tema do editor'));
-    };
-
-    document.head.appendChild(link);
-
-    // Carregar JavaScript
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js';
-    script.async = true;
-    script.id = 'quill-library-js';
-
-    script.onload = () => {
-      if (!isMounted) return;
-      if (window.Quill) {
-        styleDelayTimeout = setTimeout(() => {
-          if (isMounted) {
-            injectQuillStyles();
-            injectQuillLightStyles();
-            setQuillReady(true);
-            setQuillError(null);
-          }
-        }, 100);
-      } else {
-        setQuillError(new Error('Biblioteca carregada mas não disponível'));
-      }
-    };
-
-    script.onerror = () => {
-      if (!isMounted) return;
-      if (quillRetryCount < MAX_RETRIES) {
-        retryTimeout = setTimeout(() => {
-          if (isMounted) setQuillRetryCount(prev => prev + 1);
-        }, RETRY_DELAY);
-      } else {
-        setQuillError(new Error(`Falha ao carregar editor após ${MAX_RETRIES} tentativas. Verifique sua conexão.`));
-      }
-    };
-
-    document.head.appendChild(script);
-
-    // Cleanup
-    return () => {
-      isMounted = false;
-      if (styleDelayTimeout) clearTimeout(styleDelayTimeout);
-      if (retryTimeout) clearTimeout(retryTimeout);
-    };
-  }, [quillRetryCount]);
+  // 📝 v1.37.42: Quill.js Loader movido para useQuillInitialization (FASE 43)
 
   useEffect(() => {
         // loadAiSettings() agora está dentro do hook useAIIntegration
@@ -1289,54 +1201,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   useEffect(() => {
     modelLibrary.setCurrentModelPage(1);
   }, [modelLibrary.searchTerm, modelLibrary.selectedCategory, modelLibrary.showFavoritesOnly]);
-
-  // 🚀 OTIMIZAÇÃO v1.4.1: Agrupar useEffects relacionados (keyboard + scroll management)
-  useEffect(() => {
-    // Atalho Ctrl+S para salvar
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        if (editingTopic) {
-          saveTopicEditWithoutClosing();
-        } else if (modals.modelForm) {
-          saveModelWithoutClosing();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [editingTopic, modals.modelForm]);
-
-  // ESC para fechar modal de configurações
-  // v1.36.46: Não fechar se ModelGeneratorModal está aberto (respeitar hierarquia)
-  React.useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && modals.settings && !modelGeneratorModal.isOpen) {
-        closeModal('settings');
-      }
-    };
-
-    if (modals.settings) {
-      window.addEventListener('keydown', handleEscape);
-    }
-
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [modals.settings, closeModal, modelGeneratorModal.isOpen]);
-
-  // v1.35.64: Bloquear scroll do body quando modal de configurações aberto
-  React.useEffect(() => {
-    if (modals.settings) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [modals.settings]);
 
   // 🚀 OTIMIZAÇÃO v1.7: Observer para marcar dirty (FASE 1.1) - DEPS REDUZIDAS
   // 🔄 v1.9.1: Agora usa HASHES para detectar edições de campos (não apenas add/remove)
@@ -1522,61 +1386,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     }
   };
 
-
-  // 🔒 Sanitização com DOMPurify (memoizada)
-  const sanitizeHTML = React.useCallback((dirty: string | null | undefined) => {
-    // Se DOMPurify não estiver carregado ainda, retorna string vazia para segurança
-    if (!domPurifyReady || !window.DOMPurify) {
-      return ''; // Mais seguro retornar vazio do que conteúdo não sanitizado
-    }
-
-    // Configuração de sanitização para permitir apenas tags seguras de formatação
-    const cleanHTML = window.DOMPurify.sanitize(dirty || '', {
-      ALLOWED_TAGS: [
-        'p', 'br', 'div', 'span',           // Estrutura
-        'strong', 'b', 'em', 'i', 'u',      // Formatação básica
-        'ul', 'ol', 'li',                    // Listas
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', // Cabeçalhos
-        'blockquote'                         // v1.36.6: Citações
-      ],
-      ALLOWED_ATTR: [
-        'class', 'id', 'style',              // Atributos permitidos (limitados)
-        'data-list'                          // v1.36.6: Tipo de lista (bullet/ordered)
-      ],
-      ALLOWED_STYLES: {
-        '*': {
-          'font-weight': [/^bold$/],
-          'font-style': [/^italic$/],
-          'text-decoration': [/^underline$/],
-          'text-align': [/^(left|center|right|justify)$/],  // v1.36.6: Alinhamento
-          'margin-left': [/^\d+(\.\d+)?(em|px|rem)$/],      // v1.36.6: Indent
-          'padding-left': [/^\d+(\.\d+)?(em|px|rem)$/],     // v1.36.6: Blockquote
-          'border-left': [/.*/]                              // v1.36.6: Blockquote
-        }
-      },
-      KEEP_CONTENT: true,                     // Preserva conteúdo de tags removidas
-      RETURN_TRUSTED_TYPE: false
-    });
-
-    return cleanHTML;
-  }, [domPurifyReady]); // ✅ Estável - só muda quando DOMPurify carrega
-
-  // 📝 Utility functions para Quill.js (movidas para escopo global)
-
-  // Função de teste de sanitização (disponível no console via window.testSanitization)
-  const testSanitization = (testHTML: string) => {
-    const sanitized = sanitizeHTML(testHTML);
-    return sanitized;
-  };
-
-  // Expor função de teste no console (desenvolvimento)
-  if (typeof window !== 'undefined') {
-    window.testSanitization = testSanitization;
-    window.checkDOMPurify = () => ({
-      version: window.DOMPurify?.version || 'Desconhecida',
-      isSupported: domPurifyReady && !!window.DOMPurify
-    });
-  }
+  // 🔒 v1.37.42: sanitizeHTML e testSanitization movidos para useQuillInitialization (FASE 43)
 
   // 🧠 v1.25: NER HANDLERS - IA Offline para detecção de nomes
 
@@ -1951,137 +1761,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     }
   }, [selectedTopics, cleanupTopicRefs]);
 
-  // 🔧 HELPER FUNCTIONS - v1.3.5.1
-
-  // Verifica se um tópico está decidido
-  const isTopicDecidido = React.useCallback((topic: Topic) => {
-    if (!topic) return false;
-
-    // DISPOSITIVO usa editedContent
-    if (isDispositivo(topic)) {
-      return topic.editedContent && topic.editedContent.trim() !== '';
-    }
-
-    if (isRelatorio(topic)) {
-      return (topic.editedRelatorio && topic.editedRelatorio.trim() !== '') ||
-             (topic.relatorio && topic.relatorio.trim() !== '');
-    }
-
-    // Tópicos normais precisam de conteúdo E resultado selecionado
-    const temConteudo = topic.editedFundamentacao && topic.editedFundamentacao.trim() !== '';
-    const temResultado = topic.resultado && topic.resultado.trim() !== '';
-
-    return temConteudo && temResultado;
-  }, []);
-
-  // 🚀 OTIMIZAÇÕES DE PERFORMANCE - v1.2.7
-
-  // 📊 Contadores memoizados para evitar recálculos a cada render
-  const topicsDecididos = React.useMemo(() => {
-    return selectedTopics.filter(t =>
-      isTopicDecidido(t) &&
-      t.title.toUpperCase() !== 'RELATÓRIO' &&
-      t.title.toUpperCase() !== 'DISPOSITIVO'
-    ).length;
-  }, [selectedTopics, isTopicDecidido]);
-
-  const topicsPendentes = React.useMemo(() => {
-    return selectedTopics.filter(t =>
-      !isTopicDecidido(t) &&
-      t.title.toUpperCase() !== 'RELATÓRIO' &&
-      t.title.toUpperCase() !== 'DISPOSITIVO'
-    ).length;
-  }, [selectedTopics, isTopicDecidido]);
-
-  const topicsSemDecisao = React.useMemo(() => {
-    return selectedTopics.filter(t => !isTopicDecidido(t));
-  }, [selectedTopics, isTopicDecidido]);
-
-  const topicsSemResultado = React.useMemo(() => {
-    return selectedTopics.filter(t =>
-      t.title.toUpperCase() !== 'RELATÓRIO' &&
-      t.title.toUpperCase() !== 'DISPOSITIVO' &&
-      !t.resultado
-    );
-  }, [selectedTopics]);
-
-  const canGenerateDispositivo = React.useMemo(() => {
-    // Precisa ter pelo menos 1 tópico selecionado
-    if (selectedTopics.length === 0) {
-      return { enabled: false, reason: 'Nenhum tópico selecionado' };
-    }
-
-    // Filtrar tópicos relevantes (exceto RELATÓRIO e DISPOSITIVO)
-    const topicsRelevantes = selectedTopics.filter(t =>
-      t.title.toUpperCase() !== 'RELATÓRIO' &&
-      t.title.toUpperCase() !== 'DISPOSITIVO'
-    );
-
-    if (topicsRelevantes.length === 0) {
-      return { enabled: false, reason: 'Nenhum tópico de mérito/preliminar selecionado' };
-    }
-
-    // Verificar tópicos sem conteúdo (fundamentação não escrita)
-    const semConteudo = topicsRelevantes.filter(t =>
-      !t.editedFundamentacao || t.editedFundamentacao.trim() === ''
-    );
-
-    // Verificar tópicos com conteúdo mas sem resultado selecionado
-    const semResultado = topicsRelevantes.filter(t =>
-      t.editedFundamentacao && t.editedFundamentacao.trim() !== '' &&
-      (!t.resultado || t.resultado.trim() === '')
-    );
-
-    const totalPendentes = semConteudo.length + semResultado.length;
-
-    if (totalPendentes > 0) {
-      // Construir mensagem detalhada
-      let detalhes = [];
-
-      if (semConteudo.length > 0) {
-        const primeiros = semConteudo.slice(0, 3).map(t => t.title);
-        const resto = semConteudo.length > 3 ? ` e mais ${semConteudo.length - 3}` : '';
-        detalhes.push(`${semConteudo.length} sem conteúdo: ${primeiros.join(', ')}${resto}`);
-      }
-
-      if (semResultado.length > 0) {
-        const primeiros = semResultado.slice(0, 3).map(t => t.title);
-        const resto = semResultado.length > 3 ? ` e mais ${semResultado.length - 3}` : '';
-        detalhes.push(`${semResultado.length} sem resultado: ${primeiros.join(', ')}${resto}`);
-      }
-
-      return {
-        enabled: false,
-        reason: `${totalPendentes} tópico${totalPendentes > 1 ? 's' : ''} pendente${totalPendentes > 1 ? 's' : ''} (${detalhes.join(' | ')})`
-      };
-    }
-
-    return { enabled: true, reason: '' };
-  }, [selectedTopics]);
-
-  // v1.14.5: Excluir DISPOSITIVO para evitar ruído do conteúdo antigo
-  const topicsParaDispositivo = React.useMemo(() => {
-    return selectedTopics.filter(topic =>
-      topic.title.toUpperCase() !== 'RELATÓRIO' &&
-      topic.title.toUpperCase() !== 'DISPOSITIVO' &&
-      topic.resultado !== 'SEM RESULTADO'
-    );
-  }, [selectedTopics]);
-
-  const selectedTopicTitles = React.useMemo(() =>
-    selectedTopics.map(t => t.title).join('|'),
-    [selectedTopics.map(t => t.title).join('|')]
-  );
-
-  // v1.19.2: Normalizar comparação case-insensitive para evitar duplicatas
-  const unselectedTopics = React.useMemo(() => {
-    return extractedTopics.filter(topic =>
-      !selectedTopics.find(st =>
-        (st.title || '').toUpperCase().trim() === (topic.title || '').toUpperCase().trim()
-      )
-    );
-  }, [extractedTopics, selectedTopicTitles]);
-
   // 🎯 HANDLERS COM useCallback (memoizados para evitar recriação)
 
   // v1.33.58: dnd-kit sensors e handler para drag and drop com wheel scroll
@@ -2097,95 +1776,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // (specialTopicIds, customCollisionDetection, handleDndDragEnd, handleDragStart, handleDragEnd,
   //  handleDragOver, handleDragLeave, handleDrop, handleComplementaryDragStart, handleComplementaryDragEnd,
   //  handleComplementaryDragOver, handleComplementaryDragLeave, handleComplementaryDrop)
-
-  // 🎯 v1.4.6.3: OPT-06 - Handlers Memoizados para Editor de Decisões
-  // Estes handlers são passados como props para DecisionEditorContainer.
-  // Memoizá-los evita quebrar React.memo e recalcular useMemo internos.
-
-  const handleFundamentacaoChange = React.useCallback((html: string) => {
-    setEditingTopic(prev => {
-      if (!prev) return prev;
-      return { ...prev, editedFundamentacao: html };
-    });
-  }, []);
-
-  const handleRelatorioChange = React.useCallback((html: string) => {
-    setEditingTopic(prev => {
-      if (!prev) return prev;
-      return { ...prev, editedRelatorio: html };
-    });
-  }, []);
-
-  const handleCategoryChange = React.useCallback((newCategory: string) => {
-    setEditingTopic(prev => {
-      if (!prev) return prev;
-      return { ...prev, category: newCategory as TopicCategory };
-    });
-
-    // Atualiza selectedTopics
-    setSelectedTopics(prevSelected => {
-      const selectedIndex = prevSelected.findIndex((t: Topic) => t.title === editingTopic?.title);
-      if (selectedIndex === -1) return prevSelected;
-
-      const newSelected = [...prevSelected];
-      newSelected[selectedIndex] = { ...newSelected[selectedIndex], category: newCategory as TopicCategory };
-      return newSelected;
-    });
-
-    // Atualiza extractedTopics
-    setExtractedTopics(prevExtracted => {
-      const extractedIndex = prevExtracted.findIndex((t: Topic) => t.title === editingTopic?.title);
-      if (extractedIndex === -1) return prevExtracted;
-
-      const newExtracted = [...prevExtracted];
-      newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], category: newCategory as TopicCategory };
-      return newExtracted;
-    });
-  }, [editingTopic?.title]);
-
-  // 🎨 v1.4.7: Helper Centralizado para Configuração de Editores por Tipo
-  // Este helper retorna configuração específica para cada tipo de tópico,
-  // permitindo especialização de editores sem acoplar componentes filhos.
-
-  const getTopicEditorConfig = React.useCallback((topicTitle: string) => {
-    switch(topicTitle?.toUpperCase()) {
-      case 'RELATÓRIO':
-        return {
-          showCategory: false,
-          showMiniRelatorio: true,
-          showDecisionEditor: false,
-          relatorioConfig: {
-            label: '📄 Relatório:',
-            minHeight: 'min-h-48',
-            showRegenerateSection: true
-          },
-          editorConfig: {}
-        };
-
-      case 'DISPOSITIVO':
-        return {
-          showCategory: false,
-          showMiniRelatorio: false,
-          showDecisionEditor: true,
-          relatorioConfig: {},
-          editorConfig: {
-            label: '📋 Dispositivo:',
-            placeholder: 'Descreva o resultado da decisão (PROCEDENTE, IMPROCEDENTE, etc)...',
-            showRegenerateSection: true
-          }
-        };
-
-      default:
-        // Tópicos normais (PRELIMINAR, MÉRITO, etc)
-        return {
-          showCategory: true,
-          showMiniRelatorio: true,
-          showDecisionEditor: true,
-          relatorioConfig: {},
-          editorConfig: {}
-        };
-    }
-  }, []);
 
   // 📚 FUNÇÕES: Gerenciamento de Modelos
   // Hook useModelLibrary já gerencia persistência via 'sentencify-models'
@@ -3391,6 +2981,19 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       setSavingTopic(false);
     }
   };
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.37.42: useKeyboardShortcuts - Atalhos de teclado (Ctrl+S, ESC) e scroll lock
+  // ═══════════════════════════════════════════════════════════════════════════════
+  useKeyboardShortcuts({
+    editingTopic,
+    isModelFormOpen: modals.modelForm,
+    isSettingsOpen: modals.settings,
+    isModelGeneratorOpen: modelGeneratorModal.isOpen,
+    saveTopicEditWithoutClosing,
+    saveModelWithoutClosing,
+    closeSettingsModal: () => closeModal('settings'),
+  });
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // v1.37.26: useDecisionExport - Hook extraído para exportação da decisão

@@ -43,6 +43,18 @@ export type { UseChangeDetectionHashesReturn, ProofManagerData } from './useChan
 export { useSemanticSearchManagement } from './useSemanticSearchManagement';
 export type { UseSemanticSearchManagementReturn } from './useSemanticSearchManagement';
 
+export { useQuillInitialization } from './useQuillInitialization';
+export type { UseQuillInitializationReturn } from './useQuillInitialization';
+
+export { useTopicValidation } from './useTopicValidation';
+export type { UseTopicValidationReturn, CanGenerateDispositivoResult } from './useTopicValidation';
+
+export { useKeyboardShortcuts } from './useKeyboardShortcuts';
+export type { UseKeyboardShortcutsProps, UseKeyboardShortcutsReturn } from './useKeyboardShortcuts';
+
+export { useEditorHandlers } from './useEditorHandlers';
+export type { UseEditorHandlersProps, UseEditorHandlersReturn, TopicEditorConfig } from './useEditorHandlers';
+
 // TIER 1 hooks (dependem de TIER 0)
 export { useIndexedDB, validateModel, sanitizeModel } from './useIndexedDB';
 export type { UseIndexedDBReturn, SyncCallbackParams } from './useIndexedDB';
