@@ -71,13 +71,13 @@ const AUTO_SAVE_DEBOUNCE_MS = 5000;
 /**
  * Modal de edição global da sentença
  *
- * Permite editar todos os tópicos selecionados em uma unica interface,
+ * Permite editar todos os tópicos selecionados em uma única interface,
  * com suporte a:
- * - Sugestoes automaticas de modelos
- * - Busca manual de modelos (textual e semantica)
+ * - Sugestões automáticas de modelos
+ * - Busca manual de modelos (textual e semântica)
  * - Assistente IA interativo
- * - Jurisprudencia contextual
- * - Confronto de fatos (peticao vs contestacao)
+ * - Jurisprudência contextual
+ * - Confronto de fatos (petição vs contestação)
  *
  * @param props - Props do componente (GlobalEditorModalProps)
  */
@@ -288,11 +288,11 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
         ...updated[topicIndex],
         [field]: html
       };
-      // Se for editedRelatorio, tambem atualizar relatorio
+      // Se for editedRelatorio, também atualizar relatorio
       if (field === 'editedRelatorio') {
         updated[topicIndex].relatorio = html;
       }
-      // v1.13: Rastrear edicoes no campo decisao para deteccao automatica de resultado
+      // v1.13: Rastrear edições no campo decisão para detecção automática de resultado
       if (field === 'editedFundamentacao' && topicTitle) {
         setEditedTopicTitles(prevSet => new Set(prevSet).add(topicTitle));
       }
@@ -301,10 +301,10 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     setIsDirty(true);
   }, []);
 
-  // Handler para foco em campo (sugestoes contextuais) - v1.12.2: usa ref para evitar closure stale
+  // Handler para foco em campo (sugestões contextuais) - v1.12.2: usa ref para evitar closure stale
   const handleFieldFocus = React.useCallback(async (topicIndex: number, fieldType: string, topic: Topic | null) => {
     if (fieldType === 'fundamentacao' && topic) {
-      // Campo de fundamentacao/decisao focado -> buscar sugestoes automaticamente
+      // Campo de fundamentação/decisão focado -> buscar sugestões automaticamente
       const topicInfo = {
         index: topicIndex,
         title: topic.title,
@@ -345,12 +345,12 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   }, [findSuggestions]); // Removido isSplitMode das deps - agora usa ref
 
   React.useEffect(() => {
-    // Detectar transicao de false -> true
+    // Detectar transição de false -> true
     const wasOff = !prevIsSplitModeRef.current;
     const isNowOn = isSplitMode;
     prevIsSplitModeRef.current = isSplitMode;
 
-    // So buscar quando split mode ACABOU de ser ativado (nao em cada render)
+    // Só buscar quando split mode ACABOU de ser ativado (não em cada render)
     if (wasOff && isNowOn && currentFocusedTopic && findSuggestions) {
       const fetchSuggestions = async () => {
         setLoadingSuggestions(true);
@@ -378,9 +378,9 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
 
       fetchSuggestions();
     }
-  }, [isSplitMode, currentFocusedTopic, findSuggestions]); // Agora com todas as dependencias
+  }, [isSplitMode, currentFocusedTopic, findSuggestions]); // Agora com todas as dependências
 
-  // Inserir modelo no campo de fundamentacao do topico focado
+  // Inserir modelo no campo de fundamentação do tópico focado
   const handleInsertModel = React.useCallback((modelContent: string) => {
     if (currentFocusedTopic?.index === undefined) return;
 
@@ -390,7 +390,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
       const currentContent = updated[topicIndex].editedFundamentacao ||
                             updated[topicIndex].fundamentacao || '';
 
-      // Adicionar ao final do conteudo existente
+      // Adicionar ao final do conteúdo existente
       updated[topicIndex].editedFundamentacao = currentContent +
         (currentContent ? '<p><br></p>' : '') + modelContent;
 
@@ -447,7 +447,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
 
   // v1.13.8: Auto-save com debounce no Editor Global
   React.useEffect(() => {
-    // So rodar se modal esta aberto e ha mudancas
+    // Só rodar se modal está aberto e há mudanças
     if (!isOpen || !isDirty) return;
 
     // Limpar timer anterior
@@ -470,7 +470,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
       );
 
       setIsDirty(false);
-      // Nao mostrar toast no auto-save (apenas o indicador verde ja e suficiente)
+      // Não mostrar toast no auto-save (apenas o indicador verde já é suficiente)
     }, AUTO_SAVE_DEBOUNCE_MS);
 
     return () => {
@@ -481,12 +481,12 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   }, [isOpen, isDirty, localTopics, setSelectedTopics, setExtractedTopics]);
 
   // Salvar e fechar - sincroniza estados externos e fecha
-  // v1.13: Agora tambem detecta automaticamente o resultado para topicos editados
+  // v1.13: Agora também detecta automaticamente o resultado para tópicos editados
   const handleSaveAndClose = React.useCallback(async () => {
-    // v1.13: Identificar topicos que precisam de analise de resultado:
-    // - Foram editados (campo decisao)
-    // - Nao tem resultadoManual (usuário não escolheu manualmente)
-    // - Nao sao RELATORIO ou DISPOSITIVO
+    // v1.13: Identificar tópicos que precisam de análise de resultado:
+    // - Foram editados (campo decisão)
+    // - Não tem resultadoManual (usuário não escolheu manualmente)
+    // - Não são RELATÓRIO ou DISPOSITIVO
     const topicsToAnalyze = detectResultadoAutomatico ? localTopics.filter(t =>
       editedTopicTitles.has(t.title) &&
       !t.resultadoManual &&
@@ -533,12 +533,12 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
           }
         });
         if (rejectedCount > 0) {
-          console.warn(`[SentencifyAI] ${rejectedCount} topico(s) falharam na deteccao automatica de resultado`);
+          console.warn(`[SentencifyAI] ${rejectedCount} tópico(s) falharam na detecção automática de resultado`);
         }
 
         setAnalyzingProgress({ current: Math.min(i + BATCH_SIZE, topicsToAnalyze.length), total: topicsToAnalyze.length });
 
-        // Delay entre batches para evitar rate limit (exceto ultimo)
+        // Delay entre batches para evitar rate limit (exceto último)
         if (i + BATCH_SIZE < topicsToAnalyze.length) {
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
@@ -626,33 +626,33 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
       if (source === 'mini-relatorio') {
         const relatorio = topic.editedRelatorio || topic.relatorio || '';
         if (!relatorio.trim()) {
-          throw new Error('Mini-relatorio nao disponivel para este topico.');
+          throw new Error('Mini-relatório não disponível para este tópico.');
         }
         prompt = buildMiniRelatorioComparisonPrompt(topic.title, relatorio);
       } else {
-        // Documentos completos - priorizar texto, fallback para PDF binario
+        // Documentos completos - priorizar texto, fallback para PDF binário
         const peticaoText = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
         const contestacaoText = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
         const impugnacaoText = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
 
         const hasText = peticaoText.trim() || contestacaoText.trim();
-        // v1.36.22: PDFs base64 estao em analyzedDocuments?.peticoes (nao em peticaoFiles)
+        // v1.36.22: PDFs base64 estão em analyzedDocuments?.peticoes (não em peticaoFiles)
         const hasPdfs = (analyzedDocuments?.peticoes?.length || 0) > 0 || (analyzedDocuments?.contestacoes?.length || 0) > 0;
 
         if (!hasText && !hasPdfs) {
-          throw new Error('Nenhum documento disponivel (peticao ou contestacao).');
+          throw new Error('Nenhum documento disponível (petição ou contestação).');
         }
 
         if (hasText) {
-          // Caminho padrao: usar texto extraido
+          // Caminho padrão: usar texto extraído
           prompt = buildDocumentosComparisonPrompt(topic.title, peticaoText, contestacaoText, impugnacaoText);
         } else {
-          // v1.36.22: Fallback para PDF binario (quando nao ha texto extraido)
+          // v1.36.22: Fallback para PDF binário (quando não há texto extraído)
           prompt = buildPdfComparisonPrompt(topic.title);
         }
       }
 
-      // Construir mensagem - pode ser texto simples ou incluir PDFs binarios
+      // Construir mensagem - pode ser texto simples ou incluir PDFs binários
       let messageContent: AIMessageContent[];
 
       const peticaoTextFallback = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
@@ -826,14 +826,14 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
 
     try {
       const topic = localTopics[aiAssistantTopicIndex];
-      if (!topic) throw new Error('Topico nao encontrado');
+      if (!topic) throw new Error('Tópico não encontrado');
 
       // Preparar documentos usando helper
       const { contentArray, flags } = prepareDocumentsContext(analyzedDocuments);
       const { hasPeticao, hasContestacoes, hasComplementares } = flags;
 
-      // v1.19.5: Usar funcao centralizada para provas
-      // v1.19.2: Passar flag de anonimizacao
+      // v1.19.5: Usar função centralizada para provas
+      // v1.19.2: Passar flag de anonimização
       // v1.21.5: Passar anonConfig para anonimizar texto
       const { proofDocuments, proofsContext, hasProofs } = fileToBase64 ? await prepareProofsContext(
         proofManager, topic.title, fileToBase64, aiIntegration?.aiSettings?.anonymization?.enabled, aiIntegration?.aiSettings?.anonymization
@@ -844,30 +844,30 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
       let decisionContext = '';
 
       if (globalContextScope === 'current') {
-        // Apenas o topico atual
+        // Apenas o tópico atual
         decisionContext = `
-CONTEXTO DO TOPICO:
-Titulo: ${topic.title}
+CONTEXTO DO TÓPICO:
+Título: ${topic.title}
 Categoria: ${topic.category || 'Não especificada'}
 
-MINI-RELATORIO DO TOPICO:
+MINI-RELATÓRIO DO TÓPICO:
 ${topic.editedRelatorio || topic.relatorio || 'Não disponível'}
 
-DECISAO JA ESCRITA:
-${topic.editedFundamentacao || topic.fundamentacao || 'Ainda nao foi escrito nada'}
+DECISÃO JÁ ESCRITA:
+${topic.editedFundamentacao || topic.fundamentacao || 'Ainda não foi escrito nada'}
 `;
       } else {
-        // Toda a decisao (todos os topicos)
-        decisionContext = 'CONTEXTO COMPLETO DA DECISAO:\n\n';
+        // Toda a decisão (todos os tópicos)
+        decisionContext = 'CONTEXTO COMPLETO DA DECISÃO:\n\n';
 
         localTopics.forEach((t, index) => {
           const titleUpper = t.title.toUpperCase();
           if (titleUpper === 'RELATÓRIO') {
-            decisionContext += `RELATORIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
+            decisionContext += `RELATÓRIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
           } else if (titleUpper === 'DISPOSITIVO') {
             decisionContext += `DISPOSITIVO:\n${t.editedContent || ''}\n\n---\n\n`;
           } else {
-            decisionContext += `TOPICO ${index}: ${t.title} (${t.category || 'Sem categoria'})
+            decisionContext += `TÓPICO ${index}: ${t.title} (${t.category || 'Sem categoria'})
 Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
 Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
 
@@ -877,52 +877,52 @@ Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
           }
         });
 
-        decisionContext += `\nTOPICO SENDO EDITADO: ${topic.title}`;
+        decisionContext += `\nTÓPICO SENDO EDITADO: ${topic.title}`;
       }
 
       // 8. Adicionar instrução final (mesmo prompt do assistente individual)
       contentArray.push({
         type: 'text',
-        text: `Voce esta auxiliando na redacao de uma DECISAO JUDICIAL TRABALHISTA.
+        text: `Você está auxiliando na redação de uma DECISÃO JUDICIAL TRABALHISTA.
 
 ${decisionContext}
 
 ${hasPeticao || hasContestacoes || hasComplementares || hasProofs ? `
-DOCUMENTOS DISPONIVEIS PARA CONSULTA:
-${hasPeticao ? '- Peticao inicial' : ''}
-${hasContestacoes ? '- Contestacao(oes)' : ''}
+DOCUMENTOS DISPONÍVEIS PARA CONSULTA:
+${hasPeticao ? '- Petição inicial' : ''}
+${hasContestacoes ? '- Contestação(ões)' : ''}
 ${hasComplementares ? '- Documento(s) complementar(es)' : ''}
-${hasProofs ? '- Prova(s) vinculada(s) a este topico' : ''}
+${hasProofs ? '- Prova(s) vinculada(s) a este tópico' : ''}
 
-Os documentos foram anexados acima. Voce pode e DEVE consulta-los para fundamentar sua decisao, especialmente:
-- Para identificar alegacoes e argumentos das partes
+Os documentos foram anexados acima. Você pode e DEVE consultá-los para fundamentar sua decisão, especialmente:
+- Para identificar alegações e argumentos das partes
 - Para verificar provas mencionadas
-- Para fundamentar sua decisao com base no que foi apresentado nos autos
-${hasProofs ? '- Para analisar as provas vinculadas e suas respectivas analises/conclusoes' : ''}
+- Para fundamentar sua decisão com base no que foi apresentado nos autos
+${hasProofs ? '- Para analisar as provas vinculadas e suas respectivas análises/conclusões' : ''}
 ` : ''}
 ${proofsContext}
-INSTRUCAO DO USUARIO:
+INSTRUÇÃO DO USUÁRIO:
 ${globalAiInstruction}
 
-IMPORTANTE - NAO INCLUIR MINI-RELATORIO:
-- O mini-relatorio ja foi fornecido acima apenas como CONTEXTO
-- NAO repita ou resuma os fatos no texto gerado
-- NAO inicie com "Trata-se de...", "Cuida-se de...", "O reclamante postula..."
-- Va DIRETO para a analise juridica, fundamentacao e conclusao
+IMPORTANTE - NÃO INCLUIR MINI-RELATÓRIO:
+- O mini-relatório já foi fornecido acima apenas como CONTEXTO
+- NÃO repita ou resuma os fatos no texto gerado
+- NÃO inicie com "Trata-se de...", "Cuida-se de...", "O reclamante postula..."
+- Vá DIRETO para a análise jurídica, fundamentação e conclusão
 
 ${AI_PROMPTS.estiloRedacao}
 
 Com base em TODOS os elementos acima (contexto do tópico, documentos processuais e instrução do usuário), gere o texto solicitado.
 
 O texto deve:
-- Ser adequado para uma decisao judicial trabalhista
+- Ser adequado para uma decisão judicial trabalhista
 - Usar SEMPRE a primeira pessoa
-- Manter linguagem formal, mas acessivel
-- Evitar latinismos desnecessarios
+- Manter linguagem formal, mas acessível
+- Evitar latinismos desnecessários
 - Ser claro e objetivo
-- Considerar o contexto do topico e o que ja foi escrito
-- FUNDAMENTAR-SE nos documentos processuais (peticao, contestacoes, provas)
-- Citar fatos especificos dos autos quando relevante
+- Considerar o contexto do tópico e o que já foi escrito
+- FUNDAMENTAR-SE nos documentos processuais (petição, contestações, provas)
+- Citar fatos específicos dos autos quando relevante
 - Aplicar bases legais quando apropriado
 
 ${AI_PROMPTS.formatacaoHTML("A <strong>CLT</strong> estabelece que...")}
@@ -931,7 +931,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Passo a analisar...</p><p>A CLT estabelece
 
 ${AI_PROMPTS.numeracaoReclamadas}
 
-Responda APENAS com o texto gerado em HTML, sem prefacio, sem explicacoes. Gere texto pronto para ser inserido na decisao.`
+Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Gere texto pronto para ser inserido na decisão.`
       });
 
       // Chamar API
@@ -1018,26 +1018,26 @@ Responda APENAS com o texto gerado em HTML, sem prefacio, sem explicacoes. Gere 
     let decisionContext = '';
     if (globalContextScope === 'current') {
       decisionContext = `
-CONTEXTO DO TOPICO:
-Titulo: ${topic.title}
+CONTEXTO DO TÓPICO:
+Título: ${topic.title}
 Categoria: ${topic.category || 'Não especificada'}
 
-MINI-RELATORIO DO TOPICO:
+MINI-RELATÓRIO DO TÓPICO:
 ${topic.editedRelatorio || topic.relatorio || 'Não disponível'}
 
-DECISAO JA ESCRITA:
-${topic.editedFundamentacao || topic.fundamentacao || 'Ainda nao foi escrito nada'}
+DECISÃO JÁ ESCRITA:
+${topic.editedFundamentacao || topic.fundamentacao || 'Ainda não foi escrito nada'}
 `;
     } else {
-      decisionContext = 'CONTEXTO COMPLETO DA DECISAO:\n\n';
+      decisionContext = 'CONTEXTO COMPLETO DA DECISÃO:\n\n';
       localTopics.forEach((t, index) => {
         const titleUpper = t.title.toUpperCase();
         if (titleUpper === 'RELATÓRIO') {
-          decisionContext += `RELATORIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
+          decisionContext += `RELATÓRIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
         } else if (titleUpper === 'DISPOSITIVO') {
           decisionContext += `DISPOSITIVO:\n${t.editedContent || ''}\n\n---\n\n`;
         } else {
-          decisionContext += `TOPICO ${index}: ${t.title} (${t.category || 'Sem categoria'})
+          decisionContext += `TÓPICO ${index}: ${t.title} (${t.category || 'Sem categoria'})
 Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
 Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
 
@@ -1046,28 +1046,28 @@ Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
 `;
         }
       });
-      decisionContext += `\nTOPICO SENDO EDITADO: ${topic.title}`;
+      decisionContext += `\nTÓPICO SENDO EDITADO: ${topic.title}`;
     }
 
-    // Verificar se anonimizacao esta ativada
+    // Verificar se anonimização está ativada
     const anonymizationEnabled = aiIntegration?.aiSettings?.anonymization?.enabled;
 
     // Montar prompt completo
     contentArray.push({
       type: 'text',
-      text: `Voce esta auxiliando na redacao de uma DECISAO JUDICIAL TRABALHISTA.
+      text: `Você está auxiliando na redação de uma DECISÃO JUDICIAL TRABALHISTA.
 
 ${decisionContext}
 
 ${hasPeticao || hasContestacoes || hasComplementares || hasProofs ? `
-DOCUMENTOS DISPONIVEIS PARA CONSULTA:
-${hasPeticao ? '- Peticao inicial' : ''}
-${hasContestacoes ? '- Contestacao(oes)' : ''}
+DOCUMENTOS DISPONÍVEIS PARA CONSULTA:
+${hasPeticao ? '- Petição inicial' : ''}
+${hasContestacoes ? '- Contestação(ões)' : ''}
 ${hasComplementares ? '- Documento(s) complementar(es)' : ''}
-${hasProofs ? '- Prova(s) vinculada(s) a este topico' : ''}
+${hasProofs ? '- Prova(s) vinculada(s) a este tópico' : ''}
 
-Os documentos foram anexados acima. Voce pode e DEVE consulta-los para fundamentar sua decisao.
-${hasProofs ? '- Analise as provas vinculadas e suas respectivas analises/conclusoes' : ''}
+Os documentos foram anexados acima. Você pode e DEVE consultá-los para fundamentar sua decisão.
+${hasProofs ? '- Analise as provas vinculadas e suas respectivas análises/conclusões' : ''}
 ` : ''}
 ${proofsContext}
 
@@ -1077,21 +1077,21 @@ ${AI_PROMPTS.estiloRedacao}
 ${AI_PROMPTS.numeracaoReclamadas}
 ${anonymizationEnabled ? AI_PROMPTS.preservarAnonimizacao : ''}
 
-NAO INCLUIR MINI-RELATORIO no texto gerado.
+NÃO INCLUIR MINI-RELATÓRIO no texto gerado.
 
-INSTRUCAO DO USUARIO:
+INSTRUÇÃO DO USUÁRIO:
 ${userMessage}
 
 Quando faltar informação expressa necessária à redação, PERGUNTE ao usuário antes de redigir. Prefira perguntar a presumir.
 
-ANTES DE REDIGIR QUALQUER TEXTO DE DECISAO:
+ANTES DE REDIGIR QUALQUER TEXTO DE DECISÃO:
 Liste as informações/conclusões que você precisa confirmar com o usuário.
-So prossiga com a redacao APOS receber as respostas.
-Se nao houver nada a confirmar, indique "Nenhuma informacao pendente" e prossiga.
+Só prossiga com a redação APÓS receber as respostas.
+Se não houver nada a confirmar, indique "Nenhuma informação pendente" e prossiga.
 
-Quando gerar texto para a decisao, responda em HTML.
+Quando gerar texto para a decisão, responda em HTML.
 ${AI_PROMPTS.formatacaoHTML("A <strong>CLT</strong> estabelece...")}
-${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro paragrafo.</p><p>Segundo paragrafo.</p>")}`
+${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágrafo.</p>")}`
     });
 
     return contentArray;
@@ -1132,9 +1132,9 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro paragrafo.</p><p>Segundo paragraf
 
   // v1.19.0: Handler para enviar mensagem no chat global
   // v1.21.1: Aceita options (ex: { proofFilter: 'oral' }) para filtrar provas
-  // v1.21.6: Verifica provas vinculadas + anonimizacao -> abre modal de nomes
+  // v1.21.6: Verifica provas vinculadas + anonimização -> abre modal de nomes
   const handleSendGlobalChatMessage = React.useCallback(async (message: string, options: { proofFilter?: string } = {}) => {
-    // v1.21.13: Removido modal de anonimizacao - provas CONFLITO sao filtradas em prepareProofsContext
+    // v1.21.13: Removido modal de anonimização - provas CONFLITO são filtradas em prepareProofsContext
     const contextBuilderWithOptions = (msg: string) => buildContextForChatGlobal(msg, options);
     await chatAssistantGlobal.send(message, contextBuilderWithOptions);
   }, [chatAssistantGlobal, buildContextForChatGlobal]);
@@ -1229,7 +1229,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro paragrafo.</p><p>Segundo paragraf
 
   return (
     <div className="fixed inset-0 z-[70] flex flex-col theme-bg-app overflow-visible">
-      {/* v1.13: Modal de progresso da analise de resultados */}
+      {/* v1.13: Modal de progresso da análise de resultados */}
       {isAnalyzingResults && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
           <div className="theme-bg-primary rounded-xl p-6 shadow-xl border theme-border max-w-sm">
@@ -1238,7 +1238,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro paragrafo.</p><p>Segundo paragraf
               <div>
                 <p className="font-medium theme-text">Analisando resultados...</p>
                 <p className="text-sm theme-text-muted">
-                  Topico {analyzingProgress.current} de {analyzingProgress.total}
+                  Tópico {analyzingProgress.current} de {analyzingProgress.total}
                 </p>
               </div>
             </div>
@@ -1264,13 +1264,13 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro paragrafo.</p><p>Segundo paragraf
           )}
           {isDirty && (
             <span className="px-2 py-1 text-xs rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              Nao salvo
+              Não salvo
             </span>
           )}
         </div>
 
         <div className="flex items-center gap-2">
-          {/* v1.12.2: Botao Modelos padronizado igual ao fullscreen */}
+          {/* v1.12.2: Botão Modelos padronizado igual ao fullscreen */}
           <button
             onClick={toggleSplitMode}
             className={`px-3 py-1.5 text-white text-xs rounded flex items-center gap-1.5 transition-all ${
@@ -1377,9 +1377,9 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro paragrafo.</p><p>Segundo paragraf
             className="flex flex-col min-h-0 overflow-hidden theme-bg-secondary"
             style={{ width: `${100 - splitPosition}%` }}
           >
-            {/* Panel Header - v1.12.1: Sugestoes automaticas */}
+            {/* Panel Header - v1.12.1: Sugestões automáticas */}
             <div className="p-4 border-b theme-border-secondary flex-shrink-0">
-              <h3 className="text-sm font-semibold theme-text-primary mb-2 flex items-center gap-2">Sugestoes de Modelos{suggestionsSource === 'local' && <span className="bg-purple-600 text-white px-1.5 py-0.5 rounded text-[10px]">IA Local</span>}</h3>
+              <h3 className="text-sm font-semibold theme-text-primary mb-2 flex items-center gap-2">Sugestões de Modelos{suggestionsSource === 'local' && <span className="bg-purple-600 text-white px-1.5 py-0.5 rounded text-[10px]">IA Local</span>}</h3>
 
               {currentFocusedTopic ? (
                 <p className="text-xs theme-text-muted flex items-center gap-1.5">
@@ -1387,14 +1387,14 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro paragrafo.</p><p>Segundo paragraf
                     <span className="w-3 h-3 border border-purple-500 border-t-transparent rounded-full animate-spin inline-block"></span>
                   )}
                   <span>
-                    {loadingSuggestions ? 'Buscando para:' : 'Sugestoes para:'}{' '}
+                    {loadingSuggestions ? 'Buscando para:' : 'Sugestões para:'}{' '}
                     <strong>{currentFocusedTopic.title}</strong>
                     {currentFocusedTopic.category && ` (${currentFocusedTopic.category})`}
                   </span>
                 </p>
               ) : (
                 <p className="text-xs theme-text-muted italic">
-                  Clique em um campo de "Decisao" para ver sugestoes de modelos
+                  Clique em um campo de "Decisão" para ver sugestões de modelos
                 </p>
               )}
             </div>
@@ -1409,7 +1409,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro paragrafo.</p><p>Segundo paragraf
                     value={globalManualSearchTerm}
                     onChange={(e) => {
                       setGlobalManualSearchTerm(e.target.value);
-                      // v1.33.19: So faz busca textual se nao estiver em modo semantico
+                      // v1.33.19: Só faz busca textual se não estiver em modo semântico
                       if (!useGlobalSemanticSearch) {
                         debouncedGlobalManualSearch(e.target.value);
                       }
@@ -1533,10 +1533,10 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro paragrafo.</p><p>Segundo paragraf
           <div className="relative theme-bg-primary rounded-lg shadow-xl border theme-border-input max-w-md w-full p-6">
             <h3 className="text-lg font-bold text-amber-400 mb-4 flex items-center gap-2">
               <AlertCircle className="w-5 h-5" />
-              Descartar alteracoes?
+              Descartar alterações?
             </h3>
             <p className="theme-text-secondary mb-6">
-              Voce tem alteracoes nao salvas. Deseja descarta-las?
+              Você tem alterações não salvas. Deseja descartá-las?
             </p>
             <div className="flex gap-3 justify-end">
               <button

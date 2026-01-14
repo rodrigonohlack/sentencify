@@ -249,7 +249,7 @@ export const useProofAnalysis = ({
             if (extractedText) {
               contentArray.push({
                 type: 'text' as const,
-                text: `PROVA (texto extraido do PDF):\n\n${maybeAnonymize(extractedText)}`
+                text: `PROVA (texto extraído do PDF):\n\n${maybeAnonymize(extractedText)}`
               });
             } else {
               proofManager.removeAnalyzingProof(proofId);
@@ -259,7 +259,7 @@ export const useProofAnalysis = ({
           } else {
             if (!proof.file) {
               proofManager.removeAnalyzingProof(proofId);
-              showToast('Arquivo PDF nao encontrado.', 'error');
+              showToast('Arquivo PDF não encontrado.', 'error');
               return;
             }
             const base64 = await storage.fileToBase64(proof.file);
@@ -269,16 +269,16 @@ export const useProofAnalysis = ({
             });
           }
         } else {
-          // Usuario escolheu modo de extracao (pdfjs ou claude-vision)
+          // Usuário escolheu modo de extração (pdfjs ou claude-vision)
           const extractedText = proofManager.extractedProofTexts[proofId];
           if (extractedText) {
             contentArray.push({
               type: 'text' as const,
-              text: `PROVA (texto extraido do PDF):\n\n${maybeAnonymize(extractedText)}`
+              text: `PROVA (texto extraído do PDF):\n\n${maybeAnonymize(extractedText)}`
             });
           } else {
             proofManager.removeAnalyzingProof(proofId);
-            showToast('Texto nao extraido. Extraia o texto da prova antes de analisar.', 'error');
+            showToast('Texto não extraído. Extraia o texto da prova antes de analisar.', 'error');
             return;
           }
         }
@@ -294,14 +294,14 @@ export const useProofAnalysis = ({
       const linkedTopicTitles = proofManager.proofTopicLinks[proofId] || [];
       const linkedTopics = selectedTopics.filter(t => linkedTopicTitles.includes(t.title));
 
-      // Preparar prompt baseado no tipo de analise
+      // Preparar prompt baseado no tipo de análise
       let prompt = '';
 
       if (analysisType === 'livre') {
         if (includeLinkedTopics && linkedTopics.length > 0) {
           // Adicionar tópicos vinculados e mini-relatórios ao contexto
           const topicsContext = linkedTopics.map((topic, idx) =>
-            `TOPICO ${idx + 1}: ${topic.title} (${topic.category})\n\n${topic.relatorio || 'Mini-relatorio nao disponivel'}`
+            `TOPICO ${idx + 1}: ${topic.title} (${topic.category})\n\n${topic.relatorio || 'Mini-relatório não disponível'}`
           ).join('\n\n---\n\n');
 
           contentArray.push({
@@ -316,16 +316,16 @@ export const useProofAnalysis = ({
           // Análise livre simples - apenas prova + instruções
           prompt = customInstructions
             ? `Analise a prova a seguir conforme estas instruções:\n\n${customInstructions}`
-            : `Analise a prova a seguir e forneca insights relevantes. Seja objetivo e direto.`;
+            : `Analise a prova a seguir e forneça insights relevantes. Seja objetivo e direto.`;
         }
       } else {
-        // Analise contextual - Escolher entre documentos completos ou apenas mini-relatórios
+        // Análise contextual - Escolher entre documentos completos ou apenas mini-relatórios
 
         // Se useOnlyMiniRelatorios estiver ativado E houver tópicos vinculados, usar apenas mini-relatórios
         if (useOnlyMiniRelatorios && linkedTopics.length > 0) {
           // Adicionar apenas mini-relatórios dos tópicos vinculados
           const miniRelatoriosText = linkedTopics.map((topic, idx) =>
-            `TOPICO ${idx + 1}: ${topic.title} (${topic.category})\n\n${topic.relatorio || 'Mini-relatorio nao disponivel'}`
+            `TOPICO ${idx + 1}: ${topic.title} (${topic.category})\n\n${topic.relatorio || 'Mini-relatório não disponível'}`
           ).join('\n\n---\n\n');
 
           contentArray.push({
@@ -333,7 +333,7 @@ export const useProofAnalysis = ({
             text: `CONTEXTO DOS PEDIDOS VINCULADOS:\n\n${miniRelatoriosText}`
           });
         } else {
-          // Comportamento padrao: usar helper para documentos (evita duplicacao)
+          // Comportamento padrão: usar helper para documentos (evita duplicação)
           const docsArray = buildDocumentContentArray({ includeComplementares: true });
           contentArray.push(...docsArray);
         }
@@ -344,83 +344,83 @@ export const useProofAnalysis = ({
           'Não enviado (usando apenas mini-relatórios)' :
           (totalPeticoes > 0 ?
             `${totalPeticoes} documento${totalPeticoes > 1 ? 's' : ''} do autor fornecido${totalPeticoes > 1 ? 's' : ''} (veja acima)` :
-            'Peticao inicial nao disponivel');
+            'Petição inicial não disponível');
 
         const totalContestacoes = (analyzedDocuments.contestacoes?.length || 0) + (analyzedDocuments.contestacoesText?.length || 0);
         const contestacoesSummary = useOnlyMiniRelatorios && linkedTopics.length > 0 ?
           'Não enviado (usando apenas mini-relatórios)' :
           (totalContestacoes > 0 ?
-            `${totalContestacoes} contestacao${totalContestacoes > 1 ? 'oes' : ''} fornecida${totalContestacoes > 1 ? 's' : ''} (veja acima)` :
-            'Nenhuma contestacao disponivel');
+            `${totalContestacoes} contestação${totalContestacoes > 1 ? 'ões' : ''} fornecida${totalContestacoes > 1 ? 's' : ''} (veja acima)` :
+            'Nenhuma contestação disponível');
 
         const totalComplementares = (analyzedDocuments.complementares?.length || 0) + (analyzedDocuments.complementaresText?.length || 0);
         const complementaresSummary = useOnlyMiniRelatorios && linkedTopics.length > 0 ?
           'Não enviado (usando apenas mini-relatórios)' :
           (totalComplementares > 0 ?
             `${totalComplementares} documento${totalComplementares > 1 ? 's' : ''} complementar${totalComplementares > 1 ? 'es' : ''} fornecido${totalComplementares > 1 ? 's' : ''} (veja acima)` :
-            'Nenhum documento complementar disponivel');
+            'Nenhum documento complementar disponível');
 
-        prompt = `${customInstructions ? `**INSTRUCOES ESPECIFICAS PARA ESTA PROVA:**\n${customInstructions}\n\n` : ''}Voce esta analisando uma prova no contexto de um processo trabalhista.
+        prompt = `${customInstructions ? `**INSTRUÇÕES ESPECÍFICAS PARA ESTA PROVA:**\n${customInstructions}\n\n` : ''}Você está analisando uma prova no contexto de um processo trabalhista.
 
 CONTEXTO DO PROCESSO:
-- Peticao inicial: ${peticaoSummary}
-- Contestacoes: ${contestacoesSummary}
+- Petição inicial: ${peticaoSummary}
+- Contestações: ${contestacoesSummary}
 - Documentos complementares: ${complementaresSummary}
 
 ${linkedTopics.length > 0 ? `
-**PEDIDOS ESPECIFICOS VINCULADOS A ESTA PROVA:**
+**PEDIDOS ESPECÍFICOS VINCULADOS A ESTA PROVA:**
 
-Esta prova foi vinculada aos seguintes pedidos/topicos do processo:
+Esta prova foi vinculada aos seguintes pedidos/tópicos do processo:
 
 ${linkedTopics.map((topic, idx) => `
 ${idx + 1}. **${topic.title}** (${topic.category})
 
    O que as partes alegaram sobre este pedido:
-   ${topic.relatorio || 'Mini-relatorio nao disponivel - verifique a peticao e contestacao acima'}
+   ${topic.relatorio || 'Mini-relatório não disponível - verifique a petição e contestação acima'}
 
-   ${topic.editedContent ? `Fundamentacao parcial ja escrita (considere ao analisar):
+   ${topic.editedContent ? `Fundamentação parcial já escrita (considere ao analisar):
    ${topic.editedContent}
-   ` : 'Fundamentacao ainda nao iniciada para este pedido'}
-   Resultado parcial: ${topic.resultado || 'Ainda nao definido'}
+   ` : 'Fundamentação ainda não iniciada para este pedido'}
+   Resultado parcial: ${topic.resultado || 'Ainda não definido'}
 `).join('\n---\n')}
 
-**IMPORTANTE:** Ao analisar esta prova no contexto do processo, PRIORIZE sua relacao com os pedidos vinculados acima.
+**IMPORTANTE:** Ao analisar esta prova no contexto do processo, PRIORIZE sua relação com os pedidos vinculados acima.
 
 Para cada pedido vinculado, indique ESPECIFICAMENTE:
 - Como esta prova impacta este pedido em particular
-- Se a prova favorece o autor ou reu neste ponto especifico
-- Qual conclusao a prova sugere para este pedido
+- Se a prova favorece o autor ou réu neste ponto específico
+- Qual conclusão a prova sugere para este pedido
 
 ` : `
-Esta prova nao foi vinculada a nenhum pedido especifico. A analise sera generica em relacao a todo o processo.
+Esta prova não foi vinculada a nenhum pedido específico. A análise será genérica em relação a todo o processo.
 
 `}
 Analise a prova fornecida e responda:
 
-1. **O que esta prova demonstra?** Descreva objetivamente o conteudo probatorio
-2. **Relacao com alegacoes do autor**: Esta prova confirma, refuta ou e neutra em relacao as alegacoes da peticao inicial?
-3. **Relacao com defesa**: Esta prova confirma, refuta ou e neutra em relacao aos argumentos de defesa?
-4. **Forca probatoria**: Avalie a qualidade e relevancia desta prova para o deslinde do feito
-5. **Conclusao**: De forma resumida, qual a contribuicao desta prova para a formacao do convencimento?
+1. **O que esta prova demonstra?** Descreva objetivamente o conteúdo probatório
+2. **Relação com alegações do autor**: Esta prova confirma, refuta ou é neutra em relação às alegações da petição inicial?
+3. **Relação com defesa**: Esta prova confirma, refuta ou é neutra em relação aos argumentos de defesa?
+4. **Força probatória**: Avalie a qualidade e relevância desta prova para o deslinde do feito
+5. **Conclusão**: De forma resumida, qual a contribuição desta prova para a formação do convencimento?
 
-Seja objetivo, tecnico e imparcial. Base-se exclusivamente no conteudo da prova.
+Seja objetivo, técnico e imparcial. Base-se exclusivamente no conteúdo da prova.
 
-Formato da resposta (use quebras de linha entre secoes):
+Formato da resposta (use quebras de linha entre seções):
 
-CONTEUDO DA PROVA:
+CONTEÚDO DA PROVA:
 [descreva o que a prova demonstra]
 
-RELACAO COM ALEGACOES DO AUTOR:
-[analise]
+RELAÇÃO COM ALEGAÇÕES DO AUTOR:
+[análise]
 
-RELACAO COM A DEFESA:
-[analise]
+RELAÇÃO COM A DEFESA:
+[análise]
 
-FORCA PROBATORIA:
-[avaliacao]
+FORÇA PROBATÓRIA:
+[avaliação]
 
-CONCLUSAO:
-[sintese]`;
+CONCLUSÃO:
+[síntese]`;
       }
 
       contentArray.push({
@@ -428,8 +428,8 @@ CONCLUSAO:
         text: prompt
       });
 
-      // Fazer chamada a API
-      // v1.21.26: Parametros para analise critica de provas
+      // Fazer chamada à API
+      // v1.21.26: Parâmetros para análise crítica de provas
       const textContent = await aiIntegration.callAI([{
         role: 'user',
         content: contentArray

@@ -307,7 +307,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
               } else {
                 if (anonymizationEnabled) {
                   console.warn(`[analyzeDocuments] Extração falhou em ${label}, PDF bloqueado (anonimização ativa)`);
-                  showToast(`Nao foi possível extrair texto de ${label}. Com anonimização ativa, PDF binario nãopode ser usado.`, 'error');
+                  showToast(`Não foi possível extrair texto de ${label}. Com anonimização ativa, PDF binário não pode ser usado.`, 'error');
                 } else {
                   console.warn(`[analyzeDocuments] Extração falhou em ${label}, usando PDF puro`);
                   const base64 = await storage.fileToBase64(fileObj);
@@ -402,7 +402,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
                 });
               } else {
                 if (anonymizationEnabled) {
-                  showToast(`Nao foi possível extrair texto da contestação ${i + 1}. PDF bloqueado (anonimização ativa).`, 'error');
+                  showToast(`Não foi possível extrair texto da contestação ${i + 1}. PDF bloqueado (anonimização ativa).`, 'error');
                 } else {
                   showToast(`Texto insuficiente na contestação ${i + 1}. Usando documento original.`, 'warning');
                   const base64 = await storage.fileToBase64(fileObj);
@@ -496,7 +496,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
                 });
               } else {
                 if (anonymizationEnabled) {
-                  showToast(`Nao foi possível extrair texto do complementar ${i + 1}. PDF bloqueado (anonimização ativa).`, 'error');
+                  showToast(`Não foi possível extrair texto do complementar ${i + 1}. PDF bloqueado (anonimização ativa).`, 'error');
                 } else {
                   showToast(`Texto insuficiente no documento complementar ${i + 1}. Usando original.`, 'warning');
                   const base64 = await storage.fileToBase64(fileObj);
@@ -613,13 +613,13 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
             }
           }
         } else {
-          throw new Error(`Nao foi possível encontrar JSON válido na resposta da IA. Detalhes: ${(parseError as Error).message}`);
+          throw new Error(`Não foi possível encontrar JSON válido na resposta da IA. Detalhes: ${(parseError as Error).message}`);
         }
       }
 
       let topics = parsed.topics || [];
 
-      // Double Check - Verificação secundaria da extração de tópicos
+      // Double Check - Verificação secundária da extração de tópicos
       if (aiIntegration.aiSettings.doubleCheck?.enabled &&
           aiIntegration.aiSettings.doubleCheck?.operations.topicExtraction &&
           aiIntegration.performDoubleCheck) {

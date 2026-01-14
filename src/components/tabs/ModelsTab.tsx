@@ -382,7 +382,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
                   ? 'bg-blue-600 text-white'
                   : 'theme-text-muted hover-theme-text-secondary'
               }`}
-              title="Visualizacao em cards"
+              title="Visualização em cards"
             >
               📇 Cards
             </button>
@@ -393,7 +393,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
                   ? 'bg-blue-600 text-white'
                   : 'theme-text-muted hover-theme-text-secondary'
               }`}
-              title="Visualizacao em lista"
+              title="Visualização em lista"
             >
               📋 Lista
             </button>

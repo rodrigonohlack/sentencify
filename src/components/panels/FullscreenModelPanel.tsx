@@ -262,8 +262,8 @@ export const FullscreenModelPanel = React.memo(({
         ) : !searchResults.length && (
           <p className="text-sm theme-text-muted text-center py-4">
             {topicTitle
-              ? 'Nenhuma sugestao encontrada para este topico'
-              : 'Selecione um topico para ver sugestoes'}
+              ? 'Nenhuma sugestão encontrada para este tópico'
+              : 'Selecione um tópico para ver sugestões'}
           </p>
         )}
       </div>

@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.37 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.40 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,13 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.40 | Fix encoding UTF-8 em GlobalEditorModal, useDocumentAnalysis, ModelsTab, FullscreenModelPanel - ~40 strings/comentários com acentos perdidos (Sugestões, Tópicos, Decisão, Visualização, etc.) |
+| v1.37.39 | Fix encoding UTF-8 em ProofCard.tsx - ~25 strings com acentos perdidos (Tópicos, Análise, extração, binário, anonimização, etc.) |
+| v1.37.38 | FASE 29: Toast system migrado para useUIStore - toast, showToast, clearToast centralizados no Zustand (~12 linhas removidas) |
+| v1.37.37 | FASE 35+32: useThemeManagement e useTabbedInterface extraídos para src/hooks/ (~40 linhas removidas) |
+| v1.37.36 | Fix RELATÓRIO duplicado: buildAnalysisPrompt extraído para src/prompts/ com acentos corretos (~95 linhas removidas) |
+| v1.37.35 | Fix RELATÓRIO não reconhecido como tópico especial: título/categoria sem acento não batiam com SPECIAL_TOPICS |
+| v1.37.34 | Fix bug RELATÓRIO duplicado: acento perdido no filtro causava comparação "RELATÓRIO" !== "RELATORIO" sempre true |
 | v1.37.33 | HOTFIX: Corrigir encoding UTF-8 em ~30 arquivos - acentos perdidos durante extrações bash (Posição Fixa, Gerando relatório, sinônimos jurídicos, mensagens de progresso) |
 | v1.37.32 | FASE 28: UploadTab extraído para src/components/tabs/UploadTab.tsx (~630 linhas) - aba Upload com 3 seções (Petição, Contestação, Complementares) + paste text + ProcessingModeSelector |
 | v1.37.31 | FASE 27: ModelsTab extraído para src/components/tabs/ModelsTab.tsx (~512 linhas) - aba Banco de Modelos com 8 seções (banner, header, ModelFormModal, filtros, semântica, grid/lista, paginação, empty states) |
