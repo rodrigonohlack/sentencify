@@ -62,7 +62,7 @@ const IncontroversosSection: React.FC<{ fatos: string[] }> = ({ fatos }) => {
       <ul className="space-y-1">
         {fatos.map((fato, idx) => (
           <li key={idx} className="flex items-start gap-2 text-sm theme-text-secondary">
-            <span className="text-green-400 mt-0.5">{'\u2022'}</span>
+            <span className="text-green-400 mt-0.5">•</span>
             {fato}
           </li>
         ))}

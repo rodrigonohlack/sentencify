@@ -15,20 +15,20 @@ export const buildBulkAnalysisPrompt = (textToAnalyze: string, estiloRedacao: st
 
 TAREFA: Analise o documento jurídico fornecido e identifique TODOS os tópicos/assuntos jurídicos distintos que podem se tornar modelos de decisão completos.
 
-\u26a0\ufe0f ATENÇÃO - REGRAS DE GENERALIZAÇÃO (MUITO IMPORTANTE):
+⚠️ ATENÇÃO - REGRAS DE GENERALIZAÇÃO (MUITO IMPORTANTE):
 
 1. **REMOVA informações específicas do caso concreto:**
-   - \u274c NÃO use nomes de partes (ex: "João da Silva", "Empresa XYZ Ltda")
-   - \u274c NÃO use valores monetários específicos (ex: "R$ 5.000,00")
-   - \u274c NÃO use datas específicas (ex: "10/05/2023")
-   - \u274c NÃO use números de processo
-   - \u274c NÃO use endereços ou locais específicos
+   - ❌ NÃO use nomes de partes (ex: "João da Silva", "Empresa XYZ Ltda")
+   - ❌ NÃO use valores monetários específicos (ex: "R$ 5.000,00")
+   - ❌ NÃO use datas específicas (ex: "10/05/2023")
+   - ❌ NÃO use números de processo
+   - ❌ NÃO use endereços ou locais específicos
 
 2. **USE termos genéricos:**
-   - \u2705 "o reclamante", "a reclamada", "a empresa"
-   - \u2705 "o valor devido", "o montante apurado"
-   - \u2705 "o período trabalhado", "a data da rescisão"
-   - \u2705 "os documentos apresentados", "as provas dos autos"
+   - ✅ "o reclamante", "a reclamada", "a empresa"
+   - ✅ "o valor devido", "o montante apurado"
+   - ✅ "o período trabalhado", "a data da rescisão"
+   - ✅ "os documentos apresentados", "as provas dos autos"
 
 3. **FOQUE na fundamentação jurídica:**
    - Argumentação legal aplicável a casos similares
@@ -41,32 +41,32 @@ TAREFA: Analise o documento jurídico fornecido e identifique TODOS os tópicos/
    - Um juiz deve poder copiar e adaptar facilmente
    - Evite referências muito específicas ao caso original
 
-\ud83d\udea8 PRESERVAÇÃO LITERAL DO TEXTO (CRÍTICO - EXTREMAMENTE IMPORTANTE):
+🚨 PRESERVAÇÃO LITERAL DO TEXTO (CRÍTICO - EXTREMAMENTE IMPORTANTE):
 
 Esta é a regra MAIS IMPORTANTE de todas. Se você não seguir isso, o modelo será INÚTIL.
 
 **O QUE VOCÊ DEVE FAZER:**
 - Fazer APENAS substituições literais de informações específicas por termos genéricos
-- Funcionar como "CTRL+F \u2192 SUBSTITUIR": encontrar nomes/valores/datas e trocar por genéricos
+- Funcionar como "CTRL+F → SUBSTITUIR": encontrar nomes/valores/datas e trocar por genéricos
 - PRESERVAR TODO O RESTO DO TEXTO EXATAMENTE COMO ESTÁ
 - Manter a redação, estrutura de frases, argumentação, conectivos, tudo IDÊNTICO
 
 **O QUE VOCÊ NÃO DEVE FAZER:**
-- \u274c NÃO resuma o texto
-- \u274c NÃO reescreva com suas próprias palavras
-- \u274c NÃO simplifique a argumentação
-- \u274c NÃO altere a estrutura das frases
-- \u274c NÃO mude conectivos ou expressões jurídicas
-- \u274c NÃO "melhore" ou "otimize" o texto original
+- ❌ NÃO resuma o texto
+- ❌ NÃO reescreva com suas próprias palavras
+- ❌ NÃO simplifique a argumentação
+- ❌ NÃO altere a estrutura das frases
+- ❌ NÃO mude conectivos ou expressões jurídicas
+- ❌ NÃO "melhore" ou "otimize" o texto original
 
 **EXEMPLO DO QUE FAZER:**
 
-\u274c ERRADO (resumindo/reescrevendo):
+❌ ERRADO (resumindo/reescrevendo):
 Texto original: "A pretensão autoral merece acolhimento. Com efeito, restou comprovado nos autos que o reclamante João da Silva laborou para a empresa Acme Ltda no período de 01/01/2020 a 31/12/2023, recebendo salário mensal de R$ 3.500,00. A jornada habitual era das 8h às 18h, com uma hora de intervalo, conforme cartões de ponto de fls. 45/89."
 
 Modelo ERRADO: "A pretensão é procedente. Ficou demonstrado que houve relação de trabalho com jornada superior à legal."
 
-\u2705 CORRETO (apenas substituindo dados específicos):
+✅ CORRETO (apenas substituindo dados específicos):
 Modelo CORRETO: "A pretensão autoral merece acolhimento. Com efeito, restou comprovado nos autos que o reclamante laborou para a reclamada no período trabalhado, recebendo o salário mensal contratado. A jornada habitual era das [horário de início] às [horário de término], com uma hora de intervalo, conforme cartões de ponto dos autos."
 
 **REGRA DE OURO:**
@@ -74,12 +74,12 @@ Se você não tem certeza se deve alterar algo, NÃO ALTERE. Preserve o texto or
 Seu trabalho é fazer "buscar e substituir" de dados específicos, NÃO reescrever.
 
 **CHECKLIST FINAL - VERIFIQUE ANTES DE RESPONDER:**
-\u2713 Mantive a estrutura exata das frases do original?
-\u2713 Mantive os mesmos conectivos (ademais, com efeito, nesse sentido, etc.)?
-\u2713 Mantive a mesma argumentação jurídica?
-\u2713 Mantive a mesma ordem dos argumentos?
-\u2713 Fiz APENAS substituições de nomes, valores, datas por termos genéricos?
-\u2713 O texto tem o mesmo tamanho/extensão do original (não resumi)?
+✓ Mantive a estrutura exata das frases do original?
+✓ Mantive os mesmos conectivos (ademais, com efeito, nesse sentido, etc.)?
+✓ Mantive a mesma argumentação jurídica?
+✓ Mantive a mesma ordem dos argumentos?
+✓ Fiz APENAS substituições de nomes, valores, datas por termos genéricos?
+✓ O texto tem o mesmo tamanho/extensão do original (não resumi)?
 
 EXCLUSAO OBRIGATORIA DE MINI-RELATORIO (CRITICO):
 
@@ -105,34 +105,34 @@ CORRETO - Como DEVE comecar o modelo:
 - "A caracterizacao do dano moral..."
 - Diretamente com ANALISE JURIDICA, FUNDAMENTOS LEGAIS, DOUTRINA, PRECEDENTES
 
-\u26a0\ufe0f IMPORTANTE - PRESERVAÇÃO DE CITAÇÕES DOUTRINÁRIAS E JURISPRUDENCIAIS:
+⚠️ IMPORTANTE - PRESERVAÇÃO DE CITAÇÕES DOUTRINÁRIAS E JURISPRUDENCIAIS:
 
 Esta regra e CRITICA para manter a qualidade e fundamentacao do modelo extraido.
 
 O QUE PRESERVAR (MANTER INTEGRALMENTE):
-\u2705 Citacoes de autores (ex: "Segundo Mauricio Godinho Delgado...")
-\u2705 Citacoes de jurisprudencia (ex: "Conforme TST-AIRR-1234-56.2023...")
-\u2705 Sumulas (ex: "A Sumula 437 do TST estabelece...")
-\u2705 Orientacoes Jurisprudenciais (ex: "A OJ 415 da SDI-1 dispoe...")
-\u2705 Precedentes vinculantes (ex: "Nos termos do Tema 1046 do TST...")
-\u2705 Referencias doutrinarias completas (autor, obra, citacao)
-\u2705 Referencias jurisprudenciais completas (tribunal, numero, ementa)
-\u2705 Fundamentos teoricos e academicos
+✅ Citacoes de autores (ex: "Segundo Mauricio Godinho Delgado...")
+✅ Citacoes de jurisprudencia (ex: "Conforme TST-AIRR-1234-56.2023...")
+✅ Sumulas (ex: "A Sumula 437 do TST estabelece...")
+✅ Orientacoes Jurisprudenciais (ex: "A OJ 415 da SDI-1 dispoe...")
+✅ Precedentes vinculantes (ex: "Nos termos do Tema 1046 do TST...")
+✅ Referencias doutrinarias completas (autor, obra, citacao)
+✅ Referencias jurisprudenciais completas (tribunal, numero, ementa)
+✅ Fundamentos teoricos e academicos
 
 O QUE GENERALIZAR (SUBSTITUIR POR TERMOS GENERICOS):
-\ud83d\udd04 Nomes de partes especificas \u2192 "o reclamante", "a reclamada"
-\ud83d\udd04 Valores monetarios especificos \u2192 "[valor]", "quantia devida"
-\ud83d\udd04 Datas especificas \u2192 "periodo trabalhado", "data da rescisao"
-\ud83d\udd04 Locais especificos \u2192 "local de trabalho", "estabelecimento"
-\ud83d\udd04 Documentos especificos do caso \u2192 "prova documental", "laudo pericial"
-\ud83d\udd04 Testemunhas especificas \u2192 "prova testemunhal"
+🔄 Nomes de partes especificas → "o reclamante", "a reclamada"
+🔄 Valores monetarios especificos → "[valor]", "quantia devida"
+🔄 Datas especificas → "periodo trabalhado", "data da rescisao"
+🔄 Locais especificos → "local de trabalho", "estabelecimento"
+🔄 Documentos especificos do caso → "prova documental", "laudo pericial"
+🔄 Testemunhas especificas → "prova testemunhal"
 
 O QUE NUNCA FAZER:
-\u274c NÃO remova citacoes de autores renomados
-\u274c NÃO remova referencias a precedentes e jurisprudencia
-\u274c NÃO remova fundamentacao teorica/doutrinaria
-\u274c NÃO substitua nomes de doutrinadores por termos genericos
-\u274c NÃO remova numeros de processos citados como precedentes
+❌ NÃO remova citacoes de autores renomados
+❌ NÃO remova referencias a precedentes e jurisprudencia
+❌ NÃO remova fundamentacao teorica/doutrinaria
+❌ NÃO substitua nomes de doutrinadores por termos genericos
+❌ NÃO remova numeros de processos citados como precedentes
 
 EXEMPLO CORRETO DE PRESERVAÇÃO:
 
@@ -148,9 +148,9 @@ a configuracao de grupo economico exige demonstracao de direcao, controle
 ou administracao comum (TST-AIRR-1234-56.2023.5.01.0000). No caso concreto,
 a reclamada demonstrou..."
 
-\u2705 Citacao de Godinho Delgado \u2192 PRESERVADA
-\u2705 Precedente TST-AIRR \u2192 PRESERVADO
-\ud83d\udd04 "Empresa XYZ" \u2192 "a reclamada" (generalizado)
+✅ Citacao de Godinho Delgado → PRESERVADA
+✅ Precedente TST-AIRR → PRESERVADO
+🔄 "Empresa XYZ" → "a reclamada" (generalizado)
 
 REGRA DE OURO:
 Se o primeiro paragrafo fala sobre "o que o reclamante pede" ou "o que as partes alegam", ESTA ERRADO.
@@ -191,21 +191,21 @@ Para CADA tópico identificado, crie:
 3. **Palavras-chave** (5 a 10 termos estratégicos):
 
    INCLUA:
-   - \u2705 Termos técnicos jurídicos principais
-   - \u2705 Sinônimos e variações do tema
-   - \u2705 Palavras que um juiz digitaria na busca
-   - \u2705 Conceitos-chave relacionados
-   - \u2705 Artigos de lei relevantes (ex: "CLT art 59", "Lei 13467")
+   - ✅ Termos técnicos jurídicos principais
+   - ✅ Sinônimos e variações do tema
+   - ✅ Palavras que um juiz digitaria na busca
+   - ✅ Conceitos-chave relacionados
+   - ✅ Artigos de lei relevantes (ex: "CLT art 59", "Lei 13467")
 
    EVITE:
-   - \u274c Palavras muito genéricas ("direito", "trabalho", "lei", "justiça")
-   - \u274c Verbos conjugados ("trabalhar", "receber", "pagar")
-   - \u274c Artigos e preposições (o, a, de, da, para)
-   - \u274c Nomes próprios ou específicos
+   - ❌ Palavras muito genéricas ("direito", "trabalho", "lei", "justiça")
+   - ❌ Verbos conjugados ("trabalhar", "receber", "pagar")
+   - ❌ Artigos e preposições (o, a, de, da, para)
+   - ❌ Nomes próprios ou específicos
 
    EXEMPLOS:
-   \u274c Ruins: "direito, trabalho, empregado, salário, lei"
-   \u2705 Bons: "horas extras, sobrejornada, adicional hora extra, banco de horas, controle jornada, CLT art 59, 7\u00ba inciso XVI, prova horário"
+   ❌ Ruins: "direito, trabalho, empregado, salário, lei"
+   ✅ Bons: "horas extras, sobrejornada, adicional hora extra, banco de horas, controle jornada, CLT art 59, 7º inciso XVI, prova horário"
 
 4. **Conteúdo**: Modelo de decisão GENÉRICO em formato HTML com REDAÇÃO FLUIDA, COESA E CONTÍNUA:
    - INICIE DIRETAMENTE na análise jurídica (SEM mini-relatório)
@@ -218,10 +218,10 @@ Para CADA tópico identificado, crie:
 
 EXEMPLO DE GENERALIZAÇÃO:
 
-\u274c ERRADO (específico demais):
+❌ ERRADO (específico demais):
 "João da Silva trabalhou para a Empresa ABC Ltda de 01/01/2020 a 31/12/2022, fazendo jus a R$ 15.000,00 de horas extras conforme planilha de fls. 45."
 
-\u2705 CORRETO (genérico e reutilizável):
+✅ CORRETO (genérico e reutilizável):
 "O reclamante comprovou o labor em sobrejornada durante o período contratual, fazendo jus ao pagamento das horas extras apuradas em liquidação de sentença, conforme documentação apresentada nos autos."
 
 FORMATO DE RESPOSTA - JSON valido:

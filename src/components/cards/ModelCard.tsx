@@ -44,7 +44,7 @@ export const ModelCard = React.memo(({
                 className={`text-xl hover:scale-125 transition-all duration-200 ${model.favorite ? 'text-yellow-400' : 'text-slate-400 hover:text-yellow-300'}`}
                 title={model.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
               >
-                {model.favorite ? '\u2605' : '\u2606'}
+                {model.favorite ? '★' : '☆'}
               </button>
               <h4 className="font-semibold text-lg theme-text-primary">{model.title}</h4>
             </div>
@@ -159,7 +159,7 @@ export const ModelCard = React.memo(({
             className={`text-lg flex-shrink-0 hover:scale-125 transition-all duration-200 ${model.favorite ? 'text-yellow-400' : 'text-slate-400 hover:text-yellow-300'}`}
             title={model.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
           >
-            {model.favorite ? '\u2605' : '\u2606'}
+            {model.favorite ? '★' : '☆'}
           </button>
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold theme-text-primary truncate">{model.title}</h4>

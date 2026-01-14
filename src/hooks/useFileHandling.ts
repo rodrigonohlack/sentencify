@@ -313,7 +313,7 @@ export function useFileHandling({
         const attemptNum = attempt + 1;
 
         // Log de erro para debug
-        console.warn(`[callWithRetry] \u274c Erro na tentativa ${attemptNum}/${maxRetries}${fileName ? ` (${fileName})` : ''}:`, (err as Error).message || err);
+        console.warn(`[callWithRetry] ❌ Erro na tentativa ${attemptNum}/${maxRetries}${fileName ? ` (${fileName})` : ''}:`, (err as Error).message || err);
 
         if (isRetryable) {
           if (!isLastAttempt) {
@@ -327,13 +327,13 @@ export function useFileHandling({
             }
             continue;
           } else {
-            console.error(`[callWithRetry] \ud83d\udc80 FALHA FINAL: Todas as ${maxRetries} tentativas esgotadas${fileName ? ` (${fileName})` : ''}`);
+            console.error(`[callWithRetry] 💀 FALHA FINAL: Todas as ${maxRetries} tentativas esgotadas${fileName ? ` (${fileName})` : ''}`);
             throw new Error(`Rate limit excedido após ${maxRetries} tentativas. O sistema de lotes está ativo, mas a API ainda atingiu o limite. Aguarde alguns minutos antes de tentar novamente.`);
           }
         }
 
         // Não é rate limit - propagar erro original
-        console.error(`[callWithRetry] \u26a0\ufe0f Erro não-retryable${fileName ? ` (${fileName})` : ''}:`, (err as Error).message || err);
+        console.error(`[callWithRetry] ⚠️ Erro não-retryable${fileName ? ` (${fileName})` : ''}:`, (err as Error).message || err);
         throw err;
       }
     }
@@ -519,7 +519,7 @@ export function useFileHandling({
     if (files.length === 0) return;
 
     if (files.length > MAX_BULK_FILES) {
-      showToast(`\u26a0\ufe0f Limite máximo de ${MAX_BULK_FILES} arquivos por lote. Por favor, selecione menos arquivos.`, 'error');
+      showToast(`⚠️ Limite máximo de ${MAX_BULK_FILES} arquivos por lote. Por favor, selecione menos arquivos.`, 'error');
       return;
     }
 
@@ -531,7 +531,7 @@ export function useFileHandling({
     });
 
     if (invalidFiles.length > 0) {
-      showToast(`\u26a0\ufe0f Arquivos inválidos detectados:\n${invalidFiles.map(f => f.name).join('\n')}\n\n\u2705 Tipos suportados: PDF, DOCX, DOC, TXT`, 'error');
+      showToast(`⚠️ Arquivos inválidos detectados:\n${invalidFiles.map(f => f.name).join('\n')}\n\n✅ Tipos suportados: PDF, DOCX, DOC, TXT`, 'error');
       return;
     }
 
