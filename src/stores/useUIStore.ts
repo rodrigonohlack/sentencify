@@ -1,7 +1,7 @@
 /**
  * @file useUIStore.ts
- * @description Store Zustand para estado de UI (modais, tema, preview)
- * @version 1.36.61
+ * @description Store Zustand para estado de UI (modais, tema, preview, toast)
+ * @version 1.37.38
  *
  * Este store centraliza o estado de UI que antes estava distribuído
  * em múltiplos hooks e componentes.
@@ -13,7 +13,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { ModalKey, ModalState, TextPreviewState } from '../types';
+import type { ModalKey, ModalState, TextPreviewState, ToastState } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SEÇÃO 1: TIPOS DO STORE
@@ -74,11 +74,19 @@ const initialTextPreviewState: TextPreviewState = {
   text: '',
 };
 
+/** Estado inicial do toast de notificações */
+const initialToastState: ToastState = {
+  show: false,
+  message: '',
+  type: 'success',
+};
+
 /** Interface do estado do store */
 interface UIState {
   // Estado
   modals: ModalState;
   textPreview: TextPreviewState;
+  toast: ToastState;
 
   // Actions - Modais
   openModal: (modalName: ModalKey) => void;
@@ -90,6 +98,11 @@ interface UIState {
   setTextPreview: (preview: TextPreviewState) => void;
   openTextPreview: (title: string, text: string) => void;
   closeTextPreview: () => void;
+
+  // Actions - Toast (v1.37.38)
+  setToast: (toast: ToastState) => void;
+  showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
+  clearToast: () => void;
 
   // Computed (via selectors)
   // isAnyModalOpen é um selector, não uma action
@@ -113,10 +126,11 @@ interface UIState {
  */
 export const useUIStore = create<UIState>()(
   devtools(
-    immer((set) => ({
+    immer((set, get) => ({
       // Estado inicial
       modals: initialModalState,
       textPreview: initialTextPreviewState,
+      toast: initialToastState,
 
       // ─────────────────────────────────────────────────────────────────────
       // Actions - Modais
@@ -190,6 +204,42 @@ export const useUIStore = create<UIState>()(
           false,
           'closeTextPreview'
         ),
+
+      // ─────────────────────────────────────────────────────────────────────
+      // Actions - Toast (v1.37.38)
+      // ─────────────────────────────────────────────────────────────────────
+
+      setToast: (toast: ToastState) =>
+        set(
+          (state) => {
+            state.toast = toast;
+          },
+          false,
+          'setToast'
+        ),
+
+      showToast: (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+        set(
+          (state) => {
+            state.toast = { show: true, message, type };
+          },
+          false,
+          `showToast/${type}`
+        );
+        // Auto-hide after 4 seconds
+        setTimeout(() => {
+          get().clearToast();
+        }, 4000);
+      },
+
+      clearToast: () =>
+        set(
+          (state) => {
+            state.toast = initialToastState;
+          },
+          false,
+          'clearToast'
+        ),
     })),
     { name: 'UIStore' }
   )
@@ -227,6 +277,20 @@ export const selectTextPreview = (state: UIState): TextPreviewState =>
 export const selectIsTextPreviewOpen = (state: UIState): boolean =>
   state.textPreview.isOpen;
 
+/**
+ * Selector: Retorna estado do toast (v1.37.38)
+ * @example const toast = useUIStore(selectToast);
+ */
+export const selectToast = (state: UIState): ToastState =>
+  state.toast;
+
+/**
+ * Selector: Verifica se toast está visível (v1.37.38)
+ * @example const isToastVisible = useUIStore(selectIsToastVisible);
+ */
+export const selectIsToastVisible = (state: UIState): boolean =>
+  state.toast.show;
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SEÇÃO 4: HOOKS DE COMPATIBILIDADE
 // ═══════════════════════════════════════════════════════════════════════════
@@ -255,6 +319,10 @@ export function useModalManagerCompat() {
   const isAnyModalOpen = useUIStore(selectIsAnyModalOpen);
   const textPreview = useUIStore((s) => s.textPreview);
   const setTextPreview = useUIStore((s) => s.setTextPreview);
+  // v1.37.38: Toast state adicionado
+  const toast = useUIStore((s) => s.toast);
+  const showToast = useUIStore((s) => s.showToast);
+  const clearToast = useUIStore((s) => s.clearToast);
 
   return {
     modals,
@@ -264,6 +332,10 @@ export function useModalManagerCompat() {
     isAnyModalOpen,
     textPreview,
     setTextPreview,
+    // v1.37.38: Toast
+    toast,
+    showToast,
+    clearToast,
   };
 }
 

@@ -312,7 +312,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 }) => {
 
   // 🎣 CUSTOM HOOKS
-  const { modals, openModal, closeModal, closeAllModals, isAnyModalOpen, textPreview, setTextPreview } = useModalManager();
+  // v1.37.38: toast, showToast, clearToast agora vêm do useUIStore via useModalManager
+  const { modals, openModal, closeModal, closeAllModals, isAnyModalOpen, textPreview, setTextPreview, toast, showToast, clearToast } = useModalManager();
   const aiIntegration = useAIIntegration();
   const featureFlags = useFeatureFlags();
   const indexedDB = useIndexedDB();   const apiCache = useAPICache(50, 5 * 60 * 1000); // 🚀 v1.8.2: Cache de API (50 entradas, TTL 5min)
@@ -786,7 +787,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // 🎨 v1.37.37: Navegação - extraído para useTabbedInterface (FASE 32)
   const { activeTab, setActiveTab, goToTopics, goToEditor, goToModels } = useTabbedInterface();
-  const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' }); // 'success', 'error', 'info'
+  // 🔔 v1.37.38: toast e showToast extraídos para useUIStore (vem do useModalManager acima)
   const [error, setError] = useState<string | { type: string; message: string }>('');
   const [copySuccess, setCopySuccess] = useState(false);
   const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1870,13 +1871,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // Constantes STOP_WORDS_*, GENTILIC_WORDS, ORG_STOP_WORDS também movidas para useDetectEntities
 
   // v1.37.25: exportAiSettings, importAiSettings movidos para useExportImport hook
-
-  const showToast = (message: string, type: 'error' | 'success' | 'info' | 'warning' = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => {
-      setToast({ show: false, message: '', type: 'success' });
-    }, 4000); // Auto-hide after 4 seconds
-  };
+  // v1.37.38: showToast movido para useUIStore (vem do useModalManager no início)
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // v1.37.27: useSlashMenu - Hook extraído para acesso rápido a modelos com \
@@ -6110,7 +6105,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
                 <p className="text-sm theme-text-primary whitespace-pre-line">{toast.message}</p>
               </div>
               <button
-                onClick={() => setToast({ show: false, message: '', type: 'success' })}
+                onClick={clearToast}
                 className="flex-shrink-0 text-white/60 hover-text-white transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
