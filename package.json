@@ -1,6 +1,6 @@
 {
   "name": "sentencify-standalone",
-  "version": "1.37.38",
+  "version": "1.37.39",
   "private": true,
   "type": "module",
   "scripts": {

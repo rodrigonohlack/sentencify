@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.39', feature: 'Fix encoding UTF-8 em ProofCard.tsx - ~25 strings com acentos perdidos (Tópicos, Análise, extração, binário, anonimização, etc.)' },
   { version: '1.37.38', feature: 'FASE 29: Toast system migrado para useUIStore - toast, showToast, clearToast centralizados no Zustand (~12 linhas removidas do App.tsx)' },
   { version: '1.37.37', feature: 'FASE 35+32: useThemeManagement e useTabbedInterface extraídos para src/hooks/ (~40 linhas removidas do App.tsx)' },
   { version: '1.37.36', feature: 'Fix RELATÓRIO duplicado: buildAnalysisPrompt extraído para src/prompts/ com acentos corretos (~95 linhas removidas de useDocumentAnalysis)' },

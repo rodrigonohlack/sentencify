@@ -1,10 +1,10 @@
 /**
  * @file ProofCard.tsx
- * @description Card de prova PDF/Texto com extracao, anonimizacao e analise
+ * @description Card de prova PDF/Texto com extração, anonimização e análise
  * @version 1.36.86
  *
- * Extraido do App.tsx como parte da FASE 3 de refatoracao.
- * v1.21.5: Suporte a anonimizacao de provas
+ * Extraído do App.tsx como parte da FASE 3 de refatoração.
+ * v1.21.5: Suporte a anonimização de provas
  * v1.36.36: Bloquear PDF Puro quando Grok selecionado
  */
 
@@ -28,10 +28,10 @@ export const ProofCard = React.memo(({
   editorTheme = 'dark',
   setTextPreview
 }: ProofCardProps) => {
-  // Estado local para progresso de extracao
+  // Estado local para progresso de extração
   const [extractionProgress, setExtractionProgress] = React.useState<{ current: number; total: number; mode: string } | null>(null);
 
-  // Handler: Remover vinculo de topico
+  // Handler: Remover vínculo de tópico
   const handleUnlinkTopic = React.useCallback((topicTitle: string) => {
     proofManager.setProofTopicLinks((prev: Record<string, string[]>) => ({
       ...prev,
@@ -57,16 +57,16 @@ export const ProofCard = React.memo(({
     }
   }, [proof.id, proof.isPlaceholder, proofManager]);
 
-  // Funcao interna de extracao (chamada diretamente ou apos modal de nomes)
+  // Função interna de extração (chamada diretamente ou após modal de nomes)
   const executeExtraction = React.useCallback(async (nomesToUse: string[] = []) => {
-    // Bloquear apenas modos binarios, permitir tesseract
+    // Bloquear apenas modos binários, permitir tesseract
     const userMode = proofManager.proofProcessingModes[proof.id] || 'pdfjs';
     const blockedModes = ['claude-vision', 'pdf-puro'];
     const selectedMode = (anonymizationEnabled && blockedModes.includes(userMode))
       ? 'pdfjs'
       : userMode;
 
-    // Se modo e 'pdf-puro', usar PDF binario diretamente
+    // Se modo é 'pdf-puro', usar PDF binário diretamente
     if (selectedMode === 'pdf-puro') {
       proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
       return;
@@ -111,18 +111,18 @@ export const ProofCard = React.memo(({
   const handleExtractText = React.useCallback(async () => {
     if (proof.isPlaceholder) return;
 
-    // Se anonimizacao ativa, abrir modal de nomes antes de extrair
+    // Se anonimização ativa, abrir modal de nomes antes de extrair
     if (anonymizationEnabled && anonConfig) {
       proofManager.setPendingExtraction({ proofId: proof.id, proof, executeExtraction });
       openModal('proofExtractionAnonymization');
       return;
     }
 
-    // Sem anonimizacao: extrair diretamente
+    // Sem anonimização: extrair diretamente
     await executeExtraction(nomesParaAnonimizar);
   }, [proof.id, proof.isPlaceholder, proofManager, openModal, anonymizationEnabled, anonConfig, nomesParaAnonimizar, executeExtraction]);
 
-  // Handler: Abrir modal de analise
+  // Handler: Abrir modal de análise
   const handleAnalyze = React.useCallback(() => {
     proofManager.setProofToAnalyze(proof);
     openModal('proofAnalysis');
@@ -158,11 +158,11 @@ export const ProofCard = React.memo(({
               {isPdf ? 'PDF' : 'TEXTO'}
             </span>
             {isPdf && proof.isPlaceholder && (
-              <span className="px-2 py-0.5 theme-bg-amber-accent theme-text-amber text-xs rounded" title="PDF original nao salvo, mas texto extraido disponivel">
+              <span className="px-2 py-0.5 theme-bg-amber-accent theme-text-amber text-xs rounded" title="PDF original não salvo, mas texto extraído disponível">
                 Somente Texto
               </span>
             )}
-            {/* Badge de modo de processamento (BINARIO vs EXTRAIDO) */}
+            {/* Badge de modo de processamento (BINÁRIO vs EXTRAÍDO) */}
             {isPdf && !proof.isPlaceholder && (
               <span className={`px-2 py-0.5 text-xs rounded ${
                 anonymizationEnabled && proofManager.proofUsePdfMode[proof.id]
@@ -172,14 +172,14 @@ export const ProofCard = React.memo(({
                     : editorTheme === 'light' ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-green-600/20 text-green-400 border border-green-500/30'
               }`} title={
                 anonymizationEnabled && proofManager.proofUsePdfMode[proof.id]
-                  ? 'Conflito: Modo PDF + anonimizacao. Clique em "Usar Texto" para resolver.'
+                  ? 'Conflito: Modo PDF + anonimização. Clique em "Usar Texto" para resolver.'
                   : proofManager.proofUsePdfMode[proof.id]
-                    ? 'PDF binario sera enviado a IA'
-                    : 'Texto extraido sera enviado a IA'
+                    ? 'PDF binário será enviado à IA'
+                    : 'Texto extraído será enviado à IA'
               }>
                 {anonymizationEnabled && proofManager.proofUsePdfMode[proof.id]
                   ? 'CONFLITO'
-                  : proofManager.proofUsePdfMode[proof.id] ? 'BINARIO' : 'EXTRAIDO'}
+                  : proofManager.proofUsePdfMode[proof.id] ? 'BINÁRIO' : 'EXTRAÍDO'}
               </span>
             )}
           </div>
@@ -194,11 +194,11 @@ export const ProofCard = React.memo(({
           {isPdf && proof.isPlaceholder && (
             <div className="mb-3 text-xs text-amber-400 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" />
-              PDF original nao salvo (muito grande), mas texto extraido esta disponivel
+              PDF original não salvo (muito grande), mas texto extraído está disponível
             </div>
           )}
 
-          {/* Aviso para PDF com anonimizacao ativa */}
+          {/* Aviso para PDF com anonimização ativa */}
           {isPdf && anonymizationEnabled && !proofManager.extractedProofTexts[proof.id] && (
             <div className={`mb-3 p-2 rounded text-xs flex items-start gap-2 ${
               editorTheme === 'dark'
@@ -207,12 +207,12 @@ export const ProofCard = React.memo(({
             }`}>
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <div>
-                <span className="font-medium">Anonimizacao ativa:</span> Extraia o texto antes de usar no Assistente IA
+                <span className="font-medium">Anonimização ativa:</span> Extraia o texto antes de usar no Assistente IA
               </div>
             </div>
           )}
 
-          {/* Aviso para PDF com Grok selecionado (so mostra se anonimizacao nao ativa) */}
+          {/* Aviso para PDF com Grok selecionado (só mostra se anonimização não ativa) */}
           {isPdf && grokEnabled && !anonymizationEnabled && !proofManager.extractedProofTexts[proof.id] && (
             <div className={`mb-3 p-2 rounded text-xs flex items-start gap-2 ${
               editorTheme === 'dark'
@@ -221,7 +221,7 @@ export const ProofCard = React.memo(({
             }`}>
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <div>
-                <span className="font-medium">Grok selecionado:</span> Grok nao suporta PDF binario. Extraia o texto primeiro.
+                <span className="font-medium">Grok selecionado:</span> Grok não suporta PDF binário. Extraia o texto primeiro.
               </div>
             </div>
           )}
@@ -245,7 +245,7 @@ export const ProofCard = React.memo(({
                       ? 'bg-blue-600 text-white shadow-lg hover-blue-700-from-600'
                       : 'theme-bg-tertiary-50 theme-text-muted hover-slate-600'
                   }`}
-                  title={proof.isPlaceholder ? 'PDF original nao disponivel' : anonymizationEnabled ? 'Anonimizacao ativa: PDF binario bloqueado' : grokEnabled ? 'Grok nao suporta PDF binario' : ''}
+                  title={proof.isPlaceholder ? 'PDF original não disponível' : anonymizationEnabled ? 'Anonimização ativa: PDF binário bloqueado' : grokEnabled ? 'Grok não suporta PDF binário' : ''}
                 >
                   Usar PDF
                 </button>
@@ -279,7 +279,7 @@ export const ProofCard = React.memo(({
                 />
               </div>
 
-              {/* Indicador de progresso de extracao (inline) */}
+              {/* Indicador de progresso de extração (inline) */}
               {extractionProgress && (
                 <div className="mt-2 text-xs text-blue-400 flex items-center gap-2">
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -287,37 +287,37 @@ export const ProofCard = React.memo(({
                     {extractionProgress.mode === 'claude-vision' ? '' : ''}
                     {extractionProgress.total > 0
                       ? ` Extraindo... ${extractionProgress.current}/${extractionProgress.total} páginas`
-                      : ' Iniciando extracao...'}
+                      : ' Iniciando extração...'}
                   </span>
                 </div>
               )}
 
-              {/* Indicador de texto extraido - clicavel para preview */}
+              {/* Indicador de texto extraído - clicável para preview */}
               {!proofManager.proofUsePdfMode[proof.id] && proofManager.extractedProofTexts[proof.id] && (
                 <div
                   className={`mt-2 text-xs flex items-center gap-1 cursor-pointer hover:underline ${editorTheme === 'light' ? 'text-green-600' : 'text-green-400'}`}
                   onClick={() => setTextPreview?.({ isOpen: true, title: proof.name, text: proofManager.extractedProofTexts[proof.id] })}
                 >
                   <Check className="w-3 h-3" />
-                  Texto extraido com sucesso ({proofManager.extractedProofTexts[proof.id].length.toLocaleString()} caracteres)
+                  Texto extraído com sucesso ({proofManager.extractedProofTexts[proof.id].length.toLocaleString()} caracteres)
                 </div>
               )}
 
-              {/* Indicador de extracao falhada - mensagem diferente quando PDF bloqueado */}
+              {/* Indicador de extração falhada - mensagem diferente quando PDF bloqueado */}
               {proofManager.proofExtractionFailed[proof.id] && (
                 <div className={`mt-2 text-xs flex items-center gap-1 ${
                   (anonymizationEnabled || grokEnabled) ? 'text-red-400' : 'text-amber-400'
                 }`}>
                   <AlertCircle className="w-3 h-3" />
                   {(anonymizationEnabled || grokEnabled)
-                    ? 'PDF sem texto extraivel - extracao obrigatoria (tente Tesseract OCR)'
-                    : 'PDF sem texto extraivel (imagem) - usando PDF completo'}
+                    ? 'PDF sem texto extraível - extração obrigatória (tente Tesseract OCR)'
+                    : 'PDF sem texto extraível (imagem) - usando PDF completo'}
                 </div>
               )}
             </div>
           )}
 
-          {/* Botao: Analisar com IA */}
+          {/* Botão: Analisar com IA */}
           <div className="mt-3">
             <button
               onClick={handleAnalyze}
@@ -338,7 +338,7 @@ export const ProofCard = React.memo(({
             </button>
           </div>
 
-          {/* Botao: Vincular a Topicos */}
+          {/* Botão: Vincular a Tópicos */}
           <div className="mt-3">
             <button
               onClick={handleLink}
@@ -350,11 +350,11 @@ export const ProofCard = React.memo(({
               }`}
             >
               <Scale className="w-3 h-3" />
-              Vincular a Topicos
+              Vincular a Tópicos
             </button>
           </div>
 
-          {/* Toggle para enviar conteudo completo a IA */}
+          {/* Toggle para enviar conteúdo completo à IA */}
           <div className="mt-3 flex items-center gap-2">
             <button
               onClick={() => {
@@ -384,17 +384,17 @@ export const ProofCard = React.memo(({
                 ? 'theme-text-disabled'
                 : 'theme-text-muted'
             }`}>
-              Enviar conteudo completo a IA
+              Enviar conteúdo completo à IA
             </span>
           </div>
 
-          {/* Resultado da Analise */}
+          {/* Resultado da Análise */}
           {proofManager.proofAnalysisResults[proof.id] && (
             <div className="mt-3 theme-info-box">
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="w-3 h-3 text-blue-400" />
                 <span className="text-xs font-medium theme-text-blue">
-                  Analise {proofManager.proofAnalysisResults[proof.id].type === 'livre' ? 'Livre' : 'Contextual'}
+                  Análise {proofManager.proofAnalysisResults[proof.id].type === 'livre' ? 'Livre' : 'Contextual'}
                 </span>
               </div>
               <div className="overflow-y-auto" style={{ resize: 'vertical', height: '16rem', minHeight: '10rem', maxHeight: '40rem' }}>
@@ -413,13 +413,13 @@ export const ProofCard = React.memo(({
             <textarea
               value={proofManager.proofConclusions[proof.id] || ''}
               onChange={handleConclusionChange}
-              placeholder="Adicione suas conclusoes sobre esta prova..."
+              placeholder="Adicione suas conclusões sobre esta prova..."
               rows={3}
               className="w-full px-3 py-2 theme-bg-secondary-50 border theme-border-input rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent theme-text-secondary text-xs resize-none"
             />
           </div>
 
-          {/* Badges de Topicos Vinculados */}
+          {/* Badges de Tópicos Vinculados */}
           {proofManager.proofTopicLinks[proof.id] && proofManager.proofTopicLinks[proof.id].length > 0 && (
             <div className="mt-3">
               <p className="text-xs theme-text-muted mb-2">Vinculado a:</p>
@@ -443,7 +443,7 @@ export const ProofCard = React.memo(({
           )}
         </div>
 
-        {/* Botao Remover */}
+        {/* Botão Remover */}
         <button
           onClick={handleDelete}
           className="p-2 rounded-lg hover-delete-proof"
