@@ -126,7 +126,7 @@ export const ModelCard = React.memo(({
             }}
             title="Duplicar para sua biblioteca"
           >
-            \uD83D\uDCCB
+            📋
           </button>
           {/* Mostrar excluir para modelos proprios OU compartilhados com permissao edit */}
           {(!isShared || sharedPermission === 'edit') && (
@@ -224,7 +224,7 @@ export const ModelCard = React.memo(({
             }}
             title="Duplicar para sua biblioteca"
           >
-            \uD83D\uDCCB
+            📋
           </button>
           {/* Mostrar excluir para modelos proprios OU compartilhados com permissao edit */}
           {(!isShared || sharedPermission === 'edit') && (
