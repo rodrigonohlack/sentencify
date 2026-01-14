@@ -197,7 +197,7 @@ export const TopicCard = React.memo(({
               </span>
 
               {/* Seletor de resultado do julgamento - não mostrar para RELATÓRIO e DISPOSITIVO */}
-              {topic.title.toUpperCase() !== 'RELATORIO' && topic.title.toUpperCase() !== 'DISPOSITIVO' && (
+              {topic.title.toUpperCase() !== 'RELATÓRIO' && topic.title.toUpperCase() !== 'DISPOSITIVO' && (
                 <select
                   value={topic.resultado || ''}
                   onChange={(e) => {
@@ -238,7 +238,7 @@ export const TopicCard = React.memo(({
               )}
 
               {/* Indicador de resultado auto-detectado */}
-              {topic.resultado && !topic.resultadoManual && topic.title.toUpperCase() !== 'RELATORIO' && topic.title.toUpperCase() !== 'DISPOSITIVO' && (
+              {topic.resultado && !topic.resultadoManual && topic.title.toUpperCase() !== 'RELATÓRIO' && topic.title.toUpperCase() !== 'DISPOSITIVO' && (
                 <span className="text-xs text-purple-400 flex items-center gap-1" title="Resultado detectado automaticamente pela IA">
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -248,7 +248,7 @@ export const TopicCard = React.memo(({
               )}
 
               {/* Indicador de status de decisão - não mostrar para RELATÓRIO e DISPOSITIVO */}
-              {topic.title.toUpperCase() !== 'RELATORIO' && topic.title.toUpperCase() !== 'DISPOSITIVO' && (
+              {topic.title.toUpperCase() !== 'RELATÓRIO' && topic.title.toUpperCase() !== 'DISPOSITIVO' && (
                 isDecidido() ? (
                   <span className="flex items-center gap-1 text-xs theme-bg-green-accent theme-text-green px-2 py-1 rounded border border-green-500/30">
                     <span className="w-2 h-2 bg-green-500 rounded-full"></span>
@@ -274,7 +274,7 @@ export const TopicCard = React.memo(({
             </button>
 
             {/* Botões adicionais apenas para tópicos que não sejam RELATÓRIO ou DISPOSITIVO */}
-            {topic.title.toUpperCase() !== 'RELATORIO' && topic.title.toUpperCase() !== 'DISPOSITIVO' && (
+            {topic.title.toUpperCase() !== 'RELATÓRIO' && topic.title.toUpperCase() !== 'DISPOSITIVO' && (
               <>
                 <button
                   onClick={() => {

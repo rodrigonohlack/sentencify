@@ -862,7 +862,7 @@ ${topic.editedFundamentacao || topic.fundamentacao || 'Ainda nao foi escrito nad
 
         localTopics.forEach((t, index) => {
           const titleUpper = t.title.toUpperCase();
-          if (titleUpper === 'RELATORIO') {
+          if (titleUpper === 'RELATÓRIO') {
             decisionContext += `RELATORIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
           } else if (titleUpper === 'DISPOSITIVO') {
             decisionContext += `DISPOSITIVO:\n${t.editedContent || ''}\n\n---\n\n`;
@@ -1032,7 +1032,7 @@ ${topic.editedFundamentacao || topic.fundamentacao || 'Ainda nao foi escrito nad
       decisionContext = 'CONTEXTO COMPLETO DA DECISAO:\n\n';
       localTopics.forEach((t, index) => {
         const titleUpper = t.title.toUpperCase();
-        if (titleUpper === 'RELATORIO') {
+        if (titleUpper === 'RELATÓRIO') {
           decisionContext += `RELATORIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
         } else if (titleUpper === 'DISPOSITIVO') {
           decisionContext += `DISPOSITIVO:\n${t.editedContent || ''}\n\n---\n\n`;

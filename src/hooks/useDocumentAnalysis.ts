@@ -953,8 +953,8 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       // Montar lista final de tópicos
       const allTopics: Topic[] = [
         {
-          title: 'RELATORIO',
-          category: 'RELATORIO' as TopicCategory,
+          title: 'RELATÓRIO',
+          category: 'RELATÓRIO',
           relatorio: relatórioHtml,
           editedFundamentacao: relatórioHtml,
         },
@@ -964,7 +964,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
       setExtractedTopics(allTopics);
 
-      // Selecionar apenas RELATORIO e os tópicos analisados
+      // Selecionar apenas RELATÓRIO e os tópicos analisados
       const tópicosInicialmenteSelecionados = allTopics.filter((_, index) => index < topicsComRelatorios.length + 1);
       setSelectedTopics(tópicosInicialmenteSelecionados);
 
