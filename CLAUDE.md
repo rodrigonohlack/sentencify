@@ -4,11 +4,11 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.43 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.45 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
-**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`, `useFullscreen`, `useSpacingControl`, `useFontSizeControl`, `useFeatureFlags`, `useThrottledBroadcast`, `useAPICache`, `useIndexedDB`, `useLegislacao`, `useModelSave`, `useDispositivoGeneration`, `useDecisionTextGeneration`, `useFactsComparison`, `useModelExtraction`, `useDetectEntities`, `useExportImport`, `useDecisionExport`, `useSlashMenu`, `useFileHandling`, `useNERManagement`, `useChangeDetectionHashes`, `useSemanticSearchManagement`, `useQuillInitialization`, `useTopicValidation`, `useKeyboardShortcuts`, `useEditorHandlers`, `useReviewSentence`
+**Hooks**: `useModalManager`, `useAIIntegration`, `useLocalStorage`, `useModelLibrary`, `useProofManager`, `useDocumentManager`, `useTopicManager`, `usePrimaryTabLock`, `useGlobalEditor`, `useChatAssistant`, `useFieldVersioning`, `useCloudSync`, `useGoogleDrive`, `useFactsComparisonCache`, `useSentenceReviewCache`, `useFullscreen`, `useSpacingControl`, `useFontSizeControl`, `useFeatureFlags`, `useThrottledBroadcast`, `useAPICache`, `useIndexedDB`, `useLegislacao`, `useModelSave`, `useDispositivoGeneration`, `useDecisionTextGeneration`, `useFactsComparison`, `useModelExtraction`, `useDetectEntities`, `useExportImport`, `useDecisionExport`, `useSlashMenu`, `useFileHandling`, `useNERManagement`, `useChangeDetectionHashes`, `useSemanticSearchManagement`, `useQuillInitialization`, `useTopicValidation`, `useKeyboardShortcuts`, `useEditorHandlers`, `useReviewSentence`, `useSemanticSearchHandlers`, `useModelSuggestions`
 
 **Components**: `TopicCard`, `ModelCard`, `SuggestionCard`, `ProofCard`, `GlobalEditorModal`, `LockedTabOverlay`, `VersionSelect`, `LoginMagicModal`, `SyncStatusIndicator`, `ShareLibraryModal`, `AcceptSharePage`, `TopicCurationModal`, `GoogleDriveButton`, `ModelGeneratorModal`, `FactsComparisonModal`, `ConfigModal`, `AIAssistantBaseLegacy`, `AIAssistantBase`, `AIAssistantModal`, `AIAssistantGlobalModal`, `AIAssistantModelModal`
 
@@ -124,6 +124,8 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.45 | FASE 47: useModelSuggestions extraído para src/hooks/ (~216 linhas removidas) - findSuggestions, refineWithAI, scoreModel com estratégia Zustand (useModelsStore.getState()) |
+| v1.37.44 | FASE 52: useSemanticSearchHandlers extraído para src/hooks/ (~35 linhas removidas) - performModelSemanticSearch, performManualSemanticSearch com estratégia Zustand |
 | v1.37.43 | FASE 44: useReviewSentence extraído para src/hooks/ (~82 linhas removidas) - estados e função de revisão crítica de sentença com cache e double check |
 | v1.37.42 | FASE 43+48-50: useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers extraídos (~380 linhas removidas) - App.tsx 6400→6020 |
 | v1.37.41 | FASE 40-42: useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement extraídos (~160 linhas removidas) |

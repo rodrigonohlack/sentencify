@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.45', feature: 'FASE 47: useModelSuggestions extraído para src/hooks/ (~216 linhas removidas) - findSuggestions, refineWithAI, scoreModel com estratégia Zustand (useModelsStore.getState())' },
   { version: '1.37.44', feature: 'FASE 52: useSemanticSearchHandlers extraído para src/hooks/ (~35 linhas removidas) - busca semântica de modelos usando Zustand getState() para acesso direto ao store' },
   { version: '1.37.43', feature: 'FASE 44: useReviewSentence extraído para src/hooks/ (~82 linhas removidas) - estados e função de revisão crítica de sentença com cache e double check' },
   { version: '1.37.42', feature: 'FASE 43+48-50: useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers extraídos para src/hooks/ (~380 linhas removidas) - App.tsx 6400→6020 linhas' },

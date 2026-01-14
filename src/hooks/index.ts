@@ -61,6 +61,9 @@ export type { UseReviewSentenceProps, UseReviewSentenceReturn, ReviewScope, AIIn
 export { useSemanticSearchHandlers } from './useSemanticSearchHandlers';
 export type { UseSemanticSearchHandlersProps, UseSemanticSearchHandlersReturn } from './useSemanticSearchHandlers';
 
+export { useModelSuggestions } from './useModelSuggestions';
+export type { UseModelSuggestionsProps, UseModelSuggestionsReturn, AIIntegrationForSuggestions, APICacheForSuggestions, SuggestionsResult } from './useModelSuggestions';
+
 // TIER 1 hooks (dependem de TIER 0)
 export { useIndexedDB, validateModel, sanitizeModel } from './useIndexedDB';
 export type { UseIndexedDBReturn, SyncCallbackParams } from './useIndexedDB';
