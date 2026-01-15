@@ -228,17 +228,31 @@ Sua função é verificar criticamente a tabela de confronto de fatos gerada.
 \`\`\`json
 {
   "corrections": [
-    { "type": "add_row", "row": {"tema": "...", "alegacaoReclamante": "...", "alegacaoReclamada": "...", "status": "...", "relevancia": "..."}, "reason": "Fato omitido" },
-    { "type": "fix_row", "tema": "TEMA", "field": "alegacaoReclamante|alegacaoReclamada|status|relevancia", "newValue": "...", "reason": "..." },
-    { "type": "remove_row", "tema": "TEMA", "reason": "..." },
-    { "type": "add_fato", "list": "fatosIncontroversos|fatosControversos", "fato": "...", "reason": "..." },
-    { "type": "remove_fato", "list": "fatosIncontroversos|fatosControversos", "fato": "...", "reason": "..." }
+    { "type": "add_row", "row": {"tema": "...", "alegacaoReclamante": "...", "alegacaoReclamada": "...", "status": "...", "relevancia": "..."}, "reason": "..." },
+    { "type": "fix_row", "tema": "Subordinação Hierárquica", "field": "observacoes", "newValue": "Texto corrigido aqui", "reason": "..." },
+    { "type": "remove_row", "tema": "Tema da linha", "reason": "..." },
+    { "type": "add_fato", "list": "fatosIncontroversos", "fato": "Fato a adicionar", "reason": "..." }
   ],
   "verifiedResult": { /* Objeto FactsComparisonResult corrigido ou original */ },
   "confidence": 0.95,
   "summary": "Resumo breve das alterações (ou 'Nenhuma correção necessária')"
 }
 \`\`\`
+
+## REGRAS CRÍTICAS PARA CORREÇÕES fix_row:
+
+1. **"tema" DEVE ser o tema REAL da linha na tabela** (ex: "Subordinação Hierárquica", "Jornada de Trabalho")
+   - NUNCA use identificadores genéricos como "Correção 1", "Linha 1", etc.
+
+2. **"field" DEVE ser um campo válido**:
+   - "alegacaoReclamante" - alegação do autor
+   - "alegacaoReclamada" - alegação da ré
+   - "status" - controverso/incontroverso/silencio
+   - "relevancia" - alta/média/baixa
+   - "observacoes" - observações adicionais
+   - NUNCA use "tabela" como field
+
+3. **"newValue" DEVE conter o texto corrigido** - nunca deixe vazio
 
 IMPORTANTE:
 - Se o confronto estiver correto, retorne corrections: [] e copie o original em verifiedResult

@@ -161,8 +161,28 @@ function describeFactsCorrection(correction: DoubleCheckCorrection): string {
       const rowTema = (correction.row as { tema?: string })?.tema || 'Nova linha';
       return `Adicionar linha: "${rowTema}"`;
     }
-    case 'fix_row':
-      return `Corrigir "${correction.tema}".${correction.field}: → "${correction.newValue}"`;
+    case 'fix_row': {
+      const tema = correction.tema || '(tema não especificado)';
+      const field = correction.field || 'campo';
+      const newValue = correction.newValue;
+
+      // Se field é genérico ("tabela") ou newValue está vazio, usar descrição simplificada
+      if (field === 'tabela' || !newValue) {
+        return `Corrigir "${tema}" - ver detalhes no motivo`;
+      }
+
+      // Traduzir nomes de campos para português
+      const fieldLabels: Record<string, string> = {
+        alegacaoReclamante: 'alegação do reclamante',
+        alegacaoReclamada: 'alegação da reclamada',
+        status: 'status',
+        relevancia: 'relevância',
+        observacoes: 'observações'
+      };
+      const fieldLabel = fieldLabels[field] || field;
+
+      return `Alterar ${fieldLabel} em "${tema}": "${newValue}"`;
+    }
     case 'remove_row':
       return `Remover linha: "${correction.tema}"`;
     case 'add_fato': {

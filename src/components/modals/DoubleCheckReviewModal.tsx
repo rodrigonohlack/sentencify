@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { RefreshCw, Check, X, Info } from 'lucide-react';
+import { RefreshCw, Check, Info } from 'lucide-react';
 import { BaseModal, CSS, ModalInfoBox } from './BaseModal';
 import { useUIStore } from '../../stores/useUIStore';
 import type { DoubleCheckCorrectionWithSelection } from '../../types';
@@ -209,34 +209,35 @@ export const DoubleCheckReviewModal: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={handleSelectAll}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium theme-bg-secondary theme-hover-bg theme-text-secondary transition-all"
+              className="px-4 py-2 rounded-lg text-sm font-medium theme-bg-secondary theme-hover-bg theme-text-secondary transition-all"
             >
               Selecionar Todas
             </button>
             <button
               onClick={handleDeselectAll}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium theme-bg-secondary theme-hover-bg theme-text-secondary transition-all"
+              className="px-4 py-2 rounded-lg text-sm font-medium theme-bg-secondary theme-hover-bg theme-text-secondary transition-all"
             >
               Desmarcar Todas
             </button>
           </div>
 
+          {/* Separador visual */}
+          <div className="h-6 w-px bg-gray-500/30 mx-4" />
+
           {/* Botões de ação */}
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={handleDiscardAll}
-              className={CSS.btnSecondary}
+              className="px-4 py-2 rounded-lg text-sm font-medium theme-bg-secondary theme-hover-bg theme-text-secondary border theme-border-secondary transition-all"
             >
-              <X className="w-4 h-4 mr-1.5 inline" />
-              Descartar Todas
+              Descartar
             </button>
             <button
               onClick={handleApply}
               disabled={selectedCount === 0}
-              className={`${CSS.btnGreen} ${selectedCount === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition-all ${selectedCount === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Check className="w-4 h-4 mr-1.5 inline" />
-              Aplicar Selecionadas ({selectedCount})
+              Aplicar ({selectedCount})
             </button>
           </div>
         </div>
