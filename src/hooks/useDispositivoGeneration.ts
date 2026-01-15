@@ -2,12 +2,15 @@
  * @file useDispositivoGeneration.ts
  * @description Hook para geração e regeneração do DISPOSITIVO da sentença
  * Extraído do App.tsx v1.37.16 - FASE 11 refactoring
+ *
+ * v1.37.59: Integração com DoubleCheckReviewModal - abre modal para revisão de correções
  */
 
-import { useCallback } from 'react';
-import type { Topic, AIMessage, AICallOptions, AIMessageContent, DoubleCheckCorrection } from '../types';
+import { useCallback, useRef, useEffect } from 'react';
+import type { Topic, AIMessage, AICallOptions, AIMessageContent, DoubleCheckCorrection, DoubleCheckReviewResult } from '../types';
 import { AI_PROMPTS } from '../prompts';
 import { normalizeHTMLSpacing, isRelatorio } from '../utils/text';
+import { useUIStore } from '../stores/useUIStore';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -103,6 +106,23 @@ export function useDispositivoGeneration({
   isTopicDecidido,
   htmlToFormattedText,
 }: UseDispositivoGenerationProps): UseDispositivoGenerationReturn {
+
+  // Double Check Review - Zustand actions (v1.37.59)
+  const openDoubleCheckReview = useUIStore(state => state.openDoubleCheckReview);
+  const doubleCheckResult = useUIStore(state => state.doubleCheckResult);
+  const setDoubleCheckResult = useUIStore(state => state.setDoubleCheckResult);
+
+  // Ref para armazenar o resolver da Promise que aguarda decisão do usuário
+  const pendingDoubleCheckResolve = useRef<((result: DoubleCheckReviewResult) => void) | null>(null);
+
+  // Quando o usuário decide no modal, resolver a Promise pendente
+  useEffect(() => {
+    if (doubleCheckResult && doubleCheckResult.operation === 'dispositivo' && pendingDoubleCheckResolve.current) {
+      pendingDoubleCheckResolve.current(doubleCheckResult);
+      pendingDoubleCheckResolve.current = null;
+      setDoubleCheckResult(null); // Limpar após consumir
+    }
+  }, [doubleCheckResult, setDoubleCheckResult]);
 
   /**
    * Gera o DISPOSITIVO inicial baseado nos tópicos decididos
@@ -284,9 +304,36 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           );
 
           if (corrections.length > 0) {
-            dispositivoFinal = verified;
-            showToast(`🔄 Double Check: ${corrections.length} correção(ões) - ${summary}`, 'info');
-            console.log('[DoubleCheck Dispositivo] Correções aplicadas:', corrections);
+            // v1.37.59: Abrir modal para revisão de correções
+            setAnalysisProgress('Aguardando revisão das correções...');
+
+            // Criar Promise para aguardar decisão do usuário
+            const waitForDecision = new Promise<DoubleCheckReviewResult>(resolve => {
+              pendingDoubleCheckResolve.current = resolve;
+            });
+
+            // Abrir modal de revisão
+            openDoubleCheckReview({
+              operation: 'dispositivo',
+              originalResult: dispositivoFinal,
+              verifiedResult: verified,
+              corrections,
+              summary,
+              confidence: 85
+            });
+
+            // Aguardar decisão do usuário
+            const result = await waitForDecision;
+
+            // Aplicar resultado da decisão
+            if (result.selected.length > 0) {
+              dispositivoFinal = result.finalResult;
+              showToast(`🔄 Double Check: ${result.selected.length} correção(ões) aplicada(s)`, 'info');
+              console.log('[DoubleCheck Dispositivo] Correções aplicadas pelo usuário:', result.selected);
+            } else {
+              console.log('[DoubleCheck Dispositivo] Usuário descartou todas as correções');
+              showToast('Double Check: correções descartadas', 'info');
+            }
           } else {
             console.log('[DoubleCheck Dispositivo] Nenhuma correção necessária');
           }
@@ -307,7 +354,9 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
     topicsParaDispositivo,
     aiIntegration,
     setError,
+    setAnalysisProgress,
     openModal,
+    openDoubleCheckReview,
     showToast,
     isTopicDecidido,
     htmlToFormattedText

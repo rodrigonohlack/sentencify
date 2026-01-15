@@ -1,14 +1,16 @@
 /**
  * @file useDocumentAnalysis.ts
  * @description Hook para análise de documentos (petição, contestação, complementares)
- * @version 1.36.73
+ * @version 1.37.59
  *
  * Extraido do App.tsx linhas ~7451-8521
  * Funções: handleAnalyzeDocuments, handleAnonymizationConfirm, analyzeDocuments,
  *          handleCurationConfirm, handleCurationCancel
+ *
+ * v1.37.59: Integração com DoubleCheckReviewModal - abre modal para revisão de correções
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import { anonymizeText, normalizeHTMLSpacing } from '../utils/text';
 import { AI_PROMPTS, buildAnalysisPrompt } from '../prompts';
@@ -26,6 +28,8 @@ import type {
   AISettings,
   TopicoComplementar,
   AIProvider,
+  DoubleCheckReviewResult,
+  DoubleCheckCorrection,
 } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -211,6 +215,23 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
   // Store de modais
   const { openModal, closeModal } = useUIStore();
+
+  // Double Check Review - Zustand actions (v1.37.59)
+  const openDoubleCheckReview = useUIStore(state => state.openDoubleCheckReview);
+  const doubleCheckResult = useUIStore(state => state.doubleCheckResult);
+  const setDoubleCheckResult = useUIStore(state => state.setDoubleCheckResult);
+
+  // Ref para armazenar o resolver da Promise que aguarda decisão do usuário
+  const pendingDoubleCheckResolve = useRef<((result: DoubleCheckReviewResult) => void) | null>(null);
+
+  // Quando o usuário decide no modal, resolver a Promise pendente
+  useEffect(() => {
+    if (doubleCheckResult && doubleCheckResult.operation === 'topicExtraction' && pendingDoubleCheckResolve.current) {
+      pendingDoubleCheckResolve.current(doubleCheckResult);
+      pendingDoubleCheckResolve.current = null;
+      setDoubleCheckResult(null); // Limpar após consumir
+    }
+  }, [doubleCheckResult, setDoubleCheckResult]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // FUNCAO PRINCIPAL DE ANALISE
@@ -653,10 +674,36 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
           );
 
           if (corrections.length > 0) {
-            const verifiedTopics = JSON.parse(verified);
-            topics = verifiedTopics;
-            showToast(`Double Check: ${corrections.length} correção(oes) - ${summary}`, 'info');
-            console.log('[DoubleCheck] Correções aplicadas:', corrections);
+            // v1.37.59: Abrir modal para revisão de correções
+            setAnalysisProgress('Aguardando revisão das correções...');
+
+            // Criar Promise para aguardar decisão do usuário
+            const waitForDecision = new Promise<DoubleCheckReviewResult>(resolve => {
+              pendingDoubleCheckResolve.current = resolve;
+            });
+
+            // Abrir modal de revisão
+            openDoubleCheckReview({
+              operation: 'topicExtraction',
+              originalResult: JSON.stringify(topics),
+              verifiedResult: verified,
+              corrections: corrections as DoubleCheckCorrection[],
+              summary,
+              confidence: 85 // TODO: Obter do retorno da IA se disponível
+            });
+
+            // Aguardar decisão do usuário
+            const result = await waitForDecision;
+
+            // Aplicar resultado da decisão
+            if (result.selected.length > 0) {
+              topics = JSON.parse(result.finalResult);
+              showToast(`Double Check: ${result.selected.length} correção(ões) aplicada(s)`, 'info');
+              console.log('[DoubleCheck] Correções aplicadas pelo usuário:', result.selected);
+            } else {
+              console.log('[DoubleCheck] Usuário descartou todas as correções');
+              showToast('Double Check: correções descartadas', 'info');
+            }
           } else {
             console.log('[DoubleCheck] Nenhuma correção necessária');
           }

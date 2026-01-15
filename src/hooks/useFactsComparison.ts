@@ -1,14 +1,17 @@
 /**
  * @file useFactsComparison.ts
  * @description Hook para gerenciar comparação de fatos (Confronto de Fatos)
- * @version v1.37.21
+ * @version v1.37.59
  *
  * Extraído do App.tsx para modularização.
  * Gerencia a geração e cache de comparações de fatos entre documentos.
+ *
+ * v1.37.59: Integração com DoubleCheckReviewModal - abre modal para revisão de correções
  */
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import useFactsComparisonCache from './useFactsComparisonCache';
+import { useUIStore } from '../stores/useUIStore';
 import {
   buildMiniRelatorioComparisonPrompt,
   buildDocumentosComparisonPrompt,
@@ -21,7 +24,9 @@ import type {
   PastedText,
   AIMessageContent,
   AIDocumentContent,
-  AnalyzedDocuments
+  AnalyzedDocuments,
+  DoubleCheckReviewResult,
+  DoubleCheckCorrection
 } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -102,6 +107,23 @@ export function useFactsComparison({
 
   // Cache
   const factsComparisonCache = useFactsComparisonCache();
+
+  // Double Check Review - Zustand actions (v1.37.59)
+  const openDoubleCheckReview = useUIStore(state => state.openDoubleCheckReview);
+  const doubleCheckResult = useUIStore(state => state.doubleCheckResult);
+  const setDoubleCheckResult = useUIStore(state => state.setDoubleCheckResult);
+
+  // Ref para armazenar o resolver da Promise que aguarda decisão do usuário
+  const pendingDoubleCheckResolve = useRef<((result: DoubleCheckReviewResult) => void) | null>(null);
+
+  // Quando o usuário decide no modal, resolver a Promise pendente
+  useEffect(() => {
+    if (doubleCheckResult && doubleCheckResult.operation === 'factsComparison' && pendingDoubleCheckResolve.current) {
+      pendingDoubleCheckResolve.current(doubleCheckResult);
+      pendingDoubleCheckResolve.current = null;
+      setDoubleCheckResult(null); // Limpar após consumir
+    }
+  }, [doubleCheckResult, setDoubleCheckResult]);
 
   // v1.36.26: Limpar resultado do Confronto quando tópico muda (evita mostrar cache do tópico anterior)
   React.useEffect(() => {
@@ -277,11 +299,45 @@ export function useFactsComparison({
           );
 
           if (corrections.length > 0) {
-            const verifiedObj = JSON.parse(verified);
-            // Extrair o resultado verificado (pode estar em verifiedResult ou ser o objeto inteiro)
-            verifiedParsed = verifiedObj.verifiedResult || verifiedObj;
-            showToast(`🔄 Double Check: ${corrections.length} correção(ões) - ${summary}`, 'info');
-            console.log('[DoubleCheck FactsComparison] Correções:', corrections);
+            // v1.37.59: Abrir modal para revisão de correções
+            // Converter corrections de string[] para DoubleCheckCorrection[]
+            const typedCorrections: DoubleCheckCorrection[] = corrections.map((c, idx) => ({
+              type: 'fix_row' as const,
+              reason: typeof c === 'string' ? c : (c as { reason?: string }).reason || '',
+              tema: `Correção ${idx + 1}`,
+              field: 'tabela',
+              newValue: typeof c === 'string' ? c : ''
+            }));
+
+            // Criar Promise para aguardar decisão do usuário
+            const waitForDecision = new Promise<DoubleCheckReviewResult>(resolve => {
+              pendingDoubleCheckResolve.current = resolve;
+            });
+
+            // Abrir modal de revisão
+            openDoubleCheckReview({
+              operation: 'factsComparison',
+              originalResult: JSON.stringify(parsed, null, 2),
+              verifiedResult: verified,
+              corrections: typedCorrections,
+              summary,
+              confidence: 85
+            });
+
+            // Aguardar decisão do usuário
+            const dcResult = await waitForDecision;
+
+            // Aplicar resultado da decisão
+            if (dcResult.selected.length > 0) {
+              const verifiedObj = JSON.parse(dcResult.finalResult);
+              // Extrair o resultado verificado (pode estar em verifiedResult ou ser o objeto inteiro)
+              verifiedParsed = verifiedObj.verifiedResult || verifiedObj;
+              showToast(`🔄 Double Check: ${dcResult.selected.length} correção(ões) aplicada(s)`, 'info');
+              console.log('[DoubleCheck FactsComparison] Correções aplicadas pelo usuário:', dcResult.selected);
+            } else {
+              console.log('[DoubleCheck FactsComparison] Usuário descartou todas as correções');
+              showToast('Double Check: correções descartadas', 'info');
+            }
           }
         } catch (dcError) {
           console.error('[DoubleCheck FactsComparison] Erro:', dcError);
@@ -310,7 +366,7 @@ export function useFactsComparison({
     } finally {
       setGeneratingFactsComparison(false);
     }
-  }, [aiIntegration, editingTopic, analyzedDocuments, factsComparisonCache, showToast]);
+  }, [aiIntegration, editingTopic, analyzedDocuments, factsComparisonCache, showToast, openDoubleCheckReview]);
 
   return {
     // Estados

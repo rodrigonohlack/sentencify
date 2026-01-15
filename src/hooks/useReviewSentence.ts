@@ -5,6 +5,8 @@
  * FASE 44: Extraído do App.tsx para consolidar lógica de revisão
  * de sentenças com IA, incluindo cache e double check.
  *
+ * v1.37.59: Integração com DoubleCheckReviewModal - abre modal para revisão de correções
+ *
  * Responsabilidades:
  * - Gerenciar estado da revisão (scope, result, loading, fromCache)
  * - Executar revisão com IA
@@ -12,11 +14,12 @@
  * - Aplicar double check quando habilitado
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import useSentenceReviewCache from './useSentenceReviewCache';
+import { useUIStore } from '../stores/useUIStore';
 import { normalizeHTMLSpacing } from '../utils/text';
 import { AI_PROMPTS } from '../prompts';
-import type { AIMessageContent, AnalyzedDocuments } from '../types';
+import type { AIMessageContent, AnalyzedDocuments, DoubleCheckReviewResult, DoubleCheckCorrection } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -109,6 +112,23 @@ export function useReviewSentence({
   const [generatingReview, setGeneratingReview] = useState(false);
   const [reviewFromCache, setReviewFromCache] = useState(false);
 
+  // Double Check Review - Zustand actions (v1.37.59)
+  const openDoubleCheckReview = useUIStore(state => state.openDoubleCheckReview);
+  const doubleCheckResult = useUIStore(state => state.doubleCheckResult);
+  const setDoubleCheckResult = useUIStore(state => state.setDoubleCheckResult);
+
+  // Ref para armazenar o resolver da Promise que aguarda decisão do usuário
+  const pendingDoubleCheckResolve = useRef<((result: DoubleCheckReviewResult) => void) | null>(null);
+
+  // Quando o usuário decide no modal, resolver a Promise pendente
+  useEffect(() => {
+    if (doubleCheckResult && doubleCheckResult.operation === 'sentenceReview' && pendingDoubleCheckResolve.current) {
+      pendingDoubleCheckResolve.current(doubleCheckResult);
+      pendingDoubleCheckResolve.current = null;
+      setDoubleCheckResult(null); // Limpar após consumir
+    }
+  }, [doubleCheckResult, setDoubleCheckResult]);
+
   // Cache de revisão de sentença
   const sentenceReviewCache = useSentenceReviewCache();
 
@@ -181,9 +201,42 @@ export function useReviewSentence({
           );
 
           if (corrections.length > 0) {
-            reviewFinal = verified;
-            showToast(`🔄 Double Check: ${corrections.length} correção(ões) - ${summary}`, 'info');
-            console.log('[DoubleCheck Review] Correções aplicadas:', corrections);
+            // v1.37.59: Abrir modal para revisão de correções
+            // Converter corrections de string[] para DoubleCheckCorrection[]
+            const typedCorrections: DoubleCheckCorrection[] = corrections.map((c, idx) => ({
+              type: 'improve' as const,
+              reason: typeof c === 'string' ? c : (c as { reason?: string }).reason || '',
+              item: `Correção ${idx + 1}`,
+              suggestion: typeof c === 'string' ? c : ''
+            }));
+
+            // Criar Promise para aguardar decisão do usuário
+            const waitForDecision = new Promise<DoubleCheckReviewResult>(resolve => {
+              pendingDoubleCheckResolve.current = resolve;
+            });
+
+            // Abrir modal de revisão
+            openDoubleCheckReview({
+              operation: 'sentenceReview',
+              originalResult: reviewFinal,
+              verifiedResult: verified,
+              corrections: typedCorrections,
+              summary,
+              confidence: 85
+            });
+
+            // Aguardar decisão do usuário
+            const result = await waitForDecision;
+
+            // Aplicar resultado da decisão
+            if (result.selected.length > 0) {
+              reviewFinal = result.finalResult;
+              showToast(`🔄 Double Check: ${result.selected.length} correção(ões) aplicada(s)`, 'info');
+              console.log('[DoubleCheck Review] Correções aplicadas pelo usuário:', result.selected);
+            } else {
+              console.log('[DoubleCheck Review] Usuário descartou todas as correções');
+              showToast('Double Check: correções descartadas', 'info');
+            }
           } else {
             console.log('[DoubleCheck Review] Nenhuma correção necessária');
           }
@@ -215,7 +268,8 @@ export function useReviewSentence({
     aiIntegration,
     showToast,
     closeModal,
-    openModal
+    openModal,
+    openDoubleCheckReview
   ]);
 
   // ═══════════════════════════════════════════════════════════════════════════════

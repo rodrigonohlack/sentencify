@@ -45,3 +45,6 @@ export { ModelPreviewModal } from './PreviewModals';
 
 // Config Modal (v1.37.30)
 export { ConfigModal } from './ConfigModal';
+
+// Double Check Review Modal (v1.37.58)
+export { DoubleCheckReviewModal } from './DoubleCheckReviewModal';

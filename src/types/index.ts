@@ -273,15 +273,38 @@ export interface DoubleCheckResult {
   summary: string;
 }
 
+/** Tipos de correção por operação */
+export type DoubleCheckCorrectionType =
+  // Extração de Tópicos
+  | 'remove' | 'add' | 'merge' | 'reclassify'
+  // Dispositivo
+  | 'modify'
+  // Revisão de Sentença
+  | 'false_positive' | 'missed' | 'improve'
+  // Confronto de Fatos
+  | 'add_row' | 'fix_row' | 'remove_row' | 'add_fato';
+
 /** Correção identificada pelo Double Check */
 export interface DoubleCheckCorrection {
-  type: 'remove' | 'add' | 'merge' | 'reclassify';
-  topic?: string;
+  type: DoubleCheckCorrectionType;
+  // Campos comuns
+  reason: string;
+  // Extração de Tópicos
+  topic?: string | { title: string; category: string };
   topics?: string[];
   into?: string;
   from?: string;
   to?: string;
-  reason: string;
+  // Dispositivo / Revisão de Sentença
+  item?: string;
+  suggestion?: string;
+  // Confronto de Fatos
+  tema?: string;
+  field?: string;
+  newValue?: string;
+  list?: 'fatosIncontroversos' | 'fatosControversos';
+  fato?: string;
+  row?: Record<string, unknown>;
 }
 
 /** Retorno da função performDoubleCheck */
@@ -289,6 +312,37 @@ export interface PerformDoubleCheckReturn {
   verified: string;
   corrections: DoubleCheckCorrection[];
   summary: string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DOUBLE CHECK REVIEW MODAL TYPES (v1.37.58)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Operações disponíveis para Double Check */
+export type DoubleCheckOperation = 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison';
+
+/** Dados para abrir o modal de revisão do Double Check */
+export interface DoubleCheckReviewData {
+  operation: DoubleCheckOperation;
+  originalResult: string;
+  verifiedResult: string;
+  corrections: DoubleCheckCorrection[];
+  summary: string;
+  confidence: number;
+}
+
+/** Resultado da decisão do usuário no modal de revisão */
+export interface DoubleCheckReviewResult {
+  selected: DoubleCheckCorrection[];
+  finalResult: string;
+  operation: DoubleCheckOperation;
+}
+
+/** Correção com flag de seleção para o modal */
+export interface DoubleCheckCorrectionWithSelection extends DoubleCheckCorrection {
+  id: string;
+  selected: boolean;
+  description: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

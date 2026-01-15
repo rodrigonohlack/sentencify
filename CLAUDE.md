@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.57 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.59 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.59 | DoubleCheckReviewModal: Modal obrigatório para revisão de correções do Double Check - usuário aceita/rejeita correções individualmente antes de aplicá-las (topicExtraction, dispositivo, sentenceReview, factsComparison) |
 | v1.37.57 | Fix bug "cannot add property embedding, object is not extensible" - gerar embeddings para modelos existentes falhava por mutação direta de objetos frozen do Zustand/Immer |
 | v1.37.51 | Extração de modais: Toast, AutoSaveIndicator, ChangelogModal, SentenceReviewModals, DownloadModals extraídos do App.tsx (~400 linhas) - 7 novos componentes |
 | v1.37.50 | Fix bug categoria de tópicos: MERITO → MÉRITO (typo sem acento) em TopicCard.tsx e FullscreenModelPanel.tsx - tópicos agora preservam categoria correta após curadoria |

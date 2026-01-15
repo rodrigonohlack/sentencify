@@ -13,7 +13,16 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { ModalKey, ModalState, TextPreviewState, ToastState, DriveFile } from '../types';
+import type {
+  ModalKey,
+  ModalState,
+  TextPreviewState,
+  ToastState,
+  DriveFile,
+  DoubleCheckReviewData,
+  DoubleCheckReviewResult,
+  DoubleCheckOperation
+} from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SEÇÃO 1: TIPOS DO STORE
@@ -107,6 +116,10 @@ interface UIState {
   exportedText: string;
   exportedHtml: string;
 
+  // Estado - Double Check Review (v1.37.58)
+  doubleCheckReview: DoubleCheckReviewData | null;
+  doubleCheckResult: DoubleCheckReviewResult | null;
+
   // Actions - Modais (v1.37.56: Modal Registry)
   openModal: (modalName: ModalKey) => void;
   closeModal: (modalName: ModalKey) => void;
@@ -143,6 +156,11 @@ interface UIState {
   // Actions - Exportação (v1.37.49)
   setExportedText: (text: string) => void;
   setExportedHtml: (html: string) => void;
+
+  // Actions - Double Check Review (v1.37.58)
+  openDoubleCheckReview: (data: DoubleCheckReviewData) => void;
+  closeDoubleCheckReview: () => void;
+  setDoubleCheckResult: (result: DoubleCheckReviewResult | null) => void;
 
   // Computed (via selectors)
   // isAnyModalOpen é um selector, não uma action
@@ -190,6 +208,10 @@ export const useUIStore = create<UIState>()(
       // Estado - Exportação (v1.37.49)
       exportedText: '',
       exportedHtml: '',
+
+      // Estado - Double Check Review (v1.37.58)
+      doubleCheckReview: null,
+      doubleCheckResult: null,
 
       // ─────────────────────────────────────────────────────────────────────
       // Actions - Modais (v1.37.56: Modal Registry Pattern)
@@ -439,6 +461,38 @@ export const useUIStore = create<UIState>()(
           false,
           'setExportedHtml'
         ),
+
+      // ─────────────────────────────────────────────────────────────────────
+      // Actions - Double Check Review (v1.37.58)
+      // ─────────────────────────────────────────────────────────────────────
+
+      openDoubleCheckReview: (data: DoubleCheckReviewData) =>
+        set(
+          (state) => {
+            state.doubleCheckReview = data;
+            state.doubleCheckResult = null; // Limpa resultado anterior
+          },
+          false,
+          `openDoubleCheckReview/${data.operation}`
+        ),
+
+      closeDoubleCheckReview: () =>
+        set(
+          (state) => {
+            state.doubleCheckReview = null;
+          },
+          false,
+          'closeDoubleCheckReview'
+        ),
+
+      setDoubleCheckResult: (result: DoubleCheckReviewResult | null) =>
+        set(
+          (state) => {
+            state.doubleCheckResult = result;
+          },
+          false,
+          'setDoubleCheckResult'
+        ),
     })),
     { name: 'UIStore' }
   )
@@ -489,6 +543,27 @@ export const selectToast = (state: UIState): ToastState =>
  */
 export const selectIsToastVisible = (state: UIState): boolean =>
   state.toast.show;
+
+/**
+ * Selector: Retorna dados do Double Check Review (v1.37.58)
+ * @example const reviewData = useUIStore(selectDoubleCheckReview);
+ */
+export const selectDoubleCheckReview = (state: UIState): DoubleCheckReviewData | null =>
+  state.doubleCheckReview;
+
+/**
+ * Selector: Verifica se modal de Double Check Review está aberto (v1.37.58)
+ * @example const isReviewOpen = useUIStore(selectIsDoubleCheckReviewOpen);
+ */
+export const selectIsDoubleCheckReviewOpen = (state: UIState): boolean =>
+  state.doubleCheckReview !== null;
+
+/**
+ * Selector: Retorna resultado do Double Check Review (v1.37.58)
+ * @example const result = useUIStore(selectDoubleCheckResult);
+ */
+export const selectDoubleCheckResult = (state: UIState): DoubleCheckReviewResult | null =>
+  state.doubleCheckResult;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SEÇÃO 4: HOOKS DE COMPATIBILIDADE
