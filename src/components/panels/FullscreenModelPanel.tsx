@@ -89,7 +89,7 @@ export const FullscreenModelPanel = React.memo(({
         try {
           const result = await onFindSuggestions({
             title: topicTitle,
-            category: (topicCategory || 'MERITO') as TopicCategory,
+            category: (topicCategory || 'MÉRITO') as TopicCategory,
             relatorio: topicRelatorio || ''
           });
           // Suporta novo formato { suggestions, source }

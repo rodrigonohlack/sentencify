@@ -166,7 +166,7 @@ export const TopicCard = React.memo(({
               {/* Seletor de categoria - editável (não mostrar para RELATÓRIO e DISPOSITIVO) */}
               {!isRelatorioOrDispositivo && (
                 <select
-                  value={topic.category || 'MERITO'}
+                  value={topic.category || 'MÉRITO'}
                   onChange={(e) => {
                     const newTopics = [...selectedTopics];
                     newTopics[selectedIdx] = { ...topic, category: e.target.value as TopicCategory };
@@ -186,7 +186,7 @@ export const TopicCard = React.memo(({
                 >
                   <option value="PRELIMINAR">Preliminar</option>
                   <option value="PREJUDICIAL">Prejudicial</option>
-                  <option value="MERITO">Mérito</option>
+                  <option value="MÉRITO">Mérito</option>
                   <option value="PROCESSUAL">Processual</option>
                 </select>
               )}
