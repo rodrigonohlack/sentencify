@@ -2,7 +2,7 @@
 // 🤖 INSTRUÇÕES DO SISTEMA (System Prompt para LLM)
 // Refatorado em v1.35.76 para suportar estilo personalizado substitutivo
 //
-// @version 1.35.80 - Migrado para TypeScript
+// @version 1.37.63 - Preferir "dispensa" em vez de "demissão"
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -45,6 +45,7 @@ Priorize clareza e objetividade
 Mantenha tom sereno e imparcial
 Sempre use primeira pessoa
 Evite adjetivações
+Prefira "dispensa" e "dispensado" em vez de "demissão" e "demitido" (ex: "dispensa sem justa causa")
 
 📝 EXIGÊNCIAS DE QUALIDADE TEXTUAL (MUITO IMPORTANTE):
 

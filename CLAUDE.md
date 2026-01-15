@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.62 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.63 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.63 | Estilo de redação: preferir "dispensa/dispensado" em vez de "demissão/demitido" |
 | v1.37.62 | Fix Double Check factsComparison: usar dados reais da IA nas correções (código sobrescrevia tema/field/newValue com valores fixos) |
 | v1.37.61 | Double Check factsComparison: regras fix_row movidas para início do prompt com exemplos ✅/❌ - IA agora gera tema real, field válido e newValue preenchido |
 | v1.37.60 | Fix API keys perdidas ao recarregar: setApiKey agora persiste em sentencify-ai-settings (antes só gravava em memória Zustand, usuários novos perdiam keys ao recarregar) |
