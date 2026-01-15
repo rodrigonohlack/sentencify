@@ -1,7 +1,7 @@
 /**
  * @file useUIStore.ts
  * @description Store Zustand para estado de UI (modais, tema, preview, toast, formulários)
- * @version 1.37.49
+ * @version 1.37.56 - Modal Registry Pattern (openModals array substitui 46 flags)
  *
  * Este store centraliza o estado de UI que antes estava distribuído
  * em múltiplos hooks e componentes.
@@ -19,53 +19,36 @@ import type { ModalKey, ModalState, TextPreviewState, ToastState, DriveFile } fr
 // SEÇÃO 1: TIPOS DO STORE
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** Estado inicial dos modais */
-const initialModalState: ModalState = {
-  modelForm: false,
-  extractModelConfirm: false,
-  extractedModelPreview: false,
-  export: false,
-  import: false,
-  exportModels: false,
-  deleteModel: false,
-  deleteAllModels: false,
-  deleteAllPrecedentes: false,
-  deleteAllLegislacao: false,
-  rename: false,
-  merge: false,
-  split: false,
-  newTopic: false,
-  deleteTopic: false,
-  aiAssistant: false,
-  aiAssistantModel: false,
-  analysis: false,
-  settings: false,
-  dispositivo: false,
-  restoreSession: false,
-  clearProject: false,
-  bulkModel: false,
-  bulkReview: false,
-  bulkDiscardConfirm: false,
-  confirmBulkCancel: false,
-  addProofText: false,
-  deleteProof: false,
-  linkProof: false,
-  proofAnalysis: false,
-  globalEditor: false,
-  jurisIndividual: false,
-  factsComparisonIndividual: false,
-  proofTextAnonymization: false,
-  proofExtractionAnonymization: false,
-  sentenceReview: false,
-  sentenceReviewResult: false,
-  logout: false,
-  shareLibrary: false,
-  changelog: false,
-  topicCuration: false,
-  modelGenerator: false,
-  regenerateRelatorioCustom: false,
-  bulkModal: false,
-  driveFiles: false, // v1.37.49: Modal de arquivos do Google Drive
+/**
+ * v1.37.56: Modal Registry Pattern
+ * Substitui 46 flags booleanas por um array de modais abertos
+ * Benefícios: código mais limpo, escalável, fácil debug
+ */
+
+/** Lista de todas as chaves de modal válidas para inicialização */
+const ALL_MODAL_KEYS: ModalKey[] = [
+  'modelForm', 'extractModelConfirm', 'extractedModelPreview', 'export', 'import',
+  'exportModels', 'deleteModel', 'deleteAllModels', 'deleteAllPrecedentes', 'deleteAllLegislacao',
+  'rename', 'merge', 'split', 'newTopic', 'deleteTopic', 'aiAssistant', 'aiAssistantModel',
+  'analysis', 'settings', 'dispositivo', 'restoreSession', 'clearProject', 'bulkModel',
+  'bulkReview', 'bulkDiscardConfirm', 'confirmBulkCancel', 'addProofText', 'deleteProof',
+  'linkProof', 'proofAnalysis', 'globalEditor', 'jurisIndividual', 'factsComparisonIndividual',
+  'proofTextAnonymization', 'proofExtractionAnonymization', 'sentenceReview', 'sentenceReviewResult',
+  'logout', 'shareLibrary', 'changelog', 'topicCuration', 'modelGenerator',
+  'regenerateRelatorioCustom', 'bulkModal', 'driveFiles'
+];
+
+/**
+ * Converte array de modais abertos para objeto ModalState (compatibilidade backwards)
+ * @param openModals Array de chaves de modais atualmente abertos
+ * @returns Objeto com todas as chaves e seus estados booleanos
+ */
+const arrayToModalState = (openModals: ModalKey[]): ModalState => {
+  const state: Partial<ModalState> = {};
+  ALL_MODAL_KEYS.forEach(key => {
+    state[key] = openModals.includes(key);
+  });
+  return state as ModalState;
 };
 
 /** Estado inicial do preview de texto */
@@ -100,8 +83,9 @@ interface ModelGeneratorModalState {
 
 /** Interface do estado do store */
 interface UIState {
-  // Estado - Modais
-  modals: ModalState;
+  // Estado - Modais (v1.37.56: Modal Registry)
+  openModals: ModalKey[];  // Array interno de modais abertos
+  modals: ModalState;      // Computed: objeto para compatibilidade backwards
   textPreview: TextPreviewState;
   toast: ToastState;
 
@@ -123,11 +107,12 @@ interface UIState {
   exportedText: string;
   exportedHtml: string;
 
-  // Actions - Modais
+  // Actions - Modais (v1.37.56: Modal Registry)
   openModal: (modalName: ModalKey) => void;
   closeModal: (modalName: ModalKey) => void;
   closeAllModals: () => void;
   toggleModal: (modalName: ModalKey) => void;
+  isModalOpen: (modalName: ModalKey) => boolean;
 
   // Actions - Text Preview
   setTextPreview: (preview: TextPreviewState) => void;
@@ -182,8 +167,9 @@ interface UIState {
 export const useUIStore = create<UIState>()(
   devtools(
     immer((set, get) => ({
-      // Estado inicial
-      modals: initialModalState,
+      // Estado inicial (v1.37.56: Modal Registry)
+      openModals: [] as ModalKey[],
+      modals: arrayToModalState([]),  // Computed para compatibilidade
       textPreview: initialTextPreviewState,
       toast: initialToastState,
 
@@ -206,13 +192,16 @@ export const useUIStore = create<UIState>()(
       exportedHtml: '',
 
       // ─────────────────────────────────────────────────────────────────────
-      // Actions - Modais
+      // Actions - Modais (v1.37.56: Modal Registry Pattern)
       // ─────────────────────────────────────────────────────────────────────
 
       openModal: (modalName: ModalKey) =>
         set(
           (state) => {
-            state.modals[modalName] = true;
+            if (!state.openModals.includes(modalName)) {
+              state.openModals.push(modalName);
+              state.modals = arrayToModalState(state.openModals);
+            }
           },
           false,
           `openModal/${modalName}`
@@ -221,7 +210,11 @@ export const useUIStore = create<UIState>()(
       closeModal: (modalName: ModalKey) =>
         set(
           (state) => {
-            state.modals[modalName] = false;
+            const idx = state.openModals.indexOf(modalName);
+            if (idx !== -1) {
+              state.openModals.splice(idx, 1);
+              state.modals = arrayToModalState(state.openModals);
+            }
           },
           false,
           `closeModal/${modalName}`
@@ -230,9 +223,8 @@ export const useUIStore = create<UIState>()(
       closeAllModals: () =>
         set(
           (state) => {
-            (Object.keys(state.modals) as ModalKey[]).forEach((key) => {
-              state.modals[key] = false;
-            });
+            state.openModals = [];
+            state.modals = arrayToModalState([]);
           },
           false,
           'closeAllModals'
@@ -241,11 +233,19 @@ export const useUIStore = create<UIState>()(
       toggleModal: (modalName: ModalKey) =>
         set(
           (state) => {
-            state.modals[modalName] = !state.modals[modalName];
+            const idx = state.openModals.indexOf(modalName);
+            if (idx === -1) {
+              state.openModals.push(modalName);
+            } else {
+              state.openModals.splice(idx, 1);
+            }
+            state.modals = arrayToModalState(state.openModals);
           },
           false,
           `toggleModal/${modalName}`
         ),
+
+      isModalOpen: (modalName: ModalKey) => get().openModals.includes(modalName),
 
       // ─────────────────────────────────────────────────────────────────────
       // Actions - Text Preview
@@ -453,7 +453,7 @@ export const useUIStore = create<UIState>()(
  * @example const isAnyOpen = useUIStore(selectIsAnyModalOpen);
  */
 export const selectIsAnyModalOpen = (state: UIState): boolean =>
-  Object.values(state.modals).some((value) => value === true);
+  state.openModals.length > 0;  // v1.37.56: Usa array diretamente (mais eficiente)
 
 /**
  * Selector: Retorna estado de um modal específico

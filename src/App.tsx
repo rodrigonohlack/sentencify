@@ -65,7 +65,7 @@ import { GoogleDriveButton, DriveFilesModal } from './components/GoogleDriveButt
 import { VoiceButton } from './components/VoiceButton';
 import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 import { FactsComparisonModalContent } from './components/FactsComparisonModal';
-import { TopicCard, SortableTopicCard, ModelCard, ProofCard, VirtualList, SuggestionCard, SplitDivider, SpacingDropdown, FontSizeDropdown, ProcessingModeSelector, VersionCompareModal, VersionSelect, JurisprudenciaCard, ArtigoCard, ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown, BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview, RenameTopicModal, DeleteTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal, DeleteModelModal, DeleteAllModelsModal, DeleteAllPrecedentesModal, ExtractModelConfirmModal, ExtractedModelPreviewModal, SimilarityWarningModal, AddProofTextModal, DeleteProofModal, ProofAnalysisModal, LinkProofModal, RestoreSessionModal, ClearProjectModal, LogoutConfirmModal, BulkDiscardConfirmModal, ConfirmBulkCancelModal, TextPreviewModal, FullscreenModelPanel, ModelSearchPanel, JurisprudenciaTab, LegislacaoTab, AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal, AIAssistantGlobalModal, AIAssistantModelModal, extractPlainText, isOralProof, hasOralProofsForTopic, AnalysisModal, ExportModal, AnonymizationNamesModal, LinkedProofsModal, ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal, ModelFormFields, SlashCommandMenu, JurisprudenciaModal, getQuillToolbarConfig, QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor, AIRegenerationSection, FieldEditor, InlineFormattingToolbar, ModelFormModal, ModelPreviewModal, GlobalEditorSection, DecisionEditorContainer, LockedTabOverlay, GlobalEditorModal, ConfigModal, ModelsTab, UploadTab, ErrorBoundary } from './components';  // v1.36.82+: UI, v1.36.85-91: Modals/AI, v1.36.86: Cards, v1.36.87: Panels, v1.36.94: Editors, v1.36.97: Editor Containers, v1.36.99: GlobalEditorModal, v1.37.30: ConfigModal, v1.37.31: ModelsTab, v1.37.32: UploadTab
+import { TopicCard, SortableTopicCard, ModelCard, ProofCard, VirtualList, SuggestionCard, SplitDivider, SpacingDropdown, FontSizeDropdown, ProcessingModeSelector, VersionCompareModal, VersionSelect, JurisprudenciaCard, ArtigoCard, ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown, BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview, RenameTopicModal, DeleteTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal, DeleteModelModal, DeleteAllModelsModal, DeleteAllPrecedentesModal, ExtractModelConfirmModal, ExtractedModelPreviewModal, SimilarityWarningModal, AddProofTextModal, DeleteProofModal, ProofAnalysisModal, LinkProofModal, RestoreSessionModal, ClearProjectModal, LogoutConfirmModal, BulkDiscardConfirmModal, ConfirmBulkCancelModal, TextPreviewModal, FullscreenModelPanel, ModelSearchPanel, JurisprudenciaTab, LegislacaoTab, AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal, AIAssistantGlobalModal, AIAssistantModelModal, extractPlainText, isOralProof, hasOralProofsForTopic, AnalysisModal, ExportModal, AnonymizationNamesModal, LinkedProofsModal, ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal, ModelFormFields, SlashCommandMenu, JurisprudenciaModal, getQuillToolbarConfig, QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor, AIRegenerationSection, FieldEditor, InlineFormattingToolbar, ModelFormModal, ModelPreviewModal, GlobalEditorSection, DecisionEditorContainer, LockedTabOverlay, GlobalEditorModal, ConfigModal, ModelsTab, UploadTab, ProofsTab, TopicsTab, ErrorBoundary } from './components';  // v1.36.82+: UI, v1.36.85-91: Modals/AI, v1.36.86: Cards, v1.36.87: Panels, v1.36.94: Editors, v1.36.97: Editor Containers, v1.36.99: GlobalEditorModal, v1.37.30: ConfigModal, v1.37.31: ModelsTab, v1.37.32: UploadTab, v1.37.54: ProofsTab, v1.37.55: TopicsTab
 import useFactsComparisonCache, { openFactsDB, FACTS_STORE_NAME } from './hooks/useFactsComparisonCache';
 import useSentenceReviewCache, { openReviewDB, REVIEW_STORE_NAME } from './hooks/useSentenceReviewCache';
 
@@ -3321,436 +3321,54 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
             )}
 
             {activeTab === 'topics' && (
-              <div className="space-y-6">
-                {extractedTopics.length === 0 ? (
-                  <div className="text-center py-12 theme-text-muted">
-                    <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p>Nenhum tópico extraído ainda. Faça upload e análise dos documentos.</p>
-                  </div>
-                ) : (
-                  <>
-                    <div>
-                      <div className="mb-4 space-y-3">
-                        {/* Linha 1: Título e Botões */}
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <h3 className="text-xl font-bold text-blue-400">
-                              Gerenciar Tópicos {selectedTopics.length > 0 && `(${selectedTopics.length} selecionados)`}
-                            </h3>
-                            <p className="text-xs theme-text-muted mt-1 flex items-center gap-2">
-                              Clique para selecionar • <GripVertical className="w-3 h-3" /> Arraste para reordenar • Use setas e números
-                            </p>
-                          </div>
-                          <div className="flex gap-2 flex-nowrap overflow-x-auto">
-                            {topicsToMerge.length >= 2 && (
-                              <button
-                                onClick={() => openModal('merge')}
-                                disabled={aiIntegration.regenerating}
-                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm disabled:opacity-50 hover-amber-700-from-600 bg-amber-600 text-white transition-colors duration-300"
-                              >
-                                <Merge className="w-4 h-4" />
-                                Unir {topicsToMerge.length} Selecionados
-                              </button>
-                            )}
-                            <button
-                              onClick={() => openModal('newTopic')}
-                              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover-green-700-from-600 bg-emerald-600 text-white transition-colors duration-300"
-                            >
-                              <PlusCircle className="w-4 h-4" />
-                              Novo Tópico
-                            </button>
-                            {/* v1.11.0: Botão de Edição Global */}
-                            {selectedTopics.length > 0 && (
-                              <button
-                                onClick={() => openModal('globalEditor')}
-                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover-cyan-700-from-600 bg-cyan-600 text-white transition-colors duration-300"
-                              >
-                                <Edit className="w-4 h-4" />
-                                Edição Global
-                              </button>
-                            )}
-                            {selectedTopics.length > 0 && (
-                              <>
-                                {/* v1.21.21: Botão Revisar Sentença */}
-                                <div className="relative group">
-                                  <button
-                                    onClick={() => openModal('sentenceReview')}
-                                    disabled={!canGenerateDispositivo.enabled || generatingReview}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white transition-all ${
-                                      !canGenerateDispositivo.enabled || generatingReview
-                                        ? 'opacity-50 cursor-not-allowed'
-                                        : 'hover-amber-700-from-600'
-                                    }`}
-                                    style={{
-                                      backgroundColor: canGenerateDispositivo.enabled && !generatingReview ? '#d97706' : '#6b7280',
-                                      transition: 'background-color 0.3s ease'
-                                    }}
-                                  >
-                                    {generatingReview ? (
-                                      <>
-                                        <div className={CSS.spinner}></div>
-                                        <span>Revisando...</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Scale className="w-4 h-4" />
-                                        Revisar Sentença
-                                      </>
-                                    )}
-                                  </button>
-                                  {/* Tooltip quando desabilitado */}
-                                  {!canGenerateDispositivo.enabled && !generatingReview && (
-                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 theme-bg-primary text-white text-xs rounded-lg shadow-lg border border-amber-500/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 max-w-xs">
-                                      <div className="flex items-start gap-2">
-                                        <span className="text-xl flex-shrink-0">⚠️</span>
-                                        <span>{canGenerateDispositivo.reason}</span>
-                                      </div>
-                                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-amber-500/50"></div>
-                                    </div>
-                                  )}
-                                </div>
-                                {/* v1.5.14: Botão com validação e tooltip */}
-                                <div className="relative group">
-                                  <button
-                                    onClick={generateDispositivo}
-                                    disabled={!canGenerateDispositivo.enabled || aiIntegration.generatingDispositivo}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white transition-all ${
-                                      !canGenerateDispositivo.enabled || aiIntegration.generatingDispositivo
-                                        ? 'opacity-50 cursor-not-allowed'
-                                        : 'hover-purple-700-from-600'
-                                    }`}
-                                    style={{
-                                      backgroundColor: canGenerateDispositivo.enabled && !aiIntegration.generatingDispositivo ? '#9333ea' : '#6b7280',
-                                      transition: 'background-color 0.3s ease'
-                                    }}
-                                  >
-                                    {aiIntegration.generatingDispositivo ? (
-                                      <>
-                                        <div className={CSS.spinner}></div>
-                                        <span>Gerando...</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Sparkles className="w-4 h-4" />
-                                        Gerar Dispositivo
-                                      </>
-                                    )}
-                                  </button>
-
-                                  {/* Tooltip explicativo quando desabilitado - v1.5.14: Otimizado para múltiplos tópicos */}
-                                  {!canGenerateDispositivo.enabled && !aiIntegration.generatingDispositivo && (
-                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 theme-bg-primary text-white text-xs rounded-lg shadow-lg border border-amber-500/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 max-w-xs">
-                                      <div className="flex items-start gap-2">
-                                        <span className="text-xl flex-shrink-0">⚠️</span>
-                                        <span>{canGenerateDispositivo.reason}</span>
-                                      </div>
-                                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-amber-500/50"></div>
-                                    </div>
-                                  )}
-                                </div>
-                                <button
-                                  onClick={exportDecision}
-                                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm hover-blue-700-from-600 bg-blue-600 text-white transition-colors duration-300"
-                                >
-                                  <Download className="w-4 h-4" />
-                                  Exportar Minuta Completa
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Linha 2: Contadores de Status */}
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <div className="flex items-center gap-2 px-3 py-1.5 theme-bg-green-accent rounded-lg border border-green-500/30">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                            <span className="text-xs theme-text-green font-medium">
-                              {topicsDecididos} Decididos
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 theme-bg-amber-accent rounded-lg border border-amber-500/30">
-                            <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-                            <span className="text-xs theme-text-amber font-medium">
-                              {topicsPendentes} Pendentes
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Aviso sobre mini-relatórios gerados por IA */}
-                      <div className="mb-4 p-3 theme-bg-blue-accent border border-blue-500/30 rounded-lg">
-                        <div className="flex items-start gap-2">
-                          <span className="theme-text-blue text-sm">ℹ️</span>
-                          <div className="text-xs theme-text-blue-muted">
-                            <p>Os mini-relatórios foram gerados automaticamente por IA. Revise-os e complemente com informações relevantes antes de decidir.</p>
-                            <p className="mt-1 theme-text-blue-muted">Sua revisão é fundamental, na forma estabelecida pela <span className="font-semibold">Resolução 615/2025 do CNJ</span>.</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        {/* v1.33.59: DndContext com collision detection customizado (ignora RELATÓRIO/DISPOSITIVO) */}
-                        <DndContext
-                          sensors={dndSensors}
-                          collisionDetection={customCollisionDetection}
-                          onDragEnd={handleDndDragEnd}
-                        >
-                          <SortableContext
-                            items={selectedTopics.map(t => t.id || t.title)}
-                            strategy={verticalListSortingStrategy}
-                          >
-                            {/* Renderizar tópicos selecionados primeiro (na ordem correta) - v1.33.58: SortableTopicCard */}
-                            {selectedTopics.map((topic, selectedIdx) => (
-                              <SortableTopicCard
-                                key={topic.id || topic.title}
-                                id={String(topic.id || topic.title)}
-                                topic={topic}
-                                selectedIdx={selectedIdx}
-                                topicRefs={topicRefs}
-                                lastEditedTopicTitle={lastEditedTopicTitle}
-                                selectedTopics={selectedTopics}
-                                extractedTopics={extractedTopics}
-                                topicsToMerge={topicsToMerge}
-                                toggleTopicSelection={toggleTopicSelection}
-                                moveTopicUp={moveTopicUp}
-                                moveTopicDown={moveTopicDown}
-                                moveTopicToPosition={moveTopicToPosition}
-                                setSelectedTopics={setSelectedTopics}
-                                setExtractedTopics={setExtractedTopics}
-                                startEditing={startEditing}
-                                setTopicToRename={setTopicToRename}
-                                setNewTopicName={setNewTopicName}
-                                openModal={openModal}
-                                setTopicToSplit={setTopicToSplit}
-                                setTopicsToMerge={setTopicsToMerge}
-                              />
-                            ))}
-                          </SortableContext>
-                        </DndContext>
-
-                        {/* Renderizar tópicos NÃO selecionados por último */}
-                        {/* v1.4.6.2: OPT-01 - Memoizado no corpo do componente (linha 10546) */}
-                        {unselectedTopics.map((topic, idx) => {
-                            const isRelatorioOrDispositivo = isSpecialTopic(topic);
-                            
-                            return (
-                          <div
-                            key={topic.title}
-                            className="p-4 rounded-lg border-2 transition-all theme-bg-secondary-30 theme-border-input hover-theme-border hover-slate-700/50"
-                          >
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                  {/* Seletor de categoria - editável (não mostrar para RELATÓRIO e DISPOSITIVO) */}
-                                  {!isRelatorioOrDispositivo && (
-                                    <select
-                                      value={topic.category || 'MÉRITO'}
-                                      onChange={(e) => {
-                                        e.stopPropagation();
-                                        const newExtracted = [...extractedTopics];
-                                        const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === topic.title);
-                                        if (extractedIndex !== -1) {
-                                          newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], category: e.target.value as TopicCategory };
-                                          setExtractedTopics(newExtracted);
-                                        }
-                                      }}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="text-xs px-2 py-1 rounded cursor-pointer font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 border-2 theme-border theme-text-secondary hover-category-select"
-                                      title="Clique para alterar a categoria"
-                                    >
-                                      <option value="PRELIMINAR">📋 Preliminar</option>
-                                      <option value="PREJUDICIAL">⚠️ Prejudicial</option>
-                                      <option value="MÉRITO">⚖️ Mérito</option>
-                                      <option value="PROCESSUAL">📝 Processual</option>
-                                    </select>
-                                  )}
-                                  
-                                  <h4 
-                                    className="font-semibold theme-text-primary cursor-pointer"
-                                    onClick={() => toggleTopicSelection(topic)}
-                                  >
-                                    {topic.title.toUpperCase()}
-                                  </h4>
-                                  {/* Indicador de status de decisão - não mostrar para RELATÓRIO e DISPOSITIVO */}
-                                  {topic.title.toUpperCase() !== 'RELATÓRIO' && topic.title.toUpperCase() !== 'DISPOSITIVO' && (
-                                    isTopicDecidido(topic) ? (
-                                      <span className="flex items-center gap-1 text-xs theme-bg-green-accent theme-text-green px-2 py-1 rounded border border-green-500/30">
-                                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                        Decidido
-                                      </span>
-                                    ) : (
-                                      <span className="flex items-center gap-1 text-xs theme-bg-amber-accent theme-text-amber px-2 py-1 rounded border border-amber-500/30">
-                                        <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-                                        Pendente
-                                      </span>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                              <div className={CSS.flexGap2}>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteTopic(topic);
-                                  }}
-                                  className="p-2 rounded hover-delete-topic"
-                                  title="Excluir tópico"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                                <div className="flex flex-col items-center gap-1">
-                                  <span className="text-xs theme-text-disabled">Clique para selecionar</span>
-                                  <input
-                                    type="checkbox"
-                                    checked={false}
-                                    onChange={(e) => {
-                                      e.stopPropagation();
-                                      toggleTopicSelection(topic);
-                                    }}
-                                    className="w-5 h-5 rounded cursor-pointer"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+              <TopicsTab
+                extractedTopics={extractedTopics}
+                setExtractedTopics={setExtractedTopics}
+                selectedTopics={selectedTopics}
+                setSelectedTopics={setSelectedTopics}
+                topicsToMerge={topicsToMerge}
+                setTopicsToMerge={setTopicsToMerge}
+                unselectedTopics={unselectedTopics}
+                topicsDecididos={topicsDecididos}
+                topicsPendentes={topicsPendentes}
+                lastEditedTopicTitle={lastEditedTopicTitle}
+                topicRefs={topicRefs}
+                dndSensors={dndSensors}
+                customCollisionDetection={customCollisionDetection}
+                handleDndDragEnd={handleDndDragEnd}
+                regenerating={aiIntegration.regenerating}
+                generatingDispositivo={aiIntegration.generatingDispositivo}
+                generatingReview={generatingReview}
+                canGenerateDispositivo={canGenerateDispositivo}
+                toggleTopicSelection={toggleTopicSelection}
+                moveTopicUp={moveTopicUp}
+                moveTopicDown={moveTopicDown}
+                moveTopicToPosition={moveTopicToPosition}
+                startEditing={startEditing}
+                deleteTopic={deleteTopic}
+                setTopicToRename={setTopicToRename}
+                setNewTopicName={setNewTopicName}
+                setTopicToSplit={setTopicToSplit}
+                openModal={openModal}
+                generateDispositivo={generateDispositivo}
+                exportDecision={exportDecision}
+                isTopicDecidido={isTopicDecidido}
+                isSpecialTopic={isSpecialTopic}
+                CSS={CSS}
+              />
             )}
 
             {activeTab === 'proofs' && (
-              <div className="space-y-6">
-                {/* v1.36.36: Aviso removido - bloqueio visual no seletor é suficiente */}
-
-                <div className="theme-gradient-card-50 rounded-lg p-6 border theme-border-secondary">
-                  <div className="flex items-start justify-between mb-6">
-                    <div>
-                      <h3 className="text-xl font-bold text-blue-400 mb-2">Gestão de Provas</h3>
-                      <p className="text-sm theme-text-muted">
-                        Faça upload de documentos probatórios, analise com IA e vincule aos tópicos da decisão
-                      </p>
-                    </div>
-                    <Scale className="w-8 h-8 text-blue-400 opacity-50" />
-                  </div>
-
-                  {/* Seção de Upload */}
-                  <div className="space-y-4 mb-8">
-                    <h4 className="text-lg font-semibold theme-text-secondary flex items-center gap-2">
-                      <Upload className="w-5 h-5" />
-                      Upload de Provas
-                    </h4>
-
-                    {/* Upload de PDF */}
-                    <div className="border-2 border-dashed theme-border-input rounded-lg p-6 hover-border-blue-500 transition-colors">
-                      <input
-                        type="file"
-                        accept="application/pdf"
-                        multiple
-                        onChange={(e) => {
-                          const files = Array.from(e.target.files || []);
-                          if (files.length > 0) {
-                            proofManager.handleUploadProofPdf(files);
-                          }
-                          e.target.value = '';
-                        }}
-                        className="hidden"
-                        id="proof-pdf-upload"
-                      />
-                      <label
-                        htmlFor="proof-pdf-upload"
-                        className="flex flex-col items-center cursor-pointer"
-                      >
-                        <Upload className="w-12 h-12 theme-text-muted mb-3" />
-                        <p className="theme-text-tertiary font-medium mb-1">Clique para fazer upload de PDFs</p>
-                        <p className="text-sm theme-text-disabled">Suporta múltiplos arquivos PDF</p>
-                      </label>
-                    </div>
-
-                    {/* Área para colar texto */}
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => {
-                          proofManager.setNewProofTextData({ name: '', text: '' });
-                          openModal('addProofText');
-                        }}
-                        className="w-full py-3 theme-bg-secondary rounded-lg hover-slate-600 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <FileText className="w-4 h-4" />
-                        Colar Texto como Prova
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Lista de Provas */}
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold theme-text-secondary flex items-center gap-2">
-                      <FileText className="w-5 h-5" />
-                      Provas Enviadas ({proofManager.proofFiles.length + proofManager.proofTexts.length})
-                    </h4>
-
-                    {proofManager.proofFiles.length === 0 && proofManager.proofTexts.length === 0 ? (
-                      <div className="text-center py-12 theme-text-muted border border-dashed theme-border-input rounded-lg">
-                        <Scale className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                        <p>Nenhuma prova enviada ainda</p>
-                        <p className="text-sm mt-2">Faça upload de PDFs ou cole textos acima</p>
-                      </div>
-                    ) : extractedTopics.length === 0 ? (
-                      <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
-                        <p className="text-sm theme-text-amber flex items-start gap-2">
-                          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                          <span>
-                            <strong>Atenção:</strong> Para vincular provas a tópicos, primeiro analise os documentos na aba "Upload & Análise".
-                          </span>
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {/* 🚀 v1.8.2: Componentizado com ProofCard - PROVAS EM PDF */}
-                        {proofManager.proofFiles.map((proof: Proof) => (
-                          <ProofCard
-                            key={proof.id}
-                            proof={proof}
-                            isPdf={true}
-                            proofManager={proofManager}
-                            openModal={openModal}
-                            setError={setError}
-                            extractTextFromPDFWithMode={documentServices.extractTextFromPDFWithMode}
-                            anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
-                            grokEnabled={aiIntegration.aiSettings?.provider === 'grok'}
-                            anonConfig={aiIntegration.aiSettings?.anonymization}
-                            nomesParaAnonimizar={aiIntegration.aiSettings?.anonymization?.nomesUsuario || []}
-                            editorTheme={appTheme as 'dark' | 'light' | undefined}
-                            setTextPreview={setTextPreview}
-                          />
-                        ))}
-
-                        {/* 🚀 v1.8.2: Componentizado com ProofCard - PROVAS EM TEXTO */}
-                        {proofManager.proofTexts.map((proof: Proof) => (
-                          <ProofCard
-                            key={proof.id}
-                            proof={proof}
-                            isPdf={false}
-                            proofManager={proofManager}
-                            openModal={openModal}
-                            setError={setError}
-                            extractTextFromPDFWithMode={documentServices.extractTextFromPDFWithMode}
-                            anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
-                            grokEnabled={aiIntegration.aiSettings?.provider === 'grok'}
-                            anonConfig={aiIntegration.aiSettings?.anonymization}
-                            nomesParaAnonimizar={aiIntegration.aiSettings?.anonymization?.nomesUsuario || []}
-                            editorTheme={appTheme as 'dark' | 'light' | undefined}
-                            setTextPreview={setTextPreview}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <ProofsTab
+                proofManager={proofManager}
+                extractedTopics={extractedTopics}
+                openModal={openModal}
+                setError={setError}
+                setTextPreview={setTextPreview}
+                documentServices={documentServices}
+                aiIntegration={aiIntegration}
+                appTheme={appTheme as 'dark' | 'light'}
+              />
             )}
 
             {activeTab === 'editor' && (

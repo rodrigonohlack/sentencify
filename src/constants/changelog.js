@@ -2,6 +2,10 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.56', feature: 'FASE 4: Modal Registry Pattern em useUIStore - 46 flags booleanas substituídas por openModals: ModalKey[] array, código mais limpo e escalável, mantém compatibilidade backwards com objeto modals' },
+  { version: '1.37.55', feature: 'FASE 3: TopicsTab extraído para src/components/tabs/TopicsTab.tsx (~252 linhas removidas) - aba Tópicos com DND, SortableTopicCard, botões ação (Unir/Novo/Editor Global/Revisar/Dispositivo/Exportar)' },
+  { version: '1.37.54', feature: 'FASE 2: ProofsTab extraído para src/components/tabs/ProofsTab.tsx (~130 linhas removidas) - aba Provas com upload PDF/texto e ProofCard list' },
+  { version: '1.37.53', feature: 'Limpeza App.tsx: removidos ~169 linhas de comentários obsoletos (extraído/movido) - imports reorganizados por categoria' },
   { version: '1.37.52', feature: 'Fix SentenceReviewModals: migrado para BaseModal com scroll lock e visual consistente (antes usava CSS.modalOverlay diretamente)' },
   { version: '1.37.51', feature: 'Extração de modais: Toast, AutoSaveIndicator, ChangelogModal, SentenceReviewModals, DownloadModals extraídos do App.tsx (~400 linhas removidas) - 7 novos componentes em src/components/' },
   { version: '1.37.50', feature: 'Fix bug categoria de tópicos: MERITO → MÉRITO (typo sem acento) em TopicCard.tsx e FullscreenModelPanel.tsx - tópicos agora preservam categoria correta após curadoria' },

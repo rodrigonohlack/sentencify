@@ -2541,6 +2541,94 @@ export interface UploadTabProps {
   removePdfFromIndexedDB: (key: string) => Promise<void>;
 }
 
+// v1.37.54: ProofsTab props - usa mesmos tipos que ProofCardProps para proofManager
+export interface ProofsTabProps {
+  // Proof manager hook - tipo completo para ProofCard
+  proofManager: ProofCardProps['proofManager'] & {
+    proofFiles: Proof[];
+    proofTexts: Proof[];
+    handleUploadProofPdf: (files: File[]) => void;
+    setNewProofTextData: (data: { name: string; text: string }) => void;
+  };
+
+  // Topics for empty state check
+  extractedTopics: Topic[];
+
+  // Modal handlers
+  openModal: (key: ModalKey) => void;
+
+  // Error handling
+  setError: (error: string) => void;
+
+  // Text preview
+  setTextPreview: (preview: TextPreviewState) => void;
+
+  // Document services
+  documentServices: {
+    extractTextFromPDFWithMode: (file: File, mode: string, progressCallback?: ((page: number, total: number) => void) | null) => Promise<string | null>;
+  };
+
+  // AI settings
+  aiIntegration: {
+    aiSettings: AISettings | null;
+  };
+
+  // Theme
+  appTheme: 'dark' | 'light';
+}
+
+// v1.37.55: TopicsTab props
+export interface TopicsTabProps {
+  // Core topic data
+  extractedTopics: Topic[];
+  setExtractedTopics: React.Dispatch<React.SetStateAction<Topic[]>>;
+  selectedTopics: Topic[];
+  setSelectedTopics: React.Dispatch<React.SetStateAction<Topic[]>>;
+  topicsToMerge: Topic[];
+  setTopicsToMerge: (topics: Topic[]) => void;
+  unselectedTopics: Topic[];
+
+  // Computed stats
+  topicsDecididos: number;
+  topicsPendentes: number;
+
+  // UI state
+  lastEditedTopicTitle: string | null;
+  topicRefs: React.RefObject<Record<string, HTMLDivElement | null>>;
+
+  // DND (drag and drop)
+  dndSensors: ReturnType<typeof import('@dnd-kit/core').useSensors>;
+  customCollisionDetection: import('@dnd-kit/core').CollisionDetection;
+  handleDndDragEnd: (event: import('@dnd-kit/core').DragEndEvent) => void;
+
+  // AI/Generation state
+  regenerating?: boolean;
+  generatingDispositivo?: boolean;
+  generatingReview: boolean;
+  canGenerateDispositivo: { enabled: boolean; reason: string };
+
+  // Topic actions - moveTopicUp/Down/ToPosition use index (from SortableTopicCard)
+  toggleTopicSelection: (topic: Topic) => void;
+  moveTopicUp: (idx: number) => void;
+  moveTopicDown: (idx: number) => void;
+  moveTopicToPosition: (currentIndex: number, newPosition: number) => void;
+  startEditing: (topic: Topic) => void;
+  deleteTopic: (topic: Topic) => void;
+  setTopicToRename: (topic: Topic | null) => void;
+  setNewTopicName: (name: string) => void;
+  setTopicToSplit: (topic: Topic | null) => void;
+
+  // Modal/Navigation
+  openModal: (key: ModalKey) => void;
+  generateDispositivo: () => void;
+  exportDecision: () => void;
+
+  // Helpers
+  isTopicDecidido: (topic: Topic) => boolean;
+  isSpecialTopic: (topic: Topic) => boolean;
+  CSS: Record<string, string>;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // GLOBAL TYPE AUGMENTATIONS
 // ═══════════════════════════════════════════════════════════════════════════
