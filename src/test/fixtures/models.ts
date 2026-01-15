@@ -5,6 +5,7 @@
  */
 
 import type { Model } from '../../types';
+import { EMBEDDING_DIMENSION } from '../../constants/embeddings';
 
 // Modelo de exemplo
 export const createMockModel = (overrides: Partial<Model> = {}): Model => ({
@@ -62,7 +63,7 @@ export const mockModels: Model[] = [
 export const modelWithEmbedding: Model = createMockModel({
   id: 'model-with-embedding',
   title: 'Modelo com Embedding',
-  embedding: Array(768).fill(0.1), // Vetor de 768 dimensões
+  embedding: Array(EMBEDDING_DIMENSION).fill(0.1), // Vetor de embeddings E5
 });
 
 // Modelos por categoria para testes de filtro

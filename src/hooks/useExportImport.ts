@@ -10,6 +10,7 @@
 import React from 'react';
 import AIModelService from '../services/AIModelService';
 import type { Model, AISettings } from '../types';
+import { EMBEDDING_DIMENSION } from '../constants/embeddings';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -249,7 +250,7 @@ export function useExportImport({
 
       // Generate embeddings for models without embedding if AI is ready
       if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && newModels.length > 0) {
-        const modelsWithoutEmbedding = newModels.filter(m => !m.embedding || m.embedding.length !== 768);
+        const modelsWithoutEmbedding = newModels.filter(m => !m.embedding || m.embedding.length !== EMBEDDING_DIMENSION);
         if (modelsWithoutEmbedding.length > 0) {
           const stripHTML = (html: string) => {
             const div = document.createElement('div');

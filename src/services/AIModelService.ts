@@ -1,11 +1,11 @@
 /**
  * @file AIModelService.ts
  * @description Serviço de IA local (NER + Embeddings) via Web Worker
- * @version 1.36.60
+ * @version 1.37.58
  *
  * Modelos:
  * - NER: Xenova/distilbert-base-multilingual-cased-ner-hrl
- * - Embeddings: Xenova/multilingual-e5-base
+ * - Embeddings: Xenova/multilingual-e5-large (1024 dimensões)
  *
  * @dependencies transformers.js (WASM), Web Worker API
  * @usedBy useLegislacao, useJurisprudencia, findSuggestions, NER detection
@@ -228,7 +228,9 @@ const AIModelService = {
     if (import.meta.env.DEV) console.log(`[AI] Iniciando ${modelType}...`, caps);
 
     try {
-      await this._call(`init-${modelType}`);
+      // E5-Large é maior (~355MB), precisa de mais tempo para download inicial
+      const initTimeout = modelType === 'search' ? 300000 : 60000; // 5min para search, 1min para NER
+      await this._call(`init-${modelType}`, null, null, initTimeout);
       this.status[modelType] = 'ready';
       this.progress[modelType] = 100;
       this._notify();

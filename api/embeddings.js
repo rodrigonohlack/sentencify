@@ -1,6 +1,7 @@
 // Proxy para download de embeddings do GitHub Releases
 // v1.33.0: Resolve CORS ao baixar embeddings
 // v1.33.61: Adicionado suporte para arquivos de dados (legis-data.json, juris-data.json)
+// v1.37.58: Migração embeddings-v2 (E5-Large 1024 dimensões)
 
 export default async function handler(req, res) {
   // CORS headers
@@ -19,20 +20,21 @@ export default async function handler(req, res) {
 
   const { file } = req.query;
 
-  // Arquivos permitidos e suas releases correspondentes
+  // Arquivos permitidos: { release, githubFilename }
+  // v1.37.58: embeddings-v2 com E5-Large (1024 dim)
   const allowedFiles = {
-    'legis-embeddings.json': 'embeddings-v1',
-    'juris-embeddings.json': 'embeddings-v1',
-    'legis-data.json': 'data-v1',
-    'juris-data.json': 'data-v1'
+    'legis-embeddings.json': { release: 'embeddings-v2', filename: 'embeddings.json' },
+    'juris-embeddings.json': { release: 'embeddings-v2', filename: 'juris-embeddings.json' },
+    'legis-data.json': { release: 'data-v1', filename: 'legis-data.json' },
+    'juris-data.json': { release: 'data-v1', filename: 'juris-data.json' }
   };
 
   if (!file || !allowedFiles[file]) {
     return res.status(400).json({ error: 'Invalid file parameter' });
   }
 
-  const releaseTag = allowedFiles[file];
-  const githubUrl = `https://github.com/rodrigonohlack/sentencify/releases/download/${releaseTag}/${file}`;
+  const { release: releaseTag, filename: githubFilename } = allowedFiles[file];
+  const githubUrl = `https://github.com/rodrigonohlack/sentencify/releases/download/${releaseTag}/${githubFilename}`;
 
   try {
     console.log(`[Embeddings] Fetching ${file}...`);
