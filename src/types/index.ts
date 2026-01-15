@@ -2245,7 +2245,7 @@ export interface BaseModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   icon?: React.ReactElement;
   iconColor?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
