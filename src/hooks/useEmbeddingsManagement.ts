@@ -555,20 +555,28 @@ export function useEmbeddingsManagement({
         return div.textContent || div.innerText || '';
       };
 
+      // v1.37.57: Coletar embeddings em um Map (evita mutação de objetos frozen do Zustand/Immer)
+      const embeddingsMap = new Map<string, number[]>();
+
       for (let i = 0; i < modelsWithoutEmbedding.length; i++) {
         const model = modelsWithoutEmbedding[i];
         const text = [model.title, model.keywords, stripHTML(model.content).slice(0, 2000)].filter(Boolean).join(' ');
         const embedding = await AIModelService.getEmbedding(text, 'passage');
-        model.embedding = embedding;
+        embeddingsMap.set(model.id, embedding);
         setModelEmbeddingsProgress({ current: i + 1, total: modelsWithoutEmbedding.length });
         // Yield to event loop para permitir que React renderize o progresso
         await new Promise(resolve => setTimeout(resolve, 0));
       }
 
+      // Criar novos objetos com embeddings (respeitando imutabilidade do Zustand/Immer)
+      const updatedModels = modelLibrary.models.map(m => {
+        const embedding = embeddingsMap.get(m.id);
+        return embedding ? { ...m, embedding } : m;
+      });
+
       // Salvar modelos atualizados
-      await indexedDB.saveModels(modelLibrary.models);
-      // Trigger re-render para atualizar contador
-      modelLibrary.setModels([...modelLibrary.models]);
+      await indexedDB.saveModels(updatedModels);
+      modelLibrary.setModels(updatedModels);
       showToast(`${modelsWithoutEmbedding.length} embeddings de modelos gerados`, 'success');
     } catch (err) {
       showToast('Erro ao gerar embeddings: ' + (err as Error).message, 'error');
