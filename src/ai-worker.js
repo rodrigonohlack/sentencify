@@ -1,10 +1,10 @@
 /**
  * AI Worker - Executa modelos de IA em thread separada
- * v1.37.58 - E5-Large migration
+ * v1.32.09 - Transformers.js via npm
  *
  * Modelos:
  * - NER: Xenova/bert-base-multilingual-cased-ner-hrl (PER, ORG, LOC) - BERT completo para qualidade
- * - Embeddings: Xenova/multilingual-e5-large (busca semântica) - 1024 dimensões
+ * - Embeddings: Xenova/multilingual-e5-base (busca semântica)
  */
 
 import { pipeline, env } from '@xenova/transformers';
@@ -43,7 +43,7 @@ async function initSearch(onProgress) {
 
   searchPipeline = await pipeline(
     'feature-extraction',
-    'Xenova/multilingual-e5-large',
+    'Xenova/multilingual-e5-base',
     {
       quantized: true,
       progress_callback: (progress) => {

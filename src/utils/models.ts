@@ -1,14 +1,13 @@
 /**
  * @file models.ts
  * @description Utilitários de busca semântica de modelos
- * @version 1.37.58
+ * @version 1.36.81
  *
  * Extraído do App.tsx
  */
 
 import AIModelService from '../services/AIModelService';
 import type { Model } from '../types';
-import { EMBEDDING_DIMENSION } from '../constants/embeddings';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // BUSCA SEMÂNTICA DE MODELOS
@@ -28,7 +27,7 @@ export const searchModelsBySimilarity = async (
   if (!query || query.length < 3) return [];
 
   // Filtrar apenas modelos com embedding
-  const modelsWithEmbedding = models.filter((m: Model) => m.embedding?.length === EMBEDDING_DIMENSION);
+  const modelsWithEmbedding = models.filter((m: Model) => m.embedding?.length === 768);
   if (modelsWithEmbedding.length === 0) return [];
 
   // Gerar embedding da query (v1.32.20: toLowerCase para E5 case-sensitive)

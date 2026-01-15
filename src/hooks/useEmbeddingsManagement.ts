@@ -13,7 +13,6 @@ import type {
 } from '../types';
 import { EmbeddingsService, JurisEmbeddingsService, EmbeddingsCDNService } from '../services/EmbeddingsServices';
 import AIModelService from '../services/AIModelService';
-import { EMBEDDING_DIMENSION } from '../constants/embeddings';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -537,7 +536,7 @@ export function useEmbeddingsManagement({
     }
     if (generatingModelEmbeddings) return;
 
-    const modelsWithoutEmbedding = modelLibrary.models.filter(m => !m.embedding || m.embedding.length !== EMBEDDING_DIMENSION);
+    const modelsWithoutEmbedding = modelLibrary.models.filter(m => !m.embedding || m.embedding.length !== 768);
     if (!modelsWithoutEmbedding.length) {
       showToast('Todos os modelos já têm embeddings', 'info');
       return;

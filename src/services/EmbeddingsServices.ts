@@ -382,10 +382,9 @@ export const EmbeddingsCDNService = {
   VERSION: '1.0.0',
 
   // v1.35.20: Tamanhos estimados para fallback quando Content-Length não disponível
-  // v1.37.58: Atualizado para E5-Large (1024 dim) - arquivos maiores
   ESTIMATED_SIZES: {
-    'legis-embeddings.json': 272_000_000,  // ~272MB (E5-Large 1024 dim)
-    'juris-embeddings.json': 27_000_000,   // ~27MB (E5-Large 1024 dim)
+    'legis-embeddings.json': 211_000_000,  // ~211MB
+    'juris-embeddings.json': 50_000_000,   // ~50MB
     'legis-data.json': 5_000_000,          // ~5MB
     'juris-data.json': 2_000_000,          // ~2MB
   } as EstimatedSizes,

@@ -20,7 +20,6 @@ import AIModelService from '../services/AIModelService';
 import { AI_PROMPTS } from '../prompts';
 import { isSpecialTopic } from '../utils/text';
 import type { Model, Topic, AIMessage, AICallOptions } from '../types';
-import { EMBEDDING_DIMENSION } from '../constants/embeddings';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -229,7 +228,7 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
     if (isSpecialTopic(topic)) return { suggestions: [], source: null };
 
     // v1.28.02: IA Local para sugestões (sem API Claude)
-    if (aiIntegration.aiSettings.useLocalAIForSuggestions && searchModelReady && models.some(m => m.embedding?.length === EMBEDDING_DIMENSION)) {
+    if (aiIntegration.aiSettings.useLocalAIForSuggestions && searchModelReady && models.some(m => m.embedding?.length === 768)) {
       if (!topic?.title || topic.title.length < 3) return { suggestions: [], source: null };
       // v1.32.22: Usar apenas título para query mais focada
       const topicText = topic.title;
@@ -246,7 +245,7 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
         const qEmb = await AIModelService.getEmbedding(topicText.toLowerCase(), 'query');
         const threshold = (aiIntegration.aiSettings.modelSemanticThreshold || 60) / 100;
         const results = models
-          .filter(m => m.embedding?.length === EMBEDDING_DIMENSION)
+          .filter(m => m.embedding?.length === 768)
           .map(m => ({ ...m, similarity: AIModelService.cosineSimilarity(qEmb, m.embedding || []) }))
           .filter(m => m.similarity >= threshold)
           .sort((a, b) => b.similarity - a.similarity)

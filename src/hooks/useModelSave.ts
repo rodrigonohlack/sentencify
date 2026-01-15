@@ -29,18 +29,12 @@ export interface ModelLibraryForSave {
   editingModel: Model | null;
   extractedModelPreview: NewModelData | null;
   similarityWarning: SimilarityWarningState | null;
-  modelToDelete: Model | null;
-  suggestions: Model[];
-  deleteAllConfirmText: string;
   setModels: (models: Model[] | ((prev: Model[]) => Model[])) => void;
   setNewModel: (model: NewModelData | ((prev: NewModelData) => NewModelData)) => void;
   setEditingModel: (model: Model | null) => void;
   setExtractedModelPreview: (model: NewModelData | null) => void;
   setSimilarityWarning: (warning: SimilarityWarningState | null) => void;
   setHasUnsavedChanges: (value: boolean) => void;
-  setModelToDelete: (model: Model | null) => void;
-  setSuggestions: (suggestions: Model[]) => void;
-  setDeleteAllConfirmText: (text: string) => void;
 }
 
 export interface CloudSyncForSave {
@@ -67,7 +61,6 @@ export interface UseModelSaveProps {
   apiCache: APICacheForSave;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
   modelEditorRef: React.RefObject<{ root?: HTMLElement } | null>;
-  openModal: (modalId: string) => void;
   closeModal: (modalId: string) => void;
   modelPreview: ModelPreviewForSave;
   sanitizeHTML: (dirty: string | null | undefined) => string;
@@ -92,11 +85,6 @@ export interface UseModelSaveReturn {
   handleSimilarityCancel: () => void;
   handleSimilaritySaveNew: () => Promise<void>;
   handleSimilarityReplace: () => Promise<void>;
-
-  // Handlers de exclusão de modelos (v1.37.58)
-  confirmDeleteModel: (model: Model) => void;
-  executeDeleteModel: () => Promise<void>;
-  deleteAllModels: () => Promise<void>;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -149,7 +137,6 @@ export function useModelSave({
   apiCache,
   showToast,
   modelEditorRef,
-  openModal,
   closeModal,
   modelPreview,
   sanitizeHTML,
@@ -592,73 +579,6 @@ export function useModelSave({
   }, [modelLibrary, executeSaveModel, executeExtractedModelSave, executeSaveAsNew, processBulkSaveNext]);
 
   // ══════════════════════════════════════════════════════════════════════════
-  // HANDLERS DE EXCLUSÃO DE MODELOS (v1.37.58)
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Prepara exclusão de modelo (abre modal de confirmação)
-   */
-  const confirmDeleteModel = useCallback((model: Model) => {
-    modelLibrary.setModelToDelete(model);
-    openModal('deleteModel');
-  }, [modelLibrary, openModal]);
-
-  /**
-   * Executa exclusão do modelo após confirmação
-   */
-  const executeDeleteModel = useCallback(async () => {
-    if (!modelLibrary.modelToDelete) return;
-
-    try {
-      const modelId = modelLibrary.modelToDelete.id;
-      const modelToDelete = modelLibrary.modelToDelete;
-      modelLibrary.setModels(modelLibrary.models.filter(m => m.id !== modelId));
-      // v1.34.0: Rastrear delete para sync
-      if (cloudSyncRef.current?.trackChange) {
-        cloudSyncRef.current.trackChange('delete', { ...modelToDelete, updatedAt: new Date().toISOString() });
-      }
-      modelLibrary.setHasUnsavedChanges(true);
-      // Remover das sugestões também
-      if (modelLibrary.suggestions?.length > 0) {
-        modelLibrary.setSuggestions(modelLibrary.suggestions.filter(m => m.id !== modelId));
-      }
-      closeModal('deleteModel');
-      modelLibrary.setModelToDelete(null);
-    } catch (err) {
-      setError('Erro ao excluir modelo: ' + (err as Error).message);
-    }
-  }, [modelLibrary, closeModal, setError]);
-
-  /**
-   * Exclui todos os modelos após confirmação com texto "EXCLUIR"
-   */
-  const deleteAllModels = useCallback(async () => {
-    if (modelLibrary.deleteAllConfirmText !== 'EXCLUIR') {
-      setError('Digite "EXCLUIR" para confirmar');
-      return;
-    }
-
-    try {
-      // v1.35.2: Rastrear cada modelo como delete para sync com servidor
-      const modelsToDelete = [...modelLibrary.models];
-      const now = new Date().toISOString();
-
-      for (const model of modelsToDelete) {
-        if (cloudSyncRef.current?.trackChange) {
-          cloudSyncRef.current.trackChange('delete', { ...model, updatedAt: now });
-        }
-      }
-
-      modelLibrary.setModels([]);
-      modelLibrary.setHasUnsavedChanges(true);
-      closeModal('deleteAllModels');
-      modelLibrary.setDeleteAllConfirmText('');
-    } catch (err) {
-      setError('Erro ao excluir todos os modelos: ' + (err as Error).message);
-    }
-  }, [modelLibrary, closeModal, setError]);
-
-  // ══════════════════════════════════════════════════════════════════════════
   // RETORNO
   // ══════════════════════════════════════════════════════════════════════════
 
@@ -680,10 +600,5 @@ export function useModelSave({
     handleSimilarityCancel,
     handleSimilaritySaveNew,
     handleSimilarityReplace,
-
-    // Handlers de exclusão de modelos (v1.37.58)
-    confirmDeleteModel,
-    executeDeleteModel,
-    deleteAllModels,
   };
 }

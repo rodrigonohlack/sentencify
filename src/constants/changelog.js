@@ -2,7 +2,6 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
-  { version: '1.37.58', feature: 'E5-Large migration: embeddings de 768→1024 dimensões (+33% qualidade), modelo Xenova/multilingual-e5-large, constantes EMBEDDING_DIMENSION/EMBEDDING_MODEL centralizadas' },
   { version: '1.37.57', feature: 'Fix bug "cannot add property embedding, object is not extensible" - gerar embeddings para modelos existentes falhava por mutação direta de objetos frozen do Zustand/Immer' },
   { version: '1.37.56', feature: 'FASE 4: Modal Registry Pattern em useUIStore - 46 flags booleanas substituídas por openModals: ModalKey[] array, código mais limpo e escalável, mantém compatibilidade backwards com objeto modals' },
   { version: '1.37.55', feature: 'FASE 3: TopicsTab extraído para src/components/tabs/TopicsTab.tsx (~252 linhas removidas) - aba Tópicos com DND, SortableTopicCard, botões ação (Unir/Novo/Editor Global/Revisar/Dispositivo/Exportar)' },

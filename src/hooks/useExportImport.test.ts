@@ -8,12 +8,11 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useExportImport } from './useExportImport';
 import type { Model, AISettings } from '../types';
-import { EMBEDDING_DIMENSION } from '../constants/embeddings';
 
 // Mock AIModelService
 vi.mock('../services/AIModelService', () => ({
   default: {
-    getEmbedding: vi.fn().mockResolvedValue(new Array(1024).fill(0.1)) // E5-Large (1024 dims)
+    getEmbedding: vi.fn().mockResolvedValue(new Array(768).fill(0.1))
   }
 }));
 

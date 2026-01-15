@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.58 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.57 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -110,13 +110,13 @@
 **Arquivos estáticos**: Colocar na pasta `public/` (ex: `MANUAL_USUARIO_AVANCADO.html`)
 
 **Arquivos grandes ignorados** (não vão para o GitHub):
-- `LEGIS/embeddings.json` (272 MB - E5-Large 1024 dim)
-- `JURIS/juris-embeddings.json` (27 MB - E5-Large 1024 dim)
+- `LEGIS/embeddings.json` (211 MB)
+- `JURIS/juris-embeddings.json`
 - `sentencify-modelos-com-embeddings.json`
 
-**Embeddings via CDN** (v1.37.58):
-- Hospedados no GitHub Releases: `embeddings-v2` (E5-Large 1024 dimensões)
-- URLs: `https://github.com/rodrigonohlack/sentencify/releases/download/embeddings-v2/embeddings.json` (legis) e `juris-embeddings.json`
+**Embeddings via CDN** (v1.33.0):
+- Hospedados no GitHub Releases: `embeddings-v1`
+- URLs: `https://github.com/rodrigonohlack/sentencify/releases/download/embeddings-v1/legis-embeddings.json` e `juris-embeddings.json`
 - Download automático na primeira execução via modal
 - `EmbeddingsCDNService` gerencia download com retry e progresso
 
@@ -124,7 +124,6 @@
 
 | Version | Feature |
 |---------|---------|
-| v1.37.58 | E5-Large migration: embeddings de 768→1024 dimensões (+33% qualidade), modelo Xenova/multilingual-e5-large, constantes EMBEDDING_DIMENSION/EMBEDDING_MODEL centralizadas, CDN atualizado para embeddings-v2 |
 | v1.37.57 | Fix bug "cannot add property embedding, object is not extensible" - gerar embeddings para modelos existentes falhava por mutação direta de objetos frozen do Zustand/Immer |
 | v1.37.51 | Extração de modais: Toast, AutoSaveIndicator, ChangelogModal, SentenceReviewModals, DownloadModals extraídos do App.tsx (~400 linhas) - 7 novos componentes |
 | v1.37.50 | Fix bug categoria de tópicos: MERITO → MÉRITO (typo sem acento) em TopicCard.tsx e FullscreenModelPanel.tsx - tópicos agora preservam categoria correta após curadoria |

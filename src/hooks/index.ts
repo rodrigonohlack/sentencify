@@ -334,20 +334,3 @@ export type {
   CloudSyncForFileHandling,
   ModelPreviewForFileHandling
 } from './useFileHandling';
-
-// Resultado Detection hook (TIER 2 - dependências: aiIntegration) - v1.37.58
-export { default as useResultadoDetection } from './useResultadoDetection';
-export type { ResultadoValido } from './useResultadoDetection';
-
-// Topic Edit Save hook (TIER 2 - dependências: detectResultadoAutomatico) - v1.37.58
-export { default as useTopicEditSave } from './useTopicEditSave';
-
-// Topic Editor Handlers hook (TIER 2 - handlers de operações de tópicos) - v1.37.58
-export { default as useTopicEditorHandlers } from './useTopicEditorHandlers';
-
-// Relatorio Regeneration hook (TIER 2 - regeneração de relatórios) - v1.37.58
-export { default as useRelatorioRegeneration } from './useRelatorioRegeneration';
-
-// Session Persistence hook (TIER 1 - beforeunload + restore) - v1.37.58
-export { default as useSessionPersistence } from './useSessionPersistence';
-export type { UseSessionPersistenceReturn } from './useSessionPersistence';

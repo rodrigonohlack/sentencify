@@ -9,7 +9,6 @@ import { renderHook, act } from '@testing-library/react';
 import { useModelSuggestions } from './useModelSuggestions';
 import { useModelsStore } from '../stores/useModelsStore';
 import type { Model, Topic, TopicCategory } from '../types';
-import { EMBEDDING_DIMENSION } from '../constants/embeddings';
 
 // Mock useModelsStore
 vi.mock('../stores/useModelsStore', () => ({
@@ -21,7 +20,7 @@ vi.mock('../stores/useModelsStore', () => ({
 // Mock AIModelService
 vi.mock('../services/AIModelService', () => ({
   default: {
-    getEmbedding: vi.fn().mockResolvedValue(new Array(1024).fill(0.1)), // E5-Large (1024 dims)
+    getEmbedding: vi.fn().mockResolvedValue(new Array(768).fill(0.1)),
     cosineSimilarity: vi.fn().mockReturnValue(0.8)
   }
 }));
@@ -293,7 +292,7 @@ describe('useModelSuggestions', () => {
   describe('Local AI', () => {
     it('should use local AI when enabled and model ready', async () => {
       const modelsWithEmbedding = [
-        createMockModel({ id: 'model-1', embedding: new Array(EMBEDDING_DIMENSION).fill(0.1) })
+        createMockModel({ id: 'model-1', embedding: new Array(768).fill(0.1) })
       ];
       (useModelsStore.getState as ReturnType<typeof vi.fn>).mockReturnValue({
         models: modelsWithEmbedding
@@ -325,7 +324,7 @@ describe('useModelSuggestions', () => {
 
     it('should fallback to API when local AI fails', async () => {
       const models = [
-        createMockModel({ id: 'model-1', title: 'Horas', embedding: new Array(EMBEDDING_DIMENSION).fill(0.1) })
+        createMockModel({ id: 'model-1', title: 'Horas', embedding: new Array(768).fill(0.1) })
       ];
       (useModelsStore.getState as ReturnType<typeof vi.fn>).mockReturnValue({ models });
 

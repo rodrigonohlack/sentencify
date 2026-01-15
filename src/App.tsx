@@ -46,12 +46,11 @@ import { useModelsStore } from './stores/useModelsStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers, useReviewSentence, useSemanticSearchHandlers, useModelSuggestions, useMultiTabSync, useResultadoDetection, useTopicEditSave, useTopicEditorHandlers, useRelatorioRegeneration, useSessionPersistence } from './hooks';
+import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers, useReviewSentence, useSemanticSearchHandlers, useModelSuggestions, useMultiTabSync } from './hooks';
 import type { CurationData } from './hooks/useDocumentAnalysis';
 import { API_BASE } from './constants/api';
 import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
 import { APP_VERSION } from './constants/app-version';
-import { EMBEDDING_DIMENSION } from './constants/embeddings';
 
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
 import AdminPanel from './components/AdminPanel';
@@ -1365,7 +1364,18 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [currentModelsHash, indexedDB.isSupported]); // Hash ao invés de models array
 
-  // v1.37.58: checkSavedSession movido para useSessionPersistence hook
+  // Persistência e Sessão
+  const checkSavedSession = () => {
+    try {
+      const saved = localStorage.getItem('sentencifySession');
+      if (saved) {
+        const session = JSON.parse(saved);
+        storage.setSessionLastSaved(session.savedAt);
+        openModal('restoreSession');
+      }
+    } catch (err) {
+    }
+  };
 
   // 🔒 v1.37.42: sanitizeHTML e testSanitization movidos para useQuillInitialization (FASE 43)
 
@@ -1585,14 +1595,13 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.37.14: useModelSave - Hook extraído para salvamento de modelos
   // ═══════════════════════════════════════════════════════════════════════════════
   const modelSave = useModelSave({
-    modelLibrary: modelLibrary as Parameters<typeof useModelSave>[0]['modelLibrary'],
+    modelLibrary,
     aiSettings: aiIntegration.aiSettings,
     searchModelReady,
     cloudSync,
     apiCache,
     showToast,
     modelEditorRef,
-    openModal: openModal as (modalId: string) => void,
     closeModal: closeModal as (modalId: string) => void,
     modelPreview,
     sanitizeHTML,
@@ -1612,9 +1621,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     handleSimilarityCancel,
     handleSimilaritySaveNew,
     handleSimilarityReplace,
-    confirmDeleteModel,
-    executeDeleteModel,
-    deleteAllModels,
   } = modelSave;
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -1959,38 +1965,99 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // reorderTopicsViaLLM → useTopicOrdering hook
   // ============================================================================
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // v1.37.58: useRelatorioRegeneration - Regeneração de relatórios extraída
-  // ═══════════════════════════════════════════════════════════════════════════════
-  const {
-    regenerateRelatorio,
-    regenerateRelatorioWithInstruction,
-    regenerateRelatorioProcessual,
-  } = useRelatorioRegeneration({
-    editingTopic,
-    setEditingTopic,
-    selectedTopics,
-    setSelectedTopics,
-    extractedTopics,
-    setExtractedTopics,
-    analyzedDocuments,
-    relatorioRef: relatorioRef as Parameters<typeof useRelatorioRegeneration>[0]['relatorioRef'],
-    aiIntegration: aiIntegration as Parameters<typeof useRelatorioRegeneration>[0]['aiIntegration'],
-    apiCache: apiCache as Parameters<typeof useRelatorioRegeneration>[0]['apiCache'],
-    generateMiniReport,
-    generateRelatorioProcessual,
-    closeModal: closeModal as (modalId: string) => void,
-    setError: (msg: string) => setError(msg),
-    setAnalysisProgress,
-    sanitizeHTML,
-    showToast: showToast as (message: string, type: string) => void,
-  });
+  const regenerateRelatorio = async (topicTitle: string, topicContext: string) => {
+    aiIntegration.setRegenerating(true);
+    setAnalysisProgress(`🔄 Regenerando relatório para "${topicTitle}"...`);
+    try {
+      const result = await generateMiniReport({ title: topicTitle, context: topicContext });
+      return result;
+    } catch (err) {
+      setError('Erro ao regerar mini-relatório: ' + (err as Error).message);
+      return null;
+    } finally {
+      aiIntegration.setRegenerating(false);
+    }
+  };
 
-  // v1.37.58: useSessionPersistence - Restauração de sessão extraída
-  const { checkSavedSession } = useSessionPersistence({
-    storage: storage as Parameters<typeof useSessionPersistence>[0]['storage'],
-    openModal: openModal as (modalId: string) => void,
-  });
+  const regenerateRelatorioWithInstruction = async () => {
+    if (!aiIntegration.relatorioInstruction?.trim()) {
+      setError('Digite uma instrução para regeração do mini-relatório');
+      return;
+    }
+    if (!editingTopic) {
+      setError('Nenhum tópico selecionado para edição');
+      return;
+    }
+    const cacheKey = `relatorioCustom_${editingTopic.title}_${aiIntegration.relatorioInstruction}_${JSON.stringify(analyzedDocuments)}`;
+    const cachedRelatorio = apiCache.get(cacheKey);
+    if (cachedRelatorio) {
+      setEditingTopic(prev => {
+        if (!prev) return prev;
+        return { ...prev, editedRelatorio: cachedRelatorio as string };
+      });
+      closeModal('regenerateRelatorioCustom');
+      return;
+    }
+    aiIntegration.setRegeneratingRelatorio(true);
+    setError('');
+    try {
+      const isRelatorioTopic = editingTopic.title.toUpperCase().includes('RELATÓRIO');
+      const instructionMentionsComplementares = /\b(documento complementar|ata|audiência|prova|juntad[oa]|anexad[oa]|complementar)\b/i.test(aiIntegration.relatorioInstruction);
+      const htmlContent = await generateMiniReport({
+        title: editingTopic.title,
+        instruction: aiIntegration.relatorioInstruction,
+        currentRelatorio: editingTopic.editedRelatorio || editingTopic.relatorio,
+        includeComplementares: isRelatorioTopic || instructionMentionsComplementares
+      });
+      apiCache.set(cacheKey, htmlContent);
+      const updatedTopic = { ...editingTopic, editedRelatorio: htmlContent, relatorio: htmlContent };
+      setEditingTopic(updatedTopic);
+      if (relatorioRef.current) {
+        relatorioRef.current.root.innerHTML = normalizeHTMLSpacing(sanitizeHTML(htmlContent));
+      }
+      setSelectedTopics(selectedTopics.map(t => t.title === editingTopic.title ? updatedTopic : t));
+      setExtractedTopics(extractedTopics.map(t => t.title === editingTopic.title ? updatedTopic : t));
+      aiIntegration.setRelatorioInstruction('');
+    } catch (err) {
+      setError('Erro ao regerar mini-relatório: ' + (err as Error).message);
+    } finally {
+      aiIntegration.setRegeneratingRelatorio(false);
+    }
+  };
+
+  const regenerateRelatorioProcessual = async () => {
+    if (!editingTopic || editingTopic.title.toUpperCase() !== 'RELATÓRIO') {
+      setError('Esta função só pode ser usada para o tópico RELATÓRIO');
+      return;
+    }
+    aiIntegration.setRegeneratingRelatorio(true);
+    setAnalysisProgress('🔄 Regenerando RELATÓRIO processual...');
+    try {
+      const contentArray = buildDocumentContentArray(analyzedDocuments, { includeComplementares: true });
+      const instrucao = (aiIntegration.relatorioInstruction || '').trim();
+      if (instrucao) {
+        contentArray.push({ type: 'text', text: `⚠️ INSTRUÇÃO ADICIONAL DO USUÁRIO:\n${instrucao}` });
+      }
+      const relatorioGerado = await generateRelatorioProcessual(contentArray);
+      if (!relatorioGerado?.trim()) throw new Error('Relatório gerado está vazio');
+      const htmlContent = normalizeHTMLSpacing(relatorioGerado.trim());
+      const updatedTopic = { ...editingTopic, editedRelatorio: htmlContent };
+      setEditingTopic(updatedTopic);
+      if (relatorioRef.current) {
+        relatorioRef.current.root.innerHTML = normalizeHTMLSpacing(sanitizeHTML(htmlContent));
+      }
+      setSelectedTopics(selectedTopics.map(t => t.title === editingTopic.title ? updatedTopic : t));
+      setExtractedTopics(extractedTopics.map(t => t.title === editingTopic.title ? updatedTopic : t));
+      setAnalysisProgress('');
+      aiIntegration.setRelatorioInstruction('');
+      showToast('✅ RELATÓRIO processual regenerado!', 'success');
+    } catch (err) {
+      setError('Erro ao regerar RELATÓRIO: ' + (err as Error).message);
+      setAnalysisProgress('');
+    } finally {
+      aiIntegration.setRegeneratingRelatorio(false);
+    }
+  };
 
   // 📋 v1.37.7: Funções de Gerenciamento de Tópicos extraídas para useTopicOperations hook
   // (handleRenameTopic, handleMergeTopics, handleSplitTopic, handleCreateNewTopic)
@@ -2018,7 +2085,57 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.37.23: htmlToPlainText, htmlToFormattedText, plainTextToHtml, cleanHtmlForExport
   // movidos para src/utils/html-conversion.ts
 
-  // v1.37.58: confirmDeleteModel, executeDeleteModel, deleteAllModels movidos para useModelSave
+  const confirmDeleteModel = (model: Model) => {
+    modelLibrary.setModelToDelete(model);
+    openModal('deleteModel');
+  };
+
+  const executeDeleteModel = async () => {
+    if (!modelLibrary.modelToDelete) return;
+
+    try {
+      const modelId = modelLibrary.modelToDelete.id;
+      const modelToDelete = modelLibrary.modelToDelete;
+      modelLibrary.setModels(modelLibrary.models.filter(m => m.id !== modelId));
+      // v1.34.0: Rastrear delete para sync
+      if (cloudSync?.trackChange) cloudSync.trackChange('delete', { ...modelToDelete, updatedAt: new Date().toISOString() });
+      modelLibrary.setHasUnsavedChanges(true);
+      // Remover das sugestões também
+      if (modelLibrary.suggestions?.length > 0) {
+        modelLibrary.setSuggestions(modelLibrary.suggestions.filter(m => m.id !== modelId));
+      }
+      closeModal('deleteModel');
+      modelLibrary.setModelToDelete(null);
+    } catch (err) {
+      setError('Erro ao excluir modelo: ' + (err as Error).message);
+    }
+  };
+
+  const deleteAllModels = async () => {
+    if (modelLibrary.deleteAllConfirmText !== 'EXCLUIR') {
+      setError('Digite "EXCLUIR" para confirmar');
+      return;
+    }
+
+    try {
+      // v1.35.2: Rastrear cada modelo como delete para sync com servidor
+      const modelsToDelete = [...modelLibrary.models];
+      const now = new Date().toISOString();
+
+      for (const model of modelsToDelete) {
+        if (cloudSync?.trackChange) {
+          cloudSync.trackChange('delete', { ...model, updatedAt: now });
+        }
+      }
+
+      modelLibrary.setModels([]);
+      modelLibrary.setHasUnsavedChanges(true);
+      closeModal('deleteAllModels');
+      modelLibrary.setDeleteAllConfirmText('');
+    } catch (err) {
+      setError('Erro ao excluir todos os modelos: ' + (err as Error).message);
+    }
+  };
 
   // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
   // v1.33.7: Feedback visual ao duplicar modelo
@@ -2224,40 +2341,49 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   const { analyzeProof } = proofAnalysis;
 
-  // v1.37.45: FASE 47 - Hook de sugestões de modelos extraído
-  const { findSuggestions } = useModelSuggestions({
-    aiIntegration,
-    apiCache,
-    searchModelReady,
-  });
+  // v1.19.2: Normalizar comparações case-insensitive
+  const toggleTopicSelection = (topic: Topic) => {
+    const topicTitleUpper = (topic.title || '').toUpperCase().trim();
+    const exists = selectedTopics.find(t => (t.title || '').toUpperCase().trim() === topicTitleUpper);
+    if (exists) {
+      // Remover tópico se já está selecionado
+      setSelectedTopics(selectedTopics.filter(t => (t.title || '').toUpperCase().trim() !== topicTitleUpper));
+    } else {
+      // Adicionar tópico
+      const newTopic = { ...topic, order: selectedTopics.length };
+      
+      // Se for RELATÓRIO, adicionar no início
+      if (isRelatorio(topic)) {
+        setSelectedTopics([newTopic, ...selectedTopics]);
+        return;
+      }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // v1.37.58: useTopicEditorHandlers - Handlers de operações de tópicos extraídos
-  // ═══════════════════════════════════════════════════════════════════════════════
-  const {
-    toggleTopicSelection,
-    deleteTopic,
-    moveTopicUp,
-    moveTopicDown,
-    moveTopicToPosition,
-    startEditing,
-    insertModelContent,
-  } = useTopicEditorHandlers({
-    selectedTopics,
-    setSelectedTopics,
-    editingTopic,
-    setEditingTopic,
-    setTopicToDelete,
-    setActiveTab,
-    openModal: openModal as (modalId: string) => void,
-    modelLibrary: modelLibrary as Parameters<typeof useTopicEditorHandlers>[0]['modelLibrary'],
-    editorRef: editorRef as Parameters<typeof useTopicEditorHandlers>[0]['editorRef'],
-    editorContainerRef: editorContainerRef as Parameters<typeof useTopicEditorHandlers>[0]['editorContainerRef'],
-    sanitizeHTML,
-    findSuggestions: findSuggestions as Parameters<typeof useTopicEditorHandlers>[0]['findSuggestions'],
-  });
+      // Se for DISPOSITIVO, adicionar no final
+      if (isDispositivo(topic)) {
+        setSelectedTopics([...selectedTopics, newTopic]);
+        return;
+      }
 
-  // confirmDeleteTopic usa estado local topicToDelete (permanece aqui)
+      // Para qualquer outro tópico, inserir antes do DISPOSITIVO
+      const dispositivoIndex = selectedTopics.findIndex((t: Topic) => isDispositivo(t));
+      
+      if (dispositivoIndex !== -1) {
+        // DISPOSITIVO existe - inserir antes dele
+        const newTopics = [...selectedTopics];
+        newTopics.splice(dispositivoIndex, 0, newTopic);
+        setSelectedTopics(newTopics);
+      } else {
+        // DISPOSITIVO não existe - adicionar no final
+        setSelectedTopics([...selectedTopics, newTopic]);
+      }
+    }
+  };
+
+  const deleteTopic = (topicToDelete: Topic) => {
+    setTopicToDelete(topicToDelete);
+    openModal('deleteTopic');
+  };
+
   const confirmDeleteTopic = () => {
     if (topicToDelete) {
       // Remove dos tópicos extraídos
@@ -2271,32 +2397,365 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     setTopicToDelete(null);
   };
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // v1.37.58: useResultadoDetection - Detecção automática de resultado do julgamento
-  // ═══════════════════════════════════════════════════════════════════════════════
-  const { detectResultadoAutomatico } = useResultadoDetection({
-    aiIntegration: aiIntegration as Parameters<typeof useResultadoDetection>[0]['aiIntegration'],
+  const moveTopicUp = (index: number) => {
+    if (index === 0) return;
+    
+    // Bloquear movimento de RELATÓRIO e DISPOSITIVO
+    const topic = selectedTopics[index];
+    const targetTopic = selectedTopics[index - 1];
+    
+    if (isSpecialTopic(topic)) {
+      return;
+    }
+
+    if (isSpecialTopic(targetTopic)) {
+      return;
+    }
+
+    const newTopics = [...selectedTopics];
+    [newTopics[index - 1], newTopics[index]] = [newTopics[index], newTopics[index - 1]];
+    setSelectedTopics(newTopics);
+  };
+
+  const moveTopicDown = (index: number) => {
+    if (index === selectedTopics.length - 1) return;
+
+    // Bloquear movimento de RELATÓRIO e DISPOSITIVO
+    const topic = selectedTopics[index];
+    const targetTopic = selectedTopics[index + 1];
+
+    if (isSpecialTopic(topic)) {
+      return;
+    }
+
+    if (isSpecialTopic(targetTopic)) {
+      return;
+    }
+
+    const newTopics = [...selectedTopics];
+    [newTopics[index], newTopics[index + 1]] = [newTopics[index + 1], newTopics[index]];
+    setSelectedTopics(newTopics);
+  };
+
+  const moveTopicToPosition = (currentIndex: number, newPosition: number) => {
+    if (newPosition < 1 || newPosition > selectedTopics.length) return;
+    const newIndex = newPosition - 1;
+    if (currentIndex === newIndex) return;
+
+    // Bloquear movimento de RELATÓRIO e DISPOSITIVO
+    const topic = selectedTopics[currentIndex];
+    const targetTopic = selectedTopics[newIndex];
+
+    if (isSpecialTopic(topic)) {
+      return;
+    }
+
+    if (isSpecialTopic(targetTopic)) {
+      return;
+    }
+
+    const newTopics = [...selectedTopics];
+    const [movedTopic] = newTopics.splice(currentIndex, 1);
+    newTopics.splice(newIndex, 0, movedTopic);
+    setSelectedTopics(newTopics);
+  };
+
+  // Lista de stopwords para filtrar
+  const STOPWORDS = new Set([
+    'de', 'da', 'do', 'dos', 'das', 'para', 'com', 'sem', 'por', 'pelo', 'pela',
+    'em', 'no', 'na', 'nos', 'nas', 'ao', 'aos', 'à', 'às', 'um', 'uma', 'uns', 'umas',
+    'o', 'a', 'os', 'as', 'e', 'ou', 'mas', 'que', 'qual', 'quando', 'onde', 'como'
+  ]);
+
+  // v1.37.45: FASE 47 - Hook de sugestões de modelos extraído
+  const { findSuggestions } = useModelSuggestions({
+    aiIntegration,
+    apiCache,
+    searchModelReady,
   });
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // v1.37.58: useTopicEditSave - Salvar edições de tópicos (consolidado)
-  // ═══════════════════════════════════════════════════════════════════════════════
-  const { saveTopicEdit, saveTopicEditWithoutClosing } = useTopicEditSave({
-    editingTopic,
-    setEditingTopic,
-    selectedTopics,
-    setSelectedTopics,
-    extractedTopics,
-    setExtractedTopics,
-    editorRef,
-    relatorioRef,
-    modelLibrary: modelLibrary as Parameters<typeof useTopicEditSave>[0]['modelLibrary'],
-    setActiveTab,
-    setLastEditedTopicTitle,
-    setSavingTopic,
-    sanitizeHTML,
-    detectResultadoAutomatico,
-  });
+  const startEditing = async (topic: Topic) => {
+    const topicCopy = {
+      ...topic,
+      editedFundamentacao: topic.editedFundamentacao || topic.fundamentacao || '',
+      editedRelatorio: topic.editedRelatorio || topic.relatorio || ''
+    };
+    setEditingTopic(topicCopy);
+    modelLibrary.setSuggestions([]); // Limpar sugestões antigas primeiro
+    modelLibrary.setLoadingSuggestions(true); // Indicar que está carregando
+    setActiveTab('editor');
+
+    // Scroll suave para o início da área de edição
+    setTimeout(() => {
+      if (editorContainerRef.current) {
+        editorContainerRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 100);
+
+    // Buscar sugestões de forma assíncrona (não bloqueia a abertura do editor)
+    try {
+      const { suggestions, source } = await findSuggestions(topicCopy); // v1.28.04
+      modelLibrary.setSuggestions(suggestions);
+      modelLibrary.setSuggestionsSource(source);
+    } catch (error) {
+      modelLibrary.setSuggestions([]);
+      modelLibrary.setSuggestionsSource(null);
+    } finally {
+      modelLibrary.setLoadingSuggestions(false);
+    }
+  };
+
+  const insertModelContent = (content: string) => {
+    if (editorRef.current && editingTopic) {
+      const quill = editorRef.current;
+
+      // Obter posição do cursor (ou fim do documento se não houver seleção)
+      const range = quill.getSelection();
+      const position = range ? range.index : quill.getLength() - 1;
+
+      // Sanitizar conteúdo antes de inserir
+      const sanitizedContent = sanitizeHTML(content);
+
+      // Inserir quebras de linha antes do conteúdo
+      quill.insertText(position, '\n\n');
+
+      // Inserir HTML na posição do cursor + 2 (após as quebras)
+      quill.clipboard.dangerouslyPasteHTML(position + 2, sanitizedContent);
+
+      // Mover cursor para o final do conteúdo inserido
+      try {
+        const delta = quill.clipboard.convert(sanitizedContent) as QuillDelta | null;
+        // QuillDelta.length() é um método - calcular manualmente
+        let insertedLength = 0;
+        if (delta?.ops) {
+          for (const op of delta.ops) {
+            if (typeof op.insert === 'string') {
+              insertedLength += op.insert.length;
+            } else if (op.insert) {
+              insertedLength += 1;
+            }
+          }
+        }
+        quill.setSelection(position + 2 + insertedLength);
+      } catch {
+        // Fallback: mover para o final
+        quill.setSelection(quill.getLength());
+      }
+
+      // Atualizar estado com o novo HTML
+      const newHTML = sanitizeHTML(quill.root.innerHTML);
+      setEditingTopic({
+        ...editingTopic,
+        editedFundamentacao: newHTML
+      });
+    }
+  };
+
+  // Função para detectar automaticamente o resultado do julgamento usando IA
+  const detectResultadoAutomatico = async (topicTitle: string, decisionText: string, topicCategory: string) => {
+    // Não detectar para RELATÓRIO e DISPOSITIVO
+    if (topicTitle.toUpperCase() === 'RELATÓRIO' || topicTitle.toUpperCase() === 'DISPOSITIVO') {
+      return null;
+    }
+
+    // Se não há texto de decisão, não detectar
+    if (!decisionText || decisionText.trim() === '') {
+      return null;
+    }
+
+    try {
+      const plainText = htmlToPlainText(decisionText);
+
+      const prompt = `${AI_PROMPTS.roles.classificacao}
+
+TÓPICO SENDO ANALISADO:
+Título: ${topicTitle}
+Categoria: ${topicCategory || 'Não especificada'}
+
+TEXTO DA DECISÃO ESCRITA PELO USUÁRIO:
+${plainText}
+
+TAREFA:
+Analise o texto da decisão e identifique o resultado do julgamento.
+
+OPÇÕES POSSÍVEIS (escolha UMA):
+1. PROCEDENTE - quando o pedido foi totalmente deferido/acolhido
+2. IMPROCEDENTE - quando o pedido foi totalmente indeferido/rejeitado
+3. PARCIALMENTE PROCEDENTE - quando o pedido foi parcialmente deferido
+4. ACOLHIDO - quando uma preliminar, exceção ou questão processual foi acolhida
+5. REJEITADO - quando uma preliminar, exceção ou questão processual foi rejeitada
+6. SEM RESULTADO - para tópicos administrativos/acessórios sem julgamento de mérito
+7. INDEFINIDO - quando o texto não deixa claro o resultado ou está incompleto
+
+CRITÉRIOS DE ANÁLISE:
+- Procure por palavras-chave como: "defiro", "indefiro", "julgo procedente", "julgo improcedente", "parcialmente", "acolho", "rejeito"
+- Considere o contexto geral do texto
+- Se a categoria for PRELIMINAR, prefira ACOLHIDO/REJEITADO
+- Se a categoria for MÉRITO, prefira PROCEDENTE/IMPROCEDENTE/PARCIALMENTE PROCEDENTE
+- Se o tópico tratar de deduções previdenciárias, prazos e condições para cumprimento da decisão, juros ou correção monetária, retorne SEM RESULTADO
+- Se houver dúvida ou o texto estiver incompleto, retorne INDEFINIDO
+
+Responda APENAS com uma das palavras: PROCEDENTE, IMPROCEDENTE, PARCIALMENTE PROCEDENTE, ACOLHIDO, REJEITADO, SEM RESULTADO ou INDEFINIDO.
+Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavra.`;
+
+      // v1.21.26: Parametros deterministicos para classificacao
+      const textContent = await aiIntegration.callAI([{
+        role: 'user',
+        content: [{ type: 'text', text: prompt }]
+      }], {
+        maxTokens: 500,
+        useInstructions: false,
+        logMetrics: true,
+        temperature: 0.0,
+        topP: 0.9,
+        topK: 20
+      });
+
+      const resultado = textContent.toUpperCase();
+
+      // Validar resultado
+      const resultadosValidos = ['PROCEDENTE', 'IMPROCEDENTE', 'PARCIALMENTE PROCEDENTE', 'ACOLHIDO', 'REJEITADO', 'SEM RESULTADO', 'INDEFINIDO'];
+
+      if (resultadosValidos.includes(resultado)) {
+        // Se for INDEFINIDO, retornar null para não sobrescrever escolha manual do usuário
+        return resultado === 'INDEFINIDO' ? null : resultado;
+      } else {
+        return null;
+      }
+
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const saveTopicEdit = async () => {
+    if (!editingTopic) return;
+    setSavingTopic(true);
+    try {
+      const isRelatorio = editingTopic.title.toUpperCase() === 'RELATÓRIO';
+      const isDispositivo = editingTopic.title.toUpperCase() === 'DISPOSITIVO';
+
+      // Validar refs baseado no tipo de tópico
+      if (isRelatorio && !relatorioRef.current) return;
+      if (isDispositivo && !editorRef.current) return;
+      if (!isRelatorio && !isDispositivo && (!editorRef.current || !relatorioRef.current)) return;
+
+      // Capturar conteúdo dos editores (apenas os que existem)
+            const content = editorRef.current ? sanitizeHTML(editorRef.current.root.innerHTML) : '';
+            const relatorio = relatorioRef.current ? sanitizeHTML(relatorioRef.current.root.innerHTML) : '';
+
+      let updatedTopic = {
+        ...editingTopic,
+        editedRelatorio: relatorio,
+        relatorio: htmlToPlainText(relatorio)
+      };
+
+            if (isDispositivo) {
+        updatedTopic.editedContent = content;
+      } else if (!isRelatorio) {
+        // Apenas tópicos normais (não RELATÓRIO, não DISPOSITIVO) usam editedFundamentacao
+        updatedTopic.editedFundamentacao = content;
+      }
+
+      // Detectar resultado automaticamente APENAS se não foi escolha manual do usuário
+      // Isso permite re-detecção quando o usuário muda o texto da decisão
+      if (!updatedTopic.resultadoManual) {
+        const resultadoDetectado = await detectResultadoAutomatico(
+          updatedTopic.title || '',
+          content,
+          updatedTopic.category || ''
+        );
+
+        if (resultadoDetectado) {
+          updatedTopic.resultado = resultadoDetectado;
+        }
+      }
+
+      const updatedTopics = selectedTopics.map(t =>
+        t.title === editingTopic.title ? updatedTopic : t
+      );
+      setSelectedTopics(updatedTopics);
+
+      // Atualizar também em extractedTopics
+      const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === editingTopic.title);
+      if (extractedIndex !== -1) {
+        const newExtracted = [...extractedTopics];
+        newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], resultado: updatedTopic.resultado };
+        setExtractedTopics(newExtracted);
+      }
+
+      setLastEditedTopicTitle(editingTopic.title);
+      setEditingTopic(null);
+      modelLibrary.setSuggestions([]);
+      setActiveTab('topics');
+    } finally {
+      setSavingTopic(false);
+    }
+  };
+
+  const saveTopicEditWithoutClosing = async () => {
+    if (!editingTopic) return;
+    setSavingTopic(true);
+    try {
+      const isRelatorio = editingTopic.title.toUpperCase() === 'RELATÓRIO';
+      const isDispositivo = editingTopic.title.toUpperCase() === 'DISPOSITIVO';
+
+      // Validar refs baseado no tipo de tópico
+      if (isRelatorio && !relatorioRef.current) return;
+      if (isDispositivo && !editorRef.current) return;
+      if (!isRelatorio && !isDispositivo && (!editorRef.current || !relatorioRef.current)) return;
+
+      // Capturar conteúdo dos editores (apenas os que existem)
+            const content = editorRef.current ? sanitizeHTML(editorRef.current.root.innerHTML) : '';
+            const relatorio = relatorioRef.current ? sanitizeHTML(relatorioRef.current.root.innerHTML) : '';
+
+      let updatedTopic = {
+        ...editingTopic,
+        editedRelatorio: relatorio,
+        relatorio: htmlToPlainText(relatorio)
+      };
+
+            if (isDispositivo) {
+        updatedTopic.editedContent = content;
+      } else if (!isRelatorio) {
+        // Apenas tópicos normais (não RELATÓRIO, não DISPOSITIVO) usam editedFundamentacao
+        updatedTopic.editedFundamentacao = content;
+      }
+
+      // Botão "Salvar e Fechar" (saveTopicEdit) continua com detecção automática
+
+      const updatedTopics = selectedTopics.map(t =>
+        t.title === editingTopic.title ? updatedTopic : t
+      );
+      setSelectedTopics(updatedTopics);
+
+      // Atualizar também em extractedTopics
+      const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === editingTopic.title);
+      if (extractedIndex !== -1) {
+        const newExtracted = [...extractedTopics];
+        newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], resultado: updatedTopic.resultado };
+        setExtractedTopics(newExtracted);
+      }
+
+      // Atualizar também o editingTopic com os dados salvos
+      setEditingTopic(updatedTopic);
+
+      setLastEditedTopicTitle(editingTopic.title);
+
+      // Feedback visual simples (sem detecção de resultado)
+      const successMsg = document.createElement('div');
+      successMsg.className = 'fixed top-4 left-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-pulse';
+      successMsg.innerHTML = '<span>✓</span> Salvo!';
+
+      document.body.appendChild(successMsg);
+      setTimeout(() => successMsg.remove(), 3000);
+    } finally {
+      setSavingTopic(false);
+    }
+  };
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // v1.37.42: useKeyboardShortcuts - Atalhos de teclado (Ctrl+S, ESC) e scroll lock
@@ -2510,7 +2969,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // 📦 v1.27.01: Contagem de modelos com embedding e estados de busca semântica
   const modelEmbeddingsCount = React.useMemo(() =>
-    modelLibrary.models.filter(m => m.embedding?.length === EMBEDDING_DIMENSION).length,
+    modelLibrary.models.filter(m => m.embedding?.length === 768).length,
     [modelLibrary.models]
   );
 
