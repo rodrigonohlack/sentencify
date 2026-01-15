@@ -203,10 +203,10 @@ Ao gerar correções do tipo "fix_row", você DEVE seguir estas regras:
    ❌ ERRADO: "tema": "Item 2"
 
 2. **"field" = CAMPO ESPECÍFICO A CORRIGIR**
-   Campos válidos: "alegacaoReclamante", "alegacaoReclamada", "status", "relevancia", "observacoes"
+   Campos válidos: "alegacaoReclamante", "alegacaoReclamada", "status", "relevancia", "observacao"
    ✅ CORRETO: "field": "status"
    ✅ CORRETO: "field": "alegacaoReclamante"
-   ✅ CORRETO: "field": "observacoes"
+   ✅ CORRETO: "field": "observacao"
    ❌ ERRADO: "field": "tabela" (NUNCA use "tabela"!)
 
 3. **"newValue" = VALOR CORRIGIDO COMPLETO**
