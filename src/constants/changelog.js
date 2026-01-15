@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.62', feature: 'Fix Double Check factsComparison: usar dados reais da IA nas correções (código estava sobrescrevendo tema/field/newValue com valores fixos)' },
   { version: '1.37.61', feature: 'Double Check factsComparison: regras fix_row movidas para início do prompt com exemplos ✅/❌ - IA agora gera tema real, field válido e newValue preenchido' },
   { version: '1.37.60', feature: 'Fix API keys perdidas ao recarregar página: setApiKey agora persiste em sentencify-ai-settings (antes só gravava em memória Zustand, usuários novos perdiam keys ao recarregar)' },
   { version: '1.37.59', feature: 'DoubleCheckReviewModal: Modal obrigatório para revisão de correções do Double Check - usuário aceita/rejeita correções individualmente antes de aplicá-las (topicExtraction, dispositivo, sentenceReview, factsComparison)' },

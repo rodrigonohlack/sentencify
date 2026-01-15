@@ -1,11 +1,12 @@
 /**
  * @file useFactsComparison.ts
  * @description Hook para gerenciar comparação de fatos (Confronto de Fatos)
- * @version v1.37.59
+ * @version v1.37.62
  *
  * Extraído do App.tsx para modularização.
  * Gerencia a geração e cache de comparações de fatos entre documentos.
  *
+ * v1.37.62: Fix - usar dados reais da IA nas correções (não sobrescrever com valores fixos)
  * v1.37.59: Integração com DoubleCheckReviewModal - abre modal para revisão de correções
  */
 
@@ -299,15 +300,21 @@ export function useFactsComparison({
           );
 
           if (corrections.length > 0) {
-            // v1.37.59: Abrir modal para revisão de correções
-            // Converter corrections de string[] para DoubleCheckCorrection[]
-            const typedCorrections: DoubleCheckCorrection[] = corrections.map((c, idx) => ({
-              type: 'fix_row' as const,
-              reason: typeof c === 'string' ? c : (c as { reason?: string }).reason || '',
-              tema: `Correção ${idx + 1}`,
-              field: 'tabela',
-              newValue: typeof c === 'string' ? c : ''
-            }));
+            // v1.37.62: Usar dados reais da IA (não sobrescrever com valores fixos)
+            const typedCorrections: DoubleCheckCorrection[] = corrections.map((c) => {
+              // Se já é um objeto com os campos corretos, usar diretamente
+              if (typeof c === 'object' && c !== null) {
+                return c as DoubleCheckCorrection;
+              }
+              // Fallback para string (não deveria acontecer)
+              return {
+                type: 'fix_row' as const,
+                reason: String(c),
+                tema: 'Desconhecido',
+                field: 'observacoes',
+                newValue: String(c)
+              };
+            });
 
             // Criar Promise para aguardar decisão do usuário
             const waitForDecision = new Promise<DoubleCheckReviewResult>(resolve => {
