@@ -31,7 +31,18 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: true,
+    // Suprimir warning do onnxruntime-web (dependência do @xenova/transformers)
+    // O eval é usado internamente para WebAssembly - não podemos modificar código de terceiros
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // Ignorar warning de eval do onnxruntime-web
+        if (warning.code === 'EVAL' && warning.id?.includes('onnxruntime-web')) {
+          return;
+        }
+        warn(warning);
+      }
+    }
   },
   resolve: {
     alias: {
