@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.50 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.51 | **File**: `src/App.tsx` (~0.40 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.51 | Extração de modais: Toast, AutoSaveIndicator, ChangelogModal, SentenceReviewModals, DownloadModals extraídos do App.tsx (~400 linhas) - 7 novos componentes |
 | v1.37.50 | Fix bug categoria de tópicos: MERITO → MÉRITO (typo sem acento) em TopicCard.tsx e FullscreenModelPanel.tsx - tópicos agora preservam categoria correta após curadoria |
 | v1.37.49 | Zustand Migration: 18 useState migrados para stores (useUIStore, useAIStore, useModelsStore) - driveFiles, modelGenerator, apiTestStatuses, etc. |
 | v1.37.48 | Fix encoding UTF-8: "Minhas Conclusões" na aba Provas (ProofCard.tsx) |

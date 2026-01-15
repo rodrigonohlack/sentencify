@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.51', feature: 'Extração de modais: Toast, AutoSaveIndicator, ChangelogModal, SentenceReviewModals, DownloadModals extraídos do App.tsx (~400 linhas removidas) - 7 novos componentes em src/components/' },
   { version: '1.37.50', feature: 'Fix bug categoria de tópicos: MERITO → MÉRITO (typo sem acento) em TopicCard.tsx e FullscreenModelPanel.tsx - tópicos agora preservam categoria correta após curadoria' },
   { version: '1.37.49', feature: 'Zustand Migration: 18 useState migrados para stores (useUIStore, useAIStore, useModelsStore) - driveFiles, modelGenerator, changelog, autoSaveDirty, error, copySuccess, anonymizationNamesText, partesProcesso, exportedText/Html, processoNumero, apiTestStatuses, useSemanticManualSearch, receivedModels, activeSharedLibraries' },
   { version: '1.37.48', feature: 'Fix encoding UTF-8: "Minhas Conclusões" na aba Provas (ProofCard.tsx)' },

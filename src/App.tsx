@@ -78,6 +78,13 @@ import { CSS, RESULTADO_STYLES, getResultadoStyle } from './constants/styles';
 
 // v1.37.0: Estilos CSS-in-JS extraídos
 import { GlobalHoverStyles, ThemeStyles } from './styles';
+
+// v1.37.51: Componentes UI e Modais extraídos
+import { Toast } from './components/ui/Toast';
+import { AutoSaveIndicator } from './components/ui/AutoSaveIndicator';
+import { ChangelogModal } from './components/modals/ChangelogModal';
+import { SentenceReviewOptionsModal, SentenceReviewResultModal } from './components/modals/SentenceReviewModals';
+import { DataDownloadModal, EmbeddingsDownloadModal } from './components/modals/DownloadModals';
 import { buildMiniRelatorioComparisonPrompt, buildDocumentosComparisonPrompt, buildPdfComparisonPrompt } from './prompts/facts-comparison-prompts';
 
 // v1.36.60: AIModelService extraído para src/services/
@@ -4136,182 +4143,22 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         sanitizeHTML={sanitizeHTML}
       />
 
-      {/* v1.21.21: Modal de opções para revisão de sentença */}
-      {modals.sentenceReview && (
-        <div className={CSS.modalOverlay}>
-          <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-lg`}>
-            <div className={CSS.modalHeader}>
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-amber-500/20">
-                    <Scale className="w-6 h-6 text-amber-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold theme-text-primary">Revisar Sentença</h3>
-                </div>
-                <button
-                  onClick={() => closeModal('sentenceReview')}
-                  className="p-2 rounded-xl theme-bg-secondary-50 theme-hover-bg transition-colors"
-                  title="Fechar"
-                >
-                  <X className="w-5 h-5 theme-text-tertiary" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6 space-y-4">
-              <p className="text-sm theme-text-tertiary mb-4">
-                Análise crítica da decisão buscando omissões, contradições e obscuridades que poderiam fundamentar embargos de declaração.
-              </p>
-              {/* Radio 1: Apenas decisão */}
-              <label className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
-                reviewScope === 'decisionOnly' ? 'border-amber-500 bg-amber-500/10' : 'theme-border-input theme-bg-secondary-30'
-              }`}>
-                <input
-                  type="radio"
-                  name="reviewScope"
-                  checked={reviewScope === 'decisionOnly'}
-                  onChange={() => setReviewScope('decisionOnly')}
-                  className="w-4 h-4 text-amber-600 mt-1"
-                />
-                <div>
-                  <span className="text-sm font-medium theme-text-primary">Apenas a decisão completa</span>
-                  <p className="text-xs theme-text-muted mt-1">RELATÓRIO + todos os tópicos (mini-relatórios + decisões) + DISPOSITIVO</p>
-                </div>
-              </label>
-              {/* Radio 2: Decisão + documentos */}
-              <label className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
-                reviewScope === 'decisionWithDocs' ? 'border-amber-500 bg-amber-500/10' : 'theme-border-input theme-bg-secondary-30'
-              } ${!(analyzedDocuments?.peticoesText?.length > 0 || analyzedDocuments?.contestacoesText?.length > 0) ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                <input
-                  type="radio"
-                  name="reviewScope"
-                  disabled={!(analyzedDocuments?.peticoesText?.length > 0 || analyzedDocuments?.contestacoesText?.length > 0)}
-                  checked={reviewScope === 'decisionWithDocs'}
-                  onChange={() => (analyzedDocuments?.peticoesText?.length > 0 || analyzedDocuments?.contestacoesText?.length > 0) && setReviewScope('decisionWithDocs')}
-                  className="w-4 h-4 text-amber-600 mt-1"
-                />
-                <div>
-                  <span className="text-sm font-medium theme-text-primary">Decisão + peças processuais</span>
-                  <p className="text-xs theme-text-muted mt-1">Inclui petição inicial, contestações e documentos complementares</p>
-                  {!(analyzedDocuments?.peticoesText?.length > 0 || analyzedDocuments?.contestacoesText?.length > 0) && (
-                    <p className="text-xs text-red-400 mt-1">Nenhum documento extraído disponível</p>
-                  )}
-                </div>
-              </label>
-            </div>
-            <div className={CSS.modalFooter}>
-              <button onClick={() => closeModal('sentenceReview')} disabled={generatingReview} className={CSS.btnSecondary}>
-                Cancelar
-              </button>
-              <button
-                onClick={reviewSentence}
-                disabled={generatingReview}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover-amber-700 disabled:opacity-50"
-              >
-                {generatingReview ? (
-                  <>
-                    <div className={CSS.spinner}></div>
-                    Analisando...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    Iniciar Revisão
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* v1.37.51: Modais de Revisão de Sentença extraídos para componentes */}
+      <SentenceReviewOptionsModal
+        reviewScope={reviewScope}
+        setReviewScope={setReviewScope}
+        analyzedDocuments={analyzedDocuments}
+        generatingReview={generatingReview}
+        reviewSentence={reviewSentence}
+      />
 
-      {/* v1.21.21: Modal de resultado da revisão de sentença */}
-      {modals.sentenceReviewResult && reviewResult && (
-        <div className={`${CSS.modalOverlay} overflow-auto`}>
-          <div className={`${CSS.modalContainer} max-w-5xl w-full max-h-[95vh] flex flex-col my-auto`}>
-            <div className={`${CSS.modalHeader} flex-shrink-0`}>
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-3">
-                  <Scale className="w-6 h-6 text-amber-400" />
-                  <div>
-                    <h3 className="text-xl font-bold text-amber-400">Revisão Crítica da Sentença</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm theme-text-muted">Análise detalhada por IA - revise os apontamentos abaixo</p>
-                      {/* v1.36.57: Badge de cache */}
-                      {reviewFromCache && (
-                        <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">
-                          📦 Cache
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <button onClick={() => closeModal('sentenceReviewResult')} className="p-2 rounded-lg hover-slate-700">
-                  <X className="w-5 h-5 theme-text-muted" />
-                </button>
-              </div>
-            </div>
-            {/* Aviso */}
-            <div className="mx-6 mt-4 p-4 bg-amber-500/15 border border-amber-500/30 rounded-lg flex-shrink-0">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-amber-400 mb-1">REVISÃO POR IA - AVALIE CRITICAMENTE</p>
-                  <p className="text-xs theme-text-muted">Esta análise foi gerada por inteligência artificial e pode conter falsos positivos ou não identificar todos os problemas. Use como ferramenta de apoio, não como decisão final.</p>
-                </div>
-              </div>
-            </div>
-            {/* Conteúdo com scroll */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              <div
-                className="prose prose-sm max-w-none theme-text-secondary dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: sanitizeHTML(reviewResult) }}
-              />
-            </div>
-            {/* Footer */}
-            <div className={`${CSS.modalFooter} flex-shrink-0`}>
-              <button
-                onClick={async () => {
-                  try {
-                    // v1.25.18: Usar helper ao invés de DOM (memory leak fix)
-                    const plainText = extractPlainText(reviewResult);
-                    await navigator.clipboard.writeText(plainText);
-                    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
-                    setCopySuccess(true);
-                    copyTimeoutRef.current = setTimeout(() => setCopySuccess(false), 3000);
-                  } catch (err) {
-                    setError('Erro ao copiar: ' + (err as Error).message);
-                  }
-                }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg ${copySuccess ? 'bg-green-600 text-white' : 'theme-bg-secondary hover-slate-600'}`}
-              >
-                {copySuccess ? (
-                  <><Check className="w-4 h-4" /> Copiado!</>
-                ) : (
-                  <><Copy className="w-4 h-4" /> Copiar Texto</>
-                )}
-              </button>
-              {/* v1.36.57: Botão Regenerar (limpa cache e gera novamente) */}
-              <button
-                onClick={async () => {
-                  await clearReviewCache();
-                  closeModal('sentenceReviewResult');
-                  openModal('sentenceReview');
-                }}
-                className="flex items-center gap-2 px-4 py-2 theme-bg-secondary hover-slate-600 rounded-lg"
-                title="Limpar cache e gerar nova revisão"
-              >
-                <RotateCcw className="w-4 h-4" /> Regenerar
-              </button>
-              <button
-                onClick={() => closeModal('sentenceReviewResult')}
-                className="px-6 py-2 bg-amber-600 text-white rounded-lg hover-amber-700"
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SentenceReviewResultModal
+        reviewResult={reviewResult}
+        reviewFromCache={reviewFromCache}
+        sanitizeHTML={sanitizeHTML}
+        clearReviewCache={clearReviewCache}
+        setError={setError}
+      />
 
       <RenameTopicModal
         isOpen={modals.rename}
@@ -4634,232 +4481,23 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         API_BASE={API_BASE}
       />
 
-      {/* v1.32.24: Modal de Changelog - v1.33.51: migrado para BaseModal */}
-      <BaseModal
-        isOpen={showChangelogModal}
-        onClose={() => setShowChangelogModal(false)}
-        title="Histórico de Alterações"
-        icon={<Clock />}
-        iconColor="blue"
-        size="md"
-      >
-        <div className="p-4 overflow-y-auto max-h-[60vh]">
-          {CHANGELOG.map((item, i: number) => (
-            <div key={i} className="mb-3 pb-3 border-b theme-border-secondary last:border-0">
-              <span className="text-blue-400 font-mono text-sm font-semibold">v{item.version}</span>
-              <p className="theme-text-secondary text-sm mt-1">{item.feature}</p>
-            </div>
-          ))}
-        </div>
-      </BaseModal>
+      {/* v1.37.51: ChangelogModal extraído para componente */}
+      <ChangelogModal />
 
-      {/* 📥 v1.33.61: Modal de Download de Dados Essenciais (legislação e jurisprudência) - v1.35.67: migrado para BaseModal */}
-      <BaseModal
+      {/* v1.37.51: Modais de Download extraídos para componentes */}
+      <DataDownloadModal
         isOpen={showDataDownloadModal}
-        onClose={handleDismissDataPrompt}
-        title="Baixar Base de Dados"
-        icon={<Download />}
-        iconColor="blue"
-        size="md"
-        footer={
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={handleDismissDataPrompt}
-              disabled={dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading}
-              className="px-4 py-2 text-sm theme-text-secondary hover:theme-text-primary disabled:opacity-50"
-            >
-              Depois
-            </button>
-            <button
-              onClick={handleStartDataDownload}
-              disabled={dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading ||
-                       (!dataDownloadStatus.legislacao.needed && !dataDownloadStatus.jurisprudencia.needed)}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-            >
-              {(dataDownloadStatus.legislacao.downloading || dataDownloadStatus.jurisprudencia.downloading) ? (
-                <><RefreshCw className="w-4 h-4 animate-spin" /> Baixando...</>
-              ) : (
-                <><Download className="w-4 h-4" /> Baixar Agora</>
-              )}
-            </button>
-          </div>
-        }
-      >
-        <div className="p-4 space-y-4">
-          <p className="text-sm theme-text-secondary">
-            Para usar o Sentencify, é necessário baixar a base de dados de legislação e jurisprudência (~5 MB total, download único e rápido).
-          </p>
+        onDismiss={handleDismissDataPrompt}
+        onStartDownload={handleStartDataDownload}
+        status={dataDownloadStatus}
+      />
 
-          {/* Legislação */}
-          {dataDownloadStatus.legislacao.needed && (
-            <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium theme-text-primary">📜 Legislação (~3 MB)</span>
-                {dataDownloadStatus.legislacao.downloading && (
-                  <span className="text-xs theme-text-muted">
-                    {Math.round(dataDownloadStatus.legislacao.progress * 100)}%
-                  </span>
-                )}
-                {dataDownloadStatus.legislacao.completed && (
-                  <span className="text-xs text-green-500">✓ Concluído</span>
-                )}
-              </div>
-              {dataDownloadStatus.legislacao.downloading && (
-                <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-500 transition-all duration-300"
-                    style={{ width: `${dataDownloadStatus.legislacao.progress * 100}%` }}
-                  />
-                </div>
-              )}
-              {dataDownloadStatus.legislacao.error && (
-                <p className="text-xs text-red-400 mt-1">{dataDownloadStatus.legislacao.error}</p>
-              )}
-            </div>
-          )}
-
-          {/* Jurisprudência */}
-          {dataDownloadStatus.jurisprudencia.needed && (
-            <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium theme-text-primary">⚖️ Jurisprudência (~2 MB)</span>
-                {dataDownloadStatus.jurisprudencia.downloading && (
-                  <span className="text-xs theme-text-muted">
-                    {Math.round(dataDownloadStatus.jurisprudencia.progress * 100)}%
-                  </span>
-                )}
-                {dataDownloadStatus.jurisprudencia.completed && (
-                  <span className="text-xs text-green-500">✓ Concluído</span>
-                )}
-              </div>
-              {dataDownloadStatus.jurisprudencia.downloading && (
-                <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-green-500 transition-all duration-300"
-                    style={{ width: `${dataDownloadStatus.jurisprudencia.progress * 100}%` }}
-                  />
-                </div>
-              )}
-              {dataDownloadStatus.jurisprudencia.error && (
-                <p className="text-xs text-red-400 mt-1">{dataDownloadStatus.jurisprudencia.error}</p>
-              )}
-            </div>
-          )}
-
-          {/* Mensagem se ambos já foram baixados */}
-          {!dataDownloadStatus.legislacao.needed && !dataDownloadStatus.jurisprudencia.needed && (
-            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-              <p className="text-sm text-green-400 flex items-center gap-2">
-                <Check className="w-4 h-4" /> Base de dados instalada!
-              </p>
-            </div>
-          )}
-        </div>
-      </BaseModal>
-
-      {/* 🌐 v1.33.0: Modal de Download de Embeddings do CDN - v1.35.67: migrado para BaseModal */}
-      <BaseModal
+      <EmbeddingsDownloadModal
         isOpen={showEmbeddingsDownloadModal}
-        onClose={handleDismissEmbeddingsPrompt}
-        title="Baixar Dados para Busca Semântica"
-        icon={<Download />}
-        iconColor="blue"
-        size="md"
-        footer={
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={handleDismissEmbeddingsPrompt}
-              disabled={embeddingsDownloadStatus.legislacao.downloading || embeddingsDownloadStatus.jurisprudencia.downloading}
-              className="px-4 py-2 text-sm theme-text-secondary hover:theme-text-primary disabled:opacity-50"
-            >
-              Depois
-            </button>
-            <button
-              onClick={handleStartEmbeddingsDownload}
-              disabled={embeddingsDownloadStatus.legislacao.downloading || embeddingsDownloadStatus.jurisprudencia.downloading ||
-                       (!embeddingsDownloadStatus.legislacao.needed && !embeddingsDownloadStatus.jurisprudencia.needed)}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-            >
-              {(embeddingsDownloadStatus.legislacao.downloading || embeddingsDownloadStatus.jurisprudencia.downloading) ? (
-                <><RefreshCw className="w-4 h-4 animate-spin" /> Baixando...</>
-              ) : (
-                <><Download className="w-4 h-4" /> Baixar Agora</>
-              )}
-            </button>
-          </div>
-        }
-      >
-        <div className="p-4 space-y-4">
-          <p className="text-sm theme-text-secondary">
-            Para usar a busca semântica de legislação e jurisprudência, é necessário baixar os dados de embeddings (~250 MB total, download único).
-          </p>
-
-          {/* Legislação */}
-          {embeddingsDownloadStatus.legislacao.needed && (
-            <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium theme-text-primary">📜 Legislação (~211 MB)</span>
-                {embeddingsDownloadStatus.legislacao.downloading && (
-                  <span className="text-xs theme-text-muted">
-                    {Math.round(embeddingsDownloadStatus.legislacao.progress * 100)}%
-                  </span>
-                )}
-                {!embeddingsDownloadStatus.legislacao.needed && embeddingsDownloadStatus.legislacao.progress === 1 && (
-                  <span className="text-xs text-green-500">✓ Concluído</span>
-                )}
-              </div>
-              {embeddingsDownloadStatus.legislacao.downloading && (
-                <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-500 transition-all duration-300"
-                    style={{ width: `${embeddingsDownloadStatus.legislacao.progress * 100}%` }}
-                  />
-                </div>
-              )}
-              {embeddingsDownloadStatus.legislacao.error && (
-                <p className="text-xs text-red-400 mt-1">{embeddingsDownloadStatus.legislacao.error}</p>
-              )}
-            </div>
-          )}
-
-          {/* Jurisprudência */}
-          {embeddingsDownloadStatus.jurisprudencia.needed && (
-            <div className="p-3 rounded-lg theme-bg-secondary border theme-border-input">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium theme-text-primary">📚 Jurisprudência (~38 MB)</span>
-                {embeddingsDownloadStatus.jurisprudencia.downloading && (
-                  <span className="text-xs theme-text-muted">
-                    {Math.round(embeddingsDownloadStatus.jurisprudencia.progress * 100)}%
-                  </span>
-                )}
-                {!embeddingsDownloadStatus.jurisprudencia.needed && embeddingsDownloadStatus.jurisprudencia.progress === 1 && (
-                  <span className="text-xs text-green-500">✓ Concluído</span>
-                )}
-              </div>
-              {embeddingsDownloadStatus.jurisprudencia.downloading && (
-                <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-green-500 transition-all duration-300"
-                    style={{ width: `${embeddingsDownloadStatus.jurisprudencia.progress * 100}%` }}
-                  />
-                </div>
-              )}
-              {embeddingsDownloadStatus.jurisprudencia.error && (
-                <p className="text-xs text-red-400 mt-1">{embeddingsDownloadStatus.jurisprudencia.error}</p>
-              )}
-            </div>
-          )}
-
-          {/* Mensagem se ambos já foram baixados */}
-          {!embeddingsDownloadStatus.legislacao.needed && !embeddingsDownloadStatus.jurisprudencia.needed && (
-            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-              <p className="text-sm text-green-400 flex items-center gap-2">
-                <Check className="w-4 h-4" /> Todos os embeddings já estão instalados!
-              </p>
-            </div>
-          )}
-        </div>
-      </BaseModal>
+        onDismiss={handleDismissEmbeddingsPrompt}
+        onStartDownload={handleStartEmbeddingsDownload}
+        status={embeddingsDownloadStatus}
+      />
 
       {/* Modal de Restaurar Sessão */}
       <RestoreSessionModal
@@ -5215,38 +4853,8 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         searchModelsBySimilarity={searchModelsBySimilarity}
       />
 
-      {/* Toast Notification */}
-      {toast.show && (
-        <div className="fixed top-4 left-4 z-[9999] animate-slide-in-right">
-          <div className={`
-            rounded-lg shadow-2xl border p-4 min-w-[320px] max-w-md
-            ${toast.type === 'success' ? 'theme-toast-success' : ''}
-            ${toast.type === 'error' ? 'theme-toast-error' : ''}
-            ${toast.type === 'info' ? 'theme-toast-info' : ''}
-            ${toast.type === 'warning' ? 'theme-toast-warning' : ''}
-          `}>
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 text-2xl">
-                {toast.type === 'success' && '✅'}
-                {toast.type === 'error' && '❌'}
-                {toast.type === 'info' && 'ℹ️'}
-                {toast.type === 'warning' && '⚠️'}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm theme-text-primary whitespace-pre-line">{toast.message}</p>
-              </div>
-              <button
-                onClick={clearToast}
-                className="flex-shrink-0 text-white/60 hover-text-white transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* v1.37.51: Toast extraído para componente */}
+      <Toast />
 
       {/* v1.4.6: Removido Mini-toolbar flutuante (76 linhas) */}
       {/* v1.4.8: Removido Toolbar Fixa no Topo (82 linhas) - não mais necessária com editor de altura fixa */}
@@ -5491,16 +5099,8 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         }}
       />
 
-      {/* Ícone de Auto-Save Discreto */}
-      {storage.showAutoSaveIndicator && (
-        <div className="fixed bottom-4 right-4 z-[9999] animate-in fade-in duration-300">
-          <div className="theme-autosave p-2 rounded-full shadow-lg border">
-            <svg className="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-        </div>
-      )}
+      {/* v1.37.51: AutoSaveIndicator extraído para componente */}
+      <AutoSaveIndicator show={storage.showAutoSaveIndicator} />
 
       {/* v1.9.5: Overlay para abas bloqueadas (não-primárias) */}
       <LockedTabOverlay
