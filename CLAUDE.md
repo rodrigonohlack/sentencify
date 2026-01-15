@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.60 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.61 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.61 | Double Check factsComparison: regras fix_row movidas para início do prompt com exemplos ✅/❌ - IA agora gera tema real, field válido e newValue preenchido |
 | v1.37.60 | Fix API keys perdidas ao recarregar: setApiKey agora persiste em sentencify-ai-settings (antes só gravava em memória Zustand, usuários novos perdiam keys ao recarregar) |
 | v1.37.59 | DoubleCheckReviewModal: Modal obrigatório para revisão de correções do Double Check - usuário aceita/rejeita correções individualmente antes de aplicá-las (topicExtraction, dispositivo, sentenceReview, factsComparison) |
 | v1.37.57 | Fix bug "cannot add property embedding, object is not extensible" - gerar embeddings para modelos existentes falhava por mutação direta de objetos frozen do Zustand/Immer |

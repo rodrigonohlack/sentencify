@@ -2,7 +2,7 @@
  * Prompts para Double Check de Respostas da IA
  * Verificação secundária para identificar falhas, omissões e falsos positivos
  *
- * @version 1.36.58 - Adicionado factsComparison
+ * @version 1.37.61 - Regras fix_row movidas para início do prompt factsComparison
  */
 
 import type { DoubleCheckOperations } from '../types';
@@ -185,11 +185,44 @@ IMPORTANTE:
 - Foque em erros substanciais, não em preferências de redação
 - Use confidence entre 0.0 e 1.0 para indicar sua certeza`,
 
-  // v1.36.58: Verificação do Confronto de Fatos
+  // v1.37.61: Verificação do Confronto de Fatos - Regras movidas para o início
   factsComparison: `## TAREFA: Verificação do Confronto de Fatos
 
 Você é um revisor jurídico especializado em análise comparativa de alegações trabalhistas.
-Sua função é verificar criticamente a tabela de confronto de fatos gerada.
+
+## ⚠️ REGRAS OBRIGATÓRIAS PARA CORREÇÕES fix_row (LEIA PRIMEIRO!)
+
+Ao gerar correções do tipo "fix_row", você DEVE seguir estas regras:
+
+1. **"tema" = NOME EXATO DO TEMA NA TABELA**
+   ✅ CORRETO: "tema": "Subordinação Hierárquica"
+   ✅ CORRETO: "tema": "Jornada de Trabalho"
+   ✅ CORRETO: "tema": "Período de Prestação de Serviços"
+   ❌ ERRADO: "tema": "Correção 1" (NUNCA use identificadores genéricos!)
+   ❌ ERRADO: "tema": "Linha 1"
+   ❌ ERRADO: "tema": "Item 2"
+
+2. **"field" = CAMPO ESPECÍFICO A CORRIGIR**
+   Campos válidos: "alegacaoReclamante", "alegacaoReclamada", "status", "relevancia", "observacoes"
+   ✅ CORRETO: "field": "status"
+   ✅ CORRETO: "field": "alegacaoReclamante"
+   ✅ CORRETO: "field": "observacoes"
+   ❌ ERRADO: "field": "tabela" (NUNCA use "tabela"!)
+
+3. **"newValue" = VALOR CORRIGIDO COMPLETO**
+   ✅ CORRETO: "newValue": "incontroverso"
+   ✅ CORRETO: "newValue": "Alega que trabalhava das 8h às 18h sem intervalo"
+   ❌ ERRADO: "newValue": "" (NUNCA deixe vazio!)
+
+## EXEMPLO DE CORREÇÃO CORRETA:
+
+{
+  "type": "fix_row",
+  "tema": "Período de Prestação de Serviços",
+  "field": "status",
+  "newValue": "incontroverso",
+  "reason": "As datas não foram contestadas especificamente pela ré (Art. 341 CPC)"
+}
 
 ## DOCUMENTOS ORIGINAIS:
 {context}
@@ -201,64 +234,33 @@ Sua função é verificar criticamente a tabela de confronto de fatos gerada.
 
 ### 1. COMPLETUDE DA TABELA
 - Todos os pontos fáticos relevantes foram incluídos?
-- Há omissões de alegações importantes de qualquer parte?
-- A tabela cobre os elementos essenciais do pedido?
+- Há omissões de alegações importantes?
 
-### 2. CORREÇÃO DAS ALEGAÇÕES
-- As alegações atribuídas ao reclamante estão corretas?
-- As alegações atribuídas à reclamada estão corretas?
-- Há distorções ou interpretações incorretas?
-
-### 3. CLASSIFICAÇÃO DE STATUS
+### 2. CLASSIFICAÇÃO DE STATUS
 - "controverso": partes divergem sobre o fato
-- "incontroverso": partes concordam (expresso ou tácito)
+- "incontroverso": partes concordam (expresso ou tácito, Art. 341 CPC)
 - "silencio": uma parte não se manifestou
 - A classificação está correta para cada linha?
 
-### 4. RELEVÂNCIA
-- A relevância (alta/média/baixa) está adequada?
-- Pontos centrais do litígio estão como "alta"?
-
-### 5. FATOS INCONTROVERSOS E CONTROVERSOS
+### 3. FATOS INCONTROVERSOS/CONTROVERSOS
 - As listas estão corretas e completas?
-- Há fatos classificados incorretamente?
 
 ## FORMATO DE RESPOSTA (JSON estrito):
 
 \`\`\`json
 {
   "corrections": [
+    { "type": "fix_row", "tema": "NOME EXATO DO TEMA", "field": "status", "newValue": "incontroverso", "reason": "..." },
     { "type": "add_row", "row": {"tema": "...", "alegacaoReclamante": "...", "alegacaoReclamada": "...", "status": "...", "relevancia": "..."}, "reason": "..." },
-    { "type": "fix_row", "tema": "Subordinação Hierárquica", "field": "observacoes", "newValue": "Texto corrigido aqui", "reason": "..." },
-    { "type": "remove_row", "tema": "Tema da linha", "reason": "..." },
-    { "type": "add_fato", "list": "fatosIncontroversos", "fato": "Fato a adicionar", "reason": "..." }
+    { "type": "add_fato", "list": "fatosIncontroversos", "fato": "...", "reason": "..." }
   ],
   "verifiedResult": { /* Objeto FactsComparisonResult corrigido ou original */ },
   "confidence": 0.95,
-  "summary": "Resumo breve das alterações (ou 'Nenhuma correção necessária')"
+  "summary": "Resumo breve das alterações"
 }
 \`\`\`
 
-## REGRAS CRÍTICAS PARA CORREÇÕES fix_row:
-
-1. **"tema" DEVE ser o tema REAL da linha na tabela** (ex: "Subordinação Hierárquica", "Jornada de Trabalho")
-   - NUNCA use identificadores genéricos como "Correção 1", "Linha 1", etc.
-
-2. **"field" DEVE ser um campo válido**:
-   - "alegacaoReclamante" - alegação do autor
-   - "alegacaoReclamada" - alegação da ré
-   - "status" - controverso/incontroverso/silencio
-   - "relevancia" - alta/média/baixa
-   - "observacoes" - observações adicionais
-   - NUNCA use "tabela" como field
-
-3. **"newValue" DEVE conter o texto corrigido** - nunca deixe vazio
-
-IMPORTANTE:
-- Se o confronto estiver correto, retorne corrections: [] e copie o original em verifiedResult
-- Foque em erros substanciais (omissões, classificações erradas), não em estilo
-- Use confidence entre 0.0 e 1.0 para indicar sua certeza
-- O verifiedResult deve manter a estrutura: tabela, fatosIncontroversos, fatosControversos, pontosChave`
+IMPORTANTE: Se não houver correções necessárias, retorne corrections: [] e copie o original em verifiedResult.`
 };
 
 /**
