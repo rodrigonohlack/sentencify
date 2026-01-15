@@ -1,7 +1,7 @@
 /**
  * @file useAIStore.ts
  * @description Store Zustand para configurações de IA (providers, modelos, tokens)
- * @version 1.37.49
+ * @version 1.37.60
  *
  * Este store centraliza o estado de configuração de IA que antes estava
  * no hook useAIIntegration.
@@ -314,6 +314,23 @@ export const useAIStore = create<AIStoreState>()(
           set(
             (state) => {
               state.aiSettings.apiKeys[provider] = key;
+
+              // Persistir apiKeys separadamente (não vai no Zustand persist por segurança)
+              // Fix v1.37.59: apiKeys não eram persistidas para usuários novos
+              try {
+                const currentSettings = localStorage.getItem('sentencify-ai-settings');
+                const parsed = currentSettings ? JSON.parse(currentSettings) : {};
+                const updatedApiKeys = {
+                  ...(parsed.apiKeys || {}),
+                  [provider]: key
+                };
+                localStorage.setItem('sentencify-ai-settings', JSON.stringify({
+                  ...parsed,
+                  apiKeys: updatedApiKeys
+                }));
+              } catch (err) {
+                console.warn('[AIStore] Erro ao persistir apiKey:', err);
+              }
             },
             false,
             `setApiKey/${provider}`

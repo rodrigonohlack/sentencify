@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.60', feature: 'Fix API keys perdidas ao recarregar página: setApiKey agora persiste em sentencify-ai-settings (antes só gravava em memória Zustand, usuários novos perdiam keys ao recarregar)' },
   { version: '1.37.59', feature: 'DoubleCheckReviewModal: Modal obrigatório para revisão de correções do Double Check - usuário aceita/rejeita correções individualmente antes de aplicá-las (topicExtraction, dispositivo, sentenceReview, factsComparison)' },
   { version: '1.37.57', feature: 'Fix bug "cannot add property embedding, object is not extensible" - gerar embeddings para modelos existentes falhava por mutação direta de objetos frozen do Zustand/Immer' },
   { version: '1.37.56', feature: 'FASE 4: Modal Registry Pattern em useUIStore - 46 flags booleanas substituídas por openModals: ModalKey[] array, código mais limpo e escalável, mantém compatibilidade backwards com objeto modals' },
