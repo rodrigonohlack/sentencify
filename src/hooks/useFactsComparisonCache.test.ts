@@ -26,73 +26,16 @@ const createMockComparisonResult = (): FactsComparisonResult => ({
   resumo: 'Test summary'
 });
 
-// Mock IndexedDB
-const createMockIDBDatabase = () => {
-  const stores: Record<string, Map<number | string, unknown>> = {};
-
-  return {
-    objectStoreNames: {
-      contains: vi.fn((name: string) => name in stores)
-    },
-    createObjectStore: vi.fn((name: string) => {
-      stores[name] = new Map();
-      return {
-        createIndex: vi.fn()
-      };
-    }),
-    transaction: vi.fn((storeName: string, mode?: string) => {
-      const store = stores[storeName] || new Map();
-      let idCounter = 1;
-
-      return {
-        objectStore: vi.fn(() => ({
-          add: vi.fn((entry: unknown) => {
-            const id = idCounter++;
-            (entry as { id: number }).id = id;
-            store.set(id, entry);
-            return { onsuccess: null, onerror: null };
-          }),
-          put: vi.fn((entry: unknown) => {
-            store.set((entry as { id: number }).id, entry);
-            return { onsuccess: null, onerror: null };
-          }),
-          delete: vi.fn((id: number) => {
-            store.delete(id);
-            return { onsuccess: null, onerror: null };
-          }),
-          clear: vi.fn(() => {
-            store.clear();
-            return { onsuccess: null, onerror: null };
-          }),
-          getAll: vi.fn(() => ({
-            result: Array.from(store.values()),
-            onsuccess: null,
-            onerror: null
-          })),
-          index: vi.fn(() => ({
-            get: vi.fn(() => ({
-              result: undefined,
-              onsuccess: null,
-              onerror: null
-            })),
-            getAll: vi.fn(() => ({
-              result: [],
-              onsuccess: null,
-              onerror: null
-            }))
-          }))
-        })),
-        oncomplete: null,
-        onerror: null
-      };
-    }),
-    close: vi.fn()
-  };
-};
-
 describe('useFactsComparisonCache', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    // Clear IndexedDB between tests for isolation
+    await new Promise<void>((resolve) => {
+      const req = indexedDB.deleteDatabase(FACTS_DB_NAME);
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
   });
 
   afterEach(() => {

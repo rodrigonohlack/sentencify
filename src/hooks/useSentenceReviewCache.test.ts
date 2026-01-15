@@ -15,8 +15,15 @@ import useSentenceReviewCache, {
 import type { ReviewScope, SentenceReviewCacheEntry } from '../types';
 
 describe('useSentenceReviewCache', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    // Clear IndexedDB between tests for isolation
+    await new Promise<void>((resolve) => {
+      const req = indexedDB.deleteDatabase(REVIEW_DB_NAME);
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
   });
 
   afterEach(() => {

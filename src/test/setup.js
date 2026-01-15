@@ -1,5 +1,6 @@
 // Setup para testes com Vitest + React Testing Library
 import '@testing-library/jest-dom';
+import 'fake-indexeddb/auto'; // Habilita IndexedDB globalmente para testes
 
 // Mock robusto do localStorage
 const createLocalStorageMock = () => {
