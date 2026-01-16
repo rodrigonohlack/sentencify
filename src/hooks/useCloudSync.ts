@@ -185,6 +185,8 @@ export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseC
 
   const isSyncingRef = useRef<boolean>(false);
   const syncIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // v1.37.76: Ref para sempre ter valor mais recente de pendingChanges (evita stale closure)
+  const pendingChangesRef = useRef<CloudPendingChange[]>([]);
 
   // ============================================
   // INICIALIZAÇÃO
@@ -232,6 +234,11 @@ export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseC
       // Limpar pendentes antigos para evitar loop de erro
       localStorage.removeItem(PENDING_KEY);
     }
+  }, [pendingChanges]);
+
+  // v1.37.76: Manter ref sincronizada com state (para evitar stale closure em callbacks)
+  useEffect(() => {
+    pendingChangesRef.current = pendingChanges;
   }, [pendingChanges]);
 
   // Detectar offline
@@ -386,7 +393,8 @@ export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseC
   // ============================================
   // SINCRONIZAÇÃO
   // ============================================
-  const pull = useCallback(async (): Promise<Model[] | null> => {
+  // v1.37.76: pull() recebe pendingChanges para considerar deletes na comparação
+  const pull = useCallback(async (currentPendingChanges?: CloudPendingChange[]): Promise<Model[] | null> => {
     if (!user || !navigator.onLine || isSyncingRef.current) return null;
 
     try {
@@ -405,10 +413,16 @@ export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseC
       const zustandModels = useModelsStore.getState().models;
       const localModelsCount = zustandModels.filter(m => !m.isShared).length;
 
+      // v1.37.76: Considerar pending deletes na comparação
+      // Se há deletes pendentes, o servidor ainda não sabe - ajustar expectativa
+      // Ex: local=455, servidor=456, pendingDeletes=1 → esperado=455 → match!
+      const pendingDeletes = (currentPendingChanges || []).filter(c => c.operation === 'delete').length;
+      const expectedServerCount = serverStatus.activeModels - pendingDeletes;
+
       // v1.34.2: Pull paginado para evitar crash de memória
       // v1.34.6: Forçar full sync se local != servidor
       const hasFlag = localStorage.getItem('sentencify-initial-push-done');
-      const localMatchesServer = localModelsCount >= serverStatus.activeModels;
+      const localMatchesServer = localModelsCount >= expectedServerCount;
       const needsFullSync = !hasFlag || !localMatchesServer;
       const effectiveLastSyncAt = needsFullSync ? null : lastSyncAt;
 
@@ -421,11 +435,11 @@ export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseC
 
       if (needsFullSync) {
         console.log(
-          `[CloudSync] Forçando full sync (local=${localModelsCount}, servidor=${serverStatus.activeModels})`
+          `[CloudSync] Forçando full sync (local=${localModelsCount}, servidor=${serverStatus.activeModels}, pendingDeletes=${pendingDeletes})`
         );
       } else {
         console.log(
-          `[CloudSync] Sync incremental (local=${localModelsCount} >= servidor=${serverStatus.activeModels})`
+          `[CloudSync] Sync incremental (local=${localModelsCount} >= esperado=${expectedServerCount} [servidor=${serverStatus.activeModels} - deletes=${pendingDeletes}])`
         );
       }
 
@@ -485,7 +499,9 @@ export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseC
   }, [authFetch, lastSyncAt, user, onModelsReceived]);
 
   const push = useCallback(async (): Promise<CloudPushResult> => {
-    if (!user || !navigator.onLine || pendingChanges.length === 0 || isSyncingRef.current) {
+    // v1.37.76: Usar ref para sempre ter valor mais recente (evita stale closure)
+    const currentPending = pendingChangesRef.current;
+    if (!user || !navigator.onLine || currentPending.length === 0 || isSyncingRef.current) {
       return { success: true, count: 0 };
     }
 
@@ -494,10 +510,11 @@ export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseC
       setSyncStatus('syncing');
       setSyncError(null);
 
+      console.log(`[CloudSync] Push iniciando: ${currentPending.length} mudanças pendentes`);
       const res = await authFetch('/api/sync/push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ changes: pendingChanges })
+        body: JSON.stringify({ changes: currentPending })
       });
 
       if (!res.ok) {
@@ -586,12 +603,15 @@ export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseC
     } finally {
       isSyncingRef.current = false;
     }
-  }, [authFetch, pendingChanges, user, pull]);
+  }, [authFetch, user, pull]); // v1.37.76: Removido pendingChanges (usando ref)
 
   // v1.35.11: PULL PRIMEIRO para obter versões atualizadas antes de push
   // Antes: push-then-pull causava conflitos desnecessários ao enviar com syncVersion obsoleta
+  // v1.37.76: Usar ref para sempre ter valor mais recente de pendingChanges
   const sync = useCallback(async (): Promise<CloudPushResult | Model[] | null> => {
-    const pullResult = await pull();
+    // Usar ref para evitar stale closure
+    const currentPending = pendingChangesRef.current;
+    const pullResult = await pull(currentPending);
 
     if (!pullResult && navigator.onLine) {
       // Pull falhou mas online - tentar push para não perder dados locais
@@ -605,7 +625,7 @@ export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseC
 
     // Push com versões atualizadas pelo pull
     return await push();
-  }, [pull, push]);
+  }, [pull, push]); // v1.37.76: Removido pendingChanges (usando ref)
 
   // Rastrear mudança para sync
   const trackChange = useCallback(

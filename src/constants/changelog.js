@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.76', feature: 'Fix completo sync modelos ressuscitando: pendingChangesRef evita stale closure, comparação considera pending deletes (455 >= 456-1), logs detalhados de push' },
   { version: '1.37.75', feature: 'Fix bug sync modelos ressuscitando: usar useModelsStore.getState() como fonte de verdade para contagem local (antes: localStorage desatualizado causava full sync desnecessário que baixava modelos deletados)' },
   { version: '1.37.74', feature: 'ModalRoot expandido: modais de tópicos (RenameTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal) movidos do App.tsx para ModalRoot (~37 linhas removidas) - handlers passados como props para operações com AI regeneration' },
   { version: '1.37.73', feature: 'ModalRoot com Zustand: 7 modais extraídos do App.tsx para componente centralizado (DeleteTopic, DeleteModel, DeleteAllModels, Export, SimilarityWarning, ExtractedModelPreview, BulkDiscardConfirm) - hooks useTopicModalHandlers, useModelModalHandlers, useProofModalHandlers criados' },
