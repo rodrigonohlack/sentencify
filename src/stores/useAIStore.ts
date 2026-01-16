@@ -80,6 +80,7 @@ const DEFAULT_ANONYMIZATION: AnonymizationSettings = {
 };
 
 /** Configurações de Double Check padrão */
+// v1.37.65: Adicionado proofAnalysis e quickPrompt
 const DEFAULT_DOUBLE_CHECK: DoubleCheckSettings = {
   enabled: false,
   provider: 'claude',
@@ -88,7 +89,9 @@ const DEFAULT_DOUBLE_CHECK: DoubleCheckSettings = {
     topicExtraction: false,
     dispositivo: false,
     sentenceReview: false,
-    factsComparison: false
+    factsComparison: false,
+    proofAnalysis: false,
+    quickPrompt: false
   }
 };
 

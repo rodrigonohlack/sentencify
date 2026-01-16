@@ -1,7 +1,7 @@
 /**
  * @file useDecisionTextGeneration.ts
  * @description Hook para geração de texto de decisão judicial via IA
- * @version 1.37.17
+ * @version 1.37.65 - Double Check para quick prompts
  *
  * Funções extraídas do App.tsx (FASE 12):
  * - generateAiText: Gera texto para decisão com contexto do tópico
@@ -13,14 +13,24 @@
  * - insertAiTextModel: Insere texto gerado no editor de modelo
  */
 
-import React from 'react';
-import type { Topic, InsertMode, AITextContent, AIDocumentContent, AnonymizationSettings, AIMessageContent } from '../types';
+import React, { useRef, useEffect } from 'react';
+import type {
+  Topic,
+  InsertMode,
+  AITextContent,
+  AIDocumentContent,
+  AnonymizationSettings,
+  AIMessageContent,
+  DoubleCheckReviewResult,
+  DoubleCheckCorrection,
+} from '../types';
 import type { QuillInstance } from '../types';
 import { AI_PROMPTS } from '../prompts/ai-prompts';
 import { INSTRUCAO_NAO_PRESUMIR } from '../prompts/instrucoes';
 import { prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext } from '../utils/context-helpers';
 import { normalizeHTMLSpacing } from '../utils/text';
 import { sanitizeQuillHTML } from './useQuillEditor';
+import { useUIStore } from '../stores/useUIStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INTERFACES
@@ -34,6 +44,13 @@ export interface AIIntegrationForDecisionText {
   aiSettings?: {
     anonymization?: {
       enabled?: boolean;
+    };
+    // v1.37.65: Double Check settings
+    doubleCheck?: {
+      enabled: boolean;
+      operations: {
+        quickPrompt?: boolean;
+      };
     };
   };
   setGeneratingAi: (generating: boolean) => void;
@@ -53,6 +70,18 @@ export interface AIIntegrationForDecisionText {
       topK?: number;
     }
   ) => Promise<string>;
+  // v1.37.65: Double Check para quick prompts
+  performDoubleCheck?: (
+    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison' | 'proofAnalysis' | 'quickPrompt',
+    originalResponse: string,
+    context: string,
+    onProgress?: (msg: string) => void,
+    userPrompt?: string
+  ) => Promise<{
+    verified: string;
+    corrections: DoubleCheckCorrection[];
+    summary: string;
+  }>;
 }
 
 export interface ProofManagerForDecisionText {
@@ -72,11 +101,13 @@ export interface ProofManagerForDecisionText {
 }
 
 export interface ChatAssistantForDecisionText {
-  lastResponse: string;
+  lastResponse: string | null;
   send: (
     message: string,
     contextBuilder: (msg: string) => Promise<AIMessageContent[]>
-  ) => Promise<void>;
+  ) => Promise<{ success: boolean; error?: string }>;
+  // v1.37.65: Double Check para quick prompts
+  updateLastAssistantMessage: (newContent: string) => void;
 }
 
 export interface ModelLibraryForDecisionText {
@@ -153,6 +184,25 @@ export function useDecisionTextGeneration(props: UseDecisionTextGenerationProps)
     setError,
     sanitizeHTML,
   } = props;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DOUBLE CHECK INTEGRATION (v1.37.65)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const openDoubleCheckReview = useUIStore(state => state.openDoubleCheckReview);
+  const doubleCheckResult = useUIStore(state => state.doubleCheckResult);
+  const setDoubleCheckResult = useUIStore(state => state.setDoubleCheckResult);
+
+  // Ref para armazenar o resolver da Promise que aguarda decisao do usuario
+  const pendingDoubleCheckResolve = useRef<((result: DoubleCheckReviewResult) => void) | null>(null);
+
+  // Quando o usuario decide no modal, resolver a Promise pendente
+  useEffect(() => {
+    if (doubleCheckResult && doubleCheckResult.operation === 'quickPrompt' && pendingDoubleCheckResolve.current) {
+      pendingDoubleCheckResolve.current(doubleCheckResult);
+      pendingDoubleCheckResolve.current = null;
+      setDoubleCheckResult(null);
+    }
+  }, [doubleCheckResult, setDoubleCheckResult]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // GENERATE AI TEXT (DECISÃO)
@@ -480,8 +530,72 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
 
   const handleSendChatMessage = React.useCallback(async (message: string, options: { proofFilter?: string } = {}) => {
     const contextBuilderWithOptions = (msg: string) => buildContextForChat(msg, options);
-    await chatAssistant.send(message, contextBuilderWithOptions);
-  }, [chatAssistant, buildContextForChat]);
+    const result = await chatAssistant.send(message, contextBuilderWithOptions);
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DOUBLE CHECK DO QUICK PROMPT (v1.37.65)
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (result.success &&
+        aiIntegration?.aiSettings?.doubleCheck?.enabled &&
+        aiIntegration?.aiSettings?.doubleCheck?.operations?.quickPrompt &&
+        aiIntegration?.performDoubleCheck) {
+      try {
+        const lastResponse = chatAssistant.lastResponse;
+        if (lastResponse) {
+          // Construir contexto completo para Double Check (sem limitacoes)
+          const contextContent = await buildContextForChat(message, options);
+          const contextText = Array.isArray(contextContent)
+            ? contextContent
+                .filter(c => typeof c === 'object' && c !== null && 'type' in c && c.type === 'text')
+                .map(c => (c as AITextContent).text)
+                .join('\n\n---\n\n')
+            : String(contextContent);
+
+          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+            'quickPrompt',
+            lastResponse,
+            contextText,
+            undefined,  // onProgress
+            message  // userPrompt - texto do quick prompt/mensagem do usuario
+          );
+
+          if (corrections.length > 0) {
+            const typedCorrections: DoubleCheckCorrection[] = corrections.map((c, idx) => ({
+              type: 'improve' as const,
+              reason: typeof c === 'object' && c !== null && 'reason' in c ? String(c.reason) : '',
+              item: typeof c === 'object' && c !== null && 'item' in c ? String(c.item) : `Correcao ${idx + 1}`,
+              suggestion: typeof c === 'object' && c !== null && 'suggestion' in c ? String(c.suggestion) : ''
+            }));
+
+            const waitForDecision = new Promise<DoubleCheckReviewResult>(resolve => {
+              pendingDoubleCheckResolve.current = resolve;
+            });
+
+            openDoubleCheckReview({
+              operation: 'quickPrompt',
+              originalResult: lastResponse,
+              verifiedResult: verified,
+              corrections: typedCorrections,
+              summary,
+              confidence: 85
+            });
+
+            const dcResult = await waitForDecision;
+
+            if (dcResult.selected.length > 0) {
+              // Atualizar a ultima mensagem no historico do chat
+              chatAssistant.updateLastAssistantMessage(dcResult.finalResult);
+              console.log('[DoubleCheck QuickPrompt] Correcoes aplicadas:', dcResult.selected);
+            } else {
+              console.log('[DoubleCheck QuickPrompt] Usuario descartou correcoes');
+            }
+          }
+        }
+      } catch (dcError) {
+        console.error('[DoubleCheck QuickPrompt] Erro:', dcError);
+      }
+    }
+  }, [chatAssistant, buildContextForChat, aiIntegration, openDoubleCheckReview]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // GENERATE AI TEXT FOR MODEL

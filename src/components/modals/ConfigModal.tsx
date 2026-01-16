@@ -668,7 +668,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                   enabled: false,
                   provider: 'claude' as AIProvider,
                   model: 'claude-sonnet-4-20250514',
-                  operations: { topicExtraction: false, dispositivo: false, sentenceReview: false, factsComparison: false }
+                  // v1.37.65: Adicionado proofAnalysis e quickPrompt
+                  operations: { topicExtraction: false, dispositivo: false, sentenceReview: false, factsComparison: false, proofAnalysis: false, quickPrompt: false }
                 };
                 setAiSettings({
                   ...aiSettings,
@@ -1029,6 +1030,58 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                         <span className="text-sm theme-text-primary">Confronto de fatos</span>
                         <p className="text-xs theme-text-muted">
                           Verifica completude, classificação e correção das alegações
+                        </p>
+                      </div>
+                    </label>
+                    {/* v1.37.65: Análise de provas */}
+                    <label className="flex items-center gap-3 p-2 rounded-lg hover:theme-bg-secondary cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={aiSettings.doubleCheck?.operations.proofAnalysis || false}
+                        onChange={(e) => {
+                          setAiSettings({
+                            ...aiSettings,
+                            doubleCheck: {
+                              ...aiSettings.doubleCheck!,
+                              operations: {
+                                ...aiSettings.doubleCheck!.operations,
+                                proofAnalysis: e.target.checked
+                              }
+                            }
+                          });
+                        }}
+                        className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500"
+                      />
+                      <div className="flex-1">
+                        <span className="text-sm theme-text-primary">Análise de provas</span>
+                        <p className="text-xs theme-text-muted">
+                          Verifica completude, coerência e objetividade da análise
+                        </p>
+                      </div>
+                    </label>
+                    {/* v1.37.65: Quick Prompts */}
+                    <label className="flex items-center gap-3 p-2 rounded-lg hover:theme-bg-secondary cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={aiSettings.doubleCheck?.operations.quickPrompt || false}
+                        onChange={(e) => {
+                          setAiSettings({
+                            ...aiSettings,
+                            doubleCheck: {
+                              ...aiSettings.doubleCheck!,
+                              operations: {
+                                ...aiSettings.doubleCheck!.operations,
+                                quickPrompt: e.target.checked
+                              }
+                            }
+                          });
+                        }}
+                        className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500"
+                      />
+                      <div className="flex-1">
+                        <span className="text-sm theme-text-primary">Prompts rápidos (Assistente IA)</span>
+                        <p className="text-xs theme-text-muted">
+                          Verifica atendimento à solicitação e precisão jurídica
                         </p>
                       </div>
                     </label>

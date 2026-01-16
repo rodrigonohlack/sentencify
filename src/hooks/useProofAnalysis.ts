@@ -1,14 +1,15 @@
 /**
  * @file useProofAnalysis.ts
  * @description Hook para analise de provas documentais
- * @version 1.36.73
+ * @version 1.37.65 - Double Check para analise de provas
  *
  * Extraido do App.tsx linha ~7210
  * Funcao: analyzeProof - analisa provas documentais com contexto do processo
  */
 
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { anonymizeText } from '../utils/text';
+import { useUIStore } from '../stores/useUIStore';
 import type {
   AIMessage,
   AIMessageContent,
@@ -21,6 +22,8 @@ import type {
   AISettings,
   AnalyzedDocuments,
   AnonymizationSettings,
+  DoubleCheckReviewResult,
+  DoubleCheckCorrection,
 } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -39,6 +42,18 @@ export interface AIIntegrationForProofs {
     topK?: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) => Promise<any>;
+  // v1.37.65: Double Check para analise de provas
+  performDoubleCheck?: (
+    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison' | 'proofAnalysis' | 'quickPrompt',
+    originalResponse: string,
+    context: string,
+    onProgress?: (msg: string) => void,
+    userPrompt?: string
+  ) => Promise<{
+    verified: string;
+    corrections: DoubleCheckCorrection[];
+    summary: string;
+  }>;
 }
 
 /** Interface para Proof Manager necessaria para analise */
@@ -112,6 +127,25 @@ export const useProofAnalysis = ({
   setError,
   showToast,
 }: UseProofAnalysisProps): UseProofAnalysisReturn => {
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DOUBLE CHECK INTEGRATION (v1.37.65)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const openDoubleCheckReview = useUIStore(state => state.openDoubleCheckReview);
+  const doubleCheckResult = useUIStore(state => state.doubleCheckResult);
+  const setDoubleCheckResult = useUIStore(state => state.setDoubleCheckResult);
+
+  // Ref para armazenar o resolver da Promise que aguarda decisao do usuario
+  const pendingDoubleCheckResolve = useRef<((result: DoubleCheckReviewResult) => void) | null>(null);
+
+  // Quando o usuario decide no modal, resolver a Promise pendente
+  useEffect(() => {
+    if (doubleCheckResult && doubleCheckResult.operation === 'proofAnalysis' && pendingDoubleCheckResolve.current) {
+      pendingDoubleCheckResolve.current(doubleCheckResult);
+      pendingDoubleCheckResolve.current = null;
+      setDoubleCheckResult(null);
+    }
+  }, [doubleCheckResult, setDoubleCheckResult]);
 
   /**
    * Constroi array de conteudo de documentos para envio a API
@@ -441,12 +475,78 @@ CONCLUSÃO:
         topK: 50
       });
 
-      // Armazenar resultado
+      // ═══════════════════════════════════════════════════════════════════════════
+      // DOUBLE CHECK DA ANÁLISE DE PROVA (v1.37.65)
+      // ═══════════════════════════════════════════════════════════════════════════
+      let finalResult = textContent.trim();
+
+      if (aiIntegration.aiSettings.doubleCheck?.enabled &&
+          aiIntegration.aiSettings.doubleCheck?.operations?.proofAnalysis &&
+          aiIntegration.performDoubleCheck) {
+        try {
+          // Contexto para Double Check: conteudo da prova
+          const proofContext = contentArray
+            .filter(c => typeof c === 'object' && c !== null && 'type' in c && c.type === 'text')
+            .map(c => (c as AITextContent).text)
+            .join('\n\n');
+
+          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+            'proofAnalysis',
+            finalResult,
+            proofContext
+          );
+
+          if (corrections.length > 0) {
+            // Converter corrections para tipo esperado
+            const typedCorrections: DoubleCheckCorrection[] = corrections.map((c, idx) => ({
+              type: 'improve' as const,
+              reason: typeof c === 'object' && c !== null && 'reason' in c ? String(c.reason) : '',
+              item: typeof c === 'object' && c !== null && 'item' in c ? String(c.item) : `Correcao ${idx + 1}`,
+              suggestion: typeof c === 'object' && c !== null && 'suggestion' in c ? String(c.suggestion) : ''
+            }));
+
+            // Criar Promise para aguardar decisao do usuario
+            const waitForDecision = new Promise<DoubleCheckReviewResult>(resolve => {
+              pendingDoubleCheckResolve.current = resolve;
+            });
+
+            // Abrir modal de revisao
+            openDoubleCheckReview({
+              operation: 'proofAnalysis',
+              originalResult: finalResult,
+              verifiedResult: verified,
+              corrections: typedCorrections,
+              summary,
+              confidence: 85
+            });
+
+            // Aguardar decisao do usuario
+            const dcResult = await waitForDecision;
+
+            // Aplicar resultado da decisao
+            if (dcResult.selected.length > 0) {
+              finalResult = dcResult.finalResult;
+              showToast(`Double Check: ${dcResult.selected.length} correcao(oes) aplicada(s)`, 'info');
+              console.log('[DoubleCheck ProofAnalysis] Correcoes aplicadas:', dcResult.selected);
+            } else {
+              console.log('[DoubleCheck ProofAnalysis] Usuario descartou correcoes');
+              showToast('Double Check: correcoes descartadas', 'info');
+            }
+          } else {
+            console.log('[DoubleCheck ProofAnalysis] Nenhuma correcao necessaria');
+          }
+        } catch (dcError) {
+          console.error('[DoubleCheck ProofAnalysis] Erro:', dcError);
+          // Continuar com resultado original em caso de erro
+        }
+      }
+
+      // Armazenar resultado (usar finalResult que pode ter sido corrigido pelo Double Check)
       proofManager.setProofAnalysisResults(prev => ({
         ...prev,
         [proofId]: {
           type: analysisType as 'contextual' | 'livre',
-          result: textContent.trim()
+          result: finalResult
         }
       }));
 
@@ -463,7 +563,8 @@ CONCLUSÃO:
     analyzedDocuments,
     buildDocumentContentArray,
     setError,
-    showToast
+    showToast,
+    openDoubleCheckReview  // v1.37.65: Double Check
   ]);
 
   return {

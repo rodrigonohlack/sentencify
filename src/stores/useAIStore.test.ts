@@ -275,7 +275,9 @@ describe('useAIStore', () => {
           topicExtraction: true,
           dispositivo: false,
           sentenceReview: true,
-          factsComparison: false
+          factsComparison: false,
+          proofAnalysis: false,
+          quickPrompt: false
         }
       };
 

@@ -31,6 +31,8 @@ export const defaultAISettings: Partial<AISettings> = {
       dispositivo: false,
       sentenceReview: false,
       factsComparison: false,
+      proofAnalysis: false,
+      quickPrompt: false,
     },
   },
 };

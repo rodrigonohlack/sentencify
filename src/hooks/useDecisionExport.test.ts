@@ -62,14 +62,13 @@ describe('useDecisionExport', () => {
       configurable: true
     });
 
-    // Mock ClipboardItem
-    global.ClipboardItem = vi.fn().mockImplementation((items) => items) as any;
+    // Mock ClipboardItem (usar function para evitar warning do Vitest)
+    global.ClipboardItem = vi.fn().mockImplementation(function(items) { return items; }) as any;
 
     // Mock Blob (jsdom doesn't have a proper implementation)
-    global.Blob = vi.fn().mockImplementation((content, options) => ({
-      content,
-      type: options?.type
-    })) as any;
+    global.Blob = vi.fn().mockImplementation(function(content, options) {
+      return { content, type: options?.type };
+    }) as any;
   });
 
   afterEach(() => {

@@ -47,11 +47,14 @@ export const FACTS_CORRECTION_ICONS: Record<string, string> = {
 };
 
 /** Nomes legíveis das operações */
+// v1.37.65: Adicionado proofAnalysis e quickPrompt
 export const OPERATION_LABELS: Record<DoubleCheckOperation, string> = {
   topicExtraction: 'Extração de Tópicos',
   dispositivo: 'Dispositivo',
   sentenceReview: 'Revisão de Sentença',
-  factsComparison: 'Confronto de Fatos'
+  factsComparison: 'Confronto de Fatos',
+  proofAnalysis: 'Análise de Provas',
+  quickPrompt: 'Prompts Rápidos'
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════

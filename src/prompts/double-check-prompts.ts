@@ -2,7 +2,7 @@
  * Prompts para Double Check de Respostas da IA
  * Verificação secundária para identificar falhas, omissões e falsos positivos
  *
- * @version 1.37.61 - Regras fix_row movidas para início do prompt factsComparison
+ * @version 1.37.65 - Double Check para proofAnalysis e quickPrompt + userPrompt parameter
  */
 
 import type { DoubleCheckOperations } from '../types';
@@ -260,7 +260,108 @@ Ao gerar correções do tipo "fix_row", você DEVE seguir estas regras:
 }
 \`\`\`
 
-IMPORTANTE: Se não houver correções necessárias, retorne corrections: [] e copie o original em verifiedResult.`
+IMPORTANTE: Se não houver correções necessárias, retorne corrections: [] e copie o original em verifiedResult.`,
+
+  // v1.37.65: Verificação da Análise de Provas
+  proofAnalysis: `## TAREFA: Verificação de Análise de Prova
+
+Você é um revisor jurídico especializado em análise probatória trabalhista.
+Sua função é verificar criticamente a análise de prova realizada.
+
+## CONTEÚDO DA PROVA:
+{context}
+
+## ANÁLISE GERADA (a verificar):
+{originalResponse}
+
+## CRITÉRIOS DE VERIFICAÇÃO:
+
+### 1. COMPLETUDE
+- A análise abordou todos os elementos relevantes da prova?
+- Há informações na prova que foram ignoradas?
+
+### 2. COERÊNCIA COM A PROVA
+- As conclusões derivam logicamente do conteúdo da prova?
+- Há afirmações não sustentadas pelo documento?
+
+### 3. OBJETIVIDADE
+- A análise é imparcial ou contém viés?
+- As inferências são razoáveis?
+
+### 4. RELEVÂNCIA JURÍDICA
+- A análise identifica corretamente a força probatória?
+- Relaciona adequadamente com os pedidos/defesa?
+
+## FORMATO DE RESPOSTA (JSON estrito):
+
+\`\`\`json
+{
+  "corrections": [
+    { "type": "improve", "reason": "Motivo da correção", "item": "Elemento específico", "suggestion": "Texto corrigido" }
+  ],
+  "verifiedResult": "Análise verificada e corrigida (ou original se sem correções)",
+  "confidence": 0.95,
+  "summary": "Resumo breve das alterações (ou 'Nenhuma correção necessária')"
+}
+\`\`\`
+
+IMPORTANTE:
+- Se a análise estiver correta, retorne corrections: [] e copie a análise original em verifiedResult
+- Use confidence entre 0.0 e 1.0 para indicar sua certeza
+- O campo summary deve ser conciso (1-2 frases)`,
+
+  // v1.37.65: Verificação dos Quick Prompts do Assistente IA
+  quickPrompt: `## TAREFA: Verificação de Resposta do Assistente IA
+
+Você é um revisor jurídico especializado em sentenças trabalhistas.
+Sua função é verificar criticamente a resposta do assistente de redação.
+
+## SOLICITAÇÃO DO USUÁRIO:
+{userPrompt}
+
+## CONTEXTO DA DECISÃO:
+{context}
+
+## RESPOSTA DO ASSISTENTE (a verificar):
+{originalResponse}
+
+## CRITÉRIOS DE VERIFICAÇÃO:
+
+### 1. ATENDIMENTO À SOLICITAÇÃO
+- A resposta atende ao que foi solicitado pelo usuário?
+- O objetivo específico da solicitação foi cumprido?
+- Há aspectos da solicitação que não foram abordados?
+
+### 2. PRECISÃO JURÍDICA
+- As afirmações jurídicas estão corretas?
+- Cita corretamente legislação e jurisprudência (se aplicável)?
+
+### 3. COERÊNCIA COM OS DOCUMENTOS
+- As observações são sustentadas pelos documentos do processo?
+- Há afirmações que contradizem o conteúdo dos autos?
+
+### 4. QUALIDADE DA ANÁLISE
+- A análise é equilibrada e imparcial?
+- As conclusões são lógicas e bem fundamentadas?
+
+## FORMATO DE RESPOSTA (JSON estrito):
+
+\`\`\`json
+{
+  "corrections": [
+    { "type": "improve", "reason": "Motivo da correção", "item": "Elemento específico", "suggestion": "Texto corrigido" }
+  ],
+  "verifiedResult": "Resposta verificada (ou original se sem correções)",
+  "confidence": 0.95,
+  "summary": "Resumo breve das alterações (ou 'Nenhuma correção necessária')"
+}
+\`\`\`
+
+IMPORTANTE:
+- PRIORIZE verificar se a resposta atende à solicitação específica do usuário
+- Se a resposta estiver correta, retorne corrections: [] e copie a resposta original em verifiedResult
+- Use confidence entre 0.0 e 1.0 para indicar sua certeza
+- O campo summary deve ser conciso (1-2 frases)`
 };
 
 /**
@@ -268,17 +369,29 @@ IMPORTANTE: Se não houver correções necessárias, retorne corrections: [] e c
  * @param operation - Tipo de operação sendo verificada
  * @param originalResponse - Resposta original da IA (JSON stringificado)
  * @param context - Contexto/documentos originais
+ * @param userPrompt - (v1.37.65) Solicitação original do usuário (para quickPrompt)
  */
 export const buildDoubleCheckPrompt = (
   operation: DoubleCheckOperation,
   originalResponse: string,
-  context: string
+  context: string,
+  userPrompt?: string
 ): string => {
   const template = DOUBLE_CHECK_PROMPTS[operation];
 
-  return template
+  let result = template
     .replace('{context}', context)
     .replace('{originalResponse}', originalResponse);
+
+  // v1.37.65: Substituir {userPrompt} se existir no template
+  if (userPrompt) {
+    result = result.replace('{userPrompt}', userPrompt);
+  } else {
+    // Remover seção com placeholder não preenchido
+    result = result.replace(/## SOLICITAÇÃO DO USUÁRIO:\n\{userPrompt\}\n\n/g, '');
+  }
+
+  return result;
 };
 
 /**
@@ -300,5 +413,14 @@ export const DOUBLE_CHECK_OPERATION_LABELS: Record<DoubleCheckOperation, { label
   factsComparison: {
     label: 'Confronto de fatos',
     description: 'Verifica completude, classificação e correção das alegações'
+  },
+  // v1.37.65: Novas operações
+  proofAnalysis: {
+    label: 'Análise de provas',
+    description: 'Verifica completude, coerência e objetividade da análise'
+  },
+  quickPrompt: {
+    label: 'Prompts rápidos',
+    description: 'Verifica atendimento à solicitação e precisão jurídica'
   }
 };

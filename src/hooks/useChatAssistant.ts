@@ -37,6 +37,8 @@ export interface UseChatAssistantReturn {
   clear: () => void;
   /** Última resposta da IA (ou null) */
   lastResponse: string | null;
+  /** v1.37.65: Atualiza a última mensagem do assistente (para Double Check) */
+  updateLastAssistantMessage: (newContent: string) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -61,6 +63,23 @@ export function useChatAssistant(
   const lastResponse = useMemo(() =>
     [...history].reverse().find(m => m.role === 'assistant')?.content || null
   , [history]);
+
+  // v1.37.65: Atualiza a última mensagem do assistente (para Double Check)
+  const updateLastAssistantMessage = useCallback((newContent: string) => {
+    setHistory(prev => {
+      // Encontrar índice da última mensagem do assistente
+      const lastAssistantIndex = [...prev].reverse().findIndex(m => m.role === 'assistant');
+      if (lastAssistantIndex === -1) return prev;
+
+      const actualIndex = prev.length - 1 - lastAssistantIndex;
+      const updated = [...prev];
+      updated[actualIndex] = {
+        ...updated[actualIndex],
+        content: newContent
+      };
+      return updated;
+    });
+  }, []);
 
   // Envia mensagem e atualiza histórico
   // v1.19.5: Suporta contextBuilder assíncrono
@@ -163,5 +182,5 @@ export function useChatAssistant(
     }
   }, [history, aiIntegration]);
 
-  return { history, generating, send, clear, lastResponse };
+  return { history, generating, send, clear, lastResponse, updateLastAssistantMessage };
 }

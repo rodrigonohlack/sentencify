@@ -1242,13 +1242,15 @@ ${AI_INSTRUCTIONS_SAFETY}`;
    * @param originalResponse - Resposta original em JSON
    * @param context - Documentos/contexto original
    * @param onProgress - Callback de progresso opcional
+   * @param userPrompt - (v1.37.65) Solicitação original do usuário (para quickPrompt)
    */
-  // v1.36.58: Atualizado para suportar factsComparison
+  // v1.37.65: Atualizado para suportar proofAnalysis e quickPrompt
   const performDoubleCheck = React.useCallback(async (
-    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison',
+    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison' | 'proofAnalysis' | 'quickPrompt',
     originalResponse: string,
     context: string,
-    onProgress?: (msg: string) => void
+    onProgress?: (msg: string) => void,
+    userPrompt?: string
   ): Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string }> => {
     const { doubleCheck } = aiSettings;
 
@@ -1262,7 +1264,8 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     try {
       // Importar dinamicamente o prompt builder
       const { buildDoubleCheckPrompt } = await import('../prompts/double-check-prompts');
-      const verificationPrompt = buildDoubleCheckPrompt(operation, originalResponse, context);
+      // v1.37.65: Passar userPrompt para quickPrompt
+      const verificationPrompt = buildDoubleCheckPrompt(operation, originalResponse, context, userPrompt);
 
       // Chamar API com o modelo de double check
       const response = await callDoubleCheckAPI(
@@ -1273,12 +1276,12 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       );
 
       // v1.36.56: Parsear resposta JSON baseado no tipo de operação
-      // v1.36.60: Adicionado factsComparison (verifiedResult)
+      // v1.37.65: Adicionado proofAnalysis e quickPrompt (verifiedResult)
       const verifiedFieldPattern = operation === 'topicExtraction'
         ? '"verifiedTopics"'
         : operation === 'dispositivo'
           ? '"verifiedDispositivo"'
-          : operation === 'factsComparison'
+          : operation === 'factsComparison' || operation === 'proofAnalysis' || operation === 'quickPrompt'
             ? '"verifiedResult"'
             : '"verifiedReview"';
 
@@ -1294,14 +1297,16 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       const result = JSON.parse(jsonStr);
 
       // Extrair campo verificado baseado na operação
-      // v1.36.60: Adicionado factsComparison (verifiedResult)
+      // v1.37.65: Adicionado proofAnalysis e quickPrompt (verifiedResult como string)
       const verified = operation === 'topicExtraction'
         ? JSON.stringify(result.verifiedTopics)
         : operation === 'dispositivo'
           ? result.verifiedDispositivo || originalResponse
           : operation === 'factsComparison'
             ? JSON.stringify(result.verifiedResult) || originalResponse
-            : result.verifiedReview || originalResponse;
+            : operation === 'proofAnalysis' || operation === 'quickPrompt'
+              ? result.verifiedResult || originalResponse
+              : result.verifiedReview || originalResponse;
 
       return {
         verified,

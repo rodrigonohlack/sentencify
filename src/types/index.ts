@@ -251,6 +251,8 @@ export interface DoubleCheckOperations {
   dispositivo: boolean;      // v1.36.56: Verificação do dispositivo
   sentenceReview: boolean;   // v1.36.56: Verificação da revisão de sentença
   factsComparison: boolean;  // v1.36.58: Verificação do confronto de fatos
+  proofAnalysis: boolean;    // v1.37.65: Verificação da análise de provas
+  quickPrompt: boolean;      // v1.37.65: Verificação dos quick prompts do assistente IA
 }
 
 /** Configurações de Double Check */
@@ -319,7 +321,8 @@ export interface PerformDoubleCheckReturn {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** Operações disponíveis para Double Check */
-export type DoubleCheckOperation = 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison';
+// v1.37.65: Adicionado proofAnalysis e quickPrompt
+export type DoubleCheckOperation = 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison' | 'proofAnalysis' | 'quickPrompt';
 
 /** Dados para abrir o modal de revisão do Double Check */
 export interface DoubleCheckReviewData {
