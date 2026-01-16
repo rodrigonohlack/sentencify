@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.71 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.72 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.72 | Estender fix Double Check para dispositivo e sentenceReview: instrução explícita para incorporar correções no verifiedResult |
 | v1.37.71 | Logos dos provedores de IA: ícones SVG oficiais (Claude, Gemini, OpenAI, Grok) substituem bolinhas coloridas no seletor de provedores |
 | v1.37.70 | Fix Double Check correções não aplicadas ao texto final: instrução explícita para IA incorporar correções no verifiedResult (proofAnalysis e quickPrompt) |
 | v1.37.69 | Fix Double Check respondendo em inglês: instrução explícita de idioma (português brasileiro) adicionada a todos os prompts |

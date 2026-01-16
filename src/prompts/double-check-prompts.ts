@@ -126,7 +126,7 @@ RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reas
     { "type": "modify", "item": "O QUE MODIFICAR", "suggestion": "TEXTO SUGERIDO", "reason": "Justificativa" },
     { "type": "remove", "item": "O QUE REMOVER", "reason": "Justificativa" }
   ],
-  "verifiedDispositivo": "TEXTO DO DISPOSITIVO CORRIGIDO (ou original se não houver correções)",
+  "verifiedDispositivo": "TEXTO COMPLETO do dispositivo com TODAS as correções já incorporadas (ou original se corrections vazio)",
   "confidence": 0.95,
   "summary": "Resumo breve das alterações (ou 'Dispositivo correto, nenhuma correção necessária')"
 }
@@ -134,6 +134,8 @@ RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reas
 
 IMPORTANTE:
 - Se o dispositivo estiver correto, retorne corrections: [] e copie o original em verifiedDispositivo
+- Se houver correções, o campo verifiedDispositivo DEVE conter o texto COMPLETO do dispositivo com TODAS as correções JÁ APLICADAS
+- NÃO retorne o texto original em verifiedDispositivo se houver correções - retorne a versão corrigida completa
 - Foque em erros substanciais (omissões, contradições), não em estilo
 - Use confidence entre 0.0 e 1.0 para indicar sua certeza`,
 
@@ -183,7 +185,7 @@ RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reas
     { "type": "missed", "item": "PROBLEMA NÃO DETECTADO", "reason": "Por que deveria ter sido detectado" },
     { "type": "improve", "item": "SUGESTÃO A MELHORAR", "suggestion": "SUGESTÃO MELHORADA", "reason": "Justificativa" }
   ],
-  "verifiedReview": "ANÁLISE CRÍTICA CORRIGIDA (ou original se não houver correções)",
+  "verifiedReview": "TEXTO COMPLETO da análise crítica com TODAS as correções já incorporadas (ou original se corrections vazio)",
   "confidence": 0.95,
   "summary": "Resumo breve das alterações (ou 'Análise correta, nenhuma correção necessária')"
 }
@@ -191,6 +193,8 @@ RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reas
 
 IMPORTANTE:
 - Se a análise estiver correta, retorne corrections: [] e copie o original em verifiedReview
+- Se houver correções, o campo verifiedReview DEVE conter o texto COMPLETO da análise com TODAS as correções JÁ APLICADAS
+- NÃO retorne o texto original em verifiedReview se houver correções - retorne a versão corrigida completa
 - Foque em erros substanciais, não em preferências de redação
 - Use confidence entre 0.0 e 1.0 para indicar sua certeza`,
 
