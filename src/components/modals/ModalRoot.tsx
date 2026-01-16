@@ -1,23 +1,28 @@
 /**
  * @file ModalRoot.tsx
  * @description Componente centralizado para renderizar todos os modais da aplicação
- * @version 1.37.73
+ * @version 1.37.74
  *
  * Este componente lê estado diretamente dos stores Zustand, eliminando
  * a necessidade de prop drilling do App.tsx para a maioria dos modais.
  *
- * MODAIS SIMPLES (100% Zustand):
+ * MODAIS 100% ZUSTAND (sem props):
  * - DeleteTopicModal
  * - DeleteModelModal
  * - DeleteAllModelsModal
- * - DeleteProofModal
+ * - ExportModal
+ * - RestoreSessionModal, ClearProjectModal, LogoutConfirmModal
  * - BulkDiscardConfirmModal
  *
- * MODAIS COMPLEXOS (precisam de props):
- * - RenameTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal (precisam de AI regeneration)
- * - ConfigModal (precisa de NER/embeddings/handlers)
+ * MODAIS COM HANDLERS (props mínimas):
+ * - RenameTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal (handlers de AI)
+ * - SimilarityWarningModal, ExtractedModelPreviewModal (handlers de save)
+ *
+ * MODAIS COMPLEXOS (permanecem no App.tsx):
+ * - ConfigModal (precisa de NER/embeddings/handlers complexos)
  * - GlobalEditorModal (precisa de muitas dependências)
  * - DriveFilesModal (precisa de googleDrive hook)
+ * - AIAssistantModal (precisa de chatAssistant hook)
  *
  * @usedBy App.tsx
  */
@@ -47,16 +52,14 @@ import { useProofModalHandlers } from '../../hooks/useProofModalHandlers';
 
 import {
   DeleteTopicModal,
+  RenameTopicModal,
+  MergeTopicsModal,
+  SplitTopicModal,
+  NewTopicModal,
   DeleteModelModal,
   DeleteAllModelsModal,
-  DeleteProofModal,
   BulkDiscardConfirmModal,
   ExportModal,
-  RestoreSessionModal,
-  ClearProjectModal,
-  LogoutConfirmModal,
-  AddProofTextModal,
-  LinkProofModal,
   ExtractedModelPreviewModal,
   SimilarityWarningModal
 } from './index';
@@ -66,15 +69,6 @@ import {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export interface ModalRootProps {
-  // Callbacks para operações que precisam de dependências externas
-  onLogout?: () => void;
-
-  // Callbacks para sessão
-  onRestoreSession?: () => void;
-  onStartNew?: () => void;
-  onConfirmClear?: () => void;
-  sessionLastSaved?: string | number | null;
-
   // Export modal
   exportedText?: string;
   exportedHtml?: string;
@@ -93,6 +87,28 @@ export interface ModalRootProps {
   // Extracted Model Preview
   onSaveExtractedModel?: () => void;
   onCancelExtractedModel?: () => void;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TOPIC MODALS (v1.37.74)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Handler para renomear tópico (com ou sem regeneração) */
+  handleRenameTopic?: (regenerate: boolean) => void;
+
+  /** Handler para unir tópicos selecionados */
+  handleMergeTopics?: () => void;
+
+  /** Handler para separar tópico em subtópicos */
+  handleSplitTopic?: () => void;
+
+  /** Handler para criar novo tópico */
+  handleCreateNewTopic?: () => void;
+
+  /** Indica se a IA está regenerando (desabilita botões) */
+  isRegenerating?: boolean;
+
+  /** Indica se há documentos para regenerar mini-relatórios */
+  hasDocuments?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -100,28 +116,27 @@ export interface ModalRootProps {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * ModalRoot - Renderiza modais simples que funcionam 100% com Zustand
+ * ModalRoot - Renderiza modais centralizados com Zustand
  *
- * Este componente gerencia modais que não precisam de dependências
- * externas como AI, Google Drive, etc. Modais complexos continuam
- * sendo renderizados diretamente no App.tsx.
+ * Este componente gerencia modais que lêem estado do Zustand,
+ * com handlers passados como props para operações complexas.
+ *
+ * v1.37.74: Adicionados modais de tópicos (Rename, Merge, Split, New)
  *
  * @example
  * // No App.tsx
  * <ModalRoot
- *   onLogout={handleLogout}
- *   sessionLastSaved={storage.sessionLastSaved}
- *   onRestoreSession={handleRestoreSession}
- *   onStartNew={handleStartNew}
- *   onConfirmClear={handleClearProject}
+ *   exportedText={exportedText}
+ *   exportedHtml={exportedHtml}
+ *   handleRenameTopic={handleRenameTopic}
+ *   handleMergeTopics={handleMergeTopics}
+ *   handleSplitTopic={handleSplitTopic}
+ *   handleCreateNewTopic={handleCreateNewTopic}
+ *   isRegenerating={aiIntegration.regenerating}
+ *   hasDocuments={hasDocuments}
  * />
  */
 export const ModalRoot: React.FC<ModalRootProps> = ({
-  onLogout,
-  onRestoreSession,
-  onStartNew,
-  onConfirmClear,
-  sessionLastSaved,
   exportedText = '',
   exportedHtml = '',
   onBulkDiscard,
@@ -132,7 +147,14 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
   savingFromSimilarity = false,
   sanitizeHTML = (html) => html,
   onSaveExtractedModel,
-  onCancelExtractedModel
+  onCancelExtractedModel,
+  // Topic modals (v1.37.74)
+  handleRenameTopic,
+  handleMergeTopics,
+  handleSplitTopic,
+  handleCreateNewTopic,
+  isRegenerating = false,
+  hasDocuments = false
 }) => {
   // ═══════════════════════════════════════════════════════════════════════════
   // ESTADO DOS STORES
@@ -149,6 +171,18 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
   // Topics Store
   const topicToDelete = useTopicsStore((s) => s.topicToDelete);
   const setTopicToDelete = useTopicsStore((s) => s.setTopicToDelete);
+  // v1.37.74: Estados para modais de tópicos
+  const topicToRename = useTopicsStore((s) => s.topicToRename);
+  const setTopicToRename = useTopicsStore((s) => s.setTopicToRename);
+  const newTopicName = useTopicsStore((s) => s.newTopicName);
+  const setNewTopicName = useTopicsStore((s) => s.setNewTopicName);
+  const topicsToMerge = useTopicsStore((s) => s.topicsToMerge);
+  const topicToSplit = useTopicsStore((s) => s.topicToSplit);
+  const setTopicToSplit = useTopicsStore((s) => s.setTopicToSplit);
+  const splitNames = useTopicsStore((s) => s.splitNames);
+  const setSplitNames = useTopicsStore((s) => s.setSplitNames);
+  const newTopicData = useTopicsStore((s) => s.newTopicData);
+  const setNewTopicData = useTopicsStore((s) => s.setNewTopicData);
 
   // Models Store
   const modelToDelete = useModelsStore((s) => s.modelToDelete);
@@ -188,6 +222,58 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
         setTopicToDelete={setTopicToDelete}
         onConfirmDelete={topicHandlers.confirmDeleteTopic}
       />
+
+      {/* v1.37.74: Modais de tópicos com regeneração AI */}
+      {handleRenameTopic && (
+        <RenameTopicModal
+          isOpen={modals.rename}
+          onClose={() => closeModal('rename')}
+          topicToRename={topicToRename}
+          setTopicToRename={setTopicToRename}
+          newTopicName={newTopicName}
+          setNewTopicName={setNewTopicName}
+          handleRenameTopic={handleRenameTopic}
+          isRegenerating={isRegenerating}
+          hasDocuments={hasDocuments}
+        />
+      )}
+
+      {handleMergeTopics && (
+        <MergeTopicsModal
+          isOpen={modals.merge}
+          onClose={() => closeModal('merge')}
+          topicsToMerge={topicsToMerge}
+          onConfirmMerge={handleMergeTopics}
+          isRegenerating={isRegenerating}
+          hasDocuments={hasDocuments}
+        />
+      )}
+
+      {handleSplitTopic && (
+        <SplitTopicModal
+          isOpen={modals.split}
+          onClose={() => closeModal('split')}
+          topicToSplit={topicToSplit}
+          setTopicToSplit={setTopicToSplit}
+          splitNames={splitNames}
+          setSplitNames={setSplitNames}
+          onConfirmSplit={handleSplitTopic}
+          isRegenerating={isRegenerating}
+          hasDocuments={hasDocuments}
+        />
+      )}
+
+      {handleCreateNewTopic && (
+        <NewTopicModal
+          isOpen={modals.newTopic}
+          onClose={() => closeModal('newTopic')}
+          newTopicData={newTopicData}
+          setNewTopicData={setNewTopicData}
+          onConfirmCreate={handleCreateNewTopic}
+          isRegenerating={isRegenerating}
+          hasDocuments={hasDocuments}
+        />
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* MODAIS DE MODELOS */}
@@ -256,41 +342,9 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
       />
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* MODAIS DE SESSÃO */}
+      {/* MODAIS DE SESSÃO - permanecem no App.tsx (callbacks complexos) */}
+      {/* RestoreSessionModal, ClearProjectModal, LogoutConfirmModal */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-
-      {onRestoreSession && onStartNew && (
-        <RestoreSessionModal
-          isOpen={modals.restoreSession}
-          onClose={() => closeModal('restoreSession')}
-          sessionLastSaved={sessionLastSaved ?? null}
-          onRestoreSession={onRestoreSession}
-          onStartNew={onStartNew}
-        />
-      )}
-
-      {onConfirmClear && (
-        <ClearProjectModal
-          isOpen={modals.clearProject}
-          onClose={() => {
-            closeModal('clearProject');
-            openModal('restoreSession');
-          }}
-          onConfirmClear={onConfirmClear}
-        />
-      )}
-
-      {onLogout && (
-        <LogoutConfirmModal
-          isOpen={modals.logout}
-          onClose={() => closeModal('logout')}
-          onConfirm={() => {
-            closeModal('logout');
-            onLogout();
-            window.location.reload();
-          }}
-        />
-      )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* MODAIS DE BULK */}

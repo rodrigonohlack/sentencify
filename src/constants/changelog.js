@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.74', feature: 'ModalRoot expandido: modais de tópicos (RenameTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal) movidos do App.tsx para ModalRoot (~37 linhas removidas) - handlers passados como props para operações com AI regeneration' },
   { version: '1.37.73', feature: 'ModalRoot com Zustand: 7 modais extraídos do App.tsx para componente centralizado (DeleteTopic, DeleteModel, DeleteAllModels, Export, SimilarityWarning, ExtractedModelPreview, BulkDiscardConfirm) - hooks useTopicModalHandlers, useModelModalHandlers, useProofModalHandlers criados' },
   { version: '1.37.72', feature: 'Estender fix Double Check para dispositivo e sentenceReview: instrução explícita para incorporar correções no verifiedResult' },
   { version: '1.37.71', feature: 'Logos dos provedores de IA: ícones SVG oficiais (Claude, Gemini, OpenAI, Grok) substituem bolinhas coloridas no seletor de provedores' },

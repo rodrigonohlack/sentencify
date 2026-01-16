@@ -65,7 +65,7 @@ import { GoogleDriveButton, DriveFilesModal } from './components/GoogleDriveButt
 import { VoiceButton } from './components/VoiceButton';
 import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 import { FactsComparisonModalContent } from './components/FactsComparisonModal';
-import { TopicCard, SortableTopicCard, ModelCard, ProofCard, VirtualList, SuggestionCard, SplitDivider, SpacingDropdown, FontSizeDropdown, ProcessingModeSelector, VersionCompareModal, VersionSelect, JurisprudenciaCard, ArtigoCard, ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown, BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview, RenameTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal, DeleteAllPrecedentesModal, ExtractModelConfirmModal, ExtractedModelPreviewModal, AddProofTextModal, ProofAnalysisModal, LinkProofModal, RestoreSessionModal, ClearProjectModal, LogoutConfirmModal, ConfirmBulkCancelModal, DeleteProofModal, TextPreviewModal, FullscreenModelPanel, ModelSearchPanel, JurisprudenciaTab, LegislacaoTab, AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal, AIAssistantGlobalModal, AIAssistantModelModal, extractPlainText, isOralProof, hasOralProofsForTopic, AnalysisModal, AnonymizationNamesModal, LinkedProofsModal, ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal, ModelFormFields, SlashCommandMenu, JurisprudenciaModal, getQuillToolbarConfig, QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor, AIRegenerationSection, FieldEditor, InlineFormattingToolbar, ModelFormModal, ModelPreviewModal, GlobalEditorSection, DecisionEditorContainer, LockedTabOverlay, GlobalEditorModal, ConfigModal, DoubleCheckReviewModal, ModelsTab, UploadTab, ProofsTab, TopicsTab, ErrorBoundary, ModalRoot } from './components';  // v1.36.82+: UI, v1.36.85-91: Modals/AI, v1.36.86: Cards, v1.36.87: Panels, v1.36.94: Editors, v1.36.97: Editor Containers, v1.36.99: GlobalEditorModal, v1.37.30: ConfigModal, v1.37.31: ModelsTab, v1.37.32: UploadTab, v1.37.54: ProofsTab, v1.37.55: TopicsTab, v1.37.59: DoubleCheckReviewModal, v1.37.73: ModalRoot
+import { TopicCard, SortableTopicCard, ModelCard, ProofCard, VirtualList, SuggestionCard, SplitDivider, SpacingDropdown, FontSizeDropdown, ProcessingModeSelector, VersionCompareModal, VersionSelect, JurisprudenciaCard, ArtigoCard, ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown, BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview, DeleteAllPrecedentesModal, ExtractModelConfirmModal, ExtractedModelPreviewModal, AddProofTextModal, ProofAnalysisModal, LinkProofModal, RestoreSessionModal, ClearProjectModal, LogoutConfirmModal, ConfirmBulkCancelModal, DeleteProofModal, TextPreviewModal, FullscreenModelPanel, ModelSearchPanel, JurisprudenciaTab, LegislacaoTab, AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal, AIAssistantGlobalModal, AIAssistantModelModal, extractPlainText, isOralProof, hasOralProofsForTopic, AnalysisModal, AnonymizationNamesModal, LinkedProofsModal, ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal, ModelFormFields, SlashCommandMenu, JurisprudenciaModal, getQuillToolbarConfig, QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor, AIRegenerationSection, FieldEditor, InlineFormattingToolbar, ModelFormModal, ModelPreviewModal, GlobalEditorSection, DecisionEditorContainer, LockedTabOverlay, GlobalEditorModal, ConfigModal, DoubleCheckReviewModal, ModelsTab, UploadTab, ProofsTab, TopicsTab, ErrorBoundary, ModalRoot } from './components';  // v1.36.82+: UI, v1.36.85-91: Modals/AI, v1.36.86: Cards, v1.36.87: Panels, v1.36.94: Editors, v1.36.97: Editor Containers, v1.36.99: GlobalEditorModal, v1.37.30: ConfigModal, v1.37.31: ModelsTab, v1.37.32: UploadTab, v1.37.54: ProofsTab, v1.37.55: TopicsTab, v1.37.59: DoubleCheckReviewModal, v1.37.74: ModalRoot (topic modals)
 import useFactsComparisonCache, { openFactsDB, FACTS_STORE_NAME } from './hooks/useFactsComparisonCache';
 import useSentenceReviewCache, { openReviewDB, REVIEW_STORE_NAME } from './hooks/useSentenceReviewCache';
 
@@ -3770,50 +3770,8 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         setError={setError}
       />
 
-      <RenameTopicModal
-        isOpen={modals.rename}
-        onClose={() => closeModal('rename')}
-        topicToRename={topicToRename}
-        setTopicToRename={setTopicToRename}
-        newTopicName={newTopicName}
-        setNewTopicName={setNewTopicName}
-        handleRenameTopic={handleRenameTopic}
-        isRegenerating={aiIntegration.regenerating}
-        hasDocuments={!!(analyzedDocuments.peticoes?.length > 0 || analyzedDocuments.peticoesText?.length > 0)}
-      />
-
-      {/* v1.37.73: DeleteTopicModal movido para ModalRoot */}
-
-      <MergeTopicsModal
-        isOpen={modals.merge}
-        onClose={() => closeModal('merge')}
-        topicsToMerge={topicsToMerge}
-        onConfirmMerge={handleMergeTopics}
-        isRegenerating={aiIntegration.regenerating}
-        hasDocuments={!!(analyzedDocuments.peticoes?.length > 0 || analyzedDocuments.peticoesText?.length > 0)}
-      />
-
-      <SplitTopicModal
-        isOpen={modals.split}
-        onClose={() => closeModal('split')}
-        topicToSplit={topicToSplit}
-        setTopicToSplit={setTopicToSplit}
-        splitNames={splitNames}
-        setSplitNames={setSplitNames}
-        onConfirmSplit={handleSplitTopic}
-        isRegenerating={aiIntegration.regenerating}
-        hasDocuments={!!(analyzedDocuments.peticoes?.length > 0 || analyzedDocuments.peticoesText?.length > 0)}
-      />
-
-      <NewTopicModal
-        isOpen={modals.newTopic}
-        onClose={() => closeModal('newTopic')}
-        newTopicData={newTopicData}
-        setNewTopicData={setNewTopicData}
-        onConfirmCreate={handleCreateNewTopic}
-        isRegenerating={aiIntegration.regenerating}
-        hasDocuments={!!(analyzedDocuments.peticoes?.length > 0 || analyzedDocuments.peticoesText?.length > 0)}
-      />
+      {/* v1.37.74: Modais de tópicos movidos para ModalRoot */}
+      {/* RenameTopicModal, DeleteTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal */}
 
       <AIAssistantModal
         isOpen={modals.aiAssistant}
@@ -4425,8 +4383,6 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
 
       {/* v1.37.73: ModalRoot - modais simples centralizados com Zustand */}
       <ModalRoot
-        onLogout={onLogout}
-        sessionLastSaved={storage.sessionLastSaved}
         exportedText={exportedText}
         exportedHtml={exportedHtml}
         onBulkDiscard={() => {
@@ -4442,6 +4398,13 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         sanitizeHTML={sanitizeHTML}
         onSaveExtractedModel={saveExtractedModel}
         onCancelExtractedModel={cancelExtractedModel}
+        // v1.37.74: Topic modals
+        handleRenameTopic={handleRenameTopic}
+        handleMergeTopics={handleMergeTopics}
+        handleSplitTopic={handleSplitTopic}
+        handleCreateNewTopic={handleCreateNewTopic}
+        isRegenerating={aiIntegration.regenerating}
+        hasDocuments={!!(analyzedDocuments.peticoes?.length > 0 || analyzedDocuments.peticoesText?.length > 0)}
       />
 
       {/* v1.4.6: Removido Mini-toolbar flutuante (76 linhas) */}
