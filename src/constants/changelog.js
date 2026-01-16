@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.71', feature: 'Logos dos provedores de IA: ícones SVG oficiais (Claude, Gemini, OpenAI, Grok) substituem bolinhas coloridas no seletor de provedores' },
   { version: '1.37.70', feature: 'Fix Double Check correções não aplicadas ao texto final: instrução explícita para IA incorporar correções no verifiedResult (proofAnalysis e quickPrompt)' },
   { version: '1.37.69', feature: 'Fix Double Check respondendo em inglês: instrução explícita de idioma (português brasileiro) adicionada a todos os prompts' },
   { version: '1.37.68', feature: 'Double Check multimodal: suporte a PDF binário (Claude/Gemini/OpenAI), contexto completo sem truncação, fallback texto para Grok' },

@@ -26,6 +26,7 @@ import {
   X, Zap, Download, Upload, Check, RefreshCw, Trash2, Plus,
   AlertCircle, FileText, Scale, BookOpen, Sparkles, Wand2
 } from 'lucide-react';
+import { ProviderIcon } from '../ui/ProviderIcon';
 import { CSS } from '../../constants/styles';
 import AIModelService from '../../services/AIModelService';
 import { EmbeddingsCDNService } from '../../services/EmbeddingsServices';
@@ -145,7 +146,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">🟣</span>
+                  <ProviderIcon provider="claude" size={20} className="text-purple-400" />
                   <div>
                     <div className="font-semibold theme-text-primary text-sm">Claude</div>
                     <div className="text-xs theme-text-muted">Anthropic</div>
@@ -161,7 +162,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">🔵</span>
+                  <ProviderIcon provider="gemini" size={20} className="text-blue-400" />
                   <div>
                     <div className="font-semibold theme-text-primary text-sm">Gemini</div>
                     <div className="text-xs theme-text-muted">Google</div>
@@ -177,7 +178,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">🟢</span>
+                  <ProviderIcon provider="openai" size={20} className="text-emerald-400" />
                   <div>
                     <div className="font-semibold theme-text-primary text-sm">OpenAI</div>
                     <div className="text-xs theme-text-muted">GPT-5.2</div>
@@ -193,7 +194,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">𝕏</span>
+                  <ProviderIcon provider="grok" size={20} className="text-gray-300" />
                   <div>
                     <div className="font-semibold theme-text-primary text-sm">Grok</div>
                     <div className="text-xs theme-text-muted">xAI</div>
