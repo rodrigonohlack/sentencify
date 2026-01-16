@@ -213,6 +213,8 @@ export function getCorrectionDescription(
     case 'dispositivo':
       return describeDispositivoCorrection(correction);
     case 'sentenceReview':
+    case 'proofAnalysis':
+    case 'quickPrompt':
       return describeReviewCorrection(correction);
     case 'factsComparison':
       return describeFactsCorrection(correction);

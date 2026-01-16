@@ -1,7 +1,7 @@
 /**
  * @file useProofAnalysis.ts
  * @description Hook para analise de provas documentais
- * @version 1.37.65 - Double Check para analise de provas
+ * @version 1.37.67 - Remover fundamentacao ja escrita do contexto
  *
  * Extraido do App.tsx linha ~7210
  * Funcao: analyzeProof - analisa provas documentais com contexto do processo
@@ -9,6 +9,7 @@
 
 import { useCallback, useRef, useEffect } from 'react';
 import { anonymizeText } from '../utils/text';
+import { getCorrectionDescription } from '../utils/double-check-utils';
 import { useUIStore } from '../stores/useUIStore';
 import type {
   AIMessage,
@@ -24,6 +25,7 @@ import type {
   AnonymizationSettings,
   DoubleCheckReviewResult,
   DoubleCheckCorrection,
+  DoubleCheckCorrectionWithSelection,
 } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -411,11 +413,6 @@ ${idx + 1}. **${topic.title}** (${topic.category})
 
    O que as partes alegaram sobre este pedido:
    ${topic.relatorio || 'Mini-relatório não disponível - verifique a petição e contestação acima'}
-
-   ${topic.editedContent ? `Fundamentação parcial já escrita (considere ao analisar):
-   ${topic.editedContent}
-   ` : 'Fundamentação ainda não iniciada para este pedido'}
-   Resultado parcial: ${topic.resultado || 'Ainda não definido'}
 `).join('\n---\n')}
 
 **IMPORTANTE:** Ao analisar esta prova no contexto do processo, PRIORIZE sua relação com os pedidos vinculados acima.
@@ -497,13 +494,22 @@ CONCLUSÃO:
           );
 
           if (corrections.length > 0) {
-            // Converter corrections para tipo esperado
-            const typedCorrections: DoubleCheckCorrection[] = corrections.map((c, idx) => ({
-              type: 'improve' as const,
-              reason: typeof c === 'object' && c !== null && 'reason' in c ? String(c.reason) : '',
-              item: typeof c === 'object' && c !== null && 'item' in c ? String(c.item) : `Correcao ${idx + 1}`,
-              suggestion: typeof c === 'object' && c !== null && 'suggestion' in c ? String(c.suggestion) : ''
-            }));
+            // Converter corrections para tipo esperado com descrição legível
+            const typedCorrections: DoubleCheckCorrectionWithSelection[] = corrections.map((c, idx) => {
+              const type = typeof c === 'object' && c !== null && 'type' in c ? String(c.type) : 'improve';
+              const reason = typeof c === 'object' && c !== null && 'reason' in c ? String(c.reason) : '';
+              const item = typeof c === 'object' && c !== null && 'item' in c ? String(c.item) : `Correção ${idx + 1}`;
+              const suggestion = typeof c === 'object' && c !== null && 'suggestion' in c ? String(c.suggestion) : '';
+
+              const correction: DoubleCheckCorrection = { type: type as DoubleCheckCorrection['type'], reason, item, suggestion };
+
+              return {
+                ...correction,
+                id: `proofAnalysis-${idx}-${type}`,
+                selected: true,
+                description: getCorrectionDescription('proofAnalysis', correction)
+              };
+            });
 
             // Criar Promise para aguardar decisao do usuario
             const waitForDecision = new Promise<DoubleCheckReviewResult>(resolve => {

@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.63 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.67 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,10 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.67 | Análise de provas: remover fundamentação já escrita do contexto - análise baseada apenas em documentos originais/mini-relatórios |
+| v1.37.66 | Fix modal Double Check: descrições de correções agora mostram item/suggestion legíveis ao invés de apenas "improve" |
+| v1.37.65 | Double Check para Análise de Provas e Quick Prompts: verificação secundária com modal de revisão de correções |
+| v1.37.64 | Fix Double Check factsComparison: campo "observacoes" → "observacao" (singular) alinhado com tipo TypeScript |
 | v1.37.63 | Estilo de redação: preferir "dispensa/dispensado" em vez de "demissão/demitido" |
 | v1.37.62 | Fix Double Check factsComparison: usar dados reais da IA nas correções (código sobrescrevia tema/field/newValue com valores fixos) |
 | v1.37.61 | Double Check factsComparison: regras fix_row movidas para início do prompt com exemplos ✅/❌ - IA agora gera tema real, field válido e newValue preenchido |

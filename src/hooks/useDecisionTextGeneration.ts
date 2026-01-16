@@ -23,12 +23,14 @@ import type {
   AIMessageContent,
   DoubleCheckReviewResult,
   DoubleCheckCorrection,
+  DoubleCheckCorrectionWithSelection,
 } from '../types';
 import type { QuillInstance } from '../types';
 import { AI_PROMPTS } from '../prompts/ai-prompts';
 import { INSTRUCAO_NAO_PRESUMIR } from '../prompts/instrucoes';
 import { prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext } from '../utils/context-helpers';
 import { normalizeHTMLSpacing } from '../utils/text';
+import { getCorrectionDescription } from '../utils/double-check-utils';
 import { sanitizeQuillHTML } from './useQuillEditor';
 import { useUIStore } from '../stores/useUIStore';
 
@@ -560,12 +562,22 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
           );
 
           if (corrections.length > 0) {
-            const typedCorrections: DoubleCheckCorrection[] = corrections.map((c, idx) => ({
-              type: 'improve' as const,
-              reason: typeof c === 'object' && c !== null && 'reason' in c ? String(c.reason) : '',
-              item: typeof c === 'object' && c !== null && 'item' in c ? String(c.item) : `Correcao ${idx + 1}`,
-              suggestion: typeof c === 'object' && c !== null && 'suggestion' in c ? String(c.suggestion) : ''
-            }));
+            // Converter corrections para tipo esperado com descrição legível
+            const typedCorrections: DoubleCheckCorrectionWithSelection[] = corrections.map((c, idx) => {
+              const type = typeof c === 'object' && c !== null && 'type' in c ? String(c.type) : 'improve';
+              const reason = typeof c === 'object' && c !== null && 'reason' in c ? String(c.reason) : '';
+              const item = typeof c === 'object' && c !== null && 'item' in c ? String(c.item) : `Correção ${idx + 1}`;
+              const suggestion = typeof c === 'object' && c !== null && 'suggestion' in c ? String(c.suggestion) : '';
+
+              const correction: DoubleCheckCorrection = { type: type as DoubleCheckCorrection['type'], reason, item, suggestion };
+
+              return {
+                ...correction,
+                id: `quickPrompt-${idx}-${type}`,
+                selected: true,
+                description: getCorrectionDescription('quickPrompt', correction)
+              };
+            });
 
             const waitForDecision = new Promise<DoubleCheckReviewResult>(resolve => {
               pendingDoubleCheckResolve.current = resolve;
