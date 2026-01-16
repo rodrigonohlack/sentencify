@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.77 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.78 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.78 | Fix race condition sync inicial: modelsLoaded prop impede sync antes de IndexedDB carregar (antes: local=0 causava full sync em todo F5) + logs diagnóstico trackChange |
 | v1.37.77 | Fix trackChange para deletes via modal: useModelModalHandlers agora chama trackChange antes de remover modelo, permitindo sync correto (antes: pendingDeletes=0) |
 | v1.37.76 | Fix completo sync modelos ressuscitando: pendingChangesRef evita stale closure, comparação considera pending deletes (455 >= 456-1), logs detalhados de push |
 | v1.37.75 | Fix bug sync modelos ressuscitando: usar useModelsStore.getState() como fonte de verdade para contagem local (antes: localStorage desatualizado causava full sync que baixava modelos deletados) |

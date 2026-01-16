@@ -79,6 +79,8 @@ export interface VerifyResult {
 /** Props do hook useCloudSync */
 export interface UseCloudSyncProps {
   onModelsReceived?: (models: Model[], sharedLibraries: SharedLibrary[]) => void;
+  /** v1.37.78: Indica se modelos foram carregados do IndexedDB (evita sync antes de carregar) */
+  modelsLoaded?: boolean;
 }
 
 /** Retorno do hook useCloudSync */
@@ -166,7 +168,7 @@ interface VerifyApiResponse {
  * // Sync manual:
  * await cloudSync.sync();
  */
-export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseCloudSyncReturn {
+export function useCloudSync({ onModelsReceived, modelsLoaded = false }: UseCloudSyncProps = {}): UseCloudSyncReturn {
   // ============================================
   // ESTADO DE AUTENTICAÇÃO
   // ============================================
@@ -630,7 +632,13 @@ export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseC
   // Rastrear mudança para sync
   const trackChange = useCallback(
     (operation: CloudSyncOperation, model: Partial<Model> & { id: string }): void => {
-      if (!user) return; // Não trackear se não está autenticado
+      // v1.37.78: Log de diagnóstico
+      console.log(`[CloudSync] trackChange: ${operation} ${model.id}, user=${user?.email || 'null'}`);
+
+      if (!user) {
+        console.warn('[CloudSync] trackChange IGNORADO - usuário não autenticado');
+        return;
+      }
 
       setPendingChanges((prev) => {
         const filtered = prev.filter((c) => c.model.id !== model.id);
@@ -709,13 +717,13 @@ export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseC
     return () => clearInterval(interval);
   }, [user, pendingChanges.length, sync]);
 
-  // Sync inicial ao autenticar
+  // Sync inicial ao autenticar (v1.37.78: aguardar modelos carregados)
   useEffect(() => {
-    if (user && navigator.onLine) {
-      console.log('[CloudSync] Sync inicial - user autenticado, chamando pull()');
+    if (user && navigator.onLine && modelsLoaded) {
+      console.log('[CloudSync] Sync inicial - user autenticado E modelos carregados, chamando pull()');
       pull();
     }
-  }, [user]); // eslint-disable-line
+  }, [user, modelsLoaded]); // eslint-disable-line
 
   // Push inicial de todos os modelos (para primeira sincronização)
   const pushAllModels = useCallback(

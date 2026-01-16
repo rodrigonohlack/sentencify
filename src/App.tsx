@@ -312,12 +312,14 @@ const AUTO_SAVE_DEBOUNCE_MS = 5000;
 
 // 📦 COMPONENTE PRINCIPAL: LegalDecisionEditor
 // v1.34.1: Adicionado props receivedModels e clearReceivedModels para merge de sync
-const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeSharedLibraries, clearReceivedModels }: {
+const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeSharedLibraries, clearReceivedModels, setModelsLoaded }: {
   onLogout: () => void;
   cloudSync: UseCloudSyncReturn;
   receivedModels: Model[] | null;
   activeSharedLibraries: Array<{ ownerId: string; ownerEmail: string }> | null;
   clearReceivedModels: () => void;
+  /** v1.37.78: Callback para indicar que modelos foram carregados do IndexedDB */
+  setModelsLoaded: (loaded: boolean) => void;
 }) => {
 
   // 🎣 CUSTOM HOOKS
@@ -689,6 +691,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
     // Skip if IndexedDB feature flag is disabled
     if (!featureFlags.isEnabled('useIndexedDB')) {
+      setModelsLoaded(true); // v1.37.78: Se IndexedDB desabilitado, marcar como carregado
       return;
     }
 
@@ -709,8 +712,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         if (isMounted && loadedModels && loadedModels.length > 0) {
           modelLibrary.setModels(loadedModels);
           hasLoadedModelsRef.current = true; // Marcar como carregado
+          setModelsLoaded(true); // v1.37.78: Notificar que modelos foram carregados
         } else if (isMounted) {
           hasLoadedModelsRef.current = true; // Marcar como carregado mesmo se vazio
+          setModelsLoaded(true); // v1.37.78: Notificar mesmo se vazio
         }
       } catch (err) {
         if (isMounted) {
@@ -728,7 +733,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     return () => {
       isMounted = false;
     };
-  }, [indexedDB.isAvailable]); // Only re-run when IndexedDB becomes available
+  }, [indexedDB.isAvailable, setModelsLoaded]); // v1.37.78: Added setModelsLoaded
 
   // Save Models quando mudarem (v1.7 FASE 1.2: hash ao invés de stringify)
   React.useEffect(() => {
@@ -4408,6 +4413,8 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         handleCreateNewTopic={handleCreateNewTopic}
         isRegenerating={aiIntegration.regenerating}
         hasDocuments={!!(analyzedDocuments.peticoes?.length > 0 || analyzedDocuments.peticoesText?.length > 0)}
+        // v1.37.77: trackChange para rastrear deletes de modelos para sync
+        trackChange={cloudSync?.trackChange}
       />
 
       {/* v1.4.6: Removido Mini-toolbar flutuante (76 linhas) */}
@@ -4752,8 +4759,12 @@ const SentencifyAI = () => {
     useModelsStore.getState().setActiveSharedLibraries(null);
   }, []);
 
+  // v1.37.78: Estado para indicar que modelos foram carregados do IndexedDB
+  const [modelsLoaded, setModelsLoaded] = React.useState(false);
+
   const cloudSync = useCloudSync({
-    onModelsReceived: handleModelsReceived
+    onModelsReceived: handleModelsReceived,
+    modelsLoaded: modelsLoaded
   });
 
   // Fallback para auth legada durante transição
@@ -4825,6 +4836,7 @@ const SentencifyAI = () => {
         receivedModels={receivedModels}
         activeSharedLibraries={activeSharedLibraries}
         clearReceivedModels={clearReceivedModels}
+        setModelsLoaded={setModelsLoaded}
       />
     </ErrorBoundary>
   );
