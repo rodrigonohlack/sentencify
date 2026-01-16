@@ -52,6 +52,9 @@ Identifique tópicos redundantes que poderiam ser mesclados:
 - Mesmo pedido com nomes diferentes
 - Pedidos que são variações do mesmo tema
 
+## IDIOMA OBRIGATÓRIO
+RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reason, suggestion, summary, item, etc.) devem estar em português.
+
 ## FORMATO DE RESPOSTA (JSON estrito):
 
 \`\`\`json
@@ -111,6 +114,9 @@ Sua função é verificar criticamente o dispositivo gerado, identificando omiss
 - Estrutura clara: primeiro declara resultado, depois especifica condenações?
 - Cláusulas obrigatórias: custas, honorários, INSS/IR?
 
+## IDIOMA OBRIGATÓRIO
+RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reason, suggestion, summary, item, etc.) devem estar em português.
+
 ## FORMATO DE RESPOSTA (JSON estrito):
 
 \`\`\`json
@@ -164,6 +170,9 @@ Sua função é verificar se a análise crítica (revisão) está correta e úti
 - As correções sugeridas são APLICÁVEIS?
 - As sugestões respeitam os limites da sentença trabalhista?
 - Há sugestões desnecessárias ou excessivas?
+
+## IDIOMA OBRIGATÓRIO
+RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reason, suggestion, summary, item, etc.) devem estar em português.
 
 ## FORMATO DE RESPOSTA (JSON estrito):
 
@@ -245,6 +254,9 @@ Ao gerar correções do tipo "fix_row", você DEVE seguir estas regras:
 ### 3. FATOS INCONTROVERSOS/CONTROVERSOS
 - As listas estão corretas e completas?
 
+## IDIOMA OBRIGATÓRIO
+RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reason, suggestion, summary, tema, etc.) devem estar em português.
+
 ## FORMATO DE RESPOSTA (JSON estrito):
 
 \`\`\`json
@@ -291,6 +303,9 @@ Sua função é verificar criticamente a análise de prova realizada.
 ### 4. RELEVÂNCIA JURÍDICA
 - A análise identifica corretamente a força probatória?
 - Relaciona adequadamente com os pedidos/defesa?
+
+## IDIOMA OBRIGATÓRIO
+RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reason, suggestion, summary, item, etc.) devem estar em português.
 
 ## FORMATO DE RESPOSTA (JSON estrito):
 
@@ -343,6 +358,9 @@ Sua função é verificar criticamente a resposta do assistente de redação.
 ### 4. QUALIDADE DA ANÁLISE
 - A análise é equilibrada e imparcial?
 - As conclusões são lógicas e bem fundamentadas?
+
+## IDIOMA OBRIGATÓRIO
+RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reason, suggestion, summary, item, etc.) devem estar em português.
 
 ## FORMATO DE RESPOSTA (JSON estrito):
 
