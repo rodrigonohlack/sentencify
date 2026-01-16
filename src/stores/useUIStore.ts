@@ -90,6 +90,9 @@ interface ModelGeneratorModalState {
   targetField: string | null;
 }
 
+/** Status de download (v1.37.73) */
+export type DownloadStatus = 'idle' | 'downloading' | 'done' | 'error';
+
 /** Interface do estado do store */
 interface UIState {
   // Estado - Modais (v1.37.56: Modal Registry)
@@ -119,6 +122,13 @@ interface UIState {
   // Estado - Double Check Review (v1.37.58)
   doubleCheckReview: DoubleCheckReviewData | null;
   doubleCheckResult: DoubleCheckReviewResult | null;
+
+  // Estado - Modais Diversos (v1.37.73: ModalRoot)
+  showAnonymizationModal: boolean;
+  showDataDownloadModal: boolean;
+  showEmbeddingsDownloadModal: boolean;
+  dataDownloadStatus: DownloadStatus;
+  embeddingsDownloadStatus: DownloadStatus;
 
   // Actions - Modais (v1.37.56: Modal Registry)
   openModal: (modalName: ModalKey) => void;
@@ -161,6 +171,13 @@ interface UIState {
   openDoubleCheckReview: (data: DoubleCheckReviewData) => void;
   closeDoubleCheckReview: () => void;
   setDoubleCheckResult: (result: DoubleCheckReviewResult | null) => void;
+
+  // Actions - Modais Diversos (v1.37.73: ModalRoot)
+  setShowAnonymizationModal: (show: boolean) => void;
+  setShowDataDownloadModal: (show: boolean) => void;
+  setShowEmbeddingsDownloadModal: (show: boolean) => void;
+  setDataDownloadStatus: (status: DownloadStatus) => void;
+  setEmbeddingsDownloadStatus: (status: DownloadStatus) => void;
 
   // Computed (via selectors)
   // isAnyModalOpen é um selector, não uma action
@@ -212,6 +229,13 @@ export const useUIStore = create<UIState>()(
       // Estado - Double Check Review (v1.37.58)
       doubleCheckReview: null,
       doubleCheckResult: null,
+
+      // Estado - Modais Diversos (v1.37.73: ModalRoot)
+      showAnonymizationModal: false,
+      showDataDownloadModal: false,
+      showEmbeddingsDownloadModal: false,
+      dataDownloadStatus: 'idle' as DownloadStatus,
+      embeddingsDownloadStatus: 'idle' as DownloadStatus,
 
       // ─────────────────────────────────────────────────────────────────────
       // Actions - Modais (v1.37.56: Modal Registry Pattern)
@@ -492,6 +516,55 @@ export const useUIStore = create<UIState>()(
           },
           false,
           'setDoubleCheckResult'
+        ),
+
+      // ─────────────────────────────────────────────────────────────────────
+      // Actions - Modais Diversos (v1.37.73: ModalRoot)
+      // ─────────────────────────────────────────────────────────────────────
+
+      setShowAnonymizationModal: (show: boolean) =>
+        set(
+          (state) => {
+            state.showAnonymizationModal = show;
+          },
+          false,
+          `setShowAnonymizationModal/${show}`
+        ),
+
+      setShowDataDownloadModal: (show: boolean) =>
+        set(
+          (state) => {
+            state.showDataDownloadModal = show;
+          },
+          false,
+          `setShowDataDownloadModal/${show}`
+        ),
+
+      setShowEmbeddingsDownloadModal: (show: boolean) =>
+        set(
+          (state) => {
+            state.showEmbeddingsDownloadModal = show;
+          },
+          false,
+          `setShowEmbeddingsDownloadModal/${show}`
+        ),
+
+      setDataDownloadStatus: (status: DownloadStatus) =>
+        set(
+          (state) => {
+            state.dataDownloadStatus = status;
+          },
+          false,
+          `setDataDownloadStatus/${status}`
+        ),
+
+      setEmbeddingsDownloadStatus: (status: DownloadStatus) =>
+        set(
+          (state) => {
+            state.embeddingsDownloadStatus = status;
+          },
+          false,
+          `setEmbeddingsDownloadStatus/${status}`
         ),
     })),
     { name: 'UIStore' }

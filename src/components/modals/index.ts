@@ -48,3 +48,7 @@ export { ConfigModal } from './ConfigModal';
 
 // Double Check Review Modal (v1.37.58)
 export { DoubleCheckReviewModal } from './DoubleCheckReviewModal';
+
+// ModalRoot (v1.37.73)
+export { ModalRoot } from './ModalRoot';
+export type { ModalRootProps } from './ModalRoot';

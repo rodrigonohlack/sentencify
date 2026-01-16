@@ -334,3 +334,19 @@ export type {
   CloudSyncForFileHandling,
   ModelPreviewForFileHandling
 } from './useFileHandling';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODAL HANDLERS (v1.37.73: ModalRoot)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Topic Modal Handlers (TIER 0 - apenas Zustand)
+export { useTopicModalHandlers } from './useTopicModalHandlers';
+export type { UseTopicModalHandlersReturn } from './useTopicModalHandlers';
+
+// Model Modal Handlers (TIER 0 - apenas Zustand)
+export { useModelModalHandlers } from './useModelModalHandlers';
+export type { UseModelModalHandlersReturn } from './useModelModalHandlers';
+
+// Proof Modal Handlers (TIER 0 - apenas Zustand)
+export { useProofModalHandlers } from './useProofModalHandlers';
+export type { UseProofModalHandlersReturn } from './useProofModalHandlers';

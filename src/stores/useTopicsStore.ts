@@ -77,6 +77,16 @@ interface TopicsStoreState {
   newTopicData: Partial<Topic> | null;
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // ESTADO DE CURADORIA (v1.37.73: ModalRoot)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Indica se modal de curadoria está aberto */
+  showTopicCurationModal: boolean;
+
+  /** Dados pendentes da curadoria */
+  pendingCurationData: { topics: Topic[] } | null;
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // SETTERS DE TÓPICOS (2)
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -108,6 +118,13 @@ interface TopicsStoreState {
   setTopicToSplit: (topic: Topic | null) => void;
   setSplitNames: (names: string[]) => void;
   setNewTopicData: (data: Partial<Topic> | null | ((prev: Partial<Topic> | null) => Partial<Topic> | null)) => void;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SETTERS DE CURADORIA (v1.37.73: ModalRoot) (2)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  setShowTopicCurationModal: (show: boolean) => void;
+  setPendingCurationData: (data: { topics: Topic[] } | null) => void;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // HANDLERS DE PREPARAÇÃO (5)
@@ -191,6 +208,10 @@ export const useTopicsStore = create<TopicsStoreState>()(
       topicToSplit: null,
       splitNames: ['', ''],
       newTopicData: null,
+
+      // Curadoria (v1.37.73: ModalRoot) (2)
+      showTopicCurationModal: false,
+      pendingCurationData: null,
 
       // ═══════════════════════════════════════════════════════════════════════
       // SETTERS DE TÓPICOS
@@ -288,6 +309,20 @@ export const useTopicsStore = create<TopicsStoreState>()(
             state.newTopicData = dataOrUpdater;
           }
         }, false, 'setNewTopicData'),
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // SETTERS DE CURADORIA (v1.37.73: ModalRoot)
+      // ═══════════════════════════════════════════════════════════════════════
+
+      setShowTopicCurationModal: (show) =>
+        set((state) => {
+          state.showTopicCurationModal = show;
+        }, false, `setShowTopicCurationModal/${show}`),
+
+      setPendingCurationData: (data) =>
+        set((state) => {
+          state.pendingCurationData = data;
+        }, false, 'setPendingCurationData'),
 
       // ═══════════════════════════════════════════════════════════════════════
       // HANDLERS DE PREPARAÇÃO

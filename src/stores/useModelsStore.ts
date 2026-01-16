@@ -93,6 +93,9 @@ interface ModelsStoreState {
   modelToDelete: Model | null;
   similarityWarning: SimilarityWarningState | null;
 
+  // v1.37.73: Confirmação de exclusão em massa
+  deleteAllConfirmText: string;
+
   // ─────────────────────────────────────────────────────────────────────────
   // ACTIONS - DADOS CORE
   // ─────────────────────────────────────────────────────────────────────────
@@ -138,6 +141,7 @@ interface ModelsStoreState {
   setExportedModelsText: (text: string) => void;
   setModelToDelete: (model: Model | null) => void;
   setSimilarityWarning: (warning: SimilarityWarningState | null) => void;
+  setDeleteAllConfirmText: (text: string) => void;
 
   // Form helpers
   resetForm: () => void;
@@ -204,6 +208,7 @@ export const useModelsStore = create<ModelsStoreState>()(
       exportedModelsText: '',
       modelToDelete: null,
       similarityWarning: null,
+      deleteAllConfirmText: '',
 
       // ─────────────────────────────────────────────────────────────────────
       // ACTIONS - DADOS CORE
@@ -527,6 +532,15 @@ export const useModelsStore = create<ModelsStoreState>()(
           },
           false,
           'setSimilarityWarning'
+        ),
+
+      setDeleteAllConfirmText: (text) =>
+        set(
+          (state) => {
+            state.deleteAllConfirmText = text;
+          },
+          false,
+          'setDeleteAllConfirmText'
         ),
 
       resetForm: () =>

@@ -65,7 +65,7 @@ import { GoogleDriveButton, DriveFilesModal } from './components/GoogleDriveButt
 import { VoiceButton } from './components/VoiceButton';
 import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 import { FactsComparisonModalContent } from './components/FactsComparisonModal';
-import { TopicCard, SortableTopicCard, ModelCard, ProofCard, VirtualList, SuggestionCard, SplitDivider, SpacingDropdown, FontSizeDropdown, ProcessingModeSelector, VersionCompareModal, VersionSelect, JurisprudenciaCard, ArtigoCard, ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown, BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview, RenameTopicModal, DeleteTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal, DeleteModelModal, DeleteAllModelsModal, DeleteAllPrecedentesModal, ExtractModelConfirmModal, ExtractedModelPreviewModal, SimilarityWarningModal, AddProofTextModal, DeleteProofModal, ProofAnalysisModal, LinkProofModal, RestoreSessionModal, ClearProjectModal, LogoutConfirmModal, BulkDiscardConfirmModal, ConfirmBulkCancelModal, TextPreviewModal, FullscreenModelPanel, ModelSearchPanel, JurisprudenciaTab, LegislacaoTab, AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal, AIAssistantGlobalModal, AIAssistantModelModal, extractPlainText, isOralProof, hasOralProofsForTopic, AnalysisModal, ExportModal, AnonymizationNamesModal, LinkedProofsModal, ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal, ModelFormFields, SlashCommandMenu, JurisprudenciaModal, getQuillToolbarConfig, QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor, AIRegenerationSection, FieldEditor, InlineFormattingToolbar, ModelFormModal, ModelPreviewModal, GlobalEditorSection, DecisionEditorContainer, LockedTabOverlay, GlobalEditorModal, ConfigModal, DoubleCheckReviewModal, ModelsTab, UploadTab, ProofsTab, TopicsTab, ErrorBoundary } from './components';  // v1.36.82+: UI, v1.36.85-91: Modals/AI, v1.36.86: Cards, v1.36.87: Panels, v1.36.94: Editors, v1.36.97: Editor Containers, v1.36.99: GlobalEditorModal, v1.37.30: ConfigModal, v1.37.31: ModelsTab, v1.37.32: UploadTab, v1.37.54: ProofsTab, v1.37.55: TopicsTab, v1.37.59: DoubleCheckReviewModal
+import { TopicCard, SortableTopicCard, ModelCard, ProofCard, VirtualList, SuggestionCard, SplitDivider, SpacingDropdown, FontSizeDropdown, ProcessingModeSelector, VersionCompareModal, VersionSelect, JurisprudenciaCard, ArtigoCard, ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown, BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview, RenameTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal, DeleteAllPrecedentesModal, ExtractModelConfirmModal, ExtractedModelPreviewModal, AddProofTextModal, ProofAnalysisModal, LinkProofModal, RestoreSessionModal, ClearProjectModal, LogoutConfirmModal, ConfirmBulkCancelModal, DeleteProofModal, TextPreviewModal, FullscreenModelPanel, ModelSearchPanel, JurisprudenciaTab, LegislacaoTab, AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal, AIAssistantGlobalModal, AIAssistantModelModal, extractPlainText, isOralProof, hasOralProofsForTopic, AnalysisModal, AnonymizationNamesModal, LinkedProofsModal, ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal, ModelFormFields, SlashCommandMenu, JurisprudenciaModal, getQuillToolbarConfig, QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor, AIRegenerationSection, FieldEditor, InlineFormattingToolbar, ModelFormModal, ModelPreviewModal, GlobalEditorSection, DecisionEditorContainer, LockedTabOverlay, GlobalEditorModal, ConfigModal, DoubleCheckReviewModal, ModelsTab, UploadTab, ProofsTab, TopicsTab, ErrorBoundary, ModalRoot } from './components';  // v1.36.82+: UI, v1.36.85-91: Modals/AI, v1.36.86: Cards, v1.36.87: Panels, v1.36.94: Editors, v1.36.97: Editor Containers, v1.36.99: GlobalEditorModal, v1.37.30: ConfigModal, v1.37.31: ModelsTab, v1.37.32: UploadTab, v1.37.54: ProofsTab, v1.37.55: TopicsTab, v1.37.59: DoubleCheckReviewModal, v1.37.73: ModalRoot
 import useFactsComparisonCache, { openFactsDB, FACTS_STORE_NAME } from './hooks/useFactsComparisonCache';
 import useSentenceReviewCache, { openReviewDB, REVIEW_STORE_NAME } from './hooks/useSentenceReviewCache';
 
@@ -3736,15 +3736,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         </div>
       </div>
 
-      <ExportModal
-        isOpen={modals.export}
-        onClose={() => closeModal('export')}
-        exportedText={exportedText}
-        exportedHtml={exportedHtml}
-        copySuccess={copySuccess}
-        setCopySuccess={setCopySuccess}
-        setError={setError}
-      />
+      {/* v1.37.73: ExportModal movido para ModalRoot */}
 
       <DispositivoModal
         isOpen={modals.dispositivo}
@@ -3790,13 +3782,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         hasDocuments={!!(analyzedDocuments.peticoes?.length > 0 || analyzedDocuments.peticoesText?.length > 0)}
       />
 
-      <DeleteTopicModal
-        isOpen={modals.deleteTopic}
-        onClose={() => closeModal('deleteTopic')}
-        topicToDelete={topicToDelete}
-        setTopicToDelete={setTopicToDelete}
-        onConfirmDelete={confirmDeleteTopic}
-      />
+      {/* v1.37.73: DeleteTopicModal movido para ModalRoot */}
 
       <MergeTopicsModal
         isOpen={modals.merge}
@@ -4261,13 +4247,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       />
 
       {/* Modal de Confirmação de Exclusão de Modelo */}
-      <DeleteModelModal
-        isOpen={modals.deleteModel}
-        onClose={() => closeModal('deleteModel')}
-        modelToDelete={modelLibrary.modelToDelete}
-        setModelToDelete={modelLibrary.setModelToDelete}
-        onConfirmDelete={executeDeleteModel}
-      />
+      {/* v1.37.73: DeleteModelModal movido para ModalRoot */}
 
       {/* ============= MODAIS DE GERAÇÃO EM MASSA ============= */}
 
@@ -4298,14 +4278,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       />
 
       {/* 🔍 v1.13.1: Modal de Aviso de Similaridade */}
-      <SimilarityWarningModal
-        warning={modelLibrary.similarityWarning}
-        saving={savingFromSimilarity}
-        onCancel={handleSimilarityCancel}
-        onSaveNew={handleSimilaritySaveNew}
-        onReplace={handleSimilarityReplace}
-        sanitizeHTML={sanitizeHTML}
-      />
+      {/* v1.37.73: SimilarityWarningModal movido para ModalRoot */}
 
       {/* Modal 3: Revisão de Modelos Gerados */}
       {/* Modal de Revisão de Modelos Gerados em Lote */}
@@ -4326,19 +4299,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       />
 
       {/* Modal de Confirmação - Descartar Modelos Gerados */}
-      <BulkDiscardConfirmModal
-        isOpen={modals.bulkDiscardConfirm}
-        onClose={() => {
-          closeModal('bulkDiscardConfirm');
-          openModal('bulkReview'); // Reabre o modal de revisão se cancelar
-        }}
-        totalModels={modelLibrary.bulkReviewModels.length}
-        onConfirm={() => {
-          closeModal('bulkDiscardConfirm');
-          closeModal('bulkModal');
-          modelLibrary.resetBulkState();
-        }}
-      />
+      {/* v1.37.73: BulkDiscardConfirmModal movido para ModalRoot */}
 
       {/* v1.5.15: Modal de Confirmação - Cancelar Processamento */}
       <ConfirmBulkCancelModal
@@ -4351,14 +4312,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       {/* ============= FIM DOS MODAIS DE GERAÇÃO EM MASSA ============= */}
 
       {/* Modal de Confirmação de Exclusão em Massa */}
-      <DeleteAllModelsModal
-        isOpen={modals.deleteAllModels}
-        onClose={() => closeModal('deleteAllModels')}
-        totalModels={modelLibrary.models.length}
-        confirmText={modelLibrary.deleteAllConfirmText}
-        setConfirmText={modelLibrary.setDeleteAllConfirmText}
-        onConfirmDelete={deleteAllModels}
-      />
+      {/* v1.37.73: DeleteAllModelsModal movido para ModalRoot */}
 
 
       {/* Modal de Confirmação - Extrair Modelo */}
@@ -4371,15 +4325,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       />
 
       {/* Modal de Preview/Edição - Modelo Extraído */}
-      <ExtractedModelPreviewModal
-        isOpen={modals.extractedModelPreview}
-        onClose={() => closeModal('extractedModelPreview')}
-        extractedModel={modelLibrary.extractedModelPreview}
-        setExtractedModel={modelLibrary.setExtractedModelPreview}
-        onSave={saveExtractedModel}
-        onCancel={cancelExtractedModel}
-        sanitizeHTML={sanitizeHTML}
-      />
+      {/* v1.37.73: ExtractedModelPreviewModal movido para ModalRoot */}
 
       {/* v1.15.3: Modal de "Salvar como Novo Modelo" (reutiliza ExtractedModelPreviewModal) */}
       <ExtractedModelPreviewModal
@@ -4476,6 +4422,27 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
 
       {/* v1.37.51: Toast extraído para componente */}
       <Toast />
+
+      {/* v1.37.73: ModalRoot - modais simples centralizados com Zustand */}
+      <ModalRoot
+        onLogout={onLogout}
+        sessionLastSaved={storage.sessionLastSaved}
+        exportedText={exportedText}
+        exportedHtml={exportedHtml}
+        onBulkDiscard={() => {
+          closeModal('bulkDiscardConfirm');
+          closeModal('bulkModal');
+          modelLibrary.resetBulkState();
+        }}
+        bulkReviewModelsCount={modelLibrary.bulkReviewModels.length}
+        onSimilarityCancel={handleSimilarityCancel}
+        onSimilaritySaveNew={handleSimilaritySaveNew}
+        onSimilarityReplace={handleSimilarityReplace}
+        savingFromSimilarity={savingFromSimilarity}
+        sanitizeHTML={sanitizeHTML}
+        onSaveExtractedModel={saveExtractedModel}
+        onCancelExtractedModel={cancelExtractedModel}
+      />
 
       {/* v1.4.6: Removido Mini-toolbar flutuante (76 linhas) */}
       {/* v1.4.8: Removido Toolbar Fixa no Topo (82 linhas) - não mais necessária com editor de altura fixa */}
