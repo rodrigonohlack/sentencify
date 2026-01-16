@@ -73,10 +73,11 @@ export interface AIIntegrationForDecisionText {
     }
   ) => Promise<string>;
   // v1.37.65: Double Check para quick prompts
+  // v1.37.68: context agora é AIMessageContent[] (não string)
   performDoubleCheck?: (
     operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison' | 'proofAnalysis' | 'quickPrompt',
     originalResponse: string,
-    context: string,
+    context: AIMessageContent[],  // v1.37.68: mudou de string para array
     onProgress?: (msg: string) => void,
     userPrompt?: string
   ) => Promise<{
@@ -544,19 +545,16 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
       try {
         const lastResponse = chatAssistant.lastResponse;
         if (lastResponse) {
-          // Construir contexto completo para Double Check (sem limitacoes)
+          // v1.37.68: Passar contextContent diretamente (sem filtrar para texto)
           const contextContent = await buildContextForChat(message, options);
-          const contextText = Array.isArray(contextContent)
-            ? contextContent
-                .filter(c => typeof c === 'object' && c !== null && 'type' in c && c.type === 'text')
-                .map(c => (c as AITextContent).text)
-                .join('\n\n---\n\n')
-            : String(contextContent);
+          const contextArray: AIMessageContent[] = Array.isArray(contextContent)
+            ? contextContent as AIMessageContent[]
+            : [{ type: 'text' as const, text: String(contextContent) }];
 
           const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
             'quickPrompt',
             lastResponse,
-            contextText,
+            contextArray,  // v1.37.68: Array (não string)
             undefined,  // onProgress
             message  // userPrompt - texto do quick prompt/mensagem do usuario
           );

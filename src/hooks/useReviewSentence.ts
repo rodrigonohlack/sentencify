@@ -50,7 +50,7 @@ export interface AIIntegrationForReview {
       };
     };
   };
-  performDoubleCheck: (operation: string, content: string, context: string) => Promise<{
+  performDoubleCheck: (operation: string, content: string, context: AIMessageContent[]) => Promise<{  // v1.37.68: mudou de string para array
     verified: string;
     corrections: string[];
     summary: string;
@@ -193,11 +193,13 @@ export function useReviewSentence({
       if (aiIntegration.aiSettings.doubleCheck?.enabled &&
           aiIntegration.aiSettings.doubleCheck?.operations.sentenceReview) {
 
+        // v1.37.68: Usar contentArray original (inclui documentos se scope=decisionWithDocs)
+        // contentArray já contém: documentos via buildDocumentContentArray + decisão via buildDecisionText
         try {
           const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
             'sentenceReview',
             reviewFinal,
-            buildDecisionText()
+            contentArray  // Array original (já é AIMessageContent[])
           );
 
           if (corrections.length > 0) {

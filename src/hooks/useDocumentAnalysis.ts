@@ -106,7 +106,7 @@ export interface AIIntegrationForAnalysis {
   performDoubleCheck?: (
     operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison',
     originalResponse: string,
-    context: string,
+    context: AIMessageContent[],  // v1.37.68: mudou de string para array
     setProgress?: (msg: string) => void
   ) => Promise<{ verified: string; corrections: { type: string; reason: string }[]; summary: string }>;
 }
@@ -648,28 +648,13 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         setAnalysisProgress('Verificando extração com Double Check...');
         await new Promise(resolve => setTimeout(resolve, 300));
 
-        // Reconstruir contexto dos documentos para verificação
-        const contextParts: string[] = [];
-        peticoesTextFinal.forEach((doc, idx) => {
-          contextParts.push(`PETIÇÃO ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
-        });
-        contestacoesTextFinal.forEach((doc, idx) => {
-          contextParts.push(`CONTESTAÇÃO ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
-        });
-        pastedPeticaoTexts.forEach((doc, idx) => {
-          contextParts.push(`PETIÇÃO COLADA ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
-        });
-        pastedContestacaoTexts.forEach((doc, idx) => {
-          contextParts.push(`CONTESTAÇÃO COLADA ${idx + 1}:\n${doc.text?.substring(0, 3000) || ''}`);
-        });
-
-        const documentContext = contextParts.join('\n\n---\n\n');
-
+        // v1.37.68: Usar contentArray original completo (sem truncação)
+        // contentArray já contém todos os documentos + buildAnalysisPrompt
         try {
           const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
             'topicExtraction',
             JSON.stringify(topics),
-            documentContext,
+            contentArray as AIMessageContent[],  // Array original com tudo
             setAnalysisProgress
           );
 

@@ -740,33 +740,16 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
       const parsed = JSON.parse(jsonStr);
 
       // v1.36.58: Double Check do Confronto de Fatos
+      // v1.37.68: Usar messageContent original (já construído acima)
       let verifiedParsed = parsed;
       if (aiIntegration.aiSettings.doubleCheck?.enabled &&
           aiIntegration.aiSettings.doubleCheck?.operations.factsComparison &&
           aiIntegration.performDoubleCheck) {
         try {
-          // Contexto depende do source usado
-          let contextText: string;
-          if (source === 'mini-relatorio') {
-            const relatorio = topic.editedRelatorio || topic.relatorio || '';
-            contextText = `MINI-RELATORIO DO TOPICO "${topic.title}":\n${relatorio}`;
-          } else {
-            // documentos-completos
-            const peticaoText = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-            const contestacaoText = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-            const impugnacaoText = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
-
-            contextText = [
-              peticaoText && `PETICAO INICIAL:\n${peticaoText}`,
-              contestacaoText && `CONTESTACAO:\n${contestacaoText}`,
-              impugnacaoText && `IMPUGNACAO/REPLICA:\n${impugnacaoText}`
-            ].filter(Boolean).join('\n\n---\n\n');
-          }
-
           const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
             'factsComparison',
             JSON.stringify(parsed, null, 2),
-            contextText
+            messageContent  // v1.37.68: Array original (já é AIMessageContent[])
           );
 
           if (corrections.length > 0) {

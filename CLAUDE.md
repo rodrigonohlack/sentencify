@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.67 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.68 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.68 | Double Check multimodal: suporte a PDF binário (Claude/Gemini/OpenAI), contexto completo sem truncação, fallback texto para Grok |
 | v1.37.67 | Análise de provas: remover fundamentação já escrita do contexto - análise baseada apenas em documentos originais/mini-relatórios |
 | v1.37.66 | Fix modal Double Check: descrições de correções agora mostram item/suggestion legíveis ao invés de apenas "improve" |
 | v1.37.65 | Double Check para Análise de Provas e Quick Prompts: verificação secundária com modal de revisão de correções |

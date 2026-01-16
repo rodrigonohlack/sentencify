@@ -1801,7 +1801,7 @@ export interface GlobalEditorModalProps {
     performDoubleCheck?: (
       operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison',
       originalResponse: string,
-      context: string
+      context: AIMessageContent[]  // v1.37.68: mudou de string para array
     ) => Promise<PerformDoubleCheckReturn>;
   } | null;
   detectResultadoAutomatico?: ((topicTitle: string, fundamentacao: string, category: TopicCategory) => Promise<string | null>) | null;

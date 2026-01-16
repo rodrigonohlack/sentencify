@@ -15,6 +15,7 @@ import type {
   AISettings,
   AIMessage,
   AIMessageContent,
+  AITextContent,  // v1.37.68: adicionado para type guard no performDoubleCheck
   AICallOptions,
   AIProvider,
   AIGenState,
@@ -1193,15 +1194,33 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   /**
    * Chama a API com provider/modelo específico (para double check)
    * v1.36.56: Atualizado para usar thinking config do Double Check
+   * v1.37.68: Suporte a AIMessageContent[] com PDF binário
    */
   const callDoubleCheckAPI = React.useCallback(async (
     provider: AIProvider,
     model: string,
-    prompt: string,
+    content: AIMessageContent[],  // v1.37.68: array de conteúdo (não string)
     maxTokens: number = 8000
   ): Promise<string> => {
+    // v1.37.68: Verificar se há PDF binário e se provider suporta
+    const hasPdfBinary = content.some(c =>
+      typeof c === 'object' && c !== null && 'type' in c && c.type === 'document'
+    );
+    const providerSupportsPdf = provider !== 'grok';  // Grok não suporta PDF binário
+
+    let finalContent: AIMessageContent[];
+    if (hasPdfBinary && !providerSupportsPdf) {
+      // Grok: filtrar PDFs binários (não suportados) - usar apenas texto
+      console.warn('[DoubleCheck] Grok não suporta PDF binário, usando apenas texto');
+      finalContent = content.filter(c =>
+        !(typeof c === 'object' && c !== null && 'type' in c && c.type === 'document')
+      );
+    } else {
+      finalContent = content;
+    }
+
     const messages: AIMessage[] = [
-      { role: 'user', content: prompt }
+      { role: 'user', content: finalContent }
     ];
 
     // v1.36.56: Construir opções com thinking config do Double Check
@@ -1240,15 +1259,15 @@ ${AI_INSTRUCTIONS_SAFETY}`;
    * Executa o double check em uma resposta da IA
    * @param operation - Tipo de operação (topicExtraction, etc)
    * @param originalResponse - Resposta original em JSON
-   * @param context - Documentos/contexto original
+   * @param context - v1.37.68: AIMessageContent[] - contexto original (PDFs incluídos)
    * @param onProgress - Callback de progresso opcional
    * @param userPrompt - (v1.37.65) Solicitação original do usuário (para quickPrompt)
    */
-  // v1.37.65: Atualizado para suportar proofAnalysis e quickPrompt
+  // v1.37.68: context agora é AIMessageContent[] (não string)
   const performDoubleCheck = React.useCallback(async (
     operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison' | 'proofAnalysis' | 'quickPrompt',
     originalResponse: string,
-    context: string,
+    context: AIMessageContent[],  // v1.37.68: MUDOU de string para array
     onProgress?: (msg: string) => void,
     userPrompt?: string
   ): Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string }> => {
@@ -1262,16 +1281,33 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     onProgress?.('🔄 Verificando resposta com Double Check...');
 
     try {
+      // v1.37.68: Extrair texto do contexto para o template do prompt
+      const textContext = context
+        .filter((c): c is AITextContent =>
+          typeof c === 'object' && c !== null && 'type' in c && c.type === 'text'
+        )
+        .map(c => c.text)
+        .join('\n\n');
+
       // Importar dinamicamente o prompt builder
       const { buildDoubleCheckPrompt } = await import('../prompts/double-check-prompts');
       // v1.37.65: Passar userPrompt para quickPrompt
-      const verificationPrompt = buildDoubleCheckPrompt(operation, originalResponse, context, userPrompt);
+      const verificationPrompt = buildDoubleCheckPrompt(operation, originalResponse, textContext, userPrompt);
+
+      // v1.37.68: Criar conteúdo final - prompt de verificação + PDFs binários (se houver)
+      const pdfContent = context.filter(c =>
+        typeof c === 'object' && c !== null && 'type' in c && c.type === 'document'
+      );
+      const finalContent: AIMessageContent[] = [
+        { type: 'text', text: verificationPrompt },
+        ...pdfContent  // PDFs binários do contexto original
+      ];
 
       // Chamar API com o modelo de double check
       const response = await callDoubleCheckAPI(
         doubleCheck.provider,
         doubleCheck.model,
-        verificationPrompt,
+        finalContent,  // v1.37.68: array (não string)
         8000
       );
 

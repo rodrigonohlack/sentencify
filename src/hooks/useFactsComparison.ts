@@ -56,7 +56,7 @@ export interface AIIntegrationForFactsComparison {
   performDoubleCheck: (
     operation: string,
     result: string,
-    context: string
+    context: AIMessageContent[]  // v1.37.68: mudou de string para array
   ) => Promise<{
     verified: string;
     corrections: string[];
@@ -275,28 +275,12 @@ export function useFactsComparison({
       if (aiIntegration.aiSettings.doubleCheck?.enabled &&
           aiIntegration.aiSettings.doubleCheck?.operations.factsComparison) {
         try {
-          // Contexto depende do source usado
-          let contextText: string;
-          if (source === 'mini-relatorio') {
-            const relatorio = editingTopic.editedRelatorio || editingTopic.relatorio || '';
-            contextText = `MINI-RELATÓRIO DO TÓPICO "${editingTopic.title}":\n${relatorio}`;
-          } else {
-            // documentos-completos
-            const peticaoText = (analyzedDocuments?.peticoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-            const contestacaoText = (analyzedDocuments?.contestacoesText || []).map((t: PastedText) => t.text || '').join('\n\n');
-            const impugnacaoText = (analyzedDocuments?.complementaresText || []).map((t: PastedText) => t.text || '').join('\n\n');
-
-            contextText = [
-              peticaoText && `PETIÇÃO INICIAL:\n${peticaoText}`,
-              contestacaoText && `CONTESTAÇÃO:\n${contestacaoText}`,
-              impugnacaoText && `IMPUGNAÇÃO/RÉPLICA:\n${impugnacaoText}`
-            ].filter(Boolean).join('\n\n---\n\n');
-          }
-
+          // v1.37.68: Usar messageContent original (contém prompt + PDFs binários se fallback)
+          // messageContent já inclui: prompt de comparação + PDFs binários (se texto não extraído)
           const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
             'factsComparison',
             JSON.stringify(parsed, null, 2),
-            contextText
+            messageContent  // Array original (já é AIMessageContent[])
           );
 
           if (corrections.length > 0) {

@@ -45,10 +45,11 @@ export interface AIIntegrationForProofs {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) => Promise<any>;
   // v1.37.65: Double Check para analise de provas
+  // v1.37.68: context agora é AIMessageContent[] (não string)
   performDoubleCheck?: (
     operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison' | 'proofAnalysis' | 'quickPrompt',
     originalResponse: string,
-    context: string,
+    context: AIMessageContent[],  // v1.37.68: mudou de string para array
     onProgress?: (msg: string) => void,
     userPrompt?: string
   ) => Promise<{
@@ -481,16 +482,12 @@ CONCLUSÃO:
           aiIntegration.aiSettings.doubleCheck?.operations?.proofAnalysis &&
           aiIntegration.performDoubleCheck) {
         try {
-          // Contexto para Double Check: conteudo da prova
-          const proofContext = contentArray
-            .filter(c => typeof c === 'object' && c !== null && 'type' in c && c.type === 'text')
-            .map(c => (c as AITextContent).text)
-            .join('\n\n');
-
+          // v1.37.68: Passar contentArray diretamente (inclui PDF binário se modo pdf-puro)
+          // contentArray já contém: PDF binário (se pdf-puro) ou texto extraído + contexto do processo
           const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
             'proofAnalysis',
             finalResult,
-            proofContext
+            contentArray as AIMessageContent[]  // Array incluindo PDFs binários
           );
 
           if (corrections.length > 0) {

@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.68', feature: 'Double Check multimodal: suporte a PDF binário (Claude/Gemini/OpenAI), contexto completo sem truncação, fallback texto para Grok' },
   { version: '1.37.67', feature: 'Análise de provas: remover fundamentação já escrita (editedContent) do contexto - análise agora baseada apenas em documentos originais/mini-relatórios' },
   { version: '1.37.66', feature: 'Fix modal Double Check: descrições de correções agora mostram item/suggestion legíveis ao invés de apenas "improve"' },
   { version: '1.37.65', feature: 'Double Check para Análise de Provas e Quick Prompts: verificação secundária com modal de revisão de correções (completude, coerência, precisão jurídica)' },

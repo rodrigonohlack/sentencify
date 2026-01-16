@@ -37,7 +37,7 @@ export interface AIIntegrationForDispositivo {
   performDoubleCheck: (
     operation: DoubleCheckOperation,
     content: string,
-    context: string,
+    context: AIMessageContent[],  // v1.37.68: mudou de string para array
     onProgress?: (msg: string) => void
   ) => Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string }>;
 }
@@ -292,15 +292,14 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
       if (aiIntegration.aiSettings.doubleCheck?.enabled &&
           aiIntegration.aiSettings.doubleCheck?.operations.dispositivo) {
 
-        const fundamentacaoContext = topicsSummary.map(t =>
-          `${t.titulo} (${t.categoria})\nResultado: ${t.resultado}\nDecisão: ${t.decisao}`
-        ).join('\n\n---\n\n');
-
+        // v1.37.68: Usar promptText completo (contém todas as regras e modelo personalizado)
+        // promptText inclui: AI_PROMPTS.roles.redacao, buildPartesDoProcesso, buildTopicosSection,
+        // regraFundamentalDispositivo, estiloRedacao, modeloDispositivo (se configurado)
         try {
           const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
             'dispositivo',
             dispositivoFinal,
-            fundamentacaoContext
+            [{ type: 'text' as const, text: promptText }]  // Array com prompt completo
           );
 
           if (corrections.length > 0) {
