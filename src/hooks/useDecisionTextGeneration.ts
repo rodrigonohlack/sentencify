@@ -593,11 +593,11 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
             const dcResult = await waitForDecision;
 
             if (dcResult.selected.length > 0) {
-              // Atualizar a ultima mensagem no historico do chat
+              // Atualizar a última mensagem no histórico do chat
               chatAssistant.updateLastAssistantMessage(dcResult.finalResult);
-              console.log('[DoubleCheck QuickPrompt] Correcoes aplicadas:', dcResult.selected);
+              console.log('[DoubleCheck QuickPrompt] Correções aplicadas:', dcResult.selected);
             } else {
-              console.log('[DoubleCheck QuickPrompt] Usuario descartou correcoes');
+              console.log('[DoubleCheck QuickPrompt] Usuário descartou correções');
             }
           }
         }

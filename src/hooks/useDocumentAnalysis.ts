@@ -1024,7 +1024,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
       closeModal('analysis');
       setActiveTab('topics');
-      showToast('Analise concluída com sucesso!', 'success');
+      showToast('Análise concluída com sucesso!', 'success');
 
     } catch (err) {
       setError('Erro ao processar tópicos: ' + (err as Error).message);
@@ -1060,7 +1060,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
     setShowTopicCurationModal(false);
     setPendingCurationData(null);
     setAnalysisProgress('');
-    showToast('Analise cancelada. Você pode reiniciar quando quiser.', 'info');
+    showToast('Análise cancelada. Você pode reiniciar quando quiser.', 'info');
   }, [showToast]);
 
   // ═══════════════════════════════════════════════════════════════════════════

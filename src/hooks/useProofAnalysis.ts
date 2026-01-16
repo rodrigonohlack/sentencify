@@ -523,20 +523,20 @@ CONCLUSÃO:
               confidence: 85
             });
 
-            // Aguardar decisao do usuario
+            // Aguardar decisão do usuário
             const dcResult = await waitForDecision;
 
-            // Aplicar resultado da decisao
+            // Aplicar resultado da decisão
             if (dcResult.selected.length > 0) {
               finalResult = dcResult.finalResult;
-              showToast(`Double Check: ${dcResult.selected.length} correcao(oes) aplicada(s)`, 'info');
-              console.log('[DoubleCheck ProofAnalysis] Correcoes aplicadas:', dcResult.selected);
+              showToast(`Double Check: ${dcResult.selected.length} correção(ões) aplicada(s)`, 'info');
+              console.log('[DoubleCheck ProofAnalysis] Correções aplicadas:', dcResult.selected);
             } else {
-              console.log('[DoubleCheck ProofAnalysis] Usuario descartou correcoes');
-              showToast('Double Check: correcoes descartadas', 'info');
+              console.log('[DoubleCheck ProofAnalysis] Usuário descartou correções');
+              showToast('Double Check: correções descartadas', 'info');
             }
           } else {
-            console.log('[DoubleCheck ProofAnalysis] Nenhuma correcao necessaria');
+            console.log('[DoubleCheck ProofAnalysis] Nenhuma correção necessária');
           }
         } catch (dcError) {
           console.error('[DoubleCheck ProofAnalysis] Erro:', dcError);

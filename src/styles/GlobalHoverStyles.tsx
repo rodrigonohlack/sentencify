@@ -194,7 +194,7 @@ const GlobalHoverStyles = () => (
       background-color: rgba(147, 51, 234, 0.3) !important;
     }
 
-    /* v1.10.9: Botao Analise Livre */
+    /* v1.10.9: Botão Análise Livre */
     .hover-button-free {
       background-color: rgba(51, 65, 85, 0.5);
       border-color: #475569;
@@ -208,7 +208,7 @@ const GlobalHoverStyles = () => (
       background-color: rgba(34, 197, 94, 0.3) !important;
     }
 
-    /* v1.21.16: Tema claro - Botao Analise Contextual */
+    /* v1.21.16: Tema claro - Botão Análise Contextual */
     .hover-button-contextual-light {
       background-color: rgba(147, 51, 234, 0.08);
       border: 1px solid rgba(147, 51, 234, 0.2);
@@ -222,7 +222,7 @@ const GlobalHoverStyles = () => (
       background-color: rgba(147, 51, 234, 0.25) !important;
     }
 
-    /* v1.21.16: Tema claro - Botao Analise Livre */
+    /* v1.21.16: Tema claro - Botão Análise Livre */
     .hover-button-free-light {
       background-color: rgba(34, 197, 94, 0.08);
       border: 1px solid rgba(34, 197, 94, 0.2);
