@@ -314,7 +314,7 @@ RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reas
   "corrections": [
     { "type": "improve", "reason": "Motivo da correção", "item": "Elemento específico", "suggestion": "Texto corrigido" }
   ],
-  "verifiedResult": "Análise verificada e corrigida (ou original se sem correções)",
+  "verifiedResult": "TEXTO COMPLETO da análise com TODAS as correções já incorporadas (ou original se corrections vazio)",
   "confidence": 0.95,
   "summary": "Resumo breve das alterações (ou 'Nenhuma correção necessária')"
 }
@@ -322,6 +322,8 @@ RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reas
 
 IMPORTANTE:
 - Se a análise estiver correta, retorne corrections: [] e copie a análise original em verifiedResult
+- Se houver correções, o campo verifiedResult DEVE conter o texto COMPLETO da análise com TODAS as correções do array "corrections" JÁ APLICADAS no texto
+- NÃO retorne o texto original em verifiedResult se houver correções - retorne a versão corrigida completa
 - Use confidence entre 0.0 e 1.0 para indicar sua certeza
 - O campo summary deve ser conciso (1-2 frases)`,
 
@@ -369,7 +371,7 @@ RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reas
   "corrections": [
     { "type": "improve", "reason": "Motivo da correção", "item": "Elemento específico", "suggestion": "Texto corrigido" }
   ],
-  "verifiedResult": "Resposta verificada (ou original se sem correções)",
+  "verifiedResult": "TEXTO COMPLETO da resposta com TODAS as correções já incorporadas (ou original se corrections vazio)",
   "confidence": 0.95,
   "summary": "Resumo breve das alterações (ou 'Nenhuma correção necessária')"
 }
@@ -378,6 +380,8 @@ RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reas
 IMPORTANTE:
 - PRIORIZE verificar se a resposta atende à solicitação específica do usuário
 - Se a resposta estiver correta, retorne corrections: [] e copie a resposta original em verifiedResult
+- Se houver correções, o campo verifiedResult DEVE conter o texto COMPLETO da resposta com TODAS as correções JÁ APLICADAS
+- NÃO retorne o texto original em verifiedResult se houver correções - retorne a versão corrigida completa
 - Use confidence entre 0.0 e 1.0 para indicar sua certeza
 - O campo summary deve ser conciso (1-2 frases)`
 };

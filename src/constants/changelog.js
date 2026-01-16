@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.70', feature: 'Fix Double Check correções não aplicadas ao texto final: instrução explícita para IA incorporar correções no verifiedResult (proofAnalysis e quickPrompt)' },
   { version: '1.37.69', feature: 'Fix Double Check respondendo em inglês: instrução explícita de idioma (português brasileiro) adicionada a todos os prompts' },
   { version: '1.37.68', feature: 'Double Check multimodal: suporte a PDF binário (Claude/Gemini/OpenAI), contexto completo sem truncação, fallback texto para Grok' },
   { version: '1.37.67', feature: 'Análise de provas: remover fundamentação já escrita (editedContent) do contexto - análise agora baseada apenas em documentos originais/mini-relatórios' },
