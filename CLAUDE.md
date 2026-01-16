@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.74 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.75 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.75 | Fix bug sync modelos ressuscitando: usar useModelsStore.getState() como fonte de verdade para contagem local (antes: localStorage desatualizado causava full sync que baixava modelos deletados) |
 | v1.37.74 | ModalRoot expandido: modais de tópicos (RenameTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal) movidos do App.tsx (~37 linhas removidas), handlers passados como props para AI regeneration |
 | v1.37.73 | ModalRoot com Zustand: 7 modais extraídos para componente centralizado (DeleteTopic, DeleteModel, DeleteAllModels, Export, SimilarityWarning, ExtractedModelPreview, BulkDiscardConfirm), 3 hooks criados (useTopicModalHandlers, useModelModalHandlers, useProofModalHandlers), useReviewStore adicionado |
 | v1.37.72 | Estender fix Double Check para dispositivo e sentenceReview: instrução explícita para incorporar correções no verifiedResult |

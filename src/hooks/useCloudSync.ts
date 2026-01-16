@@ -6,6 +6,7 @@
  */
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { Model, User } from '../types';
+import { useModelsStore } from '../stores/useModelsStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -399,8 +400,10 @@ export function useCloudSync({ onModelsReceived }: UseCloudSyncProps = {}): UseC
       if (!statusRes.ok) throw new Error('Erro ao verificar status');
       const serverStatus = (await statusRes.json()) as StatusApiResponse;
 
-      // Contar modelos locais no IndexedDB
-      const localModelsCount = parseInt(localStorage.getItem('sentencify-models-count') || '0', 10);
+      // v1.37.75: Usar estado real do Zustand (fix bug modelo ressuscita após exclusão)
+      // Antes: contagem de localStorage ficava desatualizada após exclusões locais
+      const zustandModels = useModelsStore.getState().models;
+      const localModelsCount = zustandModels.filter(m => !m.isShared).length;
 
       // v1.34.2: Pull paginado para evitar crash de memória
       // v1.34.6: Forçar full sync se local != servidor

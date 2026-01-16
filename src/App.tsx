@@ -401,8 +401,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
       // v1.34.7: Salvar IMEDIATAMENTE no IndexedDB (não esperar debounce)
       saveToIndexedDB(mergedModels).then(() => {
-        localStorage.setItem('sentencify-models-count', String(mergedModels.length));
-        console.log(`[Sync] Salvo ${mergedModels.length} modelos no IndexedDB`);
+        // v1.37.75: Filtrar compartilhados para consistência com servidor
+        const ownModels = mergedModels.filter(m => !m.isShared);
+        localStorage.setItem('sentencify-models-count', String(ownModels.length));
+        console.log(`[Sync] Salvo ${mergedModels.length} modelos no IndexedDB (${ownModels.length} próprios)`);
       }).catch(err => {
         console.error('[Sync] Erro ao salvar no IndexedDB:', err);
       });
@@ -765,8 +767,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       try {
         await indexedDB.saveModels(modelLibrary.models);
 
-        // v1.34.6: Salvar contagem para sync comparar com servidor
-        localStorage.setItem('sentencify-models-count', String(modelLibrary.models.length));
+        // v1.37.75: Filtrar compartilhados para consistência com servidor
+        const ownModels = modelLibrary.models.filter(m => !m.isShared);
+        localStorage.setItem('sentencify-models-count', String(ownModels.length));
 
         // Atualizar ref com hash atual
         modelsHashRef.current = currentModelsHash;
