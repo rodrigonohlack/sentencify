@@ -1,7 +1,7 @@
 /**
  * @file useModelModalHandlers.ts
  * @description Handlers simples para modais de modelos
- * @version 1.37.73
+ * @version 1.37.77
  *
  * Este hook fornece callbacks simples para modais de modelos que
  * funcionam apenas com Zustand, sem dependências externas.
@@ -13,6 +13,15 @@ import { useCallback } from 'react';
 import { useModelsStore } from '../stores/useModelsStore';
 import { useUIStore } from '../stores/useUIStore';
 import type { Model } from '../types';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROPS
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface UseModelModalHandlersProps {
+  /** v1.37.77: Callback para rastrear mudanças para sync na nuvem */
+  trackChange?: (operation: 'create' | 'update' | 'delete', model: Partial<Model> & { id: string }) => void;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -55,9 +64,11 @@ export interface UseModelModalHandlersReturn {
  * - Cancelar aviso de similaridade
  * - Cancelar preview de modelo extraído
  *
+ * @param props.trackChange - Callback para rastrear mudanças para sync (v1.37.77)
  * @returns Handlers para operações simples de modelos
  */
-export function useModelModalHandlers(): UseModelModalHandlersReturn {
+export function useModelModalHandlers(props: UseModelModalHandlersProps = {}): UseModelModalHandlersReturn {
+  const { trackChange } = props;
   // ═══════════════════════════════════════════════════════════════════════
   // ESTADO DOS STORES
   // ═══════════════════════════════════════════════════════════════════════
@@ -79,9 +90,15 @@ export function useModelModalHandlers(): UseModelModalHandlersReturn {
   /**
    * Confirma exclusão do modelo selecionado
    * Remove o modelo da lista de modelos
+   * v1.37.77: Rastreia mudança para sync na nuvem
    */
   const confirmDeleteModel = useCallback(() => {
     if (!modelToDelete) return;
+
+    // v1.37.77: Rastrear delete para sync na nuvem ANTES de remover
+    if (trackChange) {
+      trackChange('delete', { ...modelToDelete, updatedAt: new Date().toISOString() });
+    }
 
     // Remove o modelo da lista
     setModels((prev: Model[]) => prev.filter((m) => m.id !== modelToDelete.id));
@@ -89,7 +106,7 @@ export function useModelModalHandlers(): UseModelModalHandlersReturn {
     // Limpa estado e fecha modal
     setModelToDelete(null);
     closeModal('deleteModel');
-  }, [modelToDelete, setModels, setModelToDelete, closeModal]);
+  }, [modelToDelete, setModels, setModelToDelete, closeModal, trackChange]);
 
   const cancelDeleteModel = useCallback(() => {
     setModelToDelete(null);
@@ -101,10 +118,19 @@ export function useModelModalHandlers(): UseModelModalHandlersReturn {
   // ═══════════════════════════════════════════════════════════════════════
 
   const confirmDeleteAllModels = useCallback(() => {
+    // v1.37.77: Rastrear delete de todos os modelos locais ANTES de remover
+    if (trackChange) {
+      const now = new Date().toISOString();
+      const modelsToDelete = models.filter((m) => !m.isShared);
+      for (const model of modelsToDelete) {
+        trackChange('delete', { ...model, updatedAt: now });
+      }
+    }
+
     // Limpa todos os modelos (apenas locais, não compartilhados)
     setModels((prev: Model[]) => prev.filter((m) => m.isShared));
     closeModal('deleteAllModels');
-  }, [setModels, closeModal]);
+  }, [setModels, closeModal, trackChange, models]);
 
   const cancelDeleteAllModels = useCallback(() => {
     closeModal('deleteAllModels');

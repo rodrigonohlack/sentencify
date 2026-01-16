@@ -109,6 +109,13 @@ export interface ModalRootProps {
 
   /** Indica se há documentos para regenerar mini-relatórios */
   hasDocuments?: boolean;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SYNC (v1.37.77)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Callback para rastrear mudanças para sync na nuvem */
+  trackChange?: (operation: 'create' | 'update' | 'delete', model: { id: string; updatedAt?: string }) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -154,7 +161,9 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
   handleSplitTopic,
   handleCreateNewTopic,
   isRegenerating = false,
-  hasDocuments = false
+  hasDocuments = false,
+  // Sync (v1.37.77)
+  trackChange
 }) => {
   // ═══════════════════════════════════════════════════════════════════════════
   // ESTADO DOS STORES
@@ -202,7 +211,8 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
   // ═══════════════════════════════════════════════════════════════════════════
 
   const topicHandlers = useTopicModalHandlers();
-  const modelHandlers = useModelModalHandlers();
+  // v1.37.77: Passar trackChange para rastrear deletes para sync
+  const modelHandlers = useModelModalHandlers({ trackChange });
   const proofHandlers = useProofModalHandlers();
 
   // ═══════════════════════════════════════════════════════════════════════════
