@@ -3138,9 +3138,10 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
                         const projectJson = await storage.buildProjectJson(allStatesWithAI);
                         const fileName = `sentencify-${processoNumero || 'projeto'}-${new Date().toISOString().split('T')[0]}.json`;
                         await googleDrive.saveFile(fileName, projectJson);
-                        setError({ type: 'success', message: `Projeto salvo no Google Drive: ${fileName}` });
+                        // v1.37.97: Usar showToast para feedback visível (antes: setError não aparecia)
+                        showToast(`Projeto salvo no Google Drive: ${fileName}`, 'success');
                       } catch (err) {
-                        setError({ type: 'error', message: `Erro ao salvar no Drive: ${(err as Error).message}` });
+                        showToast(`Erro ao salvar no Drive: ${(err as Error).message}`, 'error');
                       }
                     }}
                     onLoadClick={async () => {
@@ -3149,7 +3150,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
                         setDriveFiles(files);
                         setDriveFilesModalOpen(true);
                       } catch (err) {
-                        setError({ type: 'error', message: `Erro ao listar arquivos: ${(err as Error).message}` });
+                        showToast(`Erro ao listar arquivos: ${(err as Error).message}`, 'error');
                       }
                     }}
                     // v1.35.51: Props para salvar/carregar local (consolidado no dropdown)

@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.96 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.97 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.97 | Toast de feedback ao salvar projeto no Google Drive: usar showToast (antes: setError não aparecia) |
 | v1.37.96 | Modal de confirmação ao excluir do Google Drive: substituir window.confirm por BaseModal estilizado |
 | v1.37.95 | Fix sincronização chat entre editores: isOpen força reload do cache ao abrir modal (antes: clear em um editor não refletia no outro) |
 | v1.37.94 | Fix cache chat Editor Individual: App.tsx agora usa useChatHistoryCache (antes: só GlobalEditorModal tinha cache), remoção de logs debug |
