@@ -6,8 +6,9 @@
  */
 
 import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
-import { Cloud, CloudOff, Upload, Download, LogOut, Loader2, ChevronDown, Trash2, RefreshCw, Share2, X, Users, FileDown, FileUp, FolderOpen } from 'lucide-react';
+import { Cloud, CloudOff, Upload, Download, LogOut, Loader2, ChevronDown, Trash2, RefreshCw, Share2, X, Users, FileDown, FileUp, FolderOpen, AlertTriangle } from 'lucide-react';
 import { GoogleDriveFile, GoogleDrivePermission } from '../hooks/useGoogleDrive';
+import { BaseModal, ModalFooter } from './modals/BaseModal';
 
 // ============================================================================
 // TYPES
@@ -292,11 +293,19 @@ export function DriveFilesModal({
   const [permissions, setPermissions] = useState<GoogleDrivePermission[]>([]);
   const [permissionsLoading, setPermissionsLoading] = useState<boolean>(false);
 
+  // v1.37.96: Modal de confirmação de exclusão (substituir window.confirm)
+  const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
+  const [deleteFile, setDeleteFile] = useState<GoogleDriveFile | null>(null);
+
   // ESC handler - fecha sub-modais primeiro, depois modal principal (v1.37.84)
+  // v1.37.96: Adicionado deleteModal na hierarquia
   React.useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (permissionsModalOpen) {
+        if (deleteModalOpen) {
+          setDeleteModalOpen(false);
+          setDeleteFile(null);
+        } else if (permissionsModalOpen) {
           setPermissionsModalOpen(false);
         } else if (shareModalOpen) {
           setShareModalOpen(false);
@@ -535,13 +544,12 @@ export function DriveFilesModal({
                         <Share2 className="w-4 h-4" />
                       </button>
                     )}
-                    {/* Excluir (só para dono) */}
+                    {/* Excluir (só para dono) - v1.37.96: usa modal ao invés de window.confirm */}
                     {!isFromOther(file) && (
                       <button
                         onClick={() => {
-                          if (window.confirm(`Excluir "${file.name}" do Google Drive?`)) {
-                            onDelete(file);
-                          }
+                          setDeleteFile(file);
+                          setDeleteModalOpen(true);
                         }}
                         className={`p-1.5 rounded-lg transition-colors ${
                           isDarkMode
@@ -756,6 +764,42 @@ export function DriveFilesModal({
           </div>
         </div>
       )}
+
+      {/* v1.37.96: Modal de confirmação de exclusão usando BaseModal */}
+      <BaseModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setDeleteFile(null);
+        }}
+        title="Excluir do Google Drive"
+        icon={<AlertTriangle className="w-6 h-6" />}
+        iconColor="red"
+        size="sm"
+        footer={
+          <ModalFooter.Destructive
+            onClose={() => {
+              setDeleteModalOpen(false);
+              setDeleteFile(null);
+            }}
+            onConfirm={() => {
+              if (deleteFile) {
+                onDelete(deleteFile);
+              }
+              setDeleteModalOpen(false);
+              setDeleteFile(null);
+            }}
+            confirmText="Excluir"
+          />
+        }
+      >
+        <p className="theme-text-secondary">
+          Tem certeza que deseja excluir <strong className="theme-text-primary">"{deleteFile?.name}"</strong> do Google Drive?
+        </p>
+        <p className="text-sm mt-2 theme-text-muted">
+          Esta ação não pode ser desfeita.
+        </p>
+      </BaseModal>
     </div>
   );
 }

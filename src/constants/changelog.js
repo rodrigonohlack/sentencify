@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.96', feature: 'Modal de confirmação ao excluir do Google Drive: substituir window.confirm por BaseModal estilizado' },
   { version: '1.37.95', feature: 'Fix sincronização chat entre editores: isOpen força reload do cache ao abrir modal (antes: clear em um editor não refletia no outro)' },
   { version: '1.37.94', feature: 'Fix cache chat Editor Individual: App.tsx agora usa useChatHistoryCache (antes: só GlobalEditorModal tinha cache), remoção de logs debug' },
   { version: '1.37.93', feature: 'Fix persistência chat: salvar histórico do tópico anterior antes de limpar ao fechar modal (antes: topicTitle já era undefined quando tentava salvar)' },
