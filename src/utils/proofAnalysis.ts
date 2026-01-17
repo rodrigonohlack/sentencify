@@ -110,7 +110,8 @@ export const formatProofContext = (
   const {
     includeMetadata = true,
     includeLinkedTopics = false,
-    maxLength = 50000
+    // v1.37.79: Aumentado de 50k para 200k chars (~50 páginas de texto)
+    maxLength = 200000
   } = options;
 
   let context = '';

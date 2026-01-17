@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.79', feature: 'Remover truncações de conteúdo: fundamentação completa no dispositivo (antes: 200 chars), análise de prova aumentada de 50k para 200k chars (~50 páginas)' },
   { version: '1.37.78', feature: 'Fix race condition sync inicial: modelsLoaded prop impede sync antes de IndexedDB carregar (antes: local=0 causava full sync em todo F5) + logs diagnóstico trackChange' },
   { version: '1.37.77', feature: 'Fix trackChange para deletes via modal: useModelModalHandlers agora chama trackChange antes de remover modelo, permitindo sync correto (antes: pendingDeletes=0 causava full sync e ressurreição de modelos deletados)' },
   { version: '1.37.76', feature: 'Fix completo sync modelos ressuscitando: pendingChangesRef evita stale closure, comparação considera pending deletes (455 >= 456-1), logs detalhados de push' },

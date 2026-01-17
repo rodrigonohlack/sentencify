@@ -186,7 +186,8 @@ export const formatTopicosSection = (
       const decisao = t.decision === 'procedente' ? '✓ PROCEDENTE' : '✗ IMPROCEDENTE';
       section += `- ${t.title}: ${decisao}\n`;
       if (t.fundamentacao) {
-        section += `  Fundamentação: ${t.fundamentacao.substring(0, 200)}...\n`;
+        // v1.37.79: Enviar fundamentação completa (antes: truncava em 200 chars)
+        section += `  Fundamentação: ${t.fundamentacao}\n`;
       }
     }
   }
