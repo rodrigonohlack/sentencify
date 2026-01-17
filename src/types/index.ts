@@ -709,6 +709,8 @@ export interface AICallOptions {
   logMetrics?: boolean;
   extractText?: boolean;
   validateResponse?: boolean;
+  /** v1.37.90: Override do provider para chamadas específicas (ex: voice improvement) */
+  provider?: 'claude' | 'gemini' | 'openai' | 'grok';
 }
 
 /** Tipo para função callAI */

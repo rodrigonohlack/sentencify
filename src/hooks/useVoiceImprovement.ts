@@ -1,15 +1,18 @@
 /**
  * @file useVoiceImprovement.ts
  * @description Hook para melhorar texto ditado por voz usando LLM
- * @version 1.37.89
+ * @version 1.37.90
  *
  * Usa modelos rápidos/baratos para corrigir e tornar fluido o texto
  * capturado pelo reconhecimento de voz.
+ *
+ * v1.37.90: Refatorado para usar callAI do useAIIntegration
+ * - Reutiliza infraestrutura existente ao invés de duplicar código
+ * - Tracking automático de tokens via callAI
  */
 
 import React from 'react';
-import type { VoiceImprovementModel } from '../types';
-import { API_BASE } from '../constants/api';
+import type { VoiceImprovementModel, CallAIFunction } from '../types';
 import { buildVoiceImprovementPrompt } from '../prompts/voice-improvement-prompt';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -52,12 +55,8 @@ export const VOICE_MODEL_CONFIG: Record<VoiceImprovementModel, ModelConfig> = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 interface UseVoiceImprovementProps {
-  apiKeys: {
-    claude: string;
-    gemini: string;
-    openai: string;
-    grok: string;
-  };
+  /** Função callAI do useAIIntegration - reutiliza infraestrutura existente */
+  callAI: CallAIFunction;
 }
 
 interface UseVoiceImprovementReturn {
@@ -73,10 +72,11 @@ interface UseVoiceImprovementReturn {
  * Hook para melhorar texto ditado por voz usando LLM
  *
  * @example
- * const { improveText, isImproving } = useVoiceImprovement({ apiKeys });
+ * const { callAI } = useAIIntegration();
+ * const { improveText, isImproving } = useVoiceImprovement({ callAI });
  * const improved = await improveText('texto ditado', 'haiku');
  */
-export function useVoiceImprovement({ apiKeys }: UseVoiceImprovementProps): UseVoiceImprovementReturn {
+export function useVoiceImprovement({ callAI }: UseVoiceImprovementProps): UseVoiceImprovementReturn {
   const [isImproving, setIsImproving] = React.useState(false);
 
   /**
@@ -95,33 +95,28 @@ export function useVoiceImprovement({ apiKeys }: UseVoiceImprovementProps): UseV
     }
 
     const config = VOICE_MODEL_CONFIG[model];
-    const apiKey = apiKeys[config.provider];
-
-    // Sem API key configurada, retorna texto original
-    if (!apiKey) {
-      console.warn(`[VoiceImprovement] API key não configurada para ${config.provider}`);
-      return rawText;
-    }
 
     setIsImproving(true);
 
     try {
       const prompt = buildVoiceImprovementPrompt(rawText);
 
-      // Chamar API baseado no provider
-      let improvedText: string;
-
-      if (config.provider === 'claude') {
-        improvedText = await callClaudeAPI(prompt, config.model, apiKey);
-      } else if (config.provider === 'gemini') {
-        improvedText = await callGeminiAPI(prompt, config.model, apiKey);
-      } else if (config.provider === 'openai') {
-        improvedText = await callOpenAIAPI(prompt, config.model, apiKey);
-      } else if (config.provider === 'grok') {
-        improvedText = await callGrokAPI(prompt, config.model, apiKey);
-      } else {
-        return rawText;
-      }
+      // Chamar API usando callAI com provider/model específicos
+      // v1.37.90: Reutiliza infraestrutura do useAIIntegration
+      // - Tracking automático de tokens
+      // - Retry logic
+      // - Error handling consistente
+      const improvedText = await callAI(
+        [{ role: 'user', content: prompt }],
+        {
+          provider: config.provider,
+          model: config.model,
+          maxTokens: 1000,
+          temperature: 0.3,
+          disableThinking: true,  // Não precisa de reasoning para correção simples
+          logMetrics: true        // Garantir tracking de tokens
+        }
+      );
 
       return improvedText.trim() || rawText;
     } catch (error) {
@@ -130,104 +125,9 @@ export function useVoiceImprovement({ apiKeys }: UseVoiceImprovementProps): UseV
     } finally {
       setIsImproving(false);
     }
-  }, [apiKeys]);
+  }, [callAI]);
 
   return { improveText, isImproving };
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// FUNÇÕES DE API
-// ═══════════════════════════════════════════════════════════════════════════
-
-async function callClaudeAPI(prompt: string, model: string, apiKey: string): Promise<string> {
-  const response = await fetch(`${API_BASE}/api/claude/messages`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': apiKey
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`Claude API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.content?.[0]?.text || '';
-}
-
-async function callGeminiAPI(prompt: string, model: string, apiKey: string): Promise<string> {
-  const response = await fetch(`${API_BASE}/api/gemini/generate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': apiKey
-    },
-    body: JSON.stringify({
-      model,
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        maxOutputTokens: 1000,
-        temperature: 0.3
-      }
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`Gemini API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-}
-
-async function callOpenAIAPI(prompt: string, model: string, apiKey: string): Promise<string> {
-  const response = await fetch(`${API_BASE}/api/openai/chat`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': apiKey
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || '';
-}
-
-async function callGrokAPI(prompt: string, model: string, apiKey: string): Promise<string> {
-  const response = await fetch(`${API_BASE}/api/grok/chat`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': apiKey
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`Grok API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || '';
 }
 
 export default useVoiceImprovement;

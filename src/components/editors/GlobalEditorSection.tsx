@@ -15,6 +15,7 @@ import { FieldEditor, InlineFormattingToolbar } from './FieldEditor';
 import { VoiceButton } from '../VoiceButton';
 import { VersionSelect } from '../version';
 import { useAIStore } from '../../stores/useAIStore';
+import { useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
 import type { GlobalEditorSectionProps, FieldEditorRef } from '../../types';
 
@@ -64,8 +65,10 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
   const fundamentacaoEditorRef = React.useRef<FieldEditorRef | null>(null);
 
   // v1.37.88: Voice improvement com IA
+  // v1.37.90: Usa callAI do useAIIntegration para tracking de tokens
   const aiSettings = useAIStore((state) => state.aiSettings);
-  const { improveText } = useVoiceImprovement({ apiKeys: aiSettings.apiKeys });
+  const { callAI } = useAIIntegration();
+  const { improveText } = useVoiceImprovement({ callAI });
 
   return (
     <div className="global-editor-section mb-6 border theme-border-secondary rounded-lg overflow-hidden">

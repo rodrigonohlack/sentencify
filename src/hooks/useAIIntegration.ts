@@ -1131,8 +1131,9 @@ ${AI_INSTRUCTIONS_SAFETY}`;
   }, [aiSettings, convertToOpenAIFormat, extractTokenMetrics, extractResponseText, setTokenMetrics, getAiInstructions]);
 
   // Função unificada que escolhe Claude, Gemini, OpenAI ou Grok baseado no provider
+  // v1.37.90: Permite override do provider via options para casos específicos (ex: voice improvement)
   const callAI = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
-    const provider = aiSettings.provider || 'claude';
+    const provider = options.provider || aiSettings.provider || 'claude';
 
     // v1.35.97: OpenAI GPT-5.2
     if (provider === 'openai') {

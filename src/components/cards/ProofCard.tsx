@@ -14,6 +14,7 @@ import { ProcessingModeSelector } from '../ui/ProcessingModeSelector';
 import VoiceButton from '../VoiceButton';
 import { anonymizeText } from '../../utils/text';
 import { useAIStore } from '../../stores/useAIStore';
+import { useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
 import type { ProofCardProps, ProcessingMode } from '../../types';
 
@@ -35,8 +36,10 @@ export const ProofCard = React.memo(({
   const [extractionProgress, setExtractionProgress] = React.useState<{ current: number; total: number; mode: string } | null>(null);
 
   // v1.37.88: Voice improvement com IA
+  // v1.37.90: Usa callAI do useAIIntegration para tracking de tokens
   const aiSettings = useAIStore((state) => state.aiSettings);
-  const { improveText } = useVoiceImprovement({ apiKeys: aiSettings.apiKeys });
+  const { callAI } = useAIIntegration();
+  const { improveText } = useVoiceImprovement({ callAI });
 
   // Handler: Remover vínculo de tópico
   const handleUnlinkTopic = React.useCallback((topicTitle: string) => {
