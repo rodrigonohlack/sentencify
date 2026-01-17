@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.88 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.94 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,12 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.94 | Fix cache chat Editor Individual: App.tsx agora usa useChatHistoryCache (antes: só GlobalEditorModal tinha cache), remoção de logs debug |
+| v1.37.93 | Fix persistência chat: salvar histórico do tópico anterior antes de limpar ao fechar modal |
+| v1.37.92 | Persistência do histórico de chat do Assistente IA por tópico: persiste em F5, incluído em export/import de projeto, botão Limpar Chat |
+| v1.37.91 | Contagem de tokens por modelo: breakdown por modelo usado no painel Uso de Tokens, custo real calculado por provider |
+| v1.37.90 | Refatorar melhoria de voz: reutilizar callAI do useAIIntegration com provider override - tracking automático de tokens |
+| v1.37.89 | Fix endpoints API melhoria de voz: corrigir 404 (claude/messages, gemini/generate, openai/chat, grok/chat) |
 | v1.37.88 | Melhoria automática de texto ditado por voz com IA: toggle em Config IA + dropdown de modelos rápidos (Haiku/Flash/GPT-4o Mini/Grok Instant) |
 | v1.37.87 | Ditado por voz no campo "Minhas Conclusões" na aba Provas: VoiceButton integrado ao ProofCard |
 | v1.37.86 | Fix Double Check: preservar campos item/suggestion da IA + UX binária para texto livre (aceita tudo ou rejeita tudo) |

@@ -4,7 +4,7 @@
  * @tier 0 (sem dependências de outros hooks)
  * @extractedFrom App.tsx linhas 4993-5104
  * @usedBy AIAssistantBase, GlobalEditorModal
- * @version v1.37.92 - Suporte a persistência via cache
+ * @version v1.37.94 - Cache para Editor Individual + limpeza de logs debug
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
@@ -92,7 +92,7 @@ export function useChatAssistant(
           try {
             await cacheOptions.saveChat(previousTitle, historyRef.current);
           } catch (e) {
-            console.warn('[useChatAssistant] Erro ao salvar cache anterior:', e);
+            console.warn('[useChatAssistant] Erro ao salvar histórico anterior:', e);
           }
         }
 

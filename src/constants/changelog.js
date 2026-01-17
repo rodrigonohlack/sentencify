@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.94', feature: 'Fix cache chat Editor Individual: App.tsx agora usa useChatHistoryCache (antes: só GlobalEditorModal tinha cache), remoção de logs debug' },
   { version: '1.37.93', feature: 'Fix persistência chat: salvar histórico do tópico anterior antes de limpar ao fechar modal (antes: topicTitle já era undefined quando tentava salvar)' },
   { version: '1.37.92', feature: 'Persistência do histórico de chat do Assistente IA por tópico: persiste em F5, incluído em export/import de projeto, botão Limpar Chat para apagar' },
   { version: '1.37.91', feature: 'Contagem de tokens por modelo: breakdown por modelo usado no painel Uso de Tokens, custo real calculado por provider, persistência em sessão/projeto' },

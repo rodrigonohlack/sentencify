@@ -68,6 +68,7 @@ import { FactsComparisonModalContent } from './components/FactsComparisonModal';
 import { TopicCard, SortableTopicCard, ModelCard, ProofCard, VirtualList, SuggestionCard, SplitDivider, SpacingDropdown, FontSizeDropdown, ProcessingModeSelector, VersionCompareModal, VersionSelect, JurisprudenciaCard, ArtigoCard, ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown, BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview, DeleteAllPrecedentesModal, ExtractModelConfirmModal, ExtractedModelPreviewModal, AddProofTextModal, ProofAnalysisModal, LinkProofModal, RestoreSessionModal, ClearProjectModal, LogoutConfirmModal, ConfirmBulkCancelModal, DeleteProofModal, TextPreviewModal, FullscreenModelPanel, ModelSearchPanel, JurisprudenciaTab, LegislacaoTab, AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal, AIAssistantGlobalModal, AIAssistantModelModal, extractPlainText, isOralProof, hasOralProofsForTopic, AnalysisModal, AnonymizationNamesModal, LinkedProofsModal, ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal, ModelFormFields, SlashCommandMenu, JurisprudenciaModal, getQuillToolbarConfig, QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor, AIRegenerationSection, FieldEditor, InlineFormattingToolbar, ModelFormModal, ModelPreviewModal, GlobalEditorSection, DecisionEditorContainer, LockedTabOverlay, GlobalEditorModal, ConfigModal, DoubleCheckReviewModal, ModelsTab, UploadTab, ProofsTab, TopicsTab, ErrorBoundary, ModalRoot } from './components';  // v1.36.82+: UI, v1.36.85-91: Modals/AI, v1.36.86: Cards, v1.36.87: Panels, v1.36.94: Editors, v1.36.97: Editor Containers, v1.36.99: GlobalEditorModal, v1.37.30: ConfigModal, v1.37.31: ModelsTab, v1.37.32: UploadTab, v1.37.54: ProofsTab, v1.37.55: TopicsTab, v1.37.59: DoubleCheckReviewModal, v1.37.74: ModalRoot (topic modals)
 import useFactsComparisonCache, { openFactsDB, FACTS_STORE_NAME } from './hooks/useFactsComparisonCache';
 import useSentenceReviewCache, { openReviewDB, REVIEW_STORE_NAME } from './hooks/useSentenceReviewCache';
+import useChatHistoryCache from './hooks/useChatHistoryCache';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
 // v1.37.18: buildDocumentContentArray, buildMiniReportPrompt, buildBatchMiniReportPrompt extraídos
@@ -417,9 +418,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // ↑ v1.35.4: Removido libraryModels das deps - usamos libraryModelsRef para evitar loop
   // ↑ v1.35.24: Adicionado activeSharedLibraries para filtrar owners revogados
 
-  // 🤖 v1.19.0: Chat interativo do assistente IA (Editor Individual)
-  const chatAssistant = useChatAssistant(aiIntegration);
-
   // 📜 v1.24: Versionamento de campos (Editor Individual)
   const fieldVersioning = useFieldVersioning();
 
@@ -478,6 +476,16 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const documentServices = useDocumentServices(aiIntegration);
 
   const proofManager = useProofManager(documentServices);   const documentManager = useDocumentManager(storage.clearPdfCache);   const topicManager = useTopicManager();   const modelPreview = useModelPreview(); // Preview de modelos sugeridos
+
+  // 🤖 v1.19.0: Chat interativo do assistente IA (Editor Individual)
+  // v1.37.94: Adicionado cache para persistência do histórico
+  const chatHistoryCache = useChatHistoryCache();
+  const chatAssistant = useChatAssistant(aiIntegration, {
+    topicTitle: topicManager.editingTopic?.title,
+    saveChat: chatHistoryCache.saveChat,
+    getChat: chatHistoryCache.getChat,
+    deleteChat: chatHistoryCache.deleteChat
+  });
 
   // v1.13.9: Ref para auto-save debounced no Editor Individual
   const individualAutoSaveTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -3783,10 +3791,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
 
       <AIAssistantModal
         isOpen={modals.aiAssistant}
-        onClose={() => {
-          closeModal('aiAssistant');
-          chatAssistant.clear();
-        }}
+        onClose={() => closeModal('aiAssistant')}
         contextScope={topicContextScope}
         setContextScope={setTopicContextScope}
         topicTitle={editingTopic?.title}
