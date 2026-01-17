@@ -1,7 +1,7 @@
 /**
  * @file useVoiceImprovement.ts
  * @description Hook para melhorar texto ditado por voz usando LLM
- * @version 1.37.88
+ * @version 1.37.89
  *
  * Usa modelos rápidos/baratos para corrigir e tornar fluido o texto
  * capturado pelo reconhecimento de voz.
@@ -140,7 +140,7 @@ export function useVoiceImprovement({ apiKeys }: UseVoiceImprovementProps): UseV
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function callClaudeAPI(prompt: string, model: string, apiKey: string): Promise<string> {
-  const response = await fetch(`${API_BASE}/api/claude`, {
+  const response = await fetch(`${API_BASE}/api/claude/messages`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ async function callClaudeAPI(prompt: string, model: string, apiKey: string): Pro
 }
 
 async function callGeminiAPI(prompt: string, model: string, apiKey: string): Promise<string> {
-  const response = await fetch(`${API_BASE}/api/gemini`, {
+  const response = await fetch(`${API_BASE}/api/gemini/generate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -187,7 +187,7 @@ async function callGeminiAPI(prompt: string, model: string, apiKey: string): Pro
 }
 
 async function callOpenAIAPI(prompt: string, model: string, apiKey: string): Promise<string> {
-  const response = await fetch(`${API_BASE}/api/openai`, {
+  const response = await fetch(`${API_BASE}/api/openai/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -209,7 +209,7 @@ async function callOpenAIAPI(prompt: string, model: string, apiKey: string): Pro
 }
 
 async function callGrokAPI(prompt: string, model: string, apiKey: string): Promise<string> {
-  const response = await fetch(`${API_BASE}/api/grok`, {
+  const response = await fetch(`${API_BASE}/api/grok/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

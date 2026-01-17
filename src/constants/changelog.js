@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.89', feature: 'Fix endpoints API melhoria de voz: corrigir 404 (claude/messages, gemini/generate, openai/chat, grok/chat)' },
   { version: '1.37.88', feature: 'Melhoria automática de texto ditado por voz com IA: toggle em Config IA permite escolher modelo rápido (Haiku/Flash/GPT-4o Mini/Grok Instant) para corrigir e tornar fluido o texto ditado antes de inserir' },
   { version: '1.37.87', feature: 'Ditado por voz no campo "Minhas Conclusões" na aba Provas: VoiceButton integrado ao ProofCard para transcrição de voz' },
   { version: '1.37.86', feature: 'Fix Double Check: preservar campos item/suggestion da IA (antes: sobrescritos com "Correção 1/2/3") + UX binária para texto livre (sentenceReview/proofAnalysis/quickPrompt aceita tudo ou rejeita tudo)' },

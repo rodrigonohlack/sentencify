@@ -1,7 +1,7 @@
 /**
  * @file voice-improvement-prompt.ts
  * @description Prompt para melhoria de texto ditado por voz com IA
- * @version 1.37.88
+ * @version 1.37.89
  */
 
 /** Prompt base para melhoria de texto ditado */
