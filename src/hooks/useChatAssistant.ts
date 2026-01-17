@@ -74,20 +74,33 @@ export function useChatAssistant(
   const [generating, setGenerating] = useState(false);
   const lastTopicTitleRef = useRef<string | undefined>(undefined);
   const cacheLoadedRef = useRef(false);
+  // v1.37.93: Ref para histórico atual (evita dependência no useEffect)
+  const historyRef = useRef<ChatMessage[]>([]);
+  historyRef.current = history;
 
   // v1.37.92: Carregar histórico do cache quando tópico muda
+  // v1.37.93: Fix - salvar histórico do tópico anterior antes de limpar
   useEffect(() => {
     const loadFromCache = async () => {
       const topicTitle = cacheOptions?.topicTitle;
+      const previousTitle = lastTopicTitleRef.current;
 
-      // Se o tópico mudou, resetar e carregar novo histórico
-      if (topicTitle !== lastTopicTitleRef.current) {
+      // Se o tópico mudou, salvar histórico do tópico anterior antes de limpar
+      if (topicTitle !== previousTitle) {
+        // IMPORTANTE: Salvar histórico do tópico anterior ANTES de limpar
+        if (previousTitle && cacheOptions?.saveChat && historyRef.current.length > 0) {
+          try {
+            await cacheOptions.saveChat(previousTitle, historyRef.current);
+          } catch (e) {
+            console.warn('[useChatAssistant] Erro ao salvar cache anterior:', e);
+          }
+        }
+
         lastTopicTitleRef.current = topicTitle;
         cacheLoadedRef.current = false;
 
-        // Limpar histórico in-memory quando tópico muda
         if (topicTitle) {
-          // Novo tópico: tentar carregar do cache
+          // Novo tópico: carregar do cache
           if (cacheOptions?.getChat) {
             cacheLoadedRef.current = true;
             try {
@@ -101,13 +114,13 @@ export function useChatAssistant(
             setHistory([]);
           }
         } else {
-          // Sem tópico (modal fechado): manter histórico vazio
+          // Modal fechado: limpar histórico in-memory (já salvou acima)
           setHistory([]);
         }
       }
     };
     loadFromCache();
-  }, [cacheOptions?.topicTitle, cacheOptions?.getChat]);
+  }, [cacheOptions?.topicTitle, cacheOptions?.getChat, cacheOptions?.saveChat]);
 
   // v1.37.92: Salvar no cache quando histórico muda
   useEffect(() => {
