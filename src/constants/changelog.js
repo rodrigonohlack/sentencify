@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.85', feature: 'Fix cores ícones provedores IA: Claude roxo→laranja (branding oficial), Grok visível em tema claro (dark:text-gray-300)' },
   { version: '1.37.84', feature: 'DriveFilesModal seguir padrão BaseModal: ESC handler hierárquico (sub-modais primeiro) + scroll lock' },
   { version: '1.37.83', feature: 'Fix ícone Claude incorreto: substituir SVG inventado pelo logo oficial starburst do Bootstrap Icons' },
   { version: '1.37.82', feature: 'Fix Quill tema claro: restaurar estilos .quill-light-theme deletados em v1.37.80 - editor agora muda corretamente entre temas' },

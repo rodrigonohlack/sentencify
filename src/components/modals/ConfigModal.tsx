@@ -141,12 +141,12 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                 onClick={() => setAiSettings({ ...aiSettings, provider: 'claude' })}
                 className={`p-3 rounded-lg border-2 transition-all text-left ${
                   aiSettings.provider === 'claude'
-                    ? 'bg-purple-600/20 border-purple-500'
+                    ? 'bg-orange-600/20 border-orange-500'
                     : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <ProviderIcon provider="claude" size={20} className="text-purple-400" />
+                  <ProviderIcon provider="claude" size={20} className="text-orange-400" />
                   <div>
                     <div className="font-semibold theme-text-primary text-sm">Claude</div>
                     <div className="text-xs theme-text-muted">Anthropic</div>
@@ -194,7 +194,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <ProviderIcon provider="grok" size={20} className="text-gray-300" />
+                  <ProviderIcon provider="grok" size={20} className="text-gray-800 dark:text-gray-300" />
                   <div>
                     <div className="font-semibold theme-text-primary text-sm">Grok</div>
                     <div className="text-xs theme-text-muted">xAI</div>
