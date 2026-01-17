@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPONENTE: VoiceButton - Botão de ditado por voz
-// v1.35.60
+// v1.37.88 - Adicionado suporte a melhoria de texto com IA
 //
 // Botão reutilizável para ativar/desativar reconhecimento de voz.
 // Usa Web Speech API via useVoiceToText hook.
@@ -9,15 +9,18 @@
 // - Preview flutuante mostra texto em tempo real enquanto fala
 // - Só insere no editor quando resultado é final
 // - Feedback visual com cursor piscando
+// - v1.37.88: Melhoria automática do texto com IA (opcional)
 //
 // Props:
 // - onTranscript: callback com texto final transcrito
 // - size: 'sm' (apenas ícone) ou 'md' (ícone + texto)
 // - className: classes CSS adicionais
+// - improveWithAI: se deve melhorar texto com IA antes de inserir
+// - onImproveText: função para melhorar texto (recebe raw, retorna melhorado)
 // ═══════════════════════════════════════════════════════════════════════════
 
 import React, { useState, useCallback, memo } from 'react';
-import { Mic, MicOff } from 'lucide-react';
+import { Mic, MicOff, Loader2 } from 'lucide-react';
 import { useVoiceToText } from '../hooks/useVoiceToText';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -37,6 +40,10 @@ export interface VoiceButtonProps {
   idleText?: string;
   /** Texto do botão quando gravando (default: 'Ouvindo...') */
   recordingText?: string;
+  /** v1.37.88: Se deve melhorar texto com IA antes de inserir */
+  improveWithAI?: boolean;
+  /** v1.37.88: Função para melhorar texto (recebe raw, retorna Promise<melhorado>) */
+  onImproveText?: (text: string) => Promise<string>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -49,20 +56,42 @@ export const VoiceButton: React.FC<VoiceButtonProps> = memo(({
   className = '',
   onError,
   idleText = 'Voz',
-  recordingText = 'Ouvindo...'
+  recordingText = 'Ouvindo...',
+  improveWithAI = false,
+  onImproveText
 }) => {
   // v1.35.60: Estado para texto interim (preview flutuante)
   const [interimText, setInterimText] = useState('');
+  // v1.37.88: Estado para indicar que está melhorando texto com IA
+  const [isImproving, setIsImproving] = useState(false);
 
   // Handler de transcrição - mostra interim, insere apenas final
-  const handleTranscript = useCallback((text: string, isFinal: boolean) => {
+  // v1.37.88: Se improveWithAI ativo, melhora texto antes de inserir
+  const handleTranscript = useCallback(async (text: string, isFinal: boolean) => {
     if (isFinal) {
-      setInterimText(''); // Limpar preview
-      onTranscript(text);  // Inserir no editor
+      // v1.37.88: Melhorar com IA se habilitado
+      if (improveWithAI && onImproveText && text.trim().length >= 10) {
+        setInterimText('Melhorando com IA...');
+        setIsImproving(true);
+        try {
+          const improvedText = await onImproveText(text);
+          setInterimText('');
+          onTranscript(improvedText);
+        } catch (error) {
+          console.warn('[VoiceButton] Erro ao melhorar texto:', error);
+          setInterimText('');
+          onTranscript(text); // Fallback para texto original
+        } finally {
+          setIsImproving(false);
+        }
+      } else {
+        setInterimText(''); // Limpar preview
+        onTranscript(text);  // Inserir no editor
+      }
     } else {
       setInterimText(text); // Mostrar preview
     }
-  }, [onTranscript]);
+  }, [onTranscript, improveWithAI, onImproveText]);
 
   // Hook de voice-to-text
   const voice = useVoiceToText({
@@ -104,22 +133,28 @@ export const VoiceButton: React.FC<VoiceButtonProps> = memo(({
     <div className="relative">
       {/* v1.35.60: Preview flutuante com texto interim */}
       {/* v1.35.62: z-[200] para ficar acima de modais, posição top-full (abaixo do botão) */}
-      {voice.isRecording && interimText && (
+      {/* v1.37.88: Também mostra durante melhoria com IA */}
+      {(voice.isRecording || isImproving) && interimText && (
         <div
-          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2
-                     bg-slate-800 text-slate-200 text-sm rounded-lg
-                     shadow-xl border border-slate-600
+          className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2
+                     text-slate-200 text-sm rounded-lg
+                     shadow-xl border
                      max-w-xs whitespace-pre-wrap z-[200]
-                     animate-in fade-in slide-in-from-top-1 duration-150"
+                     animate-in fade-in slide-in-from-top-1 duration-150
+                     ${isImproving
+                       ? 'bg-indigo-900 border-indigo-500'
+                       : 'bg-slate-800 border-slate-600'
+                     }`}
           style={{ minWidth: '120px' }}
         >
           {/* Seta apontando para o botão (acima) */}
           <div className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-px">
-            <div className="border-8 border-transparent border-b-slate-800" />
+            <div className={`border-8 border-transparent ${isImproving ? 'border-b-indigo-900' : 'border-b-slate-800'}`} />
           </div>
-          <div className="flex items-start gap-1">
+          <div className="flex items-center gap-2">
+            {isImproving && <Loader2 className="w-3 h-3 animate-spin text-indigo-400" />}
             <span>{interimText}</span>
-            <span className="animate-pulse text-indigo-400">▋</span>
+            {!isImproving && <span className="animate-pulse text-indigo-400">▋</span>}
           </div>
         </div>
       )}

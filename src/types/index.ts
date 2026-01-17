@@ -239,6 +239,21 @@ export interface AISettings {
   logThinking?: boolean;
   // v1.36.50: Double Check de respostas da IA
   doubleCheck?: DoubleCheckSettings;
+  // v1.37.88: Melhoria de texto ditado por voz com IA
+  voiceImprovement?: VoiceImprovementSettings;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VOICE IMPROVEMENT TYPES (v1.37.88)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Modelos disponíveis para melhoria de voz (rápidos/baratos) */
+export type VoiceImprovementModel = 'haiku' | 'flash' | 'gpt-4o-mini' | 'grok-instant';
+
+/** Configurações de melhoria de texto ditado por voz */
+export interface VoiceImprovementSettings {
+  enabled: boolean;
+  model: VoiceImprovementModel;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

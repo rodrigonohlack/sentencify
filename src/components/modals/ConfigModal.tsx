@@ -36,8 +36,10 @@ import type {
   GeminiThinkingLevel,
   QuickPrompt,
   TopicoComplementar,
-  TopicCategory
+  TopicCategory,
+  VoiceImprovementModel
 } from '../../types';
+import { VOICE_MODEL_CONFIG } from '../../hooks/useVoiceImprovement';
 
 export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
   const {
@@ -1103,9 +1105,116 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
             )}
           </div>
 
-          {/* O arquivo continua com as seções 5-18 que são muito longas para exibir aqui.
-              As demais seções seguem o mesmo padrão de substituição de variáveis locais
-              por props e foram implementadas da mesma forma. */}
+          {/* ═══════════════════════════════════════════════════════════════════════════════
+              SEÇÃO 4.5: Melhoria de Voz por IA (v1.37.88)
+              ═══════════════════════════════════════════════════════════════════════════════ */}
+          <div>
+            <label className="block text-sm font-medium theme-text-tertiary mb-3">
+              🎤 Melhoria de Voz por IA
+            </label>
+
+            {/* Toggle habilitar/desabilitar */}
+            <button
+              onClick={() => setAiSettings({
+                ...aiSettings,
+                voiceImprovement: {
+                  ...aiSettings.voiceImprovement,
+                  enabled: !aiSettings.voiceImprovement?.enabled,
+                  model: aiSettings.voiceImprovement?.model || 'haiku'
+                }
+              })}
+              className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                aiSettings.voiceImprovement?.enabled
+                  ? 'bg-indigo-600/20 border-indigo-500'
+                  : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className={CSS.flexGap2}>
+                    <span className="font-semibold theme-text-primary">
+                      {aiSettings.voiceImprovement?.enabled ? '✓ Ativado' : 'Desativado'}
+                    </span>
+                    {aiSettings.voiceImprovement?.enabled && (
+                      <span className="text-xs bg-indigo-500 text-white px-2 py-0.5 rounded">
+                        {VOICE_MODEL_CONFIG[aiSettings.voiceImprovement?.model || 'haiku'].displayName}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs theme-text-muted mt-1">
+                    {aiSettings.voiceImprovement?.enabled
+                      ? 'Textos ditados por voz serão automaticamente melhorados pela IA antes de serem inseridos.'
+                      : 'Melhorar automaticamente textos ditados por voz, tornando-os fluidos e gramaticalmente corretos.'
+                    }
+                  </p>
+                </div>
+                <div className={`w-12 h-6 rounded-full transition-colors relative ${
+                  aiSettings.voiceImprovement?.enabled ? 'bg-indigo-500' : 'theme-bg-tertiary'
+                }`}>
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                    aiSettings.voiceImprovement?.enabled ? 'translate-x-7' : 'translate-x-1'
+                  }`}></div>
+                </div>
+              </div>
+            </button>
+
+            {/* Dropdown de modelo (só aparece quando habilitado) */}
+            {aiSettings.voiceImprovement?.enabled && (
+              <div className="mt-4 p-4 rounded-lg theme-bg-secondary-30 border theme-border-input space-y-4">
+                <div>
+                  <label className="block text-xs font-medium theme-text-muted mb-2">
+                    Modelo para Melhoria
+                  </label>
+                  <select
+                    value={aiSettings.voiceImprovement?.model || 'haiku'}
+                    onChange={(e) => setAiSettings({
+                      ...aiSettings,
+                      voiceImprovement: {
+                        ...aiSettings.voiceImprovement,
+                        enabled: true,
+                        model: e.target.value as VoiceImprovementModel
+                      }
+                    })}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-primary theme-text-primary theme-border-input border text-sm"
+                  >
+                    {/* Só mostra modelos cujo provider tem API key configurada */}
+                    {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
+                      .filter(([, config]) => {
+                        const apiKey = aiSettings.apiKeys?.[config.provider];
+                        return apiKey && apiKey.trim().length > 0;
+                      })
+                      .map(([key, config]) => (
+                        <option key={key} value={key}>
+                          {config.displayName}
+                        </option>
+                      ))
+                    }
+                  </select>
+                  {/* Aviso se nenhum modelo disponível */}
+                  {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
+                    .filter(([, config]) => {
+                      const apiKey = aiSettings.apiKeys?.[config.provider];
+                      return apiKey && apiKey.trim().length > 0;
+                    }).length === 0 && (
+                    <p className="text-xs text-red-400 mt-2">
+                      Configure pelo menos uma API key acima para usar este recurso.
+                    </p>
+                  )}
+                </div>
+
+                {/* Aviso de custo */}
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <div className="flex items-start gap-2">
+                    <span className="text-amber-400">⚠️</span>
+                    <p className="text-xs text-amber-700 dark:text-amber-200">
+                      Cada ditado fará uma chamada extra à API do modelo selecionado.
+                      Modelos rápidos como Haiku/Flash são baratos (~0.001 por chamada).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 5: Nível de Detalhe nos Mini-Relatórios

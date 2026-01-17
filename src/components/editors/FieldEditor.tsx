@@ -8,6 +8,8 @@
 
 import React from 'react';
 import { VoiceButton } from '../VoiceButton';
+import { useAIStore } from '../../stores/useAIStore';
+import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
 import type {
   QuillInstance,
   QuillDelta,
@@ -43,6 +45,10 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
 }, ref) => {
   const editorRef = React.useRef<HTMLDivElement | null>(null);
   const quillInstanceRef = React.useRef<QuillInstance | null>(null);
+
+  // v1.37.88: Voice improvement com IA
+  const aiSettings = useAIStore((state) => state.aiSettings);
+  const { improveText } = useVoiceImprovement({ apiKeys: aiSettings.apiKeys });
 
   // v1.20.4: Expor métodos de formatação para componente pai
   React.useImperativeHandle(ref, () => ({
@@ -226,6 +232,11 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
             onTranscript={handleVoiceTranscript}
             size="sm"
             onError={(err: unknown) => console.warn('[VoiceToText]', err)}
+            improveWithAI={aiSettings.voiceImprovement?.enabled}
+            onImproveText={aiSettings.voiceImprovement?.enabled
+              ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
+              : undefined
+            }
           />
         )}
       </div>

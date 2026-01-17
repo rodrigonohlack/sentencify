@@ -20,6 +20,7 @@ import type {
   QuickPrompt,
   AnonymizationSettings,
   DoubleCheckSettings,
+  VoiceImprovementSettings,
   TopicoComplementar,
   OCREngine,
   GeminiThinkingLevel,
@@ -95,6 +96,12 @@ const DEFAULT_DOUBLE_CHECK: DoubleCheckSettings = {
   }
 };
 
+/** Configurações de melhoria de voz padrão (v1.37.88) */
+const DEFAULT_VOICE_IMPROVEMENT: VoiceImprovementSettings = {
+  enabled: false,
+  model: 'haiku'
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SEÇÃO 1.1: TIPOS AUXILIARES (v1.37.49)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -157,7 +164,8 @@ const initialAISettings: AISettings = {
   useLocalAIForJuris: false,
   quickPrompts: DEFAULT_QUICK_PROMPTS,
   logThinking: false,
-  doubleCheck: DEFAULT_DOUBLE_CHECK
+  doubleCheck: DEFAULT_DOUBLE_CHECK,
+  voiceImprovement: DEFAULT_VOICE_IMPROVEMENT
 };
 
 /** Estado inicial do TokenMetrics */
@@ -200,6 +208,7 @@ interface AIStoreState {
   setParallelRequests: (count: number) => void;
   setAnonymization: (settings: AnonymizationSettings) => void;
   setDoubleCheck: (settings: DoubleCheckSettings) => void;
+  setVoiceImprovement: (settings: VoiceImprovementSettings) => void;
   setQuickPrompts: (prompts: QuickPrompt[]) => void;
 
   // Actions - Token Metrics
@@ -443,6 +452,15 @@ export const useAIStore = create<AIStoreState>()(
             },
             false,
             'setDoubleCheck'
+          ),
+
+        setVoiceImprovement: (settings) =>
+          set(
+            (state) => {
+              state.aiSettings.voiceImprovement = settings;
+            },
+            false,
+            'setVoiceImprovement'
           ),
 
         // ─────────────────────────────────────────────────────────────────────

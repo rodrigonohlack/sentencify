@@ -13,6 +13,8 @@ import { FileText, Sparkles, AlertCircle, Loader2, Check, Scale, Trash2 } from '
 import { ProcessingModeSelector } from '../ui/ProcessingModeSelector';
 import VoiceButton from '../VoiceButton';
 import { anonymizeText } from '../../utils/text';
+import { useAIStore } from '../../stores/useAIStore';
+import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
 import type { ProofCardProps, ProcessingMode } from '../../types';
 
 export const ProofCard = React.memo(({
@@ -31,6 +33,10 @@ export const ProofCard = React.memo(({
 }: ProofCardProps) => {
   // Estado local para progresso de extração
   const [extractionProgress, setExtractionProgress] = React.useState<{ current: number; total: number; mode: string } | null>(null);
+
+  // v1.37.88: Voice improvement com IA
+  const aiSettings = useAIStore((state) => state.aiSettings);
+  const { improveText } = useVoiceImprovement({ apiKeys: aiSettings.apiKeys });
 
   // Handler: Remover vínculo de tópico
   const handleUnlinkTopic = React.useCallback((topicTitle: string) => {
@@ -427,6 +433,11 @@ export const ProofCard = React.memo(({
                 onTranscript={handleVoiceTranscript}
                 size="sm"
                 onError={(err: unknown) => console.warn('[VoiceToText] Conclusões:', err)}
+                improveWithAI={aiSettings.voiceImprovement?.enabled}
+                onImproveText={aiSettings.voiceImprovement?.enabled
+                  ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
+                  : undefined
+                }
               />
             </div>
             <textarea

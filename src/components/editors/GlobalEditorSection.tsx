@@ -14,6 +14,8 @@ import { ChevronDown, Scale, Sparkles } from 'lucide-react';
 import { FieldEditor, InlineFormattingToolbar } from './FieldEditor';
 import { VoiceButton } from '../VoiceButton';
 import { VersionSelect } from '../version';
+import { useAIStore } from '../../stores/useAIStore';
+import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
 import type { GlobalEditorSectionProps, FieldEditorRef } from '../../types';
 
 /**
@@ -60,6 +62,10 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
 
   // v1.20.4: Ref para toolbar inline no campo Decisão
   const fundamentacaoEditorRef = React.useRef<FieldEditorRef | null>(null);
+
+  // v1.37.88: Voice improvement com IA
+  const aiSettings = useAIStore((state) => state.aiSettings);
+  const { improveText } = useVoiceImprovement({ apiKeys: aiSettings.apiKeys });
 
   return (
     <div className="global-editor-section mb-6 border theme-border-secondary rounded-lg overflow-hidden">
@@ -185,6 +191,7 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
                       </button>
                     )}
                     {/* v1.35.65: VoiceButton ao lado do Assistente IA */}
+                    {/* v1.37.88: Adicionado suporte a melhoria com IA */}
                     <VoiceButton
                       onTranscript={(text: string) => {
                         // Inserir texto no editor de fundamentação via ref
@@ -195,6 +202,11 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
                       }}
                       size="sm"
                       onError={(err: unknown) => console.warn('[VoiceToText]', err)}
+                      improveWithAI={aiSettings.voiceImprovement?.enabled}
+                      onImproveText={aiSettings.voiceImprovement?.enabled
+                        ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
+                        : undefined
+                      }
                     />
                   </div>
                 </div>

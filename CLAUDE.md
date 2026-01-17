@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.87 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.88 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.88 | Melhoria automática de texto ditado por voz com IA: toggle em Config IA + dropdown de modelos rápidos (Haiku/Flash/GPT-4o Mini/Grok Instant) |
 | v1.37.87 | Ditado por voz no campo "Minhas Conclusões" na aba Provas: VoiceButton integrado ao ProofCard |
 | v1.37.86 | Fix Double Check: preservar campos item/suggestion da IA + UX binária para texto livre (aceita tudo ou rejeita tudo) |
 | v1.37.85 | Fix cores ícones provedores IA: Claude roxo→laranja (branding oficial), Grok visível em tema claro |
