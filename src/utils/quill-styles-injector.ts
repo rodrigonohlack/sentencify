@@ -290,6 +290,106 @@ export function injectQuillStyles(): void {
     .ql-editor blockquote {
       color: var(--text-muted) !important;
     }
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       TEMA CLARO (v1.37.82)
+       Estilos aplicados via classe .quill-light-theme nos componentes
+       ═══════════════════════════════════════════════════════════════════════════ */
+
+    /* Container e editor - fundo bege claro */
+    .quill-light-theme .ql-container.ql-snow {
+      background-color: #fefcf3 !important;
+      border: none !important;
+    }
+
+    .quill-light-theme .ql-editor {
+      background-color: #fefcf3 !important;
+      color: #292524 !important;
+    }
+
+    /* Elementos de texto - cor escura */
+    .quill-light-theme .ql-editor p,
+    .quill-light-theme .ql-editor span,
+    .quill-light-theme .ql-editor li,
+    .quill-light-theme .ql-editor div {
+      color: #292524 !important;
+    }
+
+    /* Títulos */
+    .quill-light-theme .ql-editor h1,
+    .quill-light-theme .ql-editor h2,
+    .quill-light-theme .ql-editor h3 {
+      color: #1c1917 !important;
+    }
+
+    /* Negrito */
+    .quill-light-theme .ql-editor strong,
+    .quill-light-theme .ql-editor b {
+      color: #000000 !important;
+      font-weight: 700 !important;
+    }
+
+    /* Links */
+    .quill-light-theme .ql-editor a {
+      color: #2563eb !important;
+    }
+
+    /* Blockquotes */
+    .quill-light-theme .ql-editor blockquote {
+      border-left: 4px solid #d6d3d1 !important;
+      color: #57534e !important;
+    }
+
+    /* Placeholder */
+    .quill-light-theme .ql-editor.ql-blank::before {
+      color: #a8a29e !important;
+    }
+
+    /* Toolbar - fundo cinza claro */
+    .quill-light-theme .ql-toolbar.ql-snow {
+      background: #f5f5f4 !important;
+      border-bottom: 1px solid #d6d3d1 !important;
+    }
+
+    /* Ícones da toolbar - cor escura */
+    .quill-light-theme .ql-toolbar.ql-snow .ql-stroke {
+      stroke: #57534e !important;
+    }
+
+    .quill-light-theme .ql-toolbar.ql-snow .ql-fill {
+      fill: #57534e !important;
+    }
+
+    /* Pickers/dropdowns */
+    .quill-light-theme .ql-toolbar.ql-snow .ql-picker {
+      color: #44403c !important;
+    }
+
+    .quill-light-theme .ql-toolbar.ql-snow .ql-picker-label {
+      color: #44403c !important;
+    }
+
+    .quill-light-theme .ql-toolbar.ql-snow .ql-picker-options {
+      background: #ffffff !important;
+      border: 1px solid #d6d3d1 !important;
+    }
+
+    .quill-light-theme .ql-toolbar.ql-snow .ql-picker-item {
+      color: #292524 !important;
+    }
+
+    .quill-light-theme .ql-toolbar.ql-snow .ql-picker-item:hover {
+      background: #e7e5e4 !important;
+    }
+
+    /* Botões hover */
+    .quill-light-theme .ql-toolbar.ql-snow button:hover {
+      background: #e7e5e4 !important;
+    }
+
+    .quill-light-theme .ql-toolbar.ql-snow button:hover .ql-stroke {
+      stroke: #000000 !important;
+    }
   `;
 
   document.head.appendChild(style);

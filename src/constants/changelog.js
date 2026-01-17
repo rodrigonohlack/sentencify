@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.82', feature: 'Fix Quill tema claro: restaurar estilos .quill-light-theme deletados em v1.37.80 - editor agora muda corretamente entre temas' },
   { version: '1.37.81', feature: 'Sistema color-free completo: sanitização de cores inline em 10 pontos de entrada (paste, IA, import projeto/modelos), clipboard matcher remove color/background do Ctrl+V preservando bold/italic, CSS fallback com color:inherit !important' },
   { version: '1.37.80', feature: 'Fix tema claro/escuro: sistema color-free no Quill editor - textos herdam cor do tema (antes: cores hardcoded ignoravam troca de tema), injectQuillLightStyles() removida' },
   { version: '1.37.79', feature: 'Remover truncações de conteúdo: fundamentação completa no dispositivo (antes: 200 chars), análise de prova aumentada de 50k para 200k chars (~50 páginas)' },
