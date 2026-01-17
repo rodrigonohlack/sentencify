@@ -292,6 +292,36 @@ export function DriveFilesModal({
   const [permissions, setPermissions] = useState<GoogleDrivePermission[]>([]);
   const [permissionsLoading, setPermissionsLoading] = useState<boolean>(false);
 
+  // ESC handler - fecha sub-modais primeiro, depois modal principal (v1.37.84)
+  React.useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (permissionsModalOpen) {
+          setPermissionsModalOpen(false);
+        } else if (shareModalOpen) {
+          setShareModalOpen(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleEsc);
+    }
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose, shareModalOpen, permissionsModalOpen]);
+
+  // Scroll lock - bloqueia scroll do body quando modal aberto (v1.37.84)
+  React.useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
   // Verifica se o arquivo é de outro usuário
   const isFromOther = (file: GoogleDriveFile): boolean => {
     if (!file.owners || file.owners.length === 0) return false;

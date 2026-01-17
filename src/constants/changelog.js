@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.84', feature: 'DriveFilesModal seguir padrão BaseModal: ESC handler hierárquico (sub-modais primeiro) + scroll lock' },
   { version: '1.37.83', feature: 'Fix ícone Claude incorreto: substituir SVG inventado pelo logo oficial starburst do Bootstrap Icons' },
   { version: '1.37.82', feature: 'Fix Quill tema claro: restaurar estilos .quill-light-theme deletados em v1.37.80 - editor agora muda corretamente entre temas' },
   { version: '1.37.81', feature: 'Sistema color-free completo: sanitização de cores inline em 10 pontos de entrada (paste, IA, import projeto/modelos), clipboard matcher remove color/background do Ctrl+V preservando bold/italic, CSS fallback com color:inherit !important' },
