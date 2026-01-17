@@ -28,6 +28,7 @@ import type {
 import type { QuillInstance } from '../types';
 import { AI_PROMPTS } from '../prompts/ai-prompts';
 import { INSTRUCAO_NAO_PRESUMIR } from '../prompts/instrucoes';
+import { stripInlineColors } from '../utils/color-stripper';
 import { prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext } from '../utils/context-helpers';
 import { normalizeHTMLSpacing } from '../utils/text';
 import { getCorrectionDescription } from '../utils/double-check-utils';
@@ -366,13 +367,14 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
 
     switch (mode) {
       case 'replace':
-        newHtml = sanitizeHTML(normalizedAiText) || '';
+        // v1.37.81: stripInlineColors para sistema color-free
+        newHtml = stripInlineColors(sanitizeHTML(normalizedAiText) || '');
         break;
       case 'append':
-        newHtml = sanitizeHTML(currentHtml + '<br>' + normalizedAiText) || '';
+        newHtml = stripInlineColors(sanitizeHTML(currentHtml + '<br>' + normalizedAiText) || '');
         break;
       case 'prepend':
-        newHtml = sanitizeHTML(normalizedAiText + '<br>' + currentHtml) || '';
+        newHtml = stripInlineColors(sanitizeHTML(normalizedAiText + '<br>' + currentHtml) || '');
         break;
     }
 
@@ -508,16 +510,17 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
 
     switch (mode) {
       case 'replace':
-        newHtml = sanitizeHTML(normalizedAiText) || '';
+        // v1.37.81: stripInlineColors para sistema color-free
+        newHtml = stripInlineColors(sanitizeHTML(normalizedAiText) || '');
         break;
       case 'append':
-        newHtml = sanitizeHTML(currentHtml + '<br>' + normalizedAiText) || '';
+        newHtml = stripInlineColors(sanitizeHTML(currentHtml + '<br>' + normalizedAiText) || '');
         break;
       case 'prepend':
-        newHtml = sanitizeHTML(normalizedAiText + '<br>' + currentHtml) || '';
+        newHtml = stripInlineColors(sanitizeHTML(normalizedAiText + '<br>' + currentHtml) || '');
         break;
       default:
-        newHtml = sanitizeHTML(normalizedAiText) || '';
+        newHtml = stripInlineColors(sanitizeHTML(normalizedAiText) || '');
     }
 
     editorRef.current.root.innerHTML = newHtml;
@@ -699,7 +702,8 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
     switch (mode) {
       case 'replace':
         // Substituir todo o conteúdo
-        quillInstance.root.innerHTML = sanitizeQuillHTML(generatedText);
+        // v1.37.81: stripInlineColors para sistema color-free
+        quillInstance.root.innerHTML = stripInlineColors(sanitizeQuillHTML(generatedText));
         break;
 
       case 'append': {
@@ -708,19 +712,19 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
         quillInstance.insertText(currentLength - 1, '\n');
         quillInstance.clipboard.dangerouslyPasteHTML(
           quillInstance.getLength(),
-          sanitizeQuillHTML(generatedText)
+          stripInlineColors(sanitizeQuillHTML(generatedText))
         );
         break;
       }
 
       case 'prepend':
         // Adicionar no início
-        quillInstance.clipboard.dangerouslyPasteHTML(0, sanitizeQuillHTML(generatedText + '\n'));
+        quillInstance.clipboard.dangerouslyPasteHTML(0, stripInlineColors(sanitizeQuillHTML(generatedText + '\n')));
         break;
     }
 
     // Atualizar estado com o HTML do Quill
-    const newContent = sanitizeQuillHTML(quillInstance.root.innerHTML);
+    const newContent = stripInlineColors(sanitizeQuillHTML(quillInstance.root.innerHTML));
     modelLibrary.setNewModel({
       ...modelLibrary.newModel,
       content: newContent

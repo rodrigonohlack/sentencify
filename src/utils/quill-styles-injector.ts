@@ -264,6 +264,32 @@ export function injectQuillStyles(): void {
       margin: 1rem 0 !important;
       font-style: italic !important;
     }
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       COLOR-FREE FALLBACK (v1.37.81)
+       Força herança de cor do tema mesmo se cores inline escaparem da sanitização
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .ql-editor,
+    .ql-editor p,
+    .ql-editor span,
+    .ql-editor div,
+    .ql-editor li,
+    .ql-editor strong,
+    .ql-editor em,
+    .ql-editor u {
+      color: inherit !important;
+      background-color: transparent !important;
+    }
+
+    /* Links: cor de destaque do tema */
+    .ql-editor a {
+      color: var(--accent-blue) !important;
+    }
+
+    /* Blockquote: cor secundária */
+    .ql-editor blockquote {
+      color: var(--text-muted) !important;
+    }
   `;
 
   document.head.appendChild(style);

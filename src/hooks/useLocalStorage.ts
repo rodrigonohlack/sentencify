@@ -10,6 +10,7 @@ import React from 'react';
 import { APP_VERSION } from '../constants/app-version';
 import { openFactsDB, FACTS_STORE_NAME } from './useFactsComparisonCache';
 import { openReviewDB, REVIEW_STORE_NAME } from './useSentenceReviewCache';
+import { stripInlineColors } from '../utils/color-stripper';
 import type {
   SessionState,
   RestoreSessionCallbacks,
@@ -887,7 +888,15 @@ export function useLocalStorage(): UseLocalStorageReturn {
     setPastedContestacaoTexts(project.pastedContestacaoTexts || []);
     setPastedComplementaryTexts(project.pastedComplementaryTexts || []);
     setExtractedTopics(project.extractedTopics || []);
-    setSelectedTopics(project.selectedTopics || []);
+    // v1.37.81: Sanitizar cores inline dos tópicos (sistema color-free)
+    const sanitizedSelectedTopics = (project.selectedTopics || []).map(topic => ({
+      ...topic,
+      fundamentacao: stripInlineColors(topic.fundamentacao || ''),
+      editedFundamentacao: stripInlineColors(topic.editedFundamentacao || ''),
+      relatorio: stripInlineColors(topic.relatorio || ''),
+      editedRelatorio: stripInlineColors(topic.editedRelatorio || ''),
+    }));
+    setSelectedTopics(sanitizedSelectedTopics);
     setPartesProcesso(project.partesProcesso || { reclamante: '', reclamadas: [] });
     setAnalyzedDocuments(project.analyzedDocuments || {
       peticoes: [], peticoesText: [], contestacoes: [], contestacoesText: [],

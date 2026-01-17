@@ -53,3 +53,6 @@ export {
   plainTextToHtml,
   cleanHtmlForExport
 } from './html-conversion';
+
+// Color stripper (v1.37.81) - Sistema color-free
+export { stripInlineColors } from './color-stripper';

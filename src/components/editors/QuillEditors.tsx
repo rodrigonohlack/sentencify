@@ -13,6 +13,7 @@ import { VoiceButton } from '../VoiceButton';
 import { SpacingDropdown, FontSizeDropdown } from '../ui';
 import { useQuillEditor, sanitizeQuillHTML } from '../../hooks/useQuillEditor';
 import { useSpacingControl, useFontSizeControl, useFullscreen } from '../../hooks';
+import { stripInlineColors } from '../../utils/color-stripper';
 import { FullscreenModelPanel } from '../panels';
 import { VersionSelect } from '../version';
 import type {
@@ -120,7 +121,36 @@ export const QuillEditorBase = React.forwardRef<QuillInstance, QuillEditorBasePr
       const quillModules = {
         toolbar: toolbarConfig !== null ? toolbarConfig : false,
         clipboard: {
-          matchVisual: false
+          matchVisual: false,
+          // v1.37.81: Matcher para remover cores inline ao colar (Word, Google Docs, etc.)
+          matchers: [
+            [Node.ELEMENT_NODE, (node: HTMLElement, delta: { ops?: Array<{ attributes?: Record<string, unknown> }> }) => {
+              // Remover style com cores do elemento DOM
+              if (node.hasAttribute && node.hasAttribute('style')) {
+                const style = node.getAttribute('style') || '';
+                const tempHtml = `<temp style="${style}"></temp>`;
+                const cleanedHtml = stripInlineColors(tempHtml);
+                const match = cleanedHtml.match(/style="([^"]*)"/);
+                if (match && match[1]?.trim()) {
+                  node.setAttribute('style', match[1]);
+                } else {
+                  node.removeAttribute('style');
+                }
+              }
+
+              // Remover atributos de cor do delta Quill
+              if (delta?.ops) {
+                delta.ops = delta.ops.map((op) => {
+                  if (op.attributes) {
+                    delete op.attributes.color;
+                    delete op.attributes.background;
+                  }
+                  return op;
+                });
+              }
+              return delta;
+            }]
+          ]
         },
         ...modules
       };

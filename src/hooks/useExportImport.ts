@@ -9,6 +9,7 @@
 
 import React from 'react';
 import AIModelService from '../services/AIModelService';
+import { stripInlineColors } from '../utils/color-stripper';
 import type { Model, AISettings } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -233,10 +234,11 @@ export function useExportImport({
           }
 
           const modelId = `${generateModelId()}_import${importCount}`;
+          // v1.37.81: Sanitizar cores inline (sistema color-free)
           const modelData: Model = {
             id: modelId,
             title: model.title as string,
-            content: model.content as string,
+            content: stripInlineColors(model.content as string),
             keywords: model.keywords || '',
             category: model.category || '',
             createdAt: new Date().toISOString(),
