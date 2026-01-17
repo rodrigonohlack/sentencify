@@ -14,6 +14,7 @@ import { Edit, X, Save, Loader2, Search, BookOpen, Scale, AlertCircle } from 'lu
 // Hooks
 import { useChatAssistant, useFieldVersioning, searchModelsInLibrary } from '../../hooks';
 import useFactsComparisonCache from '../../hooks/useFactsComparisonCache';
+import useChatHistoryCache from '../../hooks/useChatHistoryCache';
 
 // Components
 import { GlobalEditorSection } from '../editors/GlobalEditorSection';
@@ -161,8 +162,18 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   const [generatingGlobalAi, setGeneratingGlobalAi] = React.useState(false);
   const [globalContextScope, setGlobalContextScope] = React.useState('current'); // 'current' | 'all'
 
+  // v1.37.92: Cache de histórico de chat por tópico
+  const chatHistoryCache = useChatHistoryCache();
+
   // v1.19.0: Chat interativo do assistente IA (Global)
-  const chatAssistantGlobal = useChatAssistant(aiIntegration);
+  // v1.37.92: Adiciona persistência de chat por tópico
+  const currentTopicTitle = aiAssistantTopicIndex !== null ? localTopics[aiAssistantTopicIndex]?.title : undefined;
+  const chatAssistantGlobal = useChatAssistant(aiIntegration, {
+    topicTitle: currentTopicTitle,
+    saveChat: chatHistoryCache.saveChat,
+    getChat: chatHistoryCache.getChat,
+    deleteChat: chatHistoryCache.deleteChat
+  });
 
   // v1.24: Versionamento de campos
   const fieldVersioning = useFieldVersioning();
@@ -1189,7 +1200,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
         if (showAIAssistant) {
           setShowAIAssistant(false);
           setAiAssistantTopicIndex(null);
-          chatAssistantGlobal.clear();
+          // v1.37.92: Não limpar chat ao fechar via ESC (persiste no cache)
           return;
         }
         if (showFactsComparison) {
@@ -1206,7 +1217,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isDirty, handleSaveOnly, toggleSplitMode, handleCancel, showCancelConfirm, showJurisModal, showAIAssistant, showFactsComparison, chatAssistantGlobal]);
+  }, [isOpen, isDirty, handleSaveOnly, toggleSplitMode, handleCancel, showCancelConfirm, showJurisModal, showAIAssistant, showFactsComparison]);
 
   if (!isOpen) return null;
 
@@ -1546,7 +1557,8 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
           onClose={() => {
             setShowAIAssistant(false);
             setAiAssistantTopicIndex(null);
-            chatAssistantGlobal.clear();
+            // v1.37.92: Não limpar chat ao fechar (persiste no cache)
+            // O usuário pode limpar explicitamente via botão "Limpar Chat"
           }}
           topicTitle={localTopics[aiAssistantTopicIndex]?.title}
           chatHistory={chatAssistantGlobal.history}

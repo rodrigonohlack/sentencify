@@ -4,9 +4,10 @@
  * @tier 0 (sem dependências de outros hooks)
  * @extractedFrom App.tsx linhas 4993-5104
  * @usedBy AIAssistantBase, GlobalEditorModal
+ * @version v1.37.92 - Suporte a persistência via cache
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { ChatMessage, CallAIFunction, AIMessageContent } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -22,6 +23,18 @@ export const MAX_CHAT_HISTORY_MESSAGES = 20;
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════
+
+/** Opções de persistência de cache (v1.37.92) */
+export interface ChatCacheOptions {
+  /** Título do tópico para identificar o chat no cache */
+  topicTitle?: string;
+  /** Função para salvar chat no cache */
+  saveChat?: (topicTitle: string, messages: ChatMessage[]) => Promise<void>;
+  /** Função para carregar chat do cache */
+  getChat?: (topicTitle: string) => Promise<ChatMessage[]>;
+  /** Função para deletar chat do cache */
+  deleteChat?: (topicTitle: string) => Promise<void>;
+}
 
 export interface UseChatAssistantReturn {
   /** Histórico de mensagens do chat */
@@ -39,6 +52,8 @@ export interface UseChatAssistantReturn {
   lastResponse: string | null;
   /** v1.37.65: Atualiza a última mensagem do assistente (para Double Check) */
   updateLastAssistantMessage: (newContent: string) => void;
+  /** v1.37.92: Define histórico diretamente (para carregar do cache) */
+  setHistory: (messages: ChatMessage[]) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -48,16 +63,79 @@ export interface UseChatAssistantReturn {
 /**
  * Hook para gerenciamento de chat interativo com assistente IA
  * @param aiIntegration - Objeto com função callAI para comunicação com a IA
+ * @param cacheOptions - Opções de persistência (v1.37.92)
  * @returns Estado e funções do chat
  */
 export function useChatAssistant(
-  aiIntegration: { callAI?: CallAIFunction } | null
+  aiIntegration: { callAI?: CallAIFunction } | null,
+  cacheOptions?: ChatCacheOptions
 ): UseChatAssistantReturn {
   const [history, setHistory] = useState<ChatMessage[]>([]);
   const [generating, setGenerating] = useState(false);
+  const lastTopicTitleRef = useRef<string | undefined>(undefined);
+  const cacheLoadedRef = useRef(false);
 
-  // Limpa histórico
-  const clear = useCallback(() => setHistory([]), []);
+  // v1.37.92: Carregar histórico do cache quando tópico muda
+  useEffect(() => {
+    const loadFromCache = async () => {
+      const topicTitle = cacheOptions?.topicTitle;
+
+      // Se o tópico mudou, resetar e carregar novo histórico
+      if (topicTitle !== lastTopicTitleRef.current) {
+        lastTopicTitleRef.current = topicTitle;
+        cacheLoadedRef.current = false;
+
+        // Limpar histórico in-memory quando tópico muda
+        if (topicTitle) {
+          // Novo tópico: tentar carregar do cache
+          if (cacheOptions?.getChat) {
+            cacheLoadedRef.current = true;
+            try {
+              const cached = await cacheOptions.getChat(topicTitle);
+              setHistory(cached && cached.length > 0 ? cached : []);
+            } catch (e) {
+              console.warn('[useChatAssistant] Erro ao carregar cache:', e);
+              setHistory([]);
+            }
+          } else {
+            setHistory([]);
+          }
+        } else {
+          // Sem tópico (modal fechado): manter histórico vazio
+          setHistory([]);
+        }
+      }
+    };
+    loadFromCache();
+  }, [cacheOptions?.topicTitle, cacheOptions?.getChat]);
+
+  // v1.37.92: Salvar no cache quando histórico muda
+  useEffect(() => {
+    const saveToCache = async () => {
+      if (cacheOptions?.topicTitle && cacheOptions?.saveChat && history.length > 0) {
+        try {
+          await cacheOptions.saveChat(cacheOptions.topicTitle, history);
+        } catch (e) {
+          console.warn('[useChatAssistant] Erro ao salvar cache:', e);
+        }
+      }
+    };
+    // Só salvar após o carregamento inicial
+    if (cacheLoadedRef.current) {
+      saveToCache();
+    }
+  }, [history, cacheOptions?.topicTitle, cacheOptions?.saveChat]);
+
+  // Limpa histórico (e cache se configurado)
+  const clear = useCallback(() => {
+    setHistory([]);
+    // v1.37.92: Deletar do cache também
+    if (cacheOptions?.topicTitle && cacheOptions?.deleteChat) {
+      cacheOptions.deleteChat(cacheOptions.topicTitle).catch(e => {
+        console.warn('[useChatAssistant] Erro ao limpar cache:', e);
+      });
+    }
+  }, [cacheOptions?.topicTitle, cacheOptions?.deleteChat]);
 
   // Última resposta da IA
   const lastResponse = useMemo(() =>
@@ -182,5 +260,5 @@ export function useChatAssistant(
     }
   }, [history, aiIntegration]);
 
-  return { history, generating, send, clear, lastResponse, updateLastAssistantMessage };
+  return { history, generating, send, clear, lastResponse, updateLastAssistantMessage, setHistory };
 }

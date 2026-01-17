@@ -822,6 +822,16 @@ export interface ChatMessage {
   timestamp?: number;
   ts?: number;
   contentForApi?: AIMessageContent[] | string;
+  error?: string;
+}
+
+/** Entrada de cache do histórico de chat por tópico (v1.37.92) */
+export interface ChatHistoryCacheEntry {
+  id?: number;
+  topicTitle: string;
+  messages: ChatMessage[];
+  createdAt: number;
+  updatedAt: number;
 }
 
 /** Precedente (súmula, OJ, tese) */
@@ -2270,6 +2280,7 @@ export interface ImportedProject {
   tokenMetrics?: TokenMetrics;
   factsComparison?: Record<string, FactsComparisonResult>;
   sentenceReviewCache?: Record<string, string>; // v1.36.57
+  chatHistory?: Record<string, ChatMessage[]>; // v1.37.92
 }
 
 export interface ImportCallbacks {

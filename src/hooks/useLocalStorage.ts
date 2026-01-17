@@ -10,6 +10,7 @@ import React from 'react';
 import { APP_VERSION } from '../constants/app-version';
 import { openFactsDB, FACTS_STORE_NAME } from './useFactsComparisonCache';
 import { openReviewDB, REVIEW_STORE_NAME } from './useSentenceReviewCache';
+import { openChatDB, CHAT_STORE_NAME } from './useChatHistoryCache';
 import { stripInlineColors } from '../utils/color-stripper';
 import type {
   SessionState,
@@ -29,6 +30,8 @@ import type {
   FactsComparisonSource,
   ModalKey,
   TokenMetrics,
+  ChatMessage,
+  ChatHistoryCacheEntry,
 } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -764,6 +767,24 @@ export function useLocalStorage(): UseLocalStorageReturn {
       console.warn('[Export] Erro ao exportar sentenceReviewCache:', e);
     }
 
+    // v1.37.92: Exportar cache de histórico de chat
+    let chatHistoryExport: Record<string, ChatMessage[]> = {};
+    try {
+      const db = await openChatDB();
+      const store = db.transaction(CHAT_STORE_NAME).objectStore(CHAT_STORE_NAME);
+      const entries = await new Promise<ChatHistoryCacheEntry[]>((resolve) => {
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => resolve([]);
+      });
+      db.close();
+      for (const entry of entries) {
+        chatHistoryExport[entry.topicTitle] = entry.messages;
+      }
+    } catch (e) {
+      console.warn('[Export] Erro ao exportar chatHistory:', e);
+    }
+
     return {
       version: APP_VERSION,
       exportedAt: new Date().toISOString(),
@@ -790,7 +811,8 @@ export function useLocalStorage(): UseLocalStorageReturn {
       documentProcessingModes: documentProcessingModes || { peticao: 'pdfjs', contestacoes: [], complementares: [] },
       tokenMetrics: tokenMetrics || { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0, requestCount: 0, lastUpdated: null },
       factsComparison,  // v1.36.12
-      sentenceReviewCache: sentenceReviewCacheExport  // v1.36.57
+      sentenceReviewCache: sentenceReviewCacheExport,  // v1.36.57
+      chatHistory: chatHistoryExport  // v1.37.92
     };
   }, [fileToBase64]);
 
@@ -1129,6 +1151,35 @@ export function useLocalStorage(): UseLocalStorageReturn {
         db.close();
       } catch (e) {
         console.warn('[Import] Erro ao importar sentenceReviewCache:', e);
+      }
+    }
+
+    // v1.37.92: Importar cache de histórico de chat
+    if (project.chatHistory && typeof project.chatHistory === 'object') {
+      try {
+        const db = await openChatDB();
+        const tx = db.transaction(CHAT_STORE_NAME, 'readwrite');
+        const store = tx.objectStore(CHAT_STORE_NAME);
+
+        for (const [topicTitle, messages] of Object.entries(project.chatHistory as Record<string, ChatMessage[]>)) {
+          if (topicTitle && Array.isArray(messages) && messages.length > 0) {
+            const now = Date.now();
+            store.add({
+              topicTitle,
+              messages,
+              createdAt: now,
+              updatedAt: now
+            });
+          }
+        }
+
+        await new Promise<void>((resolve) => {
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        });
+        db.close();
+      } catch (e) {
+        console.warn('[Import] Erro ao importar chatHistory:', e);
       }
     }
   }, [base64ToFile]);

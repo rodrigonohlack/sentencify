@@ -98,7 +98,7 @@ export type { UseJurisprudenciaReturn } from './useJurisprudencia';
 
 // Chat Assistant hook (TIER 0 - sem dependências)
 export { useChatAssistant, MAX_CHAT_HISTORY_MESSAGES } from './useChatAssistant';
-export type { UseChatAssistantReturn } from './useChatAssistant';
+export type { UseChatAssistantReturn, ChatCacheOptions } from './useChatAssistant';
 
 // Model Preview hook (TIER 0 - sem dependências)
 export { useModelPreview } from './useModelPreview';
@@ -125,6 +125,8 @@ export { useVoiceToText } from './useVoiceToText';
 export { useVoiceImprovement, VOICE_MODEL_CONFIG } from './useVoiceImprovement';
 export { default as useFactsComparisonCache } from './useFactsComparisonCache';
 export { default as useSentenceReviewCache } from './useSentenceReviewCache';
+export { default as useChatHistoryCache, openChatDB, CHAT_DB_NAME, CHAT_STORE_NAME } from './useChatHistoryCache';
+export type { UseChatHistoryCacheReturn } from './useChatHistoryCache';
 
 // Facts Comparison hook (v1.37.21)
 export { useFactsComparison } from './useFactsComparison';

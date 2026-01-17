@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.92', feature: 'Persistência do histórico de chat do Assistente IA por tópico: persiste em F5, incluído em export/import de projeto, botão Limpar Chat para apagar' },
   { version: '1.37.91', feature: 'Contagem de tokens por modelo: breakdown por modelo usado no painel Uso de Tokens, custo real calculado por provider, persistência em sessão/projeto' },
   { version: '1.37.90', feature: 'Refatorar melhoria de voz: reutilizar callAI do useAIIntegration com provider override - tracking automático de tokens, código duplicado removido (~90 linhas)' },
   { version: '1.37.89', feature: 'Fix endpoints API melhoria de voz: corrigir 404 (claude/messages, gemini/generate, openai/chat, grok/chat)' },
