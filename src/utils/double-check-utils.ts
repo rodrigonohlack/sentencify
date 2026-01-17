@@ -57,6 +57,24 @@ export const OPERATION_LABELS: Record<DoubleCheckOperation, string> = {
   quickPrompt: 'Prompts Rápidos'
 };
 
+/**
+ * Operações que retornam texto livre (não estruturado)
+ * Para essas operações, não faz sentido seleção parcial de correções
+ * v1.37.86: UX binária (aceita tudo ou rejeita tudo)
+ */
+export const TEXT_FREE_OPERATIONS: DoubleCheckOperation[] = [
+  'sentenceReview',
+  'proofAnalysis',
+  'quickPrompt'
+];
+
+/**
+ * Verifica se uma operação é de texto livre (UX binária)
+ */
+export function isTextFreeOperation(operation: DoubleCheckOperation): boolean {
+  return TEXT_FREE_OPERATIONS.includes(operation);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // FUNÇÕES DE FORMATAÇÃO
 // ═══════════════════════════════════════════════════════════════════════════════

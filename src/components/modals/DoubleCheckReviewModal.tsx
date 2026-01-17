@@ -1,15 +1,16 @@
 /**
  * @file DoubleCheckReviewModal.tsx
  * @description Modal para revisão de correções do Double Check
- * @version 1.37.59
+ * @version 1.37.86
  *
  * Modal OBRIGATÓRIO (sem fechar com X, ESC ou click fora).
- * O usuário DEVE escolher entre "Descartar Todas" ou "Aplicar Selecionadas".
+ * - Operações estruturadas: checkboxes para seleção individual
+ * - Operações de texto livre: UX binária (aceita tudo ou rejeita tudo)
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { RefreshCw, Check, Info } from 'lucide-react';
-import { BaseModal, CSS, ModalInfoBox } from './BaseModal';
+import { BaseModal, ModalInfoBox } from './BaseModal';
 import { useUIStore } from '../../stores/useUIStore';
 import type { DoubleCheckCorrectionWithSelection } from '../../types';
 import {
@@ -17,7 +18,8 @@ import {
   correctionsToSelectable,
   applySelectedCorrections,
   getSelectedCorrections,
-  OPERATION_LABELS
+  OPERATION_LABELS,
+  isTextFreeOperation
 } from '../../utils/double-check-utils';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -83,6 +85,56 @@ const CorrectionItem: React.FC<CorrectionItemProps> = React.memo(({
   );
 });
 CorrectionItem.displayName = 'CorrectionItem';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMPONENTE DE ITEM SOMENTE LEITURA (para operações de texto livre)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface CorrectionItemReadOnlyProps {
+  correction: DoubleCheckCorrectionWithSelection;
+  operation: string;
+}
+
+/**
+ * Item de correção somente leitura (sem checkbox)
+ * Usado para operações de texto livre onde não faz sentido seleção individual
+ * v1.37.86
+ */
+const CorrectionItemReadOnly: React.FC<CorrectionItemReadOnlyProps> = React.memo(({
+  correction,
+  operation
+}) => {
+  const icon = getCorrectionIcon(operation as 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison', correction.type);
+
+  return (
+    <div className="p-3 rounded-xl border theme-bg-secondary border-transparent theme-text-secondary">
+      <div className="flex items-start gap-3">
+        {/* Ícone (sem checkbox) */}
+        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <span className="text-lg">{icon}</span>
+        </div>
+
+        {/* Conteúdo */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-medium theme-text-primary text-sm">
+              {correction.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            </span>
+          </div>
+          <p className="text-sm theme-text-secondary">
+            {correction.description}
+          </p>
+          {correction.reason && (
+            <p className="text-xs theme-text-muted mt-1 italic">
+              Motivo: {correction.reason}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+CorrectionItemReadOnly.displayName = 'CorrectionItemReadOnly';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MODAL PRINCIPAL
@@ -153,6 +205,18 @@ export const DoubleCheckReviewModal: React.FC = () => {
     closeDoubleCheckReview();
   }, [doubleCheckReview, setDoubleCheckResult, closeDoubleCheckReview]);
 
+  /** Aceitar todas as correções (UX binária para texto livre) */
+  const handleAcceptAll = useCallback(() => {
+    if (!doubleCheckReview) return;
+
+    setDoubleCheckResult({
+      selected: doubleCheckReview.corrections,
+      finalResult: doubleCheckReview.verifiedResult,
+      operation: doubleCheckReview.operation
+    });
+    closeDoubleCheckReview();
+  }, [doubleCheckReview, setDoubleCheckResult, closeDoubleCheckReview]);
+
   /** Aplicar correções selecionadas */
   const handleApply = useCallback(() => {
     if (!doubleCheckReview) return;
@@ -187,6 +251,12 @@ export const DoubleCheckReviewModal: React.FC = () => {
     ? OPERATION_LABELS[doubleCheckReview.operation] || doubleCheckReview.operation
     : '';
 
+  // v1.37.86: Verifica se é operação de texto livre (UX binária)
+  const isTextFree = useMemo(
+    () => doubleCheckReview ? isTextFreeOperation(doubleCheckReview.operation) : false,
+    [doubleCheckReview]
+  );
+
   // ─────────────────────────────────────────────────────────────────────────────
   // RENDER
   // ─────────────────────────────────────────────────────────────────────────────
@@ -204,28 +274,9 @@ export const DoubleCheckReviewModal: React.FC = () => {
       size="lg"
       preventClose={true}
       footer={
-        <div className="flex items-center justify-between w-full">
-          {/* Botões de seleção em massa */}
-          <div className="flex gap-2">
-            <button
-              onClick={handleSelectAll}
-              className="px-4 py-2 rounded-lg text-sm font-medium theme-bg-secondary theme-hover-bg theme-text-secondary transition-all"
-            >
-              Selecionar Todas
-            </button>
-            <button
-              onClick={handleDeselectAll}
-              className="px-4 py-2 rounded-lg text-sm font-medium theme-bg-secondary theme-hover-bg theme-text-secondary transition-all"
-            >
-              Desmarcar Todas
-            </button>
-          </div>
-
-          {/* Separador visual */}
-          <div className="h-6 w-px bg-gray-500/30 mx-4" />
-
-          {/* Botões de ação */}
-          <div className="flex gap-2">
+        isTextFree ? (
+          // v1.37.86: UX binária para operações de texto livre
+          <div className="flex gap-2 w-full justify-end">
             <button
               onClick={handleDiscardAll}
               className="px-4 py-2 rounded-lg text-sm font-medium theme-bg-secondary theme-hover-bg theme-text-secondary border theme-border-secondary transition-all"
@@ -233,14 +284,52 @@ export const DoubleCheckReviewModal: React.FC = () => {
               Descartar
             </button>
             <button
-              onClick={handleApply}
-              disabled={selectedCount === 0}
-              className={`px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition-all ${selectedCount === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={handleAcceptAll}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition-all"
             >
-              Aplicar ({selectedCount})
+              Aceitar Correções
             </button>
           </div>
-        </div>
+        ) : (
+          // Operações estruturadas: checkboxes para seleção individual
+          <div className="flex items-center justify-between w-full">
+            {/* Botões de seleção em massa */}
+            <div className="flex gap-2">
+              <button
+                onClick={handleSelectAll}
+                className="px-4 py-2 rounded-lg text-sm font-medium theme-bg-secondary theme-hover-bg theme-text-secondary transition-all"
+              >
+                Selecionar Todas
+              </button>
+              <button
+                onClick={handleDeselectAll}
+                className="px-4 py-2 rounded-lg text-sm font-medium theme-bg-secondary theme-hover-bg theme-text-secondary transition-all"
+              >
+                Desmarcar Todas
+              </button>
+            </div>
+
+            {/* Separador visual */}
+            <div className="h-6 w-px bg-gray-500/30 mx-4" />
+
+            {/* Botões de ação */}
+            <div className="flex gap-2">
+              <button
+                onClick={handleDiscardAll}
+                className="px-4 py-2 rounded-lg text-sm font-medium theme-bg-secondary theme-hover-bg theme-text-secondary border theme-border-secondary transition-all"
+              >
+                Descartar
+              </button>
+              <button
+                onClick={handleApply}
+                disabled={selectedCount === 0}
+                className={`px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition-all ${selectedCount === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                Aplicar ({selectedCount})
+              </button>
+            </div>
+          </div>
+        )
       }
     >
       {/* Informação inicial */}
@@ -252,7 +341,10 @@ export const DoubleCheckReviewModal: React.FC = () => {
               O Double Check encontrou {corrections.length} correção(ões) sugerida(s).
             </p>
             <p className="mt-1 opacity-80">
-              Revise cada sugestão e selecione as que deseja aplicar.
+              {isTextFree
+                ? 'Revise as sugestões abaixo e escolha aceitar todas ou descartar.'
+                : 'Revise cada sugestão e selecione as que deseja aplicar.'
+              }
             </p>
           </div>
         </div>
@@ -260,14 +352,26 @@ export const DoubleCheckReviewModal: React.FC = () => {
 
       {/* Lista de correções */}
       <div className="space-y-2 mb-4">
-        {corrections.map(correction => (
-          <CorrectionItem
-            key={correction.id}
-            correction={correction}
-            operation={doubleCheckReview.operation}
-            onToggle={handleToggle}
-          />
-        ))}
+        {isTextFree ? (
+          // v1.37.86: Lista somente leitura para operações de texto livre
+          corrections.map(correction => (
+            <CorrectionItemReadOnly
+              key={correction.id}
+              correction={correction}
+              operation={doubleCheckReview.operation}
+            />
+          ))
+        ) : (
+          // Operações estruturadas: checkboxes para seleção individual
+          corrections.map(correction => (
+            <CorrectionItem
+              key={correction.id}
+              correction={correction}
+              operation={doubleCheckReview.operation}
+              onToggle={handleToggle}
+            />
+          ))
+        )}
       </div>
 
       {/* Resumo e confiança */}

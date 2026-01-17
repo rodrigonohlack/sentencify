@@ -203,14 +203,26 @@ export function useReviewSentence({
           );
 
           if (corrections.length > 0) {
-            // v1.37.59: Abrir modal para revisão de correções
-            // Converter corrections de string[] para DoubleCheckCorrection[]
-            const typedCorrections: DoubleCheckCorrection[] = corrections.map((c, idx) => ({
-              type: 'improve' as const,
-              reason: typeof c === 'string' ? c : (c as { reason?: string }).reason || '',
-              item: `Correção ${idx + 1}`,
-              suggestion: typeof c === 'string' ? c : ''
-            }));
+            // v1.37.86: Preservar campos originais da IA (antes: sobrescritos com valores genéricos)
+            const typedCorrections: DoubleCheckCorrection[] = corrections.map((c) => {
+              // Se a IA retornou objeto estruturado, preservar campos
+              if (typeof c === 'object' && c !== null) {
+                const correction = c as DoubleCheckCorrection;
+                return {
+                  type: correction.type || 'improve',
+                  item: correction.item || '',
+                  suggestion: correction.suggestion || '',
+                  reason: correction.reason || ''
+                } as DoubleCheckCorrection;
+              }
+              // Fallback para string (compatibilidade legada)
+              return {
+                type: 'improve' as const,
+                item: String(c),
+                suggestion: '',
+                reason: ''
+              };
+            });
 
             // Criar Promise para aguardar decisão do usuário
             const waitForDecision = new Promise<DoubleCheckReviewResult>(resolve => {

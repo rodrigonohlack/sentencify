@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.85 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.86 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.86 | Fix Double Check: preservar campos item/suggestion da IA + UX binária para texto livre (aceita tudo ou rejeita tudo) |
 | v1.37.85 | Fix cores ícones provedores IA: Claude roxo→laranja (branding oficial), Grok visível em tema claro |
 | v1.37.84 | DriveFilesModal seguir padrão BaseModal: ESC handler hierárquico (sub-modais primeiro) + scroll lock |
 | v1.37.83 | Fix ícone Claude incorreto: substituir SVG inventado pelo logo oficial starburst do Bootstrap Icons |
