@@ -553,6 +553,16 @@ export type ModalState = Record<ModalKey, boolean>;
 // TOKEN METRICS TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
+/** v1.37.91: Métricas por modelo específico */
+export interface PerModelMetrics {
+  provider: 'claude' | 'gemini' | 'openai' | 'grok';
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheCreation: number;
+  requestCount: number;
+}
+
 export interface TokenMetrics {
   inputTokens?: number;
   outputTokens?: number;
@@ -567,6 +577,8 @@ export interface TokenMetrics {
   totalCacheCreation?: number;
   requestCount?: number;
   lastUpdated?: string | null;
+  /** v1.37.91: Breakdown por modelo - chave é o model ID (ex: "claude-sonnet-4-20250514") */
+  byModel?: Record<string, PerModelMetrics>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

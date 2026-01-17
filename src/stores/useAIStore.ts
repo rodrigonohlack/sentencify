@@ -213,7 +213,15 @@ interface AIStoreState {
 
   // Actions - Token Metrics
   setTokenMetrics: (metrics: TokenMetrics | ((prev: TokenMetrics) => TokenMetrics)) => void;
-  addTokenUsage: (usage: { input?: number; output?: number; cacheRead?: number; cacheCreation?: number }) => void;
+  /** v1.37.91: Aceita model/provider para tracking por modelo */
+  addTokenUsage: (usage: {
+    input?: number;
+    output?: number;
+    cacheRead?: number;
+    cacheCreation?: number;
+    model?: string;
+    provider?: 'claude' | 'gemini' | 'openai' | 'grok';
+  }) => void;
   resetTokenMetrics: () => void;
 
   // Actions - Reset
@@ -483,12 +491,29 @@ export const useAIStore = create<AIStoreState>()(
         addTokenUsage: (usage) =>
           set(
             (state) => {
+              // Agregado global (backward compatible)
               state.tokenMetrics.totalInput = (state.tokenMetrics.totalInput || 0) + (usage.input || 0);
               state.tokenMetrics.totalOutput = (state.tokenMetrics.totalOutput || 0) + (usage.output || 0);
               state.tokenMetrics.totalCacheRead = (state.tokenMetrics.totalCacheRead || 0) + (usage.cacheRead || 0);
               state.tokenMetrics.totalCacheCreation = (state.tokenMetrics.totalCacheCreation || 0) + (usage.cacheCreation || 0);
               state.tokenMetrics.requestCount = (state.tokenMetrics.requestCount || 0) + 1;
               state.tokenMetrics.lastUpdated = new Date().toISOString();
+
+              // v1.37.91: Tracking por modelo
+              if (usage.model && usage.provider) {
+                if (!state.tokenMetrics.byModel) {
+                  state.tokenMetrics.byModel = {};
+                }
+                const existing = state.tokenMetrics.byModel[usage.model];
+                state.tokenMetrics.byModel[usage.model] = {
+                  provider: usage.provider,
+                  input: (existing?.input || 0) + (usage.input || 0),
+                  output: (existing?.output || 0) + (usage.output || 0),
+                  cacheRead: (existing?.cacheRead || 0) + (usage.cacheRead || 0),
+                  cacheCreation: (existing?.cacheCreation || 0) + (usage.cacheCreation || 0),
+                  requestCount: (existing?.requestCount || 0) + 1
+                };
+              }
             },
             false,
             'addTokenUsage'

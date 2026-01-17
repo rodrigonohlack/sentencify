@@ -168,13 +168,20 @@ const useAIIntegration = () => {
   // Utilities
   // v1.20.3: Modificado para acumular tokens no estado persistente
   // v1.36.62: Usa addTokenUsage do Zustand store
-  const logCacheMetrics = React.useCallback((data: { usage?: { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number } }) => {
+  // v1.37.91: Aceita model/provider para tracking por modelo
+  const logCacheMetrics = React.useCallback((
+    data: { usage?: { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number } },
+    model?: string,
+    provider?: 'claude' | 'gemini' | 'openai' | 'grok'
+  ) => {
     if (data.usage) {
       addTokenUsage({
         input: data.usage.input_tokens || 0,
         output: data.usage.output_tokens || 0,
         cacheRead: data.usage.cache_read_input_tokens || 0,
-        cacheCreation: data.usage.cache_creation_input_tokens || 0
+        cacheCreation: data.usage.cache_creation_input_tokens || 0,
+        model,
+        provider
       });
     }
   }, [addTokenUsage]);
@@ -446,8 +453,10 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         }
 
         // Logar métricas de cache
+        // v1.37.91: Passa model/provider para tracking por modelo
         if (logMetrics) {
-          logCacheMetrics(data);
+          const effectiveModel = model || aiSettings?.claudeModel || 'claude-sonnet-4-20250514';
+          logCacheMetrics(data, effectiveModel, 'claude');
         }
 
         // Verificar erros da API
@@ -837,16 +846,17 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         }
 
         // Logar métricas
+        // v1.37.91: Usa addTokenUsage com model/provider para tracking por modelo
         if (logMetrics && data.usageMetadata) {
           const metrics = extractTokenMetrics(data, 'gemini');
-          setTokenMetrics(prev => ({
-            totalInput: (prev.totalInput ?? 0) + metrics.input,
-            totalOutput: (prev.totalOutput ?? 0) + metrics.output,
-            totalCacheRead: (prev.totalCacheRead ?? 0) + metrics.cacheRead,
-            totalCacheCreation: (prev.totalCacheCreation ?? 0) + metrics.cacheCreation,
-            requestCount: (prev.requestCount ?? 0) + 1,
-            lastUpdated: new Date().toISOString()
-          }));
+          addTokenUsage({
+            input: metrics.input,
+            output: metrics.output,
+            cacheRead: metrics.cacheRead,
+            cacheCreation: metrics.cacheCreation,
+            model,
+            provider: 'gemini'
+          });
         }
 
         // Retornar resposta bruta se solicitado
@@ -973,16 +983,17 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           throw new Error(errorMsg);
         }
 
+        // v1.37.91: Usa addTokenUsage com model/provider para tracking por modelo
         if (logMetrics) {
           const metrics = extractTokenMetrics(data, 'openai');
-          setTokenMetrics(prev => ({
-            totalInput: (prev.totalInput || 0) + metrics.input,
-            totalOutput: (prev.totalOutput || 0) + metrics.output,
-            totalCacheRead: (prev.totalCacheRead || 0) + metrics.cacheRead,
-            totalCacheCreation: (prev.totalCacheCreation || 0) + metrics.cacheCreation,
-            requestCount: (prev.requestCount || 0) + 1,
-            lastUpdated: new Date().toISOString()
-          }));
+          addTokenUsage({
+            input: metrics.input,
+            output: metrics.output,
+            cacheRead: metrics.cacheRead,
+            cacheCreation: metrics.cacheCreation,
+            model,
+            provider: 'openai'
+          });
         }
 
         if (extractText) {
@@ -1094,16 +1105,17 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           throw new Error(errorMsg);
         }
 
+        // v1.37.91: Usa addTokenUsage com model/provider para tracking por modelo
         if (logMetrics) {
           const metrics = extractTokenMetrics(data, 'grok');
-          setTokenMetrics(prev => ({
-            totalInput: (prev.totalInput || 0) + metrics.input,
-            totalOutput: (prev.totalOutput || 0) + metrics.output,
-            totalCacheRead: (prev.totalCacheRead || 0) + metrics.cacheRead,
-            totalCacheCreation: (prev.totalCacheCreation || 0) + metrics.cacheCreation,
-            requestCount: (prev.requestCount || 0) + 1,
-            lastUpdated: new Date().toISOString()
-          }));
+          addTokenUsage({
+            input: metrics.input,
+            output: metrics.output,
+            cacheRead: metrics.cacheRead,
+            cacheCreation: metrics.cacheCreation,
+            model,
+            provider: 'grok'
+          });
         }
 
         if (extractText) {

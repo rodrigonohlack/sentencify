@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.91', feature: 'Contagem de tokens por modelo: breakdown por modelo usado no painel Uso de Tokens, custo real calculado por provider, persistência em sessão/projeto' },
   { version: '1.37.90', feature: 'Refatorar melhoria de voz: reutilizar callAI do useAIIntegration com provider override - tracking automático de tokens, código duplicado removido (~90 linhas)' },
   { version: '1.37.89', feature: 'Fix endpoints API melhoria de voz: corrigir 404 (claude/messages, gemini/generate, openai/chat, grok/chat)' },
   { version: '1.37.88', feature: 'Melhoria automática de texto ditado por voz com IA: toggle em Config IA permite escolher modelo rápido (Haiku/Flash/GPT-4o Mini/Grok Instant) para corrigir e tornar fluido o texto ditado antes de inserir' },

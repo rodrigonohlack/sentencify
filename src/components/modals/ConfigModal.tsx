@@ -2283,6 +2283,70 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                         <span className="font-mono text-sm text-gray-400">${calculateCost(metrics, grokPrices).toFixed(4)}</span>
                       </div>
                     </div>
+
+                    {/* v1.37.91: Breakdown por modelo */}
+                    {metrics.byModel && Object.keys(metrics.byModel).length > 0 && (
+                      <div className="border-t theme-border-secondary pt-3 mt-3">
+                        <span className="theme-text-secondary text-sm block mb-2">📋 Detalhes por Modelo:</span>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {Object.entries(metrics.byModel)
+                            .sort((a, b) => (b[1].input + b[1].output) - (a[1].input + a[1].output))
+                            .map(([modelId, modelMetrics]) => {
+                              // Calcular custo real baseado no provider
+                              const providerPrices = {
+                                claude: sonnetPrices,
+                                gemini: geminiFlashPrices,
+                                openai: openaiPrices,
+                                grok: grokPrices
+                              }[modelMetrics.provider] || sonnetPrices;
+                              const modelCost = ((modelMetrics.input / 1000000) * providerPrices.input) +
+                                              ((modelMetrics.output / 1000000) * providerPrices.output) +
+                                              ((modelMetrics.cacheRead / 1000000) * providerPrices.cacheRead) +
+                                              ((modelMetrics.cacheCreation / 1000000) * providerPrices.cacheWrite);
+                              const providerColors = {
+                                claude: 'text-orange-400',
+                                gemini: 'text-blue-400',
+                                openai: 'text-green-400',
+                                grok: 'text-gray-400'
+                              };
+                              const colorClass = providerColors[modelMetrics.provider] || 'theme-text-secondary';
+                              return (
+                                <div key={modelId} className="theme-bg-primary-50 rounded p-2 text-xs">
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className={`font-medium truncate max-w-[180px] ${colorClass}`} title={modelId}>
+                                      {modelId.replace(/-\d{8}$/, '')}
+                                    </span>
+                                    <span className="font-mono text-yellow-400">${modelCost.toFixed(4)}</span>
+                                  </div>
+                                  <div className="flex justify-between text-xs theme-text-muted">
+                                    <span>📥 {formatNumber(modelMetrics.input)} | 📤 {formatNumber(modelMetrics.output)}</span>
+                                    <span>{modelMetrics.requestCount} req</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                        {/* Custo Total Real */}
+                        <div className="flex justify-between items-center mt-3 pt-2 border-t theme-border-secondary">
+                          <span className="font-medium theme-text-primary text-sm">💵 Custo Total Real:</span>
+                          <span className="font-mono font-bold text-yellow-400">
+                            ${Object.values(metrics.byModel).reduce((acc, m) => {
+                              const prices = {
+                                claude: sonnetPrices,
+                                gemini: geminiFlashPrices,
+                                openai: openaiPrices,
+                                grok: grokPrices
+                              }[m.provider] || sonnetPrices;
+                              return acc +
+                                ((m.input / 1000000) * prices.input) +
+                                ((m.output / 1000000) * prices.output) +
+                                ((m.cacheRead / 1000000) * prices.cacheRead) +
+                                ((m.cacheCreation / 1000000) * prices.cacheWrite);
+                            }, 0).toFixed(4)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="theme-text-muted text-sm">Nenhuma requisição realizada ainda neste projeto.</p>
