@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.87', feature: 'Ditado por voz no campo "Minhas Conclusões" na aba Provas: VoiceButton integrado ao ProofCard para transcrição de voz' },
   { version: '1.37.86', feature: 'Fix Double Check: preservar campos item/suggestion da IA (antes: sobrescritos com "Correção 1/2/3") + UX binária para texto livre (sentenceReview/proofAnalysis/quickPrompt aceita tudo ou rejeita tudo)' },
   { version: '1.37.85', feature: 'Fix cores ícones provedores IA: Claude roxo→laranja (branding oficial), Grok visível em tema claro (dark:text-gray-300)' },
   { version: '1.37.84', feature: 'DriveFilesModal seguir padrão BaseModal: ESC handler hierárquico (sub-modais primeiro) + scroll lock' },

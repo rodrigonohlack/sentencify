@@ -11,6 +11,7 @@
 import React from 'react';
 import { FileText, Sparkles, AlertCircle, Loader2, Check, Scale, Trash2 } from 'lucide-react';
 import { ProcessingModeSelector } from '../ui/ProcessingModeSelector';
+import VoiceButton from '../VoiceButton';
 import { anonymizeText } from '../../utils/text';
 import type { ProofCardProps, ProcessingMode } from '../../types';
 
@@ -45,6 +46,17 @@ export const ProofCard = React.memo(({
       ...prev,
       [proof.id]: e.target.value
     }));
+  }, [proof.id, proofManager]);
+
+  // Handler: Ditado por voz para conclusões
+  const handleVoiceTranscript = React.useCallback((text: string) => {
+    proofManager.setProofConclusions((prev: Record<string, string>) => {
+      const current = prev[proof.id] || '';
+      return {
+        ...prev,
+        [proof.id]: current + (current ? ' ' : '') + text
+      };
+    });
   }, [proof.id, proofManager]);
 
   // Handler: Definir modo PDF
@@ -407,9 +419,16 @@ export const ProofCard = React.memo(({
 
           {/* Conclusões Manuais */}
           <div className="mt-3">
-            <label className="block text-xs font-medium theme-text-muted mb-2">
-              Minhas Conclusões:
-            </label>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs font-medium theme-text-muted">
+                Minhas Conclusões:
+              </label>
+              <VoiceButton
+                onTranscript={handleVoiceTranscript}
+                size="sm"
+                onError={(err: unknown) => console.warn('[VoiceToText] Conclusões:', err)}
+              />
+            </div>
             <textarea
               value={proofManager.proofConclusions[proof.id] || ''}
               onChange={handleConclusionChange}
