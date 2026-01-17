@@ -167,9 +167,11 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
 
   // v1.19.0: Chat interativo do assistente IA (Global)
   // v1.37.92: Adiciona persistência de chat por tópico
+  // v1.37.95: isOpen força reload ao abrir (sincroniza após clear em outro editor)
   const currentTopicTitle = aiAssistantTopicIndex !== null ? localTopics[aiAssistantTopicIndex]?.title : undefined;
   const chatAssistantGlobal = useChatAssistant(aiIntegration, {
     topicTitle: currentTopicTitle,
+    isOpen: showAIAssistant,
     saveChat: chatHistoryCache.saveChat,
     getChat: chatHistoryCache.getChat,
     deleteChat: chatHistoryCache.deleteChat

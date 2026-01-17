@@ -4,7 +4,7 @@
  * @tier 0 (sem dependências de outros hooks)
  * @extractedFrom App.tsx linhas 4993-5104
  * @usedBy AIAssistantBase, GlobalEditorModal
- * @version v1.37.94 - Cache para Editor Individual + limpeza de logs debug
+ * @version v1.37.95 - isOpen força reload ao abrir (sincroniza entre editores)
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
@@ -28,6 +28,8 @@ export const MAX_CHAT_HISTORY_MESSAGES = 20;
 export interface ChatCacheOptions {
   /** Título do tópico para identificar o chat no cache */
   topicTitle?: string;
+  /** v1.37.95: Modal está aberto? Força reload do cache quando abre */
+  isOpen?: boolean;
   /** Função para salvar chat no cache */
   saveChat?: (topicTitle: string, messages: ChatMessage[]) => Promise<void>;
   /** Função para carregar chat do cache */
@@ -77,18 +79,29 @@ export function useChatAssistant(
   // v1.37.93: Ref para histórico atual (evita dependência no useEffect)
   const historyRef = useRef<ChatMessage[]>([]);
   historyRef.current = history;
+  // v1.37.95: Ref para estado anterior de isOpen
+  const wasOpenRef = useRef(false);
 
   // v1.37.92: Carregar histórico do cache quando tópico muda
   // v1.37.93: Fix - salvar histórico do tópico anterior antes de limpar
+  // v1.37.95: Também recarrega quando modal abre (isOpen muda para true)
   useEffect(() => {
     const loadFromCache = async () => {
       const topicTitle = cacheOptions?.topicTitle;
       const previousTitle = lastTopicTitleRef.current;
+      const isOpen = cacheOptions?.isOpen ?? false;
+      const wasOpen = wasOpenRef.current;
 
-      // Se o tópico mudou, salvar histórico do tópico anterior antes de limpar
-      if (topicTitle !== previousTitle) {
+      // v1.37.95: Detectar se modal acabou de abrir
+      const justOpened = isOpen && !wasOpen;
+      wasOpenRef.current = isOpen;
+
+      // Se o tópico mudou OU modal acabou de abrir, recarregar do cache
+      const shouldReload = topicTitle !== previousTitle || justOpened;
+
+      if (shouldReload) {
         // IMPORTANTE: Salvar histórico do tópico anterior ANTES de limpar
-        if (previousTitle && cacheOptions?.saveChat && historyRef.current.length > 0) {
+        if (previousTitle && cacheOptions?.saveChat && historyRef.current.length > 0 && topicTitle !== previousTitle) {
           try {
             await cacheOptions.saveChat(previousTitle, historyRef.current);
           } catch (e) {
@@ -100,7 +113,7 @@ export function useChatAssistant(
         cacheLoadedRef.current = false;
 
         if (topicTitle) {
-          // Novo tópico: carregar do cache
+          // Novo tópico ou modal abriu: carregar do cache
           if (cacheOptions?.getChat) {
             cacheLoadedRef.current = true;
             try {
@@ -120,7 +133,7 @@ export function useChatAssistant(
       }
     };
     loadFromCache();
-  }, [cacheOptions?.topicTitle, cacheOptions?.getChat, cacheOptions?.saveChat]);
+  }, [cacheOptions?.topicTitle, cacheOptions?.isOpen, cacheOptions?.getChat, cacheOptions?.saveChat]);
 
   // v1.37.92: Salvar no cache quando histórico muda
   useEffect(() => {

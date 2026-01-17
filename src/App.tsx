@@ -479,9 +479,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // 🤖 v1.19.0: Chat interativo do assistente IA (Editor Individual)
   // v1.37.94: Adicionado cache para persistência do histórico
+  // v1.37.95: isOpen força reload ao abrir (sincroniza após clear em outro editor)
   const chatHistoryCache = useChatHistoryCache();
   const chatAssistant = useChatAssistant(aiIntegration, {
     topicTitle: topicManager.editingTopic?.title,
+    isOpen: modals.aiAssistant,
     saveChat: chatHistoryCache.saveChat,
     getChat: chatHistoryCache.getChat,
     deleteChat: chatHistoryCache.deleteChat
