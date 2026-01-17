@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.79 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.80 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.80 | Fix tema claro/escuro: sistema color-free no Quill editor - textos herdam cor do tema via CSS vars, injectQuillLightStyles() removida |
 | v1.37.79 | Remover truncações: fundamentação completa no dispositivo (antes: 200 chars), análise de prova 50k→200k chars |
 | v1.37.78 | Fix race condition sync inicial: modelsLoaded prop impede sync antes de IndexedDB carregar (antes: local=0 causava full sync em todo F5) + logs diagnóstico trackChange |
 | v1.37.77 | Fix trackChange para deletes via modal: useModelModalHandlers agora chama trackChange antes de remover modelo, permitindo sync correto (antes: pendingDeletes=0) |

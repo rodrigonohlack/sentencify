@@ -13,7 +13,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { injectQuillStyles, injectQuillLightStyles } from '../utils/quill-styles-injector';
+import { injectQuillStyles } from '../utils/quill-styles-injector';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -99,7 +99,6 @@ export function useQuillInitialization(): UseQuillInitializationReturn {
       styleDelayTimeout = setTimeout(() => {
         if (isMounted) {
           injectQuillStyles();
-          injectQuillLightStyles();
           setQuillReady(true);
           setQuillError(null);
         }
@@ -140,7 +139,6 @@ export function useQuillInitialization(): UseQuillInitializationReturn {
         styleDelayTimeout = setTimeout(() => {
           if (isMounted) {
             injectQuillStyles();
-            injectQuillLightStyles();
             setQuillReady(true);
             setQuillError(null);
           }

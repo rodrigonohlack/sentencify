@@ -100,7 +100,7 @@ import { searchModelsBySimilarity } from './utils/models';
 
 // v1.36.96: Context helpers extraídos
 import { prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext, fastHashUtil } from './utils/context-helpers';
-import { injectQuillStyles, injectQuillLightStyles } from './utils/quill-styles-injector';
+import { injectQuillStyles } from './utils/quill-styles-injector';
 import { htmlToPlainText, htmlToFormattedText, plainTextToHtml, cleanHtmlForExport } from './utils/html-conversion';
 
 // v1.35.79: Tipos TypeScript centralizados (ETAPA 0 reorganização completa)

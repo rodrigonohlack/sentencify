@@ -43,8 +43,7 @@ export {
 
 // Quill styles injector (v1.37.20)
 export {
-  injectQuillStyles,
-  injectQuillLightStyles
+  injectQuillStyles
 } from './quill-styles-injector';
 
 // HTML conversion utilities (v1.37.23)

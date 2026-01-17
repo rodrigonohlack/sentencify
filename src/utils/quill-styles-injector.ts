@@ -89,7 +89,7 @@ export function injectQuillStyles(): void {
 
     .ql-editor {
       background-color: rgb(30, 41, 59) !important;
-      color: rgb(241, 245, 249) !important;
+      color: inherit !important;
       min-height: 300px !important;
       max-height: 60vh !important;
       overflow: auto !important;
@@ -104,15 +104,14 @@ export function injectQuillStyles(): void {
       margin-bottom: 0.25em !important;  /* v1.5.11: Espaçamento sutil para aparência de quebra única */
     }
 
-    /* Negrito destacado em laranja no dark mode */
+    /* Negrito - apenas peso (herda cor do tema) */
     .ql-editor strong,
     .ql-editor b {
-      color: #fb923c !important;
       font-weight: 700 !important;
     }
 
     .ql-editor.ql-blank::before {
-      color: rgb(148, 163, 184) !important;
+      color: var(--text-muted) !important;
       font-style: italic !important;
     }
 
@@ -240,166 +239,30 @@ export function injectQuillStyles(): void {
       font-size: 2rem !important;
       font-weight: bold !important;
       margin: 1rem 0 !important;
-      color: rgb(241, 245, 249) !important;
     }
 
     .ql-editor h2 {
       font-size: 1.5rem !important;
       font-weight: bold !important;
       margin: 0.75rem 0 !important;
-      color: rgb(241, 245, 249) !important;
     }
 
     .ql-editor h3 {
       font-size: 1.25rem !important;
       font-weight: bold !important;
       margin: 0.5rem 0 !important;
-      color: rgb(241, 245, 249) !important;
     }
 
     .ql-editor a {
-      color: rgb(96, 165, 250) !important;
+      color: var(--accent-blue) !important;
       text-decoration: underline !important;
     }
 
     .ql-editor blockquote {
-      border-left: 4px solid rgb(100, 116, 139) !important;
+      border-left: 4px solid var(--border-primary) !important;
       padding-left: 1rem !important;
       margin: 1rem 0 !important;
-      color: rgb(203, 213, 225) !important;
       font-style: italic !important;
-    }
-  `;
-
-  document.head.appendChild(style);
-}
-
-/**
- * Injeta estilos CSS para o tema claro do Quill editor
- * Remove estilos existentes antes de injetar para garantir atualização
- */
-export function injectQuillLightStyles(): void {
-  // Remover estilo antigo para garantir atualização
-  const existingStyle = document.getElementById('quill-light-theme-styles');
-  if (existingStyle) existingStyle.remove();
-
-  const style = document.createElement('style');
-  style.id = 'quill-light-theme-styles';
-  style.innerHTML = `
-    /* Quill Light Theme - SentencifyAI (CSS Granular) */
-
-    /* Container: fundo bege */
-    .quill-light-theme .ql-container.ql-snow {
-      background-color: #fefcf3 !important;
-      border: none !important;
-    }
-
-    /* Área de edição: fundo bege, texto escuro */
-    .quill-light-theme .ql-editor {
-      background-color: #fefcf3 !important;
-      color: #292524 !important; /* Stone 800 */
-    }
-
-    /* Sobrescreve parágrafos e textos específicos */
-    .quill-light-theme .ql-editor p,
-    .quill-light-theme .ql-editor span,
-    .quill-light-theme .ql-editor li,
-    .quill-light-theme .ql-editor div {
-      color: #292524 !important; /* Stone 800 */
-    }
-
-    /* Sobrescreve títulos */
-    .quill-light-theme .ql-editor h1,
-    .quill-light-theme .ql-editor h2,
-    .quill-light-theme .ql-editor h3,
-    .quill-light-theme .ql-editor h4,
-    .quill-light-theme .ql-editor h5,
-    .quill-light-theme .ql-editor h6 {
-      color: #1c1917 !important; /* Stone 900 */
-    }
-
-    /* Sobrescreve elementos de formatação */
-    .quill-light-theme .ql-editor strong,
-    .quill-light-theme .ql-editor b {
-      color: #000000 !important;
-      font-weight: 700 !important;
-    }
-
-    .quill-light-theme .ql-editor u {
-      text-decoration-color: #000000 !important;
-    }
-
-    /* Sobrescreve links */
-    .quill-light-theme .ql-editor a {
-      color: #2563eb !important; /* Blue 600 */
-    }
-
-    /* Sobrescreve blockquotes */
-    .quill-light-theme .ql-editor blockquote {
-      border-left: 4px solid #d6d3d1 !important; /* Stone 300 */
-      color: #57534e !important; /* Stone 600 */
-    }
-
-    /* Placeholder */
-    .quill-light-theme .ql-editor.ql-blank::before {
-      color: #a8a29e !important; /* Stone 400 */
-      font-style: italic !important;
-    }
-
-    /* v1.9.17: Toolbar - Tema Claro (Stone) */
-    .quill-light-theme .ql-toolbar.ql-snow {
-      background: #f5f5f4 !important;
-      border-bottom: 1px solid #d6d3d1 !important;
-    }
-
-    /* Ícones da toolbar - cor escura */
-    .quill-light-theme .ql-toolbar.ql-snow .ql-stroke {
-      stroke: #57534e !important;
-    }
-
-    .quill-light-theme .ql-toolbar.ql-snow .ql-fill {
-      fill: #57534e !important;
-    }
-
-    /* Picker (dropdowns) */
-    .quill-light-theme .ql-toolbar.ql-snow .ql-picker {
-      color: #44403c !important;
-    }
-
-    .quill-light-theme .ql-toolbar.ql-snow .ql-picker-label {
-      color: #44403c !important;
-      border-color: #a8a29e !important;
-    }
-
-    /* Dropdown aberto - fundo azul claro, texto preto */
-    .quill-light-theme .ql-toolbar.ql-snow .ql-picker-options {
-      background: #dbeafe !important;
-      border-color: #93c5fd !important;
-    }
-
-    .quill-light-theme .ql-toolbar.ql-snow .ql-picker-item {
-      color: #000000 !important;
-    }
-
-    .quill-light-theme .ql-toolbar.ql-snow .ql-picker-item:hover {
-      background: #bfdbfe !important;
-      color: #000000 !important;
-    }
-
-    /* Hover nos botões */
-    .quill-light-theme .ql-toolbar.ql-snow button:hover,
-    .quill-light-theme .ql-toolbar.ql-snow button.ql-active {
-      background: #e7e5e3 !important;
-    }
-
-    .quill-light-theme .ql-toolbar.ql-snow button:hover .ql-stroke,
-    .quill-light-theme .ql-toolbar.ql-snow button.ql-active .ql-stroke {
-      stroke: #1c1917 !important;
-    }
-
-    .quill-light-theme .ql-toolbar.ql-snow button:hover .ql-fill,
-    .quill-light-theme .ql-toolbar.ql-snow button.ql-active .ql-fill {
-      fill: #1c1917 !important;
     }
   `;
 
