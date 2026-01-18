@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.37.98', feature: 'Fix erro 403 ao atualizar arquivo existente no Drive: remover campo parents do metadata no PATCH (Google API não permite)' },
   { version: '1.37.97', feature: 'Toast de feedback ao salvar projeto no Google Drive: usar showToast ao invés de setError (antes: mensagem não aparecia)' },
   { version: '1.37.96', feature: 'Modal de confirmação ao excluir do Google Drive: substituir window.confirm por BaseModal estilizado' },
   { version: '1.37.95', feature: 'Fix sincronização chat entre editores: isOpen força reload do cache ao abrir modal (antes: clear em um editor não refletia no outro)' },

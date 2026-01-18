@@ -290,10 +290,10 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
 
       // v1.35.46: appProperties identifica arquivos criados pelo Sentencify
       // v1.35.47: parents coloca o arquivo na pasta Sentencify
-      const metadata = {
+      // v1.37.98: Metadata diferente para criação vs atualização (parents não pode ir no PATCH)
+      const baseMetadata = {
         name: fileName,
         mimeType: 'application/json',
-        parents: [folderId],
         appProperties: {
           sentencify: 'true',
           version: '1'
@@ -302,6 +302,9 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
 
       const jsonContent = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
       const blob = new Blob([jsonContent], { type: 'application/json' });
+
+      // Para criação: incluir parents. Para atualização: NÃO incluir parents (erro 403)
+      const metadata = existing ? baseMetadata : { ...baseMetadata, parents: [folderId] };
 
       const formData = new FormData();
       formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
