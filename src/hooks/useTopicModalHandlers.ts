@@ -1,7 +1,7 @@
 /**
  * @file useTopicModalHandlers.ts
  * @description Handlers simples para modais de tópicos
- * @version 1.37.73
+ * @version 1.37.99
  *
  * Este hook fornece callbacks simples para modais de tópicos que
  * funcionam apenas com Zustand, sem dependências externas como
@@ -77,8 +77,11 @@ export function useTopicModalHandlers(): UseTopicModalHandlersReturn {
   const setTopicToSplit = useTopicsStore((s) => s.setTopicToSplit);
   const setSplitNames = useTopicsStore((s) => s.setSplitNames);
   const setNewTopicData = useTopicsStore((s) => s.setNewTopicData);
+  const extractedTopics = useTopicsStore((s) => s.extractedTopics);
+  const setExtractedTopics = useTopicsStore((s) => s.setExtractedTopics);
   const selectedTopics = useTopicsStore((s) => s.selectedTopics);
   const setSelectedTopics = useTopicsStore((s) => s.setSelectedTopics);
+  const topicsToMerge = useTopicsStore((s) => s.topicsToMerge);
 
   // ═══════════════════════════════════════════════════════════════════════
   // HANDLER: CONFIRMAR EXCLUSÃO
@@ -86,20 +89,33 @@ export function useTopicModalHandlers(): UseTopicModalHandlersReturn {
 
   /**
    * Confirma exclusão do tópico selecionado
-   * Remove o tópico da lista de tópicos selecionados
+   * Remove o tópico de TODAS as listas: extractedTopics, selectedTopics, topicsToMerge
+   * v1.37.99: Fix bug - antes só removia de selectedTopics
    */
   const confirmDeleteTopic = useCallback(() => {
     if (!topicToDelete) return;
 
-    // Remove o tópico da lista
+    // Remove o tópico de TODAS as listas
+    setExtractedTopics(
+      extractedTopics.filter((t) => t.title !== topicToDelete.title)
+    );
     setSelectedTopics(
       selectedTopics.filter((t) => t.title !== topicToDelete.title)
+    );
+    setTopicsToMerge(
+      topicsToMerge.filter((t) => t.title !== topicToDelete.title)
     );
 
     // Limpa estado e fecha modal
     setTopicToDelete(null);
     closeModal('deleteTopic');
-  }, [topicToDelete, selectedTopics, setSelectedTopics, setTopicToDelete, closeModal]);
+  }, [
+    topicToDelete,
+    extractedTopics, setExtractedTopics,
+    selectedTopics, setSelectedTopics,
+    topicsToMerge, setTopicsToMerge,
+    setTopicToDelete, closeModal
+  ]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // HANDLERS: CANCELAMENTO

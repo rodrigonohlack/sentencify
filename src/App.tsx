@@ -2402,18 +2402,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     openModal('deleteTopic');
   };
 
-  const confirmDeleteTopic = () => {
-    if (topicToDelete) {
-      // Remove dos tópicos extraídos
-      setExtractedTopics(extractedTopics.filter(t => t.title !== topicToDelete.title));
-      // Remove dos tópicos selecionados caso esteja lá
-      setSelectedTopics(selectedTopics.filter(t => t.title !== topicToDelete.title));
-      // Remove dos tópicos para mesclar caso esteja lá
-      setTopicsToMerge(topicsToMerge.filter((t: Topic) => t.title !== topicToDelete.title));
-    }
-    closeModal('deleteTopic');
-    setTopicToDelete(null);
-  };
+  // v1.37.99: confirmDeleteTopic movido para useTopicModalHandlers (usado pelo ModalRoot)
 
   const moveTopicUp = (index: number) => {
     if (index === 0) return;

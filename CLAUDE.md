@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.37.98 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.37.99 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.37.99 | Fix exclusão de tópicos não selecionados: useTopicModalHandlers.confirmDeleteTopic agora remove de todas as listas |
 | v1.37.98 | Fix erro 403 ao atualizar arquivo existente no Drive: remover campo parents do metadata no PATCH |
 | v1.37.97 | Toast de feedback ao salvar projeto no Google Drive: usar showToast (antes: setError não aparecia) |
 | v1.37.96 | Modal de confirmação ao excluir do Google Drive: substituir window.confirm por BaseModal estilizado |
