@@ -1382,18 +1382,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [currentModelsHash, indexedDB.isSupported]); // Hash ao invés de models array
 
-  // Persistência e Sessão
-  const checkSavedSession = () => {
-    try {
-      const saved = localStorage.getItem('sentencifySession');
-      if (saved) {
-        const session = JSON.parse(saved);
-        storage.setSessionLastSaved(session.savedAt);
-        openModal('restoreSession');
-      }
-    } catch (err) {
-    }
-  };
+  // v1.38.0: checkSavedSession removido (já existe em useLocalStorage - chamado via storage.checkSavedSession)
 
   // 🔒 v1.37.42: sanitizeHTML e testSanitization movidos para useQuillInitialization (FASE 43)
 
@@ -2084,50 +2073,17 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // (generateAiText, insertAiText, buildContextForChat, handleInsertChatResponse,
   //  handleSendChatMessage, generateAiTextForModel, insertAiTextModel)
 
-  // ✏️ FUNÇÕES: Editor de Texto
-
-  const applyFormat = (command: string, value: string | null = null) => {
-    document.execCommand(command, false, value ?? undefined);
-    if (editorRef.current) {
-      editorRef.current.focus();
-    }
-  };
-
-  const applyModelFormat = (command: string, value: string | null = null) => {
-    document.execCommand(command, false, value ?? undefined);
-    if (modelEditorRef.current) {
-      modelEditorRef.current.focus();
-    }
-  };
-
   // v1.37.23: htmlToPlainText, htmlToFormattedText, plainTextToHtml, cleanHtmlForExport
   // movidos para src/utils/html-conversion.ts
+
+  // v1.38.0: applyFormat e applyModelFormat removidos (código morto, nunca usados)
 
   const confirmDeleteModel = (model: Model) => {
     modelLibrary.setModelToDelete(model);
     openModal('deleteModel');
   };
 
-  const executeDeleteModel = async () => {
-    if (!modelLibrary.modelToDelete) return;
-
-    try {
-      const modelId = modelLibrary.modelToDelete.id;
-      const modelToDelete = modelLibrary.modelToDelete;
-      modelLibrary.setModels(modelLibrary.models.filter(m => m.id !== modelId));
-      // v1.34.0: Rastrear delete para sync
-      if (cloudSync?.trackChange) cloudSync.trackChange('delete', { ...modelToDelete, updatedAt: new Date().toISOString() });
-      modelLibrary.setHasUnsavedChanges(true);
-      // Remover das sugestões também
-      if (modelLibrary.suggestions?.length > 0) {
-        modelLibrary.setSuggestions(modelLibrary.suggestions.filter(m => m.id !== modelId));
-      }
-      closeModal('deleteModel');
-      modelLibrary.setModelToDelete(null);
-    } catch (err) {
-      setError('Erro ao excluir modelo: ' + (err as Error).message);
-    }
-  };
+  // v1.38.0: executeDeleteModel removido (lógica já está em useModelModalHandlers.confirmDeleteModel)
 
   const deleteAllModels = async () => {
     if (modelLibrary.deleteAllConfirmText !== 'EXCLUIR') {
