@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.1', feature: 'Fix bulk upload rate limiting: bulkStaggerDelay padrão alterado de 0ms para 500ms - espaça requisições dentro de cada batch para evitar erro 429' },
   { version: '1.38.0', feature: 'Limpeza de código órfão: remover 4 funções não utilizadas do App.tsx (applyFormat, applyModelFormat, executeDeleteModel, checkSavedSession) - ~40 linhas de código morto' },
   { version: '1.37.99', feature: 'Fix exclusão de tópicos não selecionados: useTopicModalHandlers.confirmDeleteTopic agora remove de extractedTopics, selectedTopics e topicsToMerge (antes: só removia de selectedTopics)' },
   { version: '1.37.98', feature: 'Fix erro 403 ao atualizar arquivo existente no Drive: remover campo parents do metadata no PATCH (Google API não permite)' },

@@ -274,7 +274,8 @@ const useModelLibrary = () => {
   const [bulkReviewModels, setBulkReviewModels] = React.useState<BulkGeneratedModel[]>([]);
   const [bulkEditingModel, setBulkEditingModel] = React.useState<BulkGeneratedModel | null>(null);
   const [bulkCancelController, setBulkCancelController] = React.useState<AbortController | null>(null);
-  const [bulkStaggerDelay, setBulkStaggerDelay] = React.useState<number>(0);
+  // v1.38.1: Valor padrão 500ms para espaçar requisições dentro do batch e evitar rate limiting
+  const [bulkStaggerDelay, setBulkStaggerDelay] = React.useState<number>(500);
   const [bulkCurrentBatch, setBulkCurrentBatch] = React.useState<number>(0);
 
   // --- Cancelar processamento bulk ---
