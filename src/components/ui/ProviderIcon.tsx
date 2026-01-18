@@ -69,6 +69,7 @@ const GrokIcon: React.FC<{ size: number; className?: string }> = ({ size, classN
     width={size}
     height={size}
     viewBox="0 0 24 24"
+    fill="currentColor"
     className={className}
   >
     {/* X/Twitter logo - usado pelo xAI/Grok */}
