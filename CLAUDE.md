@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.38.1 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.38.2 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.38.2 | Fix ícone Grok invisível no tema escuro: dark:text-gray-300 → dark:text-white |
 | v1.38.1 | Fix bulk upload rate limiting: bulkStaggerDelay padrão 0ms→500ms para espaçar requisições e evitar erro 429 |
 | v1.38.0 | Limpeza de código órfão: remover 4 funções não utilizadas do App.tsx (~40 linhas de código morto) |
 | v1.37.99 | Fix exclusão de tópicos não selecionados: useTopicModalHandlers.confirmDeleteTopic agora remove de todas as listas |

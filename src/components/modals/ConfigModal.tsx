@@ -196,7 +196,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <ProviderIcon provider="grok" size={20} className="text-gray-800 dark:text-gray-300" />
+                  <ProviderIcon provider="grok" size={20} className="text-gray-800 dark:text-white" />
                   <div>
                     <div className="font-semibold theme-text-primary text-sm">Grok</div>
                     <div className="text-xs theme-text-muted">xAI</div>
