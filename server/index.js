@@ -81,8 +81,8 @@ app.use((req, res, next) => {
     // Fontes: apenas locais (Lucide React icons são npm)
     "font-src 'self'",
 
-    // Conexões: APIs de IA, Google, HuggingFace, GitHub, Sentry (US region)
-    "connect-src 'self' https://api.anthropic.com https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://github.com https://raw.githubusercontent.com https://cdn-lfs.huggingface.co https://huggingface.co https://o4510650008076288.ingest.us.sentry.io",
+    // Conexões: APIs de IA, Google, HuggingFace, GitHub, Sentry, CDNs (source maps)
+    "connect-src 'self' https://api.anthropic.com https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://github.com https://raw.githubusercontent.com https://cdn-lfs.huggingface.co https://huggingface.co https://o4510650008076288.ingest.us.sentry.io https://cdn.quilljs.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
 
     // Frames: popup do Google OAuth
     "frame-src 'self' https://accounts.google.com",
