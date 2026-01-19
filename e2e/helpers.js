@@ -16,9 +16,10 @@ export const setupAuth = async (page) => {
     }));
     // Compatibilidade com auth antiga
     localStorage.setItem('sentencify-auth', 'true');
-    // Marcar que já viu o prompt de download para não aparecer
+    // Marcar que já viu os prompts para não aparecerem
     localStorage.setItem('dismissedDownloadPrompt', 'true');
     localStorage.setItem('dismissedDataPrompt', 'true');
+    localStorage.setItem('dismissedEmbeddingsPrompt', 'true');
     // Limpar sessão anterior para evitar modal
     localStorage.removeItem('sentencifySession');
   });

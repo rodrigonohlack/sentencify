@@ -21,6 +21,7 @@ export const test = base.extend({
       // Marcar que já viu os prompts para não aparecerem
       localStorage.setItem('dismissedDownloadPrompt', 'true');
       localStorage.setItem('dismissedDataPrompt', 'true');
+      localStorage.setItem('dismissedEmbeddingsPrompt', 'true');
       // Limpar sessão anterior para evitar modal
       localStorage.removeItem('sentencifySession');
     });
