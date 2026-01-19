@@ -17,3 +17,8 @@ export { SlashCommandMenu } from './SlashCommandMenu';
 
 // v1.36.98: LockedTabOverlay
 export { LockedTabOverlay } from './LockedTabOverlay';
+
+// v1.38.12: ContextScopeSelector - Seletor de escopo de contexto para Assistente IA
+export { ContextScopeSelector } from './ContextScopeSelector';
+export type { ContextScopeSelectorProps } from './ContextScopeSelector';
+// ContextScope type vem de src/types/index.ts (fonte única de verdade)

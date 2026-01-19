@@ -43,7 +43,8 @@ import type {
   Proof,
   ProofFile,
   ProofText,
-  PastedText
+  PastedText,
+  ContextScope
 } from '../../types';
 
 // Utils
@@ -160,7 +161,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   const [globalAiInstruction, setGlobalAiInstruction] = React.useState('');
   const [globalAiGeneratedText, setGlobalAiGeneratedText] = React.useState('');
   const [generatingGlobalAi, setGeneratingGlobalAi] = React.useState(false);
-  const [globalContextScope, setGlobalContextScope] = React.useState('current'); // 'current' | 'all'
+  const [globalContextScope, setGlobalContextScope] = React.useState<ContextScope>('current'); // v1.38.12: 'current' | 'selected' | 'all'
 
   // v1.37.92: Cache de histórico de chat por tópico
   const chatHistoryCache = useChatHistoryCache();
@@ -991,14 +992,29 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
   // v1.19.0: Constroi contexto completo para chat do assistente IA (Global)
   // v1.19.5: Agora assincrono para suportar PDFs binarios
   // v1.21.1: Aceita options para filtrar provas
-  const buildContextForChatGlobal = React.useCallback(async (userMessage: string, options: { proofFilter?: string } = {}) => {
+  // v1.38.12: Suporte a includeMainDocs e selectedContextTopics
+  const buildContextForChatGlobal = React.useCallback(async (userMessage: string, options: { proofFilter?: string; includeMainDocs?: boolean; selectedContextTopics?: string[] } = {}) => {
     if (aiAssistantTopicIndex === null) return [];
     const topic = localTopics[aiAssistantTopicIndex];
     if (!topic) return [];
-    const { proofFilter } = options;
+    const { proofFilter, includeMainDocs = true, selectedContextTopics } = options;
+
+    // v1.38.12: Filtrar documentos baseado no toggle includeMainDocs
+    const docsToSend = includeMainDocs
+      ? analyzedDocuments
+      : {
+          // Excluir petições e contestações
+          peticoes: [],
+          peticoesText: [],
+          contestacoes: [],
+          contestacoesText: [],
+          // Manter complementares
+          complementares: analyzedDocuments.complementares,
+          complementaresText: analyzedDocuments.complementaresText,
+        };
 
     // Preparar documentos usando helper
-    const { contentArray, flags } = prepareDocumentsContext(analyzedDocuments);
+    const { contentArray, flags } = prepareDocumentsContext(docsToSend);
     const { hasPeticao, hasContestacoes, hasComplementares } = flags;
 
     // v1.21.1: Usar funcao de provas orais se filtro ativo
@@ -1010,9 +1026,12 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
     ) : { proofDocuments: [] as AIMessageContent[], proofsContext: '', hasProofs: false };
     contentArray.push(...proofDocuments);
 
+    // v1.38.12: Determinar escopo efetivo
+    const effectiveScope = selectedContextTopics && selectedContextTopics.length > 0 ? 'selected' : globalContextScope;
+
     // Contexto baseado no escopo selecionado
     let decisionContext = '';
-    if (globalContextScope === 'current') {
+    if (effectiveScope === 'current') {
       decisionContext = `
 CONTEXTO DO TÓPICO:
 Título: ${topic.title}
@@ -1024,7 +1043,24 @@ ${topic.editedRelatorio || topic.relatorio || 'Não disponível'}
 DECISÃO JÁ ESCRITA:
 ${topic.editedFundamentacao || topic.fundamentacao || 'Ainda não foi escrito nada'}
 `;
+    } else if (effectiveScope === 'selected' && selectedContextTopics) {
+      // v1.38.12: Escopo de tópicos selecionados
+      decisionContext = 'CONTEXTO DOS TÓPICOS SELECIONADOS:\n\n';
+      const topicsToInclude = localTopics.filter(t => selectedContextTopics.includes(t.title));
+
+      topicsToInclude.forEach((t, index) => {
+        decisionContext += `TÓPICO ${index + 1}: ${t.title} (${t.category || 'Sem categoria'})
+Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
+Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
+
+---
+
+`;
+      });
+
+      decisionContext += `\nTÓPICO SENDO EDITADO: ${topic.title}`;
     } else {
+      // Escopo 'all' - Toda a decisão
       decisionContext = 'CONTEXTO COMPLETO DA DECISÃO:\n\n';
       localTopics.forEach((t, index) => {
         const titleUpper = t.title.toUpperCase();
@@ -1129,7 +1165,8 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
   // v1.19.0: Handler para enviar mensagem no chat global
   // v1.21.1: Aceita options (ex: { proofFilter: 'oral' }) para filtrar provas
   // v1.21.6: Verifica provas vinculadas + anonimização -> abre modal de nomes
-  const handleSendGlobalChatMessage = React.useCallback(async (message: string, options: { proofFilter?: string } = {}) => {
+  // v1.38.12: Suporte a includeMainDocs e selectedContextTopics
+  const handleSendGlobalChatMessage = React.useCallback(async (message: string, options: { proofFilter?: string; includeMainDocs?: boolean; selectedContextTopics?: string[] } = {}) => {
     // v1.21.13: Removido modal de anonimização - provas CONFLITO são filtradas em prepareProofsContext
     const contextBuilderWithOptions = (msg: string) => buildContextForChatGlobal(msg, options);
     await chatAssistantGlobal.send(message, contextBuilderWithOptions);
@@ -1553,6 +1590,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
       )}
 
       {/* v1.19.0: Modal Assistente IA Global - Chat Interativo */}
+      {/* v1.38.12: Adicionado allTopics para ContextScopeSelector */}
       {showAIAssistant && aiAssistantTopicIndex !== null && (
         <AIAssistantGlobalModal
           isOpen={showAIAssistant}
@@ -1574,6 +1612,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
           sanitizeHTML={sanitizeHTML}
           quickPrompts={aiIntegration?.aiSettings?.quickPrompts}
           proofManager={proofManager}
+          allTopics={localTopics}
         />
       )}
 

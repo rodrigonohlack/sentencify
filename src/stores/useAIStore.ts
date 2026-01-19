@@ -51,7 +51,8 @@ const DEFAULT_QUICK_PROMPTS: QuickPrompt[] = [
   {
     id: 'qp-4',
     label: 'Análise de Prova Oral',
-    prompt: '**INSTRUÇÃO CRÍTICA**: Analise a prova oral EXCLUSIVAMENTE sobre "{TOPICO}".\n\nREGRAS OBRIGATÓRIAS:\n1. IGNORE 100% de qualquer trecho que NÃO trate de "{TOPICO}"\n2. NÃO mencione outros assuntos discutidos nos depoimentos\n3. Se um depoente falou sobre múltiplos temas, extraia APENAS o que se refere a "{TOPICO}"\n4. Se não houver NENHUMA menção a "{TOPICO}", responda: "Não há menção a {TOPICO} nesta prova oral."\n\nProduza um resumo estruturado APENAS com trechos relevantes a "{TOPICO}", com minutagem quando disponível:\n\nAUTOR: [afirmação sobre {TOPICO}] (mm:ss);\nPREPOSTO: [afirmação sobre {TOPICO}] (mm:ss);\nTestemunha [nome]: [afirmação sobre {TOPICO}] (mm:ss);\n\n⚠️ LEMBRE-SE: Analise SOMENTE "{TOPICO}". Outros assuntos devem ser COMPLETAMENTE ignorados.'
+    prompt: '**INSTRUÇÃO CRÍTICA**: Analise a prova oral EXCLUSIVAMENTE sobre "{TOPICO}".\n\nREGRAS OBRIGATÓRIAS:\n1. IGNORE 100% de qualquer trecho que NÃO trate de "{TOPICO}"\n2. NÃO mencione outros assuntos discutidos nos depoimentos\n3. Se um depoente falou sobre múltiplos temas, extraia APENAS o que se refere a "{TOPICO}"\n4. Se não houver NENHUMA menção a "{TOPICO}", responda: "Não há menção a {TOPICO} nesta prova oral."\n\nProduza um resumo estruturado APENAS com trechos relevantes a "{TOPICO}", com minutagem quando disponível:\n\nAUTOR: [afirmação sobre {TOPICO}] (mm:ss);\nPREPOSTO: [afirmação sobre {TOPICO}] (mm:ss);\nTestemunha [nome]: [afirmação sobre {TOPICO}] (mm:ss);\n\n⚠️ LEMBRE-SE: Analise SOMENTE "{TOPICO}". Outros assuntos devem ser COMPLETAMENTE ignorados.',
+    proofFilter: 'oral'  // v1.38.12: Filtrar apenas provas orais vinculadas
   }
 ];
 

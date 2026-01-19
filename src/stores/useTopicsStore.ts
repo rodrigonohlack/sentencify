@@ -14,7 +14,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { Topic, TopicCategory } from '../types';
+import type { Topic, TopicCategory, ContextScope } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -41,8 +41,8 @@ interface TopicsStoreState {
   /** Título do último tópico editado (para scroll automático) */
   lastEditedTopicTitle: string | null;
 
-  /** Escopo do contexto do tópico (current | all) */
-  topicContextScope: string;
+  /** Escopo do contexto do tópico (current | selected | all) - v1.38.12 */
+  topicContextScope: ContextScope;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ESTADOS DE UI/PROGRESSO (1)
@@ -99,7 +99,7 @@ interface TopicsStoreState {
 
   setEditingTopic: (topic: Topic | null | ((prev: Topic | null) => Topic | null)) => void;
   setLastEditedTopicTitle: (title: string | null) => void;
-  setTopicContextScope: (scope: string) => void;
+  setTopicContextScope: (scope: ContextScope) => void;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SETTERS DE UI (1)

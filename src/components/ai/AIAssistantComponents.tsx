@@ -1,11 +1,13 @@
 /**
  * @file AIAssistantComponents.tsx
  * @description Componentes de assistente de IA
- * @version 1.36.90
+ * @version 1.38.12
  *
  * Extraído do App.tsx como parte da FASE 3 de refatoração.
  * Inclui AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal,
  * AIAssistantGlobalModal e AIAssistantModelModal.
+ *
+ * v1.38.12: Usa ContextScopeSelector unificado para controle granular de contexto
  */
 
 import React from 'react';
@@ -13,6 +15,7 @@ import { Sparkles, X } from 'lucide-react';
 import { CSS } from '../modals/BaseModal';
 import { ChatHistoryArea, ChatInput, InsertDropdown } from '../chat';
 import { VoiceButton } from '../VoiceButton';
+import { ContextScopeSelector } from '../ui/ContextScopeSelector';
 import { useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
 import { useAIStore } from '../../stores/useAIStore';
@@ -24,7 +27,8 @@ import type {
   AIAssistantModelModalProps,
   QuickPrompt,
   ProofFile,
-  ProofText
+  ProofText,
+  ContextScope
 } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -503,6 +507,7 @@ AIAssistantBase.displayName = 'AIAssistantBase';
 
 /**
  * AIAssistantModal - Wrapper com seletor de escopo e CHAT INTERATIVO para Editor de Tópicos
+ * v1.38.12: Usa ContextScopeSelector unificado com 3 opções de escopo + toggle de documentos
  */
 export const AIAssistantModal = React.memo(({
   isOpen,
@@ -519,13 +524,42 @@ export const AIAssistantModal = React.memo(({
   lastResponse,
   sanitizeHTML = (html: string) => html || '',
   quickPrompts = [],  // v1.20.0
-  proofManager = null  // v1.21.1: Para validação de provas orais
+  proofManager = null,  // v1.21.1: Para validação de provas orais
+  // v1.38.12: Novas props para controle granular de contexto
+  allTopics = [],
+  selectedContextTopics: externalSelectedTopics,
+  setSelectedContextTopics: externalSetSelectedTopics,
+  includeMainDocs: externalIncludeMainDocs,
+  setIncludeMainDocs: externalSetIncludeMainDocs
 }: AIAssistantModalProps) => {
   // v1.21.2: Estado para erro no botão do quick prompt
   const [qpError, setQpError] = React.useState<{ id: string; message: string } | null>(null);
 
-  // v1.21.2: Handler para quick prompts com validação - mostra erro no próprio botão
+  // v1.38.12: Estados locais que resetam ao reabrir modal (se não fornecidos externamente)
+  const [localSelectedTopics, setLocalSelectedTopics] = React.useState<string[]>([]);
+  const [localIncludeMainDocs, setLocalIncludeMainDocs] = React.useState(true);
+
+  // Usar props externas se fornecidas, senão usar estado local
+  const selectedContextTopics = externalSelectedTopics ?? localSelectedTopics;
+  const setSelectedContextTopics = externalSetSelectedTopics ?? setLocalSelectedTopics;
+  const includeMainDocs = externalIncludeMainDocs ?? localIncludeMainDocs;
+  const setIncludeMainDocs = externalSetIncludeMainDocs ?? setLocalIncludeMainDocs;
+
+  // v1.38.12: Resetar estados locais ao reabrir modal
+  React.useEffect(() => {
+    if (isOpen) {
+      if (!externalSelectedTopics) setLocalSelectedTopics([]);
+      if (externalIncludeMainDocs === undefined) setLocalIncludeMainDocs(true);
+    }
+  }, [isOpen, externalSelectedTopics, externalIncludeMainDocs]);
+
+  // v1.38.12: Handler para quick prompts com validação - passa opções de contexto
   const handleQuickPromptClick = React.useCallback((qp: QuickPrompt, resolvedPrompt: string) => {
+    const options: { proofFilter?: string; includeMainDocs?: boolean; selectedContextTopics?: string[] } = {
+      includeMainDocs,
+      selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
+    };
+
     if (qp.proofFilter === 'oral') {
       const hasOral = hasOralProofsForTopic(proofManager, topicTitle);
       if (!hasOral) {
@@ -534,54 +568,34 @@ export const AIAssistantModal = React.memo(({
         setTimeout(() => setQpError(null), 3000);
         return;
       }
-      onSendMessage(resolvedPrompt, { proofFilter: 'oral' });
+      onSendMessage(resolvedPrompt, { ...options, proofFilter: 'oral' });
     } else {
-      onSendMessage(resolvedPrompt);
+      onSendMessage(resolvedPrompt, options);
     }
-  }, [proofManager, topicTitle, onSendMessage]);
+  }, [proofManager, topicTitle, onSendMessage, includeMainDocs, contextScope, selectedContextTopics]);
 
+  // v1.38.12: Handler para mensagens normais - passa opções de contexto
+  const handleSendMessage = React.useCallback((message: string, extraOptions?: { proofFilter?: string }) => {
+    const options = {
+      ...extraOptions,
+      includeMainDocs,
+      selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
+    };
+    onSendMessage(message, options);
+  }, [onSendMessage, includeMainDocs, contextScope, selectedContextTopics]);
+
+  // v1.38.12: Usa ContextScopeSelector unificado
   const scopeSelector = (
-    <div>
-      <label className={CSS.label}>Escopo do Contexto</label>
-      <div className="flex gap-4 mt-2">
-        <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${
-          contextScope === 'current'
-            ? 'border-purple-500 bg-purple-500/10'
-            : 'theme-border-input theme-bg-secondary-30 hover-theme-border'
-        }`}>
-          <input
-            type="radio"
-            name="topicContextScope"
-            value="current"
-            checked={contextScope === 'current'}
-            onChange={() => setContextScope('current')}
-            className="w-4 h-4 text-purple-600"
-          />
-          <div>
-            <span className="text-sm font-medium theme-text-primary">Apenas este tópico</span>
-            <p className="text-xs theme-text-muted">Mini-relatório + decisão do tópico atual</p>
-          </div>
-        </label>
-        <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${
-          contextScope === 'all'
-            ? 'border-purple-500 bg-purple-500/10'
-            : 'theme-border-input theme-bg-secondary-30 hover-theme-border'
-        }`}>
-          <input
-            type="radio"
-            name="topicContextScope"
-            value="all"
-            checked={contextScope === 'all'}
-            onChange={() => setContextScope('all')}
-            className="w-4 h-4 text-purple-600"
-          />
-          <div>
-            <span className="text-sm font-medium theme-text-primary">Toda a decisão</span>
-            <p className="text-xs theme-text-muted">RELATÓRIO + todos os tópicos</p>
-          </div>
-        </label>
-      </div>
-    </div>
+    <ContextScopeSelector
+      contextScope={contextScope}
+      setContextScope={setContextScope}
+      allTopics={allTopics}
+      currentTopicTitle={topicTitle || ''}
+      selectedContextTopics={selectedContextTopics}
+      setSelectedContextTopics={setSelectedContextTopics}
+      includeMainDocs={includeMainDocs}
+      setIncludeMainDocs={setIncludeMainDocs}
+    />
   );
 
   return (
@@ -589,7 +603,7 @@ export const AIAssistantModal = React.memo(({
       isOpen={isOpen}
       onClose={onClose}
       chatHistory={chatHistory}
-      onSendMessage={onSendMessage}
+      onSendMessage={handleSendMessage}
       onInsertResponse={onInsertResponse}
       generating={generating}
       onClear={onClear}
@@ -610,6 +624,7 @@ AIAssistantModal.displayName = 'AIAssistantModal';
 
 /**
  * AIAssistantGlobalModal - Para Editor Global com CHAT INTERATIVO
+ * v1.38.12: Usa ContextScopeSelector unificado com 3 opções de escopo + toggle de documentos
  */
 export const AIAssistantGlobalModal = React.memo(({
   isOpen,
@@ -626,13 +641,42 @@ export const AIAssistantGlobalModal = React.memo(({
   lastResponse,
   sanitizeHTML = (html: string) => html || '',
   quickPrompts = [],  // v1.20.0
-  proofManager = null  // v1.21.1: Para validação de provas orais
+  proofManager = null,  // v1.21.1: Para validação de provas orais
+  // v1.38.12: Novas props para controle granular de contexto
+  allTopics = [],
+  selectedContextTopics: externalSelectedTopics,
+  setSelectedContextTopics: externalSetSelectedTopics,
+  includeMainDocs: externalIncludeMainDocs,
+  setIncludeMainDocs: externalSetIncludeMainDocs
 }: AIAssistantGlobalModalProps) => {
   // v1.21.2: Estado para erro no botão do quick prompt
   const [qpError, setQpError] = React.useState<{ id: string; message: string } | null>(null);
 
-  // v1.21.2: Handler para quick prompts com validação - mostra erro no próprio botão
+  // v1.38.12: Estados locais que resetam ao reabrir modal (se não fornecidos externamente)
+  const [localSelectedTopics, setLocalSelectedTopics] = React.useState<string[]>([]);
+  const [localIncludeMainDocs, setLocalIncludeMainDocs] = React.useState(true);
+
+  // Usar props externas se fornecidas, senão usar estado local
+  const selectedContextTopics = externalSelectedTopics ?? localSelectedTopics;
+  const setSelectedContextTopics = externalSetSelectedTopics ?? setLocalSelectedTopics;
+  const includeMainDocs = externalIncludeMainDocs ?? localIncludeMainDocs;
+  const setIncludeMainDocs = externalSetIncludeMainDocs ?? setLocalIncludeMainDocs;
+
+  // v1.38.12: Resetar estados locais ao reabrir modal
+  React.useEffect(() => {
+    if (isOpen) {
+      if (!externalSelectedTopics) setLocalSelectedTopics([]);
+      if (externalIncludeMainDocs === undefined) setLocalIncludeMainDocs(true);
+    }
+  }, [isOpen, externalSelectedTopics, externalIncludeMainDocs]);
+
+  // v1.38.12: Handler para quick prompts com validação - passa opções de contexto
   const handleQuickPromptClick = React.useCallback((qp: QuickPrompt, resolvedPrompt: string) => {
+    const options: { proofFilter?: string; includeMainDocs?: boolean; selectedContextTopics?: string[] } = {
+      includeMainDocs,
+      selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
+    };
+
     if (qp.proofFilter === 'oral') {
       const hasOral = hasOralProofsForTopic(proofManager, topicTitle);
       if (!hasOral) {
@@ -641,55 +685,34 @@ export const AIAssistantGlobalModal = React.memo(({
         setTimeout(() => setQpError(null), 3000);
         return;
       }
-      onSendMessage(resolvedPrompt, { proofFilter: 'oral' });
+      onSendMessage(resolvedPrompt, { ...options, proofFilter: 'oral' });
     } else {
-      onSendMessage(resolvedPrompt);
+      onSendMessage(resolvedPrompt, options);
     }
-  }, [proofManager, topicTitle, onSendMessage]);
+  }, [proofManager, topicTitle, onSendMessage, includeMainDocs, contextScope, selectedContextTopics]);
 
-  // Componente de seleção de escopo para passar como extraContent
+  // v1.38.12: Handler para mensagens normais - passa opções de contexto
+  const handleSendMessage = React.useCallback((message: string, extraOptions?: { proofFilter?: string }) => {
+    const options = {
+      ...extraOptions,
+      includeMainDocs,
+      selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
+    };
+    onSendMessage(message, options);
+  }, [onSendMessage, includeMainDocs, contextScope, selectedContextTopics]);
+
+  // v1.38.12: Usa ContextScopeSelector unificado
   const scopeSelector = (
-    <div>
-      <label className={CSS.label}>Escopo do Contexto</label>
-      <div className="flex gap-4 mt-2">
-        <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${
-          contextScope === 'current'
-            ? 'border-purple-500 bg-purple-500/10'
-            : 'theme-border-input theme-bg-secondary-30 hover-theme-border'
-        }`}>
-          <input
-            type="radio"
-            name="contextScope"
-            value="current"
-            checked={contextScope === 'current'}
-            onChange={() => setContextScope('current')}
-            className="w-4 h-4 text-purple-600"
-          />
-          <div>
-            <span className="text-sm font-medium theme-text-primary">Apenas este tópico</span>
-            <p className="text-xs theme-text-muted">Mini-relatório + decisão do tópico atual</p>
-          </div>
-        </label>
-        <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${
-          contextScope === 'all'
-            ? 'border-purple-500 bg-purple-500/10'
-            : 'theme-border-input theme-bg-secondary-30 hover-theme-border'
-        }`}>
-          <input
-            type="radio"
-            name="contextScope"
-            value="all"
-            checked={contextScope === 'all'}
-            onChange={() => setContextScope('all')}
-            className="w-4 h-4 text-purple-600"
-          />
-          <div>
-            <span className="text-sm font-medium theme-text-primary">Toda a decisão</span>
-            <p className="text-xs theme-text-muted">RELATÓRIO + todos os tópicos</p>
-          </div>
-        </label>
-      </div>
-    </div>
+    <ContextScopeSelector
+      contextScope={contextScope}
+      setContextScope={setContextScope}
+      allTopics={allTopics}
+      currentTopicTitle={topicTitle || ''}
+      selectedContextTopics={selectedContextTopics}
+      setSelectedContextTopics={setSelectedContextTopics}
+      includeMainDocs={includeMainDocs}
+      setIncludeMainDocs={setIncludeMainDocs}
+    />
   );
 
   return (
@@ -697,7 +720,7 @@ export const AIAssistantGlobalModal = React.memo(({
       isOpen={isOpen}
       onClose={onClose}
       chatHistory={chatHistory}
-      onSendMessage={onSendMessage}
+      onSendMessage={handleSendMessage}
       onInsertResponse={onInsertResponse}
       generating={generating}
       onClear={onClear}

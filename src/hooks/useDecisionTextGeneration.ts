@@ -147,7 +147,7 @@ export interface UseDecisionTextGenerationProps {
   editingTopic: Topic | null;
   setEditingTopic: (topic: Topic | null) => void;
   selectedTopics: Topic[];
-  topicContextScope: 'current' | 'all';
+  topicContextScope: 'current' | 'selected' | 'all';
   storage: {
     fileToBase64: (file: File) => Promise<string>;
   };
@@ -156,12 +156,19 @@ export interface UseDecisionTextGenerationProps {
   sanitizeHTML: (html: string) => string;
 }
 
+/** v1.38.12: Opções para construção de contexto do chat */
+export interface ChatContextOptions {
+  proofFilter?: string;
+  includeMainDocs?: boolean;
+  selectedContextTopics?: string[];
+}
+
 export interface UseDecisionTextGenerationReturn {
   generateAiText: () => Promise<void>;
   insertAiText: (mode: InsertMode) => void;
-  buildContextForChat: (userMessage: string, options?: { proofFilter?: string }) => Promise<AIMessageContent[]>;
+  buildContextForChat: (userMessage: string, options?: ChatContextOptions) => Promise<AIMessageContent[]>;
   handleInsertChatResponse: (mode: InsertMode) => void;
-  handleSendChatMessage: (message: string, options?: { proofFilter?: string }) => Promise<void>;
+  handleSendChatMessage: (message: string, options?: ChatContextOptions) => Promise<void>;
   generateAiTextForModel: () => Promise<void>;
   insertAiTextModel: (mode: InsertMode) => void;
 }
@@ -392,14 +399,29 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
 
   // ═══════════════════════════════════════════════════════════════════════════
   // BUILD CONTEXT FOR CHAT
+  // v1.38.12: Suporte a includeMainDocs e selectedContextTopics
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const buildContextForChat = React.useCallback(async (userMessage: string, options: { proofFilter?: string } = {}) => {
+  const buildContextForChat = React.useCallback(async (userMessage: string, options: ChatContextOptions = {}) => {
     const currentContent = editorRef.current?.root?.innerText || '';
-    const { proofFilter } = options;
+    const { proofFilter, includeMainDocs = true, selectedContextTopics } = options;
+
+    // v1.38.12: Filtrar documentos baseado no toggle includeMainDocs
+    const docsToSend = includeMainDocs
+      ? analyzedDocuments
+      : {
+          // Excluir petições e contestações
+          peticoes: [],
+          peticoesText: [],
+          contestacoes: [],
+          contestacoesText: [],
+          // Manter complementares
+          complementares: analyzedDocuments.complementares,
+          complementaresText: analyzedDocuments.complementaresText,
+        };
 
     // Preparar documentos usando helper
-    const { contentArray, flags } = prepareDocumentsContext(analyzedDocuments);
+    const { contentArray, flags } = prepareDocumentsContext(docsToSend);
     const { hasPeticao, hasContestacoes, hasComplementares } = flags;
 
     // Usar função de provas orais se filtro ativo
@@ -413,19 +435,42 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
     );
     contentArray.push(...proofDocuments);
 
+    // v1.38.12: Determinar escopo efetivo
+    // Se selectedContextTopics foi passado, usar 'selected', senão usar o escopo do componente
+    const effectiveScope = selectedContextTopics && selectedContextTopics.length > 0 ? 'selected' : topicContextScope;
+
     // Contexto baseado no escopo selecionado
     let decisionContext = '';
-    if (topicContextScope === 'current') {
+    if (effectiveScope === 'current') {
       decisionContext = `📋 CONTEXTO DO TÓPICO:
 Título: ${editingTopic?.title || 'Não especificado'}
 Categoria: ${editingTopic?.category || 'Não especificada'}
 
 📝 MINI-RELATÓRIO DO TÓPICO:
-${editingTopic?.relatorio || 'Não disponível'}
+${editingTopic?.relatorio || editingTopic?.editedRelatorio || 'Não disponível'}
 
 ✍️ CONTEÚDO JÁ ESCRITO DA DECISÃO:
 ${currentContent || 'Ainda não foi escrito nada'}`;
+    } else if (effectiveScope === 'selected' && selectedContextTopics) {
+      // v1.38.12: Escopo de tópicos selecionados
+      decisionContext = '📋 CONTEXTO DOS TÓPICOS SELECIONADOS:\n\n';
+      const topicsToInclude = selectedTopics.filter(t => selectedContextTopics.includes(t.title));
+
+      topicsToInclude.forEach((t, index) => {
+        decisionContext += `📋 TÓPICO ${index + 1}: ${t.title} (${t.category || 'Sem categoria'})
+Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
+Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
+
+---
+
+`;
+      });
+
+      decisionContext += `\n🎯 TÓPICO SENDO EDITADO: ${editingTopic?.title}
+✍️ CONTEÚDO JÁ ESCRITO:
+${currentContent || 'Ainda não foi escrito nada'}`;
     } else {
+      // Escopo 'all' - Toda a decisão
       decisionContext = '📋 CONTEXTO COMPLETO DA DECISÃO:\n\n';
       selectedTopics.forEach((t, index) => {
         const titleUpper = t.title.toUpperCase();
@@ -534,7 +579,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
   // HANDLE SEND CHAT MESSAGE
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const handleSendChatMessage = React.useCallback(async (message: string, options: { proofFilter?: string } = {}) => {
+  const handleSendChatMessage = React.useCallback(async (message: string, options: ChatContextOptions = {}) => {
     const contextBuilderWithOptions = (msg: string) => buildContextForChat(msg, options);
     const result = await chatAssistant.send(message, contextBuilderWithOptions);
 

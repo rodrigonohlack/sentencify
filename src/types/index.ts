@@ -2145,14 +2145,17 @@ export interface ProofManagerForAI {
   proofTexts: ProofText[];
 }
 
+/** v1.38.12: Tipo para escopo de contexto do Assistente IA */
+export type ContextScope = 'current' | 'selected' | 'all';
+
 export interface AIAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
-  contextScope: string;
-  setContextScope: (scope: string) => void;
+  contextScope: ContextScope;  // v1.38.12: Tipo específico
+  setContextScope: (scope: ContextScope) => void;
   topicTitle?: string;
   chatHistory: ChatMessage[];
-  onSendMessage: (message: string, options?: { proofFilter?: string }) => void;
+  onSendMessage: (message: string, options?: { proofFilter?: string; includeMainDocs?: boolean; selectedContextTopics?: string[] }) => void;
   onInsertResponse: (mode: InsertMode) => void;
   generating: boolean;
   onClear: () => void;
@@ -2160,16 +2163,22 @@ export interface AIAssistantModalProps {
   sanitizeHTML?: (html: string) => string;
   quickPrompts?: QuickPrompt[];
   proofManager?: ProofManagerForAI | null;
+  // v1.38.12: Novas props para controle granular de contexto
+  allTopics?: Topic[];
+  selectedContextTopics?: string[];
+  setSelectedContextTopics?: (topics: string[]) => void;
+  includeMainDocs?: boolean;
+  setIncludeMainDocs?: (include: boolean) => void;
 }
 
 export interface AIAssistantGlobalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  contextScope: string;
-  setContextScope: (scope: string) => void;
+  contextScope: ContextScope;  // v1.38.12: Tipo específico
+  setContextScope: (scope: ContextScope) => void;
   topicTitle?: string;
   chatHistory: ChatMessage[];
-  onSendMessage: (message: string, options?: { proofFilter?: string }) => void;
+  onSendMessage: (message: string, options?: { proofFilter?: string; includeMainDocs?: boolean; selectedContextTopics?: string[] }) => void;
   onInsertResponse: (mode: InsertMode) => void;
   generating: boolean;
   onClear: () => void;
@@ -2177,6 +2186,12 @@ export interface AIAssistantGlobalModalProps {
   sanitizeHTML?: (html: string) => string;
   quickPrompts?: QuickPrompt[];
   proofManager?: ProofManagerForAI | null;
+  // v1.38.12: Novas props para controle granular de contexto
+  allTopics?: Topic[];
+  selectedContextTopics?: string[];
+  setSelectedContextTopics?: (topics: string[]) => void;
+  includeMainDocs?: boolean;
+  setIncludeMainDocs?: (include: boolean) => void;
 }
 
 export interface AIAssistantModelModalProps {

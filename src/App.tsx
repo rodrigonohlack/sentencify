@@ -3737,6 +3737,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       {/* v1.37.74: Modais de tópicos movidos para ModalRoot */}
       {/* RenameTopicModal, DeleteTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal */}
 
+      {/* v1.38.12: Adicionado allTopics para ContextScopeSelector */}
       <AIAssistantModal
         isOpen={modals.aiAssistant}
         onClose={() => closeModal('aiAssistant')}
@@ -3752,6 +3753,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         sanitizeHTML={sanitizeHTML}
         quickPrompts={aiIntegration.aiSettings.quickPrompts}
         proofManager={proofManager}
+        allTopics={selectedTopics}
       />
 
       {/* v1.20.0: Modal de Jurisprudência (editor individual) */}
