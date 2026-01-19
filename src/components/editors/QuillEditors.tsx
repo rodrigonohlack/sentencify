@@ -12,7 +12,9 @@ import { CSS } from '../modals/BaseModal';
 import { VoiceButton } from '../VoiceButton';
 import { SpacingDropdown, FontSizeDropdown } from '../ui';
 import { useQuillEditor, sanitizeQuillHTML } from '../../hooks/useQuillEditor';
-import { useSpacingControl, useFontSizeControl, useFullscreen } from '../../hooks';
+import { useSpacingControl, useFontSizeControl, useFullscreen, useAIIntegration } from '../../hooks';
+import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
+import { useAIStore } from '../../stores/useAIStore';
 import { stripInlineColors } from '../../utils/color-stripper';
 import { FullscreenModelPanel } from '../panels';
 import { VersionSelect } from '../version';
@@ -381,6 +383,11 @@ export const QuillModelEditor = React.forwardRef<QuillInstance, QuillModelEditor
   const { fontSize, setFontSize } = useFontSizeControl();
   const { isFullscreen, toggleFullscreen, containerRef } = useFullscreen();
 
+  // v1.38.4: Voice improvement com IA
+  const aiSettings = useAIStore((state) => state.aiSettings);
+  const { callAI } = useAIIntegration();
+  const { improveText } = useVoiceImprovement({ callAI });
+
   const toolbarConfig = React.useMemo(() => getQuillToolbarConfig('full'), []);
 
   const handleVoiceTranscript = React.useCallback((text: string) => {
@@ -417,6 +424,11 @@ export const QuillModelEditor = React.forwardRef<QuillInstance, QuillModelEditor
             onTranscript={handleVoiceTranscript}
             size="md"
             onError={(err: unknown) => console.warn('[VoiceToText]', err)}
+            improveWithAI={aiSettings.voiceImprovement?.enabled}
+            onImproveText={aiSettings.voiceImprovement?.enabled
+              ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
+              : undefined
+            }
           />
 
           {onOpenAIAssistant && (
