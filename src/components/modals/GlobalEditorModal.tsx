@@ -999,6 +999,17 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
     if (!topic) return [];
     const { proofFilter, includeMainDocs = true, selectedContextTopics } = options;
 
+    // DEBUG v1.38.14: Verificar estado de analyzedDocuments
+    console.log('[buildContextForChatGlobal] analyzedDocuments:', JSON.stringify({
+      peticoes: analyzedDocuments?.peticoes?.length ?? 0,
+      peticoesText: analyzedDocuments?.peticoesText?.length ?? 0,
+      contestacoes: analyzedDocuments?.contestacoes?.length ?? 0,
+      contestacoesText: analyzedDocuments?.contestacoesText?.length ?? 0,
+      complementares: analyzedDocuments?.complementares?.length ?? 0,
+      complementaresText: analyzedDocuments?.complementaresText?.length ?? 0,
+    }));
+    console.log('[buildContextForChatGlobal] includeMainDocs:', includeMainDocs);
+
     // v1.38.12: Filtrar documentos baseado no toggle includeMainDocs
     const docsToSend = includeMainDocs
       ? analyzedDocuments

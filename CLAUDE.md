@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.38.11 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.38.14 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,9 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.38.14 | Fix migração quickPrompts: sessões pré-v1.38.12 recebem proofFilter:oral via onRehydrateStorage + diagnóstico analyzedDocuments |
+| v1.38.13 | VirtualList no ChangelogModal: renderiza só ~15-20 items visíveis (antes: 430+ DOM nodes) - performance |
+| v1.38.12 | Controle granular de contexto no Assistente IA: escopo de tópicos + toggle petições/contestações + proofFilter oral |
 | v1.38.11 | Fix crítico: chat do Assistente IA agora recebe petição inicial completa (antes: type mismatch peticao/peticoes em prepareDocumentsContext causava petição ser ignorada) |
 | v1.38.9 | Expandir área útil: layout usa 95% da tela (antes: 1280px fixo), padding reduzido de 24px para 16px |
 | v1.38.8 | Anexos em provas: permite adicionar documentos relacionados (impugnações, esclarecimentos) a uma prova, análise com delimitadores XML para IA distinguir prova principal de anexos |

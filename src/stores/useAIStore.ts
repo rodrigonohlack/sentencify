@@ -591,6 +591,17 @@ export const useAIStore = create<AIStoreState>()(
             } catch (err) {
               console.warn('[AIStore] Erro ao restaurar apiKeys:', err);
             }
+
+            // Migração v1.38.14: Adicionar proofFilter aos quickPrompts existentes
+            // Usuários com sessões pré-v1.38.12 têm quickPrompts sem proofFilter
+            if (state.aiSettings?.quickPrompts) {
+              state.aiSettings.quickPrompts = state.aiSettings.quickPrompts.map((qp: QuickPrompt) => {
+                if (qp.id === 'qp-4' && !qp.proofFilter) {
+                  return { ...qp, proofFilter: 'oral' as const };
+                }
+                return qp;
+              });
+            }
           }
         }
       }
