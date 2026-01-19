@@ -197,6 +197,9 @@ interface ProofsStoreState {
   /** Atualiza texto extraído de anexo PDF */
   updateAttachmentExtractedText: (proofId: string | number, attachmentId: string, text: string) => void;
 
+  /** v1.38.10: Atualiza modo de processamento de anexo PDF */
+  updateAttachmentProcessingMode: (proofId: string | number, attachmentId: string, mode: ProcessingMode) => void;
+
   // ═══════════════════════════════════════════════════════════════════════════
   // MÉTODOS DE PERSISTÊNCIA
   // ═══════════════════════════════════════════════════════════════════════════
@@ -565,6 +568,36 @@ export const useProofsStore = create<ProofsStoreState>()(
           }
         }, false, 'updateAttachmentExtractedText'),
 
+      updateAttachmentProcessingMode: (proofId, attachmentId, mode) =>
+        set((state) => {
+          const key = String(proofId);
+          // Procurar em proofFiles
+          const fileIndex = state.proofFiles.findIndex(
+            (p) => String(p.id) === key
+          );
+          if (fileIndex !== -1 && state.proofFiles[fileIndex].attachments) {
+            const attachIdx = state.proofFiles[fileIndex].attachments!.findIndex(
+              (a) => a.id === attachmentId
+            );
+            if (attachIdx !== -1) {
+              state.proofFiles[fileIndex].attachments![attachIdx].processingMode = mode;
+              return;
+            }
+          }
+          // Procurar em proofTexts
+          const textIndex = state.proofTexts.findIndex(
+            (p) => String(p.id) === key
+          );
+          if (textIndex !== -1 && state.proofTexts[textIndex].attachments) {
+            const attachIdx = state.proofTexts[textIndex].attachments!.findIndex(
+              (a) => a.id === attachmentId
+            );
+            if (attachIdx !== -1) {
+              state.proofTexts[textIndex].attachments![attachIdx].processingMode = mode;
+            }
+          }
+        }, false, 'updateAttachmentProcessingMode'),
+
       // ═══════════════════════════════════════════════════════════════════════
       // MÉTODOS DE PERSISTÊNCIA
       // ═══════════════════════════════════════════════════════════════════════
@@ -733,6 +766,7 @@ export function useProofManagerCompat() {
   const addAttachment = useProofsStore((s) => s.addAttachment);
   const removeAttachment = useProofsStore((s) => s.removeAttachment);
   const updateAttachmentExtractedText = useProofsStore((s) => s.updateAttachmentExtractedText);
+  const updateAttachmentProcessingMode = useProofsStore((s) => s.updateAttachmentProcessingMode);
 
   // Persistence
   const serializeForPersistence = useProofsStore((s) => s.serializeForPersistence);
@@ -809,10 +843,11 @@ export function useProofManagerCompat() {
     handleUnlinkProof,
     handleSaveProofConclusion,
 
-    // Attachment Actions (3) - v1.38.8
+    // Attachment Actions (4) - v1.38.8, v1.38.10
     addAttachment,
     removeAttachment,
     updateAttachmentExtractedText,
+    updateAttachmentProcessingMode,
 
     // Métodos de Persistência (3)
     serializeForPersistence,

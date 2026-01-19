@@ -180,6 +180,7 @@ export const ProofCard = React.memo(({
   const addAttachment = useProofsStore((s) => s.addAttachment);
   const removeAttachment = useProofsStore((s) => s.removeAttachment);
   const updateAttachmentExtractedText = useProofsStore((s) => s.updateAttachmentExtractedText);
+  const updateAttachmentProcessingMode = useProofsStore((s) => s.updateAttachmentProcessingMode);
 
   // Handler: Adicionar anexo PDF
   const handleAddAttachmentPdf = React.useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,14 +250,22 @@ export const ProofCard = React.memo(({
   }, [proof.id, removeAttachment]);
 
   // Handler: Extrair texto de anexo PDF
+  // v1.38.10: Usa processingMode do próprio anexo (não da prova principal)
   const handleExtractAttachmentText = React.useCallback(async (attachment: ProofAttachment) => {
     if (!attachment.file || attachment.type !== 'pdf') return;
 
     try {
-      const userMode = proofManager.proofProcessingModes[proof.id] || 'pdfjs';
-      const selectedMode = (anonymizationEnabled && ['claude-vision', 'pdf-puro'].includes(userMode))
-        ? 'pdfjs'
-        : userMode;
+      // Usar modo do anexo (default: pdfjs)
+      const userMode = attachment.processingMode || 'pdfjs';
+      // Bloquear claude-vision se anonimização ativa
+      // Bloquear pdf-puro se anonimização OU Grok ativos
+      let selectedMode = userMode;
+      if (anonymizationEnabled && userMode === 'claude-vision') {
+        selectedMode = 'pdfjs';
+      }
+      if ((anonymizationEnabled || grokEnabled) && userMode === 'pdf-puro') {
+        selectedMode = 'pdfjs';
+      }
 
       const extractedText = await extractTextFromPDFWithMode(attachment.file, selectedMode);
 
@@ -269,7 +278,7 @@ export const ProofCard = React.memo(({
     } catch (err) {
       console.error('[ProofCard] Erro ao extrair texto do anexo:', err);
     }
-  }, [proof.id, proofManager.proofProcessingModes, anonymizationEnabled, anonConfig, nomesParaAnonimizar, extractTextFromPDFWithMode, updateAttachmentExtractedText]);
+  }, [proof.id, anonymizationEnabled, grokEnabled, anonConfig, nomesParaAnonimizar, extractTextFromPDFWithMode, updateAttachmentExtractedText]);
 
   // Obter anexos da prova atual
   const attachments = proof.attachments || [];
@@ -540,37 +549,21 @@ export const ProofCard = React.memo(({
                 {attachments.map((attachment) => (
                   <div
                     key={attachment.id}
-                    className="flex items-center justify-between p-2 theme-bg-tertiary-30 rounded border theme-border-input"
+                    className="flex flex-col gap-2 p-2 theme-bg-tertiary-30 rounded border theme-border-input"
                   >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <FileText className={`w-4 h-4 flex-shrink-0 ${attachment.type === 'pdf' ? 'text-red-400' : 'text-blue-400'}`} />
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs theme-text-secondary truncate block">{attachment.name}</span>
-                        <span className="text-[10px] theme-text-muted">
-                          {attachment.type === 'pdf'
-                            ? `PDF • ${((attachment.size ?? 0) / 1024).toFixed(1)} KB`
-                            : `Texto • ${(attachment.text ?? '').length} caracteres`}
-                          {attachment.extractedText && ` • Extraído: ${attachment.extractedText.length} caracteres`}
-                        </span>
+                    {/* Linha 1: Nome e metadata */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <FileText className={`w-4 h-4 flex-shrink-0 ${attachment.type === 'pdf' ? 'text-red-400' : 'text-blue-400'}`} />
+                        <div className="min-w-0 flex-1">
+                          <span className="text-xs theme-text-secondary truncate block">{attachment.name}</span>
+                          <span className="text-[10px] theme-text-muted">
+                            {attachment.type === 'pdf'
+                              ? `PDF • ${((attachment.size ?? 0) / 1024).toFixed(1)} KB`
+                              : `Texto • ${(attachment.text ?? '').length} caracteres`}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {/* Botão extrair (só para PDF sem texto extraído) */}
-                      {attachment.type === 'pdf' && !attachment.extractedText && attachment.file && (
-                        <button
-                          onClick={() => handleExtractAttachmentText(attachment)}
-                          className="px-2 py-1 text-[10px] theme-text-blue theme-bg-blue-accent rounded hover:opacity-80 transition-opacity"
-                          title="Extrair texto do PDF"
-                        >
-                          Extrair
-                        </button>
-                      )}
-                      {/* Badge de texto extraído */}
-                      {attachment.extractedText && (
-                        <span className="px-2 py-1 text-[10px] theme-text-green theme-bg-green-accent rounded">
-                          ✓
-                        </span>
-                      )}
                       {/* Botão remover */}
                       <button
                         onClick={() => handleRemoveAttachment(attachment.id, attachment.type)}
@@ -580,6 +573,43 @@ export const ProofCard = React.memo(({
                         <Trash2 className="w-3 h-3 text-red-400" />
                       </button>
                     </div>
+
+                    {/* Linha 2: ProcessingModeSelector + Extrair (só para PDF sem texto extraído) */}
+                    {attachment.type === 'pdf' && !attachment.extractedText && attachment.file && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <ProcessingModeSelector
+                            value={attachment.processingMode || 'pdfjs'}
+                            onChange={(mode) => updateAttachmentProcessingMode(proof.id, attachment.id, mode)}
+                            anonymizationEnabled={anonymizationEnabled}
+                            grokEnabled={grokEnabled}
+                          />
+                        </div>
+                        <button
+                          onClick={() => handleExtractAttachmentText(attachment)}
+                          className="px-2 py-1 text-[10px] theme-text-blue theme-bg-blue-accent rounded hover:opacity-80 transition-opacity whitespace-nowrap"
+                          title="Extrair texto do PDF"
+                        >
+                          Extrair
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Linha 2 alternativa: Texto extraído clicável (abre preview) */}
+                    {attachment.extractedText && (
+                      <button
+                        onClick={() => setTextPreview?.({
+                          isOpen: true,
+                          title: `Anexo: ${attachment.name}`,
+                          text: attachment.extractedText || ''
+                        })}
+                        className="flex items-center gap-1 px-2 py-1 text-[10px] theme-text-green theme-bg-green-accent rounded hover:opacity-80 transition-opacity cursor-pointer w-fit"
+                        title="Clique para ver o texto extraído"
+                      >
+                        <Check className="w-3 h-3" />
+                        Extraído: {attachment.extractedText.length.toLocaleString()} caracteres
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

@@ -144,6 +144,7 @@ export interface ProofAttachment {
   size?: number;
   uploadDate: string;
   extractedText?: string;   // Texto extraído de PDF (OCR/pdf.js)
+  processingMode?: ProcessingMode;  // v1.38.10: Modo de extração para PDFs
 }
 
 export type Proof = ProofFile | ProofText;
