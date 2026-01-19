@@ -476,7 +476,7 @@ export const ProofCard = React.memo(({
                 {/* Botão: Adicionar PDF */}
                 <button
                   onClick={() => attachmentFileInputRef.current?.click()}
-                  className="px-2 py-1 text-xs theme-bg-tertiary-50 theme-text-muted rounded hover:theme-bg-tertiary-100 transition-colors flex items-center gap-1"
+                  className="px-2 py-1 text-xs theme-text-muted rounded hover:theme-bg-tertiary-50 transition-colors flex items-center gap-1"
                   title="Adicionar anexo PDF"
                 >
                   <Plus className="w-3 h-3" />
@@ -485,7 +485,7 @@ export const ProofCard = React.memo(({
                 {/* Botão: Adicionar Texto */}
                 <button
                   onClick={() => setShowAttachmentTextInput(true)}
-                  className="px-2 py-1 text-xs theme-bg-tertiary-50 theme-text-muted rounded hover:theme-bg-tertiary-100 transition-colors flex items-center gap-1"
+                  className="px-2 py-1 text-xs theme-text-muted rounded hover:theme-bg-tertiary-50 transition-colors flex items-center gap-1"
                   title="Adicionar anexo de texto"
                 >
                   <Plus className="w-3 h-3" />
