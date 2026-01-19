@@ -18,8 +18,13 @@ import { isOralProof } from '../components';
 // ═══════════════════════════════════════════════════════════════════════════
 
 interface DocumentsInput {
+  // v1.38.11: Suporte a arrays (formato de AnalyzedDocuments)
+  peticoes?: string[];
+  peticoesText?: Array<{ name?: string; text: string }>;
+  // Legado: manter para compatibilidade com sessões antigas
   peticao?: string;
   peticaoType?: string;
+  // Contestações e complementares (já eram arrays)
   contestacoes?: string[];
   contestacoesText?: { text: string }[];
   complementares?: string[];
@@ -39,14 +44,39 @@ interface DocumentsContextResult {
  * Prepara array de documentos para envio à API de IA
  * @param docs - Documentos do processo (petição, contestações, complementares)
  * @returns Objeto com array de conteúdo e flags indicando quais documentos estão presentes
+ * @version 1.38.11 - Adicionado suporte a peticoes (array) além de peticao (singular legado)
  */
 export const prepareDocumentsContext = (docs: DocumentsInput): DocumentsContextResult => {
   const contentArray: AIMessageContent[] = [];
+  let hasPeticao = false;
 
+  // v1.38.11: Suporte a peticoes (array de PDFs base64) - formato de AnalyzedDocuments
+  docs.peticoes?.forEach((base64: string) => {
+    contentArray.push({
+      type: 'document',
+      source: { type: 'base64', media_type: 'application/pdf', data: base64 },
+      cache_control: base64.length > 100000 ? { type: "ephemeral" } : undefined
+    });
+    hasPeticao = true;
+  });
+
+  // v1.38.11: Suporte a peticoesText (array de textos colados/extraídos)
+  docs.peticoesText?.forEach((peticao: { name?: string; text: string }, index: number) => {
+    const label = peticao.name || `PETIÇÃO INICIAL ${index + 1 + (docs.peticoes?.length || 0)}`;
+    contentArray.push({
+      type: 'text',
+      text: `${label}:\n\n${peticao.text}`,
+      cache_control: peticao.text.length > 2000 ? { type: "ephemeral" } : undefined
+    });
+    hasPeticao = true;
+  });
+
+  // Legado: suporte a peticao singular (para sessões antigas migradas)
   if (docs.peticao) {
     contentArray.push(docs.peticaoType === 'pdf'
       ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: docs.peticao }, cache_control: docs.peticao.length > 100000 ? { type: "ephemeral" } : undefined }
       : { type: 'text', text: `PETIÇÃO INICIAL:\n\n${docs.peticao}`, cache_control: docs.peticao.length > 2000 ? { type: "ephemeral" } : undefined });
+    hasPeticao = true;
   }
 
   docs.contestacoes?.forEach((base64: string) => {
@@ -68,7 +98,7 @@ export const prepareDocumentsContext = (docs: DocumentsInput): DocumentsContextR
   return {
     contentArray,
     flags: {
-      hasPeticao: !!docs.peticao,
+      hasPeticao,
       hasContestacoes: (docs.contestacoes?.length || 0) + (docs.contestacoesText?.length || 0) > 0,
       hasComplementares: (docs.complementares?.length || 0) + (docs.complementaresText?.length || 0) > 0
     }

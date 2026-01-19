@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.11', feature: 'Fix crítico: chat do Assistente IA agora recebe petição inicial completa (antes: type mismatch peticao/peticoes causava petição ser ignorada)' },
   { version: '1.38.10', feature: 'Anexos de provas: dropdown de modo de extração (PDF.js, Tesseract, Claude Vision, PDF Binário) por anexo + clique em "Extraído: X caracteres" abre preview do texto' },
   { version: '1.38.9', feature: 'Expandir área útil: layout usa 95% da tela (antes: 1280px fixo), padding reduzido de 24px para 16px' },
   { version: '1.38.8', feature: 'Anexos em provas: permite adicionar documentos relacionados (impugnações, esclarecimentos) a uma prova principal, análise com delimitadores XML para IA distinguir prova principal de anexos' },
