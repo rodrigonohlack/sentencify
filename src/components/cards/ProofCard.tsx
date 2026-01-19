@@ -9,14 +9,19 @@
  */
 
 import React from 'react';
-import { FileText, Sparkles, AlertCircle, Loader2, Check, Scale, Trash2 } from 'lucide-react';
+import { FileText, Sparkles, AlertCircle, Loader2, Check, Scale, Trash2, Paperclip, Plus, X } from 'lucide-react';
 import { ProcessingModeSelector } from '../ui/ProcessingModeSelector';
 import VoiceButton from '../VoiceButton';
 import { anonymizeText } from '../../utils/text';
 import { useAIStore } from '../../stores/useAIStore';
 import { useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
-import type { ProofCardProps, ProcessingMode } from '../../types';
+import { useProofsStore } from '../../stores/useProofsStore';
+import {
+  saveAttachmentToIndexedDB,
+  removeAttachmentFromIndexedDB
+} from '../../hooks/useLocalStorage';
+import type { ProofCardProps, ProcessingMode, ProofAttachment } from '../../types';
 
 export const ProofCard = React.memo(({
   proof,
@@ -160,6 +165,114 @@ export const ProofCard = React.memo(({
     proofManager.setProofToDelete(proof);
     openModal('deleteProof');
   }, [proof, proofManager, openModal]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ANEXOS (v1.38.8)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // Estado e refs para anexos
+  const attachmentFileInputRef = React.useRef<HTMLInputElement>(null);
+  const [showAttachmentTextInput, setShowAttachmentTextInput] = React.useState(false);
+  const [attachmentTextName, setAttachmentTextName] = React.useState('');
+  const [attachmentTextContent, setAttachmentTextContent] = React.useState('');
+
+  // Store actions para anexos
+  const addAttachment = useProofsStore((s) => s.addAttachment);
+  const removeAttachment = useProofsStore((s) => s.removeAttachment);
+  const updateAttachmentExtractedText = useProofsStore((s) => s.updateAttachmentExtractedText);
+
+  // Handler: Adicionar anexo PDF
+  const handleAddAttachmentPdf = React.useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const attachmentId = `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const attachment: ProofAttachment = {
+      id: attachmentId,
+      name: file.name,
+      type: 'pdf',
+      file,
+      size: file.size,
+      uploadDate: new Date().toISOString()
+    };
+
+    // Salvar no IndexedDB
+    try {
+      await saveAttachmentToIndexedDB(proof.id, attachmentId, file);
+    } catch (err) {
+      console.error('[ProofCard] Erro ao salvar anexo:', err);
+    }
+
+    // Adicionar ao store
+    addAttachment(proof.id, attachment);
+
+    // Limpar input
+    if (attachmentFileInputRef.current) {
+      attachmentFileInputRef.current.value = '';
+    }
+  }, [proof.id, addAttachment]);
+
+  // Handler: Adicionar anexo texto
+  const handleAddAttachmentText = React.useCallback(() => {
+    if (!attachmentTextName.trim() || !attachmentTextContent.trim()) return;
+
+    const attachmentId = `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const attachment: ProofAttachment = {
+      id: attachmentId,
+      name: attachmentTextName.trim(),
+      type: 'text',
+      text: attachmentTextContent.trim(),
+      uploadDate: new Date().toISOString()
+    };
+
+    addAttachment(proof.id, attachment);
+
+    // Limpar form
+    setAttachmentTextName('');
+    setAttachmentTextContent('');
+    setShowAttachmentTextInput(false);
+  }, [proof.id, attachmentTextName, attachmentTextContent, addAttachment]);
+
+  // Handler: Remover anexo
+  const handleRemoveAttachment = React.useCallback(async (attachmentId: string, type: 'pdf' | 'text') => {
+    // Remover do IndexedDB se for PDF
+    if (type === 'pdf') {
+      try {
+        await removeAttachmentFromIndexedDB(proof.id, attachmentId);
+      } catch (err) {
+        console.error('[ProofCard] Erro ao remover anexo do IndexedDB:', err);
+      }
+    }
+
+    // Remover do store
+    removeAttachment(proof.id, attachmentId);
+  }, [proof.id, removeAttachment]);
+
+  // Handler: Extrair texto de anexo PDF
+  const handleExtractAttachmentText = React.useCallback(async (attachment: ProofAttachment) => {
+    if (!attachment.file || attachment.type !== 'pdf') return;
+
+    try {
+      const userMode = proofManager.proofProcessingModes[proof.id] || 'pdfjs';
+      const selectedMode = (anonymizationEnabled && ['claude-vision', 'pdf-puro'].includes(userMode))
+        ? 'pdfjs'
+        : userMode;
+
+      const extractedText = await extractTextFromPDFWithMode(attachment.file, selectedMode);
+
+      if (extractedText && extractedText.trim().length > 0) {
+        const textToStore = (anonymizationEnabled && anonConfig)
+          ? anonymizeText(extractedText, anonConfig, nomesParaAnonimizar)
+          : extractedText;
+        updateAttachmentExtractedText(proof.id, attachment.id, textToStore);
+      }
+    } catch (err) {
+      console.error('[ProofCard] Erro ao extrair texto do anexo:', err);
+    }
+  }, [proof.id, proofManager.proofProcessingModes, anonymizationEnabled, anonConfig, nomesParaAnonimizar, extractTextFromPDFWithMode, updateAttachmentExtractedText]);
+
+  // Obter anexos da prova atual
+  const attachments = proof.attachments || [];
 
   return (
     <div
@@ -337,6 +450,145 @@ export const ProofCard = React.memo(({
               )}
             </div>
           )}
+
+          {/* ═══════════════════════════════════════════════════════════════════════
+              SEÇÃO DE ANEXOS (v1.38.8)
+              ═══════════════════════════════════════════════════════════════════════ */}
+          <div className="mt-4 pt-3 border-t theme-border-input">
+            {/* Header da seção */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Paperclip className="w-4 h-4 theme-text-muted" />
+                <span className="text-xs font-medium theme-text-secondary">
+                  Anexos {attachments.length > 0 && `(${attachments.length})`}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                {/* Botão: Adicionar PDF */}
+                <button
+                  onClick={() => attachmentFileInputRef.current?.click()}
+                  className="px-2 py-1 text-xs theme-bg-tertiary-50 theme-text-muted rounded hover:theme-bg-tertiary-100 transition-colors flex items-center gap-1"
+                  title="Adicionar anexo PDF"
+                >
+                  <Plus className="w-3 h-3" />
+                  PDF
+                </button>
+                {/* Botão: Adicionar Texto */}
+                <button
+                  onClick={() => setShowAttachmentTextInput(true)}
+                  className="px-2 py-1 text-xs theme-bg-tertiary-50 theme-text-muted rounded hover:theme-bg-tertiary-100 transition-colors flex items-center gap-1"
+                  title="Adicionar anexo de texto"
+                >
+                  <Plus className="w-3 h-3" />
+                  Texto
+                </button>
+              </div>
+            </div>
+
+            {/* Input oculto para upload de PDF */}
+            <input
+              ref={attachmentFileInputRef}
+              type="file"
+              accept=".pdf"
+              onChange={handleAddAttachmentPdf}
+              className="hidden"
+            />
+
+            {/* Formulário inline para anexo de texto */}
+            {showAttachmentTextInput && (
+              <div className="mb-3 p-3 theme-bg-tertiary-30 rounded-lg border theme-border-input">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium theme-text-secondary">Novo Anexo de Texto</span>
+                  <button
+                    onClick={() => {
+                      setShowAttachmentTextInput(false);
+                      setAttachmentTextName('');
+                      setAttachmentTextContent('');
+                    }}
+                    className="p-1 rounded hover:theme-bg-tertiary-50"
+                  >
+                    <X className="w-3 h-3 theme-text-muted" />
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={attachmentTextName}
+                  onChange={(e) => setAttachmentTextName(e.target.value)}
+                  placeholder="Nome do anexo (ex: Impugnação do Autor)"
+                  className="w-full px-2 py-1.5 mb-2 text-xs theme-bg-secondary-50 border theme-border-input rounded focus:ring-1 focus:ring-blue-500 theme-text-secondary"
+                />
+                <textarea
+                  value={attachmentTextContent}
+                  onChange={(e) => setAttachmentTextContent(e.target.value)}
+                  placeholder="Cole o conteúdo do anexo aqui..."
+                  rows={4}
+                  className="w-full px-2 py-1.5 mb-2 text-xs theme-bg-secondary-50 border theme-border-input rounded focus:ring-1 focus:ring-blue-500 theme-text-secondary resize-none"
+                />
+                <button
+                  onClick={handleAddAttachmentText}
+                  disabled={!attachmentTextName.trim() || !attachmentTextContent.trim()}
+                  className="w-full px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
+                >
+                  Adicionar Anexo
+                </button>
+              </div>
+            )}
+
+            {/* Lista de anexos */}
+            {attachments.length > 0 ? (
+              <div className="space-y-2">
+                {attachments.map((attachment) => (
+                  <div
+                    key={attachment.id}
+                    className="flex items-center justify-between p-2 theme-bg-tertiary-30 rounded border theme-border-input"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <FileText className={`w-4 h-4 flex-shrink-0 ${attachment.type === 'pdf' ? 'text-red-400' : 'text-blue-400'}`} />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs theme-text-secondary truncate block">{attachment.name}</span>
+                        <span className="text-[10px] theme-text-muted">
+                          {attachment.type === 'pdf'
+                            ? `PDF • ${((attachment.size ?? 0) / 1024).toFixed(1)} KB`
+                            : `Texto • ${(attachment.text ?? '').length} caracteres`}
+                          {attachment.extractedText && ` • Extraído: ${attachment.extractedText.length} caracteres`}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {/* Botão extrair (só para PDF sem texto extraído) */}
+                      {attachment.type === 'pdf' && !attachment.extractedText && attachment.file && (
+                        <button
+                          onClick={() => handleExtractAttachmentText(attachment)}
+                          className="px-2 py-1 text-[10px] theme-text-blue theme-bg-blue-accent rounded hover:opacity-80 transition-opacity"
+                          title="Extrair texto do PDF"
+                        >
+                          Extrair
+                        </button>
+                      )}
+                      {/* Badge de texto extraído */}
+                      {attachment.extractedText && (
+                        <span className="px-2 py-1 text-[10px] theme-text-green theme-bg-green-accent rounded">
+                          ✓
+                        </span>
+                      )}
+                      {/* Botão remover */}
+                      <button
+                        onClick={() => handleRemoveAttachment(attachment.id, attachment.type)}
+                        className="p-1 rounded hover:bg-red-500/20 transition-colors"
+                        title="Remover anexo"
+                      >
+                        <Trash2 className="w-3 h-3 text-red-400" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs theme-text-muted text-center py-2">
+                Nenhum anexo. Adicione impugnações, esclarecimentos ou documentos relacionados.
+              </p>
+            )}
+          </div>
 
           {/* Botão: Analisar com IA */}
           <div className="mt-3">

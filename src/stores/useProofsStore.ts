@@ -19,6 +19,7 @@ import type {
   ProofFile,
   ProofText,
   Proof,
+  ProofAttachment,
   ProofAnalysisResult,
   ProcessingMode,
   NewProofTextData
@@ -182,6 +183,19 @@ interface ProofsStoreState {
 
   /** Salva conclusão do juiz para uma prova */
   handleSaveProofConclusion: (proofId: string | number, conclusion: string) => void;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ACTIONS DE ANEXOS (v1.38.8)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Adiciona anexo a uma prova */
+  addAttachment: (proofId: string | number, attachment: ProofAttachment) => void;
+
+  /** Remove anexo de uma prova */
+  removeAttachment: (proofId: string | number, attachmentId: string) => void;
+
+  /** Atualiza texto extraído de anexo PDF */
+  updateAttachmentExtractedText: (proofId: string | number, attachmentId: string, text: string) => void;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // MÉTODOS DE PERSISTÊNCIA
@@ -468,6 +482,90 @@ export const useProofsStore = create<ProofsStoreState>()(
         }, false, 'handleSaveProofConclusion'),
 
       // ═══════════════════════════════════════════════════════════════════════
+      // ACTIONS DE ANEXOS (v1.38.8)
+      // ═══════════════════════════════════════════════════════════════════════
+
+      addAttachment: (proofId, attachment) =>
+        set((state) => {
+          const key = String(proofId);
+          // Procurar em proofFiles
+          const fileIndex = state.proofFiles.findIndex(
+            (p) => String(p.id) === key
+          );
+          if (fileIndex !== -1) {
+            if (!state.proofFiles[fileIndex].attachments) {
+              state.proofFiles[fileIndex].attachments = [];
+            }
+            state.proofFiles[fileIndex].attachments!.push(attachment);
+            return;
+          }
+          // Procurar em proofTexts
+          const textIndex = state.proofTexts.findIndex(
+            (p) => String(p.id) === key
+          );
+          if (textIndex !== -1) {
+            if (!state.proofTexts[textIndex].attachments) {
+              state.proofTexts[textIndex].attachments = [];
+            }
+            state.proofTexts[textIndex].attachments!.push(attachment);
+          }
+        }, false, 'addAttachment'),
+
+      removeAttachment: (proofId, attachmentId) =>
+        set((state) => {
+          const key = String(proofId);
+          // Procurar em proofFiles
+          const fileIndex = state.proofFiles.findIndex(
+            (p) => String(p.id) === key
+          );
+          if (fileIndex !== -1 && state.proofFiles[fileIndex].attachments) {
+            state.proofFiles[fileIndex].attachments = state.proofFiles[fileIndex].attachments!.filter(
+              (a) => a.id !== attachmentId
+            );
+            return;
+          }
+          // Procurar em proofTexts
+          const textIndex = state.proofTexts.findIndex(
+            (p) => String(p.id) === key
+          );
+          if (textIndex !== -1 && state.proofTexts[textIndex].attachments) {
+            state.proofTexts[textIndex].attachments = state.proofTexts[textIndex].attachments!.filter(
+              (a) => a.id !== attachmentId
+            );
+          }
+        }, false, 'removeAttachment'),
+
+      updateAttachmentExtractedText: (proofId, attachmentId, text) =>
+        set((state) => {
+          const key = String(proofId);
+          // Procurar em proofFiles
+          const fileIndex = state.proofFiles.findIndex(
+            (p) => String(p.id) === key
+          );
+          if (fileIndex !== -1 && state.proofFiles[fileIndex].attachments) {
+            const attachIdx = state.proofFiles[fileIndex].attachments!.findIndex(
+              (a) => a.id === attachmentId
+            );
+            if (attachIdx !== -1) {
+              state.proofFiles[fileIndex].attachments![attachIdx].extractedText = text;
+              return;
+            }
+          }
+          // Procurar em proofTexts
+          const textIndex = state.proofTexts.findIndex(
+            (p) => String(p.id) === key
+          );
+          if (textIndex !== -1 && state.proofTexts[textIndex].attachments) {
+            const attachIdx = state.proofTexts[textIndex].attachments!.findIndex(
+              (a) => a.id === attachmentId
+            );
+            if (attachIdx !== -1) {
+              state.proofTexts[textIndex].attachments![attachIdx].extractedText = text;
+            }
+          }
+        }, false, 'updateAttachmentExtractedText'),
+
+      // ═══════════════════════════════════════════════════════════════════════
       // MÉTODOS DE PERSISTÊNCIA
       // ═══════════════════════════════════════════════════════════════════════
 
@@ -631,6 +729,11 @@ export function useProofManagerCompat() {
   const handleUnlinkProof = useProofsStore((s) => s.handleUnlinkProof);
   const handleSaveProofConclusion = useProofsStore((s) => s.handleSaveProofConclusion);
 
+  // Attachment Actions (v1.38.8)
+  const addAttachment = useProofsStore((s) => s.addAttachment);
+  const removeAttachment = useProofsStore((s) => s.removeAttachment);
+  const updateAttachmentExtractedText = useProofsStore((s) => s.updateAttachmentExtractedText);
+
   // Persistence
   const serializeForPersistence = useProofsStore((s) => s.serializeForPersistence);
   const restoreFromPersistence = useProofsStore((s) => s.restoreFromPersistence);
@@ -705,6 +808,11 @@ export function useProofManagerCompat() {
     handleLinkProof,
     handleUnlinkProof,
     handleSaveProofConclusion,
+
+    // Attachment Actions (3) - v1.38.8
+    addAttachment,
+    removeAttachment,
+    updateAttachmentExtractedText,
 
     // Métodos de Persistência (3)
     serializeForPersistence,

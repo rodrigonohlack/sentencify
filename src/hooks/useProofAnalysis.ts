@@ -273,6 +273,19 @@ export const useProofAnalysis = ({
       // Preparar conteudo da prova
       const contentArray: AIMessageContent[] = [];
 
+      // v1.38.8: Obter anexos da prova
+      const attachments = proof.attachments || [];
+      const hasAttachments = attachments.length > 0;
+
+      // v1.38.8: Helper para construir conteúdo com delimitadores XML
+      // Quando há anexos, usamos XML para distinguir prova principal dos anexos
+      const buildProofContent = (proofText: string, proofName: string, proofType: string): string => {
+        if (hasAttachments) {
+          return `<prova-principal nome="${proofName}" tipo="${proofType}">\n${proofText}\n</prova-principal>`;
+        }
+        return `PROVA (${proofType}):\n\n${proofText}`;
+      };
+
       // v1.36.28: Verificacao robusta - usa type === 'pdf' para compatibilidade com provas existentes
       if (proof.type === 'pdf' || proof.isPdf) {
         // Prova em PDF - v1.21.2: Respeita modo de processamento escolhido
@@ -286,7 +299,7 @@ export const useProofAnalysis = ({
             if (extractedText) {
               contentArray.push({
                 type: 'text' as const,
-                text: `PROVA (texto extraído do PDF):\n\n${maybeAnonymize(extractedText)}`
+                text: buildProofContent(maybeAnonymize(extractedText), proof.name, 'texto extraído do PDF')
               });
             } else {
               proofManager.removeAnalyzingProof(proofId);
@@ -299,11 +312,24 @@ export const useProofAnalysis = ({
               showToast('Arquivo PDF não encontrado.', 'error');
               return;
             }
+            // v1.38.8: Se houver anexos, incluir header XML antes do PDF
+            if (hasAttachments) {
+              contentArray.push({
+                type: 'text' as const,
+                text: `<prova-principal nome="${proof.name}" tipo="PDF binário">`
+              });
+            }
             const base64 = await storage.fileToBase64(proof.file);
             contentArray.push({
               type: 'document' as const,
               source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 }
             });
+            if (hasAttachments) {
+              contentArray.push({
+                type: 'text' as const,
+                text: `</prova-principal>`
+              });
+            }
           }
         } else {
           // Usuário escolheu modo de extração (pdfjs ou claude-vision)
@@ -311,7 +337,7 @@ export const useProofAnalysis = ({
           if (extractedText) {
             contentArray.push({
               type: 'text' as const,
-              text: `PROVA (texto extraído do PDF):\n\n${maybeAnonymize(extractedText)}`
+              text: buildProofContent(maybeAnonymize(extractedText), proof.name, 'texto extraído do PDF')
             });
           } else {
             proofManager.removeAnalyzingProof(proofId);
@@ -323,7 +349,71 @@ export const useProofAnalysis = ({
         // Prova em texto
         contentArray.push({
           type: 'text' as const,
-          text: `PROVA:\n\n${maybeAnonymize(proof.text || '')}`
+          text: buildProofContent(maybeAnonymize(proof.text || ''), proof.name, 'texto')
+        });
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // ANEXOS DA PROVA (v1.38.8)
+      // ═══════════════════════════════════════════════════════════════════════════
+      if (hasAttachments) {
+        for (let i = 0; i < attachments.length; i++) {
+          const attachment = attachments[i];
+          const attachmentNumber = i + 1;
+
+          if (attachment.type === 'pdf') {
+            // Anexo PDF: usar texto extraído se disponível
+            const attachmentText = attachment.extractedText;
+            if (attachmentText) {
+              contentArray.push({
+                type: 'text' as const,
+                text: `<anexo numero="${attachmentNumber}" nome="${attachment.name}" tipo="PDF">\n${maybeAnonymize(attachmentText)}\n</anexo>`
+              });
+            } else if (attachment.file && !shouldAnonymize) {
+              // PDF binário se não extraído e anonimização desativada
+              contentArray.push({
+                type: 'text' as const,
+                text: `<anexo numero="${attachmentNumber}" nome="${attachment.name}" tipo="PDF binário">`
+              });
+              const base64 = await storage.fileToBase64(attachment.file);
+              contentArray.push({
+                type: 'document' as const,
+                source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 }
+              });
+              contentArray.push({
+                type: 'text' as const,
+                text: `</anexo>`
+              });
+            } else {
+              // Anexo PDF sem texto extraído e com anonimização - avisar
+              contentArray.push({
+                type: 'text' as const,
+                text: `<anexo numero="${attachmentNumber}" nome="${attachment.name}" tipo="PDF">\n[Texto não extraído - extraia o texto do anexo para incluí-lo na análise]\n</anexo>`
+              });
+            }
+          } else {
+            // Anexo de texto
+            contentArray.push({
+              type: 'text' as const,
+              text: `<anexo numero="${attachmentNumber}" nome="${attachment.name}" tipo="texto">\n${maybeAnonymize(attachment.text || '')}\n</anexo>`
+            });
+          }
+        }
+
+        // Adicionar instrução sobre os delimitadores XML
+        contentArray.push({
+          type: 'text' as const,
+          text: `
+IMPORTANTE: O documento está organizado com delimitadores XML.
+- <prova-principal>: contém o documento PRINCIPAL (ex: laudo pericial, perícia técnica)
+- <anexo>: contém documentos RELACIONADOS (ex: impugnações das partes, esclarecimentos do perito)
+
+Ao analisar, DISTINGA CLARAMENTE entre:
+- Conclusões e conteúdo do documento principal
+- Alegações, impugnações ou esclarecimentos contidos nos anexos
+- NÃO confunda conteúdo dos anexos com conteúdo da prova principal
+- Indique explicitamente a origem de cada informação (se da prova principal ou de qual anexo)
+`
         });
       }
 

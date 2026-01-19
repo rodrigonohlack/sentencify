@@ -185,6 +185,86 @@ export const clearAllPdfsFromIndexedDB = async () => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
+// ATTACHMENT INDEXEDDB HELPERS (v1.38.8)
+// Reutiliza o mesmo banco 'sentencify-pdfs' com prefixo diferente
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Gera ID do anexo no IndexedDB
+ * Formato: attachment-{proofId}-{attachmentId}
+ */
+export const getAttachmentIndexedDBKey = (proofId: string | number, attachmentId: string): string => {
+  return `attachment-${proofId}-${attachmentId}`;
+};
+
+/**
+ * Salva um anexo PDF no IndexedDB
+ */
+export const saveAttachmentToIndexedDB = async (
+  proofId: string | number,
+  attachmentId: string,
+  file: File
+) => {
+  const id = getAttachmentIndexedDBKey(proofId, attachmentId);
+  await savePdfToIndexedDB(id, file, 'attachment');
+};
+
+/**
+ * Recupera um anexo PDF do IndexedDB
+ */
+export const getAttachmentFromIndexedDB = async (
+  proofId: string | number,
+  attachmentId: string
+): Promise<File | null> => {
+  const id = getAttachmentIndexedDBKey(proofId, attachmentId);
+  return await getPdfFromIndexedDB(id);
+};
+
+/**
+ * Remove um anexo específico do IndexedDB
+ */
+export const removeAttachmentFromIndexedDB = async (
+  proofId: string | number,
+  attachmentId: string
+) => {
+  const id = getAttachmentIndexedDBKey(proofId, attachmentId);
+  await removePdfFromIndexedDB(id);
+};
+
+/**
+ * Remove todos os anexos de uma prova do IndexedDB
+ */
+export const removeAllAttachmentsFromIndexedDB = async (proofId: string | number) => {
+  try {
+    const db = await openPdfDB();
+    const transaction = db.transaction([PDF_STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(PDF_STORE_NAME);
+    const prefix = `attachment-${proofId}-`;
+
+    // Obter todas as chaves
+    const keys = await new Promise<IDBValidKey[]>((resolve, reject) => {
+      const request = store.getAllKeys();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+
+    // Filtrar e deletar chaves com o prefixo
+    const deletePromises = keys
+      .filter((key) => typeof key === 'string' && key.startsWith(prefix))
+      .map((key) => new Promise<void>((resolve, reject) => {
+        const request = store.delete(key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      }));
+
+    await Promise.all(deletePromises);
+    db.close();
+  } catch (error) {
+    console.error('[Attachments] Erro ao remover anexos:', error);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════
 

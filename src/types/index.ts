@@ -110,6 +110,7 @@ export interface ProofFile {
   isPdf?: boolean;
   fileData?: string; // Base64 data for restored PDFs
   isPlaceholder?: boolean; // v1.35.92: PDF placeholder (arquivo não salvo, só texto)
+  attachments?: ProofAttachment[]; // v1.38.8: Anexos da prova
   // Union compatibility
   text?: never;
 }
@@ -122,10 +123,27 @@ export interface ProofText {
   uploadDate: string;
   isPlaceholder?: boolean; // v1.35.92: Consistência com ProofFile
   isPdf?: boolean; // v1.35.79: Compat com linkedProofs
+  attachments?: ProofAttachment[]; // v1.38.8: Anexos da prova
   // Union compatibility
   file?: never;
   size?: never;
   fileData?: never;
+}
+
+/**
+ * v1.38.8: Anexo de prova (impugnações, esclarecimentos, etc.)
+ * Permite agrupar documentos relacionados sob uma única prova
+ */
+export interface ProofAttachment {
+  id: string;
+  name: string;
+  type: 'pdf' | 'text';
+  file?: File;              // File object (runtime)
+  fileData?: string;        // Base64 para persistência (IndexedDB)
+  text?: string;            // Conteúdo para anexos de texto
+  size?: number;
+  uploadDate: string;
+  extractedText?: string;   // Texto extraído de PDF (OCR/pdf.js)
 }
 
 export type Proof = ProofFile | ProofText;
