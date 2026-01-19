@@ -23,8 +23,6 @@ import type { LockedTabOverlayProps } from '../../types';
  * @param setActiveTab - Callback para mudar de aba
  */
 const LockedTabOverlay = React.memo(({ isPrimaryTab, activeTab, setActiveTab }: LockedTabOverlayProps) => {
-  const [controlTaken, setControlTaken] = React.useState(false);
-
   const handleTakeControl = React.useCallback(() => {
     const LOCK_KEY = 'sentencify-primary-tab-lock';
     const TAKEOVER_KEY = 'sentencify-tab-takeover';
@@ -43,8 +41,9 @@ const LockedTabOverlay = React.memo(({ isPrimaryTab, activeTab, setActiveTab }: 
       takeover: true
     }));
 
-    setControlTaken(true);
-  }, [setControlTaken]);
+    // v1.38.7: Reload automático (standalone não tem restrição do sandbox)
+    window.location.reload();
+  }, []);
 
   const handleGoToModels = React.useCallback(() => {
     setActiveTab('models');
@@ -149,118 +148,75 @@ const LockedTabOverlay = React.memo(({ isPrimaryTab, activeTab, setActiveTab }: 
           </span>
         </p>
 
-        {/* v1.9.10: Instrução para assumir controle */}
+        {/* v1.38.7: Instrução simplificada (reload automático) */}
         <p
           style={{
-            fontSize: controlTaken ? '16px' : '14px',
+            fontSize: '14px',
             color: '#fbbf24',
             lineHeight: '1.5',
             marginBottom: '24px',
             padding: '12px 16px',
             background: 'rgba(251, 191, 36, 0.1)',
             borderRadius: '8px',
-            border: '1px solid rgba(251, 191, 36, 0.3)',
-            fontWeight: controlTaken ? '700' : '400',
-            animation: controlTaken ? 'pulse 2s ease-in-out infinite' : 'none',
-            transition: 'all 0.3s ease'
+            border: '1px solid rgba(251, 191, 36, 0.3)'
           }}
         >
-          {controlTaken ? (
-            <>
-              <strong>✓ Controle assumido!</strong><br />
-              Agora pressione <kbd style={{
-                padding: '4px 8px',
-                background: 'rgba(255, 255, 255, 0.2)',
-                borderRadius: '4px',
-                fontFamily: 'monospace',
-                fontSize: '15px',
-                fontWeight: '700',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-              }}>F5</kbd> para recarregar a página
-            </>
-          ) : (
-            <>
-              <strong>Para assumir o controle:</strong><br />
-              1. Clique em "Assumir Controle" para reivindicar o lock<br />
-              2. Depois, pressione <kbd style={{
-                padding: '2px 6px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '4px',
-                fontFamily: 'monospace',
-                fontSize: '13px'
-              }}>F5</kbd> para recarregar
-            </>
-          )}
+          Clique em <strong>"Assumir Controle"</strong> para transferir a edição para esta aba.
+          A página será recarregada automaticamente.
         </p>
 
         {/* Botão de Assumir Controle */}
         <button
           onClick={handleTakeControl}
-          disabled={controlTaken}
           style={{
             width: '100%',
             padding: '14px 24px',
-            background: controlTaken
-              ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-              : 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+            background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
             color: 'white',
             fontSize: '15px',
             fontWeight: '600',
             border: 'none',
             borderRadius: '8px',
-            cursor: controlTaken ? 'not-allowed' : 'pointer',
-            boxShadow: controlTaken
-              ? '0 4px 12px rgba(16, 185, 129, 0.3)'
-              : '0 4px 12px rgba(59, 130, 246, 0.3)',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
             transition: 'all 0.2s ease',
-            letterSpacing: '0.025em',
-            opacity: controlTaken ? 0.9 : 1
+            letterSpacing: '0.025em'
           }}
           onMouseEnter={(e) => {
-            if (!controlTaken) {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.4)';
-            }
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.4)';
           }}
           onMouseLeave={(e) => {
-            if (!controlTaken) {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
-            }
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
           }}
         >
-          {controlTaken ? '✓ Controle Assumido' : '🔒 Assumir Controle'}
+          🔒 Assumir Controle
         </button>
 
         {/* v1.9.6: Botão para acessar Modelos sem assumir controle */}
         <button
           onClick={handleGoToModels}
-          disabled={controlTaken}
           style={{
             width: '100%',
             marginTop: '12px',
             padding: '12px 24px',
             background: 'transparent',
-            color: controlTaken ? '#64748b' : '#60a5fa',
+            color: '#60a5fa',
             fontSize: '14px',
             fontWeight: '500',
-            border: `2px solid ${controlTaken ? '#475569' : '#3b82f6'}`,
+            border: '2px solid #3b82f6',
             borderRadius: '8px',
-            cursor: controlTaken ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s ease',
-            opacity: controlTaken ? 0.5 : 1
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => {
-            if (!controlTaken) {
-              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)';
-              e.currentTarget.style.borderColor = '#60a5fa';
-            }
+            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)';
+            e.currentTarget.style.borderColor = '#60a5fa';
           }}
           onMouseLeave={(e) => {
-            if (!controlTaken) {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.borderColor = '#3b82f6';
-            }
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.borderColor = '#3b82f6';
           }}
         >
           📚 Ir para Biblioteca de Modelos

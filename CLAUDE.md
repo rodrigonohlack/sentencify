@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.38.6 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.38.7 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.38.7 | Reload automático no Assumir Controle: não precisa mais pressionar F5 (standalone não tem restrição do sandbox) |
 | v1.38.6 | Fix race condition no tab lock: mover leitura de sessionStorage para useEffect (evita StrictMode limpar TAKEOVER_KEY antes do claim) |
 | v1.38.5 | Fix melhoria com IA no ditado: improveWithAI em todos os VoiceButtons (Sua Decisão, Regenerar com IA, Assistente IA, Chat, Preview Modal) |
 | v1.38.3 | CSP (Content Security Policy) headers: proteção contra XSS com whitelist de CDNs, APIs IA, Google, HuggingFace, GitHub e Sentry |
