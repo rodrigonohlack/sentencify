@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.13', feature: 'VirtualList no ChangelogModal: renderiza só ~15-20 items visíveis (antes: 430+ DOM nodes) - performance' },
   { version: '1.38.12', feature: 'Controle granular de contexto no Assistente IA: escopo de tópicos (atual/selecionados/todos) + toggle petições/contestações + fix proofFilter oral no quick prompt' },
   { version: '1.38.11', feature: 'Fix crítico: chat do Assistente IA agora recebe petição inicial completa (antes: type mismatch peticao/peticoes causava petição ser ignorada)' },
   { version: '1.38.10', feature: 'Anexos de provas: dropdown de modo de extração (PDF.js, Tesseract, Claude Vision, PDF Binário) por anexo + clique em "Extraído: X caracteres" abre preview do texto' },
