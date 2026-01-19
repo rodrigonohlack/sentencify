@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.6', feature: 'Fix race condition no tab lock: mover leitura de sessionStorage para useEffect (evita StrictMode limpar TAKEOVER_KEY antes do claim)' },
   { version: '1.38.5', feature: 'Fix melhoria com IA no ditado: adicionar improveWithAI em todos os VoiceButtons (QuillDecisionEditor, AIRegenerationSection, AIAssistantBaseLegacy, ChatInput, PreviewModals)' },
   { version: '1.38.3', feature: 'CSP (Content Security Policy) headers: proteção contra XSS com whitelist de CDNs (Quill, PDF.js, Tesseract), APIs IA, Google OAuth/Drive, HuggingFace, GitHub Releases e Sentry' },
   { version: '1.38.2', feature: 'Fix ícone Grok invisível no tema escuro: usar text-gray-400 (cor única para ambos os temas, igual aos outros ícones)' },

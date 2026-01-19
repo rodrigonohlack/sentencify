@@ -26,22 +26,14 @@ export interface UsePrimaryTabLockReturn {
 export function usePrimaryTabLock(): UsePrimaryTabLockReturn {
   const [isPrimaryTab, setIsPrimaryTab] = useState(false);
 
-  const getSavedTabId = () => {
-    try {
-      const saved = sessionStorage.getItem(TAKEOVER_KEY);
-      if (saved) {
-        sessionStorage.removeItem(TAKEOVER_KEY); // Limpar imediatamente
-        return saved;
-      }
-    } catch (err) {
-      // Ignore sessionStorage errors
-    }
-    return null;
-  };
-
-  const tabIdRef = useRef(
-    getSavedTabId() || `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  // v1.38.6: Gerar tabId PROVISÓRIO (sem ler sessionStorage no render)
+  // O takeover será processado no useEffect para evitar race condition com StrictMode
+  const tabIdRef = useRef<string>(
+    `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
   );
+
+  // Flag para garantir que o takeover seja processado apenas 1x
+  const takeoverProcessedRef = useRef(false);
 
   // Criar lock (tornar esta aba primária)
   // v1.20.1: Adicionado parâmetro force para takeover e locks expirados
@@ -125,8 +117,26 @@ export function usePrimaryTabLock(): UsePrimaryTabLockReturn {
     };
   }, [releaseLock]);
 
-  // Mount: Tentar claim imediatamente
+  // v1.38.6: Processar takeover + claim inicial (apenas 1x no mount)
+  // IMPORTANTE: Isso DEVE estar em useEffect para evitar race condition com StrictMode
+  // Se estivesse no render, múltiplas renderizações poderiam ler/limpar o sessionStorage
   useEffect(() => {
+    if (takeoverProcessedRef.current) return;
+    takeoverProcessedRef.current = true;
+
+    try {
+      const saved = sessionStorage.getItem(TAKEOVER_KEY);
+      if (saved) {
+        // Substituir tabId provisório pelo salvo do "Assumir Controle"
+        tabIdRef.current = saved;
+        sessionStorage.removeItem(TAKEOVER_KEY);
+        console.log('[TabLock] Takeover restaurado:', saved);
+      }
+    } catch (err) {
+      // Ignore sessionStorage errors
+    }
+
+    // Agora sim, tentar claim com o tabId correto
     claimPrimaryTab();
   }, [claimPrimaryTab]);
 
