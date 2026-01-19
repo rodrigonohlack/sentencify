@@ -11,6 +11,9 @@ import { X, Copy } from 'lucide-react';
 import { CSS } from './BaseModal';
 import { VoiceButton } from '../VoiceButton';
 import { QuillEditorBase, getQuillToolbarConfig } from '../editors';
+import { useAIIntegration } from '../../hooks';
+import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
+import { useAIStore } from '../../stores/useAIStore';
 import type { QuillInstance, ModelPreviewModalProps, Model } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -64,6 +67,11 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
 }) => {
   // Ref para o editor Quill em modo edição
   const quickEditRef = React.useRef<QuillInstance | null>(null);
+
+  // v1.38.5: Voice improvement com IA
+  const aiSettings = useAIStore((state) => state.aiSettings);
+  const { callAI } = useAIIntegration();
+  const { improveText } = useVoiceImprovement({ callAI });
 
   // Conteúdo Sanitizado (Memoizado para Performance)
   const sanitizedContent = React.useMemo(
@@ -238,6 +246,11 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
                   size="md"
                   idleText="Ditar"
                   onError={(err: unknown) => console.warn('[VoiceToText]', err)}
+                  improveWithAI={aiSettings.voiceImprovement?.enabled}
+                  onImproveText={aiSettings.voiceImprovement?.enabled
+                    ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
+                    : undefined
+                  }
                 />
               </div>
               <div

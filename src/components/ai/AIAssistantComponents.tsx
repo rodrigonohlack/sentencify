@@ -13,6 +13,9 @@ import { Sparkles, X } from 'lucide-react';
 import { CSS } from '../modals/BaseModal';
 import { ChatHistoryArea, ChatInput, InsertDropdown } from '../chat';
 import { VoiceButton } from '../VoiceButton';
+import { useAIIntegration } from '../../hooks';
+import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
+import { useAIStore } from '../../stores/useAIStore';
 import type {
   AIAssistantBaseLegacyProps,
   AIAssistantBaseProps,
@@ -114,6 +117,11 @@ export const AIAssistantBaseLegacy = React.memo(({
   sanitizeHTML = (html: string) => html || '',
 }: AIAssistantBaseLegacyProps) => {
   const [copied, setCopied] = React.useState(false);
+
+  // v1.38.5: Voice improvement com IA
+  const aiSettings = useAIStore((state) => state.aiSettings);
+  const { callAI } = useAIIntegration();
+  const { improveText } = useVoiceImprovement({ callAI });
 
   const handleCopyText = React.useCallback(() => {
     // v1.25.18: Usar helper ao invés de DOM (memory leak fix)
@@ -221,6 +229,11 @@ export const AIAssistantBaseLegacy = React.memo(({
                 size="sm"
                 idleText="Ditar"
                 onError={(err: unknown) => console.warn('[VoiceToText]', err)}
+                improveWithAI={aiSettings.voiceImprovement?.enabled}
+                onImproveText={aiSettings.voiceImprovement?.enabled
+                  ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
+                  : undefined
+                }
               />
             </div>
             <textarea

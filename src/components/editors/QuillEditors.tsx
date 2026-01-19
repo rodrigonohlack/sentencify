@@ -511,6 +511,9 @@ interface AIRegenerationSectionProps {
   regenerating?: boolean;
   onRegenerate: () => void;
   contextLabel?: string;
+  // v1.38.5: Voice improvement com IA
+  improveWithAI?: boolean;
+  onImproveText?: (text: string) => Promise<string>;
 }
 
 /**
@@ -522,7 +525,9 @@ export const AIRegenerationSection = React.memo(({
   onInstructionChange,
   regenerating = false,
   onRegenerate,
-  contextLabel = 'texto'
+  contextLabel = 'texto',
+  improveWithAI,
+  onImproveText
 }: AIRegenerationSectionProps) => {
   const [localInstruction, setLocalInstruction] = React.useState(customInstruction);
 
@@ -580,6 +585,8 @@ export const AIRegenerationSection = React.memo(({
           onTranscript={handleVoiceTranscript}
           size="sm"
           className="self-start mt-1"
+          improveWithAI={improveWithAI}
+          onImproveText={onImproveText}
         />
       </div>
 
@@ -691,6 +698,11 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
   const { fontSize, setFontSize } = useFontSizeControl();
   const { isFullscreen, toggleFullscreen, isSplitMode, toggleSplitMode, splitPosition, handleSplitDrag, containerRef } = useFullscreen();
 
+  // v1.38.5: Voice improvement com IA
+  const aiSettings = useAIStore((state) => state.aiSettings);
+  const { callAI } = useAIIntegration();
+  const { improveText } = useVoiceImprovement({ callAI });
+
   const [isDragging, setIsDragging] = React.useState(false);
 
   const startDrag = React.useCallback((e: React.MouseEvent) => {
@@ -801,6 +813,11 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
             onTranscript={handleVoiceTranscript}
             size="md"
             onError={(err: unknown) => console.warn('[VoiceToText]', err)}
+            improveWithAI={aiSettings.voiceImprovement?.enabled}
+            onImproveText={aiSettings.voiceImprovement?.enabled
+              ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
+              : undefined
+            }
           />
 
           {onOpenAIAssistant && (
@@ -959,6 +976,11 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
             regenerating={regenerating}
             onRegenerate={onRegenerate}
             contextLabel="dispositivo"
+            improveWithAI={aiSettings.voiceImprovement?.enabled}
+            onImproveText={aiSettings.voiceImprovement?.enabled
+              ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
+              : undefined
+            }
           />
         )}
       </div>
@@ -1028,6 +1050,11 @@ export const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstanc
   const { spacing } = useSpacingControl();
   const { fontSize } = useFontSizeControl();
 
+  // v1.38.5: Voice improvement com IA
+  const aiSettings = useAIStore((state) => state.aiSettings);
+  const { callAI } = useAIIntegration();
+  const { improveText } = useVoiceImprovement({ callAI });
+
   const toolbarConfig = React.useMemo(() => false, []);
 
   return (
@@ -1062,6 +1089,11 @@ export const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstanc
           regenerating={regenerating}
           onRegenerate={onRegenerate}
           contextLabel="mini-relatório"
+          improveWithAI={aiSettings.voiceImprovement?.enabled}
+          onImproveText={aiSettings.voiceImprovement?.enabled
+            ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
+            : undefined
+          }
         />
       )}
     </div>

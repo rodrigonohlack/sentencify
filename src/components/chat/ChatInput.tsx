@@ -7,6 +7,9 @@
 import React from 'react';
 import type { ChatInputProps } from '../../types';
 import { VoiceButton } from '../VoiceButton';
+import { useAIIntegration } from '../../hooks';
+import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
+import { useAIStore } from '../../stores/useAIStore';
 
 export const ChatInput = React.memo(({
   onSend,
@@ -14,6 +17,11 @@ export const ChatInput = React.memo(({
   placeholder
 }: ChatInputProps) => {
   const [value, setValue] = React.useState('');
+
+  // v1.38.5: Voice improvement com IA
+  const aiSettings = useAIStore((state) => state.aiSettings);
+  const { callAI } = useAIIntegration();
+  const { improveText } = useVoiceImprovement({ callAI });
 
   const handleSend = () => {
     if (!value.trim() || disabled) return;
@@ -48,6 +56,11 @@ export const ChatInput = React.memo(({
         onTranscript={handleVoiceTranscript}
         size="sm"
         className="self-end mb-1"
+        improveWithAI={aiSettings.voiceImprovement?.enabled}
+        onImproveText={aiSettings.voiceImprovement?.enabled
+          ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
+          : undefined
+        }
       />
       <button
         onClick={handleSend}
