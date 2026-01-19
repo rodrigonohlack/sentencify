@@ -60,6 +60,53 @@ app.use((req, res, next) => {
   next();
 });
 
+// v1.38.3: Content Security Policy (CSP) para proteção contra XSS
+// Recursos externos mapeados: CDNs (Quill, PDF.js, Tesseract, DOMPurify),
+// APIs IA (Claude, Gemini, OpenAI, Grok), Google (Drive, OAuth),
+// HuggingFace (modelos NER/E5), GitHub Releases (embeddings), Sentry
+app.use((req, res, next) => {
+  const cspDirectives = [
+    // Fallback: apenas recursos do próprio domínio
+    "default-src 'self'",
+
+    // Scripts: CDNs necessários + unsafe-inline/eval para Quill e Transformers.js WASM
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.quilljs.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://accounts.google.com",
+
+    // Estilos: Quill injeta estilos inline dinamicamente
+    "style-src 'self' 'unsafe-inline' https://cdn.quilljs.com https://cdn.jsdelivr.net",
+
+    // Imagens: avatares Google, data URIs (favicon), blobs (PDFs renderizados)
+    "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.googleusercontent.com",
+
+    // Fontes: apenas locais (Lucide React icons são npm)
+    "font-src 'self'",
+
+    // Conexões: APIs de IA, Google, HuggingFace, GitHub, Sentry (US region)
+    "connect-src 'self' https://api.anthropic.com https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://github.com https://raw.githubusercontent.com https://cdn-lfs.huggingface.co https://huggingface.co https://o4510650008076288.ingest.us.sentry.io",
+
+    // Frames: popup do Google OAuth
+    "frame-src 'self' https://accounts.google.com",
+
+    // Workers: PDF.js e Tesseract usam blob workers, ai-worker.js é local
+    "worker-src 'self' blob:",
+
+    // Child frames/workers
+    "child-src 'self' blob:",
+
+    // Bloquear plugins (Flash, Java, etc.)
+    "object-src 'none'",
+
+    // Restringir base URI para evitar hijacking
+    "base-uri 'self'",
+
+    // Restringir destinos de formulários
+    "form-action 'self'"
+  ];
+
+  res.setHeader('Content-Security-Policy', cspDirectives.join('; '));
+  next();
+});
+
 app.use(cors({
   origin: function(origin, callback) {
     // Permitir requests sem origin (ex: curl, Postman, health checks)

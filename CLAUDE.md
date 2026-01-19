@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.38.2 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.38.3 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.38.3 | CSP (Content Security Policy) headers: proteção contra XSS com whitelist de CDNs, APIs IA, Google, HuggingFace, GitHub e Sentry |
 | v1.38.2 | Fix ícone Grok invisível no tema escuro: usar text-gray-400 (cor única para ambos os temas) |
 | v1.38.1 | Fix bulk upload rate limiting: bulkStaggerDelay padrão 0ms→500ms para espaçar requisições e evitar erro 429 |
 | v1.38.0 | Limpeza de código órfão: remover 4 funções não utilizadas do App.tsx (~40 linhas de código morto) |
