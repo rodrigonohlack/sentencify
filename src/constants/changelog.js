@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.9', feature: 'Expandir área útil: layout usa 95% da tela (antes: 1280px fixo), padding reduzido de 24px para 16px' },
   { version: '1.38.8', feature: 'Anexos em provas: permite adicionar documentos relacionados (impugnações, esclarecimentos) a uma prova principal, análise com delimitadores XML para IA distinguir prova principal de anexos' },
   { version: '1.38.7', feature: 'Reload automático no Assumir Controle: não precisa mais pressionar F5 (standalone não tem restrição do sandbox)' },
   { version: '1.38.6', feature: 'Fix race condition no tab lock: mover leitura de sessionStorage para useEffect (evita StrictMode limpar TAKEOVER_KEY antes do claim)' },

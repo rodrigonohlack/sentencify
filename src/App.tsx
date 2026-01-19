@@ -2985,7 +2985,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       <GlobalHoverStyles />
       <ThemeStyles />
       <div className="min-h-screen theme-gradient-app theme-text-primary">
-      <div className="container mx-auto p-6 max-w-7xl">
+      <div className="container mx-auto p-4 max-w-[95vw]">
         <div className="theme-bg-primary rounded-lg shadow-2xl border theme-border-secondary" style={{ backgroundColor: 'var(--bg-primary)', opacity: 0.95 }}>
           <div className={CSS.modalHeader}>
             <div className="flex items-center justify-between">
