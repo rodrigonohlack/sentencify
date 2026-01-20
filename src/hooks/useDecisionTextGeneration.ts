@@ -465,6 +465,13 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
     // ═══════════════════════════════════════════════════════════════════════════
     // DOUBLE CHECK DO QUICK PROMPT (v1.37.65)
     // ═══════════════════════════════════════════════════════════════════════════
+    // DEBUG: Verificar condições do Double Check
+    console.log('[QuickPrompt DoubleCheck] Condições:', {
+      resultSuccess: result.success,
+      dcEnabled: aiIntegration?.aiSettings?.doubleCheck?.enabled,
+      dcQuickPrompt: aiIntegration?.aiSettings?.doubleCheck?.operations?.quickPrompt,
+      hasPerformDC: !!aiIntegration?.performDoubleCheck
+    });
     if (result.success &&
         aiIntegration?.aiSettings?.doubleCheck?.enabled &&
         aiIntegration?.aiSettings?.doubleCheck?.operations?.quickPrompt &&
