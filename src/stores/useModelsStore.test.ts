@@ -628,14 +628,4 @@ describe('useModelsStore', () => {
     });
   });
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // COMPATIBILITY HOOK TEST
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  describe('useModelLibraryCompat', () => {
-    it('should be importable (compatibility layer)', async () => {
-      const { useModelLibraryCompat } = await import('./useModelsStore');
-      expect(typeof useModelLibraryCompat).toBe('function');
-    });
-  });
 });

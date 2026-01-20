@@ -566,14 +566,4 @@ describe('useTopicsStore', () => {
     });
   });
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // COMPATIBILITY HOOK TEST
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  describe('useTopicManagerCompat', () => {
-    it('should be importable (compatibility layer)', async () => {
-      const { useTopicManagerCompat } = await import('./useTopicsStore');
-      expect(typeof useTopicManagerCompat).toBe('function');
-    });
-  });
 });

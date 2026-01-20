@@ -646,14 +646,4 @@ describe('useProofsStore', () => {
     });
   });
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // COMPATIBILITY HOOK TEST
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  describe('useProofManagerCompat', () => {
-    it('should be importable (compatibility layer)', async () => {
-      const { useProofManagerCompat } = await import('./useProofsStore');
-      expect(typeof useProofManagerCompat).toBe('function');
-    });
-  });
 });

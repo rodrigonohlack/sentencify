@@ -1,14 +1,15 @@
 /**
  * @file useModelLibrary.ts
  * @description Hook para gerenciamento da biblioteca de modelos jurídicos
- * @version 1.36.78
+ * @version 1.38.23
  *
- * Extraído do App.tsx - wrapper sobre Zustand + lógica de busca e bulk
+ * v1.38.23: Migração completa para seletores diretos do Zustand
+ * v1.36.78: Extraído do App.tsx
  * v1.36.63: Estado core migrado para Zustand
  */
 
 import React from 'react';
-import { useModelLibraryCompat } from '../stores/useModelsStore';
+import { useModelsStore } from '../stores/useModelsStore';
 import type { Model } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -204,46 +205,82 @@ export type UseModelLibraryReturn = ReturnType<typeof useModelLibrary>;
 
 /**
  * Hook para gerenciamento da biblioteca de modelos jurídicos
- * Combina estado Zustand + lógica de busca + processamento em lote
+ * Usa seletores diretos do Zustand + lógica de busca + processamento em lote
  */
 const useModelLibrary = () => {
 
   // ===========================================================================
-  // v1.36.63: Estado migrado para Zustand - ver src/stores/useModelsStore.ts
-  // Seções 1, 2 e 3 agora usam o store global
+  // v1.38.23: Seletores diretos do Zustand
   // ===========================================================================
-  const {
-    // Seção 1: Dados Core
-    models, setModels,
-    hasUnsavedChanges, setHasUnsavedChanges,
-    isLoadingModels, setIsLoadingModels,
-    persistenceError, setPersistenceError,
-    // Seção 2: Busca e Filtros
-    searchTerm, setSearchTerm,
-    selectedCategory, setSelectedCategory,
-    showFavoritesOnly, setShowFavoritesOnly,
-    ownershipFilter, setOwnershipFilter,
-    currentModelPage, setCurrentModelPage,
-    manualSearchTerm, setManualSearchTerm,
-    manualSearchResults, setManualSearchResults,
-    suggestions, setSuggestions,
-    suggestionsSource, setSuggestionsSource,
-    loadingSuggestions, setLoadingSuggestions,
-    modelViewMode, setModelViewMode,
-    modelsPerPage,
-    // Seção 3: Formulário
-    newModel, setNewModel,
-    editingModel, setEditingModel,
-    extractingModelFromDecision, setExtractingModelFromDecision,
-    showExtractModelButton, setShowExtractModelButton,
-    extractedModelPreview, setExtractedModelPreview,
-    exportedModelsText, setExportedModelsText,
-    modelToDelete, setModelToDelete,
-    similarityWarning, setSimilarityWarning,
-    resetForm, startEditingModel
-  } = useModelLibraryCompat();
 
-  // --- Busca manual por termo (lógica encapsulada) ---
+  // Dados Core
+  const models = useModelsStore((s) => s.models);
+  const setModels = useModelsStore((s) => s.setModels);
+  const hasUnsavedChanges = useModelsStore((s) => s.hasUnsavedChanges);
+  const setHasUnsavedChanges = useModelsStore((s) => s.setHasUnsavedChanges);
+  const isLoadingModels = useModelsStore((s) => s.isLoadingModels);
+  const setIsLoadingModels = useModelsStore((s) => s.setIsLoadingModels);
+  const persistenceError = useModelsStore((s) => s.persistenceError);
+  const setPersistenceError = useModelsStore((s) => s.setPersistenceError);
+
+  // Busca e Filtros
+  const searchTerm = useModelsStore((s) => s.searchTerm);
+  const setSearchTerm = useModelsStore((s) => s.setSearchTerm);
+  const selectedCategory = useModelsStore((s) => s.selectedCategory);
+  const setSelectedCategory = useModelsStore((s) => s.setSelectedCategory);
+  const showFavoritesOnly = useModelsStore((s) => s.showFavoritesOnly);
+  const setShowFavoritesOnly = useModelsStore((s) => s.setShowFavoritesOnly);
+  const ownershipFilter = useModelsStore((s) => s.ownershipFilter);
+  const setOwnershipFilter = useModelsStore((s) => s.setOwnershipFilter);
+  const currentModelPage = useModelsStore((s) => s.currentModelPage);
+  const setCurrentModelPage = useModelsStore((s) => s.setCurrentModelPage);
+  const manualSearchTerm = useModelsStore((s) => s.manualSearchTerm);
+  const setManualSearchTerm = useModelsStore((s) => s.setManualSearchTerm);
+  const manualSearchResults = useModelsStore((s) => s.manualSearchResults);
+  const setManualSearchResults = useModelsStore((s) => s.setManualSearchResults);
+  const useSemanticManualSearch = useModelsStore((s) => s.useSemanticManualSearch);
+  const setUseSemanticManualSearch = useModelsStore((s) => s.setUseSemanticManualSearch);
+
+  // Modelos compartilhados (v1.37.49)
+  const receivedModels = useModelsStore((s) => s.receivedModels);
+  const setReceivedModels = useModelsStore((s) => s.setReceivedModels);
+  const activeSharedLibraries = useModelsStore((s) => s.activeSharedLibraries);
+  const setActiveSharedLibraries = useModelsStore((s) => s.setActiveSharedLibraries);
+
+  const suggestions = useModelsStore((s) => s.suggestions);
+  const setSuggestions = useModelsStore((s) => s.setSuggestions);
+  const suggestionsSource = useModelsStore((s) => s.suggestionsSource);
+  const setSuggestionsSource = useModelsStore((s) => s.setSuggestionsSource);
+  const loadingSuggestions = useModelsStore((s) => s.loadingSuggestions);
+  const setLoadingSuggestions = useModelsStore((s) => s.setLoadingSuggestions);
+  const modelViewMode = useModelsStore((s) => s.modelViewMode);
+  const setModelViewMode = useModelsStore((s) => s.setModelViewMode);
+  const modelsPerPage = useModelsStore((s) => s.modelsPerPage);
+
+  // Formulário
+  const newModel = useModelsStore((s) => s.newModel);
+  const setNewModel = useModelsStore((s) => s.setNewModel);
+  const editingModel = useModelsStore((s) => s.editingModel);
+  const setEditingModel = useModelsStore((s) => s.setEditingModel);
+  const extractingModelFromDecision = useModelsStore((s) => s.extractingModelFromDecision);
+  const setExtractingModelFromDecision = useModelsStore((s) => s.setExtractingModelFromDecision);
+  const showExtractModelButton = useModelsStore((s) => s.showExtractModelButton);
+  const setShowExtractModelButton = useModelsStore((s) => s.setShowExtractModelButton);
+  const extractedModelPreview = useModelsStore((s) => s.extractedModelPreview);
+  const setExtractedModelPreview = useModelsStore((s) => s.setExtractedModelPreview);
+  const exportedModelsText = useModelsStore((s) => s.exportedModelsText);
+  const setExportedModelsText = useModelsStore((s) => s.setExportedModelsText);
+  const modelToDelete = useModelsStore((s) => s.modelToDelete);
+  const setModelToDelete = useModelsStore((s) => s.setModelToDelete);
+  const similarityWarning = useModelsStore((s) => s.similarityWarning);
+  const setSimilarityWarning = useModelsStore((s) => s.setSimilarityWarning);
+  const resetForm = useModelsStore((s) => s.resetForm);
+  const startEditingModel = useModelsStore((s) => s.startEditingModel);
+
+  // ===========================================================================
+  // BUSCA MANUAL
+  // ===========================================================================
+
   const performManualSearch = React.useCallback((term: string) => {
     if (!term?.trim()) {
       setManualSearchResults([]);
@@ -253,7 +290,6 @@ const useModelLibrary = () => {
     setManualSearchResults(results);
   }, [models, setManualSearchResults]);
 
-  // --- Busca com debounce 300ms ---
   const debouncedSearchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const debouncedManualSearch = React.useCallback((term: string) => {
     if (debouncedSearchTimeoutRef.current) clearTimeout(debouncedSearchTimeoutRef.current);
@@ -331,6 +367,9 @@ const useModelLibrary = () => {
     currentModelPage, setCurrentModelPage,
     manualSearchTerm, setManualSearchTerm,
     manualSearchResults, setManualSearchResults,
+    useSemanticManualSearch, setUseSemanticManualSearch,
+    receivedModels, setReceivedModels,
+    activeSharedLibraries, setActiveSharedLibraries,
     suggestions, setSuggestions,
     suggestionsSource, setSuggestionsSource,
     loadingSuggestions, setLoadingSuggestions,
