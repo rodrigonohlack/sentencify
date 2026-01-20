@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { useAISettingsCompat } from '../stores/useAIStore';
+import { useAIStore } from '../stores/useAIStore';
 import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY } from '../prompts';
 import { API_BASE } from '../constants/api';
 import type {
@@ -68,8 +68,12 @@ const aiGenerationReducer = (state: AIGenState, action: AIGenAction): AIGenState
 export type UseAIIntegrationReturn = ReturnType<typeof useAIIntegration>;
 
 const useAIIntegration = () => {
-  // v1.36.62: Estado migrado para Zustand - ver src/stores/useAIStore.ts
-  const { aiSettings, setAiSettings, tokenMetrics, setTokenMetrics, addTokenUsage } = useAISettingsCompat();
+  // v1.38.22: Migração Zustand completa - seletores diretos
+  const aiSettings = useAIStore((s) => s.aiSettings);
+  const setAiSettings = useAIStore((s) => s.setAiSettings);
+  const tokenMetrics = useAIStore((s) => s.tokenMetrics);
+  const setTokenMetrics = useAIStore((s) => s.setTokenMetrics);
+  const addTokenUsage = useAIStore((s) => s.addTokenUsage);
 
   // 🔧 Estado consolidado de geração de IA (useReducer)
   const [aiGeneration, dispatchAI] = React.useReducer(aiGenerationReducer, aiGenerationInitialState);

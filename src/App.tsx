@@ -27,7 +27,7 @@ import SyncStatusIndicator from './components/SyncStatusIndicator';
 
 // v1.36.61+: Zustand Stores - Estado global gerenciado
 // useModalManagerCompat movido para src/hooks/useModalManager.ts (v1.36.78)
-import { useAISettingsCompat, useAIStore } from './stores/useAIStore';
+import { useAIStore } from './stores/useAIStore';
 import { useUIStore } from './stores/useUIStore';
 import { useModelsStore } from './stores/useModelsStore';
 // useModelLibraryCompat movido para src/hooks/useModelLibrary.ts (v1.36.78)

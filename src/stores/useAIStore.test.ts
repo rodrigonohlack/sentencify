@@ -555,14 +555,4 @@ describe('useAIStore', () => {
     });
   });
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // COMPATIBILITY HOOK TEST
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  describe('useAISettingsCompat', () => {
-    it('should be importable (compatibility layer)', async () => {
-      const { useAISettingsCompat } = await import('./useAIStore');
-      expect(typeof useAISettingsCompat).toBe('function');
-    });
-  });
 });

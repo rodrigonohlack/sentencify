@@ -658,39 +658,4 @@ export const selectApiTestStatuses = (state: AIStoreState): ApiTestStatuses =>
 export const selectApiTestStatus = (provider: AIProvider) => (state: AIStoreState): ApiTestStatus =>
   state.apiTestStatuses[provider];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// SEÇÃO 5: HOOKS DE COMPATIBILIDADE
-// ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * Hook de compatibilidade para acesso às configurações de IA
- *
- * @deprecated Use useAIStore diretamente após migração completa
- *
- * @example
- * // Substituir:
- * const { aiSettings, setAiSettings } = useAIIntegration();
- *
- * // Por:
- * const { aiSettings, setAiSettings } = useAISettingsCompat();
- *
- * // Ou melhor ainda, use o store diretamente:
- * const provider = useAIStore((s) => s.aiSettings.provider);
- */
-export function useAISettingsCompat() {
-  const aiSettings = useAIStore((s) => s.aiSettings);
-  const setAiSettings = useAIStore((s) => s.setAiSettings);
-  const tokenMetrics = useAIStore((s) => s.tokenMetrics);
-  const setTokenMetrics = useAIStore((s) => s.setTokenMetrics);
-  const addTokenUsage = useAIStore((s) => s.addTokenUsage);
-
-  return {
-    aiSettings,
-    setAiSettings,
-    tokenMetrics,
-    setTokenMetrics,
-    addTokenUsage
-  };
-}
-
 export default useAIStore;

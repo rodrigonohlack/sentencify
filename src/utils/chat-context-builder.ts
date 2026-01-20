@@ -1,7 +1,7 @@
 /**
  * @file chat-context-builder.ts
  * @description Função centralizada para construção de contexto do chat do Assistente IA
- * @version 1.38.21
+ * @version 1.38.22
  *
  * Centraliza a lógica de buildContextForChat (editor individual) e buildContextForChatGlobal (editor global)
  * para eliminar ~280 linhas de código duplicado.
