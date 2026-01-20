@@ -478,6 +478,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
         aiIntegration?.performDoubleCheck) {
       try {
         const lastResponse = chatAssistant.lastResponse;
+        console.log('[QuickPrompt DoubleCheck] lastResponse:', lastResponse ? `${lastResponse.substring(0, 100)}...` : 'NULL/EMPTY');
         if (lastResponse) {
           // v1.37.68: Passar contextContent diretamente (sem filtrar para texto)
           const contextContent = await buildContextForChat(message, options);
@@ -485,6 +486,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
             ? contextContent as AIMessageContent[]
             : [{ type: 'text' as const, text: String(contextContent) }];
 
+          console.log('[QuickPrompt DoubleCheck] Chamando performDoubleCheck...');
           const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
             'quickPrompt',
             lastResponse,
@@ -492,6 +494,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
             undefined,  // onProgress
             message  // userPrompt - texto do quick prompt/mensagem do usuario
           );
+          console.log('[QuickPrompt DoubleCheck] Resultado:', { correctionsCount: corrections.length, summary: summary?.substring(0, 50) });
 
           if (corrections.length > 0) {
             // Converter corrections para tipo esperado com descrição legível
