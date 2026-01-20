@@ -1,11 +1,13 @@
 /**
  * @file GlobalEditorModal.tsx
  * @description Modal de edição global da sentença - permite editar todos os topicos em uma unica interface
- * @version 1.36.99
+ * @version 1.38.16
  *
  * Extraido do App.tsx (linhas 361-1930) como parte da refatoracao de componentes.
  * Este componente gerencia a edição em tela cheia de todos os tópicos selecionados,
  * com suporte a sugestoes de modelos, assistente IA, jurisprudencia e confronto de fatos.
+ *
+ * v1.38.16: Toggle "Incluir petições e contestações" persistido por tópico (IndexedDB)
  */
 
 import React from 'react';
@@ -162,6 +164,8 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   const [globalAiGeneratedText, setGlobalAiGeneratedText] = React.useState('');
   const [generatingGlobalAi, setGeneratingGlobalAi] = React.useState(false);
   const [globalContextScope, setGlobalContextScope] = React.useState<ContextScope>('current'); // v1.38.12: 'current' | 'selected' | 'all'
+  // v1.38.16: Toggle de documentos persistido por tópico
+  const [globalIncludeMainDocs, setGlobalIncludeMainDocsState] = React.useState(true);
 
   // v1.37.92: Cache de histórico de chat por tópico
   const chatHistoryCache = useChatHistoryCache();
@@ -592,10 +596,26 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     onClose();
   }, [onClose]);
 
-  const handleOpenAIAssistant = React.useCallback((topicIndex: number) => {
+  // v1.38.16: Wrapper para setIncludeMainDocs que persiste no cache
+  const setGlobalIncludeMainDocs = React.useCallback((value: boolean) => {
+    setGlobalIncludeMainDocsState(value);
+    // Salvar no cache se houver tópico ativo
+    if (aiAssistantTopicIndex !== null && localTopics[aiAssistantTopicIndex]) {
+      chatHistoryCache.setIncludeMainDocs(localTopics[aiAssistantTopicIndex].title, value);
+    }
+  }, [aiAssistantTopicIndex, localTopics, chatHistoryCache]);
+
+  // v1.38.16: Carrega includeMainDocs do cache ao abrir assistente
+  const handleOpenAIAssistant = React.useCallback(async (topicIndex: number) => {
     setAiAssistantTopicIndex(topicIndex);
+    // Carregar config do cache
+    const topicTitle = localTopics[topicIndex]?.title;
+    if (topicTitle) {
+      const savedInclude = await chatHistoryCache.getIncludeMainDocs(topicTitle);
+      setGlobalIncludeMainDocsState(savedInclude);
+    }
     setShowAIAssistant(true);
-  }, []);
+  }, [localTopics, chatHistoryCache]);
 
   // v1.12.14: Handler para abrir modal de provas vinculadas
   const handleOpenProofsModal = React.useCallback((topicIndex: number) => {
@@ -1591,6 +1611,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
 
       {/* v1.19.0: Modal Assistente IA Global - Chat Interativo */}
       {/* v1.38.12: Adicionado allTopics para ContextScopeSelector */}
+      {/* v1.38.16: Adicionado includeMainDocs com persistência por tópico */}
       {showAIAssistant && aiAssistantTopicIndex !== null && (
         <AIAssistantGlobalModal
           isOpen={showAIAssistant}
@@ -1609,6 +1630,8 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
           lastResponse={chatAssistantGlobal.lastResponse}
           contextScope={globalContextScope}
           setContextScope={setGlobalContextScope}
+          includeMainDocs={globalIncludeMainDocs}
+          setIncludeMainDocs={setGlobalIncludeMainDocs}
           sanitizeHTML={sanitizeHTML}
           quickPrompts={aiIntegration?.aiSettings?.quickPrompts}
           proofManager={proofManager}

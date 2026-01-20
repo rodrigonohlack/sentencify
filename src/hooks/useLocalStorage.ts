@@ -1,16 +1,19 @@
 /**
  * @file useLocalStorage.ts
  * @description Hook para persistência de sessão e projeto (localStorage + IndexedDB)
+ * @version 1.38.16
  * @tier 0 (sem dependências de outros hooks do projeto, exceto cache helpers)
  * @extractedFrom App.tsx linhas 2452-3664
  * @usedBy App.tsx (autoSaveSession, restoreSession, exportProject, importProject, clearProject)
+ *
+ * v1.38.16: Export/import de chatHistory inclui includeMainDocs (suporta formato legado)
  */
 
 import React from 'react';
 import { APP_VERSION } from '../constants/app-version';
 import { openFactsDB, FACTS_STORE_NAME } from './useFactsComparisonCache';
 import { openReviewDB, REVIEW_STORE_NAME } from './useSentenceReviewCache';
-import { openChatDB, CHAT_STORE_NAME } from './useChatHistoryCache';
+import { openChatDB, CHAT_STORE_NAME, type ChatExportEntry } from './useChatHistoryCache';
 import { stripInlineColors } from '../utils/color-stripper';
 import type {
   SessionState,
@@ -848,7 +851,8 @@ export function useLocalStorage(): UseLocalStorageReturn {
     }
 
     // v1.37.92: Exportar cache de histórico de chat
-    let chatHistoryExport: Record<string, ChatMessage[]> = {};
+    // v1.38.16: Inclui includeMainDocs junto com messages
+    let chatHistoryExport: Record<string, ChatExportEntry> = {};
     try {
       const db = await openChatDB();
       const store = db.transaction(CHAT_STORE_NAME).objectStore(CHAT_STORE_NAME);
@@ -859,7 +863,10 @@ export function useLocalStorage(): UseLocalStorageReturn {
       });
       db.close();
       for (const entry of entries) {
-        chatHistoryExport[entry.topicTitle] = entry.messages;
+        chatHistoryExport[entry.topicTitle] = {
+          messages: entry.messages,
+          includeMainDocs: entry.includeMainDocs
+        };
       }
     } catch (e) {
       console.warn('[Export] Erro ao exportar chatHistory:', e);
@@ -1235,18 +1242,27 @@ export function useLocalStorage(): UseLocalStorageReturn {
     }
 
     // v1.37.92: Importar cache de histórico de chat
+    // v1.38.16: Suporta novo formato (objeto com messages + includeMainDocs) e legado (array de messages)
     if (project.chatHistory && typeof project.chatHistory === 'object') {
       try {
         const db = await openChatDB();
         const tx = db.transaction(CHAT_STORE_NAME, 'readwrite');
         const store = tx.objectStore(CHAT_STORE_NAME);
 
-        for (const [topicTitle, messages] of Object.entries(project.chatHistory as Record<string, ChatMessage[]>)) {
-          if (topicTitle && Array.isArray(messages) && messages.length > 0) {
+        for (const [topicTitle, value] of Object.entries(project.chatHistory)) {
+          if (!topicTitle) continue;
+
+          // v1.38.16: Detectar formato (novo vs legado)
+          const isNewFormat = value && typeof value === 'object' && !Array.isArray(value) && 'messages' in value;
+          const messages = isNewFormat ? (value as ChatExportEntry).messages : (value as ChatMessage[]);
+          const includeMainDocs = isNewFormat ? (value as ChatExportEntry).includeMainDocs : undefined;
+
+          if (Array.isArray(messages) && messages.length > 0) {
             const now = Date.now();
             store.add({
               topicTitle,
               messages,
+              includeMainDocs,
               createdAt: now,
               updatedAt: now
             });

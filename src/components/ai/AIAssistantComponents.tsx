@@ -1,13 +1,14 @@
 /**
  * @file AIAssistantComponents.tsx
  * @description Componentes de assistente de IA
- * @version 1.38.12
+ * @version 1.38.16
  *
  * Extraído do App.tsx como parte da FASE 3 de refatoração.
  * Inclui AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal,
  * AIAssistantGlobalModal e AIAssistantModelModal.
  *
  * v1.38.12: Usa ContextScopeSelector unificado para controle granular de contexto
+ * v1.38.16: Toggle bloqueado quando chat tem histórico (chatHistoryLength prop)
  */
 
 import React from 'react';
@@ -585,6 +586,7 @@ export const AIAssistantModal = React.memo(({
   }, [onSendMessage, includeMainDocs, contextScope, selectedContextTopics]);
 
   // v1.38.12: Usa ContextScopeSelector unificado
+  // v1.38.16: Passa chatHistoryLength para bloquear toggle quando chat tem histórico
   const scopeSelector = (
     <ContextScopeSelector
       contextScope={contextScope}
@@ -595,6 +597,7 @@ export const AIAssistantModal = React.memo(({
       setSelectedContextTopics={setSelectedContextTopics}
       includeMainDocs={includeMainDocs}
       setIncludeMainDocs={setIncludeMainDocs}
+      chatHistoryLength={chatHistory.length}
     />
   );
 
@@ -702,6 +705,7 @@ export const AIAssistantGlobalModal = React.memo(({
   }, [onSendMessage, includeMainDocs, contextScope, selectedContextTopics]);
 
   // v1.38.12: Usa ContextScopeSelector unificado
+  // v1.38.16: Passa chatHistoryLength para bloquear toggle quando chat tem histórico
   const scopeSelector = (
     <ContextScopeSelector
       contextScope={contextScope}
@@ -712,6 +716,7 @@ export const AIAssistantGlobalModal = React.memo(({
       setSelectedContextTopics={setSelectedContextTopics}
       includeMainDocs={includeMainDocs}
       setIncludeMainDocs={setIncludeMainDocs}
+      chatHistoryLength={chatHistory.length}
     />
   );
 

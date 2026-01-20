@@ -489,6 +489,30 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     deleteChat: chatHistoryCache.deleteChat
   });
 
+  // v1.38.16: Toggle "Incluir petições e contestações" persistido por tópico
+  const [topicIncludeMainDocs, setTopicIncludeMainDocsState] = React.useState(true);
+
+  // v1.38.16: Wrapper que persiste no cache
+  const setTopicIncludeMainDocs = React.useCallback((value: boolean) => {
+    setTopicIncludeMainDocsState(value);
+    const topicTitle = topicManager.editingTopic?.title;
+    if (topicTitle) {
+      chatHistoryCache.setIncludeMainDocs(topicTitle, value);
+    }
+  }, [topicManager.editingTopic?.title, chatHistoryCache]);
+
+  // v1.38.16: Carregar includeMainDocs do cache ao abrir assistente
+  React.useEffect(() => {
+    const loadIncludeMainDocs = async () => {
+      const topicTitle = topicManager.editingTopic?.title;
+      if (modals.aiAssistant && topicTitle) {
+        const savedInclude = await chatHistoryCache.getIncludeMainDocs(topicTitle);
+        setTopicIncludeMainDocsState(savedInclude);
+      }
+    };
+    loadIncludeMainDocs();
+  }, [modals.aiAssistant, topicManager.editingTopic?.title, chatHistoryCache]);
+
   // v1.13.9: Ref para auto-save debounced no Editor Individual
   const individualAutoSaveTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -3738,6 +3762,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       {/* RenameTopicModal, DeleteTopicModal, MergeTopicsModal, SplitTopicModal, NewTopicModal */}
 
       {/* v1.38.12: Adicionado allTopics para ContextScopeSelector */}
+      {/* v1.38.16: Adicionado includeMainDocs com persistência por tópico */}
       <AIAssistantModal
         isOpen={modals.aiAssistant}
         onClose={() => closeModal('aiAssistant')}
@@ -3750,6 +3775,8 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         generating={chatAssistant.generating}
         onClear={chatAssistant.clear}
         lastResponse={chatAssistant.lastResponse}
+        includeMainDocs={topicIncludeMainDocs}
+        setIncludeMainDocs={setTopicIncludeMainDocs}
         sanitizeHTML={sanitizeHTML}
         quickPrompts={aiIntegration.aiSettings.quickPrompts}
         proofManager={proofManager}

@@ -849,6 +849,7 @@ export interface ChatHistoryCacheEntry {
   id?: number;
   topicTitle: string;
   messages: ChatMessage[];
+  includeMainDocs?: boolean;  // v1.38.16: Persistir toggle "Incluir petições e contestações" por tópico
   createdAt: number;
   updatedAt: number;
 }
