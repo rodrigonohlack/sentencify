@@ -42,3 +42,7 @@ export {
   MAX_BULK_FILES
 } from './bulk-prompts';
 export { buildAnalysisPrompt } from './document-analysis-prompts';
+export {
+  PROOF_ANALYSIS_INSTRUCTIONS,
+  buildProofAnalysisPrompt
+} from './proof-analysis-prompts';

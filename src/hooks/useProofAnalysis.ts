@@ -1,7 +1,7 @@
 /**
  * @file useProofAnalysis.ts
  * @description Hook para analise de provas documentais
- * @version 1.38.31 - Fix: remover complementares do contexto + tags XML para demarcação
+ * @version 1.38.32 - Prompt profissional: lógica exclusiva prova oral vs documental
  *
  * Extraido do App.tsx linha ~7210
  * Funcao: analyzeProof - analisa provas documentais com contexto do processo
@@ -13,6 +13,7 @@ import { getCorrectionDescription } from '../utils/double-check-utils';
 import { useUIStore } from '../stores/useUIStore';
 import { isOralProof } from '../components/ai/AIAssistantComponents';
 import { ORAL_PROOF_ANALYSIS_INSTRUCTIONS, buildOralProofSynthesisSection } from '../prompts/oral-proof-analysis';
+import { buildProofAnalysisPrompt } from '../prompts/proof-analysis-prompts';
 import type {
   AIMessage,
   AIMessageContent,
@@ -489,75 +490,39 @@ Ao analisar, DISTINGA CLARAMENTE entre:
             `${totalContestacoes} contestação${totalContestacoes > 1 ? 'ões' : ''} fornecida${totalContestacoes > 1 ? 's' : ''} (veja acima)` :
             'Nenhuma contestação disponível');
 
-        prompt = `${customInstructions ? `**INSTRUÇÕES ESPECÍFICAS PARA ESTA PROVA:**\n${customInstructions}\n\n` : ''}Você está analisando uma prova no contexto de um processo trabalhista.
+        // v1.38.32: Lógica de prompts EXCLUSIVOS
+        // Prova oral → APENAS prompt de prova oral
+        // Prova documental → APENAS prompt profissional de prova documental
+        if (isOralProofType) {
+          // PROVA ORAL: Usar APENAS prompt especializado de prova oral
+          const synthesisSection = buildOralProofSynthesisSection(linkedTopics);
 
+          // Construir contexto mínimo para prova oral
+          const oralContext = `
 CONTEXTO DO PROCESSO:
 - Petição inicial: ${peticaoSummary}
-- Contestações: ${contestacoesSummary}
-
+- Contestação: ${contestacoesSummary}
 ${linkedTopics.length > 0 ? `
-**PEDIDOS ESPECÍFICOS VINCULADOS A ESTA PROVA:**
+PEDIDOS VINCULADOS:
+${linkedTopics.map((t, i) => `${i + 1}. ${t.title} (${t.category})`).join('\n')}
+` : ''}
+${customInstructions ? `INSTRUÇÕES DO MAGISTRADO:\n${customInstructions}\n` : ''}`;
 
-Esta prova foi vinculada aos seguintes pedidos/tópicos do processo:
-
-${linkedTopics.map((topic, idx) => `
-${idx + 1}. **${topic.title}** (${topic.category})
-
-   O que as partes alegaram sobre este pedido:
-   ${topic.relatorio || 'Mini-relatório não disponível - verifique a petição e contestação acima'}
-`).join('\n---\n')}
-
-**IMPORTANTE:** Ao analisar esta prova no contexto do processo, PRIORIZE sua relação com os pedidos vinculados acima.
-
-Para cada pedido vinculado, indique ESPECIFICAMENTE:
-- Como esta prova impacta este pedido em particular
-- Se a prova favorece o autor ou réu neste ponto específico
-- Qual conclusão a prova sugere para este pedido
-
-` : `
-Esta prova não foi vinculada a nenhum pedido específico. A análise será genérica em relação a todo o processo.
-
-`}
-Analise a prova fornecida e responda:
-
-1. **O que esta prova demonstra?** Descreva objetivamente o conteúdo probatório
-2. **Relação com alegações do autor**: Esta prova confirma, refuta ou é neutra em relação às alegações da petição inicial?
-3. **Relação com defesa**: Esta prova confirma, refuta ou é neutra em relação aos argumentos de defesa?
-4. **Força probatória**: Avalie a qualidade e relevância desta prova para o deslinde do feito
-5. **Conclusão**: De forma resumida, qual a contribuição desta prova para a formação do convencimento?
-
-Seja objetivo, técnico e imparcial. Base-se exclusivamente no conteúdo da prova.
-
-Formato da resposta (use quebras de linha entre seções):
-
-CONTEÚDO DA PROVA:
-[descreva o que a prova demonstra]
-
-RELAÇÃO COM ALEGAÇÕES DO AUTOR:
-[análise]
-
-RELAÇÃO COM A DEFESA:
-[análise]
-
-FORÇA PROBATÓRIA:
-[avaliação]
-
-CONCLUSÃO:
-[síntese]`;
-      }
-
-      // v1.38.15: Se for prova oral, prefixar instruções especializadas de valoração
-      let finalPrompt = prompt;
-      if (isOralProofType) {
-        // Construir seção de síntese adaptada aos tópicos vinculados (se houver)
-        const synthesisSection = buildOralProofSynthesisSection(linkedTopics);
-        // Prefixar instruções de valoração + síntese adaptada ao prompt existente
-        finalPrompt = ORAL_PROOF_ANALYSIS_INSTRUCTIONS + '\n\n' + synthesisSection + '\n\n---\n\nAGORA, ANALISE A PROVA FORNECIDA:\n\n' + prompt;
+          prompt = ORAL_PROOF_ANALYSIS_INSTRUCTIONS + '\n\n' + synthesisSection + '\n\n' + oralContext + '\n\n---\n\nAGORA, ANALISE A PROVA ORAL FORNECIDA:';
+        } else {
+          // PROVA DOCUMENTAL: Usar novo prompt profissional
+          prompt = buildProofAnalysisPrompt({
+            customInstructions,
+            peticaoSummary,
+            contestacoesSummary,
+            linkedTopics
+          });
+        }
       }
 
       contentArray.push({
         type: 'text' as const,
-        text: finalPrompt
+        text: prompt
       });
 
       // Fazer chamada à API
