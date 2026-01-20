@@ -2446,16 +2446,6 @@ export interface ConfigModalProps {
   handleJurisToggle: (enabled: boolean) => void;
   handleModelToggle: (enabled: boolean) => void;
 
-  // API test states
-  claudeTestStatus: APITestStatus;
-  setClaudeTestStatus: (v: APITestStatus) => void;
-  geminiTestStatus: APITestStatus;
-  setGeminiTestStatus: (v: APITestStatus) => void;
-  openaiTestStatus: APITestStatus;
-  setOpenaiTestStatus: (v: APITestStatus) => void;
-  grokTestStatus: APITestStatus;
-  setGrokTestStatus: (v: APITestStatus) => void;
-
   // Embeddings management
   embeddingsCount: number;
   jurisEmbeddingsCount: number;

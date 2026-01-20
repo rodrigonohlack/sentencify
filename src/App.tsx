@@ -1096,19 +1096,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     useModelsStore.getState().setUseSemanticManualSearch(aiIntegration.aiSettings.modelSemanticEnabled ?? false);
   }, [aiIntegration.aiSettings.modelSemanticEnabled]);
 
-  // v1.35.75: Feedback inline nos botões de teste de API Key
-  // v1.37.49: apiTestStatuses migrado para useAIStore
-  const apiTestStatuses = useAIStore((s) => s.apiTestStatuses);
-  const setApiTestStatus = useAIStore((s) => s.setApiTestStatus);
-  // Compat aliases para código existente
-  const claudeTestStatus = apiTestStatuses.claude;
-  const geminiTestStatus = apiTestStatuses.gemini;
-  const openaiTestStatus = apiTestStatuses.openai;
-  const grokTestStatus = apiTestStatuses.grok;
-  const setClaudeTestStatus = React.useCallback((status: 'testing' | 'ok' | 'error' | null) => setApiTestStatus('claude', status), [setApiTestStatus]);
-  const setGeminiTestStatus = React.useCallback((status: 'testing' | 'ok' | 'error' | null) => setApiTestStatus('gemini', status), [setApiTestStatus]);
-  const setOpenaiTestStatus = React.useCallback((status: 'testing' | 'ok' | 'error' | null) => setApiTestStatus('openai', status), [setApiTestStatus]);
-  const setGrokTestStatus = React.useCallback((status: 'testing' | 'ok' | 'error' | null) => setApiTestStatus('grok', status), [setApiTestStatus]);
+  // v1.38.24: apiTestStatuses movidos diretamente para ConfigModal via useAIStore
 
   // 📜 v1.26.02: Hook de legislação para geração de embeddings
   const legislacao = useLegislacao();
@@ -3999,14 +3987,6 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         handleLegislacaoToggle={handleLegislacaoToggle}
         handleJurisToggle={handleJurisToggle}
         handleModelToggle={handleModelToggle}
-        claudeTestStatus={claudeTestStatus}
-        setClaudeTestStatus={setClaudeTestStatus}
-        geminiTestStatus={geminiTestStatus}
-        setGeminiTestStatus={setGeminiTestStatus}
-        openaiTestStatus={openaiTestStatus}
-        setOpenaiTestStatus={setOpenaiTestStatus}
-        grokTestStatus={grokTestStatus}
-        setGrokTestStatus={setGrokTestStatus}
         embeddingsCount={embeddingsCount}
         jurisEmbeddingsCount={jurisEmbeddingsCount}
         modelEmbeddingsCount={modelEmbeddingsCount}

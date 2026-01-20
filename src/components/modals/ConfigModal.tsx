@@ -29,6 +29,7 @@ import {
 import { ProviderIcon } from '../ui/ProviderIcon';
 import { CSS } from '../../constants/styles';
 import AIModelService from '../../services/AIModelService';
+import { useAIStore } from '../../stores/useAIStore';
 import { EmbeddingsCDNService } from '../../services/EmbeddingsServices';
 import type {
   ConfigModalProps,
@@ -72,14 +73,6 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
     handleLegislacaoToggle,
     handleJurisToggle,
     handleModelToggle,
-    claudeTestStatus,
-    setClaudeTestStatus,
-    geminiTestStatus,
-    setGeminiTestStatus,
-    openaiTestStatus,
-    setOpenaiTestStatus,
-    grokTestStatus,
-    setGrokTestStatus,
     embeddingsCount,
     jurisEmbeddingsCount,
     modelEmbeddingsCount,
@@ -105,6 +98,10 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
     handleComplementaryDrop,
     API_BASE
   } = props;
+
+  // v1.38.24: API test status direto do store (removido props intermediárias)
+  const apiTestStatuses = useAIStore((s) => s.apiTestStatuses);
+  const setApiTestStatus = useAIStore((s) => s.setApiTestStatus);
 
   if (!isOpen) return null;
 
@@ -279,27 +276,27 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                   />
                   <button
                     onClick={async () => {
-                      setClaudeTestStatus('testing');
+                      setApiTestStatus('claude', 'testing');
                       try {
                         const resp = await fetch(`${API_BASE}/api/claude/messages`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys?.claude || '' },
                           body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 10, messages: [{ role: 'user', content: 'Olá' }] })
                         });
-                        setClaudeTestStatus(resp.ok ? 'ok' : 'error');
-                      } catch { setClaudeTestStatus('error'); }
-                      setTimeout(() => setClaudeTestStatus(null), 2000);
+                        setApiTestStatus('claude', resp.ok ? 'ok' : 'error');
+                      } catch { setApiTestStatus('claude', 'error'); }
+                      setTimeout(() => setApiTestStatus('claude', null), 2000);
                     }}
-                    disabled={claudeTestStatus === 'testing'}
+                    disabled={apiTestStatuses.claude === 'testing'}
                     className={`px-3 py-2 text-white rounded text-sm min-w-[60px] transition-colors ${
-                      claudeTestStatus === 'ok' ? 'bg-green-600' :
-                      claudeTestStatus === 'error' ? 'bg-red-600' :
+                      apiTestStatuses.claude === 'ok' ? 'bg-green-600' :
+                      apiTestStatuses.claude === 'error' ? 'bg-red-600' :
                       'bg-purple-600 hover:bg-purple-700'
                     }`}
                   >
-                    {claudeTestStatus === 'testing' ? '...' :
-                     claudeTestStatus === 'ok' ? '✓' :
-                     claudeTestStatus === 'error' ? '✗' : 'Testar'}
+                    {apiTestStatuses.claude === 'testing' ? '...' :
+                     apiTestStatuses.claude === 'ok' ? '✓' :
+                     apiTestStatuses.claude === 'error' ? '✗' : 'Testar'}
                   </button>
                 </div>
               </div>
@@ -319,7 +316,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                   />
                   <button
                     onClick={async () => {
-                      setGeminiTestStatus('testing');
+                      setApiTestStatus('gemini', 'testing');
                       try {
                         const resp = await fetch(`${API_BASE}/api/gemini/generate`, {
                           method: 'POST',
@@ -330,20 +327,20 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                             request: { contents: [{ role: 'user', parts: [{ text: 'Olá' }] }], generationConfig: { maxOutputTokens: 100, thinking_config: { thinking_level: 'minimal' } } }
                           })
                         });
-                        setGeminiTestStatus(resp.ok ? 'ok' : 'error');
-                      } catch { setGeminiTestStatus('error'); }
-                      setTimeout(() => setGeminiTestStatus(null), 2000);
+                        setApiTestStatus('gemini', resp.ok ? 'ok' : 'error');
+                      } catch { setApiTestStatus('gemini', 'error'); }
+                      setTimeout(() => setApiTestStatus('gemini', null), 2000);
                     }}
-                    disabled={geminiTestStatus === 'testing'}
+                    disabled={apiTestStatuses.gemini === 'testing'}
                     className={`px-3 py-2 text-white rounded text-sm min-w-[60px] transition-colors ${
-                      geminiTestStatus === 'ok' ? 'bg-green-600' :
-                      geminiTestStatus === 'error' ? 'bg-red-600' :
+                      apiTestStatuses.gemini === 'ok' ? 'bg-green-600' :
+                      apiTestStatuses.gemini === 'error' ? 'bg-red-600' :
                       'bg-blue-600 hover:bg-blue-700'
                     }`}
                   >
-                    {geminiTestStatus === 'testing' ? '...' :
-                     geminiTestStatus === 'ok' ? '✓' :
-                     geminiTestStatus === 'error' ? '✗' : 'Testar'}
+                    {apiTestStatuses.gemini === 'testing' ? '...' :
+                     apiTestStatuses.gemini === 'ok' ? '✓' :
+                     apiTestStatuses.gemini === 'error' ? '✗' : 'Testar'}
                   </button>
                 </div>
               </div>
@@ -363,7 +360,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                   />
                   <button
                     onClick={async () => {
-                      setOpenaiTestStatus('testing');
+                      setApiTestStatus('openai', 'testing');
                       try {
                         const resp = await fetch(`${API_BASE}/api/openai/chat`, {
                           method: 'POST',
@@ -374,20 +371,20 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                             messages: [{ role: 'user', content: 'Olá' }]
                           })
                         });
-                        setOpenaiTestStatus(resp.ok ? 'ok' : 'error');
-                      } catch { setOpenaiTestStatus('error'); }
-                      setTimeout(() => setOpenaiTestStatus(null), 2000);
+                        setApiTestStatus('openai', resp.ok ? 'ok' : 'error');
+                      } catch { setApiTestStatus('openai', 'error'); }
+                      setTimeout(() => setApiTestStatus('openai', null), 2000);
                     }}
-                    disabled={openaiTestStatus === 'testing'}
+                    disabled={apiTestStatuses.openai === 'testing'}
                     className={`px-3 py-2 text-white rounded text-sm min-w-[60px] transition-colors ${
-                      openaiTestStatus === 'ok' ? 'bg-green-600' :
-                      openaiTestStatus === 'error' ? 'bg-red-600' :
+                      apiTestStatuses.openai === 'ok' ? 'bg-green-600' :
+                      apiTestStatuses.openai === 'error' ? 'bg-red-600' :
                       'bg-emerald-600 hover:bg-emerald-700'
                     }`}
                   >
-                    {openaiTestStatus === 'testing' ? '...' :
-                     openaiTestStatus === 'ok' ? '✓' :
-                     openaiTestStatus === 'error' ? '✗' : 'Testar'}
+                    {apiTestStatuses.openai === 'testing' ? '...' :
+                     apiTestStatuses.openai === 'ok' ? '✓' :
+                     apiTestStatuses.openai === 'error' ? '✗' : 'Testar'}
                   </button>
                 </div>
               </div>
@@ -407,7 +404,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                   />
                   <button
                     onClick={async () => {
-                      setGrokTestStatus('testing');
+                      setApiTestStatus('grok', 'testing');
                       try {
                         const resp = await fetch(`${API_BASE}/api/grok/chat`, {
                           method: 'POST',
@@ -418,20 +415,20 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
                             messages: [{ role: 'user', content: 'Olá' }]
                           })
                         });
-                        setGrokTestStatus(resp.ok ? 'ok' : 'error');
-                      } catch { setGrokTestStatus('error'); }
-                      setTimeout(() => setGrokTestStatus(null), 2000);
+                        setApiTestStatus('grok', resp.ok ? 'ok' : 'error');
+                      } catch { setApiTestStatus('grok', 'error'); }
+                      setTimeout(() => setApiTestStatus('grok', null), 2000);
                     }}
-                    disabled={grokTestStatus === 'testing'}
+                    disabled={apiTestStatuses.grok === 'testing'}
                     className={`px-3 py-2 text-white rounded text-sm min-w-[60px] transition-colors ${
-                      grokTestStatus === 'ok' ? 'bg-green-600' :
-                      grokTestStatus === 'error' ? 'bg-red-600' :
+                      apiTestStatuses.grok === 'ok' ? 'bg-green-600' :
+                      apiTestStatuses.grok === 'error' ? 'bg-red-600' :
                       'bg-gray-600 hover:bg-gray-700'
                     }`}
                   >
-                    {grokTestStatus === 'testing' ? '...' :
-                     grokTestStatus === 'ok' ? '✓' :
-                     grokTestStatus === 'error' ? '✗' : 'Testar'}
+                    {apiTestStatuses.grok === 'testing' ? '...' :
+                     apiTestStatuses.grok === 'ok' ? '✓' :
+                     apiTestStatuses.grok === 'error' ? '✗' : 'Testar'}
                   </button>
                 </div>
               </div>
