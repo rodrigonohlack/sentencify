@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual do Usuário Avançado - SentencifyAI v1.28</title>
+    <title>Manual do Usuário Avançado - SentencifyAI v1.38.21</title>
     <style>
         :root {
             --bg-primary: #0f172a;
@@ -599,7 +599,7 @@
 <body>
     <header class="header">
         <h1>📚 Manual do Usuário Avançado</h1>
-        <p class="subtitle">SentencifyAI v1.28 — Guia Completo de Funcionalidades</p>
+        <p class="subtitle">SentencifyAI v1.38.21 — Guia Completo de Funcionalidades</p>
         <div class="header-controls">
             <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌓</button>
         </div>
@@ -695,7 +695,7 @@
                         <span class="card-icon">🎯</span>
                         <h3 class="card-title">O que é o SentencifyAI?</h3>
                     </div>
-                    <p>O SentencifyAI é uma ferramenta avançada que roda 100% no navegador (via Claude.ai artifacts) e auxilia juízes trabalhistas na redação de sentenças completas, desde a extração de tópicos até a geração do dispositivo final.</p>
+                    <p>O SentencifyAI é uma ferramenta avançada que roda 100% no navegador e auxilia juízes trabalhistas na redação de sentenças completas. Suporta <strong>4 provedores de IA</strong> (Claude, Gemini, OpenAI, Grok) e oferece recursos como extração automática de tópicos, assistente de chat, ditado por voz e verificação dupla.</p>
 
                     <div class="feature-grid">
                         <div class="feature-item">
@@ -738,6 +738,27 @@
                             <div class="feature-text">
                                 <h4>Revisão Crítica</h4>
                                 <p>IA analisa omissões, contradições e obscuridades na sentença</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🌐</span>
+                            <div class="feature-text">
+                                <h4>Multi-Provider</h4>
+                                <p>Escolha entre Claude, Gemini, OpenAI ou Grok para cada tarefa</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🎤</span>
+                            <div class="feature-text">
+                                <h4>Ditado por Voz</h4>
+                                <p>Dite textos usando microfone com melhoria automática por IA</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">✅</span>
+                            <div class="feature-text">
+                                <h4>Double Check</h4>
+                                <p>Verificação secundária das respostas por outro modelo de IA</p>
                             </div>
                         </div>
                     </div>
@@ -900,7 +921,7 @@
                         <div class="step-number">7</div>
                         <div class="step-content">
                             <h4>Revisão Crítica</h4>
-                            <p>Clique em <strong>"Revisar Sentença"</strong>. A IA atua como "advogado do diabo", buscando omissões, contradições e obscuridades que poderiam gerar embargos de declaração. Corrija e exporte a minuta final.</p>
+                            <p>Clique em <strong>"Revisar Sentença"</strong>. A IA atua como "advogado do diabo", buscando omissões, contradições e obscuridades que poderiam gerar embargos de declaração. Com <strong>Double Check</strong> ativado, um segundo modelo verifica as correções sugeridas. Corrija e exporte a minuta final.</p>
                         </div>
                     </div>
                 </div>
@@ -908,7 +929,7 @@
                 <div class="tip-box success">
                     <span class="tip-icon">✅</span>
                     <div>
-                        <strong>Pronto!</strong> Com a revisão concluída, exporte a sentença em Word/PDF ou salve o projeto em JSON para continuar depois.
+                        <strong>Pronto!</strong> Com a revisão concluída, exporte a sentença em Word/PDF, salve em JSON local, ou use o <strong>Google Drive</strong> para backup na nuvem.
                     </div>
                 </div>
 
@@ -931,18 +952,23 @@
                             <tbody>
                                 <tr>
                                     <td><strong>Exportar Projeto</strong> 📤</td>
-                                    <td>Tópicos, Provas, Relatório, Dispositivo, Resultados, Vínculos, Análises</td>
-                                    <td>Botão no canto superior direito (header)</td>
+                                    <td>Tópicos, Provas, Relatório, Dispositivo, Resultados, Vínculos, Análises, Chat</td>
+                                    <td>Dropdown "Projeto" no header</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Importar Projeto</strong> 📥</td>
                                     <td>Restaura estado completo do projeto de um JSON exportado</td>
-                                    <td>Botão no canto superior direito (header)</td>
+                                    <td>Dropdown "Projeto" no header</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Exportar Minuta</strong> 📄</td>
                                     <td>Relatório + Fundamentação + Dispositivo formatados (Word/HTML)</td>
                                     <td>Botão "Exportar Minuta" na aba Tópicos</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Salvar no Drive</strong> ☁️</td>
+                                    <td>Projeto completo no Google Drive (requer login)</td>
+                                    <td>Botão Google Drive no header (após conectar)</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1355,14 +1381,19 @@
                     </div>
                     <p>Após analisar uma prova (com IA ou manualmente), você pode registrar suas conclusões:</p>
                     <ul style="margin: 1rem 0; padding-left: 1.5rem;">
-                        <li><strong>Campo "Conclusão/Observações"</strong> — Clique para editar no card da prova</li>
+                        <li><strong>Campo "Minhas Conclusões"</strong> — Clique para editar no card da prova</li>
                         <li>Registre o que você concluiu sobre a prova (ex: "Comprova vínculo empregatício")</li>
                         <li>Suas conclusões são <strong>enviadas ao Assistente IA</strong> junto com a análise</li>
                         <li>Aparecem na exportação e ficam disponíveis para referência</li>
+                        <li><strong>Botão 🎤 Ditado por Voz</strong> — Dite suas conclusões usando o microfone</li>
                     </ul>
                     <div class="tip-box success">
                         <span class="tip-icon">✅</span>
                         <div><strong>Por que usar:</strong> A IA recebe tanto a análise automática quanto suas conclusões, permitindo fundamentações mais precisas e alinhadas com sua convicção.</div>
+                    </div>
+                    <div class="tip-box info">
+                        <span class="tip-icon">🎤</span>
+                        <div><strong>Ditado por Voz:</strong> O botão de microfone permite ditar suas conclusões verbalmente. Se a melhoria automática estiver ativada em Configurações, a IA corrige pontuação e formatação.</div>
                     </div>
                 </div>
 
@@ -1410,6 +1441,13 @@
                     <span class="tip-icon">⚠️</span>
                     <div>
                         <strong>Com Anonimização Ativa:</strong> PDFs devem ter texto extraído antes de analisar. Clique em "Extrair Texto" primeiro. O badge "⚠️ CONFLITO" indica que precisa resolver.
+                    </div>
+                </div>
+
+                <div class="tip-box warning">
+                    <span class="tip-icon">🌐</span>
+                    <div>
+                        <strong>Grok e PDFs:</strong> O Grok não suporta análise de PDF binário. Ao usar Grok como provedor, você deve extrair o texto da prova primeiro. O botão "Usar PDF" fica desabilitado e um badge laranja "Grok não suporta PDF" aparece no card.
                     </div>
                 </div>
 
@@ -1593,8 +1631,96 @@
                                     <td>🔄</td>
                                     <td>Regenera o mini-relatório do tópico com IA (útil após renomear/ajustar)</td>
                                 </tr>
+                                <tr>
+                                    <td><strong>Ditado por Voz</strong></td>
+                                    <td>🎤</td>
+                                    <td>Dita texto por voz usando o microfone (com melhoria automática por IA)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Confronto de Fatos</strong></td>
+                                    <td>⚔️</td>
+                                    <td>Abre modal para comparar alegações da Petição vs Contestação</td>
+                                </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- NOVO: Ditado por Voz -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🎤</span>
+                        <h3 class="card-title">Ditado por Voz</h3>
+                    </div>
+                    <p>Clique no botão <strong>🎤</strong> na toolbar do editor para ditar texto usando seu microfone.</p>
+
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Clique no microfone</h4>
+                                <p>O botão fica vermelho indicando que está gravando</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Fale normalmente</h4>
+                                <p>O texto é transcrito automaticamente pelo navegador</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Clique novamente para parar</h4>
+                                <p>O texto é inserido no editor (com melhoria automática se ativada)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tip-box info">
+                        <span class="tip-icon">✨</span>
+                        <div><strong>Melhoria Automática:</strong> Se ativada em Configurações, a IA corrige pontuação, formatação e palavras mal reconhecidas automaticamente.</div>
+                    </div>
+                </div>
+
+                <!-- NOVO: Confronto de Fatos -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">⚔️</span>
+                        <h3 class="card-title">Confronto de Fatos</h3>
+                    </div>
+                    <p>O botão <strong>"Confronto de Fatos"</strong> abre um modal para <strong>comparar alegações</strong> da Petição Inicial com a Contestação e eventuais Impugnações.</p>
+
+                    <p style="margin-top: 1rem;"><strong>O que a IA analisa:</strong></p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Alegações do reclamante na Petição</li>
+                        <li>Defesa da reclamada na Contestação</li>
+                        <li>Impugnações de ambas as partes</li>
+                        <li>Classifica cada fato como <strong>controverso</strong> ou <strong>incontroverso</strong></li>
+                    </ul>
+
+                    <p style="margin-top: 1rem;"><strong>Resultado:</strong></p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Coluna</th>
+                                    <th>Descrição</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Tema</strong></td><td>Assunto/fato em discussão</td></tr>
+                                <tr><td><strong>Petição</strong></td><td>O que o reclamante alegou</td></tr>
+                                <tr><td><strong>Contestação</strong></td><td>O que a reclamada respondeu</td></tr>
+                                <tr><td><strong>Status</strong></td><td><span class="badge badge-red">Controverso</span> ou <span class="badge badge-green">Incontroverso</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="tip-box success">
+                        <span class="tip-icon">💾</span>
+                        <div><strong>Cache:</strong> O resultado é salvo automaticamente. Se reabrir o modal para o mesmo tópico, recupera do cache (badge "cache" aparece).</div>
                     </div>
                 </div>
 
@@ -1734,13 +1860,44 @@
                         <span class="card-icon">🤖</span>
                         <h3 class="card-title">Assistente IA (Chat)</h3>
                     </div>
-                    <p>Botão <strong>"Assistente IA"</strong> abre chat interativo:</p>
+                    <p>Botão <strong>"Assistente IA"</strong> abre chat interativo para tirar dúvidas, gerar textos e analisar provas.</p>
+
+                    <p style="margin-top: 1rem;"><strong>Recursos:</strong></p>
                     <ul style="margin: 1rem 0; padding-left: 1.5rem;">
                         <li>Contexto automático (título, relatório, fundamentação atual)</li>
                         <li>Conversação multi-turno (histórico de até 20 mensagens)</li>
                         <li>Botão <strong>"Usar Mensagem"</strong> para inserir resposta no editor</li>
                         <li>Prompts rápidos pré-configurados (Avaliar, Melhorar, Verificar Omissões)</li>
+                        <li><strong>Histórico persistente</strong> — chat é salvo por tópico e persiste após F5</li>
+                        <li>Botão <strong>"Limpar Chat"</strong> para resetar o histórico</li>
                     </ul>
+
+                    <p style="margin-top: 1rem;"><strong>Controle de Escopo do Contexto:</strong></p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Escopo</th>
+                                    <th>O que a IA recebe</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Apenas Tópico Atual</strong></td><td>Mini-relatório e decisão do tópico sendo editado</td></tr>
+                                <tr><td><strong>Tópicos Selecionados</strong></td><td>Mini-relatórios e decisões dos tópicos que você marcar</td></tr>
+                                <tr><td><strong>Toda a Decisão</strong></td><td>RELATÓRIO + todos os tópicos (contexto completo)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="tip-box info">
+                        <span class="tip-icon">📄</span>
+                        <div><strong>Toggle "Incluir documentos principais":</strong> Se desativado, a IA não recebe petição/contestação — útil para economizar tokens quando você só quer discutir o texto já escrito.</div>
+                    </div>
+
+                    <div class="tip-box success">
+                        <span class="tip-icon">🎓</span>
+                        <div><strong>Estagiário Socrático:</strong> A IA verifica se sua instrução contém o fundamento da decisão (ratio decidendi). Se a instrução for vaga (ex: "Indefira as horas extras"), ela pergunta qual a tese antes de redigir.</div>
+                    </div>
                 </div>
 
                 <!-- NOVO: Slash Menu - Inserção rápida de modelos -->
@@ -2152,6 +2309,35 @@
                         <div>Faça backup regularmente! Exporte seus modelos antes de limpar dados do navegador.</div>
                     </div>
                 </div>
+
+                <!-- NOVO: Sincronização na Nuvem -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">☁️</span>
+                        <h3 class="card-title">Sincronização na Nuvem</h3>
+                    </div>
+                    <p>Seus modelos podem ser sincronizados automaticamente com o servidor, permitindo acesso de qualquer dispositivo.</p>
+
+                    <p style="margin-top: 1rem;"><strong>Como funciona:</strong></p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Faça login com seu e-mail (link mágico, sem senha)</li>
+                        <li>Os modelos são sincronizados automaticamente em segundo plano</li>
+                        <li>Indicador de status mostra quando está sincronizando</li>
+                        <li>Funciona entre computador, notebook e outros navegadores</li>
+                    </ul>
+
+                    <p style="margin-top: 1rem;"><strong>Google Drive:</strong></p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li><strong>Salvar projeto</strong> — Salva o projeto atual no seu Drive</li>
+                        <li><strong>Carregar projeto</strong> — Lista e carrega projetos salvos</li>
+                        <li><strong>Backup automático</strong> — Seus arquivos ficam no seu Drive pessoal</li>
+                    </ul>
+
+                    <div class="tip-box info">
+                        <span class="tip-icon">🔗</span>
+                        <div><strong>Compartilhamento:</strong> Você pode compartilhar sua biblioteca de modelos com colegas. O destinatário recebe um link e importa os modelos para sua conta.</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Config Tab -->
@@ -2164,12 +2350,152 @@
                     </div>
                 </div>
 
+                <!-- NOVO: Provedores de IA -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🌐</span>
+                        <h3 class="card-title">Provedores de IA</h3>
+                    </div>
+                    <p>O SentencifyAI suporta <strong>4 provedores</strong> de IA. Cada um tem características e preços diferentes:</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Provider</th>
+                                    <th>Modelo Principal</th>
+                                    <th>Reasoning</th>
+                                    <th>PDF Binário</th>
+                                    <th>Preço Relativo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Claude</strong> (Anthropic)</td>
+                                    <td>Sonnet 4</td>
+                                    <td><span class="badge badge-green">✓ Extended Thinking</span></td>
+                                    <td><span class="badge badge-green">✓ Suporta</span></td>
+                                    <td>Base (1x)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Gemini</strong> (Google)</td>
+                                    <td>2.5 Flash / Pro</td>
+                                    <td><span class="badge badge-green">✓ Thinking</span></td>
+                                    <td><span class="badge badge-green">✓ Suporta</span></td>
+                                    <td>~50% mais barato</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>OpenAI</strong></td>
+                                    <td>GPT-5.2</td>
+                                    <td><span class="badge badge-green">✓ Reasoning</span></td>
+                                    <td><span class="badge badge-green">✓ Suporta</span></td>
+                                    <td>Similar ao Claude</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Grok</strong> (xAI)</td>
+                                    <td>Grok 4.1</td>
+                                    <td><span class="badge badge-amber">Embutido</span></td>
+                                    <td><span class="badge badge-red">✗ Não suporta</span></td>
+                                    <td><strong>96% mais barato</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tip-box info">
+                        <span class="tip-icon">🔑</span>
+                        <div><strong>API Keys:</strong> Configure a chave de cada provedor em Configurações IA. O botão "Testar" verifica se a chave está válida.</div>
+                    </div>
+                    <div class="tip-box warning">
+                        <span class="tip-icon">⚠️</span>
+                        <div><strong>Grok e PDFs:</strong> O Grok não suporta PDF binário. Ao usar Grok, a opção "PDF Puro" é desabilitada e você deve extrair o texto primeiro.</div>
+                    </div>
+                </div>
+
+                <!-- NOVO: Double Check -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">✅</span>
+                        <h3 class="card-title">Double Check (Verificação Secundária)</h3>
+                    </div>
+                    <p>O Double Check é uma <strong>segunda verificação</strong> das respostas da IA, usando outro modelo para detectar erros, omissões ou inconsistências.</p>
+
+                    <p style="margin-top: 1rem;"><strong>Operações suportadas:</strong></p>
+                    <div class="quick-ref">
+                        <div class="quick-ref-item"><span class="badge badge-green">✓</span> Extração de Tópicos</div>
+                        <div class="quick-ref-item"><span class="badge badge-green">✓</span> Geração de Dispositivo</div>
+                        <div class="quick-ref-item"><span class="badge badge-green">✓</span> Revisar Sentença</div>
+                        <div class="quick-ref-item"><span class="badge badge-green">✓</span> Confronto de Fatos</div>
+                        <div class="quick-ref-item"><span class="badge badge-green">✓</span> Análise de Provas</div>
+                        <div class="quick-ref-item"><span class="badge badge-green">✓</span> Quick Prompts</div>
+                    </div>
+
+                    <p style="margin-top: 1rem;"><strong>Como funciona:</strong></p>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>IA principal gera resposta</h4>
+                                <p>O modelo selecionado (ex: Claude Sonnet) processa sua solicitação</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Modelo verificador analisa</h4>
+                                <p>Outro modelo (configurável) revisa a resposta buscando erros</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Modal de correções</h4>
+                                <p>Se encontrar problemas, abre modal para você aceitar/rejeitar cada correção</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tip-box warning">
+                        <span class="tip-icon">💰</span>
+                        <div><strong>Custo adicional:</strong> O Double Check faz uma requisição extra à API. Use em casos importantes onde a precisão é crítica.</div>
+                    </div>
+                </div>
+
+                <!-- NOVO: Melhoria de Voz -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🎤</span>
+                        <h3 class="card-title">Melhoria Automática de Voz</h3>
+                    </div>
+                    <p>Quando você usa o <strong>ditado por voz</strong>, a IA pode melhorar automaticamente o texto transcrito.</p>
+
+                    <p style="margin-top: 1rem;"><strong>O que a IA corrige:</strong></p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Pontuação ausente ou incorreta</li>
+                        <li>Formatação de parágrafos</li>
+                        <li>Palavras mal reconhecidas pelo speech-to-text</li>
+                        <li>Estrutura das frases (sem alterar o conteúdo)</li>
+                    </ul>
+
+                    <p style="margin-top: 1rem;"><strong>Modelos rápidos disponíveis:</strong></p>
+                    <div class="quick-ref">
+                        <div class="quick-ref-item"><span class="badge badge-purple">Claude</span> Haiku</div>
+                        <div class="quick-ref-item"><span class="badge badge-blue">Gemini</span> Flash</div>
+                        <div class="quick-ref-item"><span class="badge badge-green">OpenAI</span> GPT-4o Mini</div>
+                        <div class="quick-ref-item"><span class="badge badge-amber">Grok</span> Instant</div>
+                    </div>
+
+                    <div class="tip-box info">
+                        <span class="tip-icon">💡</span>
+                        <div><strong>Ativação:</strong> Configurações IA → "Melhoria de Voz" → Ativar + escolher modelo</div>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-header">
                         <span class="card-icon">🧠</span>
-                        <h3 class="card-title">Pensamento Prolongado</h3>
+                        <h3 class="card-title">Pensamento Prolongado (Extended Thinking)</h3>
                     </div>
-                    <p>Permite que a IA use tempo extra para análises mais profundas.</p>
+                    <p>Permite que a IA use tempo extra para análises mais profundas. O "thinking" é configurável <strong>por modelo específico</strong>.</p>
+
                     <div class="table-container">
                         <table>
                             <thead>
@@ -2186,6 +2512,30 @@
                                 <tr><td>64K tokens</td><td>Máximo</td><td>Casos muito complexos</td></tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <p style="margin-top: 1rem;"><strong>Suporte por Provider:</strong></p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Provider</th>
+                                    <th>Modelos</th>
+                                    <th>Thinking</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Claude</strong></td><td>Sonnet 4, Opus 4.5</td><td><span class="badge badge-green">Configurável</span></td></tr>
+                                <tr><td><strong>Gemini</strong></td><td>Flash, Pro</td><td><span class="badge badge-green">Configurável</span></td></tr>
+                                <tr><td><strong>OpenAI</strong></td><td>GPT-5.2</td><td><span class="badge badge-purple">Reasoning interno</span></td></tr>
+                                <tr><td><strong>Grok</strong></td><td>4.1</td><td><span class="badge badge-amber">Embutido (não configurável)</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="tip-box info">
+                        <span class="tip-icon">📊</span>
+                        <div><strong>Log thinking:</strong> Ative em Configurações para ver o raciocínio da IA no console. Disponível apenas para modelos com thinking configurável.</div>
                     </div>
                 </div>
 
@@ -2947,6 +3297,9 @@
                         <li>Ative <strong>Sugestões via IA Local</strong> — custo zero para sugestões de modelos</li>
                         <li>Use <strong>busca semântica local</strong> em vez de refinamento via API</li>
                         <li>O sistema usa <strong>cache de prompts</strong> automaticamente para documentos longos</li>
+                        <li>Considere <strong>Grok</strong> para tarefas simples — <strong>96% mais barato</strong> que Claude!</li>
+                        <li>Use <strong>Gemini Flash</strong> para rascunhos rápidos — ~50% mais barato que Claude</li>
+                        <li>No chat, desative <strong>"Incluir documentos principais"</strong> quando não precisar deles</li>
                     </ul>
                 </div>
 
@@ -2973,6 +3326,22 @@
                         <li>Configure <strong>templates personalizados</strong> para manter consistência</li>
                         <li>Use o <strong>versionamento</strong> para experimentar sem medo (📜 restaura versões)</li>
                         <li>Sempre selecione o <strong>resultado correto</strong> antes de gerar dispositivo</li>
+                    </ul>
+                </div>
+
+                <!-- NOVO: Double Check e Recursos Avançados -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">✅</span>
+                        <h3 class="card-title">Double Check e Recursos Avançados</h3>
+                    </div>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Ative <strong>Double Check</strong> para casos complexos ou quando quiser certeza extra</li>
+                        <li>O Double Check consome tokens adicionais — use com moderação em tarefas simples</li>
+                        <li>O <strong>Estagiário Socrático</strong> está sempre ativo — a IA pergunta o fundamento quando você dá instruções vagas</li>
+                        <li>Dê instruções completas (ex: "Indefira pela validade dos cartões") para a IA redigir direto</li>
+                        <li>Use <strong>Confronto de Fatos</strong> para ter visão clara do que é controverso vs incontroverso</li>
+                        <li>O <strong>Ditado por Voz</strong> com melhoria automática economiza tempo em textos longos</li>
                     </ul>
                 </div>
 
