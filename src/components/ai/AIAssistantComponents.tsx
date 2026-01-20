@@ -212,9 +212,9 @@ export const AIAssistantBaseLegacy = React.memo(({
         <div className="mx-6 mt-4 p-3 bg-amber-500/10 border border-amber-500/40 rounded-lg">
           <div className="flex items-start gap-2">
             <span className="text-amber-500">⚠️</span>
-            <div className="text-xs text-amber-700 dark:text-amber-200">
+            <div className="text-xs text-amber-900 dark:text-amber-200">
               <span className="font-semibold">Lembre-se:</span> A IA pode gerar conteúdo impreciso ou incompleto. Revise e valide todas as informações geradas.
-              <span className="block mt-1 text-amber-600 dark:text-amber-300/80">Sua revisão é fundamental, na forma estabelecida pela <span className="font-semibold">Resolução 615/2025 do CNJ</span>.</span>
+              <span className="block mt-1 text-amber-800 dark:text-amber-300/80">Sua revisão é fundamental, na forma estabelecida pela <span className="font-semibold">Resolução 615/2025 do CNJ</span>.</span>
             </div>
           </div>
         </div>
@@ -414,9 +414,9 @@ export const AIAssistantBase = React.memo(({
           <div className="p-3 bg-amber-500/10 border border-amber-500/40 rounded-lg">
             <div className="flex items-start gap-2">
               <span className="text-amber-500">⚠️</span>
-              <div className="text-xs text-amber-700 dark:text-amber-200">
+              <div className="text-xs text-amber-900 dark:text-amber-200">
                 <span className="font-semibold">Lembre-se:</span> A IA pode gerar conteúdo impreciso. Revise todas as informações.
-                <span className="block mt-1 text-amber-600 dark:text-amber-300/80">
+                <span className="block mt-1 text-amber-800 dark:text-amber-300/80">
                   Revisão obrigatória conforme <span className="font-semibold">Resolução 615/2025 do CNJ</span>.
                 </span>
               </div>
