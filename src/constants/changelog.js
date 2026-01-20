@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.18', feature: 'ChangelogModal com altura dinâmica por item: lista simples substitui VirtualList (textos não são mais cortados)' },
   { version: '1.38.17', feature: 'Fix scroll duplo no ChangelogModal: overflow-hidden no wrapper (só VirtualList rola)' },
   { version: '1.38.16', feature: 'Toggle "Incluir petições e contestações" persistido por tópico: bloqueado quando chat tem histórico (limpe para alterar), salvo em IndexedDB (sobrevive F5), incluído em export/import de projeto' },
   { version: '1.38.15', feature: 'Prompt especializado para análise de prova oral trabalhista: instruções de valoração correta de depoimentos pessoais (só confissão) vs testemunhais (prova a favor), síntese valorativa adaptada aos tópicos vinculados' },
