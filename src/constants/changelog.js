@@ -2,7 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
-  { version: '1.38.14', feature: 'Fix migração quickPrompts: sessões pré-v1.38.12 agora recebem proofFilter:oral via onRehydrateStorage + diagnóstico analyzedDocuments' },
+  { version: '1.38.14', feature: 'Fix migração quickPrompts: sessões pré-v1.38.12 agora recebem proofFilter:oral via onRehydrateStorage (quick prompt Análise de Prova Oral funciona para usuários existentes)' },
   { version: '1.38.13', feature: 'VirtualList no ChangelogModal: renderiza só ~15-20 items visíveis (antes: 430+ DOM nodes) - performance' },
   { version: '1.38.12', feature: 'Controle granular de contexto no Assistente IA: escopo de tópicos (atual/selecionados/todos) + toggle petições/contestações + fix proofFilter oral no quick prompt' },
   { version: '1.38.11', feature: 'Fix crítico: chat do Assistente IA agora recebe petição inicial completa (antes: type mismatch peticao/peticoes causava petição ser ignorada)' },
