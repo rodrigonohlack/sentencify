@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.30', feature: 'Reforço prompt Double Check em TODOS os prompts de texto livre: dispositivo e sentenceReview também recebem instrução enfática (complemento v1.38.29)' },
   { version: '1.38.29', feature: 'Reforço prompt Double Check: instrução enfática para IA incorporar correções no verifiedResult (problema intermitente onde IA ignorava a instrução)' },
   { version: '1.38.28', feature: 'Fix "i is not iterable" na análise de provas: migração formato antigo→array no restore de sessão + optional chaining seguro' },
   { version: '1.38.27', feature: 'Múltiplas análises por prova (max 5): array de análises com UI de lista, botão excluir individual, FIFO automático (6ª análise remove a mais antiga), migração de dados antigos, todas enviadas ao assistente IA' },

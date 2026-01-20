@@ -2,7 +2,7 @@
  * Prompts para Double Check de Respostas da IA
  * Verificação secundária para identificar falhas, omissões e falsos positivos
  *
- * @version 1.38.29 - Reforço da instrução para incorporar correções no verifiedResult (proofAnalysis e quickPrompt)
+ * @version 1.38.30 - Reforço da instrução para incorporar correções em TODOS os prompts de texto livre
  */
 
 import type { DoubleCheckOperations } from '../types';
@@ -81,10 +81,18 @@ IMPORTANTE:
 - O campo summary deve ser conciso (1-2 frases)`,
 
   // v1.36.56: Verificação do Dispositivo
+  // v1.38.29: Reforço da instrução para incorporar correções no verifiedDispositivo
   dispositivo: `## TAREFA: Verificação do Dispositivo da Sentença
 
 Você é um revisor jurídico especializado em sentenças trabalhistas brasileiras.
 Sua função é verificar criticamente o dispositivo gerado, identificando omissões e inconsistências.
+
+⚠️ REGRA CRÍTICA OBRIGATÓRIA:
+Se você identificar QUALQUER correção e incluí-la no array "corrections",
+o campo "verifiedDispositivo" DEVE OBRIGATORIAMENTE conter o texto do dispositivo
+COM TODAS AS CORREÇÕES JÁ APLICADAS E INTEGRADAS NO TEXTO.
+NUNCA copie o texto original para verifiedDispositivo quando houver correções.
+O verifiedDispositivo deve ser uma NOVA versão do texto, não o original.
 
 ## FUNDAMENTAÇÃO (contexto da decisão):
 {context}
@@ -140,10 +148,18 @@ IMPORTANTE:
 - Use confidence entre 0.0 e 1.0 para indicar sua certeza`,
 
   // v1.36.56: Verificação da Revisão de Sentença
+  // v1.38.29: Reforço da instrução para incorporar correções no verifiedReview
   sentenceReview: `## TAREFA: Verificação da Análise Crítica da Sentença
 
 Você é um revisor jurídico especializado em controle de qualidade de sentenças trabalhistas.
 Sua função é verificar se a análise crítica (revisão) está correta e útil.
+
+⚠️ REGRA CRÍTICA OBRIGATÓRIA:
+Se você identificar QUALQUER correção e incluí-la no array "corrections",
+o campo "verifiedReview" DEVE OBRIGATORIAMENTE conter o texto da análise crítica
+COM TODAS AS CORREÇÕES JÁ APLICADAS E INTEGRADAS NO TEXTO.
+NUNCA copie o texto original para verifiedReview quando houver correções.
+O verifiedReview deve ser uma NOVA versão do texto, não o original.
 
 ## SENTENÇA ORIGINAL:
 {context}

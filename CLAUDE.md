@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.38.29 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.38.30 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.38.30 | Reforço prompt Double Check em TODOS os prompts de texto livre: dispositivo e sentenceReview também recebem instrução enfática (complemento v1.38.29) |
 | v1.38.29 | Reforço prompt Double Check: instrução enfática para IA incorporar correções no verifiedResult (problema intermitente onde IA ignorava a instrução) |
 | v1.38.28 | Fix "i is not iterable" na análise de provas: migração formato antigo→array no restore de sessão (useLocalStorage.ts) + optional chaining seguro em ProofCard/MiscModals/App |
 | v1.38.27 | Múltiplas análises por prova (max 5): array de análises com UI de lista, botão excluir individual, FIFO automático, migração de dados antigos, todas enviadas ao assistente IA |
