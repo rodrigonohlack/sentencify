@@ -106,10 +106,11 @@ export interface ProofManagerForDecisionText {
 
 export interface ChatAssistantForDecisionText {
   lastResponse: string | null;
+  /** v1.38.34: Retorna response diretamente para evitar race condition */
   send: (
     message: string,
     contextBuilder: (msg: string) => Promise<AIMessageContent[]>
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; response?: string | null }>;
   // v1.37.65: Double Check para quick prompts
   updateLastAssistantMessage: (newContent: string) => void;
 }
@@ -464,21 +465,15 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
 
     // ═══════════════════════════════════════════════════════════════════════════
     // DOUBLE CHECK DO QUICK PROMPT (v1.37.65)
+    // v1.38.34: Usar result.response diretamente (evita race condition com lastResponse memoizado)
     // ═══════════════════════════════════════════════════════════════════════════
-    // DEBUG: Verificar condições do Double Check
-    console.log('[QuickPrompt DoubleCheck] Condições:', {
-      resultSuccess: result.success,
-      dcEnabled: aiIntegration?.aiSettings?.doubleCheck?.enabled,
-      dcQuickPrompt: aiIntegration?.aiSettings?.doubleCheck?.operations?.quickPrompt,
-      hasPerformDC: !!aiIntegration?.performDoubleCheck
-    });
     if (result.success &&
+        result.response &&
         aiIntegration?.aiSettings?.doubleCheck?.enabled &&
         aiIntegration?.aiSettings?.doubleCheck?.operations?.quickPrompt &&
         aiIntegration?.performDoubleCheck) {
       try {
-        const lastResponse = chatAssistant.lastResponse;
-        console.log('[QuickPrompt DoubleCheck] lastResponse:', lastResponse ? `${lastResponse.substring(0, 100)}...` : 'NULL/EMPTY');
+        const lastResponse = result.response; // v1.38.34: Usar resposta direta do result
         if (lastResponse) {
           // v1.37.68: Passar contextContent diretamente (sem filtrar para texto)
           const contextContent = await buildContextForChat(message, options);
@@ -486,7 +481,6 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
             ? contextContent as AIMessageContent[]
             : [{ type: 'text' as const, text: String(contextContent) }];
 
-          console.log('[QuickPrompt DoubleCheck] Chamando performDoubleCheck...');
           const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
             'quickPrompt',
             lastResponse,
@@ -494,7 +488,6 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
             undefined,  // onProgress
             message  // userPrompt - texto do quick prompt/mensagem do usuario
           );
-          console.log('[QuickPrompt DoubleCheck] Resultado:', { correctionsCount: corrections.length, summary: summary?.substring(0, 50) });
 
           if (corrections.length > 0) {
             // Converter corrections para tipo esperado com descrição legível

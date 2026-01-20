@@ -44,10 +44,11 @@ export interface UseChatAssistantReturn {
   /** Indica se está gerando resposta */
   generating: boolean;
   /** Envia mensagem para a IA */
+  /** v1.38.34: Retorna response diretamente para evitar race condition */
   send: (
     message: string,
     contextBuilder: (msg: string) => AIMessageContent[] | string | Promise<AIMessageContent[] | string>
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; response?: string | null }>;
   /** Limpa o histórico do chat */
   clear: () => void;
   /** Última resposta da IA (ou null) */
@@ -272,7 +273,8 @@ export function useChatAssistant(
         return newHistory;
       });
 
-      return { success: true };
+      // v1.38.34: Retornar response diretamente para evitar race condition com lastResponse memoizado
+      return { success: true, response: trimmedResponse };
 
     } catch (err) {
       // Adiciona mensagem de erro ao histórico
@@ -280,7 +282,7 @@ export function useChatAssistant(
         ...prev,
         { role: 'user', content: message, ts: Date.now(), error: (err as Error).message }
       ]);
-      return { success: false, error: (err as Error).message };
+      return { success: false, error: (err as Error).message, response: null };
     } finally {
       setGenerating(false);
     }
