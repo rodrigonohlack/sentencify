@@ -234,6 +234,109 @@ describe('useProofsStore', () => {
       expect(analyses[0].timestamp).toBeDefined();
     });
 
+    it('should add multiple analyses to same proof (up to 5)', () => {
+      const store = useProofsStore.getState();
+
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis 1' });
+      store.addProofAnalysis('proof-1', { type: 'livre', result: 'Analysis 2' });
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis 3' });
+
+      const analyses = useProofsStore.getState().proofAnalysisResults['proof-1'];
+      expect(analyses).toHaveLength(3);
+      expect(analyses[0].result).toBe('Analysis 1');
+      expect(analyses[1].result).toBe('Analysis 2');
+      expect(analyses[2].result).toBe('Analysis 3');
+    });
+
+    it('should enforce FIFO when exceeding MAX_PROOF_ANALYSES (5)', () => {
+      const store = useProofsStore.getState();
+
+      // Add 5 analyses
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis 1' });
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis 2' });
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis 3' });
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis 4' });
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis 5' });
+
+      let analyses = useProofsStore.getState().proofAnalysisResults['proof-1'];
+      expect(analyses).toHaveLength(5);
+      expect(analyses[0].result).toBe('Analysis 1');
+
+      // Add 6th analysis - should remove the oldest (Analysis 1)
+      store.addProofAnalysis('proof-1', { type: 'livre', result: 'Analysis 6' });
+
+      analyses = useProofsStore.getState().proofAnalysisResults['proof-1'];
+      expect(analyses).toHaveLength(5);
+      expect(analyses[0].result).toBe('Analysis 2'); // First one removed
+      expect(analyses[4].result).toBe('Analysis 6'); // New one at the end
+    });
+
+    it('should generate unique id and timestamp for each analysis', () => {
+      const store = useProofsStore.getState();
+
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis 1' });
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis 2' });
+
+      const analyses = useProofsStore.getState().proofAnalysisResults['proof-1'];
+      expect(analyses[0].id).not.toBe(analyses[1].id);
+      expect(analyses[0].timestamp).toBeDefined();
+      expect(analyses[1].timestamp).toBeDefined();
+    });
+
+    it('should remove specific analysis by id', () => {
+      const store = useProofsStore.getState();
+
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis 1' });
+      store.addProofAnalysis('proof-1', { type: 'livre', result: 'Analysis 2' });
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis 3' });
+
+      const analyses = useProofsStore.getState().proofAnalysisResults['proof-1'];
+      const idToRemove = analyses[1].id; // Remove the middle one
+
+      store.removeProofAnalysis('proof-1', idToRemove);
+
+      const updatedAnalyses = useProofsStore.getState().proofAnalysisResults['proof-1'];
+      expect(updatedAnalyses).toHaveLength(2);
+      expect(updatedAnalyses[0].result).toBe('Analysis 1');
+      expect(updatedAnalyses[1].result).toBe('Analysis 3');
+    });
+
+    it('should remove proof key when last analysis is deleted', () => {
+      const store = useProofsStore.getState();
+
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Only analysis' });
+
+      const analyses = useProofsStore.getState().proofAnalysisResults['proof-1'];
+      const idToRemove = analyses[0].id;
+
+      store.removeProofAnalysis('proof-1', idToRemove);
+
+      const state = useProofsStore.getState();
+      expect(state.proofAnalysisResults['proof-1']).toBeUndefined();
+    });
+
+    it('should handle analyses for multiple proofs independently', () => {
+      const store = useProofsStore.getState();
+
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Proof 1 Analysis' });
+      store.addProofAnalysis('proof-2', { type: 'livre', result: 'Proof 2 Analysis' });
+
+      const state = useProofsStore.getState();
+      expect(state.proofAnalysisResults['proof-1']).toHaveLength(1);
+      expect(state.proofAnalysisResults['proof-2']).toHaveLength(1);
+      expect(state.proofAnalysisResults['proof-1'][0].result).toBe('Proof 1 Analysis');
+      expect(state.proofAnalysisResults['proof-2'][0].result).toBe('Proof 2 Analysis');
+    });
+
+    it('should preserve topicTitle when provided', () => {
+      const store = useProofsStore.getState();
+
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis', topicTitle: 'Horas Extras' });
+
+      const analyses = useProofsStore.getState().proofAnalysisResults['proof-1'];
+      expect(analyses[0].topicTitle).toBe('Horas Extras');
+    });
+
     it('should add analyzing proof', () => {
       const store = useProofsStore.getState();
 
@@ -648,6 +751,182 @@ describe('useProofsStore', () => {
       expect(results['proof-1']).toHaveLength(1);
       expect(results['proof-1'][0].type).toBe('contextual');
       expect(results['proof-1'][0].result).toBe('Result');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MIGRATION TESTS (v1.38.27: old single object → new array format)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Migration - Old Format to Array', () => {
+    it('should migrate old single-object analysis to array format', () => {
+      const store = useProofsStore.getState();
+
+      // Simulate old format (single object per proof)
+      const oldFormatData = {
+        proofAnalysisResults: {
+          'proof-1': {
+            type: 'contextual',
+            result: 'Old analysis result',
+            topicTitle: 'Horas Extras',
+            timestamp: '2024-01-01T00:00:00Z'
+          }
+        }
+      };
+
+      store.restoreFromPersistence(oldFormatData);
+
+      const state = useProofsStore.getState();
+      const analyses = state.proofAnalysisResults['proof-1'];
+
+      // Should be converted to array
+      expect(Array.isArray(analyses)).toBe(true);
+      expect(analyses).toHaveLength(1);
+      expect(analyses[0].type).toBe('contextual');
+      expect(analyses[0].result).toBe('Old analysis result');
+      expect(analyses[0].topicTitle).toBe('Horas Extras');
+      expect(analyses[0].id).toBeDefined(); // Should have generated ID
+    });
+
+    it('should handle new array format correctly (no migration needed)', () => {
+      const store = useProofsStore.getState();
+
+      // New format (already array)
+      const newFormatData = {
+        proofAnalysisResults: {
+          'proof-1': [
+            {
+              id: 'existing-id-1',
+              type: 'contextual',
+              result: 'Analysis 1',
+              timestamp: '2024-01-01T00:00:00Z'
+            },
+            {
+              id: 'existing-id-2',
+              type: 'livre',
+              result: 'Analysis 2',
+              timestamp: '2024-01-02T00:00:00Z'
+            }
+          ]
+        }
+      };
+
+      store.restoreFromPersistence(newFormatData);
+
+      const state = useProofsStore.getState();
+      const analyses = state.proofAnalysisResults['proof-1'];
+
+      expect(analyses).toHaveLength(2);
+      expect(analyses[0].id).toBe('existing-id-1');
+      expect(analyses[1].id).toBe('existing-id-2');
+    });
+
+    it('should migrate multiple proofs with old format', () => {
+      const store = useProofsStore.getState();
+
+      const oldFormatData = {
+        proofAnalysisResults: {
+          'proof-1': {
+            type: 'contextual',
+            result: 'Analysis for proof 1'
+          },
+          'proof-2': {
+            type: 'livre',
+            result: 'Analysis for proof 2'
+          }
+        }
+      };
+
+      store.restoreFromPersistence(oldFormatData);
+
+      const state = useProofsStore.getState();
+
+      expect(state.proofAnalysisResults['proof-1']).toHaveLength(1);
+      expect(state.proofAnalysisResults['proof-2']).toHaveLength(1);
+      expect(state.proofAnalysisResults['proof-1'][0].result).toBe('Analysis for proof 1');
+      expect(state.proofAnalysisResults['proof-2'][0].result).toBe('Analysis for proof 2');
+    });
+
+    it('should generate timestamp if missing in old format', () => {
+      const store = useProofsStore.getState();
+
+      const oldFormatData = {
+        proofAnalysisResults: {
+          'proof-1': {
+            type: 'livre',
+            result: 'Old analysis without timestamp'
+            // No timestamp in old data
+          }
+        }
+      };
+
+      store.restoreFromPersistence(oldFormatData);
+
+      const state = useProofsStore.getState();
+      const analysis = state.proofAnalysisResults['proof-1'][0];
+
+      expect(analysis.timestamp).toBeDefined();
+      // Should be a valid ISO date
+      expect(new Date(analysis.timestamp).toISOString()).toBe(analysis.timestamp);
+    });
+
+    it('should skip invalid analysis entries', () => {
+      const store = useProofsStore.getState();
+
+      const invalidData = {
+        proofAnalysisResults: {
+          'proof-1': {
+            // Missing type and result - invalid
+          },
+          'proof-2': {
+            type: 'contextual',
+            result: 'Valid analysis'
+          },
+          'proof-3': null, // Invalid
+          'proof-4': 'string value' // Invalid
+        }
+      };
+
+      store.restoreFromPersistence(invalidData);
+
+      const state = useProofsStore.getState();
+
+      // Only proof-2 should have valid analysis
+      expect(state.proofAnalysisResults['proof-2']).toBeDefined();
+      expect(state.proofAnalysisResults['proof-2']).toHaveLength(1);
+    });
+
+    it('should handle mixed old and new format gracefully', () => {
+      const store = useProofsStore.getState();
+
+      const mixedData = {
+        proofAnalysisResults: {
+          'proof-1': {
+            // Old format
+            type: 'contextual',
+            result: 'Old format'
+          },
+          'proof-2': [
+            // New format
+            {
+              id: 'new-id',
+              type: 'livre',
+              result: 'New format',
+              timestamp: '2024-01-01T00:00:00Z'
+            }
+          ]
+        }
+      };
+
+      store.restoreFromPersistence(mixedData);
+
+      const state = useProofsStore.getState();
+
+      // Both should work
+      expect(state.proofAnalysisResults['proof-1']).toHaveLength(1);
+      expect(state.proofAnalysisResults['proof-2']).toHaveLength(1);
+      expect(state.proofAnalysisResults['proof-1'][0].id).toBeDefined(); // Generated
+      expect(state.proofAnalysisResults['proof-2'][0].id).toBe('new-id'); // Preserved
     });
   });
 
