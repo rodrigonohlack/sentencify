@@ -1349,6 +1349,16 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       const jsonStr = jsonMatch[1] || jsonMatch[0];
       const result = JSON.parse(jsonStr);
 
+      // Debug: Log do verifiedResult retornado pela IA
+      console.log('[DoubleCheck] Resultado parseado:', {
+        operation,
+        hasCorrections: result.corrections?.length > 0,
+        correctionsCount: result.corrections?.length || 0,
+        verifiedResultPreview: (result.verifiedResult || result.verifiedDispositivo || result.verifiedReview || '').substring(0, 200) + '...',
+        originalResponsePreview: originalResponse.substring(0, 200) + '...',
+        verifiedEqualsOriginal: (result.verifiedResult || result.verifiedDispositivo || result.verifiedReview) === originalResponse
+      });
+
       // Extrair campo verificado baseado na operação
       // v1.37.65: Adicionado proofAnalysis e quickPrompt (verifiedResult como string)
       const verified = operation === 'topicExtraction'
