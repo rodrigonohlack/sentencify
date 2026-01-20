@@ -24,6 +24,7 @@ import type {
   ProcessingMode,
   NewProofTextData
 } from '../types';
+import { MAX_PROOF_ANALYSES } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS LOCAIS
@@ -69,8 +70,8 @@ interface ProofsStoreState {
   /** Vinculações prova -> tópicos */
   proofTopicLinks: Record<string, string[]>;
 
-  /** Resultados de análise por prova */
-  proofAnalysisResults: Record<string, ProofAnalysisResult>;
+  /** Resultados de análise por prova (array de até MAX_PROOF_ANALYSES análises) */
+  proofAnalysisResults: Record<string, ProofAnalysisResult[]>;
 
   /** Conclusões manuais do juiz por prova */
   proofConclusions: Record<string, string>;
@@ -131,7 +132,7 @@ interface ProofsStoreState {
   setExtractedProofTexts: (texts: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void;
   setProofExtractionFailed: (failed: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void;
   setProofTopicLinks: (links: Record<string, string[]> | ((prev: Record<string, string[]>) => Record<string, string[]>)) => void;
-  setProofAnalysisResults: (results: Record<string, ProofAnalysisResult> | ((prev: Record<string, ProofAnalysisResult>) => Record<string, ProofAnalysisResult>)) => void;
+  setProofAnalysisResults: (results: Record<string, ProofAnalysisResult[]> | ((prev: Record<string, ProofAnalysisResult[]>) => Record<string, ProofAnalysisResult[]>)) => void;
   setProofConclusions: (conclusions: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void;
   setProofProcessingModes: (modes: Record<string, ProcessingMode> | ((prev: Record<string, ProcessingMode>) => Record<string, ProcessingMode>)) => void;
   setProofSendFullContent: (content: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void;
@@ -167,6 +168,21 @@ interface ProofsStoreState {
 
   /** Limpa todas as provas em análise */
   clearAnalyzingProofs: () => void;
+
+  /**
+   * Adiciona nova análise a uma prova (máximo MAX_PROOF_ANALYSES)
+   * Se já existem MAX_PROOF_ANALYSES análises, remove a mais antiga automaticamente (FIFO)
+   * @param proofId - ID da prova
+   * @param analysis - Dados da análise (sem id/timestamp, serão gerados)
+   */
+  addProofAnalysis: (proofId: string, analysis: Omit<ProofAnalysisResult, 'id' | 'timestamp'>) => void;
+
+  /**
+   * Remove uma análise específica de uma prova
+   * @param proofId - ID da prova
+   * @param analysisId - ID da análise a remover
+   */
+  removeProofAnalysis: (proofId: string, analysisId: string) => void;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ACTIONS DE MANIPULAÇÃO
@@ -212,7 +228,7 @@ interface ProofsStoreState {
     extractedProofTexts: Record<string, string>;
     proofExtractionFailed: Record<string, boolean>;
     proofTopicLinks: Record<string, string[]>;
-    proofAnalysisResults: Record<string, ProofAnalysisResult>;
+    proofAnalysisResults: Record<string, ProofAnalysisResult[]>;
     proofConclusions: Record<string, string>;
     proofProcessingModes: Record<string, ProcessingMode>;
     proofSendFullContent: Record<string, boolean>;
@@ -447,6 +463,35 @@ export const useProofsStore = create<ProofsStoreState>()(
           state.analyzingProofIds = new Set();
         }, false, 'clearAnalyzingProofs'),
 
+      addProofAnalysis: (proofId, analysis) =>
+        set((state) => {
+          const existing = state.proofAnalysisResults[proofId] || [];
+
+          // Se já tem MAX_PROOF_ANALYSES, remove a mais antiga (FIFO)
+          const trimmed = existing.length >= MAX_PROOF_ANALYSES
+            ? existing.slice(1)
+            : existing;
+
+          const newAnalysis: ProofAnalysisResult = {
+            ...analysis,
+            id: crypto.randomUUID(),
+            timestamp: new Date().toISOString()
+          };
+
+          state.proofAnalysisResults[proofId] = [...trimmed, newAnalysis];
+        }, false, 'addProofAnalysis'),
+
+      removeProofAnalysis: (proofId, analysisId) =>
+        set((state) => {
+          const existing = state.proofAnalysisResults[proofId] || [];
+          state.proofAnalysisResults[proofId] = existing.filter(a => a.id !== analysisId);
+
+          // Se ficou vazio, remove a chave para manter store limpo
+          if (state.proofAnalysisResults[proofId].length === 0) {
+            delete state.proofAnalysisResults[proofId];
+          }
+        }, false, 'removeProofAnalysis'),
+
       // ═══════════════════════════════════════════════════════════════════════
       // ACTIONS DE MANIPULAÇÃO
       // ═══════════════════════════════════════════════════════════════════════
@@ -633,7 +678,29 @@ export const useProofsStore = create<ProofsStoreState>()(
 
           // Restaurar vinculações e análises
           if (data.proofTopicLinks) state.proofTopicLinks = data.proofTopicLinks as Record<string, string[]>;
-          if (data.proofAnalysisResults) state.proofAnalysisResults = data.proofAnalysisResults as Record<string, ProofAnalysisResult>;
+
+          // Migração: converter análises antigas (objeto único) para arrays
+          if (data.proofAnalysisResults) {
+            const migrated: Record<string, ProofAnalysisResult[]> = {};
+            for (const [proofId, analysis] of Object.entries(data.proofAnalysisResults as Record<string, unknown>)) {
+              if (Array.isArray(analysis)) {
+                // Já é array (formato novo)
+                migrated[proofId] = analysis as ProofAnalysisResult[];
+              } else if (analysis && typeof analysis === 'object') {
+                // Análise antiga (objeto único) - converter para array
+                const oldAnalysis = analysis as { type: string; result: string; topicTitle?: string; timestamp?: string };
+                migrated[proofId] = [{
+                  id: crypto.randomUUID(),
+                  type: oldAnalysis.type as 'contextual' | 'livre',
+                  result: oldAnalysis.result,
+                  topicTitle: oldAnalysis.topicTitle,
+                  timestamp: oldAnalysis.timestamp || new Date().toISOString()
+                }];
+              }
+            }
+            state.proofAnalysisResults = migrated;
+          }
+
           if (data.proofConclusions) state.proofConclusions = data.proofConclusions as Record<string, string>;
 
           // Restaurar modos de processamento e flags

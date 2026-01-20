@@ -221,14 +221,17 @@ describe('useProofsStore', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Proof Analysis', () => {
-    it('should set proof analysis results', () => {
+    it('should add proof analysis (v1.38.27: array format)', () => {
       const store = useProofsStore.getState();
 
-      store.setProofAnalysisResults({
-        'proof-1': { type: 'contextual', result: 'Analysis result' }
-      });
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Analysis result' });
 
-      expect(useProofsStore.getState().proofAnalysisResults['proof-1'].result).toBe('Analysis result');
+      const analyses = useProofsStore.getState().proofAnalysisResults['proof-1'];
+      expect(analyses).toHaveLength(1);
+      expect(analyses[0].result).toBe('Analysis result');
+      expect(analyses[0].type).toBe('contextual');
+      expect(analyses[0].id).toBeDefined();
+      expect(analyses[0].timestamp).toBeDefined();
     });
 
     it('should add analyzing proof', () => {
@@ -572,7 +575,7 @@ describe('useProofsStore', () => {
       store.setExtractedProofTexts({ 'proof-1': 'Text' });
       store.setProofExtractionFailed({ 'proof-1': true });
       store.setProofTopicLinks({ 'proof-1': ['Topic'] });
-      store.setProofAnalysisResults({ 'proof-1': { type: 'contextual', result: 'Result' } });
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Result' });
       store.setProofConclusions({ 'proof-1': 'Conclusion' });
       store.addAnalyzingProof('proof-1');
       store.setShowProofPanel(false);
@@ -637,12 +640,14 @@ describe('useProofsStore', () => {
       });
     });
 
-    it('selectProofAnalysisResults should return analysis results', () => {
+    it('selectProofAnalysisResults should return analysis results (v1.38.27: array format)', () => {
       const store = useProofsStore.getState();
-      const results = { 'proof-1': { type: 'contextual' as const, result: 'Result' } };
-      store.setProofAnalysisResults(results);
+      store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Result' });
 
-      expect(selectProofAnalysisResults(useProofsStore.getState())).toEqual(results);
+      const results = selectProofAnalysisResults(useProofsStore.getState());
+      expect(results['proof-1']).toHaveLength(1);
+      expect(results['proof-1'][0].type).toBe('contextual');
+      expect(results['proof-1'][0].result).toBe('Result');
     });
   });
 

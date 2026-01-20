@@ -1107,7 +1107,30 @@ export function useLocalStorage(): UseLocalStorageReturn {
     setExtractedProofTexts(project.extractedProofTexts || {});
     setProofExtractionFailed(project.proofExtractionFailed || {});
     setProofTopicLinks(project.proofTopicLinks || {});
-    setProofAnalysisResults((project.proofAnalysisResults as unknown as Record<string, ProofAnalysisResult>) || {});
+
+    // v1.38.27: Migrar análises antigas (objeto único) para arrays
+    const rawAnalysisResults = project.proofAnalysisResults as Record<string, unknown> || {};
+    const migratedAnalysisResults: Record<string, ProofAnalysisResult[]> = {};
+    for (const [proofId, analysis] of Object.entries(rawAnalysisResults)) {
+      if (Array.isArray(analysis)) {
+        // Já é array (formato novo)
+        migratedAnalysisResults[proofId] = analysis as ProofAnalysisResult[];
+      } else if (analysis && typeof analysis === 'object') {
+        // Análise antiga (objeto único) - converter para array
+        const old = analysis as { type?: string; result?: string; topicTitle?: string; timestamp?: string };
+        if (old.type && old.result) {
+          migratedAnalysisResults[proofId] = [{
+            id: crypto.randomUUID(),
+            type: old.type as 'contextual' | 'livre',
+            result: old.result,
+            topicTitle: old.topicTitle,
+            timestamp: old.timestamp || new Date().toISOString()
+          }];
+        }
+      }
+    }
+    setProofAnalysisResults(migratedAnalysisResults);
+
     setProofConclusions(project.proofConclusions || {});
     setProofSendFullContent(project.proofSendFullContent || {});
 
@@ -1168,7 +1191,7 @@ export function useLocalStorage(): UseLocalStorageReturn {
         extractedProofTexts: project.extractedProofTexts || {},
         proofExtractionFailed: project.proofExtractionFailed || {},
         proofTopicLinks: project.proofTopicLinks || {},
-        proofAnalysisResults: (project.proofAnalysisResults as unknown as Record<string, { type: string; result: string }>) || {},
+        proofAnalysisResults: migratedAnalysisResults,
         proofConclusions: project.proofConclusions || {},
         proofSendFullContent: project.proofSendFullContent || {},
         documentProcessingModes: project.documentProcessingModes || { peticoes: ['pdfjs'], contestacoes: [], complementares: [] },

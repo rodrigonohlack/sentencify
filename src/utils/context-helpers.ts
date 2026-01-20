@@ -8,7 +8,7 @@
  * @usedBy App.tsx (buildApiRequest), AIIntegration
  */
 
-import type { AIMessageContent, ProofFile, ProofText, AnonymizationSettings } from '../types';
+import type { AIMessageContent, ProofFile, ProofText, AnonymizationSettings, ProofAnalysisResult } from '../types';
 import { anonymizeText } from './text';
 import { isOralProof } from '../components';
 
@@ -118,7 +118,7 @@ interface ProofManagerInput {
   proofTexts?: ProofText[];
   proofUsePdfMode?: Record<string, boolean>;
   extractedProofTexts?: Record<string, string>;
-  proofAnalysisResults?: Record<string, { type: string; result: string }>;
+  proofAnalysisResults?: Record<string, ProofAnalysisResult[]>;
   proofConclusions?: Record<string, string>;
   proofSendFullContent?: Record<string, boolean>;
 }
@@ -189,10 +189,18 @@ export const prepareProofsContext = async (
 
     proofsContext += `PROVA ${index + 1}: ${proof.name}\n`;
 
-    // Análise IA
-    if (proofManager.proofAnalysisResults?.[proofId]) {
-      const typeLabel = proofManager.proofAnalysisResults[proofId].type === 'livre' ? 'Livre' : 'Contextual';
-      proofsContext += `\nAnálise ${typeLabel}:\n${proofManager.proofAnalysisResults[proofId].result}\n`;
+    // Análises IA (v1.38.27: suporte a múltiplas análises)
+    const analyses = proofManager.proofAnalysisResults?.[proofId];
+    if (analyses && analyses.length > 0) {
+      proofsContext += `\n--- ANÁLISES DA PROVA (${analyses.length}) ---\n`;
+      for (let idx = 0; idx < analyses.length; idx++) {
+        const analysis = analyses[idx];
+        const typeLabel = analysis.type === 'livre' ? 'Livre' : 'Contextual';
+        const dateStr = analysis.timestamp
+          ? new Date(analysis.timestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+          : '';
+        proofsContext += `\nAnálise ${idx + 1} (${typeLabel}${dateStr ? ` - ${dateStr}` : ''}):\n${analysis.result}\n`;
+      }
     }
 
     // Conclusões do juiz
@@ -319,9 +327,18 @@ export const prepareOralProofsContext = async (
 
     proofsContext += `PROVA ORAL ${index + 1}: ${proof.name}\n`;
 
-    if (proofManager.proofAnalysisResults?.[proofId]) {
-      const typeLabel = proofManager.proofAnalysisResults[proofId].type === 'livre' ? 'Livre' : 'Contextual';
-      proofsContext += `\nAnálise ${typeLabel}:\n${proofManager.proofAnalysisResults[proofId].result}\n`;
+    // Análises IA (v1.38.27: suporte a múltiplas análises)
+    const analyses = proofManager.proofAnalysisResults?.[proofId];
+    if (analyses && analyses.length > 0) {
+      proofsContext += `\n--- ANÁLISES DA PROVA (${analyses.length}) ---\n`;
+      for (let idx = 0; idx < analyses.length; idx++) {
+        const analysis = analyses[idx];
+        const typeLabel = analysis.type === 'livre' ? 'Livre' : 'Contextual';
+        const dateStr = analysis.timestamp
+          ? new Date(analysis.timestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+          : '';
+        proofsContext += `\nAnálise ${idx + 1} (${typeLabel}${dateStr ? ` - ${dateStr}` : ''}):\n${analysis.result}\n`;
+      }
     }
 
     if (proofManager.proofConclusions?.[proofId]) {

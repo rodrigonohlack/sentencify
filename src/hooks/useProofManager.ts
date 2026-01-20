@@ -85,6 +85,10 @@ const useProofManager = (_documentServices: unknown = null) => {
   const handleUnlinkProof = useProofsStore((s) => s.handleUnlinkProof);
   const handleSaveProofConclusion = useProofsStore((s) => s.handleSaveProofConclusion);
 
+  // Proof Analysis Actions (v1.38.27)
+  const addProofAnalysis = useProofsStore((s) => s.addProofAnalysis);
+  const removeProofAnalysis = useProofsStore((s) => s.removeProofAnalysis);
+
   // Attachment Actions (v1.38.8)
   const addAttachment = useProofsStore((s) => s.addAttachment);
   const removeAttachment = useProofsStore((s) => s.removeAttachment);
@@ -240,6 +244,10 @@ const useProofManager = (_documentServices: unknown = null) => {
     handleLinkProof,
     handleUnlinkProof,
     handleSaveProofConclusion,
+
+    // Proof Analysis Actions (2) - v1.38.27
+    addProofAnalysis,
+    removeProofAnalysis,
 
     // Attachment Actions (4) - v1.38.8, v1.38.10
     addAttachment,

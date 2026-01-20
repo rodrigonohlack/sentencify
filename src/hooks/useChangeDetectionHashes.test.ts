@@ -309,13 +309,13 @@ describe('useChangeDetectionHashes', () => {
       expect(result1.current.proofsHash).not.toBe(result2.current.proofsHash);
     });
 
-    it('should detect changes in proofAnalysisResults', () => {
+    it('should detect changes in proofAnalysisResults (v1.38.27: array format)', () => {
       const proofManager1: ProofManagerData = {
-        proofAnalysisResults: { 'proof-1': { type: 'contextual', result: 'Analysis A' } }
+        proofAnalysisResults: { 'proof-1': [{ id: '1', type: 'contextual', result: 'Analysis A', timestamp: '2024-01-01T00:00:00Z' }] }
       };
 
       const proofManager2: ProofManagerData = {
-        proofAnalysisResults: { 'proof-1': { type: 'contextual', result: 'Analysis B' } }
+        proofAnalysisResults: { 'proof-1': [{ id: '1', type: 'contextual', result: 'Analysis B', timestamp: '2024-01-01T00:00:00Z' }] }
       };
 
       const { result: result1 } = renderHook(() =>

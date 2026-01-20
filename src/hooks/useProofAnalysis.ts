@@ -68,7 +68,7 @@ export interface ProofManagerForAnalysis {
   extractedProofTexts: Record<string, string>;
   proofTopicLinks: Record<string, string[]>;
   proofProcessingModes: Record<string, ProcessingMode>;
-  setProofAnalysisResults: (fn: (prev: Record<string, ProofAnalysisResult>) => Record<string, ProofAnalysisResult>) => void;
+  addProofAnalysis: (proofId: string, analysis: Omit<ProofAnalysisResult, 'id' | 'timestamp'>) => void;
 }
 
 /** Interface para Document Services */
@@ -649,13 +649,10 @@ CONCLUSÃO:
       }
 
       // Armazenar resultado (usar finalResult que pode ter sido corrigido pelo Double Check)
-      proofManager.setProofAnalysisResults(prev => ({
-        ...prev,
-        [proofId]: {
-          type: analysisType as 'contextual' | 'livre',
-          result: finalResult
-        }
-      }));
+      proofManager.addProofAnalysis(proofId, {
+        type: analysisType as 'contextual' | 'livre',
+        result: finalResult
+      });
 
     } catch (err) {
       setError('Erro ao analisar prova: ' + (err as Error).message);

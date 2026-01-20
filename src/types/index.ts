@@ -150,11 +150,15 @@ export interface ProofAttachment {
 export type Proof = ProofFile | ProofText;
 
 export interface ProofAnalysisResult {
+  id: string;
   type: 'contextual' | 'livre';
   result: string;
   topicTitle?: string;
-  timestamp?: string;
+  timestamp: string;
 }
+
+/** Limite máximo de análises por prova */
+export const MAX_PROOF_ANALYSES = 5;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // AI SETTINGS TYPES
@@ -1524,7 +1528,7 @@ export interface LinkedProofsModalProps {
   proofManager: {
     proofTopicLinks: Record<string, string[]>;
     setProofTopicLinks: (fn: (prev: Record<string, string[]>) => Record<string, string[]>) => void;
-    proofAnalysisResults: Record<string, { type: string; result: string }>;
+    proofAnalysisResults: Record<string, ProofAnalysisResult[]>;
     proofConclusions: Record<string, string>;
   };
 }
@@ -1849,7 +1853,7 @@ export interface GlobalEditorModalProps {
     proofTexts: ProofText[];
     proofTopicLinks?: Record<string, string[]>;
     setProofTopicLinks: (fn: (prev: Record<string, string[]>) => Record<string, string[]>) => void;
-    proofAnalysisResults?: Record<string, { type: string; result: string }>;
+    proofAnalysisResults?: Record<string, ProofAnalysisResult[]>;
     proofConclusions?: Record<string, string>;
     extractedProofTexts?: Record<string, string>;
     proofProcessingModes?: Record<string, ProcessingMode>;
@@ -1941,8 +1945,9 @@ export interface ProofCardProps {
     proofExtractionFailed: Record<string, boolean>;
     extractedProofTexts: Record<string, string>;
     proofProcessingModes: Record<string, ProcessingMode>;
-    proofAnalysisResults: Record<string, { type: string; result: string }>;
+    proofAnalysisResults: Record<string, ProofAnalysisResult[]>;
     proofSendFullContent: Record<string, boolean>;
+    removeProofAnalysis: (proofId: string, analysisId: string) => void;
   };
   openModal: (name: ModalKey) => void;
   setError: (error: string) => void;
@@ -2259,7 +2264,7 @@ export interface SessionState {
   extractedProofTexts: Record<string, string>;
   proofExtractionFailed: Record<string, boolean>;
   proofTopicLinks: Record<string, string[]>;
-  proofAnalysisResults: Record<string, { type: string; result: string }>;
+  proofAnalysisResults: Record<string, ProofAnalysisResult[]>;
   proofConclusions: Record<string, string>;
   proofSendFullContent?: Record<string, boolean>;
   extractedTexts: ExtractedTexts;
@@ -2332,7 +2337,7 @@ export interface ImportCallbacks {
   setExtractedProofTexts: (texts: Record<string, string>) => void;
   setProofExtractionFailed: (failed: Record<string, boolean>) => void;
   setProofTopicLinks: (links: Record<string, string[]>) => void;
-  setProofAnalysisResults: React.Dispatch<React.SetStateAction<Record<string, ProofAnalysisResult>>>;
+  setProofAnalysisResults: (results: Record<string, ProofAnalysisResult[]> | ((prev: Record<string, ProofAnalysisResult[]>) => Record<string, ProofAnalysisResult[]>)) => void;
   setProofConclusions: (conclusions: Record<string, string>) => void;
   setProofSendFullContent: (content: Record<string, boolean>) => void;
   setAiSettings: (settings: AISettings) => void;

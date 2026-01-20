@@ -12,7 +12,7 @@
  */
 
 import { useMemo } from 'react';
-import type { Topic, ProofFile, ProofText } from '../types';
+import type { Topic, ProofFile, ProofText, ProofAnalysisResult } from '../types';
 import { fastHashUtil } from '../utils/context-helpers';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -25,7 +25,7 @@ export interface ProofManagerData {
   extractedProofTexts?: Record<string, string>;
   proofConclusions?: Record<string, string>;
   proofTopicLinks?: Record<string, string[]>;
-  proofAnalysisResults?: Record<string, { type?: string; result?: string }>;
+  proofAnalysisResults?: Record<string, ProofAnalysisResult[]>;
   proofUsePdfMode?: Record<string, boolean>;
   proofSendFullContent?: Record<string, boolean>;
 }
@@ -121,15 +121,18 @@ function computeProofsHash(proofManager: ProofManagerData): string {
       })
       .join('|');
 
-    // Hash dos resultados de análise IA
+    // Hash dos resultados de análise IA (v1.38.27: array format)
     const analysisResults = proofManager.proofAnalysisResults || {};
     const analysisResultsSig = Object.keys(analysisResults)
       .map(id => {
-        const analysis = analysisResults[id] || {};
-        const type = analysis.type || '';
-        const result = analysis.result || '';
-        const resultPreview = typeof result === 'string' ? result.substring(0, 50) : '';
-        return `${id}:${type}:${resultPreview}`;
+        const analyses = analysisResults[id] || [];
+        const analysisSigs = analyses.map((a, idx) => {
+          const type = a.type || '';
+          const result = a.result || '';
+          const resultPreview = typeof result === 'string' ? result.substring(0, 50) : '';
+          return `${idx}:${type}:${resultPreview}`;
+        });
+        return `${id}:[${analysisSigs.join(';')}]`;
       })
       .join('|');
 

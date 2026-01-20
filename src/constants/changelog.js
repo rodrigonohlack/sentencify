@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.27', feature: 'Múltiplas análises por prova (max 5): array de análises com UI de lista, botão excluir individual, FIFO automático (6ª análise remove a mais antiga), migração de dados antigos, todas enviadas ao assistente IA' },
   { version: '1.38.26', feature: 'UX provas: tooltips explicativos nos botões Analisar/Vincular quando desabilitados por anonimização + PDF puro' },
   { version: '1.38.25', feature: 'Fix contraste aviso CNJ no tema claro: text-amber-700/600 → text-amber-900/800 para melhor legibilidade' },
   { version: '1.38.24', feature: 'Remover aliases testStatus: ConfigModal agora usa useAIStore diretamente (8 aliases + 8 props removidos do App.tsx, ~30 linhas de boilerplate)' },

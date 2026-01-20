@@ -3453,20 +3453,24 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
                                       </span>
                                     </div>
 
-                                    {/* Análise IA */}
-                                    {proofManager.proofAnalysisResults[proof.id] && (
-                                      <div className="mb-2 p-2 theme-bg-blue-accent border border-blue-500/30 rounded text-xs">
-                                        <div className="flex items-center gap-1 mb-1">
-                                          <Sparkles className="w-3 h-3 theme-text-blue" />
-                                          <span className="font-medium theme-text-blue">
-                                            {proofManager.proofAnalysisResults[proof.id].type === 'livre' ? 'Análise Livre' : 'Análise Contextual'}
-                                          </span>
-                                        </div>
-                                        <div className="max-h-32 overflow-y-auto">
-                                          <p className="theme-text-tertiary whitespace-pre-wrap">
-                                            {proofManager.proofAnalysisResults[proof.id].result}
-                                          </p>
-                                        </div>
+                                    {/* Análises IA (v1.38.27: múltiplas análises) */}
+                                    {proofManager.proofAnalysisResults[proof.id]?.length > 0 && (
+                                      <div className="mb-2 space-y-1">
+                                        {proofManager.proofAnalysisResults[proof.id].map((analysis, idx) => (
+                                          <div key={analysis.id} className="p-2 theme-bg-blue-accent border border-blue-500/30 rounded text-xs">
+                                            <div className="flex items-center gap-1 mb-1">
+                                              <Sparkles className="w-3 h-3 theme-text-blue" />
+                                              <span className="font-medium theme-text-blue">
+                                                #{idx + 1} {analysis.type === 'livre' ? 'Análise Livre' : 'Análise Contextual'}
+                                              </span>
+                                            </div>
+                                            <div className="max-h-32 overflow-y-auto">
+                                              <p className="theme-text-tertiary whitespace-pre-wrap">
+                                                {analysis.result}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        ))}
                                       </div>
                                     )}
 

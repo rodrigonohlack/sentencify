@@ -166,6 +166,11 @@ export const ProofCard = React.memo(({
     openModal('deleteProof');
   }, [proof, proofManager, openModal]);
 
+  // Handler: Remover uma análise específica (v1.38.27)
+  const handleRemoveAnalysis = React.useCallback((analysisId: string) => {
+    proofManager.removeProofAnalysis(String(proof.id), analysisId);
+  }, [proof.id, proofManager]);
+
   // ═══════════════════════════════════════════════════════════════════════════
   // ANEXOS (v1.38.8)
   // ═══════════════════════════════════════════════════════════════════════════
@@ -707,20 +712,51 @@ export const ProofCard = React.memo(({
             </span>
           </div>
 
-          {/* Resultado da Análise */}
-          {proofManager.proofAnalysisResults[proof.id] && (
-            <div className="mt-3 theme-info-box">
-              <div className="flex items-center gap-2 mb-2">
+          {/* Análises da Prova (v1.38.27: múltiplas análises) */}
+          {proofManager.proofAnalysisResults[proof.id]?.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center gap-2">
                 <Sparkles className="w-3 h-3 text-blue-400" />
                 <span className="text-xs font-medium theme-text-blue">
-                  Análise {proofManager.proofAnalysisResults[proof.id].type === 'livre' ? 'Livre' : 'Contextual'}
+                  Análises ({proofManager.proofAnalysisResults[proof.id].length}/5)
                 </span>
               </div>
-              <div className="overflow-y-auto" style={{ resize: 'vertical', height: '16rem', minHeight: '10rem', maxHeight: '40rem' }}>
-                <p className="text-xs theme-text-tertiary whitespace-pre-wrap">
-                  {proofManager.proofAnalysisResults[proof.id].result}
-                </p>
-              </div>
+
+              {proofManager.proofAnalysisResults[proof.id].map((analysis, idx) => (
+                <div key={analysis.id} className="theme-info-box relative group">
+                  {/* Header com tipo, data e botão excluir */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium theme-text-blue">
+                        #{idx + 1} - {analysis.type === 'livre' ? 'Livre' : 'Contextual'}
+                      </span>
+                      <span className="text-xs theme-text-muted">
+                        {new Date(analysis.timestamp).toLocaleString('pt-BR', {
+                          day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    {/* Botão excluir - tema claro/escuro compatível */}
+                    <button
+                      onClick={() => handleRemoveAnalysis(analysis.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-500 dark:text-red-400 transition-all"
+                      title="Excluir esta análise"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  {/* Conteúdo da análise */}
+                  <div
+                    className="overflow-y-auto"
+                    style={{ resize: 'vertical', height: '10rem', minHeight: '6rem', maxHeight: '30rem' }}
+                  >
+                    <p className="text-xs theme-text-tertiary whitespace-pre-wrap">
+                      {analysis.result}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 

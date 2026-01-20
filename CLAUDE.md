@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.38.23 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.38.27 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.38.27 | Múltiplas análises por prova (max 5): array de análises com UI de lista, botão excluir individual, FIFO automático, migração de dados antigos, todas enviadas ao assistente IA |
 | v1.38.23 | Migração Zustand completa: 4 hooks migrados para seletores diretos (useModalManager, useTopicManager, useProofManager, useModelLibrary) + remoção de 4 *Compat wrappers (~210 linhas) |
 | v1.38.22 | Completar migração Zustand: remover useAISettingsCompat deprecated - useAIIntegration agora usa seletores diretos do store |
 | v1.38.21 | Centralizar buildContextForChat: ~280 linhas duplicadas → função única em chat-context-builder.ts + remover ~170 linhas de código morto |
