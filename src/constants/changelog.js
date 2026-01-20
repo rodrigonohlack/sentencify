@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.31', feature: 'Fix análise de prova: remover complementares do contexto (só petição+contestação) + tags XML para demarcação clara <PETICAO_INICIAL>, <CONTESTACAO>' },
   { version: '1.38.30', feature: 'Reforço prompt Double Check em TODOS os prompts de texto livre: dispositivo e sentenceReview também recebem instrução enfática (complemento v1.38.29)' },
   { version: '1.38.29', feature: 'Reforço prompt Double Check: instrução enfática para IA incorporar correções no verifiedResult (problema intermitente onde IA ignorava a instrução)' },
   { version: '1.38.28', feature: 'Fix "i is not iterable" na análise de provas: migração formato antigo→array no restore de sessão + optional chaining seguro' },

@@ -1,7 +1,7 @@
 /**
  * @file useProofAnalysis.ts
  * @description Hook para analise de provas documentais
- * @version 1.38.15 - Prompt especializado para analise de prova oral trabalhista
+ * @version 1.38.31 - Fix: remover complementares do contexto + tags XML para demarcação
  *
  * Extraido do App.tsx linha ~7210
  * Funcao: analyzeProof - analisa provas documentais com contexto do processo
@@ -167,13 +167,15 @@ export const useProofAnalysis = ({
     const contentArray: (AITextContent | AIDocumentContent)[] = [];
 
     // 1. Peticoes (multiplas) - v1.21: Suporte a peticao inicial + emendas
+    // v1.38.31: Tags XML para demarcação clara
     if (includePeticao) {
       // Primeiro: textos extraidos (PDF.JS ou Claude Vision)
       if (docs.peticoesText?.length > 0) {
         docs.peticoesText.forEach((doc: { name?: string; text: string }, idx: number) => {
+          const tagName = idx === 0 ? 'PETICAO_INICIAL' : `PETICAO_${idx + 1}`;
           contentArray.push({
             type: 'text',
-            text: `${doc.name?.toUpperCase() || `PETICAO ${idx + 1}`}:\n\n${doc.text}`,
+            text: `<${tagName}>\n${doc.text}\n</${tagName}>`,
             cache_control: doc.text.length > 2000 ? { type: "ephemeral" } : undefined
           });
         });
@@ -194,12 +196,14 @@ export const useProofAnalysis = ({
     }
 
     // 2. Contestacoes - v1.14.1: Suporte a modos mistos
+    // v1.38.31: Tags XML para demarcação clara
     if (includeContestacoes) {
       if (docs.contestacoesText?.length > 0) {
         docs.contestacoesText.forEach((contestacao: { text: string }, index: number) => {
+          const tagName = docs.contestacoesText!.length === 1 ? 'CONTESTACAO' : `CONTESTACAO_${index + 1}`;
           contentArray.push({
             type: 'text',
-            text: `CONTESTACAO ${index + 1}:\n\n${contestacao.text}`,
+            text: `<${tagName}>\n${contestacao.text}\n</${tagName}>`,
             cache_control: contestacao.text.length > 2000 ? { type: "ephemeral" } : undefined
           });
         });
@@ -465,8 +469,8 @@ Ao analisar, DISTINGA CLARAMENTE entre:
             text: `CONTEXTO DOS PEDIDOS VINCULADOS:\n\n${miniRelatoriosText}`
           });
         } else {
-          // Comportamento padrão: usar helper para documentos (evita duplicação)
-          const docsArray = buildDocumentContentArray({ includeComplementares: true });
+          // v1.38.31: Comportamento padrão - NÃO incluir complementares na análise de provas
+          const docsArray = buildDocumentContentArray({ includeComplementares: false });
           contentArray.push(...docsArray);
         }
 
@@ -485,19 +489,11 @@ Ao analisar, DISTINGA CLARAMENTE entre:
             `${totalContestacoes} contestação${totalContestacoes > 1 ? 'ões' : ''} fornecida${totalContestacoes > 1 ? 's' : ''} (veja acima)` :
             'Nenhuma contestação disponível');
 
-        const totalComplementares = (analyzedDocuments.complementares?.length || 0) + (analyzedDocuments.complementaresText?.length || 0);
-        const complementaresSummary = useOnlyMiniRelatorios && linkedTopics.length > 0 ?
-          'Não enviado (usando apenas mini-relatórios)' :
-          (totalComplementares > 0 ?
-            `${totalComplementares} documento${totalComplementares > 1 ? 's' : ''} complementar${totalComplementares > 1 ? 'es' : ''} fornecido${totalComplementares > 1 ? 's' : ''} (veja acima)` :
-            'Nenhum documento complementar disponível');
-
         prompt = `${customInstructions ? `**INSTRUÇÕES ESPECÍFICAS PARA ESTA PROVA:**\n${customInstructions}\n\n` : ''}Você está analisando uma prova no contexto de um processo trabalhista.
 
 CONTEXTO DO PROCESSO:
 - Petição inicial: ${peticaoSummary}
 - Contestações: ${contestacoesSummary}
-- Documentos complementares: ${complementaresSummary}
 
 ${linkedTopics.length > 0 ? `
 **PEDIDOS ESPECÍFICOS VINCULADOS A ESTA PROVA:**
