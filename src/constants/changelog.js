@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.33', feature: 'Fix análise de provas: proibir IA de "pescar" documentos mencionados no contexto - deve analisar APENAS o documento na tag <prova-principal>' },
   { version: '1.38.32', feature: 'Prompt profissional para análise de provas documentais: engenharia de prompt avançada (role/persona, chain of thought, few-shot examples, guardrails) + lógica exclusiva prova oral vs documental' },
   { version: '1.38.31', feature: 'Fix análise de prova: remover complementares do contexto (só petição+contestação) + tags XML para demarcação clara <PETICAO_INICIAL>, <CONTESTACAO>' },
   { version: '1.38.30', feature: 'Reforço prompt Double Check em TODOS os prompts de texto livre: dispositivo e sentenceReview também recebem instrução enfática (complemento v1.38.29)' },

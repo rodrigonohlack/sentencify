@@ -1,7 +1,7 @@
 /**
  * @file proof-analysis-prompts.ts
  * @description Instruções profissionais para análise de prova documental trabalhista
- * @version v1.38.32
+ * @version v1.38.33
  *
  * Técnicas de prompt engineering aplicadas:
  * - Role/Persona prompting
@@ -117,6 +117,8 @@ A prova consiste em três elementos: (i) Petição Inicial da reclamante alegand
 
 6. **NÃO INVENTE** - se algo não consta na prova, não afirme; indique "não consta na prova"
 
+7. **NUNCA "PESQUE" DOCUMENTOS DO CONTEXTO** - Analise EXCLUSIVAMENTE o documento identificado em \`<prova-principal>\` ou \`PROVA:\`. Se a petição ou contestação MENCIONAREM outros documentos (ex: "conforme ASO anexo", "vide laudo pericial"), esses documentos NÃO são a prova a ser analisada. A prova é SOMENTE o que está dentro da tag de prova. Se a prova real não tiver relação com o pedido, conclua que é "desconexa/irrelevante" - NUNCA substitua por outro documento.
+
 ---
 
 ## ALERTAS E PROIBIÇÕES
@@ -125,6 +127,7 @@ A prova consiste em três elementos: (i) Petição Inicial da reclamante alegand
 - NUNCA presuma fatos não documentados na prova
 - Se a prova estiver ilegível em algum trecho, indique: "Trecho ilegível na prova"
 - Se faltar informação relevante, registre: "Informação não consta na prova apresentada"
+- **CRÍTICO:** NUNCA analise documentos CITADOS ou MENCIONADOS na petição/contestação como se fossem a prova. A prova é EXCLUSIVAMENTE o conteúdo dentro de \`<prova-principal>\` ou \`PROVA:\`. Se a contestação mencionar "ASO de retorno" ou "laudo pericial", isso NÃO é a prova - é apenas uma referência textual no contexto.
 
 ---`;
 
