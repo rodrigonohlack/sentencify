@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.17', feature: 'Fix scroll duplo no ChangelogModal: overflow-hidden no wrapper (só VirtualList rola)' },
   { version: '1.38.16', feature: 'Toggle "Incluir petições e contestações" persistido por tópico: bloqueado quando chat tem histórico (limpe para alterar), salvo em IndexedDB (sobrevive F5), incluído em export/import de projeto' },
   { version: '1.38.15', feature: 'Prompt especializado para análise de prova oral trabalhista: instruções de valoração correta de depoimentos pessoais (só confissão) vs testemunhais (prova a favor), síntese valorativa adaptada aos tópicos vinculados' },
   { version: '1.38.14', feature: 'Fix migração quickPrompts: sessões pré-v1.38.12 agora recebem proofFilter:oral via onRehydrateStorage (quick prompt Análise de Prova Oral funciona para usuários existentes)' },

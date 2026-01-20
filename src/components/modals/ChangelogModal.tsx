@@ -1,12 +1,13 @@
 /**
  * @file ChangelogModal.tsx
  * @description Modal de histórico de alterações do sistema
- * @version 1.38.13
+ * @version 1.38.17
  *
  * Extraído do App.tsx como parte da extração de modais.
  * Usa useUIStore para acessar estado via Zustand.
  *
  * v1.38.13: VirtualList para performance (~430 entradas → renderiza só ~15-20 visíveis)
+ * v1.38.17: Fix scroll duplo - overflow-hidden no wrapper (só VirtualList rola)
  */
 
 import React from 'react';
@@ -49,7 +50,8 @@ export const ChangelogModal: React.FC = () => {
       iconColor="blue"
       size="md"
     >
-      <div className="p-4">
+      {/* v1.38.17: overflow-hidden evita scroll duplo (só VirtualList rola) */}
+      <div className="p-4 overflow-hidden">
         <VirtualList<ChangelogItem>
           items={CHANGELOG}
           itemHeight={72}
