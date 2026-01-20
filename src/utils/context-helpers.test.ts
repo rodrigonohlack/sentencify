@@ -8,6 +8,9 @@ import { describe, it, expect } from 'vitest';
 import { prepareProofsContext, prepareOralProofsContext, fastHashUtil } from './context-helpers';
 import type { ProofFile, ProofText, ProofAnalysisResult } from '../types';
 
+// Mock function for fileToBase64
+const mockFileToBase64 = async (_file: File): Promise<string> => 'mock-base64-data';
+
 describe('context-helpers', () => {
   // ═══════════════════════════════════════════════════════════════════════════
   // FAST HASH UTIL TESTS
@@ -82,9 +85,9 @@ describe('context-helpers', () => {
       const result = await prepareProofsContext(
         proofManager,
         'Test Topic',
-        undefined,
+        mockFileToBase64,
         false,
-        undefined
+        null
       );
 
       // Should contain count
@@ -116,9 +119,9 @@ describe('context-helpers', () => {
       const result = await prepareProofsContext(
         proofManager,
         'Topic',
-        undefined,
+        mockFileToBase64,
         false,
-        undefined
+        null
       );
 
       // Date should be formatted in pt-BR format (day/month hour:minute)
@@ -140,9 +143,9 @@ describe('context-helpers', () => {
       const result = await prepareProofsContext(
         proofManager,
         'Topic',
-        undefined,
+        mockFileToBase64,
         false,
-        undefined
+        null
       );
 
       // Should not contain analysis section header when empty
@@ -161,9 +164,9 @@ describe('context-helpers', () => {
       const result = await prepareProofsContext(
         proofManager,
         'Topic',
-        undefined,
+        mockFileToBase64,
         false,
-        undefined
+        null
       );
 
       // Should not throw, should not contain analysis section
@@ -196,9 +199,9 @@ describe('context-helpers', () => {
       const result = await prepareProofsContext(
         proofManager,
         'Topic',
-        undefined,
+        mockFileToBase64,
         false,
-        undefined
+        null
       );
 
       // Both proofs should be included
@@ -229,9 +232,9 @@ describe('context-helpers', () => {
       const result = await prepareProofsContext(
         proofManager,
         'Topic',
-        undefined,
+        mockFileToBase64,
         false,
-        undefined
+        null
       );
 
       // Should not include empty date string, just the type
@@ -261,9 +264,9 @@ describe('context-helpers', () => {
       const result = await prepareProofsContext(
         proofManager,
         'Topic',
-        undefined,
+        mockFileToBase64,
         false,
-        undefined
+        null
       );
 
       // Should contain all 5 analyses
@@ -306,8 +309,9 @@ describe('context-helpers', () => {
       const result = await prepareOralProofsContext(
         proofManager,
         'Horas Extras',
+        mockFileToBase64,
         false,
-        undefined
+        null
       );
 
       expect(result.proofsContext).toContain('ANÁLISES DA PROVA (2)');
@@ -325,8 +329,9 @@ describe('context-helpers', () => {
       const result = await prepareOralProofsContext(
         proofManager,
         'Requested Topic',
+        mockFileToBase64,
         false,
-        undefined
+        null
       );
 
       expect(result.hasProofs).toBe(false);
