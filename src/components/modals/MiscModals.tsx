@@ -302,7 +302,7 @@ export const LinkedProofsModal: React.FC<LinkedProofsModalProps> = ({
                 {/* Análises IA (v1.38.27: múltiplas análises) */}
                 {proofManager?.proofAnalysisResults?.[proof.id]?.length > 0 && (
                   <div className="mb-2 space-y-1">
-                    {proofManager.proofAnalysisResults[proof.id].map((analysis, idx) => (
+                    {proofManager?.proofAnalysisResults?.[proof.id]?.map((analysis, idx) => (
                       <div key={analysis.id} className="p-2 theme-bg-blue-accent border border-blue-500/30 rounded text-xs">
                         <div className="flex items-center gap-1 mb-1">
                           <Sparkles className="w-3 h-3 theme-text-blue" />

@@ -694,7 +694,32 @@ export function useLocalStorage(): UseLocalStorageReturn {
       setExtractedProofTexts(session.extractedProofTexts || {});
       setProofExtractionFailed(session.proofExtractionFailed || {});
       setProofTopicLinks(session.proofTopicLinks || {});
-      setProofAnalysisResults(session.proofAnalysisResults || {});
+
+      // v1.38.28: Migrar análises antigas (objeto único) para arrays
+      if (session.proofAnalysisResults) {
+        const rawAnalysisResults = session.proofAnalysisResults as Record<string, unknown>;
+        const migratedAnalysisResults: Record<string, ProofAnalysisResult[]> = {};
+        for (const [proofId, analysis] of Object.entries(rawAnalysisResults)) {
+          if (Array.isArray(analysis)) {
+            migratedAnalysisResults[proofId] = analysis as ProofAnalysisResult[];
+          } else if (analysis && typeof analysis === 'object') {
+            const old = analysis as { type?: string; result?: string; topicTitle?: string; timestamp?: string };
+            if (old.type && old.result) {
+              migratedAnalysisResults[proofId] = [{
+                id: crypto.randomUUID(),
+                type: old.type as 'contextual' | 'livre',
+                result: old.result,
+                topicTitle: old.topicTitle,
+                timestamp: old.timestamp || new Date().toISOString()
+              }];
+            }
+          }
+        }
+        setProofAnalysisResults(migratedAnalysisResults);
+      } else {
+        setProofAnalysisResults({});
+      }
+
       setProofConclusions(session.proofConclusions || {});
       setProofSendFullContent(session.proofSendFullContent || {});  // v1.19.2
 

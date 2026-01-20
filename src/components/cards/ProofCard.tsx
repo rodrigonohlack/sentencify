@@ -713,16 +713,16 @@ export const ProofCard = React.memo(({
           </div>
 
           {/* Análises da Prova (v1.38.27: múltiplas análises) */}
-          {proofManager.proofAnalysisResults[proof.id]?.length > 0 && (
+          {proofManager?.proofAnalysisResults?.[proof.id]?.length > 0 && (
             <div className="mt-3 space-y-2">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-3 h-3 text-blue-400" />
                 <span className="text-xs font-medium theme-text-blue">
-                  Análises ({proofManager.proofAnalysisResults[proof.id].length}/5)
+                  Análises ({proofManager?.proofAnalysisResults?.[proof.id]?.length ?? 0}/5)
                 </span>
               </div>
 
-              {proofManager.proofAnalysisResults[proof.id].map((analysis, idx) => (
+              {proofManager?.proofAnalysisResults?.[proof.id]?.map((analysis, idx) => (
                 <div key={analysis.id} className="theme-info-box relative group">
                   {/* Header com tipo, data e botão excluir */}
                   <div className="flex items-center justify-between mb-2">
