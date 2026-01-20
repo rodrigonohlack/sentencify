@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.26', feature: 'UX provas: tooltips explicativos nos botões Analisar/Vincular quando desabilitados por anonimização + PDF puro' },
   { version: '1.38.25', feature: 'Fix contraste aviso CNJ no tema claro: text-amber-700/600 → text-amber-900/800 para melhor legibilidade' },
   { version: '1.38.24', feature: 'Remover aliases testStatus: ConfigModal agora usa useAIStore diretamente (8 aliases + 8 props removidos do App.tsx, ~30 linhas de boilerplate)' },
   { version: '1.38.23', feature: 'Migração Zustand completa: 4 hooks migrados para seletores diretos (useModalManager, useTopicManager, useProofManager, useModelLibrary) + remoção de 4 *Compat wrappers dos stores (~210 linhas de código morto)' },

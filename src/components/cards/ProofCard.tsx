@@ -625,6 +625,15 @@ export const ProofCard = React.memo(({
             <button
               onClick={handleAnalyze}
               disabled={proofManager.isAnalyzingProof(String(proof.id)) || (anonymizationEnabled && isPdf && !proofManager.extractedProofTexts[proof.id]) || (anonymizationEnabled && isPdf && proofManager.proofUsePdfMode[proof.id])}
+              title={
+                proofManager.isAnalyzingProof(String(proof.id))
+                  ? 'Análise em andamento...'
+                  : (anonymizationEnabled && isPdf && proofManager.proofUsePdfMode[proof.id])
+                    ? 'Incompatível: anonimização + PDF puro. Desabilite anonimização ou extraia o texto.'
+                    : (anonymizationEnabled && isPdf && !proofManager.extractedProofTexts[proof.id])
+                      ? 'Extraia o texto primeiro (anonimização requer texto extraído)'
+                      : 'Analisar prova com IA'
+              }
               className="w-full px-3 py-2 border border-blue-500/30 rounded-lg text-xs font-medium theme-text-blue flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover-blue-alpha-3-from-2 theme-bg-blue-accent transition-all duration-300"
             >
               {proofManager.isAnalyzingProof(String(proof.id)) ? (
@@ -646,6 +655,13 @@ export const ProofCard = React.memo(({
             <button
               onClick={handleLink}
               disabled={(anonymizationEnabled && isPdf && !proofManager.extractedProofTexts[proof.id]) || (anonymizationEnabled && isPdf && proofManager.proofUsePdfMode[proof.id])}
+              title={
+                (anonymizationEnabled && isPdf && proofManager.proofUsePdfMode[proof.id])
+                  ? 'Incompatível: anonimização + PDF puro. Desabilite anonimização ou extraia o texto.'
+                  : (anonymizationEnabled && isPdf && !proofManager.extractedProofTexts[proof.id])
+                    ? 'Extraia o texto primeiro (anonimização requer texto extraído)'
+                    : 'Vincular prova a tópicos específicos'
+              }
               className={`w-full px-3 py-2 border rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-all duration-300 ${
                 (anonymizationEnabled && isPdf && !proofManager.extractedProofTexts[proof.id]) || (anonymizationEnabled && isPdf && proofManager.proofUsePdfMode[proof.id])
                   ? 'border-gray-500/30 theme-text-disabled cursor-not-allowed opacity-50'
