@@ -1,13 +1,13 @@
 /**
  * @file GlobalEditorModal.tsx
  * @description Modal de edição global da sentença - permite editar todos os topicos em uma unica interface
- * @version 1.38.16
+ * @version 1.38.21
  *
  * Extraido do App.tsx (linhas 361-1930) como parte da refatoracao de componentes.
  * Este componente gerencia a edição em tela cheia de todos os tópicos selecionados,
  * com suporte a sugestoes de modelos, assistente IA, jurisprudencia e confronto de fatos.
  *
- * v1.38.16: Toggle "Incluir petições e contestações" persistido por tópico (IndexedDB)
+ * v1.38.21: Centralizar buildContextForChatGlobal em chat-context-builder.ts + remover código morto
  */
 
 import React from 'react';
@@ -51,10 +51,10 @@ import type {
 
 // Utils
 import { normalizeHTMLSpacing } from '../../utils/text';
-import { prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext } from '../../utils/context-helpers';
+import { buildChatContext } from '../../utils/chat-context-builder';
 
 // Prompts
-import { AI_PROMPTS, INSTRUCAO_NAO_PRESUMIR, SOCRATIC_INTERN_LOGIC } from '../../prompts';
+import { AI_PROMPTS } from '../../prompts';
 import {
   buildMiniRelatorioComparisonPrompt,
   buildDocumentosComparisonPrompt,
@@ -160,9 +160,6 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
 
   const [showAIAssistant, setShowAIAssistant] = React.useState(false);
   const [aiAssistantTopicIndex, setAiAssistantTopicIndex] = React.useState<number | null>(null);
-  const [globalAiInstruction, setGlobalAiInstruction] = React.useState('');
-  const [globalAiGeneratedText, setGlobalAiGeneratedText] = React.useState('');
-  const [generatingGlobalAi, setGeneratingGlobalAi] = React.useState(false);
   const [globalContextScope, setGlobalContextScope] = React.useState<ContextScope>('current'); // v1.38.12: 'current' | 'selected' | 'all'
   // v1.38.16: Toggle de documentos persistido por tópico
   const [globalIncludeMainDocs, setGlobalIncludeMainDocsState] = React.useState(true);
@@ -835,321 +832,26 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     ] as Proof[];
   }, [proofManager]);
 
-  const generateGlobalAiText = React.useCallback(async () => {
-    if (!globalAiInstruction.trim() || !aiIntegration || aiAssistantTopicIndex === null) return;
-
-    setGeneratingGlobalAi(true);
-    setGlobalAiGeneratedText('');
-
-    try {
-      const topic = localTopics[aiAssistantTopicIndex];
-      if (!topic) throw new Error('Tópico não encontrado');
-
-      // Preparar documentos usando helper
-      const { contentArray, flags } = prepareDocumentsContext(analyzedDocuments);
-      const { hasPeticao, hasContestacoes, hasComplementares } = flags;
-
-      // v1.19.5: Usar função centralizada para provas
-      // v1.19.2: Passar flag de anonimização
-      // v1.21.5: Passar anonConfig para anonimizar texto
-      const { proofDocuments, proofsContext, hasProofs } = fileToBase64 ? await prepareProofsContext(
-        proofManager, topic.title, fileToBase64, aiIntegration?.aiSettings?.anonymization?.enabled, aiIntegration?.aiSettings?.anonymization
-      ) : { proofDocuments: [], proofsContext: '', hasProofs: false };
-      contentArray.push(...proofDocuments);
-
-      // Preparar contexto baseado no escopo selecionado
-      let decisionContext = '';
-
-      if (globalContextScope === 'current') {
-        // Apenas o tópico atual
-        decisionContext = `
-CONTEXTO DO TÓPICO:
-Título: ${topic.title}
-Categoria: ${topic.category || 'Não especificada'}
-
-MINI-RELATÓRIO DO TÓPICO:
-${topic.editedRelatorio || topic.relatorio || 'Não disponível'}
-
-DECISÃO JÁ ESCRITA:
-${topic.editedFundamentacao || topic.fundamentacao || 'Ainda não foi escrito nada'}
-`;
-      } else {
-        // Toda a decisão (todos os tópicos)
-        decisionContext = 'CONTEXTO COMPLETO DA DECISÃO:\n\n';
-
-        localTopics.forEach((t, index) => {
-          const titleUpper = t.title.toUpperCase();
-          if (titleUpper === 'RELATÓRIO') {
-            decisionContext += `RELATÓRIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
-          } else if (titleUpper === 'DISPOSITIVO') {
-            decisionContext += `DISPOSITIVO:\n${t.editedContent || ''}\n\n---\n\n`;
-          } else {
-            decisionContext += `TÓPICO ${index}: ${t.title} (${t.category || 'Sem categoria'})
-Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
-Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
-
----
-
-`;
-          }
-        });
-
-        decisionContext += `\nTÓPICO SENDO EDITADO: ${topic.title}`;
-      }
-
-      // 8. Adicionar instrução final (mesmo prompt do assistente individual)
-      contentArray.push({
-        type: 'text',
-        text: `Você está auxiliando na redação de uma DECISÃO JUDICIAL TRABALHISTA.
-
-${decisionContext}
-
-${hasPeticao || hasContestacoes || hasComplementares || hasProofs ? `
-DOCUMENTOS DISPONÍVEIS PARA CONSULTA:
-${hasPeticao ? '- Petição inicial' : ''}
-${hasContestacoes ? '- Contestação(ões)' : ''}
-${hasComplementares ? '- Documento(s) complementar(es)' : ''}
-${hasProofs ? '- Prova(s) vinculada(s) a este tópico' : ''}
-
-Os documentos foram anexados acima. Você pode e DEVE consultá-los para fundamentar sua decisão, especialmente:
-- Para identificar alegações e argumentos das partes
-- Para verificar provas mencionadas
-- Para fundamentar sua decisão com base no que foi apresentado nos autos
-${hasProofs ? '- Para analisar as provas vinculadas e suas respectivas análises/conclusões' : ''}
-` : ''}
-${proofsContext}
-INSTRUÇÃO DO USUÁRIO:
-${globalAiInstruction}
-
-IMPORTANTE - NÃO INCLUIR MINI-RELATÓRIO:
-- O mini-relatório já foi fornecido acima apenas como CONTEXTO
-- NÃO repita ou resuma os fatos no texto gerado
-- NÃO inicie com "Trata-se de...", "Cuida-se de...", "O reclamante postula..."
-- Vá DIRETO para a análise jurídica, fundamentação e conclusão
-
-${AI_PROMPTS.estiloRedacao}
-
-Com base em TODOS os elementos acima (contexto do tópico, documentos processuais e instrução do usuário), gere o texto solicitado.
-
-O texto deve:
-- Ser adequado para uma decisão judicial trabalhista
-- Usar SEMPRE a primeira pessoa
-- Manter linguagem formal, mas acessível
-- Evitar latinismos desnecessários
-- Ser claro e objetivo
-- Considerar o contexto do tópico e o que já foi escrito
-- FUNDAMENTAR-SE nos documentos processuais (petição, contestações, provas)
-- Citar fatos específicos dos autos quando relevante
-- Aplicar bases legais quando apropriado
-
-${AI_PROMPTS.formatacaoHTML("A <strong>CLT</strong> estabelece que...")}
-
-${AI_PROMPTS.formatacaoParagrafos("<p>Passo a analisar...</p><p>A CLT estabelece...</p>")}
-
-${AI_PROMPTS.numeracaoReclamadas}
-
-Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Gere texto pronto para ser inserido na decisão.`
-      });
-
-      // Chamar API
-      // v1.21.26: Parametros para assistente interativo (criativo moderado)
-      const textContent = await aiIntegration.callAI([{
-        role: 'user',
-        content: contentArray as AIMessageContent[]
-      }], {
-        maxTokens: 4000,
-        useInstructions: true,
-        logMetrics: true,
-        temperature: 0.5,
-        topP: 0.9,
-        topK: 80
-      });
-
-      setGlobalAiGeneratedText(textContent.trim());
-    } catch (err) {
-      showToast?.('Erro ao gerar texto: ' + (err as Error).message, 'error');
-    } finally {
-      setGeneratingGlobalAi(false);
-    }
-  }, [globalAiInstruction, aiIntegration, aiAssistantTopicIndex, localTopics, analyzedDocuments, proofManager, globalContextScope, showToast, fileToBase64]);
-
-  const insertGlobalAiText = React.useCallback((mode: InsertMode) => {
-    if (!globalAiGeneratedText || aiAssistantTopicIndex === null) return;
-
-    setLocalTopics(prev => {
-      const updated = [...prev];
-      const currentContent = updated[aiAssistantTopicIndex].editedFundamentacao ||
-                            updated[aiAssistantTopicIndex].fundamentacao || '';
-      const normalizedAiText = normalizeHTMLSpacing(globalAiGeneratedText);
-
-      let newContent;
-      switch (mode) {
-        case 'replace':
-          newContent = sanitizeHTML(normalizedAiText);
-          break;
-        case 'append':
-          newContent = sanitizeHTML(currentContent + '<p><br></p>' + normalizedAiText);
-          break;
-        case 'prepend':
-          newContent = sanitizeHTML(normalizedAiText + '<p><br></p>' + currentContent);
-          break;
-        default:
-          newContent = currentContent;
-      }
-
-      updated[aiAssistantTopicIndex].editedFundamentacao = newContent;
-      return updated;
-    });
-
-    setIsDirty(true);
-    setShowAIAssistant(false);
-    setAiAssistantTopicIndex(null);
-    setGlobalAiInstruction('');
-    setGlobalAiGeneratedText('');
-    showToast?.('Texto inserido com sucesso!', 'success');
-  }, [globalAiGeneratedText, aiAssistantTopicIndex, sanitizeHTML, showToast]);
-
-  // v1.19.0: Constroi contexto completo para chat do assistente IA (Global)
-  // v1.19.5: Agora assincrono para suportar PDFs binarios
-  // v1.21.1: Aceita options para filtrar provas
-  // v1.38.12: Suporte a includeMainDocs e selectedContextTopics
+  // v1.38.21: Construção de contexto centralizada em chat-context-builder.ts
   const buildContextForChatGlobal = React.useCallback(async (userMessage: string, options: { proofFilter?: string; includeMainDocs?: boolean; selectedContextTopics?: string[] } = {}) => {
     if (aiAssistantTopicIndex === null) return [];
     const topic = localTopics[aiAssistantTopicIndex];
     if (!topic) return [];
-    const { proofFilter, includeMainDocs = true, selectedContextTopics } = options;
 
-    // v1.38.12: Filtrar documentos baseado no toggle includeMainDocs
-    const docsToSend = includeMainDocs
-      ? analyzedDocuments
-      : {
-          // Excluir petições e contestações
-          peticoes: [],
-          peticoesText: [],
-          contestacoes: [],
-          contestacoesText: [],
-          // Manter complementares
-          complementares: analyzedDocuments.complementares,
-          complementaresText: analyzedDocuments.complementaresText,
-        };
-
-    // Preparar documentos usando helper
-    const { contentArray, flags } = prepareDocumentsContext(docsToSend);
-    const { hasPeticao, hasContestacoes, hasComplementares } = flags;
-
-    // v1.21.1: Usar funcao de provas orais se filtro ativo
-    // v1.19.2: Passar flag de anonimizacao
-    // v1.21.5: Passar anonConfig para anonimizar texto
-    const prepareFunction = proofFilter === 'oral' ? prepareOralProofsContext : prepareProofsContext;
-    const { proofDocuments, proofsContext, hasProofs } = fileToBase64 ? await prepareFunction(
-      proofManager, topic.title, fileToBase64, aiIntegration?.aiSettings?.anonymization?.enabled, aiIntegration?.aiSettings?.anonymization
-    ) : { proofDocuments: [] as AIMessageContent[], proofsContext: '', hasProofs: false };
-    contentArray.push(...proofDocuments);
-
-    // v1.38.12: Determinar escopo efetivo
-    const effectiveScope = selectedContextTopics && selectedContextTopics.length > 0 ? 'selected' : globalContextScope;
-
-    // Contexto baseado no escopo selecionado
-    let decisionContext = '';
-    if (effectiveScope === 'current') {
-      decisionContext = `
-CONTEXTO DO TÓPICO:
-Título: ${topic.title}
-Categoria: ${topic.category || 'Não especificada'}
-
-MINI-RELATÓRIO DO TÓPICO:
-${topic.editedRelatorio || topic.relatorio || 'Não disponível'}
-
-DECISÃO JÁ ESCRITA:
-${topic.editedFundamentacao || topic.fundamentacao || 'Ainda não foi escrito nada'}
-`;
-    } else if (effectiveScope === 'selected' && selectedContextTopics) {
-      // v1.38.12: Escopo de tópicos selecionados
-      decisionContext = 'CONTEXTO DOS TÓPICOS SELECIONADOS:\n\n';
-      const topicsToInclude = localTopics.filter(t => selectedContextTopics.includes(t.title));
-
-      topicsToInclude.forEach((t, index) => {
-        decisionContext += `TÓPICO ${index + 1}: ${t.title} (${t.category || 'Sem categoria'})
-Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
-Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
-
----
-
-`;
-      });
-
-      decisionContext += `\nTÓPICO SENDO EDITADO: ${topic.title}`;
-    } else {
-      // Escopo 'all' - Toda a decisão
-      decisionContext = 'CONTEXTO COMPLETO DA DECISÃO:\n\n';
-      localTopics.forEach((t, index) => {
-        const titleUpper = t.title.toUpperCase();
-        if (titleUpper === 'RELATÓRIO') {
-          decisionContext += `RELATÓRIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
-        } else if (titleUpper === 'DISPOSITIVO') {
-          decisionContext += `DISPOSITIVO:\n${t.editedContent || ''}\n\n---\n\n`;
-        } else {
-          decisionContext += `TÓPICO ${index}: ${t.title} (${t.category || 'Sem categoria'})
-Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
-Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
-
----
-
-`;
-        }
-      });
-      decisionContext += `\nTÓPICO SENDO EDITADO: ${topic.title}`;
-    }
-
-    // Verificar se anonimização está ativada
-    const anonymizationEnabled = aiIntegration?.aiSettings?.anonymization?.enabled;
-
-    // Montar prompt completo
-    contentArray.push({
-      type: 'text',
-      text: `Você está auxiliando na redação de uma DECISÃO JUDICIAL TRABALHISTA.
-
-${decisionContext}
-
-${hasPeticao || hasContestacoes || hasComplementares || hasProofs ? `
-DOCUMENTOS DISPONÍVEIS PARA CONSULTA:
-${hasPeticao ? '- Petição inicial' : ''}
-${hasContestacoes ? '- Contestação(ões)' : ''}
-${hasComplementares ? '- Documento(s) complementar(es)' : ''}
-${hasProofs ? '- Prova(s) vinculada(s) a este tópico' : ''}
-
-Os documentos foram anexados acima. Você pode e DEVE consultá-los para fundamentar sua decisão.
-${hasProofs ? '- Analise as provas vinculadas e suas respectivas análises/conclusões' : ''}
-` : ''}
-${proofsContext}
-
-${INSTRUCAO_NAO_PRESUMIR}
-
-${SOCRATIC_INTERN_LOGIC}
-
-${AI_PROMPTS.estiloRedacao}
-${AI_PROMPTS.numeracaoReclamadas}
-${anonymizationEnabled ? AI_PROMPTS.preservarAnonimizacao : ''}
-
-NÃO INCLUIR MINI-RELATÓRIO no texto gerado.
-
-INSTRUÇÃO DO USUÁRIO:
-${userMessage}
-
-Quando faltar informação expressa necessária à redação, PERGUNTE ao usuário antes de redigir. Prefira perguntar a presumir.
-
-ANTES DE REDIGIR QUALQUER TEXTO DE DECISÃO:
-Liste as informações/conclusões que você precisa confirmar com o usuário.
-Só prossiga com a redação APÓS receber as respostas.
-Se não houver nada a confirmar, indique "Nenhuma informação pendente" e prossiga.
-
-Quando gerar texto para a decisão, responda em HTML.
-${AI_PROMPTS.formatacaoHTML("A <strong>CLT</strong> estabelece...")}
-${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágrafo.</p>")}`
+    return buildChatContext({
+      userMessage,
+      options,
+      currentTopic: topic,
+      currentContent: topic.editedFundamentacao || topic.fundamentacao || '',
+      allTopics: localTopics,
+      contextScope: options.selectedContextTopics?.length ? 'selected' : globalContextScope,
+      analyzedDocuments,
+      proofManager: proofManager as Parameters<typeof buildChatContext>[0]['proofManager'],
+      fileToBase64: fileToBase64 || (async () => ''),
+      anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
+      anonymizationSettings: aiIntegration?.aiSettings?.anonymization,
     });
-
-    return contentArray;
-  }, [localTopics, aiAssistantTopicIndex, analyzedDocuments, proofManager, globalContextScope, aiIntegration?.aiSettings?.anonymization?.enabled, fileToBase64]);
+  }, [localTopics, aiAssistantTopicIndex, globalContextScope, analyzedDocuments, proofManager, fileToBase64, aiIntegration?.aiSettings?.anonymization]);
 
   // v1.19.0: Handler para inserir resposta do chat no editor global
   const handleInsertGlobalChatResponse = React.useCallback((mode: InsertMode) => {

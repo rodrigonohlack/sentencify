@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.21', feature: 'Centralizar buildContextForChat: ~280 linhas duplicadas → função única em chat-context-builder.ts + remover ~170 linhas de código morto (generateGlobalAiText, insertGlobalAiText nunca chamados)' },
   { version: '1.38.20', feature: 'Estagiário Socrático: IA pergunta ratio decidendi antes de redigir comandos vagos no chat (ex: "Indefira as horas extras" → pergunta qual fundamento usar)' },
   { version: '1.38.19', feature: 'Contexto jurídico no prompt de melhoria de ditado: IA agora reconhece termos latinos, siglas (CLT, TST, OJ) e vocabulário técnico trabalhista' },
   { version: '1.38.18', feature: 'ChangelogModal com altura dinâmica por item: lista simples substitui VirtualList (textos não são mais cortados)' },

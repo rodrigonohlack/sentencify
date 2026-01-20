@@ -26,14 +26,14 @@ import type {
   DoubleCheckCorrectionWithSelection,
 } from '../types';
 import type { QuillInstance } from '../types';
-import { AI_PROMPTS, SOCRATIC_INTERN_LOGIC } from '../prompts/ai-prompts';
-import { INSTRUCAO_NAO_PRESUMIR } from '../prompts/instrucoes';
+import { AI_PROMPTS } from '../prompts/ai-prompts';
 import { stripInlineColors } from '../utils/color-stripper';
-import { prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext } from '../utils/context-helpers';
+import { prepareDocumentsContext, prepareProofsContext } from '../utils/context-helpers';
 import { normalizeHTMLSpacing } from '../utils/text';
 import { getCorrectionDescription } from '../utils/double-check-utils';
 import { sanitizeQuillHTML } from './useQuillEditor';
 import { useUIStore } from '../stores/useUIStore';
+import { buildChatContext } from '../utils/chat-context-builder';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INTERFACES
@@ -399,149 +399,26 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
 
   // ═══════════════════════════════════════════════════════════════════════════
   // BUILD CONTEXT FOR CHAT
-  // v1.38.12: Suporte a includeMainDocs e selectedContextTopics
+  // v1.38.21: Centralizado em chat-context-builder.ts
   // ═══════════════════════════════════════════════════════════════════════════
 
   const buildContextForChat = React.useCallback(async (userMessage: string, options: ChatContextOptions = {}) => {
-    const currentContent = editorRef.current?.root?.innerText || '';
-    const { proofFilter, includeMainDocs = true, selectedContextTopics } = options;
+    if (!editingTopic) return [];
 
-    // v1.38.12: Filtrar documentos baseado no toggle includeMainDocs
-    const docsToSend = includeMainDocs
-      ? analyzedDocuments
-      : {
-          // Excluir petições e contestações
-          peticoes: [],
-          peticoesText: [],
-          contestacoes: [],
-          contestacoesText: [],
-          // Manter complementares
-          complementares: analyzedDocuments.complementares,
-          complementaresText: analyzedDocuments.complementaresText,
-        };
-
-    // Preparar documentos usando helper
-    const { contentArray, flags } = prepareDocumentsContext(docsToSend);
-    const { hasPeticao, hasContestacoes, hasComplementares } = flags;
-
-    // Usar função de provas orais se filtro ativo
-    const prepareFunction = proofFilter === 'oral' ? prepareOralProofsContext : prepareProofsContext;
-    const { proofDocuments, proofsContext, hasProofs } = await prepareFunction(
-      proofManager as Parameters<typeof prepareProofsContext>[0],
-      editingTopic?.title || '',
-      storage.fileToBase64,
-      aiIntegration?.aiSettings?.anonymization?.enabled,
-      aiIntegration?.aiSettings?.anonymization as AnonymizationSettings | null | undefined
-    );
-    contentArray.push(...proofDocuments);
-
-    // v1.38.12: Determinar escopo efetivo
-    // Se selectedContextTopics foi passado, usar 'selected', senão usar o escopo do componente
-    const effectiveScope = selectedContextTopics && selectedContextTopics.length > 0 ? 'selected' : topicContextScope;
-
-    // Contexto baseado no escopo selecionado
-    let decisionContext = '';
-    if (effectiveScope === 'current') {
-      decisionContext = `📋 CONTEXTO DO TÓPICO:
-Título: ${editingTopic?.title || 'Não especificado'}
-Categoria: ${editingTopic?.category || 'Não especificada'}
-
-📝 MINI-RELATÓRIO DO TÓPICO:
-${editingTopic?.relatorio || editingTopic?.editedRelatorio || 'Não disponível'}
-
-✍️ CONTEÚDO JÁ ESCRITO DA DECISÃO:
-${currentContent || 'Ainda não foi escrito nada'}`;
-    } else if (effectiveScope === 'selected' && selectedContextTopics) {
-      // v1.38.12: Escopo de tópicos selecionados
-      decisionContext = '📋 CONTEXTO DOS TÓPICOS SELECIONADOS:\n\n';
-      const topicsToInclude = selectedTopics.filter(t => selectedContextTopics.includes(t.title));
-
-      topicsToInclude.forEach((t, index) => {
-        decisionContext += `📋 TÓPICO ${index + 1}: ${t.title} (${t.category || 'Sem categoria'})
-Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
-Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
-
----
-
-`;
-      });
-
-      decisionContext += `\n🎯 TÓPICO SENDO EDITADO: ${editingTopic?.title}
-✍️ CONTEÚDO JÁ ESCRITO:
-${currentContent || 'Ainda não foi escrito nada'}`;
-    } else {
-      // Escopo 'all' - Toda a decisão
-      decisionContext = '📋 CONTEXTO COMPLETO DA DECISÃO:\n\n';
-      selectedTopics.forEach((t, index) => {
-        const titleUpper = t.title.toUpperCase();
-        if (titleUpper === 'RELATÓRIO') {
-          decisionContext += `📄 RELATÓRIO GERAL:\n${t.editedRelatorio || t.relatorio || 'Não disponível'}\n\n---\n\n`;
-        } else if (titleUpper === 'DISPOSITIVO') {
-          decisionContext += `⚖️ DISPOSITIVO:\n${t.editedContent || ''}\n\n---\n\n`;
-        } else {
-          decisionContext += `📋 TÓPICO ${index}: ${t.title} (${t.category || 'Sem categoria'})
-Mini-relatório: ${t.editedRelatorio || t.relatorio || 'Não disponível'}
-Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
-
----
-
-`;
-        }
-      });
-      decisionContext += `\n🎯 TÓPICO SENDO EDITADO: ${editingTopic?.title}
-✍️ CONTEÚDO JÁ ESCRITO NESTE TÓPICO:
-${currentContent || 'Ainda não foi escrito nada'}`;
-    }
-
-    // Verificar se anonimização está ativada
-    const anonymizationEnabled = aiIntegration?.aiSettings?.anonymization?.enabled;
-
-    // Montar prompt completo
-    contentArray.push({
-      type: 'text',
-      text: `Você está auxiliando na redação de uma DECISÃO JUDICIAL TRABALHISTA.
-
-${decisionContext}
-
-${hasPeticao || hasContestacoes || hasComplementares || hasProofs ? `
-📚 DOCUMENTOS DISPONÍVEIS PARA CONSULTA:
-${hasPeticao ? '✓ Petição inicial' : ''}
-${hasContestacoes ? '✓ Contestação(ões)' : ''}
-${hasComplementares ? '✓ Documento(s) complementar(es)' : ''}
-${hasProofs ? '✓ Prova(s) vinculada(s) a este tópico' : ''}
-
-Os documentos foram anexados acima. Você pode e DEVE consultá-los para fundamentar sua decisão.
-${hasProofs ? '- Analise as provas vinculadas e suas respectivas análises/conclusões' : ''}
-` : ''}
-${proofsContext}
-
-${INSTRUCAO_NAO_PRESUMIR}
-
-${SOCRATIC_INTERN_LOGIC}
-
-${AI_PROMPTS.estiloRedacao}
-${AI_PROMPTS.numeracaoReclamadas}
-${anonymizationEnabled ? AI_PROMPTS.preservarAnonimizacao : ''}
-
-⚠️ NÃO INCLUIR MINI-RELATÓRIO no texto gerado.
-
-🎯 INSTRUÇÃO DO USUÁRIO:
-${userMessage}
-
-Quando faltar informação expressa necessária à redação, PERGUNTE ao usuário antes de redigir. Prefira perguntar a presumir.
-
-⚠️ ANTES DE REDIGIR QUALQUER TEXTO DE DECISÃO:
-Liste as informações/conclusões que você precisa confirmar com o usuário.
-Só prossiga com a redação APÓS receber as respostas.
-Se não houver nada a confirmar, indique "Nenhuma informação pendente" e prossiga.
-
-Quando gerar texto para a decisão, responda em HTML.
-${AI_PROMPTS.formatacaoHTML("A <strong>CLT</strong> estabelece...")}
-${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágrafo.</p>")}`
+    return buildChatContext({
+      userMessage,
+      options,
+      currentTopic: editingTopic,
+      currentContent: editorRef.current?.root?.innerText || '',
+      allTopics: selectedTopics,
+      contextScope: options.selectedContextTopics?.length ? 'selected' : topicContextScope,
+      analyzedDocuments,
+      proofManager: proofManager as Parameters<typeof buildChatContext>[0]['proofManager'],
+      fileToBase64: storage.fileToBase64,
+      anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
+      anonymizationSettings: aiIntegration?.aiSettings?.anonymization as AnonymizationSettings | undefined,
     });
-
-    return contentArray;
-  }, [analyzedDocuments, proofManager, editingTopic, topicContextScope, selectedTopics, aiIntegration?.aiSettings?.anonymization?.enabled, storage.fileToBase64, editorRef]);
+  }, [editingTopic, selectedTopics, topicContextScope, analyzedDocuments, proofManager, storage.fileToBase64, aiIntegration?.aiSettings?.anonymization, editorRef]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // HANDLE INSERT CHAT RESPONSE
