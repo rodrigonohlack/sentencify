@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.15', feature: 'Prompt especializado para análise de prova oral trabalhista: instruções de valoração correta de depoimentos pessoais (só confissão) vs testemunhais (prova a favor), síntese valorativa adaptada aos tópicos vinculados' },
   { version: '1.38.14', feature: 'Fix migração quickPrompts: sessões pré-v1.38.12 agora recebem proofFilter:oral via onRehydrateStorage (quick prompt Análise de Prova Oral funciona para usuários existentes)' },
   { version: '1.38.13', feature: 'VirtualList no ChangelogModal: renderiza só ~15-20 items visíveis (antes: 430+ DOM nodes) - performance' },
   { version: '1.38.12', feature: 'Controle granular de contexto no Assistente IA: escopo de tópicos (atual/selecionados/todos) + toggle petições/contestações + fix proofFilter oral no quick prompt' },

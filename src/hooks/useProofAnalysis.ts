@@ -1,7 +1,7 @@
 /**
  * @file useProofAnalysis.ts
  * @description Hook para analise de provas documentais
- * @version 1.37.67 - Remover fundamentacao ja escrita do contexto
+ * @version 1.38.15 - Prompt especializado para analise de prova oral trabalhista
  *
  * Extraido do App.tsx linha ~7210
  * Funcao: analyzeProof - analisa provas documentais com contexto do processo
@@ -11,6 +11,8 @@ import { useCallback, useRef, useEffect } from 'react';
 import { anonymizeText } from '../utils/text';
 import { getCorrectionDescription } from '../utils/double-check-utils';
 import { useUIStore } from '../stores/useUIStore';
+import { isOralProof } from '../components/ai/AIAssistantComponents';
+import { ORAL_PROOF_ANALYSIS_INSTRUCTIONS, buildOralProofSynthesisSection } from '../prompts/oral-proof-analysis';
 import type {
   AIMessage,
   AIMessageContent,
@@ -421,6 +423,9 @@ Ao analisar, DISTINGA CLARAMENTE entre:
       const linkedTopicTitles = proofManager.proofTopicLinks[proofId] || [];
       const linkedTopics = selectedTopics.filter(t => linkedTopicTitles.includes(t.title));
 
+      // v1.38.15: Detectar se é prova oral para aplicar instruções especializadas de valoração
+      const isOralProofType = isOralProof(proof.name);
+
       // Preparar prompt baseado no tipo de análise
       let prompt = '';
 
@@ -545,9 +550,18 @@ CONCLUSÃO:
 [síntese]`;
       }
 
+      // v1.38.15: Se for prova oral, prefixar instruções especializadas de valoração
+      let finalPrompt = prompt;
+      if (isOralProofType) {
+        // Construir seção de síntese adaptada aos tópicos vinculados (se houver)
+        const synthesisSection = buildOralProofSynthesisSection(linkedTopics);
+        // Prefixar instruções de valoração + síntese adaptada ao prompt existente
+        finalPrompt = ORAL_PROOF_ANALYSIS_INSTRUCTIONS + '\n\n' + synthesisSection + '\n\n---\n\nAGORA, ANALISE A PROVA FORNECIDA:\n\n' + prompt;
+      }
+
       contentArray.push({
         type: 'text' as const,
-        text: prompt
+        text: finalPrompt
       });
 
       // Fazer chamada à API
