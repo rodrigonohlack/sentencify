@@ -4,7 +4,7 @@
 
 **SentencifyAI** - React-based legal decision tool for Brazilian labor court judges.
 
-**Version**: 1.38.18 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
+**Version**: 1.38.19 | **File**: `src/App.tsx` (~0.44 MB) | **Runtime**: Standalone + Render
 
 ## Architecture
 
@@ -124,6 +124,7 @@
 
 | Version | Feature |
 |---------|---------|
+| v1.38.19 | Contexto jurídico no prompt de melhoria de ditado: termos latinos, siglas (CLT, TST, OJ), vocabulário técnico |
 | v1.38.18 | ChangelogModal com altura dinâmica por item: lista simples substitui VirtualList (textos completos) |
 | v1.38.17 | Fix scroll duplo no ChangelogModal: overflow-hidden no wrapper (só VirtualList rola) |
 | v1.38.16 | Toggle "Incluir petições e contestações" persistido por tópico: bloqueado quando chat tem histórico, salvo em IndexedDB (F5), incluído em export/import |
