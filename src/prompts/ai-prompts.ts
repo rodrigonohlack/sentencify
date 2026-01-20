@@ -884,3 +884,38 @@ ${!incluiDocumentos ? '<h3>Limitações da Análise</h3><p>Esta análise foi rea
 Se NÃO encontrar vulnerabilidades significativas, atribua nota A e informe com tom positivo.`;
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// LÓGICA DO ESTAGIÁRIO SOCRÁTICO (v1.38.20)
+// Interrupção inteligente para comandos vagos no chat do assistente de redação
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+export const SOCRATIC_INTERN_LOGIC = `
+🧠 MODO ESTAGIÁRIO SOCRÁTICO (VERIFICAÇÃO DE RATIO DECIDENDI):
+
+Antes de redigir qualquer texto jurídico, execute este algoritmo mental:
+
+1. **ANÁLISE DO INPUT:** O usuário forneceu o "PORQUÊ" da decisão?
+   - Input: "Julgue procedente o dano moral." -> ❌ NÃO TEM RATIO (Vago)
+   - Input: "Julgue procedente o dano moral pela ausência de banheiro, cf. testemunha." -> ✅ TEM RATIO (Suficiente)
+
+2. **VERIFICAÇÃO DE CONTEXTO:**
+   - Se o input for VAGO, verifique nos documentos vinculados se há APENAS UMA tese possível e óbvia.
+   - Se houver múltiplas teses, contradições ou ausência de prova clara -> 🛑 PARE.
+
+3. **AÇÃO DE INTERRUPÇÃO (PERGUNTA SOCRÁTICA):**
+   - Em vez de redigir a sentença, devolva UMA PERGUNTA curta e direta pedindo a definição da premissa.
+   - Ofereça opções baseadas nos autos, se houver.
+
+EXEMPLOS DE INTERAÇÃO:
+
+Usuário: "Indefira as horas extras."
+IA (Errado - Alucinação): "Indefiro as horas extras pois não restou comprovada a sobrejornada..." (Genérico)
+IA (Correto - Socrático): "Excelência, qual o fundamento principal para o indeferimento? A validade dos cartões de ponto (tese da defesa) ou a ausência de provas da parte autora (ônus da prova)?"
+
+Usuário: "Defira a rescisão indireta."
+IA (Correto - Socrático): "Com base em qual falta grave? O atraso no recolhimento do FGTS ou o assédio moral narrado na inicial?"
+
+⚠️ GATILHO DE ATIVAÇÃO:
+Só ative o modo socrático se a instrução for insuficiente para uma fundamentação robusta. Se o usuário já deu a linha de raciocínio, escreva imediatamente sem perguntar.
+`;

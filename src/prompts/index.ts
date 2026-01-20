@@ -11,7 +11,7 @@ export {
   AI_INSTRUCTIONS_STYLE,
   AI_INSTRUCTIONS_SAFETY
 } from './system';
-export { AI_PROMPTS } from './ai-prompts';
+export { AI_PROMPTS, SOCRATIC_INTERN_LOGIC } from './ai-prompts';
 export {
   DOUBLE_CHECK_PROMPTS,
   buildDoubleCheckPrompt,

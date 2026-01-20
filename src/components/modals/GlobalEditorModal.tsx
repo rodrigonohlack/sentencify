@@ -54,7 +54,7 @@ import { normalizeHTMLSpacing } from '../../utils/text';
 import { prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext } from '../../utils/context-helpers';
 
 // Prompts
-import { AI_PROMPTS, INSTRUCAO_NAO_PRESUMIR } from '../../prompts';
+import { AI_PROMPTS, INSTRUCAO_NAO_PRESUMIR, SOCRATIC_INTERN_LOGIC } from '../../prompts';
 import {
   buildMiniRelatorioComparisonPrompt,
   buildDocumentosComparisonPrompt,
@@ -1124,6 +1124,8 @@ ${hasProofs ? '- Analise as provas vinculadas e suas respectivas análises/concl
 ${proofsContext}
 
 ${INSTRUCAO_NAO_PRESUMIR}
+
+${SOCRATIC_INTERN_LOGIC}
 
 ${AI_PROMPTS.estiloRedacao}
 ${AI_PROMPTS.numeracaoReclamadas}

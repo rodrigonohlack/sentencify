@@ -26,7 +26,7 @@ import type {
   DoubleCheckCorrectionWithSelection,
 } from '../types';
 import type { QuillInstance } from '../types';
-import { AI_PROMPTS } from '../prompts/ai-prompts';
+import { AI_PROMPTS, SOCRATIC_INTERN_LOGIC } from '../prompts/ai-prompts';
 import { INSTRUCAO_NAO_PRESUMIR } from '../prompts/instrucoes';
 import { stripInlineColors } from '../utils/color-stripper';
 import { prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext } from '../utils/context-helpers';
@@ -516,6 +516,8 @@ ${hasProofs ? '- Analise as provas vinculadas e suas respectivas análises/concl
 ${proofsContext}
 
 ${INSTRUCAO_NAO_PRESUMIR}
+
+${SOCRATIC_INTERN_LOGIC}
 
 ${AI_PROMPTS.estiloRedacao}
 ${AI_PROMPTS.numeracaoReclamadas}
