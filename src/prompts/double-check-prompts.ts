@@ -2,7 +2,7 @@
  * Prompts para Double Check de Respostas da IA
  * Verificação secundária para identificar falhas, omissões e falsos positivos
  *
- * @version 1.37.65 - Double Check para proofAnalysis e quickPrompt + userPrompt parameter
+ * @version 1.38.29 - Reforço da instrução para incorporar correções no verifiedResult (proofAnalysis e quickPrompt)
  */
 
 import type { DoubleCheckOperations } from '../types';
@@ -279,10 +279,18 @@ RESPONDA SEMPRE EM PORTUGUÊS BRASILEIRO. Todos os campos da resposta JSON (reas
 IMPORTANTE: Se não houver correções necessárias, retorne corrections: [] e copie o original em verifiedResult.`,
 
   // v1.37.65: Verificação da Análise de Provas
+  // v1.38.29: Reforço da instrução para incorporar correções no verifiedResult
   proofAnalysis: `## TAREFA: Verificação de Análise de Prova
 
 Você é um revisor jurídico especializado em análise probatória trabalhista.
 Sua função é verificar criticamente a análise de prova realizada.
+
+⚠️ REGRA CRÍTICA OBRIGATÓRIA:
+Se você identificar QUALQUER correção e incluí-la no array "corrections",
+o campo "verifiedResult" DEVE OBRIGATORIAMENTE conter o texto da análise
+COM TODAS AS CORREÇÕES JÁ APLICADAS E INTEGRADAS NO TEXTO.
+NUNCA copie o texto original para verifiedResult quando houver correções.
+O verifiedResult deve ser uma NOVA versão do texto, não o original.
 
 ## CONTEÚDO DA PROVA:
 {context}
@@ -332,10 +340,18 @@ IMPORTANTE:
 - O campo summary deve ser conciso (1-2 frases)`,
 
   // v1.37.65: Verificação dos Quick Prompts do Assistente IA
+  // v1.38.29: Reforço da instrução para incorporar correções no verifiedResult
   quickPrompt: `## TAREFA: Verificação de Resposta do Assistente IA
 
 Você é um revisor jurídico especializado em sentenças trabalhistas.
 Sua função é verificar criticamente a resposta do assistente de redação.
+
+⚠️ REGRA CRÍTICA OBRIGATÓRIA:
+Se você identificar QUALQUER correção e incluí-la no array "corrections",
+o campo "verifiedResult" DEVE OBRIGATORIAMENTE conter o texto da resposta
+COM TODAS AS CORREÇÕES JÁ APLICADAS E INTEGRADAS NO TEXTO.
+NUNCA copie o texto original para verifiedResult quando houver correções.
+O verifiedResult deve ser uma NOVA versão do texto, não o original.
 
 ## SOLICITAÇÃO DO USUÁRIO:
 {userPrompt}
