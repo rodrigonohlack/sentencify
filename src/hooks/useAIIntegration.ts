@@ -1350,13 +1350,20 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       const result = JSON.parse(jsonStr);
 
       // Debug: Log do verifiedResult retornado pela IA
+      // Nota: verifiedTopics e verifiedResult (factsComparison) são objetos, não strings
+      const rawVerified = result.verifiedTopics || result.verifiedResult || result.verifiedDispositivo || result.verifiedReview;
+      const verifiedPreview = typeof rawVerified === 'string'
+        ? rawVerified.substring(0, 200) + '...'
+        : rawVerified
+          ? JSON.stringify(rawVerified).substring(0, 200) + '...'
+          : '[vazio]';
       console.log('[DoubleCheck] Resultado parseado:', {
         operation,
         hasCorrections: result.corrections?.length > 0,
         correctionsCount: result.corrections?.length || 0,
-        verifiedResultPreview: (result.verifiedResult || result.verifiedDispositivo || result.verifiedReview || '').substring(0, 200) + '...',
+        verifiedResultPreview: verifiedPreview,
         originalResponsePreview: originalResponse.substring(0, 200) + '...',
-        verifiedEqualsOriginal: (result.verifiedResult || result.verifiedDispositivo || result.verifiedReview) === originalResponse
+        verifiedEqualsOriginal: rawVerified === originalResponse
       });
 
       // Extrair campo verificado baseado na operação
