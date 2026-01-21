@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.36', feature: 'Double Check: aplicação parcial de correções (topicExtraction/factsComparison) + usar confidence retornado pela IA ao invés de 85% hardcoded' },
   { version: '1.38.35', feature: 'UX Double Check quickPrompt: mostrar "🔍 Verificando resposta..." no chat enquanto Double Check roda (usuário não vê resposta antes da verificação)' },
   { version: '1.38.34', feature: 'Fix Double Check quickPrompt: retornar response diretamente de send() para evitar race condition com lastResponse memoizado (antes: Double Check não rodava na primeira interação)' },
   { version: '1.38.33', feature: 'Fix análise de provas: proibir IA de "pescar" documentos mencionados no contexto - deve analisar APENAS o documento na tag <prova-principal>' },
