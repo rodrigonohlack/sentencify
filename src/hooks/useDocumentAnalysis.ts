@@ -104,11 +104,11 @@ export interface AIIntegrationForAnalysis {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   extractResponseText: (data: any, provider: AIProvider) => string;
   performDoubleCheck?: (
-    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison',
+    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison' | 'proofAnalysis' | 'quickPrompt',
     originalResponse: string,
     context: AIMessageContent[],  // v1.37.68: mudou de string para array
     setProgress?: (msg: string) => void
-  ) => Promise<{ verified: string; corrections: { type: string; reason: string }[]; summary: string }>;
+  ) => Promise<{ verified: string; corrections: { type: string; reason: string }[]; summary: string; confidence?: number }>;
 }
 
 /** Props do hook */
@@ -651,7 +651,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         // v1.37.68: Usar contentArray original completo (sem truncação)
         // contentArray já contém todos os documentos + buildAnalysisPrompt
         try {
-          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+          const { verified, corrections, summary, confidence } = await aiIntegration.performDoubleCheck(
             'topicExtraction',
             JSON.stringify(topics),
             contentArray as AIMessageContent[],  // Array original com tudo
@@ -674,7 +674,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
               verifiedResult: verified,
               corrections: corrections as DoubleCheckCorrection[],
               summary,
-              confidence: 85 // TODO: Obter do retorno da IA se disponível
+              confidence: Math.round((confidence ?? 0.85) * 100)  // Converter 0.0-1.0 para 0-100
             });
 
             // Aguardar decisão do usuário

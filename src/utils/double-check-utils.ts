@@ -266,13 +266,136 @@ export function correctionsToSelectable(
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
+ * Aplica correções parciais para extração de tópicos
+ * @param originalResult - JSON string do array de tópicos original
+ * @param selectedCorrections - Correções selecionadas pelo usuário
+ * @returns JSON string do array de tópicos corrigido
+ */
+function applyTopicExtractionCorrections(
+  originalResult: string,
+  selectedCorrections: DoubleCheckCorrection[]
+): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let topics: any[] = JSON.parse(originalResult);
+
+  for (const correction of selectedCorrections) {
+    switch (correction.type) {
+      case 'remove': {
+        // Remover tópico pelo título
+        const topicName = typeof correction.topic === 'string'
+          ? correction.topic
+          : correction.topic?.title;
+        if (topicName) {
+          topics = topics.filter(t => t.title !== topicName);
+        }
+        break;
+      }
+
+      case 'add': {
+        // Adicionar novo tópico
+        if (correction.topic && typeof correction.topic === 'object') {
+          topics.push(correction.topic);
+        }
+        break;
+      }
+
+      case 'merge': {
+        // Remover tópicos originais e adicionar merged
+        if (correction.topics && correction.into) {
+          topics = topics.filter(t => !correction.topics!.includes(t.title));
+          // Encontrar categoria do primeiro tópico mesclado ou usar MÉRITO
+          const firstMergedTopic = topics.find(t => correction.topics!.includes(t.title));
+          const category = firstMergedTopic?.category || 'MÉRITO';
+          topics.push({ title: correction.into, category });
+        }
+        break;
+      }
+
+      case 'reclassify': {
+        // Mudar categoria do tópico
+        const reclassifyName = typeof correction.topic === 'string'
+          ? correction.topic
+          : correction.topic?.title;
+        if (reclassifyName && correction.to) {
+          const topicToReclassify = topics.find(t => t.title === reclassifyName);
+          if (topicToReclassify) {
+            topicToReclassify.category = correction.to;
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  return JSON.stringify(topics);
+}
+
+/**
+ * Aplica correções parciais para confronto de fatos
+ * @param originalResult - JSON string do objeto FactsComparisonResult original
+ * @param selectedCorrections - Correções selecionadas pelo usuário
+ * @returns JSON string do objeto corrigido
+ */
+function applyFactsComparisonCorrections(
+  originalResult: string,
+  selectedCorrections: DoubleCheckCorrection[]
+): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result: any = JSON.parse(originalResult);
+
+  for (const correction of selectedCorrections) {
+    switch (correction.type) {
+      case 'fix_row': {
+        // Encontrar linha pelo tema e atualizar campo específico
+        if (result.tabela && correction.tema && correction.field && correction.newValue) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const rowToFix = result.tabela.find((r: any) => r.tema === correction.tema);
+          if (rowToFix) {
+            rowToFix[correction.field] = correction.newValue;
+          }
+        }
+        break;
+      }
+
+      case 'add_row': {
+        // Adicionar nova linha à tabela
+        if (correction.row && result.tabela) {
+          result.tabela.push(correction.row);
+        }
+        break;
+      }
+
+      case 'remove_row': {
+        // Remover linha pelo tema
+        if (result.tabela && correction.tema) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          result.tabela = result.tabela.filter((r: any) => r.tema !== correction.tema);
+        }
+        break;
+      }
+
+      case 'add_fato': {
+        // Adicionar fato à lista apropriada
+        if (correction.list && correction.fato) {
+          if (!result[correction.list]) {
+            result[correction.list] = [];
+          }
+          result[correction.list].push(correction.fato);
+        }
+        break;
+      }
+    }
+  }
+
+  return JSON.stringify(result);
+}
+
+/**
  * Aplica correções selecionadas ao resultado original
  *
- * NOTA: Esta é uma implementação simplificada. Para aplicação parcial de correções,
- * seria necessário implementar lógica específica para cada tipo de operação.
- * Por ora, se todas as correções estão selecionadas, usa o resultado verificado.
- * Se nenhuma está selecionada, usa o resultado original.
- * Para seleção parcial, usa o resultado verificado (comportamento conservador).
+ * Para operações estruturadas (topicExtraction, factsComparison), aplica apenas
+ * as correções selecionadas pelo usuário. Para operações de texto livre, usa o
+ * resultado verificado completo (UX binária não permite seleção parcial).
  *
  * @param operation - Tipo de operação
  * @param originalResult - Resultado original (JSON string)
@@ -298,17 +421,25 @@ export function applySelectedCorrections(
     return verifiedResult;
   }
 
-  // Para seleção parcial, implementar lógica específica por operação
-  // Por ora, usa o resultado verificado como fallback conservador
-  // TODO: Implementar aplicação parcial de correções
-
-  // Comportamento atual: usa verificado se há qualquer correção selecionada
-  // Isso é conservador mas garante consistência
+  // Aplicação parcial por operação
   console.log(
-    `[DoubleCheck] Aplicação parcial (${selectedCorrections.length}/${allCorrections.length}) - usando resultado verificado`
+    `[DoubleCheck] Aplicando ${selectedCorrections.length}/${allCorrections.length} correções para ${operation}`
   );
 
-  return verifiedResult;
+  switch (operation) {
+    case 'topicExtraction':
+      return applyTopicExtractionCorrections(originalResult, selectedCorrections);
+
+    case 'factsComparison':
+      return applyFactsComparisonCorrections(originalResult, selectedCorrections);
+
+    default:
+      // Operações de texto livre não suportam aplicação parcial (UX binária)
+      // Este código só seria alcançado se a UI permitisse seleção parcial
+      // para operações de texto, o que não acontece atualmente
+      console.warn(`[DoubleCheck] Operação ${operation} não suporta aplicação parcial - usando verificado`);
+      return verifiedResult;
+  }
 }
 
 /**

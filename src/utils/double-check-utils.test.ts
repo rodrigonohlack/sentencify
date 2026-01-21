@@ -447,19 +447,76 @@ describe('applySelectedCorrections', () => {
     expect(result).toBe(verifiedResult);
   });
 
-  it('retorna verificado para seleção parcial (comportamento conservador)', () => {
-    const selectedCorrections = [allCorrections[0]]; // apenas uma
+  it('aplica apenas correções selecionadas para topicExtraction', () => {
+    // Dados reais para testar aplicação parcial
+    const topicsOriginal = JSON.stringify([
+      { title: 'Horas Extras', category: 'MÉRITO' },
+      { title: 'FGTS', category: 'MÉRITO' },
+      { title: 'Férias', category: 'MÉRITO' }
+    ]);
+    const topicsVerified = JSON.stringify([
+      { title: 'FGTS', category: 'MÉRITO' },
+      { title: 'Férias', category: 'PRELIMINAR' }
+    ]);
+    const corrections: DoubleCheckCorrection[] = [
+      { type: 'remove', topic: 'Horas Extras', reason: 'Tópico duplicado' },
+      { type: 'reclassify', topic: 'Férias', from: 'MÉRITO', to: 'PRELIMINAR', reason: 'Categoria errada' }
+    ];
 
+    // Aplicar apenas a primeira correção (remove)
     const result = applySelectedCorrections(
       'topicExtraction',
-      originalResult,
-      verifiedResult,
-      selectedCorrections,
-      allCorrections
+      topicsOriginal,
+      topicsVerified,
+      [corrections[0]], // apenas remove
+      corrections
     );
 
-    // Por ora, seleção parcial usa o resultado verificado
-    expect(result).toBe(verifiedResult);
+    const resultParsed = JSON.parse(result);
+    // Deve ter removido 'Horas Extras' mas mantido 'Férias' em MÉRITO (não reclassificado)
+    expect(resultParsed).toHaveLength(2);
+    expect(resultParsed.find((t: { title: string }) => t.title === 'Horas Extras')).toBeUndefined();
+    expect(resultParsed.find((t: { title: string }) => t.title === 'Férias')?.category).toBe('MÉRITO');
+  });
+
+  it('aplica apenas correções selecionadas para factsComparison', () => {
+    const factsOriginal = JSON.stringify({
+      topicTitle: 'Jornada',
+      tabela: [
+        { tema: 'Horário', status: 'controverso', relevancia: 'alta' },
+        { tema: 'Intervalo', status: 'controverso', relevancia: 'media' }
+      ],
+      fatosIncontroversos: ['Fato 1']
+    });
+    const factsVerified = JSON.stringify({
+      topicTitle: 'Jornada',
+      tabela: [
+        { tema: 'Horário', status: 'incontroverso', relevancia: 'alta' },
+        { tema: 'Intervalo', status: 'incontroverso', relevancia: 'media' }
+      ],
+      fatosIncontroversos: ['Fato 1', 'Fato 2']
+    });
+    const corrections: DoubleCheckCorrection[] = [
+      { type: 'fix_row', tema: 'Horário', field: 'status', newValue: 'incontroverso', reason: 'Art. 341 CPC' },
+      { type: 'fix_row', tema: 'Intervalo', field: 'status', newValue: 'incontroverso', reason: 'Art. 341 CPC' },
+      { type: 'add_fato', list: 'fatosIncontroversos', fato: 'Fato 2', reason: 'Omissão' }
+    ];
+
+    // Aplicar apenas a primeira correção (fix_row em Horário)
+    const result = applySelectedCorrections(
+      'factsComparison',
+      factsOriginal,
+      factsVerified,
+      [corrections[0]], // apenas primeira fix_row
+      corrections
+    );
+
+    const resultParsed = JSON.parse(result);
+    // Deve ter corrigido 'Horário' mas mantido 'Intervalo' como estava
+    expect(resultParsed.tabela.find((r: { tema: string }) => r.tema === 'Horário').status).toBe('incontroverso');
+    expect(resultParsed.tabela.find((r: { tema: string }) => r.tema === 'Intervalo').status).toBe('controverso');
+    // Não deve ter adicionado 'Fato 2'
+    expect(resultParsed.fatosIncontroversos).toEqual(['Fato 1']);
   });
 });
 

@@ -352,6 +352,7 @@ export interface PerformDoubleCheckReturn {
   verified: string;
   corrections: DoubleCheckCorrection[];
   summary: string;
+  confidence?: number;  // 0.0-1.0 retornado pela IA
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

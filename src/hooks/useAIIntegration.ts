@@ -1287,7 +1287,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     context: AIMessageContent[],  // v1.37.68: MUDOU de string para array
     onProgress?: (msg: string) => void,
     userPrompt?: string
-  ): Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string }> => {
+  ): Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string; confidence?: number }> => {
     const { doubleCheck } = aiSettings;
 
     // Se double check desabilitado ou operação não selecionada, retornar original
@@ -1381,11 +1381,12 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       return {
         verified,
         corrections: result.corrections || [],
-        summary: result.summary || ''
+        summary: result.summary || '',
+        confidence: result.confidence ?? 0.85  // Fallback 85% se IA não retornar
       };
     } catch (error) {
       console.error('[DoubleCheck] Erro:', error);
-      return { verified: originalResponse, corrections: [], summary: 'Erro na verificação' };
+      return { verified: originalResponse, corrections: [], summary: 'Erro na verificação', confidence: 0.85 };
     }
   }, [aiSettings, callDoubleCheckAPI]);
 
