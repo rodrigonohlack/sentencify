@@ -592,6 +592,11 @@ export const useAIStore = create<AIStoreState>()(
               console.warn('[AIStore] Erro ao restaurar apiKeys:', err);
             }
 
+            // Garantir que quickPrompts sempre tenha os defaults se vazio/undefined
+            if (!state.aiSettings?.quickPrompts || state.aiSettings.quickPrompts.length === 0) {
+              state.aiSettings.quickPrompts = DEFAULT_QUICK_PROMPTS;
+            }
+
             // Migração v1.38.14: Adicionar proofFilter aos quickPrompts existentes
             // Usuários com sessões pré-v1.38.12 têm quickPrompts sem proofFilter
             if (state.aiSettings?.quickPrompts) {
