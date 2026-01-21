@@ -23,7 +23,7 @@ import type { Topic, Model } from '../types';
 // Mock TFIDFSimilarity
 vi.mock('../services/EmbeddingsServices', () => ({
   TFIDFSimilarity: {
-    findSimilar: vi.fn().mockReturnValue({ hasSimilar: false, similarity: 0, similarModel: null }),
+    findSimilar: vi.fn().mockReturnValue({ hasSimilar: false }),
   },
 }));
 
@@ -57,7 +57,7 @@ const createMockModel = (overrides: Partial<Model> = {}): Model => ({
   category: 'MÉRITO',
   content: '<p>Conteúdo do modelo</p>',
   keywords: 'keyword1, keyword2',
-  isFavorite: false,
+  favorite: false,
   createdAt: '2024-01-01T00:00:00.000Z',
   updatedAt: '2024-01-01T00:00:00.000Z',
   ...overrides,
@@ -94,7 +94,7 @@ const createMockEditorRef = (innerText = 'Texto da decisão judicial') => ({
   current: {
     root: {
       innerText,
-    },
+    } as unknown as HTMLElement,
   },
 });
 
@@ -552,8 +552,6 @@ describe('useModelExtraction', () => {
       const { TFIDFSimilarity } = await import('../services/EmbeddingsServices');
       vi.mocked(TFIDFSimilarity.findSimilar).mockReturnValue({
         hasSimilar: false,
-        similarity: 0,
-        similarModel: null,
       });
 
       const executeExtractedModelSave = vi.fn();

@@ -809,7 +809,7 @@ describe('useTopicOperations', () => {
           setExtractedTopics,
         }),
         analyzedDocuments: createMockAnalyzedDocuments({
-          peticoes: [{ name: 'doc.pdf', content: 'content' }],
+          peticoes: ['doc.pdf'],
         }),
         generateMiniReport,
       });
@@ -832,7 +832,7 @@ describe('useTopicOperations', () => {
           setExtractedTopics,
         }),
         analyzedDocuments: createMockAnalyzedDocuments({
-          peticoes: [{ name: 'doc.pdf', content: 'content' }],
+          peticoes: ['doc.pdf'],
         }),
         generateMiniReport,
       });
@@ -921,7 +921,7 @@ describe('useTopicOperations', () => {
           setExtractedTopics,
         }),
         analyzedDocuments: createMockAnalyzedDocuments({
-          peticoes: [{ name: 'doc.pdf', content: 'content' }],
+          peticoes: ['doc.pdf'],
         }),
         generateMiniReport,
         setError,

@@ -15,7 +15,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ModelsTab } from './ModelsTab';
-import type { ModelsTabProps, Model } from '../../types';
+import type { ModelsTabProps, Model, ModalState } from '../../types';
 
 // Mock child components
 vi.mock('../', () => ({
@@ -69,13 +69,13 @@ describe('ModelsTab', () => {
     content: `<p>Content for ${title}</p>`,
     keywords: 'keyword1, keyword2',
     category: 'Geral',
-    isFavorite: false,
+    favorite: false,
     createdAt: new Date().toISOString(),
     ...overrides,
   });
 
   const createMockProps = (overrides: Partial<ModelsTabProps> = {}): ModelsTabProps => ({
-    modals: { modelForm: false },
+    modals: { modelForm: false } as ModalState,
     openModal: vi.fn(),
     closeModal: vi.fn(),
     modelLibrary: {
@@ -135,7 +135,7 @@ describe('ModelsTab', () => {
     toggleFavorite: vi.fn(),
     duplicateModel: vi.fn(),
     confirmDeleteModel: vi.fn(),
-    sanitizeHTML: vi.fn((html: string) => html),
+    sanitizeHTML: vi.fn((html: string | null | undefined) => html ?? ''),
     fileInputRef: { current: null },
     modelFormRef: { current: null },
     modelEditorRef: { current: null },

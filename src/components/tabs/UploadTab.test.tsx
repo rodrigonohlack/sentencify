@@ -15,7 +15,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { UploadTab } from './UploadTab';
-import type { UploadTabProps, UploadedFile, PastedText, AnalyzedDocuments } from '../../types';
+import type { UploadTabProps, UploadedFile, PastedText, AnalyzedDocuments, ProcessingMode } from '../../types';
 
 // Mock ProcessingModeSelector
 vi.mock('../ui', () => ({
@@ -64,7 +64,7 @@ describe('UploadTab', () => {
     setAnalyzedDocuments: vi.fn(),
     documentProcessingModes: { peticoes: [], contestacoes: [], complementares: [] },
     setDocumentProcessingModes: vi.fn(),
-    getDefaultProcessingMode: vi.fn(() => 'pdfjs'),
+    getDefaultProcessingMode: vi.fn((): ProcessingMode => 'pdfjs'),
     setPeticaoMode: vi.fn(),
     setContestacaoMode: vi.fn(),
     setComplementarMode: vi.fn(),
@@ -206,7 +206,7 @@ describe('UploadTab', () => {
 
     it('should set default processing mode on upload', async () => {
       const setDocumentProcessingModes = vi.fn();
-      const getDefaultProcessingMode = vi.fn(() => 'ocr');
+      const getDefaultProcessingMode = vi.fn((): ProcessingMode => 'pdfjs');
       const props = createMockProps({ setDocumentProcessingModes, getDefaultProcessingMode });
       render(<UploadTab {...props} />);
 
@@ -373,7 +373,7 @@ describe('UploadTab', () => {
     });
 
     it('should show pasted text in the documents list', () => {
-      const pastedText: PastedText = { name: 'Petição colada', text: 'Conteúdo da petição' };
+      const pastedText: PastedText = { id: 'paste-1', name: 'Petição colada', text: 'Conteúdo da petição' };
       const props = createMockProps({
         pastedPeticaoTexts: [pastedText],
       });
@@ -383,7 +383,7 @@ describe('UploadTab', () => {
     });
 
     it('should show character count for pasted texts', () => {
-      const pastedText: PastedText = { name: 'Petição colada', text: 'A'.repeat(5000) };
+      const pastedText: PastedText = { id: 'paste-2', name: 'Petição colada', text: 'A'.repeat(5000) };
       const props = createMockProps({
         pastedPeticaoTexts: [pastedText],
       });
@@ -417,7 +417,7 @@ describe('UploadTab', () => {
 
     it('should call removePastedText for pasted petição text', () => {
       const removePastedText = vi.fn();
-      const pastedText: PastedText = { name: 'Petição colada', text: 'Conteúdo' };
+      const pastedText: PastedText = { id: 'paste-3', name: 'Petição colada', text: 'Conteúdo' };
       const props = createMockProps({
         pastedPeticaoTexts: [pastedText],
         removePastedText,
@@ -597,7 +597,7 @@ describe('UploadTab', () => {
     });
 
     it('should be enabled when petição text is pasted', () => {
-      const pastedText: PastedText = { name: 'Petição', text: 'Conteúdo' };
+      const pastedText: PastedText = { id: 'paste-4', name: 'Petição', text: 'Conteúdo' };
       const props = createMockProps({
         pastedPeticaoTexts: [pastedText],
       });
@@ -653,7 +653,7 @@ describe('UploadTab', () => {
   describe('Text Preview', () => {
     it('should call setTextPreview when clicking on pasted text', () => {
       const setTextPreview = vi.fn();
-      const pastedText: PastedText = { name: 'Petição colada', text: 'Conteúdo da petição' };
+      const pastedText: PastedText = { id: 'paste-5', name: 'Petição colada', text: 'Conteúdo da petição' };
       const props = createMockProps({
         pastedPeticaoTexts: [pastedText],
         setTextPreview,
