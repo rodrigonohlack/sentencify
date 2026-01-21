@@ -268,10 +268,27 @@ export const useAIStore = create<AIStoreState>()(
         setAiSettings: (settingsOrUpdater) =>
           set(
             (state) => {
+              const prevApiKeys = state.aiSettings.apiKeys;
+
               if (typeof settingsOrUpdater === 'function') {
                 state.aiSettings = settingsOrUpdater(state.aiSettings);
               } else {
                 state.aiSettings = settingsOrUpdater;
+              }
+
+              // Persistir apiKeys se mudaram (não vão no Zustand persist por segurança)
+              const newApiKeys = state.aiSettings.apiKeys;
+              if (newApiKeys && JSON.stringify(newApiKeys) !== JSON.stringify(prevApiKeys)) {
+                try {
+                  const currentSettings = localStorage.getItem('sentencify-ai-settings');
+                  const parsed = currentSettings ? JSON.parse(currentSettings) : {};
+                  localStorage.setItem('sentencify-ai-settings', JSON.stringify({
+                    ...parsed,
+                    apiKeys: newApiKeys
+                  }));
+                } catch (err) {
+                  console.warn('[AIStore] Erro ao persistir apiKeys:', err);
+                }
               }
             },
             false,
