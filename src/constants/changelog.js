@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.38', feature: 'Fix CSP para modelos HuggingFace (adiciona cas-bridge.xethub.hf.co) + Quick Prompts não carregando na primeira visita (fallback para defaults no onRehydrateStorage)' },
   { version: '1.38.37', feature: 'Fix confidence hardcoded: todas as 6 operações Double Check agora usam confidence retornado pela IA (antes: 5 de 6 usavam 85% fixo)' },
   { version: '1.38.36', feature: 'Double Check: aplicação parcial de correções (topicExtraction/factsComparison) + usar confidence retornado pela IA ao invés de 85% hardcoded' },
   { version: '1.38.35', feature: 'UX Double Check quickPrompt: mostrar "🔍 Verificando resposta..." no chat enquanto Double Check roda (usuário não vê resposta antes da verificação)' },
