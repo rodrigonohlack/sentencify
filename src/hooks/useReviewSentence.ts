@@ -54,6 +54,7 @@ export interface AIIntegrationForReview {
     verified: string;
     corrections: string[];
     summary: string;
+    confidence?: number;
   }>;
 }
 
@@ -196,7 +197,7 @@ export function useReviewSentence({
         // v1.37.68: Usar contentArray original (inclui documentos se scope=decisionWithDocs)
         // contentArray já contém: documentos via buildDocumentContentArray + decisão via buildDecisionText
         try {
-          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+          const { verified, corrections, summary, confidence } = await aiIntegration.performDoubleCheck(
             'sentenceReview',
             reviewFinal,
             contentArray  // Array original (já é AIMessageContent[])
@@ -236,7 +237,7 @@ export function useReviewSentence({
               verifiedResult: verified,
               corrections: typedCorrections,
               summary,
-              confidence: 85
+              confidence: Math.round((confidence ?? 0.85) * 100)
             });
 
             // Aguardar decisão do usuário

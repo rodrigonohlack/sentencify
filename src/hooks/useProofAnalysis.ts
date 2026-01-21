@@ -59,6 +59,7 @@ export interface AIIntegrationForProofs {
     verified: string;
     corrections: DoubleCheckCorrection[];
     summary: string;
+    confidence?: number;
   }>;
 }
 
@@ -549,7 +550,7 @@ ${customInstructions ? `INSTRUÇÕES DO MAGISTRADO:\n${customInstructions}\n` : 
         try {
           // v1.37.68: Passar contentArray diretamente (inclui PDF binário se modo pdf-puro)
           // contentArray já contém: PDF binário (se pdf-puro) ou texto extraído + contexto do processo
-          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+          const { verified, corrections, summary, confidence } = await aiIntegration.performDoubleCheck(
             'proofAnalysis',
             finalResult,
             contentArray as AIMessageContent[]  // Array incluindo PDFs binários
@@ -585,7 +586,7 @@ ${customInstructions ? `INSTRUÇÕES DO MAGISTRADO:\n${customInstructions}\n` : 
               verifiedResult: verified,
               corrections: typedCorrections,
               summary,
-              confidence: 85
+              confidence: Math.round((confidence ?? 0.85) * 100)
             });
 
             // Aguardar decisão do usuário

@@ -85,6 +85,7 @@ export interface AIIntegrationForDecisionText {
     verified: string;
     corrections: DoubleCheckCorrection[];
     summary: string;
+    confidence?: number;
   }>;
 }
 
@@ -485,7 +486,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
           ? contextContent as AIMessageContent[]
           : [{ type: 'text' as const, text: String(contextContent) }];
 
-        const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+        const { verified, corrections, summary, confidence } = await aiIntegration.performDoubleCheck(
           'quickPrompt',
           originalResponse,
           contextArray,  // v1.37.68: Array (não string)
@@ -521,7 +522,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
             verifiedResult: verified,
             corrections: typedCorrections,
             summary,
-            confidence: 85
+            confidence: Math.round((confidence ?? 0.85) * 100)
           });
 
           const dcResult = await waitForDecision;

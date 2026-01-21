@@ -61,6 +61,7 @@ export interface AIIntegrationForFactsComparison {
     verified: string;
     corrections: string[];
     summary: string;
+    confidence?: number;
   }>;
 }
 
@@ -277,7 +278,7 @@ export function useFactsComparison({
         try {
           // v1.37.68: Usar messageContent original (contém prompt + PDFs binários se fallback)
           // messageContent já inclui: prompt de comparação + PDFs binários (se texto não extraído)
-          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+          const { verified, corrections, summary, confidence } = await aiIntegration.performDoubleCheck(
             'factsComparison',
             JSON.stringify(parsed, null, 2),
             messageContent  // Array original (já é AIMessageContent[])
@@ -312,7 +313,7 @@ export function useFactsComparison({
               verifiedResult: verified,
               corrections: typedCorrections,
               summary,
-              confidence: 85
+              confidence: Math.round((confidence ?? 0.85) * 100)
             });
 
             // Aguardar decisão do usuário

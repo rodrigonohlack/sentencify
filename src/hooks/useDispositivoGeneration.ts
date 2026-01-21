@@ -39,7 +39,7 @@ export interface AIIntegrationForDispositivo {
     content: string,
     context: AIMessageContent[],  // v1.37.68: mudou de string para array
     onProgress?: (msg: string) => void
-  ) => Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string }>;
+  ) => Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string; confidence?: number }>;
 }
 
 export interface QuillInstance {
@@ -296,7 +296,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         // promptText inclui: AI_PROMPTS.roles.redacao, buildPartesDoProcesso, buildTopicosSection,
         // regraFundamentalDispositivo, estiloRedacao, modeloDispositivo (se configurado)
         try {
-          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+          const { verified, corrections, summary, confidence } = await aiIntegration.performDoubleCheck(
             'dispositivo',
             dispositivoFinal,
             [{ type: 'text' as const, text: promptText }]  // Array com prompt completo
@@ -318,7 +318,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
               verifiedResult: verified,
               corrections,
               summary,
-              confidence: 85
+              confidence: Math.round((confidence ?? 0.85) * 100)
             });
 
             // Aguardar decisão do usuário
