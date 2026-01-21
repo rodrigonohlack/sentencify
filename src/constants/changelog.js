@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.37', feature: 'Fix confidence hardcoded: todas as 6 operações Double Check agora usam confidence retornado pela IA (antes: 5 de 6 usavam 85% fixo)' },
   { version: '1.38.36', feature: 'Double Check: aplicação parcial de correções (topicExtraction/factsComparison) + usar confidence retornado pela IA ao invés de 85% hardcoded' },
   { version: '1.38.35', feature: 'UX Double Check quickPrompt: mostrar "🔍 Verificando resposta..." no chat enquanto Double Check roda (usuário não vê resposta antes da verificação)' },
   { version: '1.38.34', feature: 'Fix Double Check quickPrompt: retornar response diretamente de send() para evitar race condition com lastResponse memoizado (antes: Double Check não rodava na primeira interação)' },
