@@ -447,6 +447,76 @@ describe('useAIStore', () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // API KEYS PERSISTENCE TESTS (v1.38.39)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('setAiSettings apiKeys persistence', () => {
+    beforeEach(() => {
+      localStorage.clear();
+    });
+
+    it('should persist apiKeys to localStorage when changed via setAiSettings', () => {
+      const store = useAIStore.getState();
+      const currentSettings = store.aiSettings;
+
+      store.setAiSettings({
+        ...currentSettings,
+        apiKeys: { ...currentSettings.apiKeys, claude: 'sk-test-key-123' }
+      });
+
+      const saved = localStorage.getItem('sentencify-ai-settings');
+      expect(saved).not.toBeNull();
+      const parsed = JSON.parse(saved!);
+      expect(parsed.apiKeys.claude).toBe('sk-test-key-123');
+    });
+
+    it('should persist apiKeys when using updater function', () => {
+      const store = useAIStore.getState();
+
+      store.setAiSettings((prev) => ({
+        ...prev,
+        apiKeys: { ...prev.apiKeys, gemini: 'AIza-test-key' }
+      }));
+
+      const saved = localStorage.getItem('sentencify-ai-settings');
+      const parsed = JSON.parse(saved!);
+      expect(parsed.apiKeys.gemini).toBe('AIza-test-key');
+    });
+
+    it('should NOT persist when apiKeys do not change', () => {
+      const store = useAIStore.getState();
+      const currentSettings = store.aiSettings;
+
+      // Change only provider, not apiKeys
+      store.setAiSettings({
+        ...currentSettings,
+        provider: 'gemini'
+      });
+
+      const saved = localStorage.getItem('sentencify-ai-settings');
+      expect(saved).toBeNull(); // Should not have saved anything
+    });
+
+    it('should merge with existing localStorage data', () => {
+      // Pre-populate localStorage with other data
+      localStorage.setItem('sentencify-ai-settings', JSON.stringify({
+        someOtherData: 'should be preserved'
+      }));
+
+      const store = useAIStore.getState();
+      store.setAiSettings((prev) => ({
+        ...prev,
+        apiKeys: { ...prev.apiKeys, openai: 'sk-openai-test' }
+      }));
+
+      const saved = localStorage.getItem('sentencify-ai-settings');
+      const parsed = JSON.parse(saved!);
+      expect(parsed.someOtherData).toBe('should be preserved');
+      expect(parsed.apiKeys.openai).toBe('sk-openai-test');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // RESET TESTS
   // ═══════════════════════════════════════════════════════════════════════════
 
