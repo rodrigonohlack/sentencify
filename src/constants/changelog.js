@@ -2,6 +2,8 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.35', feature: 'UX Double Check quickPrompt: mostrar "🔍 Verificando resposta..." no chat enquanto Double Check roda (usuário não vê resposta antes da verificação)' },
+  { version: '1.38.34', feature: 'Fix Double Check quickPrompt: retornar response diretamente de send() para evitar race condition com lastResponse memoizado (antes: Double Check não rodava na primeira interação)' },
   { version: '1.38.33', feature: 'Fix análise de provas: proibir IA de "pescar" documentos mencionados no contexto - deve analisar APENAS o documento na tag <prova-principal>' },
   { version: '1.38.32', feature: 'Prompt profissional para análise de provas documentais: engenharia de prompt avançada (role/persona, chain of thought, few-shot examples, guardrails) + lógica exclusiva prova oral vs documental' },
   { version: '1.38.31', feature: 'Fix análise de prova: remover complementares do contexto (só petição+contestação) + tags XML para demarcação clara <PETICAO_INICIAL>, <CONTESTACAO>' },

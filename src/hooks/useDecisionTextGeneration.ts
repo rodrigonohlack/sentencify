@@ -466,72 +466,83 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
     // ═══════════════════════════════════════════════════════════════════════════
     // DOUBLE CHECK DO QUICK PROMPT (v1.37.65)
     // v1.38.34: Usar result.response diretamente (evita race condition com lastResponse memoizado)
+    // v1.38.35: Mostrar "Verificando resposta..." enquanto Double Check roda
     // ═══════════════════════════════════════════════════════════════════════════
     if (result.success &&
         result.response &&
         aiIntegration?.aiSettings?.doubleCheck?.enabled &&
         aiIntegration?.aiSettings?.doubleCheck?.operations?.quickPrompt &&
         aiIntegration?.performDoubleCheck) {
+      const originalResponse = result.response; // v1.38.34: Usar resposta direta do result
+
+      // v1.38.35: Mostrar estado de verificação no chat ANTES de rodar Double Check
+      chatAssistant.updateLastAssistantMessage('🔍 Verificando resposta...');
+
       try {
-        const lastResponse = result.response; // v1.38.34: Usar resposta direta do result
-        if (lastResponse) {
-          // v1.37.68: Passar contextContent diretamente (sem filtrar para texto)
-          const contextContent = await buildContextForChat(message, options);
-          const contextArray: AIMessageContent[] = Array.isArray(contextContent)
-            ? contextContent as AIMessageContent[]
-            : [{ type: 'text' as const, text: String(contextContent) }];
+        // v1.37.68: Passar contextContent diretamente (sem filtrar para texto)
+        const contextContent = await buildContextForChat(message, options);
+        const contextArray: AIMessageContent[] = Array.isArray(contextContent)
+          ? contextContent as AIMessageContent[]
+          : [{ type: 'text' as const, text: String(contextContent) }];
 
-          const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
-            'quickPrompt',
-            lastResponse,
-            contextArray,  // v1.37.68: Array (não string)
-            undefined,  // onProgress
-            message  // userPrompt - texto do quick prompt/mensagem do usuario
-          );
+        const { verified, corrections, summary } = await aiIntegration.performDoubleCheck(
+          'quickPrompt',
+          originalResponse,
+          contextArray,  // v1.37.68: Array (não string)
+          undefined,  // onProgress
+          message  // userPrompt - texto do quick prompt/mensagem do usuario
+        );
 
-          if (corrections.length > 0) {
-            // Converter corrections para tipo esperado com descrição legível
-            const typedCorrections: DoubleCheckCorrectionWithSelection[] = corrections.map((c, idx) => {
-              const type = typeof c === 'object' && c !== null && 'type' in c ? String(c.type) : 'improve';
-              const reason = typeof c === 'object' && c !== null && 'reason' in c ? String(c.reason) : '';
-              const item = typeof c === 'object' && c !== null && 'item' in c ? String(c.item) : `Correção ${idx + 1}`;
-              const suggestion = typeof c === 'object' && c !== null && 'suggestion' in c ? String(c.suggestion) : '';
+        if (corrections.length > 0) {
+          // Converter corrections para tipo esperado com descrição legível
+          const typedCorrections: DoubleCheckCorrectionWithSelection[] = corrections.map((c, idx) => {
+            const type = typeof c === 'object' && c !== null && 'type' in c ? String(c.type) : 'improve';
+            const reason = typeof c === 'object' && c !== null && 'reason' in c ? String(c.reason) : '';
+            const item = typeof c === 'object' && c !== null && 'item' in c ? String(c.item) : `Correção ${idx + 1}`;
+            const suggestion = typeof c === 'object' && c !== null && 'suggestion' in c ? String(c.suggestion) : '';
 
-              const correction: DoubleCheckCorrection = { type: type as DoubleCheckCorrection['type'], reason, item, suggestion };
+            const correction: DoubleCheckCorrection = { type: type as DoubleCheckCorrection['type'], reason, item, suggestion };
 
-              return {
-                ...correction,
-                id: `quickPrompt-${idx}-${type}`,
-                selected: true,
-                description: getCorrectionDescription('quickPrompt', correction)
-              };
-            });
+            return {
+              ...correction,
+              id: `quickPrompt-${idx}-${type}`,
+              selected: true,
+              description: getCorrectionDescription('quickPrompt', correction)
+            };
+          });
 
-            const waitForDecision = new Promise<DoubleCheckReviewResult>(resolve => {
-              pendingDoubleCheckResolve.current = resolve;
-            });
+          const waitForDecision = new Promise<DoubleCheckReviewResult>(resolve => {
+            pendingDoubleCheckResolve.current = resolve;
+          });
 
-            openDoubleCheckReview({
-              operation: 'quickPrompt',
-              originalResult: lastResponse,
-              verifiedResult: verified,
-              corrections: typedCorrections,
-              summary,
-              confidence: 85
-            });
+          openDoubleCheckReview({
+            operation: 'quickPrompt',
+            originalResult: originalResponse,
+            verifiedResult: verified,
+            corrections: typedCorrections,
+            summary,
+            confidence: 85
+          });
 
-            const dcResult = await waitForDecision;
+          const dcResult = await waitForDecision;
 
-            if (dcResult.selected.length > 0) {
-              // Atualizar a última mensagem no histórico do chat
-              chatAssistant.updateLastAssistantMessage(dcResult.finalResult);
-              console.log('[DoubleCheck QuickPrompt] Correções aplicadas:', dcResult.selected);
-            } else {
-              console.log('[DoubleCheck QuickPrompt] Usuário descartou correções');
-            }
+          if (dcResult.selected.length > 0) {
+            // v1.38.35: Atualizar chat com resposta corrigida
+            chatAssistant.updateLastAssistantMessage(dcResult.finalResult);
+            console.log('[DoubleCheck QuickPrompt] Correções aplicadas:', dcResult.selected);
+          } else {
+            // v1.38.35: Usuário rejeitou correções - restaurar resposta original
+            chatAssistant.updateLastAssistantMessage(originalResponse);
+            console.log('[DoubleCheck QuickPrompt] Usuário descartou correções - restaurando original');
           }
+        } else {
+          // v1.38.35: Sem correções - restaurar resposta original
+          chatAssistant.updateLastAssistantMessage(originalResponse);
+          console.log('[DoubleCheck QuickPrompt] Sem correções - resposta verificada OK');
         }
       } catch (dcError) {
+        // v1.38.35: Erro no Double Check - restaurar resposta original
+        chatAssistant.updateLastAssistantMessage(originalResponse);
         console.error('[DoubleCheck QuickPrompt] Erro:', dcError);
       }
     }
