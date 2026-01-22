@@ -119,7 +119,7 @@ const ProcessCard: React.FC<ProcessCardProps> = React.memo(({ index, group, onRe
       );
     }
     return (
-      <span className="text-sm text-slate-700 dark:text-slate-200 truncate" title={file.file.name}>
+      <span className="text-sm text-slate-700 dark:text-slate-200 block truncate" title={file.file.name}>
         {file.file.name}
       </span>
     );
