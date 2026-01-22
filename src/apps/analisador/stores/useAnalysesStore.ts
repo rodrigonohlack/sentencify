@@ -27,6 +27,24 @@ const DEFAULT_SETTINGS: AnalysesSettings = {
   concurrencyLimit: 3,
 };
 
+const SETTINGS_STORAGE_KEY = 'analisador-settings';
+
+/** Carrega settings do localStorage com fallback para DEFAULT_SETTINGS */
+function loadSettings(): AnalysesSettings {
+  try {
+    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        concurrencyLimit: Math.max(1, Math.min(10, parsed.concurrencyLimit ?? DEFAULT_SETTINGS.concurrencyLimit)),
+      };
+    }
+  } catch {
+    // Fallback silencioso em caso de erro de parsing
+  }
+  return DEFAULT_SETTINGS;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS DO STORE
 // ═══════════════════════════════════════════════════════════════════════════
@@ -130,7 +148,7 @@ export const useAnalysesStore = create<AnalysesState & AnalysesActions>((set, ge
   error: null,
   filters: initialFilters,
   batch: initialBatchState,
-  settings: DEFAULT_SETTINGS,
+  settings: loadSettings(),
   isHistoricoOpen: false,
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -286,10 +304,17 @@ export const useAnalysesStore = create<AnalysesState & AnalysesActions>((set, ge
   // AÇÕES - SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  setConcurrencyLimit: (limit) =>
+  setConcurrencyLimit: (limit) => {
+    const clamped = Math.max(1, Math.min(10, limit));
     set((state) => ({
-      settings: { ...state.settings, concurrencyLimit: Math.max(1, Math.min(10, limit)) },
-    })),
+      settings: { ...state.settings, concurrencyLimit: clamped },
+    }));
+    try {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ concurrencyLimit: clamped }));
+    } catch {
+      // Falha silenciosa se localStorage não disponível
+    }
+  },
 
   // ═══════════════════════════════════════════════════════════════════════════
   // AÇÕES - MODAL
