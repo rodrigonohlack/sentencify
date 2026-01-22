@@ -365,7 +365,7 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
   }, [isHistoricoOpen, fetchAnalyses]);
 
   // Computed
-  const groupedAnalyses = useMemo(() => getGroupedByPauta(), [getGroupedByPauta]);
+  const groupedAnalyses = useMemo(() => getGroupedByPauta(), [getGroupedByPauta, analyses, filters]);
 
   // Unique dates for filter
   const uniqueDates = useMemo(() => {
