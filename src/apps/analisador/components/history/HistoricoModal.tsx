@@ -23,7 +23,6 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { Modal, Button } from '../ui';
-import BaseModal, { ModalFooter, ModalWarningBox } from '../../../../components/modals/BaseModal';
 import { useAnalysesStore } from '../../stores';
 import { useAnalysesAPI } from '../../hooks';
 import type {
@@ -689,25 +688,34 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
       </div>
 
       {/* Modal de confirmação de exclusão */}
-      <BaseModal
+      <Modal
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         title="Excluir Análises?"
         icon={<AlertCircle className="w-6 h-6" />}
-        iconColor="red"
+        iconColor="text-red-600 dark:text-red-400"
         size="sm"
         footer={
-          <ModalFooter.Destructive
-            onClose={() => setShowDeleteConfirm(false)}
-            onConfirm={handleConfirmDelete}
-            confirmText="Sim, Excluir"
-          />
+          <>
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleConfirmDelete}
+              className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
+            >
+              Sim, Excluir
+            </button>
+          </>
         }
       >
-        <ModalWarningBox>
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
           {selectedIds.size} análise{selectedIds.size !== 1 ? 's' : ''} será{selectedIds.size !== 1 ? 'ão' : ''} excluída{selectedIds.size !== 1 ? 's' : ''} permanentemente.
-        </ModalWarningBox>
-      </BaseModal>
+        </div>
+      </Modal>
     </Modal>
   );
 };
