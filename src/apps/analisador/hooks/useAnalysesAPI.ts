@@ -90,7 +90,7 @@ export interface UseAnalysesAPIReturn {
   createAnalysis: (params: CreateAnalysisParams) => Promise<string | null>;
   updateAnalysis: (id: string, params: UpdateAnalysisParams) => Promise<boolean>;
   deleteAnalysis: (id: string) => Promise<boolean>;
-  updateBatchDataPauta: (ids: string[], dataPauta: string) => Promise<number>;
+  updateBatchDataPauta: (ids: string[], dataPauta: string | null) => Promise<number>;
   deleteBatch: (ids: string[]) => Promise<number>;
   isLoading: boolean;
   error: string | null;
@@ -386,7 +386,7 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
    * @returns Número de análises atualizadas
    */
   const updateBatchDataPauta = useCallback(
-    async (ids: string[], dataPauta: string): Promise<number> => {
+    async (ids: string[], dataPauta: string | null): Promise<number> => {
       if (!isAuthenticated) {
         setError('Usuário não autenticado');
         return 0;
@@ -410,7 +410,7 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
 
         // Atualizar no store
         ids.forEach((id) => {
-          updateStoreAnalysis(id, { dataPauta });
+          updateStoreAnalysis(id, { dataPauta: dataPauta || null });
         });
 
         return data.updatedCount;

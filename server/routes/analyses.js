@@ -291,12 +291,8 @@ router.put('/batch/data-pauta', (req, res) => {
       return res.status(400).json({ error: 'Máximo 1000 análises por operação em lote' });
     }
 
-    if (!dataPauta) {
-      return res.status(400).json({ error: 'Data da pauta é obrigatória' });
-    }
-
-    if (!isValidISODate(dataPauta)) {
-      return res.status(400).json({ error: 'dataPauta deve estar em formato YYYY-MM-DD' });
+    if (dataPauta !== null && !isValidISODate(dataPauta)) {
+      return res.status(400).json({ error: 'dataPauta deve estar em formato YYYY-MM-DD ou null' });
     }
 
     const now = new Date().toISOString();

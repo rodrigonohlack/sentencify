@@ -20,8 +20,10 @@ import {
   Building2,
   Loader2,
   X,
+  AlertCircle,
 } from 'lucide-react';
 import { Modal, Button } from '../ui';
+import BaseModal, { ModalFooter, ModalWarningBox } from '../../../../components/modals/BaseModal';
 import { useAnalysesStore } from '../../stores';
 import { useAnalysesAPI } from '../../hooks';
 import type {
@@ -385,6 +387,7 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [dataPautaFilter, setDataPautaFilter] = useState('');
   const [dataPautaSelecionada, setDataPautaSelecionada] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Fetch analyses on open
   useEffect(() => {
@@ -443,15 +446,13 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
     selectAll();
   }, [selectAll]);
 
-  const handleDeleteSelected = useCallback(async () => {
+  const handleDeleteClick = useCallback(() => {
     if (selectedIds.size === 0) return;
+    setShowDeleteConfirm(true);
+  }, [selectedIds]);
 
-    const confirmed = window.confirm(
-      `Tem certeza que deseja excluir ${selectedIds.size} análise(s)?`
-    );
-
-    if (!confirmed) return;
-
+  const handleConfirmDelete = useCallback(async () => {
+    setShowDeleteConfirm(false);
     setIsDeleting(true);
     await deleteBatch(Array.from(selectedIds));
     setIsDeleting(false);
@@ -473,7 +474,7 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
 
   const handleRemoverPauta = useCallback(async () => {
     if (selectedIds.size === 0) return;
-    await updateBatchDataPauta(Array.from(selectedIds), '');
+    await updateBatchDataPauta(Array.from(selectedIds), null);
     setDataPautaSelecionada('');
   }, [selectedIds, updateBatchDataPauta]);
 
@@ -596,7 +597,7 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
                 </span>
               </div>
               <button
-                onClick={handleDeleteSelected}
+                onClick={handleDeleteClick}
                 disabled={selectedIds.size === 0 || isDeleting}
                 className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
@@ -686,6 +687,27 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
           </div>
         )}
       </div>
+
+      {/* Modal de confirmação de exclusão */}
+      <BaseModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Excluir Análises?"
+        icon={<AlertCircle className="w-6 h-6" />}
+        iconColor="red"
+        size="sm"
+        footer={
+          <ModalFooter.Destructive
+            onClose={() => setShowDeleteConfirm(false)}
+            onConfirm={handleConfirmDelete}
+            confirmText="Sim, Excluir"
+          />
+        }
+      >
+        <ModalWarningBox>
+          {selectedIds.size} análise{selectedIds.size !== 1 ? 's' : ''} será{selectedIds.size !== 1 ? 'ão' : ''} excluída{selectedIds.size !== 1 ? 's' : ''} permanentemente.
+        </ModalWarningBox>
+      </BaseModal>
     </Modal>
   );
 };
