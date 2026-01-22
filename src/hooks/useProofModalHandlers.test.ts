@@ -145,10 +145,11 @@ describe('useProofModalHandlers', () => {
         type: 'text',
         uploadDate: new Date().toISOString(),
       };
-      // Remove 'type' para forçar o branch de ProofText
-      const proofWithoutType = { ...proofText } as unknown as ProofText;
-      delete (proofWithoutType as Record<string, unknown>).type;
-      delete (proofWithoutType as Record<string, unknown>).file;
+      // Remove 'type' e 'file' para forçar o branch de ProofText
+      const proofCopy = { ...proofText } as Record<string, unknown>;
+      delete proofCopy.type;
+      delete proofCopy.file;
+      const proofWithoutType = proofCopy as unknown as ProofText;
 
       mockProofToDelete = proofWithoutType;
       mockProofTexts = [proofText, createMockProofText('2', 'Outro Texto')];
