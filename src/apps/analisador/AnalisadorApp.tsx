@@ -1,14 +1,11 @@
 /**
  * @file AnalisadorApp.tsx
  * @description Componente principal do Analisador de Prepauta Trabalhista
- * @version 1.39.0 - Redesign com batch mode only e histórico SQL
+ * @version 1.39.0 - Redesign com layout centralizado e batch mode
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { History, Settings, LogOut, FileSearch, User, Scale } from 'lucide-react';
-
-// Layout
-import { Header } from './components/layout';
+import { History, Settings, LogOut, FileSearch } from 'lucide-react';
 
 // Auth
 import { LoginGate, useLoginGate } from './components/auth/LoginGate';
@@ -19,17 +16,14 @@ import { BatchMode } from './components/batch/BatchMode';
 // History
 import { HistoricoModal } from './components/history/HistoricoModal';
 
-// Results
-import { ResultsContainer } from './components/results';
-
 // Settings
 import { SettingsModal } from './components/settings';
 
 // UI
-import { Button, Card, CardContent, ToastProvider, useToast } from './components/ui';
+import { Button, ToastProvider, useToast } from './components/ui';
 
 // Stores & Hooks
-import { useAnalysesStore, useResultStore } from './stores';
+import { useAnalysesStore } from './stores';
 import { useAnalysesAPI } from './hooks';
 import type { SavedAnalysis } from './types/analysis.types';
 
@@ -39,15 +33,13 @@ import type { SavedAnalysis } from './types/analysis.types';
 
 const AnalisadorContent: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [selectedAnalysis, setSelectedAnalysis] = useState<SavedAnalysis | null>(null);
   const { showToast } = useToast();
 
   // Auth
-  const { user, logout, userEmail } = useLoginGate();
+  const { logout } = useLoginGate();
 
   // Stores
-  const { openHistorico, isHistoricoOpen, analyses } = useAnalysesStore();
-  const { result, setResult } = useResultStore();
+  const { openHistorico, analyses } = useAnalysesStore();
 
   // API
   const { fetchAnalyses } = useAnalysesAPI();
@@ -75,11 +67,9 @@ const AnalisadorContent: React.FC = () => {
 
   const handleSelectAnalysis = useCallback(
     (analysis: SavedAnalysis) => {
-      setSelectedAnalysis(analysis);
-      setResult(analysis.resultado);
       showToast('success', `Análise do processo ${analysis.numeroProcesso || 'carregada'}`);
     },
-    [setResult, showToast]
+    [showToast]
   );
 
   const handleLogout = useCallback(async () => {
@@ -92,123 +82,59 @@ const AnalisadorContent: React.FC = () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      {/* Header */}
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl">
-                <FileSearch className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-                  Analisador de Prepauta
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Análise automatizada de processos trabalhistas
-                </p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-slate-900 dark:to-slate-800 relative">
+      {/* Top-right: Settings + Logout icons */}
+      <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+        <button
+          onClick={handleOpenSettings}
+          className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all shadow-sm"
+          title="Configurações"
+        >
+          <Settings className="w-4 h-4" />
+        </button>
+        <button
+          onClick={handleLogout}
+          className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-600 transition-all shadow-sm"
+          title="Sair"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
+      </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-3">
-              {/* History button */}
-              <Button
-                variant="secondary"
-                onClick={handleOpenHistorico}
-                icon={<History className="w-4 h-4" />}
-                className="relative"
-              >
-                Histórico
-                {analyses.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
-                    {analyses.length > 99 ? '99+' : analyses.length}
-                  </span>
-                )}
-              </Button>
-
-              {/* Settings button */}
-              <Button
-                variant="secondary"
-                onClick={handleOpenSettings}
-                icon={<Settings className="w-4 h-4" />}
-              >
-                Configurações
-              </Button>
-
-              {/* User menu */}
-              <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                  <User className="w-4 h-4 text-slate-400" />
-                  <span className="hidden sm:inline">{userEmail}</span>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                  title="Sair"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+      <div className="max-w-3xl mx-auto px-6 py-8">
+        {/* Header centralizado */}
+        <div className="text-center mb-6">
+          <div className="inline-flex p-3 bg-indigo-600 rounded-2xl mb-4 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30">
+            <FileSearch className="w-8 h-8 text-white" />
           </div>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+            Análise em Lote
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+            Arraste múltiplos arquivos de uma vez — o sistema agrupa automaticamente por processo
+          </p>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-180px)]">
-          {/* Left Column - Batch Upload */}
-          <div className="flex flex-col">
-            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <span className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-sm font-bold">
-                1
+        {/* Botão Histórico */}
+        <div className="text-center mb-8">
+          <Button
+            variant="secondary"
+            onClick={handleOpenHistorico}
+            icon={<History className="w-4 h-4" />}
+            className="relative"
+          >
+            Ver Análises Salvas
+            {analyses.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                {analyses.length > 99 ? '99+' : analyses.length}
               </span>
-              Upload de Documentos
-            </h2>
-            <div className="flex-1 min-h-0">
-              <BatchMode />
-            </div>
-          </div>
-
-          {/* Right Column - Results */}
-          <div className="flex flex-col">
-            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <span className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-sm font-bold">
-                2
-              </span>
-              Resultado da Análise
-              {selectedAnalysis && (
-                <span className="ml-2 text-sm font-normal text-slate-500 dark:text-slate-400">
-                  ({selectedAnalysis.numeroProcesso || 'Processo não identificado'})
-                </span>
-              )}
-            </h2>
-            <div className="flex-1 min-h-0 overflow-auto">
-              <ResultsContainer />
-            </div>
-          </div>
+            )}
+          </Button>
         </div>
-      </main>
 
-      {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 py-2">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
-            <div className="flex items-center gap-2">
-              <Scale className="w-4 h-4" />
-              <a href="/" className="hover:text-indigo-500 transition-colors">
-                Voltar ao Sentencify
-              </a>
-            </div>
-            <div>
-              v1.39.0 • Analisador de Prepauta
-            </div>
-          </div>
-        </div>
-      </footer>
+        {/* Batch Mode */}
+        <BatchMode />
+      </div>
 
       {/* Modals */}
       <SettingsModal isOpen={settingsOpen} onClose={handleCloseSettings} />

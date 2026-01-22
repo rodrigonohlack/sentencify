@@ -15,11 +15,17 @@ import type {
 } from '../types/analysis.types';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// CONSTANTES
+// TIPOS DE SETTINGS
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** Número máximo de arquivos processados em paralelo */
-export const BATCH_CONCURRENCY_LIMIT = 3;
+interface AnalysesSettings {
+  /** Número máximo de processos processados em paralelo (1-10) */
+  concurrencyLimit: number;
+}
+
+const DEFAULT_SETTINGS: AnalysesSettings = {
+  concurrencyLimit: 3,
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS DO STORE
@@ -38,6 +44,9 @@ interface AnalysesState {
 
   // Batch processing
   batch: BatchState;
+
+  // Settings
+  settings: AnalysesSettings;
 
   // Histórico modal
   isHistoricoOpen: boolean;
@@ -76,6 +85,9 @@ interface AnalysesActions {
   setBatchProcessing: (processing: boolean) => void;
   setBatchProgress: (current: number, total: number, processed: number, errors: number) => void;
   resetBatch: () => void;
+
+  // Settings
+  setConcurrencyLimit: (limit: number) => void;
 
   // Modal
   openHistorico: () => void;
@@ -118,6 +130,7 @@ export const useAnalysesStore = create<AnalysesState & AnalysesActions>((set, ge
   error: null,
   filters: initialFilters,
   batch: initialBatchState,
+  settings: DEFAULT_SETTINGS,
   isHistoricoOpen: false,
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -268,6 +281,15 @@ export const useAnalysesStore = create<AnalysesState & AnalysesActions>((set, ge
     })),
 
   resetBatch: () => set({ batch: initialBatchState }),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AÇÕES - SETTINGS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  setConcurrencyLimit: (limit) =>
+    set((state) => ({
+      settings: { ...state.settings, concurrencyLimit: Math.max(1, Math.min(10, limit)) },
+    })),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // AÇÕES - MODAL

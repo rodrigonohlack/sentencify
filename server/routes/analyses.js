@@ -9,6 +9,26 @@ import authMiddleware from '../middleware/auth.js';
 const router = express.Router();
 
 // ═══════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Parse JSON com fallback seguro para evitar crash em dados corrompidos */
+function safeJsonParse(jsonStr, fallback = []) {
+  if (!jsonStr) return fallback;
+  try {
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    console.error('[Analyses] JSON parse error:', e);
+    return fallback;
+  }
+}
+
+/** Valida formato de data YYYY-MM-DD */
+function isValidISODate(dateStr) {
+  return !dateStr || /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MIDDLEWARE
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -62,14 +82,14 @@ router.get('/', (req, res) => {
       id: a.id,
       numeroProcesso: a.numero_processo,
       reclamante: a.reclamante,
-      reclamadas: a.reclamadas ? JSON.parse(a.reclamadas) : [],
+      reclamadas: safeJsonParse(a.reclamadas, []),
       nomeArquivoPeticao: a.nome_arquivo_peticao,
       nomeArquivoContestacao: a.nome_arquivo_contestacao,
       dataPauta: a.data_pauta,
       horarioAudiencia: a.horario_audiencia,
       resultadoAudiencia: a.resultado_audiencia,
-      pendencias: a.pendencias ? JSON.parse(a.pendencias) : [],
-      resultado: JSON.parse(a.resultado),
+      pendencias: safeJsonParse(a.pendencias, []),
+      resultado: safeJsonParse(a.resultado, {}),
       createdAt: a.created_at,
       updatedAt: a.updated_at,
     }));
@@ -108,14 +128,14 @@ router.get('/:id', (req, res) => {
       id: analysis.id,
       numeroProcesso: analysis.numero_processo,
       reclamante: analysis.reclamante,
-      reclamadas: analysis.reclamadas ? JSON.parse(analysis.reclamadas) : [],
+      reclamadas: safeJsonParse(analysis.reclamadas, []),
       nomeArquivoPeticao: analysis.nome_arquivo_peticao,
       nomeArquivoContestacao: analysis.nome_arquivo_contestacao,
       dataPauta: analysis.data_pauta,
       horarioAudiencia: analysis.horario_audiencia,
       resultadoAudiencia: analysis.resultado_audiencia,
-      pendencias: analysis.pendencias ? JSON.parse(analysis.pendencias) : [],
-      resultado: JSON.parse(analysis.resultado),
+      pendencias: safeJsonParse(analysis.pendencias, []),
+      resultado: safeJsonParse(analysis.resultado, {}),
       createdAt: analysis.created_at,
       updatedAt: analysis.updated_at,
     });
@@ -143,6 +163,10 @@ router.post('/', (req, res) => {
 
     if (!resultado) {
       return res.status(400).json({ error: 'Resultado da análise é obrigatório' });
+    }
+
+    if (dataPauta && !isValidISODate(dataPauta)) {
+      return res.status(400).json({ error: 'dataPauta deve estar em formato YYYY-MM-DD' });
     }
 
     const id = uuidv4();
@@ -204,6 +228,10 @@ router.put('/:id', (req, res) => {
       pendencias,
     } = req.body;
 
+    if (dataPauta && !isValidISODate(dataPauta)) {
+      return res.status(400).json({ error: 'dataPauta deve estar em formato YYYY-MM-DD' });
+    }
+
     // Verificar se análise existe
     const existing = db.prepare(`
       SELECT id FROM analyses
@@ -259,8 +287,16 @@ router.put('/batch/data-pauta', (req, res) => {
       return res.status(400).json({ error: 'IDs são obrigatórios' });
     }
 
+    if (ids.length > 1000) {
+      return res.status(400).json({ error: 'Máximo 1000 análises por operação em lote' });
+    }
+
     if (!dataPauta) {
       return res.status(400).json({ error: 'Data da pauta é obrigatória' });
+    }
+
+    if (!isValidISODate(dataPauta)) {
+      return res.status(400).json({ error: 'dataPauta deve estar em formato YYYY-MM-DD' });
     }
 
     const now = new Date().toISOString();
@@ -323,6 +359,10 @@ router.delete('/batch', (req, res) => {
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: 'IDs são obrigatórios' });
+    }
+
+    if (ids.length > 1000) {
+      return res.status(400).json({ error: 'Máximo 1000 análises por operação em lote' });
     }
 
     const now = new Date().toISOString();
