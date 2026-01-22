@@ -46,6 +46,7 @@ __pycache__/
 
 playwright-report/
 test-results/
+coverage/
 
 # Local database
 data/
