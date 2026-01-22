@@ -86,8 +86,32 @@ export const useFileProcessing = () => {
     }
   }, [setPeticao, setContestacao]);
 
+  /**
+   * Extrai texto de um arquivo PDF sem armazenar no store
+   * Usado pelo BatchMode para processar múltiplos arquivos
+   */
+  const extractPDFText = useCallback(
+    async (file: File): Promise<{ text: string; base64?: string }> => {
+      if (!isValidPDF(file)) {
+        throw new Error('Arquivo inválido. Por favor, envie um PDF.');
+      }
+
+      const result = await extractTextFromPDF(file);
+
+      if (!result.text || result.text.trim().length < 100) {
+        throw new Error(
+          'Não foi possível extrair texto suficiente do PDF. O arquivo pode estar escaneado ou protegido.'
+        );
+      }
+
+      return result;
+    },
+    []
+  );
+
   return {
     processFile,
+    extractPDFText,
     removeFile,
     formatFileSize
   };

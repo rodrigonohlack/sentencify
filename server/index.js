@@ -29,6 +29,7 @@ import modelsRoutes from './routes/models.js';
 import syncRoutes from './routes/sync.js';
 import adminRoutes from './routes/admin.js';
 import shareRoutes from './routes/share.js';
+import analysesRoutes from './routes/analyses.js';
 import { initDatabase } from './db/database.js';
 
 // Inicializar banco de dados SQLite
@@ -172,6 +173,9 @@ app.use('/api/admin', adminRoutes);
 // Rotas de compartilhamento (v1.35.0)
 app.use('/api/share', shareRoutes);
 
+// Rotas de análises do Analisador de Prepauta (v1.39.0)
+app.use('/api/analyses', analysesRoutes);
+
 // Rotas de proxy para APIs de IA
 app.use('/api/claude', claudeRoutes);
 app.use('/api/gemini', geminiRoutes);
@@ -253,23 +257,24 @@ app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════════╗
   ║                                                       ║
-  ║   SentencifyAI Server v1.36.19                       ║
+  ║   SentencifyAI Server v1.39.0                        ║
   ║   ────────────────────────────────────────────────   ║
   ║   Backend:  http://localhost:${PORT}                   ║
   ║   Frontend: http://localhost:3000                    ║
   ║   Admin:    http://localhost:3000/admin              ║
   ║                                                       ║
   ║   APIs:                                              ║
-  ║   • Auth:    /api/auth + /api/auth/magic             ║
-  ║   • Admin:   /api/admin (emails autorizados)         ║
-  ║   • Share:   /api/share (compartilhamento)           ║
-  ║   • Models:  /api/models (CRUD)                      ║
-  ║   • Sync:    /api/sync (push/pull)                   ║
-  ║   • Claude:  /api/claude/messages                    ║
-  ║   • Gemini:  /api/gemini/generate                    ║
-  ║   • OpenAI:  /api/openai/chat                        ║
-  ║   • Grok:    /api/grok/chat                          ║
-  ║   • Health:  /api/health                             ║
+  ║   • Auth:     /api/auth + /api/auth/magic            ║
+  ║   • Admin:    /api/admin (emails autorizados)        ║
+  ║   • Share:    /api/share (compartilhamento)          ║
+  ║   • Models:   /api/models (CRUD)                     ║
+  ║   • Sync:     /api/sync (push/pull)                  ║
+  ║   • Analyses: /api/analyses (prepauta)               ║
+  ║   • Claude:   /api/claude/messages                   ║
+  ║   • Gemini:   /api/gemini/generate                   ║
+  ║   • OpenAI:   /api/openai/chat                       ║
+  ║   • Grok:     /api/grok/chat                         ║
+  ║   • Health:   /api/health                            ║
   ║                                                       ║
   ╚═══════════════════════════════════════════════════════╝
   `);

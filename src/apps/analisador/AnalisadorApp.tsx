@@ -1,176 +1,232 @@
 /**
  * @file AnalisadorApp.tsx
  * @description Componente principal do Analisador de Prepauta Trabalhista
+ * @version 1.39.0 - Redesign com batch mode only e histórico SQL
  */
 
-import React, { useState } from 'react';
-import { Play, RotateCcw, Key } from 'lucide-react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { History, Settings, LogOut, FileSearch, User, Scale } from 'lucide-react';
 
 // Layout
 import { Header } from './components/layout';
 
-// Upload
-import { UploadSection } from './components/upload';
+// Auth
+import { LoginGate, useLoginGate } from './components/auth/LoginGate';
 
-// Settings
-import { SettingsModal } from './components/settings';
+// Batch
+import { BatchMode } from './components/batch/BatchMode';
+
+// History
+import { HistoricoModal } from './components/history/HistoricoModal';
 
 // Results
 import { ResultsContainer } from './components/results';
 
+// Settings
+import { SettingsModal } from './components/settings';
+
 // UI
-import { Button, Card, CardContent, ProgressBar, ToastProvider, useToast } from './components/ui';
+import { Button, Card, CardContent, ToastProvider, useToast } from './components/ui';
 
 // Stores & Hooks
-import { useDocumentStore, useResultStore, useAIStore } from './stores';
-import { useAnalysis } from './hooks';
+import { useAnalysesStore, useResultStore } from './stores';
+import { useAnalysesAPI } from './hooks';
+import type { SavedAnalysis } from './types/analysis.types';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPONENTE DE CONTEÚDO (AUTENTICADO)
+// ═══════════════════════════════════════════════════════════════════════════
 
 const AnalisadorContent: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<SavedAnalysis | null>(null);
   const { showToast } = useToast();
 
+  // Auth
+  const { user, logout, userEmail } = useLoginGate();
+
   // Stores
-  const { peticao, contestacao, clearAll } = useDocumentStore();
-  const { isAnalyzing, progress, progressMessage, error, reset: resetResults } = useResultStore();
-  const apiKeys = useAIStore((s) => s.aiSettings.apiKeys);
-  const provider = useAIStore((s) => s.aiSettings.provider);
+  const { openHistorico, isHistoricoOpen, analyses } = useAnalysesStore();
+  const { result, setResult } = useResultStore();
 
-  // Hooks
-  const { analyze, canAnalyze } = useAnalysis();
+  // API
+  const { fetchAnalyses } = useAnalysesAPI();
 
-  const hasApiKey = !!apiKeys[provider];
+  // Fetch analyses on mount
+  useEffect(() => {
+    fetchAnalyses();
+  }, [fetchAnalyses]);
 
-  const handleAnalyze = async () => {
-    if (!hasApiKey) {
-      showToast('warning', 'Configure a API Key nas configurações antes de analisar.');
-      setSettingsOpen(true);
-      return;
-    }
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HANDLERS
+  // ═══════════════════════════════════════════════════════════════════════════
 
-    if (!canAnalyze) {
-      showToast('warning', 'Faça upload da petição inicial para analisar.');
-      return;
-    }
+  const handleOpenSettings = useCallback(() => {
+    setSettingsOpen(true);
+  }, []);
 
-    try {
-      await analyze();
-      showToast('success', 'Análise concluída com sucesso!');
-    } catch (err) {
-      showToast('error', err instanceof Error ? err.message : 'Erro ao realizar análise');
-    }
-  };
+  const handleCloseSettings = useCallback(() => {
+    setSettingsOpen(false);
+  }, []);
 
-  const handleReset = () => {
-    clearAll();
-    resetResults();
-    showToast('info', 'Documentos e resultados limpos.');
-  };
+  const handleOpenHistorico = useCallback(() => {
+    openHistorico();
+  }, [openHistorico]);
+
+  const handleSelectAnalysis = useCallback(
+    (analysis: SavedAnalysis) => {
+      setSelectedAnalysis(analysis);
+      setResult(analysis.resultado);
+      showToast('success', `Análise do processo ${analysis.numeroProcesso || 'carregada'}`);
+    },
+    [setResult, showToast]
+  );
+
+  const handleLogout = useCallback(async () => {
+    await logout();
+    showToast('info', 'Sessão encerrada');
+  }, [logout, showToast]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════════════════════════════════════
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
-      <Header onOpenSettings={() => setSettingsOpen(true)} />
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl">
+                <FileSearch className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                  Analisador de Prepauta
+                </h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Análise automatizada de processos trabalhistas
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              {/* History button */}
+              <Button
+                variant="secondary"
+                onClick={handleOpenHistorico}
+                icon={<History className="w-4 h-4" />}
+                className="relative"
+              >
+                Histórico
+                {analyses.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                    {analyses.length > 99 ? '99+' : analyses.length}
+                  </span>
+                )}
+              </Button>
+
+              {/* Settings button */}
+              <Button
+                variant="secondary"
+                onClick={handleOpenSettings}
+                icon={<Settings className="w-4 h-4" />}
+              >
+                Configurações
+              </Button>
+
+              {/* User menu */}
+              <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                  <User className="w-4 h-4 text-slate-400" />
+                  <span className="hidden sm:inline">{userEmail}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                  title="Sair"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Upload and Actions */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Upload Section */}
-            <UploadSection />
-
-            {/* Action Buttons */}
-            <Card>
-              <CardContent className="space-y-4">
-                {/* API Key Warning */}
-                {!hasApiKey && (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <Key className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-amber-800">API Key não configurada</p>
-                        <p className="text-sm text-amber-700 mt-1">
-                          Configure sua API Key nas configurações para usar a análise com IA.
-                        </p>
-                        <button
-                          onClick={() => setSettingsOpen(true)}
-                          className="text-sm text-amber-700 font-medium underline mt-2 hover:text-amber-800"
-                        >
-                          Abrir Configurações
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Progress Bar */}
-                {isAnalyzing && (
-                  <ProgressBar progress={progress} message={progressMessage} />
-                )}
-
-                {/* Error Message */}
-                {error && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-700">{error}</p>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleAnalyze}
-                    disabled={!canAnalyze || isAnalyzing || !hasApiKey}
-                    loading={isAnalyzing}
-                    icon={isAnalyzing ? undefined : <Play className="w-4 h-4" />}
-                    className="flex-1"
-                  >
-                    {isAnalyzing ? 'Analisando...' : 'Analisar'}
-                  </Button>
-
-                  <Button
-                    variant="secondary"
-                    onClick={handleReset}
-                    disabled={isAnalyzing}
-                    icon={<RotateCcw className="w-4 h-4" />}
-                  >
-                    Limpar
-                  </Button>
-                </div>
-
-                {/* Status Info */}
-                <div className="text-sm text-slate-500 text-center">
-                  {peticao?.status === 'ready' && contestacao?.status === 'ready' ? (
-                    <span>Petição e Contestação carregadas</span>
-                  ) : peticao?.status === 'ready' ? (
-                    <span>Apenas Petição carregada (análise parcial)</span>
-                  ) : (
-                    <span>Carregue a petição inicial para começar</span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-180px)]">
+          {/* Left Column - Batch Upload */}
+          <div className="flex flex-col">
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+              <span className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-sm font-bold">
+                1
+              </span>
+              Upload de Documentos
+            </h2>
+            <div className="flex-1 min-h-0">
+              <BatchMode />
+            </div>
           </div>
 
           {/* Right Column - Results */}
-          <div className="lg:col-span-2">
-            <ResultsContainer />
+          <div className="flex flex-col">
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+              <span className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-sm font-bold">
+                2
+              </span>
+              Resultado da Análise
+              {selectedAnalysis && (
+                <span className="ml-2 text-sm font-normal text-slate-500 dark:text-slate-400">
+                  ({selectedAnalysis.numeroProcesso || 'Processo não identificado'})
+                </span>
+              )}
+            </h2>
+            <div className="flex-1 min-h-0 overflow-auto">
+              <ResultsContainer />
+            </div>
           </div>
         </div>
       </main>
 
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-      />
+      {/* Footer */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 py-2">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2">
+              <Scale className="w-4 h-4" />
+              <a href="/" className="hover:text-indigo-500 transition-colors">
+                Voltar ao Sentencify
+              </a>
+            </div>
+            <div>
+              v1.39.0 • Analisador de Prepauta
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Modals */}
+      <SettingsModal isOpen={settingsOpen} onClose={handleCloseSettings} />
+      <HistoricoModal onSelectAnalysis={handleSelectAnalysis} />
     </div>
   );
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPONENTE PRINCIPAL COM AUTH
+// ═══════════════════════════════════════════════════════════════════════════
+
 const AnalisadorApp: React.FC = () => {
   return (
     <ToastProvider>
-      <AnalisadorContent />
+      <LoginGate>
+        <AnalisadorContent />
+      </LoginGate>
     </ToastProvider>
   );
 };

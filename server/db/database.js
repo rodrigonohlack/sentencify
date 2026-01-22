@@ -53,6 +53,7 @@ const runMigrations = () => {
     { name: '002_allowed_emails', fn: migration002AllowedEmails },
     { name: '003_library_sharing', fn: migration003LibrarySharing },
     { name: '004_share_recipient_email', fn: migration004ShareRecipientEmail },
+    { name: '005_analyses', fn: migration005Analyses },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -216,6 +217,38 @@ function migration004ShareRecipientEmail(db) {
     -- v1.35.1: Adicionar email do destinatário para convite direto
     -- ═══════════════════════════════════════════════════════════════
     ALTER TABLE library_shares ADD COLUMN recipient_email TEXT;
+  `);
+}
+
+// Migration 005: Tabela de análises do Analisador de Prepauta
+function migration005Analyses(db) {
+  db.exec(`
+    -- ═══════════════════════════════════════════════════════════════
+    -- TABELA: analyses
+    -- Análises de prepauta trabalhista (batch mode)
+    -- ═══════════════════════════════════════════════════════════════
+    CREATE TABLE IF NOT EXISTS analyses (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      numero_processo TEXT,
+      reclamante TEXT,
+      reclamadas TEXT,
+      nome_arquivo_peticao TEXT,
+      nome_arquivo_contestacao TEXT,
+      data_pauta TEXT,
+      horario_audiencia TEXT,
+      resultado_audiencia TEXT,
+      pendencias TEXT,
+      resultado TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      deleted_at TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_analyses_user ON analyses(user_id);
+    CREATE INDEX IF NOT EXISTS idx_analyses_data_pauta ON analyses(data_pauta);
+    CREATE INDEX IF NOT EXISTS idx_analyses_processo ON analyses(numero_processo);
+    CREATE INDEX IF NOT EXISTS idx_analyses_deleted ON analyses(deleted_at);
   `);
 }
 

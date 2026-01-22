@@ -163,3 +163,89 @@ export interface AnalysisState {
   progressMessage: string;
   error: string | null;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TIPOS PARA HISTÓRICO E BATCH MODE
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Resultado possível de uma audiência */
+export type ResultadoAudiencia =
+  | 'pendente'
+  | 'acordou'
+  | 'desistiu'
+  | 'arquivado'
+  | 'adiado'
+  | 'instrucao'
+  | 'sentenciado';
+
+/** Análise salva no banco de dados */
+export interface SavedAnalysis {
+  id: string;
+  numeroProcesso: string | null;
+  reclamante: string | null;
+  reclamadas: string[];
+  nomeArquivoPeticao: string | null;
+  nomeArquivoContestacao: string | null;
+  dataPauta: string | null;
+  horarioAudiencia: string | null;
+  resultadoAudiencia: ResultadoAudiencia | null;
+  pendencias: string[];
+  resultado: AnalysisResult;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Item de pendência */
+export interface Pendencia {
+  id: string;
+  texto: string;
+  concluida: boolean;
+}
+
+/** Filtros do histórico */
+export interface HistoricoFilters {
+  search: string;
+  resultado: ResultadoAudiencia | 'todos';
+  dataPauta: string | null;
+}
+
+/** Estado do batch processing */
+export interface BatchState {
+  files: BatchFile[];
+  isProcessing: boolean;
+  currentIndex: number;
+  totalFiles: number;
+  processedCount: number;
+  errorCount: number;
+}
+
+/** Arquivo no batch */
+export interface BatchFile {
+  id: string;
+  file: File;
+  tipo: 'peticao' | 'contestacao';
+  numeroProcesso: string | null;
+  status: 'pending' | 'processing' | 'success' | 'error';
+  error?: string;
+  matchedWith?: string;
+}
+
+/** Par de arquivos para análise */
+export interface BatchPair {
+  peticao: BatchFile;
+  contestacao?: BatchFile;
+}
+
+/** Resultado do batch processing */
+export interface BatchResult {
+  success: boolean;
+  analysisId?: string;
+  error?: string;
+  pair: BatchPair;
+}
+
+/** Agrupamento por data da pauta */
+export interface PautaGroup {
+  dataPauta: string;
+  analyses: SavedAnalysis[];
+}

@@ -108,8 +108,34 @@ export const useAnalysis = () => {
     }
   }, [peticao, contestacao, callAI, setResult, setIsAnalyzing, setProgress, setError, reset]);
 
+  /**
+   * Analisa textos de petição e contestação diretamente (sem usar o store)
+   * Usado pelo BatchMode para processar múltiplos arquivos
+   */
+  const analyzeWithAI = useCallback(
+    async (peticaoText: string, contestacaoText: string | null): Promise<AnalysisResult | null> => {
+      try {
+        const userPrompt = buildAnalysisPrompt(peticaoText, contestacaoText || undefined);
+
+        const messages: AIMessage[] = [{ role: 'user', content: userPrompt }];
+
+        const response = await callAI(messages, {
+          maxTokens: 16000,
+          systemPrompt: ANALYSIS_SYSTEM_PROMPT,
+        });
+
+        return parseAnalysisResult(response);
+      } catch (error) {
+        console.error('Erro na análise com IA:', error);
+        return null;
+      }
+    },
+    [callAI]
+  );
+
   return {
     analyze,
+    analyzeWithAI,
     canAnalyze: peticao?.status === 'ready',
     hasContestacao: contestacao?.status === 'ready'
   };
