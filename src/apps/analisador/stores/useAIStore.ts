@@ -137,9 +137,25 @@ export const useAIStore = create<AIStoreState>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           try {
-            const saved = localStorage.getItem('analisador-prepauta-api-keys');
-            if (saved) {
-              const apiKeys = JSON.parse(saved);
+            // 1. Tentar ler keys do Analisador
+            let apiKeys = null;
+            const analisadorKeys = localStorage.getItem('analisador-prepauta-api-keys');
+            if (analisadorKeys) {
+              apiKeys = JSON.parse(analisadorKeys);
+            }
+
+            // 2. Fallback: ler do Sentencify se Analisador não tem keys configuradas
+            if (!apiKeys || !Object.values(apiKeys).some(k => k)) {
+              const sentencifySettings = localStorage.getItem('sentencify-ai-settings');
+              if (sentencifySettings) {
+                const parsed = JSON.parse(sentencifySettings);
+                if (parsed.apiKeys) {
+                  apiKeys = parsed.apiKeys;
+                }
+              }
+            }
+
+            if (apiKeys) {
               state.aiSettings.apiKeys = apiKeys;
             }
           } catch (err) {
