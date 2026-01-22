@@ -97,6 +97,20 @@ export interface UseAnalysesAPIReturn {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Extrai número CNJ do nome do arquivo (formato: [NNNNNNN-DD.AAAA.D.DD.DDDD]) */
+function extractNumeroFromFilename(filename?: string): string | null {
+  if (!filename) return null;
+  const bracketMatch = filename.match(/\[(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\]/);
+  if (bracketMatch) return bracketMatch[1];
+  const cnjMatch = filename.match(/(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/);
+  if (cnjMatch) return cnjMatch[1];
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // HOOK
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -241,7 +255,9 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
         // Criar objeto SavedAnalysis para adicionar ao store
         const newAnalysis: SavedAnalysis = {
           id: data.id,
-          numeroProcesso: params.resultado.identificacao?.numeroProcesso || null,
+          numeroProcesso: params.resultado.identificacao?.numeroProcesso
+            || extractNumeroFromFilename(params.nomeArquivoPeticao)
+            || null,
           reclamante: params.resultado.identificacao?.reclamantes?.[0] || null,
           reclamadas: params.resultado.identificacao?.reclamadas || [],
           nomeArquivoPeticao: params.nomeArquivoPeticao || null,

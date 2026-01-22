@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { History, Settings, LogOut, FileSearch } from 'lucide-react';
+import { History, Settings, LogOut, FileSearch, ArrowLeft } from 'lucide-react';
 
 // Auth
 import { LoginGate, useLoginGate } from './components/auth/LoginGate';
@@ -16,6 +16,9 @@ import { BatchMode } from './components/batch/BatchMode';
 // History
 import { HistoricoModal } from './components/history/HistoricoModal';
 
+// Results
+import { ResultsContainer } from './components/results';
+
 // Settings
 import { SettingsModal } from './components/settings';
 
@@ -23,7 +26,7 @@ import { SettingsModal } from './components/settings';
 import { Button, ToastProvider, useToast } from './components/ui';
 
 // Stores & Hooks
-import { useAnalysesStore } from './stores';
+import { useAnalysesStore, useResultStore } from './stores';
 import { useAnalysesAPI } from './hooks';
 import type { SavedAnalysis } from './types/analysis.types';
 
@@ -40,6 +43,7 @@ const AnalisadorContent: React.FC = () => {
 
   // Stores
   const { openHistorico, analyses } = useAnalysesStore();
+  const { result, setResult, reset: resetResult } = useResultStore();
 
   // API
   const { fetchAnalyses } = useAnalysesAPI();
@@ -67,10 +71,14 @@ const AnalisadorContent: React.FC = () => {
 
   const handleSelectAnalysis = useCallback(
     (analysis: SavedAnalysis) => {
-      showToast('success', `Análise do processo ${analysis.numeroProcesso || 'carregada'}`);
+      setResult(analysis.resultado);
     },
-    [showToast]
+    [setResult]
   );
+
+  const handleVoltar = useCallback(() => {
+    resetResult();
+  }, [resetResult]);
 
   const handleLogout = useCallback(async () => {
     await logout();
@@ -101,39 +109,57 @@ const AnalisadorContent: React.FC = () => {
         </button>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-8">
-        {/* Header centralizado */}
-        <div className="text-center mb-6">
-          <div className="inline-flex p-3 bg-indigo-600 rounded-2xl mb-4 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30">
-            <FileSearch className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-            Análise em Lote
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
-            Arraste múltiplos arquivos de uma vez — o sistema agrupa automaticamente por processo
-          </p>
-        </div>
+      <div className={`mx-auto px-6 py-8 ${result ? 'max-w-5xl' : 'max-w-3xl'}`}>
+        {result ? (
+          <>
+            {/* Voltar button + ResultsContainer */}
+            <div className="mb-4">
+              <Button
+                variant="secondary"
+                onClick={handleVoltar}
+                icon={<ArrowLeft className="w-4 h-4" />}
+              >
+                Voltar
+              </Button>
+            </div>
+            <ResultsContainer />
+          </>
+        ) : (
+          <>
+            {/* Header centralizado */}
+            <div className="text-center mb-6">
+              <div className="inline-flex p-3 bg-indigo-600 rounded-2xl mb-4 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30">
+                <FileSearch className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                Análise em Lote
+              </h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+                Arraste múltiplos arquivos de uma vez — o sistema agrupa automaticamente por processo
+              </p>
+            </div>
 
-        {/* Botão Histórico */}
-        <div className="text-center mb-8">
-          <Button
-            variant="secondary"
-            onClick={handleOpenHistorico}
-            icon={<History className="w-4 h-4" />}
-            className="relative"
-          >
-            Ver Análises Salvas
-            {analyses.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
-                {analyses.length > 99 ? '99+' : analyses.length}
-              </span>
-            )}
-          </Button>
-        </div>
+            {/* Botão Histórico */}
+            <div className="text-center mb-8">
+              <Button
+                variant="secondary"
+                onClick={handleOpenHistorico}
+                icon={<History className="w-4 h-4" />}
+                className="relative"
+              >
+                Ver Análises Salvas
+                {analyses.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                    {analyses.length > 99 ? '99+' : analyses.length}
+                  </span>
+                )}
+              </Button>
+            </div>
 
-        {/* Batch Mode */}
-        <BatchMode />
+            {/* Batch Mode */}
+            <BatchMode />
+          </>
+        )}
       </div>
 
       {/* Modals */}

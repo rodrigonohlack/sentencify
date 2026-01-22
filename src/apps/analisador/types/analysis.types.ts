@@ -170,13 +170,18 @@ export interface AnalysisState {
 
 /** Resultado possível de uma audiência */
 export type ResultadoAudiencia =
-  | 'pendente'
-  | 'acordou'
-  | 'desistiu'
-  | 'arquivado'
-  | 'adiado'
-  | 'instrucao'
-  | 'sentenciado';
+  | 'acordo'
+  | 'sentenca'
+  | 'sentenca_marcada'
+  | 'audiencia_encerramento'
+  | 'adiamento'
+  | 'redesignada_notificacao'
+  | 'cancelada'
+  | 'desistencia'
+  | 'arquivamento'
+  | 'instrucao_encerrada'
+  | 'aguardando_pericia'
+  | 'suspenso';
 
 /** Análise salva no banco de dados */
 export interface SavedAnalysis {

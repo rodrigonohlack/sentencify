@@ -8,8 +8,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   History,
   Search,
-  Filter,
   Calendar,
+  CalendarPlus,
   Clock,
   Trash2,
   CheckSquare,
@@ -18,13 +18,8 @@ import {
   ChevronRight,
   User,
   Building2,
-  FileText,
-  AlertCircle,
-  CheckCircle,
   Loader2,
   X,
-  Edit3,
-  Save,
 } from 'lucide-react';
 import { Modal, Button } from '../ui';
 import { useAnalysesStore } from '../../stores';
@@ -41,25 +36,49 @@ import type {
 
 const RESULTADO_OPTIONS: { value: ResultadoAudiencia | 'todos'; label: string }[] = [
   { value: 'todos', label: 'Todos' },
-  { value: 'pendente', label: 'Pendente' },
-  { value: 'acordou', label: 'Acordo' },
-  { value: 'desistiu', label: 'Desistência' },
-  { value: 'arquivado', label: 'Arquivado' },
-  { value: 'adiado', label: 'Adiado' },
-  { value: 'instrucao', label: 'Instrução' },
-  { value: 'sentenciado', label: 'Sentenciado' },
+  { value: 'acordo', label: 'Acordo' },
+  { value: 'sentenca', label: 'Sentença' },
+  { value: 'sentenca_marcada', label: 'Sentença marcada' },
+  { value: 'audiencia_encerramento', label: 'Aud. encerramento' },
+  { value: 'adiamento', label: 'Adiamento' },
+  { value: 'redesignada_notificacao', label: 'Redesignada c/ notificação' },
+  { value: 'cancelada', label: 'Cancelada' },
+  { value: 'desistencia', label: 'Desistência' },
+  { value: 'arquivamento', label: 'Arquivamento' },
+  { value: 'instrucao_encerrada', label: 'Instrução encerrada' },
+  { value: 'aguardando_pericia', label: 'Aguardando perícia' },
+  { value: 'suspenso', label: 'Suspenso' },
 ];
 
 const RESULTADO_COLORS: Record<ResultadoAudiencia | 'null', string> = {
-  pendente: 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300',
-  acordou: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
-  desistiu: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
-  arquivado: 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300',
-  adiado: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
-  instrucao: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
-  sentenciado: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
+  acordo: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
+  sentenca: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
+  sentenca_marcada: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300',
+  audiencia_encerramento: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+  adiamento: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
+  redesignada_notificacao: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+  cancelada: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
+  desistencia: 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300',
+  arquivamento: 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300',
+  instrucao_encerrada: 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300',
+  aguardando_pericia: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300',
+  suspenso: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
   null: 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400',
 };
+
+const PENDENCIAS_OPCOES = [
+  { value: 'razoes_finais', label: 'Razões finais' },
+  { value: 'transcrever_audiencia', label: 'Transcrever audiência' },
+  { value: 'prova_determinada', label: 'Prova determinada' },
+  { value: 'pericia', label: 'Perícia' },
+  { value: 'carta_precatoria', label: 'Carta precatória' },
+  { value: 'juntada_docs', label: 'Juntada de documentos' },
+  { value: 'manifestacao_parte', label: 'Manifestação da parte' },
+  { value: 'calculo_liquidacao', label: 'Cálculo de liquidação' },
+  { value: 'aguardando_transito', label: 'Aguardando trânsito' },
+  { value: 'intimacao_testemunha', label: 'Intimação de testemunha' },
+  { value: 'outra', label: 'Outra pendência' },
+] as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -80,6 +99,25 @@ const formatShortDate = (dateStr: string | null): string => {
   if (!dateStr) return '—';
   const date = new Date(dateStr);
   return date.toLocaleDateString('pt-BR');
+};
+
+/** Extrai número do processo do campo ou do nome do arquivo */
+const getNumeroProcesso = (analysis: SavedAnalysis): string | null => {
+  if (analysis.numeroProcesso) return analysis.numeroProcesso;
+  if (analysis.nomeArquivoPeticao) {
+    const match = analysis.nomeArquivoPeticao.match(/\[(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\]/);
+    if (match) return match[1];
+    const cnjMatch = analysis.nomeArquivoPeticao.match(/(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/);
+    if (cnjMatch) return cnjMatch[1];
+  }
+  return null;
+};
+
+/** Retorna label legível para o resultado */
+const getResultadoLabel = (resultado: ResultadoAudiencia | null): string => {
+  if (!resultado) return 'Sem resultado';
+  const opt = RESULTADO_OPTIONS.find((o) => o.value === resultado);
+  return opt?.label || resultado;
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -103,28 +141,34 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
   onView,
   onUpdate,
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editHorario, setEditHorario] = useState(analysis.horarioAudiencia || '');
-  const [editResultado, setEditResultado] = useState<ResultadoAudiencia | ''>(
-    analysis.resultadoAudiencia || ''
+  const numeroProcesso = getNumeroProcesso(analysis);
+  const resultadoColor = RESULTADO_COLORS[analysis.resultadoAudiencia || 'null'];
+
+  const handleHorarioChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate(analysis.id, { horarioAudiencia: e.target.value || null });
+    },
+    [analysis.id, onUpdate]
   );
 
-  const handleSave = useCallback(() => {
-    onUpdate(analysis.id, {
-      horarioAudiencia: editHorario || null,
-      resultadoAudiencia: (editResultado as ResultadoAudiencia) || null,
-    });
-    setIsEditing(false);
-  }, [analysis.id, editHorario, editResultado, onUpdate]);
+  const handleResultadoChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value as ResultadoAudiencia | '';
+      onUpdate(analysis.id, { resultadoAudiencia: value || null });
+    },
+    [analysis.id, onUpdate]
+  );
 
-  const handleCancel = useCallback(() => {
-    setEditHorario(analysis.horarioAudiencia || '');
-    setEditResultado(analysis.resultadoAudiencia || '');
-    setIsEditing(false);
-  }, [analysis.horarioAudiencia, analysis.resultadoAudiencia]);
-
-  const resultadoColor =
-    RESULTADO_COLORS[analysis.resultadoAudiencia || 'null'];
+  const handleTogglePendencia = useCallback(
+    (pendenciaValue: string) => {
+      const current = analysis.pendencias || [];
+      const updated = current.includes(pendenciaValue)
+        ? current.filter((p) => p !== pendenciaValue)
+        : [...current, pendenciaValue];
+      onUpdate(analysis.id, { pendencias: updated });
+    },
+    [analysis.id, analysis.pendencias, onUpdate]
+  );
 
   return (
     <div
@@ -153,14 +197,15 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Header */}
+          {/* Header row: processo + reclamante */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex-1 min-w-0">
               <h4
                 className="font-semibold text-slate-800 dark:text-slate-100 truncate cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
                 onClick={() => onView(analysis)}
+                title="Clique para abrir análise"
               >
-                {analysis.numeroProcesso || 'Processo não identificado'}
+                {numeroProcesso || 'Processo não identificado'}
               </h4>
               <div className="flex items-center gap-2 mt-1">
                 <User className="w-3 h-3 text-slate-400" />
@@ -177,87 +222,63 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
                 </div>
               )}
             </div>
-
-            {/* Resultado badge */}
-            <span
-              className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${resultadoColor}`}
-            >
-              {analysis.resultadoAudiencia || 'Pendente'}
-            </span>
           </div>
 
-          {/* Edit mode */}
-          {isEditing ? (
-            <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-                    Horário
-                  </label>
-                  <input
-                    type="time"
-                    value={editHorario}
-                    onChange={(e) => setEditHorario(e.target.value)}
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-                    Resultado
-                  </label>
-                  <select
-                    value={editResultado}
-                    onChange={(e) =>
-                      setEditResultado(e.target.value as ResultadoAudiencia | '')
-                    }
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100"
+          {/* Inline controls row */}
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {/* Horário input */}
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-slate-400" />
+              <input
+                type="time"
+                value={analysis.horarioAudiencia || ''}
+                onChange={handleHorarioChange}
+                className="px-2 py-1 text-sm border border-slate-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-[110px]"
+              />
+            </div>
+
+            {/* Resultado select */}
+            <select
+              value={analysis.resultadoAudiencia || ''}
+              onChange={handleResultadoChange}
+              className={`px-2 py-1 text-sm border rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${
+                analysis.resultadoAudiencia
+                  ? resultadoColor + ' border-transparent'
+                  : 'border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              <option value="">Sem resultado</option>
+              {RESULTADO_OPTIONS.filter((o) => o.value !== 'todos').map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Pendências pills */}
+          <div className="mt-3">
+            <div className="flex flex-wrap gap-1.5">
+              {PENDENCIAS_OPCOES.map((pend) => {
+                const isActive = (analysis.pendencias || []).includes(pend.value);
+                return (
+                  <button
+                    key={pend.value}
+                    onClick={() => handleTogglePendencia(pend.value)}
+                    className={`
+                      px-2.5 py-1 text-xs rounded-full border transition-all
+                      ${isActive
+                        ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700 font-medium'
+                        : 'bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
+                      }
+                    `}
                   >
-                    <option value="">Selecionar...</option>
-                    {RESULTADO_OPTIONS.filter((o) => o.value !== 'todos').map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={handleCancel}
-                  className="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-md transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="px-3 py-1.5 text-sm bg-indigo-500 text-white hover:bg-indigo-600 rounded-md transition-colors flex items-center gap-1"
-                >
-                  <Save className="w-3 h-3" />
-                  Salvar
-                </button>
-              </div>
+                    {pend.label}
+                  </button>
+                );
+              })}
             </div>
-          ) : (
-            /* View mode */
-            <div className="flex items-center gap-4 mt-2 text-sm">
-              {analysis.horarioAudiencia && (
-                <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                  <Clock className="w-3 h-3" />
-                  {analysis.horarioAudiencia}
-                </div>
-              )}
-              <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                <FileText className="w-3 h-3" />
-                {analysis.nomeArquivoPeticao || 'Arquivo não salvo'}
-              </div>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="ml-auto text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
-              >
-                <Edit3 className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
@@ -350,12 +371,13 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
   } = useAnalysesStore();
 
   // API
-  const { fetchAnalyses, updateAnalysis, deleteBatch } = useAnalysesAPI();
+  const { fetchAnalyses, updateAnalysis, updateBatchDataPauta, deleteBatch } = useAnalysesAPI();
 
   // Local state
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [dataPautaFilter, setDataPautaFilter] = useState('');
+  const [dataPautaSelecionada, setDataPautaSelecionada] = useState('');
 
   // Fetch analyses on open
   useEffect(() => {
@@ -429,6 +451,23 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
     clearSelection();
     setIsSelectionMode(false);
   }, [selectedIds, deleteBatch, clearSelection]);
+
+  const handleSetPautaHoje = useCallback(() => {
+    const today = new Date().toISOString().split('T')[0];
+    setDataPautaSelecionada(today);
+  }, []);
+
+  const handleAplicarPauta = useCallback(async () => {
+    if (selectedIds.size === 0 || !dataPautaSelecionada) return;
+    await updateBatchDataPauta(Array.from(selectedIds), dataPautaSelecionada);
+    setDataPautaSelecionada('');
+  }, [selectedIds, dataPautaSelecionada, updateBatchDataPauta]);
+
+  const handleRemoverPauta = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    await updateBatchDataPauta(Array.from(selectedIds), '');
+    setDataPautaSelecionada('');
+  }, [selectedIds, updateBatchDataPauta]);
 
   const handleView = useCallback(
     (analysis: SavedAnalysis) => {
@@ -528,36 +567,72 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
 
         {/* Selection toolbar */}
         {isSelectionMode && (
-          <div className="flex items-center justify-between py-3 px-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg mt-3">
-            <div className="flex items-center gap-3">
+          <div className="py-3 px-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg mt-3 space-y-3">
+            {/* Top row: select controls + count + delete */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSelectAll}
+                  className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                >
+                  Selecionar todos
+                </button>
+                <button
+                  onClick={clearSelection}
+                  className="text-sm text-slate-600 dark:text-slate-400 hover:underline"
+                >
+                  Limpar seleção
+                </button>
+                <span className="text-sm text-slate-500 dark:text-slate-400">
+                  {selectedIds.size} selecionado{selectedIds.size !== 1 ? 's' : ''}
+                </span>
+              </div>
               <button
-                onClick={handleSelectAll}
-                className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                onClick={handleDeleteSelected}
+                disabled={selectedIds.size === 0 || isDeleting}
+                className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Selecionar todos
+                {isDeleting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                Excluir
               </button>
-              <button
-                onClick={clearSelection}
-                className="text-sm text-slate-600 dark:text-slate-400 hover:underline"
-              >
-                Limpar seleção
-              </button>
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                {selectedIds.size} selecionado{selectedIds.size !== 1 ? 's' : ''}
-              </span>
             </div>
-            <button
-              onClick={handleDeleteSelected}
-              disabled={selectedIds.size === 0 || isDeleting}
-              className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isDeleting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-              Excluir
-            </button>
+
+            {/* Bottom row: Definir Pauta */}
+            <div className="flex items-center gap-2 pt-2 border-t border-indigo-100 dark:border-indigo-800/40">
+              <CalendarPlus className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Pauta:</span>
+              <button
+                onClick={handleSetPautaHoje}
+                className="px-2.5 py-1 text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-md text-slate-600 dark:text-slate-300 hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
+              >
+                Hoje
+              </button>
+              <input
+                type="date"
+                value={dataPautaSelecionada}
+                onChange={(e) => setDataPautaSelecionada(e.target.value)}
+                className="px-2 py-1 text-sm border border-slate-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-1 focus:ring-indigo-500"
+              />
+              <button
+                onClick={handleAplicarPauta}
+                disabled={selectedIds.size === 0 || !dataPautaSelecionada}
+                className="px-2.5 py-1 text-xs bg-indigo-500 hover:bg-indigo-600 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Aplicar
+              </button>
+              <button
+                onClick={handleRemoverPauta}
+                disabled={selectedIds.size === 0}
+                className="px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 border border-slate-200 dark:border-slate-600 rounded-md hover:border-red-300 dark:hover:border-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <X className="w-3 h-3 inline mr-0.5" />
+                Remover
+              </button>
+            </div>
           </div>
         )}
 
