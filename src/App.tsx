@@ -55,6 +55,9 @@ import { APP_VERSION } from './constants/app-version';
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
 import AdminPanel from './components/AdminPanel';
 
+// v1.38.0: Analisador de Prepauta - Rota /analise
+import { AnalisadorApp } from './apps/analisador';
+
 // v1.35.30: Modal de curadoria de tópicos pré-geração
 import TopicCurationModal from './components/TopicCurationModal';
 
@@ -4701,6 +4704,11 @@ const SentencifyAI = () => {
   // v1.34.4: Rota /admin abre painel de administração
   if (window.location.pathname === '/admin') {
     return <AdminPanel />;
+  }
+
+  // v1.38.0: Rota /analise abre Analisador de Prepauta
+  if (window.location.pathname.startsWith('/analise')) {
+    return <AnalisadorApp />;
   }
 
   // v1.35.0: Rota /share/:token abre página de aceite de compartilhamento
