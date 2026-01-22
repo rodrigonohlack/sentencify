@@ -86,7 +86,7 @@ const PENDENCIAS_OPCOES = [
 
 const formatDate = (dateStr: string | null): string => {
   if (!dateStr) return 'Sem data';
-  const date = new Date(dateStr);
+  const date = new Date(dateStr + 'T12:00:00');
   return date.toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: '2-digit',
@@ -97,7 +97,7 @@ const formatDate = (dateStr: string | null): string => {
 
 const formatShortDate = (dateStr: string | null): string => {
   if (!dateStr) return '—';
-  const date = new Date(dateStr);
+  const date = new Date(dateStr + 'T12:00:00');
   return date.toLocaleDateString('pt-BR');
 };
 
@@ -144,12 +144,18 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
   const numeroProcesso = getNumeroProcesso(analysis);
   const resultadoColor = RESULTADO_COLORS[analysis.resultadoAudiencia || 'null'];
 
-  const handleHorarioChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      onUpdate(analysis.id, { horarioAudiencia: e.target.value || null });
-    },
-    [analysis.id, onUpdate]
-  );
+  // Local state para o horário (evita API call a cada keystroke)
+  const [localHorario, setLocalHorario] = useState(analysis.horarioAudiencia || '');
+
+  useEffect(() => {
+    setLocalHorario(analysis.horarioAudiencia || '');
+  }, [analysis.horarioAudiencia]);
+
+  const handleHorarioBlur = useCallback(() => {
+    if (localHorario !== (analysis.horarioAudiencia || '')) {
+      onUpdate(analysis.id, { horarioAudiencia: localHorario || null });
+    }
+  }, [analysis.id, analysis.horarioAudiencia, localHorario, onUpdate]);
 
   const handleResultadoChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -231,8 +237,9 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
               <Clock className="w-3.5 h-3.5 text-slate-400" />
               <input
                 type="time"
-                value={analysis.horarioAudiencia || ''}
-                onChange={handleHorarioChange}
+                value={localHorario}
+                onChange={(e) => setLocalHorario(e.target.value)}
+                onBlur={handleHorarioBlur}
                 className="px-2 py-1 text-sm border border-slate-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-[110px]"
               />
             </div>
@@ -453,7 +460,8 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
   }, [selectedIds, deleteBatch, clearSelection]);
 
   const handleSetPautaHoje = useCallback(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     setDataPautaSelecionada(today);
   }, []);
 
@@ -480,8 +488,8 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
   );
 
   const handleUpdate = useCallback(
-    async (id: string, updates: Partial<SavedAnalysis>) => {
-      await updateAnalysis(id, {
+    (id: string, updates: Partial<SavedAnalysis>) => {
+      updateAnalysis(id, {
         horarioAudiencia: updates.horarioAudiencia ?? undefined,
         resultadoAudiencia: updates.resultadoAudiencia ?? undefined,
         pendencias: updates.pendencias ?? undefined,

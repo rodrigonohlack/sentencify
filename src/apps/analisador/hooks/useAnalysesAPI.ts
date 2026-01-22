@@ -303,6 +303,15 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
 
       setError(null);
 
+      // Optimistic: atualiza store imediatamente
+      const optimisticUpdate = {
+        ...(params.dataPauta !== undefined && { dataPauta: params.dataPauta }),
+        ...(params.horarioAudiencia !== undefined && { horarioAudiencia: params.horarioAudiencia }),
+        ...(params.resultadoAudiencia !== undefined && { resultadoAudiencia: params.resultadoAudiencia }),
+        ...(params.pendencias !== undefined && { pendencias: params.pendencias }),
+      };
+      updateStoreAnalysis(id, optimisticUpdate);
+
       try {
         const res = await authFetch(`${API_BASE}/${id}`, {
           method: 'PUT',
@@ -315,22 +324,16 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
           throw new Error(data.error || 'Erro ao atualizar análise');
         }
 
-        // Atualizar no store
-        updateStoreAnalysis(id, {
-          ...(params.dataPauta !== undefined && { dataPauta: params.dataPauta }),
-          ...(params.horarioAudiencia !== undefined && { horarioAudiencia: params.horarioAudiencia }),
-          ...(params.resultadoAudiencia !== undefined && { resultadoAudiencia: params.resultadoAudiencia }),
-          ...(params.pendencias !== undefined && { pendencias: params.pendencias }),
-        });
-
         return true;
       } catch (err) {
+        // Rollback: refetch para restaurar estado real
+        fetchAnalyses();
         const message = err instanceof Error ? err.message : 'Erro desconhecido';
         setError(message);
         return false;
       }
     },
-    [isAuthenticated, authFetch, updateStoreAnalysis, setError]
+    [isAuthenticated, authFetch, updateStoreAnalysis, setError, fetchAnalyses]
   );
 
   // ═══════════════════════════════════════════════════════════════════════════
