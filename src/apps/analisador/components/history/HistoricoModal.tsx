@@ -713,7 +713,7 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
         }
       >
         <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
-          {selectedIds.size} análise{selectedIds.size !== 1 ? 's' : ''} será{selectedIds.size !== 1 ? 'ão' : ''} excluída{selectedIds.size !== 1 ? 's' : ''} permanentemente.
+          {selectedIds.size} análise{selectedIds.size !== 1 ? 's' : ''} ser{selectedIds.size !== 1 ? 'ão' : 'á'} excluída{selectedIds.size !== 1 ? 's' : ''} permanentemente.
         </div>
       </Modal>
     </Modal>
