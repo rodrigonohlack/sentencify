@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.41', feature: 'Fix caches IndexedDB de projetos anteriores persistindo: importProject e clearProject agora limpam chat-history, facts-comparison, sentence-review e versions antes de carregar novo projeto' },
   { version: '1.38.40', feature: 'Fix batch analysis: stagger delay 1.5s entre requests concorrentes (evita respostas truncadas) + retry automático (max 2x) quando parsing da resposta IA falha' },
   { version: '1.38.39', feature: 'Fix API keys não persistindo em F5: setAiSettings agora detecta mudanças em apiKeys e persiste em sentencify-ai-settings (ConfigModal usava setAiSettings que bypassava a persistência)' },
   { version: '1.38.38', feature: 'Fix CSP para modelos HuggingFace (adiciona cas-bridge.xethub.hf.co) + Quick Prompts não carregando na primeira visita (fallback para defaults no onRehydrateStorage)' },

@@ -14,6 +14,7 @@ import { APP_VERSION } from '../constants/app-version';
 import { openFactsDB, FACTS_STORE_NAME } from './useFactsComparisonCache';
 import { openReviewDB, REVIEW_STORE_NAME } from './useSentenceReviewCache';
 import { openChatDB, CHAT_STORE_NAME, type ChatExportEntry } from './useChatHistoryCache';
+import { openVersionDB, VERSION_STORE } from './useFieldVersioning';
 import { stripInlineColors } from '../utils/color-stripper';
 import type {
   SessionState,
@@ -1005,6 +1006,26 @@ export function useLocalStorage(): UseLocalStorageReturn {
       // Ignore
     }
 
+    // Limpar caches project-specific do projeto anterior
+    const clearStore = async (openDb: () => Promise<IDBDatabase>, storeName: string) => {
+      try {
+        const db = await openDb();
+        const tx = db.transaction(storeName, 'readwrite');
+        tx.objectStore(storeName).clear();
+        await new Promise<void>((resolve) => {
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        });
+        db.close();
+      } catch { /* ignore */ }
+    };
+    await Promise.all([
+      clearStore(openChatDB, CHAT_STORE_NAME),
+      clearStore(openFactsDB, FACTS_STORE_NAME),
+      clearStore(openReviewDB, REVIEW_STORE_NAME),
+      clearStore(openVersionDB, VERSION_STORE),
+    ]);
+
     // Migração de projetos antigos (formato singular → plural)
     if (project.pastedPeticaoText && !project.pastedPeticaoTexts) {
       project.pastedPeticaoTexts = [{ id: crypto.randomUUID(), text: project.pastedPeticaoText, name: 'Petição Inicial' }];
@@ -1445,6 +1466,20 @@ export function useLocalStorage(): UseLocalStorageReturn {
       clearAllPdfsFromIndexedDB().catch(() => {
         // Ignore errors
       });
+
+      // Limpar caches project-specific
+      const clearProjectStore = (openDb: () => Promise<IDBDatabase>, storeName: string) => {
+        openDb().then(db => {
+          const tx = db.transaction(storeName, 'readwrite');
+          tx.objectStore(storeName).clear();
+          tx.oncomplete = () => db.close();
+          tx.onerror = () => db.close();
+        }).catch(() => { /* ignore */ });
+      };
+      clearProjectStore(openChatDB, CHAT_STORE_NAME);
+      clearProjectStore(openFactsDB, FACTS_STORE_NAME);
+      clearProjectStore(openReviewDB, REVIEW_STORE_NAME);
+      clearProjectStore(openVersionDB, VERSION_STORE);
 
       // v1.20.2: Limpar cache de PDFs em memória para liberar RAM
       clearPdfCache();

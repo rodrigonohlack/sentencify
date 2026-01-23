@@ -10,10 +10,10 @@ import { useCallback, useMemo } from 'react';
 import type { FieldVersion } from '../types';
 
 // === VERSIONAMENTO DE CAMPOS ===
-const VERSION_DB = 'sentencify-versions';
-const VERSION_STORE = 'versions';
+export const VERSION_DB = 'sentencify-versions';
+export const VERSION_STORE = 'versions';
 
-const openVersionDB = (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
+export const openVersionDB = (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
   const req = indexedDB.open(VERSION_DB, 1);
   req.onerror = () => reject(req.error);
   req.onsuccess = () => resolve(req.result);
