@@ -18,6 +18,24 @@ import {
   selectApiTestStatus
 } from './useAIStore';
 
+vi.mock('../utils/crypto', () => ({
+  encryptApiKeys: vi.fn(async (keys: Record<string, string>) => {
+    const encrypted: Record<string, string> = {};
+    for (const [provider, key] of Object.entries(keys)) {
+      encrypted[provider] = key ? `encrypted:${key}` : '';
+    }
+    return encrypted;
+  }),
+  decryptApiKeys: vi.fn(async (keys: Record<string, string>) => {
+    const decrypted: Record<string, string> = {};
+    for (const [provider, cipher] of Object.entries(keys)) {
+      decrypted[provider] = cipher?.startsWith('encrypted:') ? cipher.slice(10) : cipher || '';
+    }
+    return decrypted;
+  }),
+  isEncrypted: vi.fn((value: string) => value?.startsWith('encrypted:')),
+}));
+
 describe('useAIStore', () => {
   // Reset store before each test
   beforeEach(() => {
@@ -469,8 +487,7 @@ describe('useAIStore', () => {
         expect(saved).not.toBeNull();
         const parsed = JSON.parse(saved!);
         // Keys should be encrypted (not plain text)
-        expect(parsed.apiKeys.claude).not.toBe('sk-test-key-123');
-        expect(parsed.apiKeys.claude.length).toBeGreaterThan(0);
+        expect(parsed.apiKeys.claude).toBe('encrypted:sk-test-key-123');
       });
     });
 
@@ -487,8 +504,7 @@ describe('useAIStore', () => {
         expect(saved).not.toBeNull();
         const parsed = JSON.parse(saved!);
         // Keys should be encrypted (not plain text)
-        expect(parsed.apiKeys.gemini).not.toBe('AIza-test-key');
-        expect(parsed.apiKeys.gemini.length).toBeGreaterThan(0);
+        expect(parsed.apiKeys.gemini).toBe('encrypted:AIza-test-key');
       });
     });
 
@@ -523,8 +539,7 @@ describe('useAIStore', () => {
         const parsed = JSON.parse(saved!);
         expect(parsed.someOtherData).toBe('should be preserved');
         // Keys should be encrypted (not plain text)
-        expect(parsed.apiKeys.openai).not.toBe('sk-openai-test');
-        expect(parsed.apiKeys.openai.length).toBeGreaterThan(0);
+        expect(parsed.apiKeys.openai).toBe('encrypted:sk-openai-test');
       });
     });
   });

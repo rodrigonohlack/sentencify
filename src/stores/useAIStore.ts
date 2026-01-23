@@ -292,6 +292,17 @@ export const useAIStore = create<AIStoreState>()(
                   } catch (err) {
                     console.warn('[AIStore] Erro ao persistir apiKeys:', err);
                   }
+                }).catch(err => {
+                  // Fallback: persistir sem encriptação para não perder as keys
+                  console.warn('[AIStore] Encriptação falhou, persistindo keys em texto:', err);
+                  try {
+                    const currentSettings = localStorage.getItem('sentencify-ai-settings');
+                    const parsed = currentSettings ? JSON.parse(currentSettings) : {};
+                    localStorage.setItem('sentencify-ai-settings', JSON.stringify({
+                      ...parsed,
+                      apiKeys: apiKeysCopy
+                    }));
+                  } catch { /* noop */ }
                 });
               }
             },
@@ -358,7 +369,8 @@ export const useAIStore = create<AIStoreState>()(
               state.aiSettings.apiKeys[provider] = key;
 
               // Persistir apiKeys encriptadas
-              encryptApiKeys({ ...state.aiSettings.apiKeys, [provider]: key }).then(encrypted => {
+              const allKeys = { ...state.aiSettings.apiKeys, [provider]: key };
+              encryptApiKeys(allKeys).then(encrypted => {
                 try {
                   const currentSettings = localStorage.getItem('sentencify-ai-settings');
                   const parsed = currentSettings ? JSON.parse(currentSettings) : {};
@@ -369,6 +381,17 @@ export const useAIStore = create<AIStoreState>()(
                 } catch (err) {
                   console.warn('[AIStore] Erro ao persistir apiKey:', err);
                 }
+              }).catch(err => {
+                // Fallback: persistir sem encriptação para não perder as keys
+                console.warn('[AIStore] Encriptação falhou, persistindo keys em texto:', err);
+                try {
+                  const currentSettings = localStorage.getItem('sentencify-ai-settings');
+                  const parsed = currentSettings ? JSON.parse(currentSettings) : {};
+                  localStorage.setItem('sentencify-ai-settings', JSON.stringify({
+                    ...parsed,
+                    apiKeys: allKeys
+                  }));
+                } catch { /* noop */ }
               });
             },
             false,
@@ -603,17 +626,22 @@ export const useAIStore = create<AIStoreState>()(
               if (oldSettings) {
                 const parsed = JSON.parse(oldSettings);
                 if (parsed.apiKeys) {
-                  // Decriptar keys (async)
+                  // Decriptar keys (async) e usar setState para notificar subscribers
                   decryptApiKeys(parsed.apiKeys).then(decrypted => {
-                    // Se alguma key nao decriptou (formato antigo), usar direto
                     const finalKeys: Record<string, string> = {};
                     for (const [provider, value] of Object.entries(parsed.apiKeys)) {
                       finalKeys[provider] = decrypted[provider] || (value as string);
                     }
-                    state.aiSettings.apiKeys = finalKeys as typeof state.aiSettings.apiKeys;
+                    useAIStore.setState((s) => ({
+                      ...s,
+                      aiSettings: { ...s.aiSettings, apiKeys: finalKeys as typeof s.aiSettings.apiKeys }
+                    }));
                   }).catch(() => {
                     // Fallback: usar keys como estao (migracao gradual)
-                    state.aiSettings.apiKeys = parsed.apiKeys;
+                    useAIStore.setState((s) => ({
+                      ...s,
+                      aiSettings: { ...s.aiSettings, apiKeys: parsed.apiKeys }
+                    }));
                   });
                 }
               }
