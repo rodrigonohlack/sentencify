@@ -601,7 +601,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       const textContent = aiIntegration.extractResponseText(data, provider);
 
       if (!textContent) {
-        throw new Error('Nenhum conteúdo de texto encontrado na resposta da API');
+        throw new Error(`Nenhum conteúdo de texto encontrado na resposta da API (${provider}). Verifique a chave API e modelo configurados.`);
       }
 
       setAnalysisProgress('Extraindo tópicos identificados...');
@@ -990,17 +990,6 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
           reclamante: partes.reclamante || '',
           reclamadas: partes.reclamadas || []
         });
-      }
-
-      // Limpar PDFs originais apos extração
-      if (documents.peticoesText?.length > 0 && peticaoFiles.length > 0) {
-        setPeticaoFiles([]);
-      }
-      if (documents.contestaçõesExtraidasDePDF?.length > 0) {
-        setContestacaoFiles([]);
-      }
-      if (documents.complementaresExtraidasDePDF?.length > 0) {
-        setComplementaryFiles([]);
       }
 
       // Limpar dados pendentes

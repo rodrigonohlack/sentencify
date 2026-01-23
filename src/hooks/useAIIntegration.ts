@@ -704,6 +704,15 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       const content = candidate?.content as Record<string, unknown> | undefined;
       const parts = (content?.parts || []) as Record<string, unknown>[];
       const textPart = parts.find((p: Record<string, unknown>) => !p.thought && p.text);
+      if (!textPart) {
+        console.error('[Gemini] extractResponseText: nenhum text part encontrado.', {
+          hasCandidates: !!data.candidates,
+          candidatesLength: (data.candidates as unknown[])?.length,
+          finishReason,
+          partsLength: parts.length,
+          partTypes: parts.map((p: Record<string, unknown>) => ({ thought: p.thought, hasText: !!p.text }))
+        });
+      }
       return (textPart?.text as string) || '';
     }
     // Claude (default)
