@@ -9,7 +9,26 @@ import { AIProviderSelector } from './AIProviderSelector';
 import { ModelSelector } from './ModelSelector';
 import { APIKeyInput } from './APIKeyInput';
 import { useAIStore, useAnalysesStore } from '../../stores';
-import type { GeminiThinkingLevel, OpenAIReasoningLevel } from '../../types';
+import type { GeminiThinkingLevel, OpenAIReasoningLevel, TokenMetrics } from '../../types';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Preços por modelo (USD / 1M tokens)
+// ═══════════════════════════════════════════════════════════════════════════════
+const MODEL_PRICES = {
+  sonnet: { input: 3.00, output: 15.00, cacheWrite: 3.75, cacheRead: 0.30 },
+  opus: { input: 5.00, output: 25.00, cacheWrite: 6.25, cacheRead: 0.50 },
+  geminiPro: { input: 2.00, output: 12.00, cacheWrite: 2.50, cacheRead: 0.20 },
+  geminiFlash: { input: 0.50, output: 3.00, cacheWrite: 0.625, cacheRead: 0.05 },
+  openai: { input: 1.75, output: 14.00, cacheWrite: 1.75, cacheRead: 0.175 },
+  grok: { input: 0.20, output: 0.50, cacheWrite: 0.20, cacheRead: 0.05 },
+} as const;
+
+const calculateCost = (m: TokenMetrics, prices: { input: number; output: number; cacheWrite: number; cacheRead: number }): number => {
+  return ((m.totalInput / 1_000_000) * prices.input) +
+         ((m.totalOutput / 1_000_000) * prices.output) +
+         ((m.totalCacheRead / 1_000_000) * prices.cacheRead) +
+         ((m.totalCacheCreation / 1_000_000) * prices.cacheWrite);
+};
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -228,42 +247,93 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
         {/* Métricas de Tokens */}
         {tokenMetrics.requestCount > 0 && (
-          <div className="pt-4 border-t border-slate-200">
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-slate-700">
+              <h3 className="text-sm font-medium text-slate-700 dark:text-slate-200">
                 Uso de Tokens (sessão)
               </h3>
               <button
                 onClick={resetTokenMetrics}
-                className="text-xs text-indigo-600 hover:text-indigo-700"
+                className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
               >
                 Resetar
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="p-3 bg-slate-50 rounded-lg">
-                <p className="text-slate-500">Input</p>
-                <p className="font-semibold text-slate-800">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                <p className="text-slate-500 dark:text-slate-400">Input</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-100">
                   {tokenMetrics.totalInput.toLocaleString()}
                 </p>
               </div>
-              <div className="p-3 bg-slate-50 rounded-lg">
-                <p className="text-slate-500">Output</p>
-                <p className="font-semibold text-slate-800">
+              <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                <p className="text-slate-500 dark:text-slate-400">Output</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-100">
                   {tokenMetrics.totalOutput.toLocaleString()}
                 </p>
               </div>
-              <div className="p-3 bg-slate-50 rounded-lg">
-                <p className="text-slate-500">Requisições</p>
-                <p className="font-semibold text-slate-800">
+              <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                <p className="text-slate-500 dark:text-slate-400">Requisições</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-100">
                   {tokenMetrics.requestCount}
                 </p>
               </div>
-              <div className="p-3 bg-slate-50 rounded-lg">
-                <p className="text-slate-500">Cache Lido</p>
-                <p className="font-semibold text-slate-800">
+              <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                <p className="text-slate-500 dark:text-slate-400">Cache Lido</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-100">
                   {tokenMetrics.totalCacheRead.toLocaleString()}
                 </p>
+              </div>
+              <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                <p className="text-slate-500 dark:text-slate-400">Cache Write</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-100">
+                  {tokenMetrics.totalCacheCreation.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {/* Custo Estimado */}
+            <div className="mt-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-2">
+                💰 Custo Estimado
+              </p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-blue-600 dark:text-blue-400">Sonnet 4/4.5</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-200">
+                    ${calculateCost(tokenMetrics, MODEL_PRICES.sonnet).toFixed(4)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-purple-600 dark:text-purple-400">Opus 4.5</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-200">
+                    ${calculateCost(tokenMetrics, MODEL_PRICES.opus).toFixed(4)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-emerald-600 dark:text-emerald-400">Gemini 3 Pro</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-200">
+                    ${calculateCost(tokenMetrics, MODEL_PRICES.geminiPro).toFixed(4)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-cyan-600 dark:text-cyan-400">Gemini 3 Flash</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-200">
+                    ${calculateCost(tokenMetrics, MODEL_PRICES.geminiFlash).toFixed(4)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-green-600 dark:text-green-400">OpenAI GPT-5.2</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-200">
+                    ${calculateCost(tokenMetrics, MODEL_PRICES.openai).toFixed(4)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 dark:text-slate-400">Grok 4.1 Fast</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-200">
+                    ${calculateCost(tokenMetrics, MODEL_PRICES.grok).toFixed(4)}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
