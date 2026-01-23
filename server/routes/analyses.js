@@ -315,36 +315,8 @@ router.put('/batch/data-pauta', (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// DELETE /api/analyses/:id - Soft delete de análise
-// ═══════════════════════════════════════════════════════════════════════════
-
-router.delete('/:id', (req, res) => {
-  try {
-    const db = getDb();
-    const userId = req.user.id;
-    const { id } = req.params;
-
-    const now = new Date().toISOString();
-
-    const result = db.prepare(`
-      UPDATE analyses
-      SET deleted_at = ?, updated_at = ?
-      WHERE id = ? AND user_id = ? AND deleted_at IS NULL
-    `).run(now, now, id, userId);
-
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Análise não encontrada' });
-    }
-
-    res.json({ id, message: 'Análise removida com sucesso' });
-  } catch (error) {
-    console.error('[Analyses] Delete error:', error);
-    res.status(500).json({ error: 'Erro ao remover análise' });
-  }
-});
-
-// ═══════════════════════════════════════════════════════════════════════════
 // DELETE /api/analyses/batch - Soft delete em lote
+// (DEVE vir antes de /:id para não ser capturado como parâmetro)
 // ═══════════════════════════════════════════════════════════════════════════
 
 router.delete('/batch', (req, res) => {
@@ -377,6 +349,35 @@ router.delete('/batch', (req, res) => {
   } catch (error) {
     console.error('[Analyses] Batch delete error:', error);
     res.status(500).json({ error: 'Erro ao remover análises em lote' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DELETE /api/analyses/:id - Soft delete de análise
+// ═══════════════════════════════════════════════════════════════════════════
+
+router.delete('/:id', (req, res) => {
+  try {
+    const db = getDb();
+    const userId = req.user.id;
+    const { id } = req.params;
+
+    const now = new Date().toISOString();
+
+    const result = db.prepare(`
+      UPDATE analyses
+      SET deleted_at = ?, updated_at = ?
+      WHERE id = ? AND user_id = ? AND deleted_at IS NULL
+    `).run(now, now, id, userId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Análise não encontrada' });
+    }
+
+    res.json({ id, message: 'Análise removida com sucesso' });
+  } catch (error) {
+    console.error('[Analyses] Delete error:', error);
+    res.status(500).json({ error: 'Erro ao remover análise' });
   }
 });
 
