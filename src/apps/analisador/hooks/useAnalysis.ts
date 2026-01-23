@@ -141,21 +141,28 @@ export const useAnalysis = () => {
    */
   const analyzeWithAI = useCallback(
     async (peticaoText: string, contestacaoText: string | null): Promise<AnalysisResult | null> => {
-      try {
-        const userPrompt = buildAnalysisPrompt(peticaoText, contestacaoText || undefined);
+      const MAX_PARSE_RETRIES = 2;
+      const userPrompt = buildAnalysisPrompt(peticaoText, contestacaoText || undefined);
+      const messages: AIMessage[] = [{ role: 'user', content: userPrompt }];
 
-        const messages: AIMessage[] = [{ role: 'user', content: userPrompt }];
-
-        const response = await callAI(messages, {
-          maxTokens: 16000,
-          systemPrompt: ANALYSIS_SYSTEM_PROMPT,
-        });
-
-        return parseAnalysisResult(response);
-      } catch (error) {
-        console.error('Erro na análise com IA:', error);
-        return null;
+      for (let attempt = 0; attempt <= MAX_PARSE_RETRIES; attempt++) {
+        try {
+          const response = await callAI(messages, {
+            maxTokens: 16000,
+            systemPrompt: ANALYSIS_SYSTEM_PROMPT,
+          });
+          return parseAnalysisResult(response);
+        } catch (error) {
+          if (attempt < MAX_PARSE_RETRIES) {
+            console.warn(`[Analisador] Tentativa ${attempt + 1} falhou, retentando...`);
+            await new Promise(r => setTimeout(r, 2000));
+            continue;
+          }
+          console.error('Erro na análise com IA:', error);
+          return null;
+        }
       }
+      return null;
     },
     [callAI]
   );

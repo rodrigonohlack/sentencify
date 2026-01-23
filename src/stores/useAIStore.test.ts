@@ -455,7 +455,7 @@ describe('useAIStore', () => {
       localStorage.clear();
     });
 
-    it('should persist apiKeys to localStorage when changed via setAiSettings', () => {
+    it('should persist apiKeys encrypted to localStorage when changed via setAiSettings', async () => {
       const store = useAIStore.getState();
       const currentSettings = store.aiSettings;
 
@@ -464,13 +464,17 @@ describe('useAIStore', () => {
         apiKeys: { ...currentSettings.apiKeys, claude: 'sk-test-key-123' }
       });
 
-      const saved = localStorage.getItem('sentencify-ai-settings');
-      expect(saved).not.toBeNull();
-      const parsed = JSON.parse(saved!);
-      expect(parsed.apiKeys.claude).toBe('sk-test-key-123');
+      await vi.waitFor(() => {
+        const saved = localStorage.getItem('sentencify-ai-settings');
+        expect(saved).not.toBeNull();
+        const parsed = JSON.parse(saved!);
+        // Keys should be encrypted (not plain text)
+        expect(parsed.apiKeys.claude).not.toBe('sk-test-key-123');
+        expect(parsed.apiKeys.claude.length).toBeGreaterThan(0);
+      });
     });
 
-    it('should persist apiKeys when using updater function', () => {
+    it('should persist apiKeys encrypted when using updater function', async () => {
       const store = useAIStore.getState();
 
       store.setAiSettings((prev) => ({
@@ -478,9 +482,14 @@ describe('useAIStore', () => {
         apiKeys: { ...prev.apiKeys, gemini: 'AIza-test-key' }
       }));
 
-      const saved = localStorage.getItem('sentencify-ai-settings');
-      const parsed = JSON.parse(saved!);
-      expect(parsed.apiKeys.gemini).toBe('AIza-test-key');
+      await vi.waitFor(() => {
+        const saved = localStorage.getItem('sentencify-ai-settings');
+        expect(saved).not.toBeNull();
+        const parsed = JSON.parse(saved!);
+        // Keys should be encrypted (not plain text)
+        expect(parsed.apiKeys.gemini).not.toBe('AIza-test-key');
+        expect(parsed.apiKeys.gemini.length).toBeGreaterThan(0);
+      });
     });
 
     it('should NOT persist when apiKeys do not change', () => {
@@ -497,7 +506,7 @@ describe('useAIStore', () => {
       expect(saved).toBeNull(); // Should not have saved anything
     });
 
-    it('should merge with existing localStorage data', () => {
+    it('should merge with existing localStorage data', async () => {
       // Pre-populate localStorage with other data
       localStorage.setItem('sentencify-ai-settings', JSON.stringify({
         someOtherData: 'should be preserved'
@@ -509,10 +518,14 @@ describe('useAIStore', () => {
         apiKeys: { ...prev.apiKeys, openai: 'sk-openai-test' }
       }));
 
-      const saved = localStorage.getItem('sentencify-ai-settings');
-      const parsed = JSON.parse(saved!);
-      expect(parsed.someOtherData).toBe('should be preserved');
-      expect(parsed.apiKeys.openai).toBe('sk-openai-test');
+      await vi.waitFor(() => {
+        const saved = localStorage.getItem('sentencify-ai-settings');
+        const parsed = JSON.parse(saved!);
+        expect(parsed.someOtherData).toBe('should be preserved');
+        // Keys should be encrypted (not plain text)
+        expect(parsed.apiKeys.openai).not.toBe('sk-openai-test');
+        expect(parsed.apiKeys.openai.length).toBeGreaterThan(0);
+      });
     });
   });
 

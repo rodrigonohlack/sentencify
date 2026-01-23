@@ -450,7 +450,10 @@ export const BatchMode: React.FC = () => {
     // Processar em chunks com concurrencyLimit do settings
     for (let i = 0; i < pairs.length; i += concurrencyLimit) {
       const chunk = pairs.slice(i, i + concurrencyLimit);
-      await Promise.all(chunk.map(processPair));
+      await Promise.all(chunk.map((pair, idx) =>
+        new Promise<void>(resolve => setTimeout(resolve, idx * 1500))
+          .then(() => processPair(pair))
+      ));
     }
 
     setBatchProcessing(false);

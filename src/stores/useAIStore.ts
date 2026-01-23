@@ -280,16 +280,19 @@ export const useAIStore = create<AIStoreState>()(
               // Persistir apiKeys se mudaram (não vão no Zustand persist por segurança)
               const newApiKeys = state.aiSettings.apiKeys;
               if (newApiKeys && JSON.stringify(newApiKeys) !== JSON.stringify(prevApiKeys)) {
-                try {
-                  const currentSettings = localStorage.getItem('sentencify-ai-settings');
-                  const parsed = currentSettings ? JSON.parse(currentSettings) : {};
-                  localStorage.setItem('sentencify-ai-settings', JSON.stringify({
-                    ...parsed,
-                    apiKeys: newApiKeys
-                  }));
-                } catch (err) {
-                  console.warn('[AIStore] Erro ao persistir apiKeys:', err);
-                }
+                const apiKeysCopy = { ...newApiKeys };
+                encryptApiKeys(apiKeysCopy).then(encrypted => {
+                  try {
+                    const currentSettings = localStorage.getItem('sentencify-ai-settings');
+                    const parsed = currentSettings ? JSON.parse(currentSettings) : {};
+                    localStorage.setItem('sentencify-ai-settings', JSON.stringify({
+                      ...parsed,
+                      apiKeys: encrypted
+                    }));
+                  } catch (err) {
+                    console.warn('[AIStore] Erro ao persistir apiKeys:', err);
+                  }
+                });
               }
             },
             false,
