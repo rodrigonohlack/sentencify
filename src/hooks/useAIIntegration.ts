@@ -25,7 +25,7 @@ import type {
   OpenAIMessagePart,
   DoubleCheckCorrection
 } from '../types';
-import { parseAIResponse, DoubleCheckResponseSchema } from '../schemas/ai-responses';
+import { extractJSON, parseAIResponse, DoubleCheckResponseSchema } from '../schemas/ai-responses';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // REDUCER PARA ESTADOS DE GERAÇÃO
@@ -1342,12 +1342,14 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
                         response.match(new RegExp(`\\{[\\s\\S]*${verifiedFieldPattern}[\\s\\S]*\\}`));
 
-      if (!jsonMatch) {
+      const jsonStr = jsonMatch
+        ? (jsonMatch[1] || jsonMatch[0])
+        : extractJSON(response);
+
+      if (!jsonStr) {
         console.warn('[DoubleCheck] Resposta não contém JSON válido:', response.substring(0, 200));
         return { verified: originalResponse, corrections: [], summary: 'Falha ao parsear resposta', failed: true };
       }
-
-      const jsonStr = jsonMatch[1] || jsonMatch[0];
       const dcValidated = parseAIResponse(jsonStr, DoubleCheckResponseSchema);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let result: any;
