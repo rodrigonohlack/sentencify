@@ -19,7 +19,6 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { Readable } from 'stream';
-import { csrfProtection } from './middleware/csrf.js';
 
 import claudeRoutes from './routes/claude.js';
 import geminiRoutes from './routes/gemini.js';
@@ -129,10 +128,8 @@ app.use(cookieParser());
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
-// CSRF protection em rotas mutativas (exceto login/verify que usam tokens proprios)
-app.use('/api/models', csrfProtection);
-app.use('/api/share', csrfProtection);
-app.use('/api/sync', csrfProtection);
+// CSRF protection removida: rotas /api/models, /api/share, /api/sync usam
+// Bearer token auth (authMiddleware), que é imune a CSRF por design.
 
 // v1.35.13: Rate limiting para proteção contra abuso
 const authLimiter = rateLimit({

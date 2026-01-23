@@ -156,7 +156,14 @@ export async function decryptApiKeys(
 ): Promise<Record<string, string>> {
   const decrypted: Record<string, string> = {};
   for (const [provider, cipher] of Object.entries(encrypted)) {
-    decrypted[provider] = cipher ? await decryptString(cipher) : '';
+    if (!cipher) {
+      decrypted[provider] = '';
+    } else if (isEncrypted(cipher)) {
+      decrypted[provider] = await decryptString(cipher);
+    } else {
+      // Plain text key (pre-encryption migration) - return as-is
+      decrypted[provider] = cipher;
+    }
   }
   return decrypted;
 }
