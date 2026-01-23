@@ -4,15 +4,21 @@
  */
 
 import React from 'react';
-import { User, Building2, FileText, Calendar, Scale } from 'lucide-react';
+import { User, Building2, FileText, Calendar, Scale, DollarSign } from 'lucide-react';
 import { Badge } from '../ui';
-import type { Identificacao } from '../../types';
+import type { Identificacao, ValorCausa } from '../../types';
 
 interface IdentificacaoSectionProps {
   data: Identificacao;
+  valorCausa?: ValorCausa;
 }
 
-export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data }) => {
+export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data, valorCausa }) => {
+  const formatCurrency = (value?: number) => {
+    if (value == null) return '';
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
   const ritoLabel = {
     ordinario: 'Ordinário',
     sumarissimo: 'Sumaríssimo',
@@ -69,6 +75,17 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
             <div>
               <p className="text-sm text-slate-500">Ajuizamento</p>
               <p className="font-medium text-slate-800">{data.dataAjuizamento}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Valor da Causa */}
+        {valorCausa && valorCausa.valorTotal > 0 && (
+          <div className="flex items-start gap-3">
+            <DollarSign className="w-5 h-5 text-indigo-500 mt-0.5" />
+            <div>
+              <p className="text-sm text-slate-500">Valor da Causa</p>
+              <p className="font-medium text-slate-800">{formatCurrency(valorCausa.valorTotal)}</p>
             </div>
           </div>
         )}

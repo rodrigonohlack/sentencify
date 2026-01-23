@@ -45,7 +45,7 @@ export const ResultsContainer: React.FC = () => {
             {activeTab === 'analise' && (
               <div className="space-y-6 p-4">
                 {/* Identificação */}
-                <IdentificacaoSection data={result.identificacao} />
+                <IdentificacaoSection data={result.identificacao} valorCausa={result.valorCausa} />
 
                 {/* Contrato */}
                 <ContratoSection data={result.contrato} />
