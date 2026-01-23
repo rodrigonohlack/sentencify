@@ -3010,7 +3010,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
                   <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
                     SENTENCIFY.AI
                   </h1>
-                  <a href="/analise" className="text-xs theme-text-disabled hover:theme-text-muted transition-colors">
+                  <a href="/analise" className="text-xs theme-text-disabled hover:[color:var(--text-muted)] transition-colors">
                     [Analisador]
                   </a>
                 </div>

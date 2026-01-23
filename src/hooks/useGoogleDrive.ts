@@ -237,9 +237,11 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       // v1.35.46: Filtrar por appProperties para mostrar APENAS arquivos do Sentencify
       // v1.35.47: Filtrar também pela pasta
       // v1.35.48: Incluir arquivos compartilhados comigo (sharedWithMe)
+      // v1.38.42: Incluir arquivos com nome sentencify-*.json em qualquer local do Drive
       const query = encodeURIComponent(
         `('${folderId}' in parents and appProperties has { key='sentencify' and value='true' } and trashed=false) or ` +
-        `(sharedWithMe=true and appProperties has { key='sentencify' and value='true' } and trashed=false)`
+        `(sharedWithMe=true and appProperties has { key='sentencify' and value='true' } and trashed=false) or ` +
+        `(name contains 'sentencify-' and mimeType='application/json' and trashed=false)`
       );
       // v1.35.45: Incluir owners e shared para identificar arquivos compartilhados
       const fields = encodeURIComponent('files(id,name,size,modifiedTime,createdTime,owners,shared)');
@@ -259,8 +261,14 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       }
 
       const data = await response.json();
-      console.log('[GoogleDrive] Arquivos encontrados:', data.files?.length || 0);
-      return data.files || [];
+      // v1.38.42: Deduplicar por ID (arquivo pode bater em múltiplas condições da query)
+      const filesMap = new Map<string, GoogleDriveFile>();
+      for (const f of (data.files || []) as GoogleDriveFile[]) {
+        filesMap.set(f.id, f);
+      }
+      const uniqueFiles = Array.from(filesMap.values());
+      console.log('[GoogleDrive] Arquivos encontrados:', uniqueFiles.length);
+      return uniqueFiles;
     } catch (e) {
       console.error('[GoogleDrive] Erro ao listar:', e);
       const errorMessage = e instanceof Error ? e.message : 'Erro desconhecido';

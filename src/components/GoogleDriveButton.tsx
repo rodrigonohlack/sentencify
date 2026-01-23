@@ -297,6 +297,16 @@ export function DriveFilesModal({
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [deleteFile, setDeleteFile] = useState<GoogleDriveFile | null>(null);
 
+  // v1.38.42: Campo de busca para filtrar arquivos
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // v1.38.42: Limpar busca ao fechar modal
+  React.useEffect(() => {
+    if (!isOpen) {
+      setSearchQuery('');
+    }
+  }, [isOpen]);
+
   // ESC handler - fecha sub-modais primeiro, depois modal principal (v1.37.84)
   // v1.37.96: Adicionado deleteModal na hierarquia
   React.useEffect(() => {
@@ -370,6 +380,11 @@ export function DriveFilesModal({
   };
 
   if (!isOpen) return null;
+
+  // v1.38.42: Filtrar arquivos pelo campo de busca
+  const filteredFiles = searchQuery.trim()
+    ? files.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : files;
 
   // v1.35.49: Sempre usa 'reader' pois permissão de escrita é irrelevante
   // (ao salvar, o usuário cria uma cópia no próprio Drive)
@@ -455,6 +470,22 @@ export function DriveFilesModal({
 
         {/* Content */}
         <div className="overflow-y-auto max-h-[60vh] p-4">
+          {/* v1.38.42: Campo de busca */}
+          {!isLoading && files.length > 0 && (
+            <div className="mb-3">
+              <input
+                type="text"
+                placeholder="Buscar projeto por nome..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full px-3 py-2 rounded-lg border text-sm ${
+                  isDarkMode
+                    ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400'
+                    : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
+                } focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
+              />
+            </div>
+          )}
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className={`w-8 h-8 animate-spin ${isDarkMode ? 'text-blue-400' : 'text-blue-500'}`} />
@@ -465,9 +496,13 @@ export function DriveFilesModal({
               <p>Nenhum projeto Sentencify encontrado no Drive</p>
               <p className="text-sm mt-1">Salve um projeto para vê-lo aqui</p>
             </div>
+          ) : filteredFiles.length === 0 ? (
+            <div className={`text-center py-8 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              <p>Nenhum projeto corresponde à busca</p>
+            </div>
           ) : (
             <div className="space-y-2">
-              {files.map((file) => (
+              {filteredFiles.map((file) => (
                 <div
                   key={file.id}
                   className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
