@@ -1074,6 +1074,11 @@ export function useLocalStorage(): UseLocalStorageReturn {
       });
     }
 
+    // Acumular arquivos restaurados para incluir no autoSave
+    let restoredPeticaoFiles: UploadedFile[] = [];
+    let restoredContestacaoFiles: UploadedFile[] = [];
+    let restoredComplementaryFiles: UploadedFile[] = [];
+
     // Restaurar PDFs
     if (project.uploadPdfs) {
       // Petições (novo formato com UUID)
@@ -1086,13 +1091,16 @@ export function useLocalStorage(): UseLocalStorageReturn {
           await savePdfToIndexedDB(`upload-peticao-${id}`, pFile, 'upload');
         }
         setPeticaoFiles(petFiles);
+        restoredPeticaoFiles = petFiles;
       }
       // Petição (formato antigo singular - migração)
       else if (project.uploadPdfs.peticao && setPeticaoFiles) {
         const pData = project.uploadPdfs.peticao;
         const pFile = base64ToFile(pData.fileData, pData.name, 'application/pdf');
         const id = crypto.randomUUID();
-        setPeticaoFiles([{ file: pFile, id }]);
+        const petFiles = [{ file: pFile, id }];
+        setPeticaoFiles(petFiles);
+        restoredPeticaoFiles = petFiles;
         await savePdfToIndexedDB(`upload-peticao-${id}`, pFile, 'upload');
       }
       if (project.uploadPdfs.contestacoes && setContestacaoFiles) {
@@ -1104,6 +1112,7 @@ export function useLocalStorage(): UseLocalStorageReturn {
           await savePdfToIndexedDB(`upload-contestacao-${id}`, cFile, 'upload');
         }
         setContestacaoFiles(contestFiles);
+        restoredContestacaoFiles = contestFiles;
       }
       if (project.uploadPdfs.complementares && setComplementaryFiles) {
         const compFiles = [];
@@ -1114,6 +1123,7 @@ export function useLocalStorage(): UseLocalStorageReturn {
           await savePdfToIndexedDB(`upload-complementar-${id}`, cpFile, 'upload');
         }
         setComplementaryFiles(compFiles);
+        restoredComplementaryFiles = compFiles;
       }
     }
 
@@ -1242,9 +1252,9 @@ export function useLocalStorage(): UseLocalStorageReturn {
         proofSendFullContent: project.proofSendFullContent || {},
         documentProcessingModes: project.documentProcessingModes || { peticoes: ['pdfjs'], contestacoes: [], complementares: [] },
         tokenMetrics: project.tokenMetrics || { totalInput: 0, totalOutput: 0, totalCacheRead: 0, totalCacheCreation: 0, requestCount: 0, lastUpdated: null },
-        peticaoFiles: [],
-        contestacaoFiles: [],
-        complementaryFiles: []
+        peticaoFiles: restoredPeticaoFiles,
+        contestacaoFiles: restoredContestacaoFiles,
+        complementaryFiles: restoredComplementaryFiles
       };
       autoSaveSessionFn(allStates, (err) => err && setError(err), true);
     }
