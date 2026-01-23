@@ -63,9 +63,9 @@ export const AnalysisResponseSchema = z.object({
 
 export const CorrectionSchema = z.object({
   type: z.enum(['remove', 'add', 'merge', 'reclassify', 'modify', 'improve']),
-  description: z.string(),
-  original: z.string().optional(),
-  corrected: z.string().optional(),
+  description: z.string().nullable().default('').transform(v => v ?? ''),
+  original: z.string().nullable().optional().transform(v => v ?? undefined),
+  corrected: z.string().nullable().optional().transform(v => v ?? undefined),
 });
 
 export const DoubleCheckResponseSchema = z.object({
@@ -79,16 +79,15 @@ export const DoubleCheckResponseSchema = z.object({
 // ═══════════════════════════════════════════════════════════════════
 
 export const TopicSchema = z.object({
-  titulo: z.string().nullable().default('').transform(v => v ?? ''),
-  categoria: z.string().nullable().default('').transform(v => v ?? ''),
-  miniRelatorio: z.string().nullable().optional().transform(v => v ?? ''),
+  title: z.string().nullable().default('').transform(v => v ?? ''),
+  category: z.string().nullable().default('').transform(v => v ?? ''),
 });
 
 export const TopicExtractionSchema = z.object({
   partes: z.object({
-    reclamantes: z.array(z.string()).default([]),
+    reclamante: z.string().nullable().default('').transform(v => v ?? ''),
     reclamadas: z.array(z.string()).default([]),
-  }),
+  }).optional().default({ reclamante: '', reclamadas: [] }),
   topics: z.array(TopicSchema).default([]),
 });
 
