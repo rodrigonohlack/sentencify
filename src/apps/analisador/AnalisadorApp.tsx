@@ -36,6 +36,7 @@ import type { SavedAnalysis } from './types/analysis.types';
 
 const AnalisadorContent: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [cameFromHistorico, setCameFromHistorico] = useState(false);
   const { showToast } = useToast();
 
   // Auth
@@ -72,13 +73,18 @@ const AnalisadorContent: React.FC = () => {
   const handleSelectAnalysis = useCallback(
     (analysis: SavedAnalysis) => {
       setResult(analysis.resultado);
+      setCameFromHistorico(true);
     },
     [setResult]
   );
 
   const handleVoltar = useCallback(() => {
     resetResult();
-  }, [resetResult]);
+    if (cameFromHistorico) {
+      setCameFromHistorico(false);
+      openHistorico();
+    }
+  }, [resetResult, cameFromHistorico, openHistorico]);
 
   const handleLogout = useCallback(async () => {
     await logout();

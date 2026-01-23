@@ -37,18 +37,18 @@ import type {
 
 const RESULTADO_OPTIONS: { value: ResultadoAudiencia | 'todos'; label: string }[] = [
   { value: 'todos', label: 'Todos' },
-  { value: 'acordo', label: 'Acordo' },
-  { value: 'sentenca', label: 'Sentença' },
-  { value: 'sentenca_marcada', label: 'Sentença marcada' },
-  { value: 'audiencia_encerramento', label: 'Aud. encerramento' },
-  { value: 'adiamento', label: 'Adiamento' },
-  { value: 'redesignada_notificacao', label: 'Redesignada c/ notificação' },
-  { value: 'cancelada', label: 'Cancelada' },
-  { value: 'desistencia', label: 'Desistência' },
-  { value: 'arquivamento', label: 'Arquivamento' },
-  { value: 'instrucao_encerrada', label: 'Instrução encerrada' },
-  { value: 'aguardando_pericia', label: 'Aguardando perícia' },
-  { value: 'suspenso', label: 'Suspenso' },
+  { value: 'acordo', label: '✅ Acordo' },
+  { value: 'sentenca', label: '⚖️ Sentença' },
+  { value: 'sentenca_marcada', label: '📅 Sentença marcada' },
+  { value: 'audiencia_encerramento', label: '📋 Aud. encerramento' },
+  { value: 'adiamento', label: '🔄 Adiamento' },
+  { value: 'redesignada_notificacao', label: '📬 Redesignada c/ notificação' },
+  { value: 'cancelada', label: '❌ Cancelada' },
+  { value: 'desistencia', label: '🚫 Desistência' },
+  { value: 'arquivamento', label: '📦 Arquivamento' },
+  { value: 'instrucao_encerrada', label: '✔️ Instrução encerrada' },
+  { value: 'aguardando_pericia', label: '🔬 Aguardando perícia' },
+  { value: 'suspenso', label: '⏸️ Suspenso' },
 ];
 
 const RESULTADO_COLORS: Record<ResultadoAudiencia | 'null', string> = {
