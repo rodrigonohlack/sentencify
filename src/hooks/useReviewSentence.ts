@@ -55,6 +55,7 @@ export interface AIIntegrationForReview {
     corrections: string[];
     summary: string;
     confidence?: number;
+    failed?: boolean;
   }>;
 }
 

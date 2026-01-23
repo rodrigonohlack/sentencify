@@ -1288,7 +1288,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     context: AIMessageContent[],  // v1.37.68: MUDOU de string para array
     onProgress?: (msg: string) => void,
     userPrompt?: string
-  ): Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string; confidence?: number }> => {
+  ): Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string; confidence?: number; failed?: boolean }> => {
     const { doubleCheck } = aiSettings;
 
     // Se double check desabilitado ou operação não selecionada, retornar original
@@ -1344,7 +1344,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
       if (!jsonMatch) {
         console.warn('[DoubleCheck] Resposta não contém JSON válido:', response.substring(0, 200));
-        return { verified: originalResponse, corrections: [], summary: 'Falha ao parsear resposta' };
+        return { verified: originalResponse, corrections: [], summary: 'Falha ao parsear resposta', failed: true };
       }
 
       const jsonStr = jsonMatch[1] || jsonMatch[0];
@@ -1395,7 +1395,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       };
     } catch (error) {
       console.error('[DoubleCheck] Erro:', error);
-      return { verified: originalResponse, corrections: [], summary: 'Erro na verificação', confidence: 0.85 };
+      return { verified: originalResponse, corrections: [], summary: 'Erro na verificação', confidence: 0.85, failed: true };
     }
   }, [aiSettings, callDoubleCheckAPI]);
 

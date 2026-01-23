@@ -109,7 +109,7 @@ export interface AIIntegrationForAnalysis {
     originalResponse: string,
     context: AIMessageContent[],  // v1.37.68: mudou de string para array
     setProgress?: (msg: string) => void
-  ) => Promise<{ verified: string; corrections: { type: string; reason: string }[]; summary: string; confidence?: number }>;
+  ) => Promise<{ verified: string; corrections: { type: string; reason: string }[]; summary: string; confidence?: number; failed?: boolean }>;
 }
 
 /** Props do hook */
@@ -632,7 +632,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         // v1.37.68: Usar contentArray original completo (sem truncação)
         // contentArray já contém todos os documentos + buildAnalysisPrompt
         try {
-          const { verified, corrections, summary, confidence } = await aiIntegration.performDoubleCheck(
+          const { verified, corrections, summary, confidence, failed } = await aiIntegration.performDoubleCheck(
             'topicExtraction',
             JSON.stringify(topics),
             contentArray as AIMessageContent[],  // Array original com tudo
@@ -670,6 +670,9 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
               console.log('[DoubleCheck] Usuário descartou todas as correções');
               showToast('Double Check: correções descartadas', 'info');
             }
+          } else if (failed) {
+            console.warn('[DoubleCheck] Verificação falhou - resultado não verificado');
+            showToast('Double Check: verificação falhou, resultado não verificado', 'warning');
           } else {
             console.log('[DoubleCheck] Nenhuma correção necessária');
           }

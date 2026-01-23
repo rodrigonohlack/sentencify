@@ -2806,6 +2806,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
     closeModal: closeModal as (modalId: string) => void,
     setError,
     sanitizeHTML,
+    showToast,
   });
   const {
     generateAiText,

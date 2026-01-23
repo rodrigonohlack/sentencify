@@ -86,6 +86,7 @@ export interface AIIntegrationForDecisionText {
     corrections: DoubleCheckCorrection[];
     summary: string;
     confidence?: number;
+    failed?: boolean;
   }>;
 }
 
@@ -156,6 +157,7 @@ export interface UseDecisionTextGenerationProps {
   closeModal: (modalId: string) => void;
   setError: (error: string) => void;
   sanitizeHTML: (html: string) => string;
+  showToast?: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void;
 }
 
 /** v1.38.12: Opções para construção de contexto do chat */
@@ -196,6 +198,7 @@ export function useDecisionTextGeneration(props: UseDecisionTextGenerationProps)
     closeModal,
     setError,
     sanitizeHTML,
+    showToast,
   } = props;
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -486,7 +489,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
           ? contextContent as AIMessageContent[]
           : [{ type: 'text' as const, text: String(contextContent) }];
 
-        const { verified, corrections, summary, confidence } = await aiIntegration.performDoubleCheck(
+        const { verified, corrections, summary, confidence, failed } = await aiIntegration.performDoubleCheck(
           'quickPrompt',
           originalResponse,
           contextArray,  // v1.37.68: Array (não string)
@@ -536,6 +539,11 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
             chatAssistant.updateLastAssistantMessage(originalResponse);
             console.log('[DoubleCheck QuickPrompt] Usuário descartou correções - restaurando original');
           }
+        } else if (failed) {
+          // Verificação falhou - restaurar resposta original e notificar
+          chatAssistant.updateLastAssistantMessage(originalResponse);
+          console.warn('[DoubleCheck QuickPrompt] Verificação falhou - resultado não verificado');
+          showToast?.('Double Check: verificação falhou, resultado não verificado', 'warning');
         } else {
           // v1.38.35: Sem correções - restaurar resposta original
           chatAssistant.updateLastAssistantMessage(originalResponse);
@@ -547,7 +555,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
         console.error('[DoubleCheck QuickPrompt] Erro:', dcError);
       }
     }
-  }, [chatAssistant, buildContextForChat, aiIntegration, openDoubleCheckReview]);
+  }, [chatAssistant, buildContextForChat, aiIntegration, openDoubleCheckReview, showToast]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // GENERATE AI TEXT FOR MODEL

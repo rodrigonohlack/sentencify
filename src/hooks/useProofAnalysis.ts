@@ -60,6 +60,7 @@ export interface AIIntegrationForProofs {
     corrections: DoubleCheckCorrection[];
     summary: string;
     confidence?: number;
+    failed?: boolean;
   }>;
 }
 
@@ -550,7 +551,7 @@ ${customInstructions ? `INSTRUÇÕES DO MAGISTRADO:\n${customInstructions}\n` : 
         try {
           // v1.37.68: Passar contentArray diretamente (inclui PDF binário se modo pdf-puro)
           // contentArray já contém: PDF binário (se pdf-puro) ou texto extraído + contexto do processo
-          const { verified, corrections, summary, confidence } = await aiIntegration.performDoubleCheck(
+          const { verified, corrections, summary, confidence, failed } = await aiIntegration.performDoubleCheck(
             'proofAnalysis',
             finalResult,
             contentArray as AIMessageContent[]  // Array incluindo PDFs binários
@@ -601,6 +602,9 @@ ${customInstructions ? `INSTRUÇÕES DO MAGISTRADO:\n${customInstructions}\n` : 
               console.log('[DoubleCheck ProofAnalysis] Usuário descartou correções');
               showToast('Double Check: correções descartadas', 'info');
             }
+          } else if (failed) {
+            console.warn('[DoubleCheck ProofAnalysis] Verificação falhou - resultado não verificado');
+            showToast('Double Check: verificação falhou, resultado não verificado', 'warning');
           } else {
             console.log('[DoubleCheck ProofAnalysis] Nenhuma correção necessária');
           }
