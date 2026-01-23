@@ -18,7 +18,7 @@ export const AnalysisIdentificacaoSchema = z.object({
   rito: z.string().optional().nullable(),
   vara: z.string().optional().nullable(),
   dataAjuizamento: z.string().optional().nullable(),
-});
+}).passthrough();
 
 export const AnalysisPedidoSchema = z.object({
   numero: z.number().or(z.string().transform(Number)).optional(),
@@ -32,14 +32,14 @@ export const AnalysisPedidoSchema = z.object({
   controversia: z.boolean().default(true),
   confissaoFicta: z.string().optional().nullable(),
   pontosEsclarecer: z.array(z.string()).optional().default([]),
-});
+}).passthrough();
 
 export const AnalysisAlertaSchema = z.object({
   tipo: z.string(),
   descricao: z.string(),
   severidade: z.enum(['alta', 'media', 'baixa']).default('media'),
   recomendacao: z.string().optional().default(''),
-});
+}).passthrough();
 
 export const AnalysisResponseSchema = z.object({
   identificacao: AnalysisIdentificacaoSchema.optional(),
@@ -55,18 +55,23 @@ export const AnalysisResponseSchema = z.object({
   valorCausa: z.any().optional(),
   alertas: z.array(AnalysisAlertaSchema).optional().default([]),
   tabelaSintetica: z.array(z.any()).optional().default([]),
-});
+}).passthrough();
 
 // ═══════════════════════════════════════════════════════════════════
 // SCHEMA: Double Check
 // ═══════════════════════════════════════════════════════════════════
 
 export const CorrectionSchema = z.object({
-  type: z.enum(['remove', 'add', 'merge', 'reclassify', 'modify', 'improve']),
+  type: z.enum([
+    'remove', 'add', 'merge', 'reclassify',
+    'modify',
+    'false_positive', 'missed', 'improve',
+    'add_row', 'fix_row', 'remove_row', 'add_fato',
+  ]),
   description: z.string().nullable().default('').transform(v => v ?? ''),
   original: z.string().nullable().optional().transform(v => v ?? undefined),
   corrected: z.string().nullable().optional().transform(v => v ?? undefined),
-});
+}).passthrough();
 
 export const DoubleCheckResponseSchema = z.object({
   corrections: z.array(CorrectionSchema).default([]),
@@ -81,15 +86,15 @@ export const DoubleCheckResponseSchema = z.object({
 export const TopicSchema = z.object({
   title: z.string().nullable().default('').transform(v => v ?? ''),
   category: z.string().nullable().default('').transform(v => v ?? ''),
-});
+}).passthrough();
 
 export const TopicExtractionSchema = z.object({
   partes: z.object({
     reclamante: z.string().nullable().default('').transform(v => v ?? ''),
     reclamadas: z.array(z.string()).default([]),
-  }).optional().default({ reclamante: '', reclamadas: [] }),
+  }).passthrough().optional().default({ reclamante: '', reclamadas: [] }),
   topics: z.array(TopicSchema).default([]),
-});
+}).passthrough();
 
 // ═══════════════════════════════════════════════════════════════════
 // SCHEMA: Confronto de Fatos
@@ -106,7 +111,7 @@ export const FactRowSchema = z.object({
   classificacao: z.string().optional(),
   relevancia: z.enum(['alta', 'media', 'baixa']).optional().default('media'),
   observacao: z.string().optional().nullable(),
-});
+}).passthrough();
 
 export const FactsComparisonSchema = z.object({
   tabela: z.array(FactRowSchema).default([]),
@@ -114,7 +119,7 @@ export const FactsComparisonSchema = z.object({
   fatosControversos: z.array(z.string()).optional().default([]),
   pontosChave: z.array(z.string()).optional().default([]),
   resumo: z.string().optional().default(''),
-});
+}).passthrough();
 
 // ═══════════════════════════════════════════════════════════════════
 // SCHEMA: Extração em Lote de Modelos
@@ -128,11 +133,11 @@ export const BulkModelSchema = z.object({
     z.string().transform(s => s ? s.split(',').map(k => k.trim()) : [])
   ]).optional().default([]),
   conteudo: z.string().nullable().default('').transform(v => v ?? ''),
-});
+}).passthrough();
 
 export const BulkExtractionSchema = z.object({
   modelos: z.array(BulkModelSchema).default([]),
-});
+}).passthrough();
 
 // ═══════════════════════════════════════════════════════════════════
 // UTILIDADE: Parser seguro de JSON com validação
