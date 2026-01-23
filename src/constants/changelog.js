@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.43', feature: 'Fix PDFs perdidos após import + F5: autoSave agora grava IDs dos arquivos restaurados no localStorage (antes gravava arrays vazios, deixando PDFs órfãos no IndexedDB)' },
   { version: '1.38.42', feature: 'Busca expandida no Google Drive: além da pasta Sentencify, busca arquivos sentencify-*.json em qualquer local do Drive + campo de busca por nome no modal de arquivos' },
   { version: '1.38.41', feature: 'Fix caches IndexedDB de projetos anteriores persistindo: importProject e clearProject agora limpam chat-history, facts-comparison, sentence-review e versions antes de carregar novo projeto' },
   { version: '1.38.40', feature: 'Fix batch analysis: stagger delay 1.5s entre requests concorrentes (evita respostas truncadas) + retry automático (max 2x) quando parsing da resposta IA falha' },
