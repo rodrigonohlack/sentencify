@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.44', feature: 'Fix Gemini gasta todos os tokens em thinking: adicionar thinking_budget explícito no thinking_config (cap: 2000/4000/8000/16000 conforme nível) para garantir tokens restantes para resposta textual' },
   { version: '1.38.43', feature: 'Fix PDFs perdidos após import + F5: autoSave agora grava IDs dos arquivos restaurados no localStorage (antes gravava arrays vazios, deixando PDFs órfãos no IndexedDB)' },
   { version: '1.38.42', feature: 'Busca expandida no Google Drive: além da pasta Sentencify, busca arquivos sentencify-*.json em qualquer local do Drive + campo de busca por nome no modal de arquivos' },
   { version: '1.38.41', feature: 'Fix caches IndexedDB de projetos anteriores persistindo: importProject e clearProject agora limpam chat-history, facts-comparison, sentence-review e versions antes de carregar novo projeto' },

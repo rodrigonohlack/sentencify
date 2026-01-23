@@ -816,6 +816,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         // v1.32.39: includeThoughts para retornar pensamentos na resposta
         geminiRequest.generationConfig.thinking_config = {
           ...getGeminiThinkingConfig(model),
+          thinking_budget: thinkingBuffer,
           includeThoughts: true
         };
 
