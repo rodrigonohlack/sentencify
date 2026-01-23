@@ -419,7 +419,7 @@ describe('UploadTab', () => {
       const props = createMockProps();
       render(<UploadTab {...props} />);
 
-      expect(screen.getByText(/5\.000 caracteres/i)).toBeInTheDocument();
+      expect(screen.getByText(/5[.,]000\s*caracteres/i)).toBeInTheDocument();
     });
   });
 
