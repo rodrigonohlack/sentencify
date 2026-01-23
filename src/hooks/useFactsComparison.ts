@@ -13,6 +13,7 @@
 import React, { useRef, useEffect } from 'react';
 import useFactsComparisonCache from './useFactsComparisonCache';
 import { useUIStore } from '../stores/useUIStore';
+import { parseAIResponse, extractJSON, FactsComparisonSchema } from '../schemas/ai-responses';
 import {
   buildMiniRelatorioComparisonPrompt,
   buildDocumentosComparisonPrompt,
@@ -255,21 +256,18 @@ export function useFactsComparison({
         topK: 40
       });
 
-      // Extrair JSON da resposta (pode vir com markdown)
-      let jsonStr = response;
-      const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
-      if (jsonMatch) {
-        jsonStr = jsonMatch[1];
+      // Validar resposta com schema Zod
+      const validated = parseAIResponse(response, FactsComparisonSchema);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let parsed: any;
+      if (validated.success) {
+        parsed = validated.data;
       } else {
-        // Tentar encontrar JSON direto
-        const firstBrace = response.indexOf('{');
-        const lastBrace = response.lastIndexOf('}');
-        if (firstBrace !== -1 && lastBrace !== -1) {
-          jsonStr = response.substring(firstBrace, lastBrace + 1);
-        }
+        console.warn('[FactsComparison] Validação Zod falhou, usando fallback:', validated.error);
+        const jsonStr = extractJSON(response);
+        if (!jsonStr) throw new Error('Não foi possível encontrar JSON válido na resposta da IA.');
+        parsed = JSON.parse(jsonStr);
       }
-
-      const parsed = JSON.parse(jsonStr);
 
       // v1.36.58: Double Check do Confronto de Fatos
       let verifiedParsed = parsed;

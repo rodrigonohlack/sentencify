@@ -19,6 +19,7 @@
 import React from 'react';
 import { Model, AISettings } from '../types';
 import { TFIDFSimilarity } from '../services/EmbeddingsServices';
+import { parseAIResponse, extractJSON, BulkExtractionSchema } from '../schemas/ai-responses';
 import {
   AI_PROMPTS,
   buildBulkAnalysisPrompt,
@@ -244,20 +245,33 @@ export function useFileHandling({
       topK: BULK_AI_CONFIG.topK
     });
 
-    // Parse do JSON retornado
-    const cleanText = aiResponseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const parsed = JSON.parse(cleanText);
+    // Parse e validação com schema Zod
+    const validated = parseAIResponse(aiResponseText, BulkExtractionSchema);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let parsedModelos: any[];
+    if (validated.success) {
+      parsedModelos = validated.data.modelos;
+    } else {
+      console.warn('[BulkExtraction] Validação Zod falhou, usando fallback:', validated.error);
+      const jsonStr = extractJSON(aiResponseText);
+      if (!jsonStr) throw new Error('Nenhum JSON encontrado na resposta');
+      const parsed = JSON.parse(jsonStr);
+      if (!parsed.modelos || !Array.isArray(parsed.modelos) || parsed.modelos.length === 0) {
+        throw new Error('Nenhum modelo identificado no documento');
+      }
+      parsedModelos = parsed.modelos;
+    }
 
-    if (!parsed.modelos || !Array.isArray(parsed.modelos) || parsed.modelos.length === 0) {
+    if (parsedModelos.length === 0) {
       throw new Error('Nenhum modelo identificado no documento');
     }
 
     // Formata os modelos
-    const modelos: Model[] = parsed.modelos.map((m: { titulo?: string; categoria?: string; palavrasChave?: string; conteudo?: string }, idx: number) => ({
+    const modelos: Model[] = parsedModelos.map((m, idx: number) => ({
       id: `bulk-${Date.now()}-${idx}`,
       title: m.titulo || `Modelo ${idx + 1}`,
       category: m.categoria || 'Sem categoria',
-      keywords: m.palavrasChave || '',
+      keywords: Array.isArray(m.palavrasChave) ? m.palavrasChave.join(', ') : (m.palavrasChave || ''),
       content: m.conteudo || '<p>Conteúdo não gerado</p>',
       sourceFile: fileName,
       createdAt: new Date().toISOString(),

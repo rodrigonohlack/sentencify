@@ -71,7 +71,7 @@ export const CorrectionSchema = z.object({
 export const DoubleCheckResponseSchema = z.object({
   corrections: z.array(CorrectionSchema).default([]),
   confidence: z.number().min(0).max(1).optional().default(0.85),
-  summary: z.string().optional().default(''),
+  summary: z.string().nullable().optional().default('').transform(v => v ?? ''),
 }).passthrough(); // Permite campos extras (verifiedDispositivo, etc.)
 
 // ═══════════════════════════════════════════════════════════════════
@@ -79,9 +79,9 @@ export const DoubleCheckResponseSchema = z.object({
 // ═══════════════════════════════════════════════════════════════════
 
 export const TopicSchema = z.object({
-  titulo: z.string(),
-  categoria: z.string(),
-  miniRelatorio: z.string().optional(),
+  titulo: z.string().nullable().default('').transform(v => v ?? ''),
+  categoria: z.string().nullable().default('').transform(v => v ?? ''),
+  miniRelatorio: z.string().nullable().optional().transform(v => v ?? ''),
 });
 
 export const TopicExtractionSchema = z.object({
@@ -98,9 +98,9 @@ export const TopicExtractionSchema = z.object({
 
 export const FactRowSchema = z.object({
   tema: z.string().optional(),
-  fato: z.string().optional(),
-  alegacaoReclamante: z.string().optional().default(''),
-  alegacaoReclamada: z.string().optional().default(''),
+  fato: z.string().nullable().optional().transform(v => v ?? ''),
+  alegacaoReclamante: z.string().nullable().optional().transform(v => v ?? ''),
+  alegacaoReclamada: z.string().nullable().optional().transform(v => v ?? ''),
   posicaoReclamante: z.string().optional(),
   posicaoReclamada: z.string().optional(),
   status: z.enum(['controverso', 'incontroverso', 'silencio']).optional().default('controverso'),
@@ -122,10 +122,13 @@ export const FactsComparisonSchema = z.object({
 // ═══════════════════════════════════════════════════════════════════
 
 export const BulkModelSchema = z.object({
-  titulo: z.string(),
-  categoria: z.string().optional().default(''),
-  palavrasChave: z.array(z.string()).optional().default([]),
-  conteudo: z.string(),
+  titulo: z.string().nullable().default('').transform(v => v ?? ''),
+  categoria: z.string().nullable().optional().default('').transform(v => v ?? ''),
+  palavrasChave: z.union([
+    z.array(z.string()),
+    z.string().transform(s => s ? s.split(',').map(k => k.trim()) : [])
+  ]).optional().default([]),
+  conteudo: z.string().nullable().default('').transform(v => v ?? ''),
 });
 
 export const BulkExtractionSchema = z.object({

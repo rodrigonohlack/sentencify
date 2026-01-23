@@ -13,6 +13,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import { anonymizeText, normalizeHTMLSpacing } from '../utils/text';
+import { parseAIResponse, extractJSON, TopicExtractionSchema } from '../schemas/ai-responses';
 import { AI_PROMPTS, buildAnalysisPrompt } from '../prompts';
 import type {
   AIMessage,
@@ -606,36 +607,16 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       setAnalysisProgress('Extraindo tópicos identificados...');
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      // Limpar markdown e espacos
-      let cleanText = textContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
-      let parsed;
-      try {
-        parsed = JSON.parse(cleanText);
-      } catch (parseError) {
-        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          try {
-            parsed = JSON.parse(jsonMatch[0]);
-          } catch (matchError) {
-            let fixedText = jsonMatch[0];
-            const lastQuote = fixedText.lastIndexOf('"');
-            const lastBrace = fixedText.lastIndexOf('}');
-
-            if (lastQuote > lastBrace) {
-              fixedText = fixedText.substring(0, lastQuote + 1) + '"}]}';
-              try {
-                parsed = JSON.parse(fixedText);
-              } catch (fixError) {
-                throw new Error(`Erro ao parsear resposta da IA. Resposta pode estar incompleta ou mal formatada. Detalhes: ${(parseError as Error).message}`);
-              }
-            } else {
-              throw new Error(`Erro ao parsear resposta da IA. Resposta pode estar incompleta ou mal formatada. Detalhes: ${(parseError as Error).message}`);
-            }
-          }
-        } else {
-          throw new Error(`Não foi possível encontrar JSON válido na resposta da IA. Detalhes: ${(parseError as Error).message}`);
-        }
+      const validated = parseAIResponse(textContent, TopicExtractionSchema);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let parsed: any;
+      if (validated.success) {
+        parsed = validated.data;
+      } else {
+        console.warn('[DocumentAnalysis] Validação Zod falhou, usando fallback:', validated.error);
+        const jsonStr = extractJSON(textContent);
+        if (!jsonStr) throw new Error('Não foi possível encontrar JSON válido na resposta da IA.');
+        parsed = JSON.parse(jsonStr);
       }
 
       let topics = parsed.topics || [];

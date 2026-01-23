@@ -25,6 +25,7 @@ import type {
   OpenAIMessagePart,
   DoubleCheckCorrection
 } from '../types';
+import { parseAIResponse, DoubleCheckResponseSchema } from '../schemas/ai-responses';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // REDUCER PARA ESTADOS DE GERAÇÃO
@@ -1347,7 +1348,15 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       }
 
       const jsonStr = jsonMatch[1] || jsonMatch[0];
-      const result = JSON.parse(jsonStr);
+      const dcValidated = parseAIResponse(jsonStr, DoubleCheckResponseSchema);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result: any;
+      if (dcValidated.success) {
+        result = dcValidated.data;
+      } else {
+        console.warn('[DoubleCheck] Validação Zod falhou, usando fallback:', dcValidated.error);
+        result = JSON.parse(jsonStr);
+      }
 
       // Debug: Log do verifiedResult retornado pela IA
       // Nota: verifiedTopics e verifiedResult (factsComparison) são objetos, não strings
