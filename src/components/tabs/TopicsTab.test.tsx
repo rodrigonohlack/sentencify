@@ -1,7 +1,9 @@
 /**
  * @file TopicsTab.test.tsx
  * @description Testes para o componente TopicsTab
- * @version 1.37.57
+ * @version 1.38.40
+ *
+ * Atualizado para FASE 3: TopicsTab agora acessa useUIStore e useTopicsStore diretamente
  */
 
 import React from 'react';
@@ -9,6 +11,31 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TopicsTab } from './TopicsTab';
 import type { Topic, TopicsTabProps } from '../../types';
+
+// Mock useUIStore
+const mockUIStore = {
+  openModal: vi.fn(),
+};
+vi.mock('../../stores/useUIStore', () => ({
+  useUIStore: (selector: (s: typeof mockUIStore) => unknown) => selector(mockUIStore),
+}));
+
+// Mock useTopicsStore
+const mockTopicsStore = {
+  extractedTopics: [] as Topic[],
+  setExtractedTopics: vi.fn(),
+  selectedTopics: [] as Topic[],
+  setSelectedTopics: vi.fn(),
+  topicsToMerge: [] as Topic[],
+  setTopicsToMerge: vi.fn(),
+  lastEditedTopicTitle: null as string | null,
+  setTopicToRename: vi.fn(),
+  setNewTopicName: vi.fn(),
+  setTopicToSplit: vi.fn(),
+};
+vi.mock('../../stores/useTopicsStore', () => ({
+  useTopicsStore: (selector: (s: typeof mockTopicsStore) => unknown) => selector(mockTopicsStore),
+}));
 
 // Mock do SortableTopicCard para simplificar testes
 vi.mock('../cards', () => ({
@@ -36,18 +63,8 @@ vi.mock('@dnd-kit/sortable', () => ({
 }));
 
 describe('TopicsTab', () => {
-  // Default props factory
+  // Default props factory (only props that remain)
   const createMockProps = (overrides: Partial<TopicsTabProps> = {}): TopicsTabProps => ({
-    extractedTopics: [],
-    setExtractedTopics: vi.fn(),
-    selectedTopics: [],
-    setSelectedTopics: vi.fn(),
-    topicsToMerge: [],
-    setTopicsToMerge: vi.fn(),
-    unselectedTopics: [],
-    topicsDecididos: 0,
-    topicsPendentes: 0,
-    lastEditedTopicTitle: null,
     topicRefs: { current: {} },
     dndSensors: [],
     customCollisionDetection: vi.fn(),
@@ -62,10 +79,6 @@ describe('TopicsTab', () => {
     moveTopicToPosition: vi.fn(),
     startEditing: vi.fn(),
     deleteTopic: vi.fn(),
-    setTopicToRename: vi.fn(),
-    setNewTopicName: vi.fn(),
-    setTopicToSplit: vi.fn(),
-    openModal: vi.fn(),
     generateDispositivo: vi.fn(),
     exportDecision: vi.fn(),
     isTopicDecidido: vi.fn(() => false),
@@ -76,13 +89,30 @@ describe('TopicsTab', () => {
     ...overrides,
   });
 
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Reset store mocks
+    mockUIStore.openModal = vi.fn();
+    mockTopicsStore.extractedTopics = [];
+    mockTopicsStore.setExtractedTopics = vi.fn();
+    mockTopicsStore.selectedTopics = [];
+    mockTopicsStore.setSelectedTopics = vi.fn();
+    mockTopicsStore.topicsToMerge = [];
+    mockTopicsStore.setTopicsToMerge = vi.fn();
+    mockTopicsStore.lastEditedTopicTitle = null;
+    mockTopicsStore.setTopicToRename = vi.fn();
+    mockTopicsStore.setNewTopicName = vi.fn();
+    mockTopicsStore.setTopicToSplit = vi.fn();
+  });
+
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDERING TESTS
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Rendering', () => {
     it('should show empty state when no topics', () => {
-      const props = createMockProps({ extractedTopics: [] });
+      mockTopicsStore.extractedTopics = [];
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       expect(screen.getByText(/Nenhum tópico extraído ainda/i)).toBeInTheDocument();
@@ -93,10 +123,9 @@ describe('TopicsTab', () => {
         { id: '1', title: 'Topic 1', category: 'MÉRITO' },
         { id: '2', title: 'Topic 2', category: 'MÉRITO' },
       ];
-      const props = createMockProps({
-        extractedTopics: topics,
-        selectedTopics: topics,
-      });
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.selectedTopics = topics;
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       expect(screen.getByText(/Gerenciar Tópicos/i)).toBeInTheDocument();
@@ -104,21 +133,27 @@ describe('TopicsTab', () => {
     });
 
     it('should render status counters (decididos/pendentes)', () => {
-      const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
+      const topics: Topic[] = [
+        { id: '1', title: 'Topic 1', category: 'MÉRITO' },
+        { id: '2', title: 'Topic 2', category: 'MÉRITO' },
+        { id: '3', title: 'Topic 3', category: 'MÉRITO' },
+      ];
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.selectedTopics = topics;
+      // 1 decidido, 2 pendentes
       const props = createMockProps({
-        extractedTopics: topics,
-        topicsDecididos: 3,
-        topicsPendentes: 5,
+        isTopicDecidido: vi.fn((t: Topic) => t.id === '1'),
       });
       render(<TopicsTab {...props} />);
 
-      expect(screen.getByText(/3 Decididos/i)).toBeInTheDocument();
-      expect(screen.getByText(/5 Pendentes/i)).toBeInTheDocument();
+      expect(screen.getByText(/1 Decididos/i)).toBeInTheDocument();
+      expect(screen.getByText(/2 Pendentes/i)).toBeInTheDocument();
     });
 
     it('should render CNJ info box', () => {
       const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
-      const props = createMockProps({ extractedTopics: topics });
+      mockTopicsStore.extractedTopics = topics;
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       expect(screen.getByText(/Resolução 615\/2025 do CNJ/i)).toBeInTheDocument();
@@ -135,10 +170,9 @@ describe('TopicsTab', () => {
         { id: '1', title: 'Topic 1', category: 'MÉRITO' },
         { id: '2', title: 'Topic 2', category: 'MÉRITO' },
       ];
-      const props = createMockProps({
-        extractedTopics: topics,
-        topicsToMerge: topics,
-      });
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.topicsToMerge = topics;
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       expect(screen.getByText(/Unir 2 Selecionados/i)).toBeInTheDocument();
@@ -146,10 +180,9 @@ describe('TopicsTab', () => {
 
     it('should NOT show "Unir" button when less than 2 topics', () => {
       const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
-      const props = createMockProps({
-        extractedTopics: topics,
-        topicsToMerge: [topics[0]],
-      });
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.topicsToMerge = [topics[0]];
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       expect(screen.queryByText(/Unir.*Selecionados/i)).not.toBeInTheDocument();
@@ -157,7 +190,8 @@ describe('TopicsTab', () => {
 
     it('should always show "Novo Tópico" button', () => {
       const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
-      const props = createMockProps({ extractedTopics: topics });
+      mockTopicsStore.extractedTopics = topics;
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       expect(screen.getByText(/Novo Tópico/i)).toBeInTheDocument();
@@ -167,20 +201,17 @@ describe('TopicsTab', () => {
       const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
 
       // Without selected topics
-      const propsNoSelection = createMockProps({
-        extractedTopics: topics,
-        selectedTopics: [],
-      });
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.selectedTopics = [];
+      const propsNoSelection = createMockProps();
       const { rerender } = render(<TopicsTab {...propsNoSelection} />);
 
       expect(screen.queryByText(/Edição Global/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/Exportar Minuta/i)).not.toBeInTheDocument();
 
       // With selected topics
-      const propsWithSelection = createMockProps({
-        extractedTopics: topics,
-        selectedTopics: topics,
-      });
+      mockTopicsStore.selectedTopics = topics;
+      const propsWithSelection = createMockProps();
       rerender(<TopicsTab {...propsWithSelection} />);
 
       expect(screen.getByText(/Edição Global/i)).toBeInTheDocument();
@@ -189,9 +220,9 @@ describe('TopicsTab', () => {
 
     it('should disable "Gerar Dispositivo" when canGenerateDispositivo is false', () => {
       const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.selectedTopics = topics;
       const props = createMockProps({
-        extractedTopics: topics,
-        selectedTopics: topics,
         canGenerateDispositivo: { enabled: false, reason: 'Preencha todos os campos' },
       });
       render(<TopicsTab {...props} />);
@@ -202,9 +233,9 @@ describe('TopicsTab', () => {
 
     it('should disable "Gerar Dispositivo" when generating', () => {
       const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.selectedTopics = topics;
       const props = createMockProps({
-        extractedTopics: topics,
-        selectedTopics: topics,
         generatingDispositivo: true,
       });
       render(<TopicsTab {...props} />);
@@ -214,9 +245,9 @@ describe('TopicsTab', () => {
 
     it('should disable "Revisar Sentença" when generating review', () => {
       const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.selectedTopics = topics;
       const props = createMockProps({
-        extractedTopics: topics,
-        selectedTopics: topics,
         generatingReview: true,
       });
       render(<TopicsTab {...props} />);
@@ -232,10 +263,9 @@ describe('TopicsTab', () => {
   describe('Drag and Drop', () => {
     it('should render DndContext', () => {
       const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
-      const props = createMockProps({
-        extractedTopics: topics,
-        selectedTopics: topics,
-      });
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.selectedTopics = topics;
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       expect(screen.getByTestId('dnd-context')).toBeInTheDocument();
@@ -246,14 +276,13 @@ describe('TopicsTab', () => {
         { id: '1', title: 'Selected 1', category: 'MÉRITO' },
         { id: '2', title: 'Selected 2', category: 'MÉRITO' },
       ];
-      const unselectedTopics: Topic[] = [
+      const allTopics: Topic[] = [
+        ...selectedTopics,
         { id: '3', title: 'Unselected', category: 'MÉRITO' },
       ];
-      const props = createMockProps({
-        extractedTopics: [...selectedTopics, ...unselectedTopics],
-        selectedTopics,
-        unselectedTopics,
-      });
+      mockTopicsStore.extractedTopics = allTopics;
+      mockTopicsStore.selectedTopics = selectedTopics;
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       const sortableContext = screen.getByTestId('sortable-context');
@@ -271,10 +300,9 @@ describe('TopicsTab', () => {
         { id: '1', title: 'Topic 1', category: 'MÉRITO' },
         { id: '2', title: 'Topic 2', category: 'MÉRITO' },
       ];
-      const props = createMockProps({
-        extractedTopics: selectedTopics,
-        selectedTopics,
-      });
+      mockTopicsStore.extractedTopics = selectedTopics;
+      mockTopicsStore.selectedTopics = selectedTopics;
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       expect(screen.getByTestId('sortable-topic-1')).toBeInTheDocument();
@@ -283,12 +311,13 @@ describe('TopicsTab', () => {
 
     it('should NOT render unselected topics in DndContext', () => {
       const selectedTopics: Topic[] = [{ id: '1', title: 'Selected', category: 'MÉRITO' }];
-      const unselectedTopics: Topic[] = [{ id: '2', title: 'Unselected', category: 'MÉRITO' }];
-      const props = createMockProps({
-        extractedTopics: [...selectedTopics, ...unselectedTopics],
-        selectedTopics,
-        unselectedTopics,
-      });
+      const allTopics: Topic[] = [
+        ...selectedTopics,
+        { id: '2', title: 'Unselected', category: 'MÉRITO' },
+      ];
+      mockTopicsStore.extractedTopics = allTopics;
+      mockTopicsStore.selectedTopics = selectedTopics;
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       // Unselected should NOT be in sortable context
@@ -306,9 +335,9 @@ describe('TopicsTab', () => {
     it('should call toggleTopicSelection when topic title clicked', () => {
       const toggleFn = vi.fn();
       const unselectedTopics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
+      mockTopicsStore.extractedTopics = unselectedTopics;
+      mockTopicsStore.selectedTopics = []; // not selected → shows in unselected section
       const props = createMockProps({
-        extractedTopics: unselectedTopics,
-        unselectedTopics,
         toggleTopicSelection: toggleFn,
       });
       render(<TopicsTab {...props} />);
@@ -321,9 +350,9 @@ describe('TopicsTab', () => {
     it('should call toggleTopicSelection when checkbox clicked', () => {
       const toggleFn = vi.fn();
       const unselectedTopics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
+      mockTopicsStore.extractedTopics = unselectedTopics;
+      mockTopicsStore.selectedTopics = [];
       const props = createMockProps({
-        extractedTopics: unselectedTopics,
-        unselectedTopics,
         toggleTopicSelection: toggleFn,
       });
       render(<TopicsTab {...props} />);
@@ -336,10 +365,9 @@ describe('TopicsTab', () => {
 
     it('should show checkbox for unselected topics', () => {
       const unselectedTopics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
-      const props = createMockProps({
-        extractedTopics: unselectedTopics,
-        unselectedTopics,
-      });
+      mockTopicsStore.extractedTopics = unselectedTopics;
+      mockTopicsStore.selectedTopics = [];
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       expect(screen.getByRole('checkbox')).toBeInTheDocument();
@@ -350,9 +378,9 @@ describe('TopicsTab', () => {
 
     it('should hide category selector for RELATÓRIO', () => {
       const unselectedTopics: Topic[] = [{ id: '1', title: 'RELATÓRIO', category: 'MÉRITO' }];
+      mockTopicsStore.extractedTopics = unselectedTopics;
+      mockTopicsStore.selectedTopics = [];
       const props = createMockProps({
-        extractedTopics: unselectedTopics,
-        unselectedTopics,
         isSpecialTopic: vi.fn((t: Topic) => t.title.toUpperCase() === 'RELATÓRIO'),
       });
       render(<TopicsTab {...props} />);
@@ -363,9 +391,9 @@ describe('TopicsTab', () => {
 
     it('should hide category selector for DISPOSITIVO', () => {
       const unselectedTopics: Topic[] = [{ id: '1', title: 'DISPOSITIVO', category: 'MÉRITO' }];
+      mockTopicsStore.extractedTopics = unselectedTopics;
+      mockTopicsStore.selectedTopics = [];
       const props = createMockProps({
-        extractedTopics: unselectedTopics,
-        unselectedTopics,
         isSpecialTopic: vi.fn((t: Topic) => t.title.toUpperCase() === 'DISPOSITIVO'),
       });
       render(<TopicsTab {...props} />);
@@ -376,9 +404,9 @@ describe('TopicsTab', () => {
 
     it('should show category selector for normal topics', () => {
       const unselectedTopics: Topic[] = [{ id: '1', title: 'Normal Topic', category: 'MÉRITO' }];
+      mockTopicsStore.extractedTopics = unselectedTopics;
+      mockTopicsStore.selectedTopics = [];
       const props = createMockProps({
-        extractedTopics: unselectedTopics,
-        unselectedTopics,
         isSpecialTopic: vi.fn(() => false),
       });
       render(<TopicsTab {...props} />);
@@ -393,58 +421,49 @@ describe('TopicsTab', () => {
 
   describe('Button Actions', () => {
     it('should call openModal with "merge" when Unir button clicked', () => {
-      const openModalFn = vi.fn();
       const topics: Topic[] = [
         { id: '1', title: 'Topic 1', category: 'MÉRITO' },
         { id: '2', title: 'Topic 2', category: 'MÉRITO' },
       ];
-      const props = createMockProps({
-        extractedTopics: topics,
-        topicsToMerge: topics,
-        openModal: openModalFn,
-      });
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.topicsToMerge = topics;
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       fireEvent.click(screen.getByText(/Unir 2 Selecionados/i));
 
-      expect(openModalFn).toHaveBeenCalledWith('merge');
+      expect(mockUIStore.openModal).toHaveBeenCalledWith('merge');
     });
 
     it('should call openModal with "newTopic" when Novo Tópico clicked', () => {
-      const openModalFn = vi.fn();
       const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
-      const props = createMockProps({
-        extractedTopics: topics,
-        openModal: openModalFn,
-      });
+      mockTopicsStore.extractedTopics = topics;
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       fireEvent.click(screen.getByText(/Novo Tópico/i));
 
-      expect(openModalFn).toHaveBeenCalledWith('newTopic');
+      expect(mockUIStore.openModal).toHaveBeenCalledWith('newTopic');
     });
 
     it('should call openModal with "globalEditor" when Edição Global clicked', () => {
-      const openModalFn = vi.fn();
       const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
-      const props = createMockProps({
-        extractedTopics: topics,
-        selectedTopics: topics,
-        openModal: openModalFn,
-      });
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.selectedTopics = topics;
+      const props = createMockProps();
       render(<TopicsTab {...props} />);
 
       fireEvent.click(screen.getByText(/Edição Global/i));
 
-      expect(openModalFn).toHaveBeenCalledWith('globalEditor');
+      expect(mockUIStore.openModal).toHaveBeenCalledWith('globalEditor');
     });
 
     it('should call generateDispositivo when button clicked', () => {
       const generateFn = vi.fn();
       const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.selectedTopics = topics;
       const props = createMockProps({
-        extractedTopics: topics,
-        selectedTopics: topics,
         generateDispositivo: generateFn,
       });
       render(<TopicsTab {...props} />);
@@ -457,9 +476,9 @@ describe('TopicsTab', () => {
     it('should call exportDecision when Exportar Minuta clicked', () => {
       const exportFn = vi.fn();
       const topics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
+      mockTopicsStore.extractedTopics = topics;
+      mockTopicsStore.selectedTopics = topics;
       const props = createMockProps({
-        extractedTopics: topics,
-        selectedTopics: topics,
         exportDecision: exportFn,
       });
       render(<TopicsTab {...props} />);
@@ -472,9 +491,9 @@ describe('TopicsTab', () => {
     it('should call deleteTopic when delete button clicked', () => {
       const deleteFn = vi.fn();
       const unselectedTopics: Topic[] = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }];
+      mockTopicsStore.extractedTopics = unselectedTopics;
+      mockTopicsStore.selectedTopics = [];
       const props = createMockProps({
-        extractedTopics: unselectedTopics,
-        unselectedTopics,
         deleteTopic: deleteFn,
       });
       render(<TopicsTab {...props} />);

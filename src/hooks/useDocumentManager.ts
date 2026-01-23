@@ -1,14 +1,15 @@
 /**
  * @file useDocumentManager.ts
- * @description Hook para gerenciamento de documentos (petições, contestações, complementares)
- * @version 1.36.76
+ * @description Hook wrapper para gerenciamento de documentos (petições, contestações, complementares)
+ * @version 1.38.40
  *
- * Extraído do App.tsx - Sistema de Análise de Documentos v1.2.7a
- * Gerencia arquivos PDF e textos colados para análise
+ * FASE 3 Etapa 3.1: Thin wrapper sobre useDocumentsStore.
+ * Estado delegado ao store Zustand. Hook mantém apenas handlers com I/O (IndexedDB).
  */
 
 import React from 'react';
 import { savePdfToIndexedDB, removePdfFromIndexedDB } from './useLocalStorage';
+import { useDocumentsStore } from '../stores/useDocumentsStore';
 import type {
   UploadedFile,
   PastedText,
@@ -47,28 +48,28 @@ export interface UseDocumentManagerReturn {
   documentProcessingModes: DocumentProcessingModes;
 
   // Setters Arquivos (3)
-  setPeticaoFiles: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
-  setContestacaoFiles: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
-  setComplementaryFiles: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
+  setPeticaoFiles: (files: UploadedFile[] | ((prev: UploadedFile[]) => UploadedFile[])) => void;
+  setContestacaoFiles: (files: UploadedFile[] | ((prev: UploadedFile[]) => UploadedFile[])) => void;
+  setComplementaryFiles: (files: UploadedFile[] | ((prev: UploadedFile[]) => UploadedFile[])) => void;
 
   // Setters Textos Colados (3)
-  setPastedPeticaoTexts: React.Dispatch<React.SetStateAction<PastedText[]>>;
-  setPastedContestacaoTexts: React.Dispatch<React.SetStateAction<PastedText[]>>;
-  setPastedComplementaryTexts: React.Dispatch<React.SetStateAction<PastedText[]>>;
+  setPastedPeticaoTexts: (texts: PastedText[] | ((prev: PastedText[]) => PastedText[])) => void;
+  setPastedContestacaoTexts: (texts: PastedText[] | ((prev: PastedText[]) => PastedText[])) => void;
+  setPastedComplementaryTexts: (texts: PastedText[] | ((prev: PastedText[]) => PastedText[])) => void;
 
   // Setters Metadados (1)
-  setAnalyzedDocuments: React.Dispatch<React.SetStateAction<AnalyzedDocuments>>;
+  setAnalyzedDocuments: (docs: AnalyzedDocuments | ((prev: AnalyzedDocuments) => AnalyzedDocuments)) => void;
 
   // Setters UI/Progresso (6)
-  setAnalyzing: React.Dispatch<React.SetStateAction<boolean>>;
-  setAnalysisProgress: React.Dispatch<React.SetStateAction<string>>;
-  setExtractingText: React.Dispatch<React.SetStateAction<boolean>>;
-  setShowPasteArea: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  setExtractedTexts: React.Dispatch<React.SetStateAction<ExtractedTexts>>;
-  setShowTextPreview: React.Dispatch<React.SetStateAction<boolean>>;
+  setAnalyzing: (v: boolean) => void;
+  setAnalysisProgress: (p: string) => void;
+  setExtractingText: (v: boolean) => void;
+  setShowPasteArea: (areas: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void;
+  setExtractedTexts: (texts: ExtractedTexts | ((prev: ExtractedTexts) => ExtractedTexts)) => void;
+  setShowTextPreview: (v: boolean) => void;
 
   // v1.12.18: Setters de modos de processamento
-  setDocumentProcessingModes: React.Dispatch<React.SetStateAction<DocumentProcessingModes>>;
+  setDocumentProcessingModes: (modes: DocumentProcessingModes | ((prev: DocumentProcessingModes) => DocumentProcessingModes)) => void;
   setPeticaoMode: (index: number, mode: ProcessingMode) => void;
   setContestacaoMode: (index: number, mode: ProcessingMode) => void;
   setComplementarMode: (index: number, mode: ProcessingMode) => void;
@@ -89,168 +90,91 @@ export interface UseDocumentManagerReturn {
 
 /**
  * Hook para gerenciamento de documentos
- * Gerencia PDFs e textos colados de petições, contestações e documentos complementares
+ * Thin wrapper sobre useDocumentsStore + handlers com I/O (IndexedDB)
  *
  * @param clearPdfCache - Função opcional para limpar cache de PDFs
  * @returns Estados, setters, handlers e métodos de persistência
  */
 const useDocumentManager = (clearPdfCache?: () => void): UseDocumentManagerReturn => {
-  // 📦 ESTADOS CORE (13 total)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SELETORES DO STORE
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  // Arquivos de Documentos (3)
-  const [peticaoFiles, setPeticaoFiles] = React.useState<UploadedFile[]>([]);
-  // Array de {file: File, id: string} dos PDFs da petição inicial e emendas
+  // Estados
+  const peticaoFiles = useDocumentsStore((s) => s.peticaoFiles);
+  const contestacaoFiles = useDocumentsStore((s) => s.contestacaoFiles);
+  const complementaryFiles = useDocumentsStore((s) => s.complementaryFiles);
+  const pastedPeticaoTexts = useDocumentsStore((s) => s.pastedPeticaoTexts);
+  const pastedContestacaoTexts = useDocumentsStore((s) => s.pastedContestacaoTexts);
+  const pastedComplementaryTexts = useDocumentsStore((s) => s.pastedComplementaryTexts);
+  const analyzedDocuments = useDocumentsStore((s) => s.analyzedDocuments);
+  const analyzing = useDocumentsStore((s) => s.analyzing);
+  const analysisProgress = useDocumentsStore((s) => s.analysisProgress);
+  const extractingText = useDocumentsStore((s) => s.extractingText);
+  const showPasteArea = useDocumentsStore((s) => s.showPasteArea);
+  const extractedTexts = useDocumentsStore((s) => s.extractedTexts);
+  const showTextPreview = useDocumentsStore((s) => s.showTextPreview);
+  const documentProcessingModes = useDocumentsStore((s) => s.documentProcessingModes);
 
-  const [contestacaoFiles, setContestacaoFiles] = React.useState<UploadedFile[]>([]);
-  // Array de {file: File, id: string} dos PDFs de contestações
+  // Setters
+  const setPeticaoFiles = useDocumentsStore((s) => s.setPeticaoFiles);
+  const setContestacaoFiles = useDocumentsStore((s) => s.setContestacaoFiles);
+  const setComplementaryFiles = useDocumentsStore((s) => s.setComplementaryFiles);
+  const setPastedPeticaoTexts = useDocumentsStore((s) => s.setPastedPeticaoTexts);
+  const setPastedContestacaoTexts = useDocumentsStore((s) => s.setPastedContestacaoTexts);
+  const setPastedComplementaryTexts = useDocumentsStore((s) => s.setPastedComplementaryTexts);
+  const setAnalyzedDocuments = useDocumentsStore((s) => s.setAnalyzedDocuments);
+  const setAnalyzing = useDocumentsStore((s) => s.setAnalyzing);
+  const setAnalysisProgress = useDocumentsStore((s) => s.setAnalysisProgress);
+  const setExtractingText = useDocumentsStore((s) => s.setExtractingText);
+  const setShowPasteArea = useDocumentsStore((s) => s.setShowPasteArea);
+  const setExtractedTexts = useDocumentsStore((s) => s.setExtractedTexts);
+  const setShowTextPreview = useDocumentsStore((s) => s.setShowTextPreview);
+  const setDocumentProcessingModes = useDocumentsStore((s) => s.setDocumentProcessingModes);
+  const setPeticaoMode = useDocumentsStore((s) => s.setPeticaoMode);
+  const setContestacaoMode = useDocumentsStore((s) => s.setContestacaoMode);
+  const setComplementarMode = useDocumentsStore((s) => s.setComplementarMode);
 
-  const [complementaryFiles, setComplementaryFiles] = React.useState<UploadedFile[]>([]);
-  // Array de File objects dos PDFs de documentos complementares
+  // Actions do store
+  const storeHandlePastedText = useDocumentsStore((s) => s.handlePastedText);
+  const storeRemovePastedText = useDocumentsStore((s) => s.removePastedText);
+  const storeClearAll = useDocumentsStore((s) => s.clearAll);
+  const storeSerialize = useDocumentsStore((s) => s.serializeForPersistence);
+  const storeRestore = useDocumentsStore((s) => s.restoreFromPersistence);
 
-  // Textos Colados (Alternativa aos PDFs) (3)
-  const [pastedPeticaoTexts, setPastedPeticaoTexts] = React.useState<PastedText[]>([]);
-  // Array de {text: string, name: string} - petição e emendas coladas
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HANDLERS COM I/O (IndexedDB)
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  const [pastedContestacaoTexts, setPastedContestacaoTexts] = React.useState<PastedText[]>([]);
-  // Array de {text: string, name: string} - contestações coladas
+  const toUploadFilesArray = (value: FileList | File[] | null) =>
+    Array.isArray(value) ? value : Array.from(value || []);
 
-  const [pastedComplementaryTexts, setPastedComplementaryTexts] = React.useState<PastedText[]>([]);
-  // Array de {text: string, name: string} - documentos complementares colados
-
-  // Metadados de Documentos Processados (1)
-  const [analyzedDocuments, setAnalyzedDocuments] = React.useState<AnalyzedDocuments>({
-    peticoes: [],            // Array de base64 (PDFs não extraídos)
-    peticoesText: [],        // Array de {text, name} (textos extraídos/colados)
-    contestacoes: [],        // Array de base64 (PDFs não extraídos)
-    contestacoesText: [],    // Array de {text, name} (textos extraídos/colados)
-    complementares: [],      // Array de base64 (PDFs não extraídos)
-    complementaresText: []   // Array de {text, name} (textos extraídos/colados)
-  });
-  // Objeto contendo documentos processados após análise
-
-  // Estados de UI e Progresso (6)
-  const [analyzing, setAnalyzing] = React.useState<boolean>(false);
-  // Flag indicando se análise está em andamento
-
-  const [analysisProgress, setAnalysisProgress] = React.useState<string>('');
-  // Mensagem de progresso exibida durante análise (ex: "Extraindo texto da petição...")
-
-  const [extractingText, setExtractingText] = React.useState<boolean>(false);
-  // Flag indicando se extração de texto de PDF está em andamento
-
-  const [showPasteArea, setShowPasteArea] = React.useState<Record<string, boolean>>({
-    peticao: false,
-    contestacao: false,
-    complementary: false
-  });
-  // Controla visibilidade das áreas de colagem de texto para cada tipo de documento
-
-  const [extractedTexts, setExtractedTexts] = React.useState<ExtractedTexts>({
-    peticoes: [],
-    contestacoes: [],
-    complementares: []
-  });
-  // Cache de textos extraídos de PDFs (para não reprocessar)
-
-  // 🆕 v1.12.18: Modo de processamento por documento (v1.12.22: removido OCRAD)
-  // Cada documento pode ter seu próprio modo: 'pdf-puro' | 'pdfjs' | 'claude-vision'
-  const [documentProcessingModes, setDocumentProcessingModes] = React.useState<DocumentProcessingModes>({
-    peticoes: [],               // Array de modos, um por arquivo de petição
-    contestacoes: [],           // Array de modos, um por arquivo
-    complementares: []          // Array de modos, um por arquivo
-  });
-
-  const [showTextPreview, setShowTextPreview] = React.useState<boolean>(false);
-  // Controla exibição de modal de preview de texto extraído
-
-  // 🆕 v1.12.18: Helpers para definir modo de processamento por índice
-  const setPeticaoMode = React.useCallback((index: number, mode: ProcessingMode) => {
-    setDocumentProcessingModes(prev => {
-      const newPeticoes = [...(prev.peticoes || [])];
-      newPeticoes[index] = mode;
-      return { ...prev, peticoes: newPeticoes };
-    });
-  }, []);
-
-  const setContestacaoMode = React.useCallback((index: number, mode: ProcessingMode) => {
-    setDocumentProcessingModes(prev => {
-      const newContestacoes = [...prev.contestacoes];
-      newContestacoes[index] = mode;
-      return { ...prev, contestacoes: newContestacoes };
-    });
-  }, []);
-
-  const setComplementarMode = React.useCallback((index: number, mode: ProcessingMode) => {
-    setDocumentProcessingModes(prev => {
-      const newComplementares = [...prev.complementares];
-      newComplementares[index] = mode;
-      return { ...prev, complementares: newComplementares };
-    });
-  }, []);
-
-  // 🛠️ HANDLERS SIMPLES (5) - ETAPA 7b
-
-  // Helper para garantir array (usado por handleUploadContestacao e handleUploadComplementary)
-  const toUploadFilesArray = (value: FileList | File[] | null) => Array.isArray(value) ? value : Array.from(value || []);
-
-  // Handler: Processa texto colado (petição, contestação ou complementar)
   const handlePastedText = React.useCallback((text: string, type: string, setError: ((msg: string) => void) | null = null) => {
     if (!text.trim()) {
       if (setError) setError('O texto colado está vazio');
       return;
     }
-
-    if (type === 'peticao') {
-      setPastedPeticaoTexts(prev => [...prev, {
-        id: `pasted-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-        text,
-        name: prev.length === 0 ? 'Petição Inicial' : `Emenda/Doc Autor ${prev.length + 1}`
-      }]);
-      setShowPasteArea(prev => ({ ...prev, peticao: false }));
-    } else if (type === 'contestacao') {
-      setPastedContestacaoTexts(prev => [...prev, {
-        id: `pasted-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-        text,
-        name: `Contestação ${prev.length + 1}`
-      }]);
-      setShowPasteArea(prev => ({ ...prev, contestacao: false }));
-    } else if (type === 'complementary') {
-      setPastedComplementaryTexts(prev => [...prev, {
-        id: `pasted-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-        text,
-        name: `Documento Complementar ${prev.length + 1}`
-      }]);
-      setShowPasteArea(prev => ({ ...prev, complementary: false }));
-    }
-
+    storeHandlePastedText(text, type);
     if (setError) setError('');
-  }, []); // 🚀 v1.8.1: Memoizado (3 textareas)
+  }, [storeHandlePastedText]);
 
-  // Handler: Remove texto colado
-  const removePastedText = (type: string, index: number | null = null) => {
-    if (type === 'peticao' && index !== null) {
-      setPastedPeticaoTexts(prev => prev.filter((_, i: number) => i !== index));
-    } else if (type === 'contestacao' && index !== null) {
-      setPastedContestacaoTexts(prev => prev.filter((_, i: number) => i !== index));
-    } else if (type === 'complementary' && index !== null) {
-      setPastedComplementaryTexts(prev => prev.filter((_, i: number) => i !== index));
-    }
-  };
+  const removePastedText = React.useCallback((type: string, index: number | null = null) => {
+    storeRemovePastedText(type, index);
+  }, [storeRemovePastedText]);
 
-  // Handler: Remove arquivo de petição por índice (com limpeza IndexedDB)
   const removePeticaoFile = React.useCallback(async (index: number) => {
     const fileToRemove = peticaoFiles[index];
     if (fileToRemove?.id) {
       try {
         await removePdfFromIndexedDB(`upload-peticao-${fileToRemove.id}`);
-      } catch (err) { /* ignore */ }
+      } catch { /* ignore */ }
     }
     setPeticaoFiles(prev => prev.filter((_, i: number) => i !== index));
     setDocumentProcessingModes(prev => ({
       ...prev,
       peticoes: (prev.peticoes || []).filter((_, i: number) => i !== index)
     }));
-  }, [peticaoFiles]);
+  }, [peticaoFiles, setPeticaoFiles, setDocumentProcessingModes]);
 
   const handleUploadPeticao = React.useCallback(async (files: FileList | File[]) => {
     const filesArray = toUploadFilesArray(files);
@@ -267,9 +191,9 @@ const useDocumentManager = (clearPdfCache?: () => void): UseDocumentManagerRetur
     for (const { file, id } of filesWithIds) {
       try {
         await savePdfToIndexedDB(`upload-peticao-${id}`, file, 'upload');
-      } catch (err) { /* ignore */ }
+      } catch { /* ignore */ }
     }
-  }, []);
+  }, [setPeticaoFiles]);
 
   const handleUploadContestacao = React.useCallback(async (files: FileList | File[]) => {
     const filesArray = toUploadFilesArray(files);
@@ -286,11 +210,10 @@ const useDocumentManager = (clearPdfCache?: () => void): UseDocumentManagerRetur
     for (const { file, id } of filesWithIds) {
       try {
         await savePdfToIndexedDB(`upload-contestacao-${id}`, file, 'upload');
-      } catch (err) { /* ignore */ }
+      } catch { /* ignore */ }
     }
-  }, []);
+  }, [setContestacaoFiles]);
 
-  // Handler: Upload de complementares
   const handleUploadComplementary = React.useCallback(async (files: FileList | File[]) => {
     const filesArray = toUploadFilesArray(files);
     const pdfFiles = filesArray.filter(f => f.type === 'application/pdf');
@@ -306,66 +229,15 @@ const useDocumentManager = (clearPdfCache?: () => void): UseDocumentManagerRetur
     for (const { file, id } of filesWithIds) {
       try {
         await savePdfToIndexedDB(`upload-complementar-${id}`, file, 'upload');
-      } catch (err) { /* ignore */ }
+      } catch { /* ignore */ }
     }
-  }, []);
+  }, [setComplementaryFiles]);
 
-  // 💾 MÉTODOS DE PERSISTÊNCIA (3) - ETAPA 7c
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MÉTODOS DE PERSISTÊNCIA (wrappers com cleanup de IndexedDB)
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  // Serializa dados para persistência
-  const serializeForPersistence = () => {
-    return {
-      // Arquivos (serão convertidos para base64 pelo useLocalStorage)
-      peticaoFiles,
-      contestacaoFiles,
-      complementaryFiles,
-
-      // Textos colados
-      pastedPeticaoTexts,
-      pastedContestacaoTexts,
-      pastedComplementaryTexts,
-
-      // Metadados processados
-      analyzedDocuments,
-
-      // Estados de UI (não precisa salvar analyzing/extractingText - temporários)
-      showPasteArea,
-      extractedTexts,
-
-      // v1.12.18: Modos de processamento por documento
-      documentProcessingModes
-
-      // showTextPreview não precisa persistir (modal temporário)
-    };
-  };
-
-  // Restaura dados do localStorage
-  const restoreFromPersistence = (data: Record<string, unknown> | null) => {
-    if (!data) return;
-
-    // Restaurar arquivos (File objects reconstruídos pelo useLocalStorage)
-    if (data.peticaoFiles) setPeticaoFiles(data.peticaoFiles as UploadedFile[]);
-    if (data.contestacaoFiles) setContestacaoFiles(data.contestacaoFiles as UploadedFile[]);
-    if (data.complementaryFiles) setComplementaryFiles(data.complementaryFiles as UploadedFile[]);
-
-    // Restaurar textos colados
-    if (data.pastedPeticaoTexts) setPastedPeticaoTexts(data.pastedPeticaoTexts as PastedText[]);
-    if (data.pastedContestacaoTexts) setPastedContestacaoTexts(data.pastedContestacaoTexts as PastedText[]);
-    if (data.pastedComplementaryTexts) setPastedComplementaryTexts(data.pastedComplementaryTexts as PastedText[]);
-
-    // Restaurar metadados
-    if (data.analyzedDocuments) setAnalyzedDocuments(data.analyzedDocuments as AnalyzedDocuments);
-
-    // Restaurar estados de UI
-    if (data.showPasteArea) setShowPasteArea(data.showPasteArea as Record<string, boolean>);
-    if (data.extractedTexts) setExtractedTexts(data.extractedTexts as ExtractedTexts);
-
-    // v1.12.18: Restaurar modos de processamento
-    if (data.documentProcessingModes) setDocumentProcessingModes(data.documentProcessingModes as DocumentProcessingModes);
-  };
-
-  // Limpa TODOS os estados de documentos
-  const clearAll = async () => {
+  const clearAll = React.useCallback(async () => {
     // Limpar IndexedDB por ID antes de limpar estados
     for (const fileObj of peticaoFiles) {
       if (fileObj?.id) try { await removePdfFromIndexedDB(`upload-peticao-${fileObj.id}`); } catch {}
@@ -377,52 +249,13 @@ const useDocumentManager = (clearPdfCache?: () => void): UseDocumentManagerRetur
       if (fileObj?.id) try { await removePdfFromIndexedDB(`upload-complementar-${fileObj.id}`); } catch {}
     }
     clearPdfCache?.();
+    storeClearAll();
+  }, [peticaoFiles, contestacaoFiles, complementaryFiles, clearPdfCache, storeClearAll]);
 
-    // Limpar arquivos
-    setPeticaoFiles([]);
-    setContestacaoFiles([]);
-    setComplementaryFiles([]);
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RETURN: API compatível com versão anterior
+  // ═══════════════════════════════════════════════════════════════════════════
 
-    // Limpar textos colados
-    setPastedPeticaoTexts([]);
-    setPastedContestacaoTexts([]);
-    setPastedComplementaryTexts([]);
-
-    // Limpar metadados
-    setAnalyzedDocuments({
-      peticoes: [],
-      peticoesText: [],
-      contestacoes: [],
-      contestacoesText: [],
-      complementares: [],
-      complementaresText: []
-    });
-
-    // Limpar estados de UI/Progresso
-    setAnalyzing(false);
-    setAnalysisProgress('');
-    setExtractingText(false);
-    setShowPasteArea({
-      peticao: false,
-      contestacao: false,
-      complementary: false
-    });
-    setExtractedTexts({
-      peticoes: [],
-      contestacoes: [],
-      complementares: []
-    });
-    setShowTextPreview(false);
-
-    // v1.12.18: Resetar modos de processamento
-    setDocumentProcessingModes({
-      peticoes: [],
-      contestacoes: [],
-      complementares: []
-    });
-  };
-
-  // 🎯 RETURN: Estados, Setters, Handlers e Persistência
   return {
     // Arquivos (3)
     peticaoFiles,
@@ -475,7 +308,7 @@ const useDocumentManager = (clearPdfCache?: () => void): UseDocumentManagerRetur
     setContestacaoMode,
     setComplementarMode,
 
-    // Handlers (5) - ETAPA 7b
+    // Handlers (6) com I/O
     handlePastedText,
     removePastedText,
     removePeticaoFile,
@@ -483,9 +316,9 @@ const useDocumentManager = (clearPdfCache?: () => void): UseDocumentManagerRetur
     handleUploadContestacao,
     handleUploadComplementary,
 
-    // Métodos de Persistência (3) - ETAPA 7c
-    serializeForPersistence,
-    restoreFromPersistence,
+    // Métodos de Persistência (3)
+    serializeForPersistence: storeSerialize,
+    restoreFromPersistence: storeRestore,
     clearAll
   };
 };

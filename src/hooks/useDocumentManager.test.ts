@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useDocumentManager } from './useDocumentManager';
+import { useDocumentsStore } from '../stores/useDocumentsStore';
 import type { UploadedFile, PastedText, AnalyzedDocuments, DocumentProcessingModes } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -54,6 +55,8 @@ describe('useDocumentManager', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     uuidCounter = 0;
+    // Reset Zustand singleton store state between tests
+    useDocumentsStore.getState().clearAll();
   });
 
   afterEach(() => {

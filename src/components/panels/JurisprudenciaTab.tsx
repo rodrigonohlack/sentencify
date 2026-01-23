@@ -13,18 +13,23 @@ import { Search, X, RefreshCw, Eye, Upload, Trash2, Scale, Check, Copy } from 'l
 import { useJurisprudencia } from '../../hooks';
 import { JurisprudenciaCard } from '../cards';
 import { DeleteAllPrecedentesModal } from '../modals';
+import { useUIStore } from '../../stores/useUIStore';
 import AIModelService from '../../services/AIModelService';
 import { JurisEmbeddingsService } from '../../services/EmbeddingsServices';
 import type { JurisprudenciaTabProps, JurisEmbeddingWithSimilarity } from '../../types';
 
 export const JurisprudenciaTab = React.memo(({
-  openModal, closeModal, modals, isReadOnly = false,
+  isReadOnly = false,
   // v1.27.00: Props para busca semântica
   jurisSemanticEnabled = false,
   searchModelReady = false,
   jurisEmbeddingsCount = 0,
   jurisSemanticThreshold = 50
 }: JurisprudenciaTabProps) => {
+  // FASE 3: Acessa stores diretamente
+  const openModal = useUIStore((s) => s.openModal);
+  const closeModal = useUIStore((s) => s.closeModal);
+  const modals = useUIStore((s) => s.modals);
   const jurisprudencia = useJurisprudencia();
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
   const [importStatus, setImportStatus] = React.useState<{ success: boolean; message?: string; count?: number; error?: string } | null>(null);

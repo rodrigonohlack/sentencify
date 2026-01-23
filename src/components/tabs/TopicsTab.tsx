@@ -26,19 +26,11 @@ import {
 import { DndContext } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { SortableTopicCard } from '../cards';
+import { useUIStore } from '../../stores/useUIStore';
+import { useTopicsStore } from '../../stores/useTopicsStore';
 import type { TopicsTabProps, Topic, TopicCategory } from '../../types';
 
 export const TopicsTab: React.FC<TopicsTabProps> = ({
-  extractedTopics,
-  setExtractedTopics,
-  selectedTopics,
-  setSelectedTopics,
-  topicsToMerge,
-  setTopicsToMerge,
-  unselectedTopics,
-  topicsDecididos,
-  topicsPendentes,
-  lastEditedTopicTitle,
   topicRefs,
   dndSensors,
   customCollisionDetection,
@@ -53,16 +45,41 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
   moveTopicToPosition,
   startEditing,
   deleteTopic,
-  setTopicToRename,
-  setNewTopicName,
-  setTopicToSplit,
-  openModal,
   generateDispositivo,
   exportDecision,
   isTopicDecidido,
   isSpecialTopic,
   CSS
 }) => {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STORE ACCESS (substituindo props)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const openModal = useUIStore((s) => s.openModal);
+  const extractedTopics = useTopicsStore((s) => s.extractedTopics);
+  const setExtractedTopics = useTopicsStore((s) => s.setExtractedTopics);
+  const selectedTopics = useTopicsStore((s) => s.selectedTopics);
+  const setSelectedTopics = useTopicsStore((s) => s.setSelectedTopics);
+  const topicsToMerge = useTopicsStore((s) => s.topicsToMerge);
+  const setTopicsToMerge = useTopicsStore((s) => s.setTopicsToMerge);
+  const lastEditedTopicTitle = useTopicsStore((s) => s.lastEditedTopicTitle);
+  const setTopicToRename = useTopicsStore((s) => s.setTopicToRename);
+  const setNewTopicName = useTopicsStore((s) => s.setNewTopicName);
+  const setTopicToSplit = useTopicsStore((s) => s.setTopicToSplit);
+
+  // Computed values (derivados do store)
+  const unselectedTopics = React.useMemo(() =>
+    extractedTopics.filter(t => !selectedTopics.some(s => s.title === t.title)),
+    [extractedTopics, selectedTopics]
+  );
+  const topicsDecididos = React.useMemo(() =>
+    selectedTopics.filter(t => isTopicDecidido(t)).length,
+    [selectedTopics, isTopicDecidido]
+  );
+  const topicsPendentes = React.useMemo(() =>
+    selectedTopics.length - topicsDecididos,
+    [selectedTopics.length, topicsDecididos]
+  );
   return (
     <div className="space-y-6">
       {extractedTopics.length === 0 ? (

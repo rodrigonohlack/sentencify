@@ -11,6 +11,7 @@
 
 import { useCallback } from 'react';
 import { useProofsStore } from '../stores/useProofsStore';
+import { useProofUIStore } from '../stores/useProofUIStore';
 import { useUIStore } from '../stores/useUIStore';
 import type { Proof, ProofFile, ProofText } from '../types';
 
@@ -61,15 +62,15 @@ export function useProofModalHandlers(): UseProofModalHandlersReturn {
   const closeModal = useUIStore((s) => s.closeModal);
   const openModal = useUIStore((s) => s.openModal);
 
-  const proofToDelete = useProofsStore((s) => s.proofToDelete);
-  const setProofToDelete = useProofsStore((s) => s.setProofToDelete);
+  const proofToDelete = useProofUIStore((s) => s.proofToDelete);
+  const setProofToDelete = useProofUIStore((s) => s.setProofToDelete);
   const proofFiles = useProofsStore((s) => s.proofFiles);
   const setProofFiles = useProofsStore((s) => s.setProofFiles);
   const proofTexts = useProofsStore((s) => s.proofTexts);
   const setProofTexts = useProofsStore((s) => s.setProofTexts);
-  const setProofToLink = useProofsStore((s) => s.setProofToLink);
-  const setProofToAnalyze = useProofsStore((s) => s.setProofToAnalyze);
-  const setNewProofTextData = useProofsStore((s) => s.setNewProofTextData);
+  const setProofToLink = useProofUIStore((s) => s.setProofToLink);
+  const setProofToAnalyze = useProofUIStore((s) => s.setProofToAnalyze);
+  const setNewProofTextData = useProofUIStore((s) => s.setNewProofTextData);
 
   // ═══════════════════════════════════════════════════════════════════════
   // HANDLERS: EXCLUSÃO DE PROVA

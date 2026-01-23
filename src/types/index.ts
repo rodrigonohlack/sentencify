@@ -2054,10 +2054,8 @@ export interface LockedTabOverlayProps {
   setActiveTab: (tab: string) => void;
 }
 
+/** Props da aba Legislação (v1.38.40 - FASE 3: modals migrados para useUIStore) */
 export interface LegislacaoTabProps {
-  openModal: (name: ModalKey) => void;
-  closeModal: (name: ModalKey) => void;
-  modals: Record<string, boolean>;
   isReadOnly?: boolean;
   semanticSearchEnabled?: boolean;
   searchModelReady?: boolean;
@@ -2065,10 +2063,8 @@ export interface LegislacaoTabProps {
   semanticThreshold?: number;
 }
 
+/** Props da aba Jurisprudência (v1.38.40 - FASE 3: modals migrados para useUIStore) */
 export interface JurisprudenciaTabProps {
-  openModal: (name: ModalKey) => void;
-  closeModal: (name: ModalKey) => void;
-  modals: Record<string, boolean>;
   isReadOnly?: boolean;
   jurisSemanticEnabled?: boolean;
   searchModelReady?: boolean;
@@ -2508,13 +2504,8 @@ export interface CategoryCounts {
   favorites: number;
 }
 
-/** Props da aba Models extraída do App.tsx */
+/** Props da aba Modelos (v1.38.40 - FASE 3: modals migrados para useUIStore) */
 export interface ModelsTabProps {
-  // Modal Management
-  modals: ModalState;
-  openModal: (key: ModalKey) => void;
-  closeModal: (key: ModalKey) => void;
-
   // Model Library
   modelLibrary: {
     models: Model[];
@@ -2601,58 +2592,27 @@ export interface ModelsTabProps {
   savingModel: boolean;
 }
 
-/** Props da aba Upload extraída do App.tsx (v1.37.32) */
+/** Props da aba Upload (v1.38.40 - FASE 3: estado migrado para useDocumentsStore) */
 export interface UploadTabProps {
-  // File states
-  peticaoFiles: UploadedFile[];
-  contestacaoFiles: UploadedFile[];
-  complementaryFiles: UploadedFile[];
-  setContestacaoFiles: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
-  setComplementaryFiles: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
-
-  // Pasted texts
-  pastedPeticaoTexts: PastedText[];
-  pastedContestacaoTexts: PastedText[];
-  pastedComplementaryTexts: PastedText[];
-
-  // Analyzed documents
-  analyzedDocuments: AnalyzedDocuments;
-  setAnalyzedDocuments: React.Dispatch<React.SetStateAction<AnalyzedDocuments>>;
-
-  // Processing modes
-  documentProcessingModes: DocumentProcessingModes;
-  setDocumentProcessingModes: React.Dispatch<React.SetStateAction<DocumentProcessingModes>>;
+  // Processing mode default (from AI settings)
   getDefaultProcessingMode: () => ProcessingMode;
-  setPeticaoMode: (idx: number, mode: ProcessingMode) => void;
-  setContestacaoMode: (idx: number, mode: ProcessingMode) => void;
-  setComplementarMode: (idx: number, mode: ProcessingMode) => void;
 
-  // Processo número
+  // Processo número (App-level state)
   processoNumero: string;
   setProcessoNumero: (num: string) => void;
 
-  // Upload handlers
+  // Upload handlers (I/O - IndexedDB)
   handleUploadPeticao: (files: File[]) => void;
   handleUploadContestacao: (files: File[]) => void;
   handleUploadComplementary: (files: File[]) => void;
 
-  // Remove handlers
+  // Remove handler (I/O - IndexedDB)
   removePeticaoFile: (index: number) => void;
-  removePastedText: (type: string, index: number) => void;
-
-  // Paste area state
-  showPasteArea: Record<string, boolean>;
-  setShowPasteArea: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  handlePastedText: (text: string, type: string) => void;
-
-  // Text preview
-  setTextPreview: (preview: TextPreviewState) => void;
 
   // Document analysis
-  documentAnalyzing: boolean;
   handleAnalyzeDocuments: () => void;
 
-  // AI settings (for provider detection)
+  // AI settings (for ProcessingModeSelector provider detection)
   aiIntegration: {
     aiSettings: {
       provider?: string;
@@ -2660,16 +2620,14 @@ export interface UploadTabProps {
     };
   };
 
-  // Document services
+  // Document services (for auto-detecting processo número)
   documentServices: {
     autoDetectProcessoNumero: (docs: { peticao?: File; contestacoes?: File[]; complementares?: File[] }) => Promise<string | null>;
   };
-
-  // IndexedDB helpers
-  removePdfFromIndexedDB: (key: string) => Promise<void>;
 }
 
 // v1.37.54: ProofsTab props - usa mesmos tipos que ProofCardProps para proofManager
+/** Props da aba Provas (v1.38.40 - FASE 3: estado migrado para stores) */
 export interface ProofsTabProps {
   // Proof manager hook - tipo completo para ProofCard
   proofManager: ProofCardProps['proofManager'] & {
@@ -2679,49 +2637,15 @@ export interface ProofsTabProps {
     setNewProofTextData: (data: { name: string; text: string }) => void;
   };
 
-  // Topics for empty state check
-  extractedTopics: Topic[];
-
-  // Modal handlers
-  openModal: (key: ModalKey) => void;
-
-  // Error handling
-  setError: (error: string) => void;
-
-  // Text preview
-  setTextPreview: (preview: TextPreviewState) => void;
-
-  // Document services
+  // Document services (I/O - PDF extraction)
   documentServices: {
     extractTextFromPDFWithMode: (file: File, mode: string, progressCallback?: ((page: number, total: number) => void) | null) => Promise<string | null>;
   };
-
-  // AI settings
-  aiIntegration: {
-    aiSettings: AISettings | null;
-  };
-
-  // Theme
-  appTheme: 'dark' | 'light';
 }
 
-// v1.37.55: TopicsTab props
+/** Props da aba Tópicos (v1.38.40 - FASE 3: estado migrado para stores) */
 export interface TopicsTabProps {
-  // Core topic data
-  extractedTopics: Topic[];
-  setExtractedTopics: React.Dispatch<React.SetStateAction<Topic[]>>;
-  selectedTopics: Topic[];
-  setSelectedTopics: React.Dispatch<React.SetStateAction<Topic[]>>;
-  topicsToMerge: Topic[];
-  setTopicsToMerge: (topics: Topic[]) => void;
-  unselectedTopics: Topic[];
-
-  // Computed stats
-  topicsDecididos: number;
-  topicsPendentes: number;
-
-  // UI state
-  lastEditedTopicTitle: string | null;
+  // UI state (React refs - não vão para stores)
   topicRefs: React.RefObject<Record<string, HTMLDivElement | null>>;
 
   // DND (drag and drop)
@@ -2729,25 +2653,21 @@ export interface TopicsTabProps {
   customCollisionDetection: import('@dnd-kit/core').CollisionDetection;
   handleDndDragEnd: (event: import('@dnd-kit/core').DragEndEvent) => void;
 
-  // AI/Generation state
+  // AI/Generation state (App.tsx-level, not in stores)
   regenerating?: boolean;
   generatingDispositivo?: boolean;
   generatingReview: boolean;
   canGenerateDispositivo: { enabled: boolean; reason: string };
 
-  // Topic actions - moveTopicUp/Down/ToPosition use index (from SortableTopicCard)
+  // Topic actions (complex handlers in App.tsx)
   toggleTopicSelection: (topic: Topic) => void;
   moveTopicUp: (idx: number) => void;
   moveTopicDown: (idx: number) => void;
   moveTopicToPosition: (currentIndex: number, newPosition: number) => void;
   startEditing: (topic: Topic) => void;
   deleteTopic: (topic: Topic) => void;
-  setTopicToRename: (topic: Topic | null) => void;
-  setNewTopicName: (name: string) => void;
-  setTopicToSplit: (topic: Topic | null) => void;
 
-  // Modal/Navigation
-  openModal: (key: ModalKey) => void;
+  // Navigation/Generation
   generateDispositivo: () => void;
   exportDecision: () => void;
 

@@ -1,7 +1,10 @@
 /**
  * @file UploadTab.tsx
- * @description Aba de Upload de documentos extraída do App.tsx
- * @version 1.37.32
+ * @description Aba de Upload de documentos
+ * @version 1.38.40
+ *
+ * FASE 3 Etapa 3.3: Acessa useDocumentsStore e useUIStore diretamente,
+ * eliminando ~20 props de prop drilling.
  *
  * Seções:
  * 1. Petição Inicial (upload múltiplo + paste + lista)
@@ -14,42 +17,50 @@ import React from 'react';
 import { Upload, FileText, Trash2 } from 'lucide-react';
 import { CSS } from '../../constants/styles';
 import { ProcessingModeSelector } from '../ui';
+import { useDocumentsStore } from '../../stores/useDocumentsStore';
+import { useUIStore } from '../../stores/useUIStore';
+import { removePdfFromIndexedDB } from '../../hooks/useLocalStorage';
 import type { UploadTabProps, ProcessingMode } from '../../types';
 
 export const UploadTab: React.FC<UploadTabProps> = ({
-  peticaoFiles,
-  contestacaoFiles,
-  complementaryFiles,
-  setContestacaoFiles,
-  setComplementaryFiles,
-  pastedPeticaoTexts,
-  pastedContestacaoTexts,
-  pastedComplementaryTexts,
-  analyzedDocuments,
-  setAnalyzedDocuments,
-  documentProcessingModes,
-  setDocumentProcessingModes,
   getDefaultProcessingMode,
-  setPeticaoMode,
-  setContestacaoMode,
-  setComplementarMode,
   processoNumero,
   setProcessoNumero,
   handleUploadPeticao,
   handleUploadContestacao,
   handleUploadComplementary,
   removePeticaoFile,
-  removePastedText,
-  showPasteArea,
-  setShowPasteArea,
-  handlePastedText,
-  setTextPreview,
-  documentAnalyzing,
   handleAnalyzeDocuments,
   aiIntegration,
-  documentServices,
-  removePdfFromIndexedDB
+  documentServices
 }) => {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STORE ACCESS (substituindo props)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const peticaoFiles = useDocumentsStore((s) => s.peticaoFiles);
+  const contestacaoFiles = useDocumentsStore((s) => s.contestacaoFiles);
+  const complementaryFiles = useDocumentsStore((s) => s.complementaryFiles);
+  const pastedPeticaoTexts = useDocumentsStore((s) => s.pastedPeticaoTexts);
+  const pastedContestacaoTexts = useDocumentsStore((s) => s.pastedContestacaoTexts);
+  const pastedComplementaryTexts = useDocumentsStore((s) => s.pastedComplementaryTexts);
+  const analyzedDocuments = useDocumentsStore((s) => s.analyzedDocuments);
+  const setAnalyzedDocuments = useDocumentsStore((s) => s.setAnalyzedDocuments);
+  const documentProcessingModes = useDocumentsStore((s) => s.documentProcessingModes);
+  const setDocumentProcessingModes = useDocumentsStore((s) => s.setDocumentProcessingModes);
+  const setPeticaoMode = useDocumentsStore((s) => s.setPeticaoMode);
+  const setContestacaoMode = useDocumentsStore((s) => s.setContestacaoMode);
+  const setComplementarMode = useDocumentsStore((s) => s.setComplementarMode);
+  const showPasteArea = useDocumentsStore((s) => s.showPasteArea);
+  const setShowPasteArea = useDocumentsStore((s) => s.setShowPasteArea);
+  const handlePastedText = useDocumentsStore((s) => s.handlePastedText);
+  const removePastedText = useDocumentsStore((s) => s.removePastedText);
+  const analyzing = useDocumentsStore((s) => s.analyzing);
+  const setContestacaoFiles = useDocumentsStore((s) => s.setContestacaoFiles);
+  const setComplementaryFiles = useDocumentsStore((s) => s.setComplementaryFiles);
+
+  const setTextPreview = useUIStore((s) => s.setTextPreview);
+
   return (
     <div className="space-y-6">
       {/* v1.36.36: Aviso removido - bloqueio visual no seletor é suficiente */}
@@ -679,10 +690,10 @@ export const UploadTab: React.FC<UploadTabProps> = ({
           ═══════════════════════════════════════════════════════════════════════════════ */}
       <button
         onClick={handleAnalyzeDocuments}
-        disabled={documentAnalyzing || (peticaoFiles.length === 0 && pastedPeticaoTexts.length === 0)}
+        disabled={analyzing || (peticaoFiles.length === 0 && pastedPeticaoTexts.length === 0)}
         className="w-full py-4 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white hover-gradient-blue-purple"
       >
-        {documentAnalyzing ? 'Analisando documentos...' : 'Analisar Documentos'}
+        {analyzing ? 'Analisando documentos...' : 'Analisar Documentos'}
       </button>
     </div>
   );

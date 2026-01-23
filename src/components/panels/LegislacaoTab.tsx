@@ -13,18 +13,23 @@ import { Search, X, RefreshCw, Eye, Upload, Trash2, BookOpen, AlertCircle, Check
 import { useLegislacao, LEIS_METADATA } from '../../hooks';
 import { ArtigoCard, VirtualList } from '../cards';
 import { BaseModal } from '../modals';
+import { useUIStore } from '../../stores/useUIStore';
 import AIModelService from '../../services/AIModelService';
 import { EmbeddingsService } from '../../services/EmbeddingsServices';
 import type { LegislacaoTabProps, LegislacaoEmbeddingItem, Artigo } from '../../types';
 
 export const LegislacaoTab = React.memo(({
-  openModal, closeModal, modals, isReadOnly = false,
+  isReadOnly = false,
   // v1.26.00: Props para busca semântica
   semanticSearchEnabled = false,
   searchModelReady = false,
   embeddingsCount = 0,
   semanticThreshold = 50
 }: LegislacaoTabProps) => {
+  // FASE 3: Acessa stores diretamente
+  const openModal = useUIStore((s) => s.openModal);
+  const closeModal = useUIStore((s) => s.closeModal);
+  const modals = useUIStore((s) => s.modals);
   const legislacao = useLegislacao();
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
   const [importStatus, setImportStatus] = React.useState<{ success: boolean; message?: string; count?: number; error?: string } | null>(null);

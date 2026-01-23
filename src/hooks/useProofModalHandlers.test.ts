@@ -39,12 +39,20 @@ vi.mock('../stores/useUIStore', () => ({
 vi.mock('../stores/useProofsStore', () => ({
   useProofsStore: vi.fn((selector) => {
     const state = {
-      proofToDelete: mockProofToDelete,
-      setProofToDelete: mockSetProofToDelete,
       proofFiles: mockProofFiles,
       setProofFiles: mockSetProofFiles,
       proofTexts: mockProofTexts,
       setProofTexts: mockSetProofTexts,
+    };
+    return selector(state);
+  }),
+}));
+
+vi.mock('../stores/useProofUIStore', () => ({
+  useProofUIStore: vi.fn((selector) => {
+    const state = {
+      proofToDelete: mockProofToDelete,
+      setProofToDelete: mockSetProofToDelete,
       setProofToLink: mockSetProofToLink,
       setProofToAnalyze: mockSetProofToAnalyze,
       setNewProofTextData: mockSetNewProofTextData,

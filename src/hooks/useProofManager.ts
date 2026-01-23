@@ -1,14 +1,17 @@
 /**
  * @file useProofManager.ts
  * @description Hook para gerenciamento de provas (PDFs e textos)
- * @version 1.38.23
+ * @version 1.38.40
  *
+ * FASE 3 Etapa 3.2: Importa de 2 stores (useProofsStore + useProofUIStore).
+ * API externa mantida compatível.
  * v1.38.23: Migração completa para seletores diretos do Zustand
  * v1.36.76: Extraído do App.tsx
  */
 
 import React from 'react';
 import { useProofsStore } from '../stores/useProofsStore';
+import { useProofUIStore } from '../stores/useProofUIStore';
 import { savePdfToIndexedDB } from './useLocalStorage';
 import type { ProofFile, ProofText, Proof } from '../types';
 
@@ -35,20 +38,20 @@ const useProofManager = (_documentServices: unknown = null) => {
   const proofConclusions = useProofsStore((s) => s.proofConclusions);
   const proofProcessingModes = useProofsStore((s) => s.proofProcessingModes);
   const proofSendFullContent = useProofsStore((s) => s.proofSendFullContent);
-  const pendingProofText = useProofsStore((s) => s.pendingProofText);
-  const pendingExtraction = useProofsStore((s) => s.pendingExtraction);
-  const pendingChatMessage = useProofsStore((s) => s.pendingChatMessage);
 
-  // UI/Control States
-  const analyzingProofIds = useProofsStore((s) => s.analyzingProofIds);
-  const showProofPanel = useProofsStore((s) => s.showProofPanel);
-  const newProofTextData = useProofsStore((s) => s.newProofTextData);
-  const proofToDelete = useProofsStore((s) => s.proofToDelete);
-  const proofToLink = useProofsStore((s) => s.proofToLink);
-  const proofToAnalyze = useProofsStore((s) => s.proofToAnalyze);
-  const proofAnalysisCustomInstructions = useProofsStore((s) => s.proofAnalysisCustomInstructions);
-  const useOnlyMiniRelatorios = useProofsStore((s) => s.useOnlyMiniRelatorios);
-  const includeLinkedTopicsInFree = useProofsStore((s) => s.includeLinkedTopicsInFree);
+  // UI/Control States (useProofUIStore)
+  const pendingProofText = useProofUIStore((s) => s.pendingProofText);
+  const pendingExtraction = useProofUIStore((s) => s.pendingExtraction);
+  const pendingChatMessage = useProofUIStore((s) => s.pendingChatMessage);
+  const analyzingProofIds = useProofUIStore((s) => s.analyzingProofIds);
+  const showProofPanel = useProofUIStore((s) => s.showProofPanel);
+  const newProofTextData = useProofUIStore((s) => s.newProofTextData);
+  const proofToDelete = useProofUIStore((s) => s.proofToDelete);
+  const proofToLink = useProofUIStore((s) => s.proofToLink);
+  const proofToAnalyze = useProofUIStore((s) => s.proofToAnalyze);
+  const proofAnalysisCustomInstructions = useProofUIStore((s) => s.proofAnalysisCustomInstructions);
+  const useOnlyMiniRelatorios = useProofUIStore((s) => s.useOnlyMiniRelatorios);
+  const includeLinkedTopicsInFree = useProofUIStore((s) => s.includeLinkedTopicsInFree);
 
   // Core Setters
   const setProofFiles = useProofsStore((s) => s.setProofFiles);
@@ -61,25 +64,25 @@ const useProofManager = (_documentServices: unknown = null) => {
   const setProofConclusions = useProofsStore((s) => s.setProofConclusions);
   const setProofProcessingModes = useProofsStore((s) => s.setProofProcessingModes);
   const setProofSendFullContent = useProofsStore((s) => s.setProofSendFullContent);
-  const setPendingProofText = useProofsStore((s) => s.setPendingProofText);
-  const setPendingExtraction = useProofsStore((s) => s.setPendingExtraction);
-  const setPendingChatMessage = useProofsStore((s) => s.setPendingChatMessage);
 
-  // UI/Control Setters
-  const setShowProofPanel = useProofsStore((s) => s.setShowProofPanel);
-  const setNewProofTextData = useProofsStore((s) => s.setNewProofTextData);
-  const setProofToDelete = useProofsStore((s) => s.setProofToDelete);
-  const setProofToLink = useProofsStore((s) => s.setProofToLink);
-  const setProofToAnalyze = useProofsStore((s) => s.setProofToAnalyze);
-  const setProofAnalysisCustomInstructions = useProofsStore((s) => s.setProofAnalysisCustomInstructions);
-  const setUseOnlyMiniRelatorios = useProofsStore((s) => s.setUseOnlyMiniRelatorios);
-  const setIncludeLinkedTopicsInFree = useProofsStore((s) => s.setIncludeLinkedTopicsInFree);
+  // UI/Control Setters (useProofUIStore)
+  const setPendingProofText = useProofUIStore((s) => s.setPendingProofText);
+  const setPendingExtraction = useProofUIStore((s) => s.setPendingExtraction);
+  const setPendingChatMessage = useProofUIStore((s) => s.setPendingChatMessage);
+  const setShowProofPanel = useProofUIStore((s) => s.setShowProofPanel);
+  const setNewProofTextData = useProofUIStore((s) => s.setNewProofTextData);
+  const setProofToDelete = useProofUIStore((s) => s.setProofToDelete);
+  const setProofToLink = useProofUIStore((s) => s.setProofToLink);
+  const setProofToAnalyze = useProofUIStore((s) => s.setProofToAnalyze);
+  const setProofAnalysisCustomInstructions = useProofUIStore((s) => s.setProofAnalysisCustomInstructions);
+  const setUseOnlyMiniRelatorios = useProofUIStore((s) => s.setUseOnlyMiniRelatorios);
+  const setIncludeLinkedTopicsInFree = useProofUIStore((s) => s.setIncludeLinkedTopicsInFree);
 
-  // Actions
-  const addAnalyzingProof = useProofsStore((s) => s.addAnalyzingProof);
-  const removeAnalyzingProof = useProofsStore((s) => s.removeAnalyzingProof);
-  const isAnalyzingProof = useProofsStore((s) => s.isAnalyzingProof);
-  const clearAnalyzingProofs = useProofsStore((s) => s.clearAnalyzingProofs);
+  // UI Actions (useProofUIStore)
+  const addAnalyzingProof = useProofUIStore((s) => s.addAnalyzingProof);
+  const removeAnalyzingProof = useProofUIStore((s) => s.removeAnalyzingProof);
+  const isAnalyzingProof = useProofUIStore((s) => s.isAnalyzingProof);
+  const clearAnalyzingProofs = useProofUIStore((s) => s.clearAnalyzingProofs);
   const handleToggleProofMode = useProofsStore((s) => s.handleToggleProofMode);
   const handleLinkProof = useProofsStore((s) => s.handleLinkProof);
   const handleUnlinkProof = useProofsStore((s) => s.handleUnlinkProof);

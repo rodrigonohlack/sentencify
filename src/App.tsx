@@ -3264,53 +3264,21 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
             {/* v1.37.32: Upload Tab extraído para src/components/tabs/UploadTab.tsx */}
             {activeTab === 'upload' && (
               <UploadTab
-                peticaoFiles={peticaoFiles}
-                contestacaoFiles={contestacaoFiles}
-                complementaryFiles={complementaryFiles}
-                setContestacaoFiles={setContestacaoFiles}
-                setComplementaryFiles={setComplementaryFiles}
-                pastedPeticaoTexts={pastedPeticaoTexts}
-                pastedContestacaoTexts={pastedContestacaoTexts}
-                pastedComplementaryTexts={pastedComplementaryTexts}
-                analyzedDocuments={analyzedDocuments}
-                setAnalyzedDocuments={setAnalyzedDocuments}
-                documentProcessingModes={documentProcessingModes}
-                setDocumentProcessingModes={setDocumentProcessingModes}
                 getDefaultProcessingMode={getDefaultProcessingMode}
-                setPeticaoMode={setPeticaoMode}
-                setContestacaoMode={setContestacaoMode}
-                setComplementarMode={setComplementarMode}
                 processoNumero={processoNumero}
                 setProcessoNumero={setProcessoNumero}
                 handleUploadPeticao={handleUploadPeticao}
                 handleUploadContestacao={handleUploadContestacao}
                 handleUploadComplementary={handleUploadComplementary}
                 removePeticaoFile={removePeticaoFile}
-                removePastedText={removePastedText}
-                showPasteArea={showPasteArea}
-                setShowPasteArea={setShowPasteArea}
-                handlePastedText={handlePastedText}
-                setTextPreview={setTextPreview}
-                documentAnalyzing={documentAnalyzing}
                 handleAnalyzeDocuments={handleAnalyzeDocuments}
                 aiIntegration={aiIntegration}
                 documentServices={documentServices}
-                removePdfFromIndexedDB={removePdfFromIndexedDB}
               />
             )}
 
             {activeTab === 'topics' && (
               <TopicsTab
-                extractedTopics={extractedTopics}
-                setExtractedTopics={setExtractedTopics}
-                selectedTopics={selectedTopics}
-                setSelectedTopics={setSelectedTopics}
-                topicsToMerge={topicsToMerge}
-                setTopicsToMerge={setTopicsToMerge}
-                unselectedTopics={unselectedTopics}
-                topicsDecididos={topicsDecididos}
-                topicsPendentes={topicsPendentes}
-                lastEditedTopicTitle={lastEditedTopicTitle}
                 topicRefs={topicRefs}
                 dndSensors={dndSensors}
                 customCollisionDetection={customCollisionDetection}
@@ -3325,10 +3293,6 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
                 moveTopicToPosition={moveTopicToPosition}
                 startEditing={startEditing}
                 deleteTopic={deleteTopic}
-                setTopicToRename={setTopicToRename}
-                setNewTopicName={setNewTopicName}
-                setTopicToSplit={setTopicToSplit}
-                openModal={openModal}
                 generateDispositivo={generateDispositivo}
                 exportDecision={exportDecision}
                 isTopicDecidido={isTopicDecidido}
@@ -3340,13 +3304,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
             {activeTab === 'proofs' && (
               <ProofsTab
                 proofManager={proofManager}
-                extractedTopics={extractedTopics}
-                openModal={openModal}
-                setError={setError}
-                setTextPreview={setTextPreview}
                 documentServices={documentServices}
-                aiIntegration={aiIntegration}
-                appTheme={appTheme as 'dark' | 'light'}
               />
             )}
 
@@ -3631,9 +3589,6 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
 
             {activeTab === 'jurisprudencia' && (
               <JurisprudenciaTab
-                openModal={openModal}
-                closeModal={closeModal}
-                modals={modals}
                 isReadOnly={!primaryTabLock.isPrimaryTab}
                 jurisSemanticEnabled={aiIntegration.aiSettings.jurisSemanticEnabled}
                 searchModelReady={searchModelReady}
@@ -3644,9 +3599,6 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
 
             {activeTab === 'legislacao' && (
               <LegislacaoTab
-                openModal={openModal}
-                closeModal={closeModal}
-                modals={modals}
                 isReadOnly={!primaryTabLock.isPrimaryTab}
                 semanticSearchEnabled={aiIntegration.aiSettings.semanticSearchEnabled}
                 searchModelReady={searchModelReady}
@@ -3659,9 +3611,6 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
             {/* v1.37.31: Models Tab extraído para src/components/tabs/ModelsTab.tsx */}
             {activeTab === 'models' && (
               <ModelsTab
-                modals={modals}
-                openModal={openModal}
-                closeModal={closeModal}
                 modelLibrary={modelLibrary}
                 cloudSync={cloudSync}
                 aiIntegration={{

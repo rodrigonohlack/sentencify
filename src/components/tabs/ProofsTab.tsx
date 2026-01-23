@@ -1,7 +1,9 @@
 /**
  * @file ProofsTab.tsx
- * @description Aba de Gestão de Provas extraída do App.tsx
- * @version 1.37.54
+ * @description Aba de Gestão de Provas
+ * @version 1.38.40
+ *
+ * FASE 3 Etapa 3.3: Acessa stores diretamente para eliminar prop drilling.
  *
  * Seções:
  * 1. Upload de Provas (PDF + Texto)
@@ -11,18 +13,27 @@
 import React from 'react';
 import { Upload, FileText, Scale, AlertCircle } from 'lucide-react';
 import { ProofCard } from '../cards';
+import { useUIStore } from '../../stores/useUIStore';
+import { useTopicsStore } from '../../stores/useTopicsStore';
+import { useAIStore } from '../../stores/useAIStore';
+import { useThemeManagement } from '../../hooks';
 import type { ProofsTabProps, Proof } from '../../types';
 
 export const ProofsTab: React.FC<ProofsTabProps> = ({
   proofManager,
-  extractedTopics,
-  openModal,
-  setError,
-  setTextPreview,
-  documentServices,
-  aiIntegration,
-  appTheme
+  documentServices
 }) => {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STORE ACCESS (substituindo props)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const openModal = useUIStore((s) => s.openModal);
+  const setError = useUIStore((s) => s.setError);
+  const setTextPreview = useUIStore((s) => s.setTextPreview);
+  const extractedTopics = useTopicsStore((s) => s.extractedTopics);
+  const aiSettings = useAIStore((s) => s.aiSettings);
+  const { appTheme } = useThemeManagement();
+
   return (
     <div className="space-y-6">
       <div className="theme-gradient-card-50 rounded-lg p-6 border theme-border-secondary">
@@ -118,10 +129,10 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
                   openModal={openModal}
                   setError={setError}
                   extractTextFromPDFWithMode={documentServices.extractTextFromPDFWithMode}
-                  anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
-                  grokEnabled={aiIntegration.aiSettings?.provider === 'grok'}
-                  anonConfig={aiIntegration.aiSettings?.anonymization}
-                  nomesParaAnonimizar={aiIntegration.aiSettings?.anonymization?.nomesUsuario || []}
+                  anonymizationEnabled={aiSettings?.anonymization?.enabled}
+                  grokEnabled={aiSettings?.provider === 'grok'}
+                  anonConfig={aiSettings?.anonymization}
+                  nomesParaAnonimizar={aiSettings?.anonymization?.nomesUsuario || []}
                   editorTheme={appTheme}
                   setTextPreview={setTextPreview}
                 />
@@ -137,10 +148,10 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
                   openModal={openModal}
                   setError={setError}
                   extractTextFromPDFWithMode={documentServices.extractTextFromPDFWithMode}
-                  anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
-                  grokEnabled={aiIntegration.aiSettings?.provider === 'grok'}
-                  anonConfig={aiIntegration.aiSettings?.anonymization}
-                  nomesParaAnonimizar={aiIntegration.aiSettings?.anonymization?.nomesUsuario || []}
+                  anonymizationEnabled={aiSettings?.anonymization?.enabled}
+                  grokEnabled={aiSettings?.provider === 'grok'}
+                  anonConfig={aiSettings?.anonymization}
+                  nomesParaAnonimizar={aiSettings?.anonymization?.nomesUsuario || []}
                   editorTheme={appTheme}
                   setTextPreview={setTextPreview}
                 />

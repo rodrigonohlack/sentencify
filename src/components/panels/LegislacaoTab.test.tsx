@@ -17,6 +17,16 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { LegislacaoTab } from './LegislacaoTab';
 import type { LegislacaoTabProps } from '../../types';
 
+// Mock useUIStore
+const mockUIStore = {
+  modals: { deleteAllLegislacao: false } as Record<string, boolean>,
+  openModal: vi.fn(),
+  closeModal: vi.fn(),
+};
+vi.mock('../../stores/useUIStore', () => ({
+  useUIStore: (selector: (s: typeof mockUIStore) => unknown) => selector(mockUIStore),
+}));
+
 // Mock hooks
 vi.mock('../../hooks', () => ({
   useLegislacao: () => ({
@@ -98,9 +108,6 @@ describe('LegislacaoTab', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   const createMockProps = (overrides: Partial<LegislacaoTabProps> = {}): LegislacaoTabProps => ({
-    openModal: vi.fn(),
-    closeModal: vi.fn(),
-    modals: { deleteAllLegislacao: false },
     isReadOnly: false,
     semanticSearchEnabled: false,
     searchModelReady: false,
@@ -112,6 +119,9 @@ describe('LegislacaoTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    mockUIStore.modals = { deleteAllLegislacao: false };
+    mockUIStore.openModal = vi.fn();
+    mockUIStore.closeModal = vi.fn();
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -274,27 +284,24 @@ describe('LegislacaoTab', () => {
 
   describe('Delete All Modal', () => {
     it('should render delete modal when open', () => {
-      const props = createMockProps({
-        modals: { deleteAllLegislacao: true },
-      });
+      mockUIStore.modals = { deleteAllLegislacao: true };
+      const props = createMockProps();
       render(<LegislacaoTab {...props} />);
 
       expect(screen.getByTestId('delete-modal')).toBeInTheDocument();
     });
 
     it('should NOT render delete modal when closed', () => {
-      const props = createMockProps({
-        modals: { deleteAllLegislacao: false },
-      });
+      mockUIStore.modals = { deleteAllLegislacao: false };
+      const props = createMockProps();
       render(<LegislacaoTab {...props} />);
 
       expect(screen.queryByTestId('delete-modal')).not.toBeInTheDocument();
     });
 
     it('should have correct title on delete modal', () => {
-      const props = createMockProps({
-        modals: { deleteAllLegislacao: true },
-      });
+      mockUIStore.modals = { deleteAllLegislacao: true };
+      const props = createMockProps();
       render(<LegislacaoTab {...props} />);
 
       const modal = screen.getByTestId('delete-modal');
@@ -302,27 +309,24 @@ describe('LegislacaoTab', () => {
     });
 
     it('should show confirmation input in delete modal', () => {
-      const props = createMockProps({
-        modals: { deleteAllLegislacao: true },
-      });
+      mockUIStore.modals = { deleteAllLegislacao: true };
+      const props = createMockProps();
       render(<LegislacaoTab {...props} />);
 
       expect(screen.getByPlaceholderText('Digite EXCLUIR')).toBeInTheDocument();
     });
 
     it('should have cancel button in delete modal', () => {
-      const props = createMockProps({
-        modals: { deleteAllLegislacao: true },
-      });
+      mockUIStore.modals = { deleteAllLegislacao: true };
+      const props = createMockProps();
       render(<LegislacaoTab {...props} />);
 
       expect(screen.getByText('Cancelar')).toBeInTheDocument();
     });
 
     it('should have disabled delete button until confirmation', () => {
-      const props = createMockProps({
-        modals: { deleteAllLegislacao: true },
-      });
+      mockUIStore.modals = { deleteAllLegislacao: true };
+      const props = createMockProps();
       render(<LegislacaoTab {...props} />);
 
       const deleteButton = screen.getByText(/Excluir Tudo/i);

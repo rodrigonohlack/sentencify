@@ -20,13 +20,11 @@ import {
 } from 'lucide-react';
 import { CSS } from '../../constants/styles';
 import { SyncStatusIndicator, ModelFormModal, ModelCard, VirtualList } from '../';
+import { useUIStore } from '../../stores/useUIStore';
 import type { SyncStatus } from '../SyncStatusIndicator';
 import type { ModelsTabProps, Model } from '../../types';
 
 export const ModelsTab: React.FC<ModelsTabProps> = ({
-  modals,
-  openModal,
-  closeModal,
   modelLibrary,
   cloudSync,
   aiIntegration,
@@ -64,6 +62,14 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
   modelSaved,
   savingModel
 }) => {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STORE ACCESS (substituindo props)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const modals = useUIStore((s) => s.modals);
+  const openModal = useUIStore((s) => s.openModal);
+  const closeModal = useUIStore((s) => s.closeModal);
+
   return (
     <div className="space-y-6">
       {/* ═══════════════════════════════════════════════════════════════════════════════

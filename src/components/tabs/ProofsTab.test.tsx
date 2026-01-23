@@ -1,7 +1,9 @@
 /**
  * @file ProofsTab.test.tsx
  * @description Testes para o componente ProofsTab
- * @version 1.37.57
+ * @version 1.38.40
+ *
+ * Atualizado para FASE 3: ProofsTab agora acessa stores diretamente
  */
 
 import React from 'react';
@@ -9,6 +11,37 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ProofsTab } from './ProofsTab';
 import type { ProofsTabProps, Topic, Proof } from '../../types';
+
+// Mock useUIStore
+const mockUIStore = {
+  openModal: vi.fn(),
+  setError: vi.fn(),
+  setTextPreview: vi.fn(),
+};
+vi.mock('../../stores/useUIStore', () => ({
+  useUIStore: (selector: (s: typeof mockUIStore) => unknown) => selector(mockUIStore),
+}));
+
+// Mock useTopicsStore
+const mockTopicsStore = {
+  extractedTopics: [] as Topic[],
+};
+vi.mock('../../stores/useTopicsStore', () => ({
+  useTopicsStore: (selector: (s: typeof mockTopicsStore) => unknown) => selector(mockTopicsStore),
+}));
+
+// Mock useAIStore
+const mockAIStore = {
+  aiSettings: null as { provider?: string; anonymization?: { enabled?: boolean } } | null,
+};
+vi.mock('../../stores/useAIStore', () => ({
+  useAIStore: (selector: (s: typeof mockAIStore) => unknown) => selector(mockAIStore),
+}));
+
+// Mock useThemeManagement hook
+vi.mock('../../hooks', () => ({
+  useThemeManagement: () => ({ appTheme: 'dark' }),
+}));
 
 // Mock do ProofCard para simplificar testes
 vi.mock('../cards', () => ({
@@ -21,7 +54,7 @@ vi.mock('../cards', () => ({
 }));
 
 describe('ProofsTab', () => {
-  // Default props factory - uses 'as any' for complex nested types to simplify mocking
+  // Default props factory - only proofManager and documentServices remain
   const createMockProps = (overrides: Partial<ProofsTabProps> = {}): ProofsTabProps => ({
     proofManager: {
       proofFiles: [],
@@ -50,18 +83,20 @@ describe('ProofsTab', () => {
       proofAnalysisResults: {},
       proofSendFullContent: {},
     } as any,
-    extractedTopics: [],
-    openModal: vi.fn(),
-    setError: vi.fn(),
-    setTextPreview: vi.fn(),
     documentServices: {
       extractTextFromPDFWithMode: vi.fn().mockResolvedValue('extracted text'),
     },
-    aiIntegration: {
-      aiSettings: null, // Simplified - component handles null safely
-    },
-    appTheme: 'dark',
     ...overrides,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Reset store mocks
+    mockUIStore.openModal = vi.fn();
+    mockUIStore.setError = vi.fn();
+    mockUIStore.setTextPreview = vi.fn();
+    mockTopicsStore.extractedTopics = [];
+    mockAIStore.aiSettings = null;
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -77,13 +112,13 @@ describe('ProofsTab', () => {
     });
 
     it('should render proof count in header', () => {
+      mockTopicsStore.extractedTopics = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }] as Topic[];
       const props = createMockProps({
         proofManager: {
           ...createMockProps().proofManager,
           proofFiles: [{ id: '1', name: 'file1.pdf' }] as Proof[],
           proofTexts: [{ id: '2', name: 'text1' }] as Proof[],
         },
-        extractedTopics: [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }] as Topic[],
       });
       render(<ProofsTab {...props} />);
 
@@ -99,12 +134,12 @@ describe('ProofsTab', () => {
     });
 
     it('should show warning when proofs exist but no extracted topics', () => {
+      mockTopicsStore.extractedTopics = [];
       const props = createMockProps({
         proofManager: {
           ...createMockProps().proofManager,
           proofFiles: [{ id: '1', name: 'file1.pdf' }] as Proof[],
         },
-        extractedTopics: [],
       });
       render(<ProofsTab {...props} />);
 
@@ -113,12 +148,12 @@ describe('ProofsTab', () => {
     });
 
     it('should hide warning when topics exist', () => {
+      mockTopicsStore.extractedTopics = [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }] as Topic[];
       const props = createMockProps({
         proofManager: {
           ...createMockProps().proofManager,
           proofFiles: [{ id: '1', name: 'file1.pdf' }] as Proof[],
         },
-        extractedTopics: [{ id: '1', title: 'Topic 1', category: 'MÉRITO' }] as Topic[],
       });
       render(<ProofsTab {...props} />);
 
@@ -187,10 +222,8 @@ describe('ProofsTab', () => {
     });
 
     it('should call setNewProofTextData and openModal on button click', () => {
-      const openModalFn = vi.fn();
       const setNewProofTextDataFn = vi.fn();
       const props = createMockProps({
-        openModal: openModalFn,
         proofManager: {
           ...createMockProps().proofManager,
           setNewProofTextData: setNewProofTextDataFn,
@@ -201,7 +234,7 @@ describe('ProofsTab', () => {
       fireEvent.click(screen.getByText(/Colar Texto como Prova/i));
 
       expect(setNewProofTextDataFn).toHaveBeenCalledWith({ name: '', text: '' });
-      expect(openModalFn).toHaveBeenCalledWith('addProofText');
+      expect(mockUIStore.openModal).toHaveBeenCalledWith('addProofText');
     });
   });
 
@@ -215,12 +248,12 @@ describe('ProofsTab', () => {
         { id: '1', name: 'file1.pdf' } as Proof,
         { id: '2', name: 'file2.pdf' } as Proof,
       ];
+      mockTopicsStore.extractedTopics = [{ id: '1', title: 'Topic', category: 'MÉRITO' }] as Topic[];
       const props = createMockProps({
         proofManager: {
           ...createMockProps().proofManager,
           proofFiles: pdfProofs,
         },
-        extractedTopics: [{ id: '1', title: 'Topic', category: 'MÉRITO' }] as Topic[],
       });
       render(<ProofsTab {...props} />);
 
@@ -233,12 +266,12 @@ describe('ProofsTab', () => {
         { id: '3', name: 'text1' } as Proof,
         { id: '4', name: 'text2' } as Proof,
       ];
+      mockTopicsStore.extractedTopics = [{ id: '1', title: 'Topic', category: 'MÉRITO' }] as Topic[];
       const props = createMockProps({
         proofManager: {
           ...createMockProps().proofManager,
           proofTexts: textProofs,
         },
-        extractedTopics: [{ id: '1', title: 'Topic', category: 'MÉRITO' }] as Topic[],
       });
       render(<ProofsTab {...props} />);
 
@@ -247,13 +280,13 @@ describe('ProofsTab', () => {
     });
 
     it('should render both PDF and text proofs', () => {
+      mockTopicsStore.extractedTopics = [{ id: '1', title: 'Topic', category: 'MÉRITO' }] as Topic[];
       const props = createMockProps({
         proofManager: {
           ...createMockProps().proofManager,
           proofFiles: [{ id: '1', name: 'file.pdf' }] as Proof[],
           proofTexts: [{ id: '2', name: 'text' }] as Proof[],
         },
-        extractedTopics: [{ id: '1', title: 'Topic', category: 'MÉRITO' }] as Topic[],
       });
       render(<ProofsTab {...props} />);
 

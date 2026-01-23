@@ -17,6 +17,16 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { JurisprudenciaTab } from './JurisprudenciaTab';
 import type { JurisprudenciaTabProps } from '../../types';
 
+// Mock useUIStore
+const mockUIStore = {
+  modals: { deleteAllPrecedentes: false } as Record<string, boolean>,
+  openModal: vi.fn(),
+  closeModal: vi.fn(),
+};
+vi.mock('../../stores/useUIStore', () => ({
+  useUIStore: (selector: (s: typeof mockUIStore) => unknown) => selector(mockUIStore),
+}));
+
 // Mock hooks
 vi.mock('../../hooks', () => ({
   useJurisprudencia: () => ({
@@ -91,9 +101,6 @@ describe('JurisprudenciaTab', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   const createMockProps = (overrides: Partial<JurisprudenciaTabProps> = {}): JurisprudenciaTabProps => ({
-    openModal: vi.fn(),
-    closeModal: vi.fn(),
-    modals: { deleteAllPrecedentes: false },
     isReadOnly: false,
     jurisSemanticEnabled: false,
     searchModelReady: false,
@@ -105,6 +112,9 @@ describe('JurisprudenciaTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    mockUIStore.modals = { deleteAllPrecedentes: false };
+    mockUIStore.openModal = vi.fn();
+    mockUIStore.closeModal = vi.fn();
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -359,35 +369,30 @@ describe('JurisprudenciaTab', () => {
 
   describe('Delete All Modal', () => {
     it('should render DeleteAllPrecedentesModal when open', () => {
-      const props = createMockProps({
-        modals: { deleteAllPrecedentes: true },
-      });
+      mockUIStore.modals = { deleteAllPrecedentes: true };
+      const props = createMockProps();
       render(<JurisprudenciaTab {...props} />);
 
       expect(screen.getByTestId('delete-all-modal')).toBeInTheDocument();
     });
 
     it('should NOT render DeleteAllPrecedentesModal when closed', () => {
-      const props = createMockProps({
-        modals: { deleteAllPrecedentes: false },
-      });
+      mockUIStore.modals = { deleteAllPrecedentes: false };
+      const props = createMockProps();
       render(<JurisprudenciaTab {...props} />);
 
       expect(screen.queryByTestId('delete-all-modal')).not.toBeInTheDocument();
     });
 
     it('should call closeModal when cancel clicked', () => {
-      const closeModal = vi.fn();
-      const props = createMockProps({
-        modals: { deleteAllPrecedentes: true },
-        closeModal,
-      });
+      mockUIStore.modals = { deleteAllPrecedentes: true };
+      const props = createMockProps();
       render(<JurisprudenciaTab {...props} />);
 
       const cancelButton = screen.getByText('Cancel');
       fireEvent.click(cancelButton);
 
-      expect(closeModal).toHaveBeenCalledWith('deleteAllPrecedentes');
+      expect(mockUIStore.closeModal).toHaveBeenCalledWith('deleteAllPrecedentes');
     });
   });
 

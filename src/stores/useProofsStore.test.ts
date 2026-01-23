@@ -337,43 +337,6 @@ describe('useProofsStore', () => {
       expect(analyses[0].topicTitle).toBe('Horas Extras');
     });
 
-    it('should add analyzing proof', () => {
-      const store = useProofsStore.getState();
-
-      store.addAnalyzingProof('proof-1');
-
-      expect(useProofsStore.getState().analyzingProofIds.has('proof-1')).toBe(true);
-    });
-
-    it('should remove analyzing proof', () => {
-      const store = useProofsStore.getState();
-      store.addAnalyzingProof('proof-1');
-      store.addAnalyzingProof('proof-2');
-
-      store.removeAnalyzingProof('proof-1');
-
-      const state = useProofsStore.getState();
-      expect(state.analyzingProofIds.has('proof-1')).toBe(false);
-      expect(state.analyzingProofIds.has('proof-2')).toBe(true);
-    });
-
-    it('should check if proof is analyzing', () => {
-      const store = useProofsStore.getState();
-      store.addAnalyzingProof('proof-1');
-
-      expect(store.isAnalyzingProof('proof-1')).toBe(true);
-      expect(store.isAnalyzingProof('proof-2')).toBe(false);
-    });
-
-    it('should clear all analyzing proofs', () => {
-      const store = useProofsStore.getState();
-      store.addAnalyzingProof('proof-1');
-      store.addAnalyzingProof('proof-2');
-
-      store.clearAnalyzingProofs();
-
-      expect(useProofsStore.getState().analyzingProofIds.size).toBe(0);
-    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -447,151 +410,6 @@ describe('useProofsStore', () => {
     });
   });
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // UI STATE TESTS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  describe('UI State', () => {
-    it('should toggle show proof panel', () => {
-      const store = useProofsStore.getState();
-
-      store.setShowProofPanel(false);
-      expect(useProofsStore.getState().showProofPanel).toBe(false);
-
-      store.setShowProofPanel(true);
-      expect(useProofsStore.getState().showProofPanel).toBe(true);
-    });
-
-    it('should set new proof text data', () => {
-      const store = useProofsStore.getState();
-
-      store.setNewProofTextData({ name: 'New Proof', text: 'Content' });
-
-      const state = useProofsStore.getState();
-      expect(state.newProofTextData.name).toBe('New Proof');
-      expect(state.newProofTextData.text).toBe('Content');
-    });
-
-    it('should set new proof text data with updater', () => {
-      const store = useProofsStore.getState();
-      store.setNewProofTextData({ name: 'Initial', text: '' });
-
-      store.setNewProofTextData((prev) => ({ ...prev, text: 'Updated' }));
-
-      expect(useProofsStore.getState().newProofTextData.text).toBe('Updated');
-    });
-
-    it('should set proof to delete', () => {
-      const store = useProofsStore.getState();
-      const proof = createMockProofFile() as Proof;
-
-      store.setProofToDelete(proof);
-
-      expect(useProofsStore.getState().proofToDelete).toEqual(proof);
-    });
-
-    it('should clear proof to delete', () => {
-      const store = useProofsStore.getState();
-      store.setProofToDelete(createMockProofFile() as Proof);
-
-      store.setProofToDelete(null);
-
-      expect(useProofsStore.getState().proofToDelete).toBeNull();
-    });
-
-    it('should set proof to link', () => {
-      const store = useProofsStore.getState();
-      const proof = createMockProofFile() as Proof;
-
-      store.setProofToLink(proof);
-
-      expect(useProofsStore.getState().proofToLink).toEqual(proof);
-    });
-
-    it('should set proof to analyze', () => {
-      const store = useProofsStore.getState();
-      const proof = createMockProofFile() as Proof;
-
-      store.setProofToAnalyze(proof);
-
-      expect(useProofsStore.getState().proofToAnalyze).toEqual(proof);
-    });
-
-    it('should set proof analysis custom instructions', () => {
-      const store = useProofsStore.getState();
-
-      store.setProofAnalysisCustomInstructions('Analyze for damages');
-
-      expect(useProofsStore.getState().proofAnalysisCustomInstructions).toBe('Analyze for damages');
-    });
-
-    it('should set use only mini relatorios', () => {
-      const store = useProofsStore.getState();
-
-      store.setUseOnlyMiniRelatorios(true);
-      expect(useProofsStore.getState().useOnlyMiniRelatorios).toBe(true);
-
-      store.setUseOnlyMiniRelatorios(false);
-      expect(useProofsStore.getState().useOnlyMiniRelatorios).toBe(false);
-    });
-
-    it('should set include linked topics in free', () => {
-      const store = useProofsStore.getState();
-
-      store.setIncludeLinkedTopicsInFree(true);
-      expect(useProofsStore.getState().includeLinkedTopicsInFree).toBe(true);
-    });
-  });
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PENDING STATES TESTS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  describe('Pending States', () => {
-    it('should set pending proof text', () => {
-      const store = useProofsStore.getState();
-      const pending = { name: 'Pending', text: 'Content' };
-
-      store.setPendingProofText(pending);
-
-      expect(useProofsStore.getState().pendingProofText).toEqual(pending);
-    });
-
-    it('should clear pending proof text', () => {
-      const store = useProofsStore.getState();
-      store.setPendingProofText({ name: 'Pending', text: '' });
-
-      store.setPendingProofText(null);
-
-      expect(useProofsStore.getState().pendingProofText).toBeNull();
-    });
-
-    it('should set pending extraction', () => {
-      const store = useProofsStore.getState();
-      const pending = {
-        proofId: 'proof-1',
-        proof: createMockProofFile() as Proof
-      };
-
-      store.setPendingExtraction(pending);
-
-      expect(useProofsStore.getState().pendingExtraction?.proofId).toBe('proof-1');
-    });
-
-    it('should set pending chat message', () => {
-      const store = useProofsStore.getState();
-      const pending = {
-        message: 'Test message',
-        options: {},
-        isGlobal: true,
-        topicTitle: 'Topic 1'
-      };
-
-      store.setPendingChatMessage(pending);
-
-      expect(useProofsStore.getState().pendingChatMessage?.message).toBe('Test message');
-    });
-  });
 
   // ═══════════════════════════════════════════════════════════════════════════
   // PERSISTENCE TESTS
@@ -668,10 +486,10 @@ describe('useProofsStore', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Reset All', () => {
-    it('should reset all state', () => {
+    it('should reset all data state', () => {
       const store = useProofsStore.getState();
 
-      // Set various state
+      // Set various data state
       store.setProofFiles([createMockProofFile()]);
       store.setProofTexts([createMockProofText()]);
       store.setProofUsePdfMode({ 'proof-1': true });
@@ -680,15 +498,6 @@ describe('useProofsStore', () => {
       store.setProofTopicLinks({ 'proof-1': ['Topic'] });
       store.addProofAnalysis('proof-1', { type: 'contextual', result: 'Result' });
       store.setProofConclusions({ 'proof-1': 'Conclusion' });
-      store.addAnalyzingProof('proof-1');
-      store.setShowProofPanel(false);
-      store.setNewProofTextData({ name: 'Test', text: 'Content' });
-      store.setProofToDelete(createMockProofFile() as Proof);
-      store.setProofToLink(createMockProofFile() as Proof);
-      store.setProofToAnalyze(createMockProofFile() as Proof);
-      store.setProofAnalysisCustomInstructions('Custom');
-      store.setUseOnlyMiniRelatorios(true);
-      store.setIncludeLinkedTopicsInFree(true);
 
       store.resetAll();
 
@@ -701,15 +510,6 @@ describe('useProofsStore', () => {
       expect(Object.keys(state.proofTopicLinks)).toHaveLength(0);
       expect(Object.keys(state.proofAnalysisResults)).toHaveLength(0);
       expect(Object.keys(state.proofConclusions)).toHaveLength(0);
-      expect(state.analyzingProofIds.size).toBe(0);
-      expect(state.showProofPanel).toBe(true);
-      expect(state.newProofTextData).toEqual({ name: '', text: '' });
-      expect(state.proofToDelete).toBeNull();
-      expect(state.proofToLink).toBeNull();
-      expect(state.proofToAnalyze).toBeNull();
-      expect(state.proofAnalysisCustomInstructions).toBe('');
-      expect(state.useOnlyMiniRelatorios).toBe(false);
-      expect(state.includeLinkedTopicsInFree).toBe(false);
     });
   });
 

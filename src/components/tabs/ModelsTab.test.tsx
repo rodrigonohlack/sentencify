@@ -15,7 +15,17 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ModelsTab } from './ModelsTab';
-import type { ModelsTabProps, Model, ModalState } from '../../types';
+import type { ModelsTabProps, Model } from '../../types';
+
+// Mock useUIStore
+const mockUIStore = {
+  modals: { modelForm: false } as Record<string, boolean>,
+  openModal: vi.fn(),
+  closeModal: vi.fn(),
+};
+vi.mock('../../stores/useUIStore', () => ({
+  useUIStore: (selector: (s: typeof mockUIStore) => unknown) => selector(mockUIStore),
+}));
 
 // Mock child components
 vi.mock('../', () => ({
@@ -75,9 +85,6 @@ describe('ModelsTab', () => {
   });
 
   const createMockProps = (overrides: Partial<ModelsTabProps> = {}): ModelsTabProps => ({
-    modals: { modelForm: false } as ModalState,
-    openModal: vi.fn(),
-    closeModal: vi.fn(),
     modelLibrary: {
       models: [],
       hasUnsavedChanges: false,
@@ -150,6 +157,9 @@ describe('ModelsTab', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUIStore.modals = { modelForm: false };
+    mockUIStore.openModal = vi.fn();
+    mockUIStore.closeModal = vi.fn();
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -523,14 +533,13 @@ describe('ModelsTab', () => {
 
   describe('Action Buttons', () => {
     it('should call openModal for bulk modal', () => {
-      const openModal = vi.fn();
-      const props = createMockProps({ openModal });
+      const props = createMockProps();
       render(<ModelsTab {...props} />);
 
       const bulkButton = screen.getByText('Criar de Arquivos');
       fireEvent.click(bulkButton);
 
-      expect(openModal).toHaveBeenCalledWith('bulkModal');
+      expect(mockUIStore.openModal).toHaveBeenCalledWith('bulkModal');
     });
 
     it('should have import button that can trigger file input', () => {
@@ -558,11 +567,9 @@ describe('ModelsTab', () => {
     });
 
     it('should open model form for new model', () => {
-      const openModal = vi.fn();
       const setNewModel = vi.fn();
       const setEditingModel = vi.fn();
       const props = createMockProps({
-        openModal,
         modelLibrary: {
           ...createMockProps().modelLibrary,
           setNewModel,
@@ -576,13 +583,11 @@ describe('ModelsTab', () => {
 
       expect(setNewModel).toHaveBeenCalledWith({ title: '', content: '', keywords: '', category: '' });
       expect(setEditingModel).toHaveBeenCalledWith(null);
-      expect(openModal).toHaveBeenCalledWith('modelForm');
+      expect(mockUIStore.openModal).toHaveBeenCalledWith('modelForm');
     });
 
     it('should call openModal for deleteAllModels', () => {
-      const openModal = vi.fn();
       const props = createMockProps({
-        openModal,
         modelLibrary: {
           ...createMockProps().modelLibrary,
           models: [createMockModel('1', 'Test')],
@@ -593,7 +598,7 @@ describe('ModelsTab', () => {
       const deleteAllButton = screen.getByTitle('Excluir todos os modelos');
       fireEvent.click(deleteAllButton);
 
-      expect(openModal).toHaveBeenCalledWith('deleteAllModels');
+      expect(mockUIStore.openModal).toHaveBeenCalledWith('deleteAllModels');
     });
   });
 
