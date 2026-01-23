@@ -22,11 +22,11 @@ export const AnalysisIdentificacaoSchema = z.object({
 
 export const AnalysisPedidoSchema = z.object({
   numero: z.number().or(z.string().transform(Number)).optional(),
-  tema: z.string(),
-  descricao: z.string().optional().default(''),
+  tema: z.string().nullable().default(''),
+  descricao: z.string().nullable().optional().default(''),
   periodo: z.string().optional().nullable(),
   valor: z.union([z.string(), z.number().transform(String)]).nullable().optional(),
-  fatosReclamante: z.string().optional().default(''),
+  fatosReclamante: z.string().nullable().optional().transform(v => v ?? ''),
   defesaReclamada: z.string().nullable().optional().transform(v => v ?? ''),
   teseJuridica: z.string().nullable().optional().transform(v => v ?? ''),
   controversia: z.boolean().default(true),
