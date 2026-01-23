@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.40', feature: 'Fix batch analysis: stagger delay 1.5s entre requests concorrentes (evita respostas truncadas) + retry automático (max 2x) quando parsing da resposta IA falha' },
   { version: '1.38.39', feature: 'Fix API keys não persistindo em F5: setAiSettings agora detecta mudanças em apiKeys e persiste em sentencify-ai-settings (ConfigModal usava setAiSettings que bypassava a persistência)' },
   { version: '1.38.38', feature: 'Fix CSP para modelos HuggingFace (adiciona cas-bridge.xethub.hf.co) + Quick Prompts não carregando na primeira visita (fallback para defaults no onRehydrateStorage)' },
   { version: '1.38.37', feature: 'Fix confidence hardcoded: todas as 6 operações Double Check agora usam confidence retornado pela IA (antes: 5 de 6 usavam 85% fixo)' },
