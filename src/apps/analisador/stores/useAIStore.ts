@@ -5,6 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { encryptApiKeys, decryptApiKeys } from '../../../utils/crypto';
 import type { AIProvider, AISettings, TokenMetrics, GeminiThinkingLevel, OpenAIReasoningLevel } from '../types';
 
 interface AIStoreState {
@@ -138,25 +139,35 @@ export const useAIStore = create<AIStoreState>()(
         if (state) {
           try {
             // 1. Tentar ler keys do Analisador
-            let apiKeys = null;
+            let rawKeys: Record<string, string> | null = null;
             const analisadorKeys = localStorage.getItem('analisador-prepauta-api-keys');
             if (analisadorKeys) {
-              apiKeys = JSON.parse(analisadorKeys);
+              rawKeys = JSON.parse(analisadorKeys);
             }
 
             // 2. Fallback: ler do Sentencify se Analisador não tem keys configuradas
-            if (!apiKeys || !Object.values(apiKeys).some(k => k)) {
+            if (!rawKeys || !Object.values(rawKeys).some(k => k)) {
               const sentencifySettings = localStorage.getItem('sentencify-ai-settings');
               if (sentencifySettings) {
                 const parsed = JSON.parse(sentencifySettings);
                 if (parsed.apiKeys) {
-                  apiKeys = parsed.apiKeys;
+                  rawKeys = parsed.apiKeys;
                 }
               }
             }
 
-            if (apiKeys) {
-              state.aiSettings.apiKeys = apiKeys;
+            if (rawKeys) {
+              // Decriptar keys (async)
+              const keysToDecrypt = rawKeys;
+              decryptApiKeys(keysToDecrypt).then(decrypted => {
+                const finalKeys: Record<string, string> = {};
+                for (const [provider, value] of Object.entries(keysToDecrypt)) {
+                  finalKeys[provider] = decrypted[provider] || value;
+                }
+                state.aiSettings.apiKeys = finalKeys as unknown as typeof state.aiSettings.apiKeys;
+              }).catch(() => {
+                state.aiSettings.apiKeys = keysToDecrypt as unknown as typeof state.aiSettings.apiKeys;
+              });
             }
           } catch (err) {
             console.warn('[AIStore] Erro ao restaurar apiKeys:', err);
@@ -167,13 +178,17 @@ export const useAIStore = create<AIStoreState>()(
   )
 );
 
-// Persist API keys separately for security
+// Persist API keys separately for security (encrypted)
 export const persistApiKeys = (apiKeys: AISettings['apiKeys']) => {
-  try {
-    localStorage.setItem('analisador-prepauta-api-keys', JSON.stringify(apiKeys));
-  } catch (err) {
-    console.warn('[AIStore] Erro ao salvar apiKeys:', err);
-  }
+  encryptApiKeys(apiKeys as unknown as Record<string, string>).then(encrypted => {
+    try {
+      localStorage.setItem('analisador-prepauta-api-keys', JSON.stringify(encrypted));
+    } catch (err) {
+      console.warn('[AIStore] Erro ao salvar apiKeys:', err);
+    }
+  }).catch(err => {
+    console.warn('[AIStore] Erro ao encriptar apiKeys:', err);
+  });
 };
 
 export const selectProvider = (state: AIStoreState) => state.aiSettings.provider;

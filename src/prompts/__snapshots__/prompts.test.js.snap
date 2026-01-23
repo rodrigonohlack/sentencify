@@ -75,6 +75,8 @@ Importante: Não criar ou inventar jurisprudência, dados ou informações. Util
 
 PROIBIÇÕES ABSOLUTAS: É totalmente e absolutamente proibido que você invente dados em caso de algum documento estiver faltante. Por exemplo, caso eu peça no prompt para você relatar algo sobre uma petição inicial e sobre uma contestação, mas o arquivo da contestação estiver ausente, JAMAIS invente informações. Nesses casos, analise o documento presente e o que faltar deve ser indicado com algo do tipo "documento TAL inexistente".
 
+JURISPRUDÊNCIA E DOUTRINA: NUNCA cite súmulas, OJs, jurisprudência, doutrina ou precedentes que NÃO constem EXPLICITAMENTE nos documentos fornecidos pelo usuário. Se precisar de fundamentação adicional, INDIQUE que o usuário deve pesquisar o tema, mas JAMAIS invente ou presuma citações jurídicas. Apenas reproduza fielmente as referências que constam nos documentos de entrada.
+
 ANONIMIZAÇÃO DE DADOS: Quando o texto fornecido contiver placeholders de anonimização como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [OAB], [CEP], [RG], [PIS], [CTPS], [CONTA], [PROCESSO], você DEVE:
 1. MANTER esses placeholders exatamente como estão no texto gerado
 2. JAMAIS substituir os placeholders por valores inventados ou inferidos
@@ -117,6 +119,8 @@ exports[`Prompts - Snapshot Tests > AI_INSTRUCTIONS Modular > snapshot: AI_INSTR
 "Importante: Não criar ou inventar jurisprudência, dados ou informações. Utilizar apenas o material fornecido ou conhecimento consolidado da área trabalhista.
 
 PROIBIÇÕES ABSOLUTAS: É totalmente e absolutamente proibido que você invente dados em caso de algum documento estiver faltante. Por exemplo, caso eu peça no prompt para você relatar algo sobre uma petição inicial e sobre uma contestação, mas o arquivo da contestação estiver ausente, JAMAIS invente informações. Nesses casos, analise o documento presente e o que faltar deve ser indicado com algo do tipo "documento TAL inexistente".
+
+JURISPRUDÊNCIA E DOUTRINA: NUNCA cite súmulas, OJs, jurisprudência, doutrina ou precedentes que NÃO constem EXPLICITAMENTE nos documentos fornecidos pelo usuário. Se precisar de fundamentação adicional, INDIQUE que o usuário deve pesquisar o tema, mas JAMAIS invente ou presuma citações jurídicas. Apenas reproduza fielmente as referências que constam nos documentos de entrada.
 
 ANONIMIZAÇÃO DE DADOS: Quando o texto fornecido contiver placeholders de anonimização como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [OAB], [CEP], [RG], [PIS], [CTPS], [CONTA], [PROCESSO], você DEVE:
 1. MANTER esses placeholders exatamente como estão no texto gerado
@@ -292,14 +296,28 @@ exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot:
 `;
 
 exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: numeracaoReclamadas 1`] = `
-"⚠️ IMPORTANTE - NUMERAÇÃO DAS RECLAMADAS:
-1. Observe atentamente como as reclamadas estão identificadas no RELATÓRIO (primeira reclamada, segunda reclamada, etc.)
-2. Mantenha EXATAMENTE a mesma numeração e nomenclatura usada no relatório original
-3. Se houver APENAS UMA reclamada/ré no processo:
-   - USE: "a reclamada" ou "a ré"
-   - NÃO USE: "a primeira reclamada" ou "a primeira ré"
-4. Se houver MÚLTIPLAS reclamadas/rés:
-   - USE: "a primeira reclamada", "a segunda reclamada", etc. (conforme o relatório)"
+"⚠️ IMPORTANTE - ALGORITMO DE NUMERAÇÃO DAS RECLAMADAS:
+
+PASSO 1: Leia o RELATÓRIO e identifique TODAS as reclamadas na ordem em que aparecem.
+PASSO 2: Conte quantas reclamadas existem.
+PASSO 3: Aplique a regra correta:
+
+SE apenas 1 reclamada:
+  → USE: "a reclamada" ou "a ré"
+  → NUNCA USE: "a primeira reclamada"
+
+SE 2+ reclamadas:
+  → USE: "a primeira reclamada", "a segunda reclamada", etc.
+  → Numere na MESMA ORDEM do relatório
+  → Se uma reclamada do relatório NÃO aparece neste tópico, PULE a numeração
+    (Ex: Se só 1ª e 3ª se manifestaram → use "primeira reclamada" e "terceira reclamada")
+
+PASSO 4: Verifique responsabilidade:
+  - Subsidiária: "a segunda reclamada, subsidiariamente"
+  - Solidária: "as reclamadas, solidariamente"
+  - Individual: especificar qual reclamada
+
+PROIBIDO: Inventar numeração diferente da do relatório."
 `;
 
 exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: preservarAnonimizacao 1`] = `

@@ -12,6 +12,7 @@
 
 import type { Topic, AITextContent, AIDocumentContent } from '../types';
 import { AI_PROMPTS } from './ai-prompts';
+import { wrapUserContent } from '../utils/prompt-safety';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -95,9 +96,10 @@ export function buildDocumentContentArray(
     // Primeiro: textos extraídos (PDF.JS ou Claude Vision)
     if (docs.peticoesText?.length && docs.peticoesText.length > 0) {
       docs.peticoesText.forEach((doc: { name?: string; text: string }, idx: number) => {
+        const label = doc.name?.toUpperCase() || `PETIÇÃO ${idx + 1}`;
         contentArray.push({
           type: 'text',
-          text: `${doc.name?.toUpperCase() || `PETIÇÃO ${idx + 1}`}:\n\n${doc.text}`,
+          text: wrapUserContent(doc.text, label),
           cache_control: doc.text.length > 2000 ? { type: "ephemeral" } : undefined
         });
       });
@@ -122,9 +124,10 @@ export function buildDocumentContentArray(
     // Primeiro: textos extraídos (PDF.JS ou Claude Vision)
     if (docs.contestacoesText?.length && docs.contestacoesText.length > 0) {
       docs.contestacoesText.forEach((contestacao: { text: string }, index: number) => {
+        const label = `CONTESTAÇÃO ${index + 1}`;
         contentArray.push({
           type: 'text',
-          text: `CONTESTAÇÃO ${index + 1}:\n\n${contestacao.text}`,
+          text: wrapUserContent(contestacao.text, label),
           cache_control: contestacao.text.length > 2000 ? { type: "ephemeral" } : undefined
         });
       });
@@ -148,9 +151,10 @@ export function buildDocumentContentArray(
     // Primeiro: textos extraídos (PDF.JS ou Claude Vision)
     if (docs.complementaresText?.length && docs.complementaresText.length > 0) {
       docs.complementaresText.forEach((doc: { text: string }, index: number) => {
+        const label = `DOCUMENTO COMPLEMENTAR ${index + 1}`;
         contentArray.push({
           type: 'text',
-          text: `DOCUMENTO COMPLEMENTAR ${index + 1}:\n\n${doc.text}`,
+          text: wrapUserContent(doc.text, label),
           cache_control: doc.text.length > 2000 ? { type: "ephemeral" } : undefined
         });
       });

@@ -40,6 +40,13 @@ const QUILL_CSS_CDN = 'https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000; // 2 segundos
 
+// SRI hashes para validacao de integridade dos CDNs
+const SRI_HASHES = {
+  dompurify: 'sha384-cwS6YdhLI7XS60eoDiC+egV0qHp8zI+Cms46R0nbn8JrmoAzV9uFL60etMZhAnSu',
+  quillJs: 'sha384-hcxmSutM10NL6iGBAA0LStIhy+kWJxfrhqWVMRuABZH5Vqztexq2nBz/Xnfllly9',
+  quillCss: 'sha384-VvSC4PGxeMkOaAmyuDGZECjY2dkqdO/IdBYBUK+BCYNc3WIvRxHLUzQ5OSgUaMA7',
+} as const;
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // HOOK
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -64,6 +71,8 @@ export function useQuillInitialization(): UseQuillInitializationReturn {
 
     const script = document.createElement('script');
     script.src = DOMPURIFY_CDN;
+    script.integrity = SRI_HASHES.dompurify;
+    script.crossOrigin = 'anonymous';
     script.async = true;
     script.onload = () => {
       setDomPurifyReady(true);
@@ -119,6 +128,8 @@ export function useQuillInitialization(): UseQuillInitializationReturn {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = QUILL_CSS_CDN;
+    link.integrity = SRI_HASHES.quillCss;
+    link.crossOrigin = 'anonymous';
     link.id = 'quill-theme-css';
 
     link.onerror = () => {
@@ -130,6 +141,8 @@ export function useQuillInitialization(): UseQuillInitializationReturn {
     // Carregar JavaScript
     const script = document.createElement('script');
     script.src = QUILL_JS_CDN;
+    script.integrity = SRI_HASHES.quillJs;
+    script.crossOrigin = 'anonymous';
     script.async = true;
     script.id = 'quill-library-js';
 

@@ -164,14 +164,28 @@ Evite construções prolixas com "foi categórico ao", "foi enfático ao" ou sim
 Verbos diretos sugeridos: afirmou, declarou, confirmou, esclareceu, narrou, relatou, atestou, informou, asseverou.`,
 
   // Bloco 4: Numeração de Reclamadas (8 linhas) - Aparece em 2 funções
-  numeracaoReclamadas: `⚠️ IMPORTANTE - NUMERAÇÃO DAS RECLAMADAS:
-1. Observe atentamente como as reclamadas estão identificadas no RELATÓRIO (primeira reclamada, segunda reclamada, etc.)
-2. Mantenha EXATAMENTE a mesma numeração e nomenclatura usada no relatório original
-3. Se houver APENAS UMA reclamada/ré no processo:
-   - USE: "a reclamada" ou "a ré"
-   - NÃO USE: "a primeira reclamada" ou "a primeira ré"
-4. Se houver MÚLTIPLAS reclamadas/rés:
-   - USE: "a primeira reclamada", "a segunda reclamada", etc. (conforme o relatório)`,
+  numeracaoReclamadas: `⚠️ IMPORTANTE - ALGORITMO DE NUMERAÇÃO DAS RECLAMADAS:
+
+PASSO 1: Leia o RELATÓRIO e identifique TODAS as reclamadas na ordem em que aparecem.
+PASSO 2: Conte quantas reclamadas existem.
+PASSO 3: Aplique a regra correta:
+
+SE apenas 1 reclamada:
+  → USE: "a reclamada" ou "a ré"
+  → NUNCA USE: "a primeira reclamada"
+
+SE 2+ reclamadas:
+  → USE: "a primeira reclamada", "a segunda reclamada", etc.
+  → Numere na MESMA ORDEM do relatório
+  → Se uma reclamada do relatório NÃO aparece neste tópico, PULE a numeração
+    (Ex: Se só 1ª e 3ª se manifestaram → use "primeira reclamada" e "terceira reclamada")
+
+PASSO 4: Verifique responsabilidade:
+  - Subsidiária: "a segunda reclamada, subsidiariamente"
+  - Solidária: "as reclamadas, solidariamente"
+  - Individual: especificar qual reclamada
+
+PROIBIDO: Inventar numeração diferente da do relatório.`,
 
   // Bloco 4b: Numeração de Reclamadas para Geração Inicial (quando RELATÓRIO ainda não existe)
   numeracaoReclamadasInicial: `⚠️ NUMERAÇÃO CONSISTENTE DAS RECLAMADAS:

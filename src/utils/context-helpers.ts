@@ -11,6 +11,7 @@
 import type { AIMessageContent, ProofFile, ProofText, AnonymizationSettings, ProofAnalysisResult } from '../types';
 import { anonymizeText } from './text';
 import { isOralProof } from '../components';
+import { wrapUserContent } from './prompt-safety';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PREPARE DOCUMENTS CONTEXT
@@ -65,7 +66,7 @@ export const prepareDocumentsContext = (docs: DocumentsInput): DocumentsContextR
     const label = peticao.name || `PETIÇÃO INICIAL ${index + 1 + (docs.peticoes?.length || 0)}`;
     contentArray.push({
       type: 'text',
-      text: `${label}:\n\n${peticao.text}`,
+      text: wrapUserContent(peticao.text, label),
       cache_control: peticao.text.length > 2000 ? { type: "ephemeral" } : undefined
     });
     hasPeticao = true;
@@ -84,7 +85,8 @@ export const prepareDocumentsContext = (docs: DocumentsInput): DocumentsContextR
   });
 
   docs.contestacoesText?.forEach((contestacao: { text: string }, index: number) => {
-    contentArray.push({ type: 'text', text: `CONTESTAÇÃO ${index + 1 + (docs.contestacoes?.length || 0)}:\n\n${contestacao.text}`, cache_control: contestacao.text.length > 2000 ? { type: "ephemeral" } : undefined });
+    const label = `CONTESTAÇÃO ${index + 1 + (docs.contestacoes?.length || 0)}`;
+    contentArray.push({ type: 'text', text: wrapUserContent(contestacao.text, label), cache_control: contestacao.text.length > 2000 ? { type: "ephemeral" } : undefined });
   });
 
   docs.complementares?.forEach((base64: string) => {

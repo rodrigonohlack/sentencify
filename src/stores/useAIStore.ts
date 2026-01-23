@@ -13,6 +13,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { encryptApiKeys, decryptApiKeys } from '../utils/crypto';
 import type {
   AISettings,
   AIProvider,
@@ -353,22 +354,19 @@ export const useAIStore = create<AIStoreState>()(
             (state) => {
               state.aiSettings.apiKeys[provider] = key;
 
-              // Persistir apiKeys separadamente (não vai no Zustand persist por segurança)
-              // Fix v1.37.59: apiKeys não eram persistidas para usuários novos
-              try {
-                const currentSettings = localStorage.getItem('sentencify-ai-settings');
-                const parsed = currentSettings ? JSON.parse(currentSettings) : {};
-                const updatedApiKeys = {
-                  ...(parsed.apiKeys || {}),
-                  [provider]: key
-                };
-                localStorage.setItem('sentencify-ai-settings', JSON.stringify({
-                  ...parsed,
-                  apiKeys: updatedApiKeys
-                }));
-              } catch (err) {
-                console.warn('[AIStore] Erro ao persistir apiKey:', err);
-              }
+              // Persistir apiKeys encriptadas
+              encryptApiKeys({ ...state.aiSettings.apiKeys, [provider]: key }).then(encrypted => {
+                try {
+                  const currentSettings = localStorage.getItem('sentencify-ai-settings');
+                  const parsed = currentSettings ? JSON.parse(currentSettings) : {};
+                  localStorage.setItem('sentencify-ai-settings', JSON.stringify({
+                    ...parsed,
+                    apiKeys: encrypted
+                  }));
+                } catch (err) {
+                  console.warn('[AIStore] Erro ao persistir apiKey:', err);
+                }
+              });
             },
             false,
             `setApiKey/${provider}`
@@ -596,13 +594,24 @@ export const useAIStore = create<AIStoreState>()(
         // Migração de dados antigos do localStorage
         onRehydrateStorage: () => (state) => {
           if (state) {
-            // Restaurar apiKeys do localStorage antigo (por segurança, não ficam no Zustand persist)
+            // Restaurar apiKeys do localStorage (decriptar se necessario)
             try {
               const oldSettings = localStorage.getItem('sentencify-ai-settings');
               if (oldSettings) {
                 const parsed = JSON.parse(oldSettings);
                 if (parsed.apiKeys) {
-                  state.aiSettings.apiKeys = parsed.apiKeys;
+                  // Decriptar keys (async)
+                  decryptApiKeys(parsed.apiKeys).then(decrypted => {
+                    // Se alguma key nao decriptou (formato antigo), usar direto
+                    const finalKeys: Record<string, string> = {};
+                    for (const [provider, value] of Object.entries(parsed.apiKeys)) {
+                      finalKeys[provider] = decrypted[provider] || (value as string);
+                    }
+                    state.aiSettings.apiKeys = finalKeys as typeof state.aiSettings.apiKeys;
+                  }).catch(() => {
+                    // Fallback: usar keys como estao (migracao gradual)
+                    state.aiSettings.apiKeys = parsed.apiKeys;
+                  });
                 }
               }
             } catch (err) {

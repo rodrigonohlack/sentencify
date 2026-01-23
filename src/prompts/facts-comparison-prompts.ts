@@ -89,6 +89,46 @@ Responda APENAS com JSON válido, sem texto adicional antes ou depois:
 6. Se o conteúdo não tiver informações suficientes sobre o tópico, retorne arrays vazios
 7. A tabela deve ter pelo menos 1 linha se houver qualquer alegação relevante
 8. O campo "observacao" é opcional - use apenas quando houver algo importante a destacar
+
+## EXEMPLO DE RESPOSTA CORRETA:
+
+\`\`\`json
+{
+  "tabela": [
+    {
+      "tema": "Jornada de trabalho",
+      "alegacaoReclamante": "Trabalhava das 8h às 20h, sem intervalo, de segunda a sábado",
+      "alegacaoReclamada": "Jornada era das 8h às 17h com 1h de intervalo, de segunda a sexta",
+      "status": "controverso",
+      "relevancia": "alta",
+      "observacao": "Divergência total quanto ao horário e dias trabalhados"
+    },
+    {
+      "tema": "Salário",
+      "alegacaoReclamante": "Recebia R$ 2.500,00 mensais",
+      "alegacaoReclamada": "Confirma o salário de R$ 2.500,00",
+      "status": "incontroverso",
+      "relevancia": "media",
+      "observacao": null
+    }
+  ],
+  "fatosIncontroversos": [
+    "Admissão em 15/03/2020",
+    "Salário de R$ 2.500,00",
+    "Função de auxiliar administrativo"
+  ],
+  "fatosControversos": [
+    "Jornada extraordinária",
+    "Ausência de intervalo intrajornada",
+    "Trabalho aos sábados"
+  ],
+  "pontosChave": [
+    "Divergência completa sobre jornada sugere necessidade de prova testemunhal",
+    "Fatos incontroversos podem ser decididos de plano"
+  ],
+  "resumo": "Processo com controvérsia central na jornada de trabalho. Dados contratuais básicos são incontroversos."
+}
+\`\`\`
 `;
 };
 

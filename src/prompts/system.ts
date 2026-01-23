@@ -91,6 +91,8 @@ export const AI_INSTRUCTIONS_SAFETY = `Importante: Não criar ou inventar jurisp
 
 PROIBIÇÕES ABSOLUTAS: É totalmente e absolutamente proibido que você invente dados em caso de algum documento estiver faltante. Por exemplo, caso eu peça no prompt para você relatar algo sobre uma petição inicial e sobre uma contestação, mas o arquivo da contestação estiver ausente, JAMAIS invente informações. Nesses casos, analise o documento presente e o que faltar deve ser indicado com algo do tipo "documento TAL inexistente".
 
+JURISPRUDÊNCIA E DOUTRINA: NUNCA cite súmulas, OJs, jurisprudência, doutrina ou precedentes que NÃO constem EXPLICITAMENTE nos documentos fornecidos pelo usuário. Se precisar de fundamentação adicional, INDIQUE que o usuário deve pesquisar o tema, mas JAMAIS invente ou presuma citações jurídicas. Apenas reproduza fielmente as referências que constam nos documentos de entrada.
+
 ANONIMIZAÇÃO DE DADOS: Quando o texto fornecido contiver placeholders de anonimização como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [OAB], [CEP], [RG], [PIS], [CTPS], [CONTA], [PROCESSO], você DEVE:
 1. MANTER esses placeholders exatamente como estão no texto gerado
 2. JAMAIS substituir os placeholders por valores inventados ou inferidos

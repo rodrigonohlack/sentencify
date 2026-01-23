@@ -8,6 +8,7 @@ import { useDocumentStore, useResultStore } from '../stores';
 import { useAIIntegration } from './useAIIntegration';
 import { ANALYSIS_SYSTEM_PROMPT, buildAnalysisPrompt } from '../prompts';
 import type { AnalysisResult, AIMessage } from '../types';
+import { parseAIResponse, extractJSON, AnalysisResponseSchema } from '../../../schemas/ai-responses';
 
 export const useAnalysis = () => {
   const { peticao, contestacao } = useDocumentStore();
@@ -31,7 +32,33 @@ export const useAnalysis = () => {
     }
 
     try {
-      const parsed = JSON.parse(jsonStr);
+      // Tentar validar com Zod primeiro
+      const validated = parseAIResponse(jsonStr, AnalysisResponseSchema);
+      if (validated.success) {
+        const data = validated.data;
+        return {
+          identificacao: data.identificacao || { reclamantes: [], reclamadas: [] },
+          contrato: data.contrato || { dadosInicial: {}, controversias: [] },
+          tutelasProvisoras: data.tutelasProvisoras || [],
+          preliminares: data.preliminares || [],
+          prejudiciais: data.prejudiciais || {},
+          pedidos: data.pedidos || [],
+          reconvencao: data.reconvencao,
+          defesasAutonomas: data.defesasAutonomas || [],
+          impugnacoes: data.impugnacoes || { documentos: [], documentosNaoImpugnados: [] },
+          provas: data.provas || {
+            reclamante: { testemunhal: false, documental: false, pericial: false, depoimentoPessoal: false },
+            reclamada: { testemunhal: false, documental: false, pericial: false, depoimentoPessoal: false }
+          },
+          valorCausa: data.valorCausa || { valorTotal: 0, somaPedidos: 0, inconsistencia: false },
+          alertas: data.alertas || [],
+          tabelaSintetica: data.tabelaSintetica || []
+        } as unknown as AnalysisResult;
+      }
+
+      // Fallback: parse direto se Zod falhar (compatibilidade)
+      console.warn('[Analisador] Validação Zod falhou, usando fallback:', validated.error);
+      const parsed = JSON.parse(extractJSON(jsonStr) || jsonStr);
 
       // Validate required fields
       if (!parsed.identificacao) {

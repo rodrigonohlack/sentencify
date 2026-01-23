@@ -16,8 +16,10 @@ Sentry.init({
 
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { Readable } from 'stream';
+import { csrfProtection } from './middleware/csrf.js';
 
 import claudeRoutes from './routes/claude.js';
 import geminiRoutes from './routes/gemini.js';
@@ -120,9 +122,17 @@ app.use(cors({
   credentials: true
 }));
 
+// Cookie parser para CSRF tokens
+app.use(cookieParser());
+
 // Parser JSON com limite aumentado para PDFs grandes (Render não tem limite de plataforma)
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+
+// CSRF protection em rotas mutativas (exceto login/verify que usam tokens proprios)
+app.use('/api/models', csrfProtection);
+app.use('/api/share', csrfProtection);
+app.use('/api/sync', csrfProtection);
 
 // v1.35.13: Rate limiting para proteção contra abuso
 const authLimiter = rateLimit({

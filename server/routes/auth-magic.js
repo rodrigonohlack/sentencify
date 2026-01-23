@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getDb } from '../db/database.js';
 import EmailService from '../services/EmailService.js';
 import authMiddleware from '../middleware/auth.js';
+import { generateCSRFToken } from '../middleware/csrf.js';
 
 const router = express.Router();
 
@@ -207,6 +208,12 @@ router.post('/logout', authMiddleware, (req, res) => {
     console.error('[Auth] Logout error:', error);
     res.status(500).json({ error: 'Erro ao fazer logout' });
   }
+});
+
+// GET /api/auth/csrf-token - Retorna CSRF token para o frontend
+router.get('/csrf-token', (req, res) => {
+  const token = generateCSRFToken(req, res);
+  res.json({ csrfToken: token });
 });
 
 export default router;
