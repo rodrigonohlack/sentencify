@@ -747,6 +747,8 @@ export interface AICallOptions {
   validateResponse?: boolean;
   /** v1.37.90: Override do provider para chamadas específicas (ex: voice improvement) */
   provider?: 'claude' | 'gemini' | 'openai' | 'grok';
+  /** v1.38.44: Override do thinking level do Gemini para chamadas específicas */
+  geminiThinkingLevel?: GeminiThinkingLevel;
 }
 
 /** Tipo para função callAI */

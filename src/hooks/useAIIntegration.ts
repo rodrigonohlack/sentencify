@@ -783,7 +783,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         const geminiRequest = convertToGeminiFormat(messages, finalSystemPrompt);
 
         // v1.32.38: Gemini thinking consome maxOutputTokens - adicionar buffer
-        const thinkingLevel = aiSettings.geminiThinkingLevel || 'high';
+        const thinkingLevel = options.geminiThinkingLevel || aiSettings.geminiThinkingLevel || 'high';
         const thinkingBuffer = {
           'minimal': 2000,
           'low': 4000,
@@ -1252,7 +1252,11 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
     // v1.36.56: Construir opções com thinking config do Double Check
     const dcSettings = aiSettings.doubleCheck;
-    const options: AICallOptions = { maxTokens, model };
+    const options: AICallOptions = {
+      maxTokens,
+      model,
+      geminiThinkingLevel: dcSettings?.geminiThinkingLevel
+    };
 
     // Aplicar thinking config baseado no provider
     if (provider === 'claude' && dcSettings?.claudeThinkingBudget && dcSettings.claudeThinkingBudget > 0) {
