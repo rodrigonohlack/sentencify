@@ -64,6 +64,12 @@ router.post('/generate', async (req, res) => {
       console.warn(`[Gemini] Resposta filtrada: ${finishReason}`);
     }
 
+    // Log de erros HTTP (sempre, incluindo produção)
+    if (!response.ok) {
+      const errorMsg = data.error?.message || JSON.stringify(data).slice(0, 200);
+      console.error(`[Gemini] ${model} - HTTP ${response.status}: ${errorMsg}`);
+    }
+
     res.status(response.status).json(data);
 
   } catch (error) {
