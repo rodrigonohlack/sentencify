@@ -30,13 +30,13 @@ interface ModelConfig {
 export const VOICE_MODEL_CONFIG: Record<VoiceImprovementModel, ModelConfig> = {
   'haiku': {
     provider: 'claude',
-    model: 'claude-3-5-haiku-20241022',
-    displayName: 'Claude Haiku'
+    model: 'claude-haiku-4-5-20251001',
+    displayName: 'Claude Haiku 4.5'
   },
   'flash': {
     provider: 'gemini',
-    model: 'gemini-2.0-flash',
-    displayName: 'Gemini Flash'
+    model: 'gemini-3-flash-preview',
+    displayName: 'Gemini 3 Flash'
   },
   'gpt-4o-mini': {
     provider: 'openai',
@@ -113,7 +113,8 @@ export function useVoiceImprovement({ callAI }: UseVoiceImprovementProps): UseVo
           model: config.model,
           maxTokens: 1000,
           temperature: 0.3,
-          disableThinking: true,  // Não precisa de reasoning para correção simples
+          disableThinking: config.provider !== 'gemini',  // Gemini 3 não pode desativar totalmente
+          geminiThinkingLevel: config.provider === 'gemini' ? 'minimal' : undefined,
           logMetrics: true        // Garantir tracking de tokens
         }
       );

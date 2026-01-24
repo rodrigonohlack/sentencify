@@ -753,7 +753,8 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       timeout = null,
       abortSignal = null,
       logMetrics = true,
-      extractText = true
+      extractText = true,
+      disableThinking = false
     } = options;
 
     // v1.32.29: Resolver systemPrompt igual ao Claude (useInstructions → getAiInstructions)
@@ -782,14 +783,17 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         // Converter mensagens para formato Gemini
         const geminiRequest = convertToGeminiFormat(messages, finalSystemPrompt);
 
+        // Detectar Gemini 3 antes de calcular buffer
+        const isGemini3 = model.includes('gemini-3') || model.includes('3-flash') || model.includes('3-pro');
+
         // v1.32.38: Gemini thinking consome maxOutputTokens - adicionar buffer
-        const thinkingLevel = options.geminiThinkingLevel || aiSettings.geminiThinkingLevel || 'high';
-        const thinkingBuffer = {
-          'minimal': 2000,
+        const effectiveThinkingLevel = disableThinking ? 'minimal' : (options.geminiThinkingLevel || aiSettings.geminiThinkingLevel || 'high');
+        const thinkingBuffer = isGemini3 ? ({
+          'minimal': 1024,
           'low': 4000,
           'medium': 8000,
           'high': 16000
-        }[thinkingLevel] || 8000;
+        }[effectiveThinkingLevel] || 8000) : 0;
 
         // Configurar generationConfig com buffer para thinking
         geminiRequest.generationConfig = {
@@ -798,7 +802,6 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
         // Gemini 3: forçar temperature 1.0 para evitar bugs
         // Gemini 2.x: mínimo 0.5 para evitar filtro RECITATION (Google recomenda temp alta)
-        const isGemini3 = model.includes('gemini-3') || model.includes('3-flash') || model.includes('3-pro');
         if (isGemini3) {
           geminiRequest.generationConfig.temperature = 1.0;  // Recomendado pelo Google
         } else {
@@ -812,12 +815,13 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         if (topP !== null) geminiRequest.generationConfig.topP = topP;
         if (topK !== null) geminiRequest.generationConfig.topK = topK;
 
-        // v1.32.36: Gemini 3 sempre usa thinking (não pode desativar)
-        // v1.32.39: includeThoughts para retornar pensamentos na resposta
-        geminiRequest.generationConfig.thinking_config = {
-          thinking_budget: thinkingBuffer,
-          includeThoughts: true
-        };
+        // Só adicionar thinking_config para Gemini 3
+        if (isGemini3) {
+          geminiRequest.generationConfig.thinking_config = {
+            thinking_budget: thinkingBuffer,
+            includeThoughts: !disableThinking
+          };
+        }
 
         // Fazer requisição via proxy local
         const response = await fetch(`${API_BASE}/api/gemini/generate`, {
