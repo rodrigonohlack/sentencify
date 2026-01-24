@@ -37,6 +37,7 @@ import type {
   ChatMessage,
   ChatHistoryCacheEntry,
 } from '../types';
+import { useAIStore } from '../stores/useAIStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PDF INDEXEDDB HELPERS
@@ -1208,15 +1209,9 @@ export function useLocalStorage(): UseLocalStorageReturn {
         useLocalAIForJuris: false
       };
 
-      // Obter apiKeys ATUAIS do localStorage (nunca sobrescrever!)
-      let currentApiKeys = { claude: '', gemini: '', openai: '', grok: '' };
-      try {
-        const saved = localStorage.getItem('sentencify-ai-settings');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          currentApiKeys = { ...currentApiKeys, ...parsed.apiKeys };
-        }
-      } catch (e) { /* ignore */ }
+      // Usar apiKeys do Zustand store (já decriptadas) - nunca ler do localStorage
+      // pois lá estão criptografadas e setAiSettings() criptografaria novamente
+      const currentApiKeys = useAIStore.getState().aiSettings.apiKeys || { claude: '', gemini: '', openai: '', grok: '' };
 
       // Merge: defaults → projeto → apiKeys atuais (nunca sobrescreve chaves)
       const mergedAiSettings = {
