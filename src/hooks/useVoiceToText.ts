@@ -126,6 +126,12 @@ export const useVoiceToText = ({
   // ─── Refs ───
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isStoppingRef = useRef(false); // Evita restart automático ao parar manualmente
+  const onTranscriptRef = useRef(onTranscript);
+
+  // Manter ref sempre atualizada para evitar stale closures no SpeechRecognition
+  useEffect(() => {
+    onTranscriptRef.current = onTranscript;
+  }, [onTranscript]);
 
   // ─── Detectar suporte (apenas uma vez) ───
   useEffect(() => {
@@ -172,13 +178,13 @@ export const useVoiceToText = ({
       // Atualizar interim transcript para feedback visual
       setInterimTranscript(interim);
 
-      // Enviar resultado final
+      // Enviar resultado final (usa ref para evitar stale closure)
       if (finalTranscript) {
-        onTranscript(finalTranscript, true);
+        onTranscriptRef.current(finalTranscript, true);
         setInterimTranscript('');
       } else if (interim && interimResults) {
         // Enviar interim para preview (opcional)
-        onTranscript(interim, false);
+        onTranscriptRef.current(interim, false);
       }
     };
 
@@ -228,7 +234,7 @@ export const useVoiceToText = ({
     };
 
     return recognition;
-  }, [continuous, interimResults, lang, onTranscript, onError, onStart, onEnd, isRecording]);
+  }, [continuous, interimResults, lang, onError, onStart, onEnd, isRecording]);
 
   // ─── Iniciar gravação ───
   const start = useCallback(() => {

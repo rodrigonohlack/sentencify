@@ -94,7 +94,11 @@ export function useVoiceImprovement({ callAI }: UseVoiceImprovementProps): UseVo
       return rawText;
     }
 
-    const config = VOICE_MODEL_CONFIG[model];
+    let config = VOICE_MODEL_CONFIG[model];
+    if (!config) {
+      console.warn(`[VoiceImprovement] Modelo '${model}' não encontrado no config, usando haiku como fallback`);
+      config = VOICE_MODEL_CONFIG['haiku'];
+    }
 
     setIsImproving(true);
 

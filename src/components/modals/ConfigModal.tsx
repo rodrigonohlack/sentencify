@@ -103,6 +103,34 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
   const apiTestStatuses = useAIStore((s) => s.apiTestStatuses);
   const setApiTestStatus = useAIStore((s) => s.setApiTestStatus);
 
+  // v1.38.46: Auto-reset modelo de voice improvement quando key do provider é removida
+  React.useEffect(() => {
+    if (!aiSettings.voiceImprovement?.enabled) return;
+
+    const selectedModel = aiSettings.voiceImprovement?.model || 'haiku';
+    const selectedConfig = VOICE_MODEL_CONFIG[selectedModel];
+    if (!selectedConfig) return;
+
+    const selectedKey = aiSettings.apiKeys?.[selectedConfig.provider];
+    const isSelectedAvailable = selectedKey && selectedKey.trim().length > 0;
+
+    if (!isSelectedAvailable) {
+      // Encontrar primeiro modelo disponível
+      const firstAvailable = (Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
+        .find(([, config]) => {
+          const apiKey = aiSettings.apiKeys?.[config.provider];
+          return apiKey && apiKey.trim().length > 0;
+        });
+
+      if (firstAvailable) {
+        setAiSettings({
+          ...aiSettings,
+          voiceImprovement: { ...aiSettings.voiceImprovement, enabled: true, model: firstAvailable[0] }
+        });
+      }
+    }
+  }, [aiSettings.apiKeys, aiSettings.voiceImprovement?.enabled, aiSettings.voiceImprovement?.model]);
+
   if (!isOpen) return null;
 
   return (
