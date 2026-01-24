@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.49', feature: 'Fix anonimização de VALOR ativa mesmo quando desligada: preservarAnonimizacao agora condicional a anonymization.enabled nos prompts de mini-relatório e relatório processual' },
   { version: '1.38.48', feature: 'Redução de dívida técnica: strip console em produção (esbuild.drop), corrigir catch blocks vazios, eliminar any types (schemas Zod tipados), habilitar noUnusedLocals/Parameters e remover ~559 imports mortos' },
   { version: '1.38.47', feature: 'Default "Incluir petições e contestações" desativado: toggle inicia desligado para economizar tokens (antes: ativado por padrão)' },
   { version: '1.38.46', feature: 'Fix ditado por voz ignora modelo selecionado: corrigir stale closure no useVoiceToText (onTranscript capturava modelo antigo em gravações subsequentes) usando ref pattern' },

@@ -267,7 +267,7 @@ Gere com alto nível de detalhe em relação aos FATOS alegados pelas partes.
 A descrição fática (postulatória e defensiva) deve ter alto nível de detalhe.
 ` : '',
       estiloRedacao: AI_PROMPTS.estiloRedacao,
-      preservarAnonimizacao: AI_PROMPTS.preservarAnonimizacao,
+      preservarAnonimizacao: aiIntegration.aiSettings?.anonymization?.enabled ? AI_PROMPTS.preservarAnonimizacao : '',
       proibicaoMetaComentarios: AI_PROMPTS.proibicaoMetaComentarios
     };
   }, [docs, aiIntegration.aiSettings, partesProcesso]);
@@ -727,7 +727,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>JOÃO DA SILVA, qualificado na inicial...<
 
 ${AI_PROMPTS.estiloRedacao}
 
-${AI_PROMPTS.preservarAnonimizacao}
+${aiIntegration.aiSettings?.anonymization?.enabled ? AI_PROMPTS.preservarAnonimizacao : ''}
 
 Responda APENAS com o texto do relatório formatado em HTML, pronto para ser inserido na sentença. Não adicione explicações ou comentários.`
       });

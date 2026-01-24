@@ -37,6 +37,7 @@ export interface BuildDocumentOptions {
 export interface AISettingsForPrompt {
   modeloRelatorio?: string;
   detailedMiniReports?: boolean;
+  anonymization?: { enabled?: boolean };
 }
 
 export interface PartesProcesso {
@@ -238,7 +239,7 @@ Gere com alto nível de detalhe em relação aos FATOS alegados pelas partes.
 A descrição fática (postulatória e defensiva) deve ter alto nível de detalhe.
 ` : '',
     estiloRedacao: AI_PROMPTS.estiloRedacao,
-    preservarAnonimizacao: AI_PROMPTS.preservarAnonimizacao,
+    preservarAnonimizacao: aiSettings?.anonymization?.enabled ? AI_PROMPTS.preservarAnonimizacao : '',
     proibicaoMetaComentarios: AI_PROMPTS.proibicaoMetaComentarios
   };
 }
