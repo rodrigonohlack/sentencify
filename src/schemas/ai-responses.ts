@@ -35,10 +35,10 @@ export const AnalysisPedidoSchema = z.object({
 }).passthrough();
 
 export const AnalysisAlertaSchema = z.object({
-  tipo: z.string(),
-  descricao: z.string(),
-  severidade: z.enum(['alta', 'media', 'baixa']).default('media'),
-  recomendacao: z.string().optional().default(''),
+  tipo: z.string().nullable().default('').transform(v => v ?? ''),
+  descricao: z.string().nullable().default('').transform(v => v ?? ''),
+  severidade: z.enum(['alta', 'media', 'baixa']).nullable().default('media').transform(v => v ?? 'media'),
+  recomendacao: z.string().nullable().optional().default('').transform(v => v ?? ''),
 }).passthrough();
 
 export const AnalysisResponseSchema = z.object({
