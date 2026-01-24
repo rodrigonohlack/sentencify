@@ -304,7 +304,7 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
       });
 
       db.close();
-      return entry?.includeMainDocs ?? true;  // Default: true
+      return entry?.includeMainDocs ?? false;  // Default: false (economizar tokens)
     } catch (e) {
       console.warn('[ChatHistoryCache] Erro ao obter includeMainDocs:', e);
       return true;

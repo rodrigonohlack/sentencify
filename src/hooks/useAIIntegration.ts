@@ -705,6 +705,11 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       const parts = (content?.parts || []) as Record<string, unknown>[];
       const textPart = parts.find((p: Record<string, unknown>) => !p.thought && p.text);
       if (!textPart) {
+        const hasOnlyThought = parts.some((p: Record<string, unknown>) => p.thought && p.text);
+        if (hasOnlyThought) {
+          // v1.38.46: Gemini gastou budget no thinking sem gerar resposta - retry
+          throw new Error('Gemini retornou apenas thinking sem text part. Retentando...');
+        }
         console.error('[Gemini] extractResponseText: nenhum text part encontrado.', {
           hasCandidates: !!data.candidates,
           candidatesLength: (data.candidates as unknown[])?.length,

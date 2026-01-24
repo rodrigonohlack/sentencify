@@ -493,7 +493,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   });
 
   // v1.38.16: Toggle "Incluir petições e contestações" persistido por tópico
-  const [topicIncludeMainDocs, setTopicIncludeMainDocsState] = React.useState(true);
+  const [topicIncludeMainDocs, setTopicIncludeMainDocsState] = React.useState(false);
 
   // v1.38.16: Wrapper que persiste no cache
   const setTopicIncludeMainDocs = React.useCallback((value: boolean) => {
