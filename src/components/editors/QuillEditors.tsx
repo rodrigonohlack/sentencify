@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { Save, Sparkles, Scale, BookOpen, X, ChevronDown } from 'lucide-react';
+import { Save, Sparkles, Scale, BookOpen } from 'lucide-react';
 import { CSS } from '../modals/BaseModal';
 import { VoiceButton } from '../VoiceButton';
 import { SpacingDropdown, FontSizeDropdown } from '../ui';
@@ -115,7 +115,9 @@ export const QuillEditorBase = React.forwardRef<QuillInstance, QuillEditorBasePr
       try {
         existingQuill.off('text-change');
         existingQuill.off('selection-change');
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[QuillEditors] Falha ao remover event listener:', e);
+      }
     }
     containerRef.current.innerHTML = '';
 
@@ -367,11 +369,11 @@ export const QuillModelEditor = React.forwardRef<QuillInstance, QuillModelEditor
   onChange,
   onSaveWithoutClosing,
   onOpenAIAssistant,
-  toolbarRef,
+  toolbarRef: _toolbarRef,
   quillReady = false,
   quillError = null,
   editorTheme,
-  toggleEditorTheme
+  toggleEditorTheme: _toggleEditorTheme
 }, ref) => {
   const { quillInstanceRef, customModules, handleQuillReady } = useQuillEditor({
     ref,
@@ -672,7 +674,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
   regenerating = false,
   showRegenerateSection = false,
   editorTheme,
-  toggleEditorTheme,
+  toggleEditorTheme: _toggleEditorTheme2,
   models = [],
   onInsertModel,
   onPreviewModel,
@@ -1035,10 +1037,10 @@ export const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstanc
   quillReady = false,
   quillError = null,
   editorTheme,
-  toggleEditorTheme,
+  toggleEditorTheme: _toggleEditorTheme3,
   onSlashCommand
 }, ref) => {
-  const { quillInstanceRef, customModules, handleQuillReady } = useQuillEditor({
+  const { quillInstanceRef: _quillInstanceRef, customModules, handleQuillReady } = useQuillEditor({
     ref,
     onSaveWithoutClosing,
     enableCtrlS: true,

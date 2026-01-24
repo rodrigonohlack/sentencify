@@ -23,6 +23,7 @@ import type {
   Topic,
   FactsComparisonSource,
   FactsComparisonResult,
+  FactsComparisonRow,
   PastedText,
   AIMessageContent,
   AIDocumentContent,
@@ -258,8 +259,7 @@ export function useFactsComparison({
 
       // Validar resposta com schema Zod
       const validated = parseAIResponse(response, FactsComparisonSchema);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let parsed: any;
+      let parsed: ReturnType<typeof FactsComparisonSchema['parse']>;
       if (validated.success) {
         parsed = validated.data;
       } else {
@@ -339,7 +339,7 @@ export function useFactsComparison({
         topicTitle: editingTopic.title,
         source,
         generatedAt: new Date().toISOString(),
-        tabela: verifiedParsed.tabela || [],
+        tabela: (verifiedParsed.tabela || []) as FactsComparisonRow[],
         fatosIncontroversos: verifiedParsed.fatosIncontroversos || [],
         fatosControversos: verifiedParsed.fatosControversos || [],
         pontosChave: verifiedParsed.pontosChave || [],

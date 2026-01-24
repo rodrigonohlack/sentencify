@@ -37,7 +37,7 @@ import type {
  * v1.35.1: Criado
  * v1.35.23: Adicionado onRemoveSharedModels para limpar modelos ao remover acesso
  */
-export const ShareLibraryModal = React.memo(({ isOpen, onClose, user, onRemoveSharedModels }: ShareLibraryModalProps) => {
+export const ShareLibraryModal = React.memo(({ isOpen, onClose, user: _user, onRemoveSharedModels }: ShareLibraryModalProps) => {
   const [permission, setPermission] = React.useState('view');
   const [loading, setLoading] = React.useState(false);
   const [recipientEmail, setRecipientEmail] = React.useState('');
@@ -551,7 +551,7 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
   isOpen,
   onClose,
   dispositivoText = '',
-  setDispositivoText,
+  setDispositivoText: _setDispositivoText,
   copySuccess,
   setCopySuccess,
   setError,
@@ -830,10 +830,10 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
  */
 export const BulkReviewModal: React.FC<BulkReviewModalProps> = ({
   isOpen,
-  onClose,
+  onClose: _onClose,
   bulkReviewModels,
   bulkFiles,
-  bulkGeneratedModels,
+  bulkGeneratedModels: _bulkGeneratedModels,
   bulkErrors,
   onRemoveModel,
   onDiscard,
@@ -1001,11 +1001,11 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
   onFileUpload,
   onRemoveFile,
   onProcess,
-  currentFileIndex,
+  currentFileIndex: _currentFileIndex,
   processedFiles,
   bulkStaggerDelay,
   setBulkStaggerDelay,
-  bulkCancelController,
+  bulkCancelController: _bulkCancelController,
   generatedModels,
   bulkCurrentBatch,
   bulkBatchSize = 3,

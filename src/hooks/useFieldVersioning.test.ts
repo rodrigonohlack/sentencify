@@ -3,8 +3,8 @@
  * @description Testes REAIS para useFieldVersioning - importa e executa o hook de produção
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
 import { useFieldVersioning } from './useFieldVersioning';
 import 'fake-indexeddb/auto';
 

@@ -4,7 +4,7 @@
  * @version 1.37.57
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   useAIStore,
   selectProvider,

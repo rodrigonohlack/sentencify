@@ -12,7 +12,6 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  LogOut,
   ArrowLeft,
   FileSearch,
 } from 'lucide-react';
@@ -35,7 +34,7 @@ interface MagicLinkFormProps {
   onSuccess: () => void;
 }
 
-const MagicLinkForm: React.FC<MagicLinkFormProps> = ({ onSuccess }) => {
+const MagicLinkForm: React.FC<MagicLinkFormProps> = ({ onSuccess: _onSuccess }) => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -171,7 +170,7 @@ const MagicLinkForm: React.FC<MagicLinkFormProps> = ({ onSuccess }) => {
  * Gate de autenticação - exibe tela de login se não autenticado
  */
 export const LoginGate: React.FC<LoginGateProps> = ({ children }) => {
-  const { user, loading, isAuthenticated, logout } = useAuthMagicLink();
+  const { user: _user, loading, isAuthenticated, logout: _logout } = useAuthMagicLink();
 
   // Loading state
   if (loading) {

@@ -14,12 +14,11 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import { anonymizeText, normalizeHTMLSpacing } from '../utils/text';
 import { parseAIResponse, extractJSON, TopicExtractionSchema } from '../schemas/ai-responses';
-import { AI_PROMPTS, buildAnalysisPrompt } from '../prompts';
+import { buildAnalysisPrompt } from '../prompts';
 import type {
   AIMessage,
   AIMessageContent,
   Topic,
-  TopicCategory,
   PartesProcesso,
   ExtractedTexts,
   AnalyzedDocuments,
@@ -139,9 +138,8 @@ export interface UseDocumentAnalysisProps {
   // Funcoes auxiliares
   showToast: (msg: string, type: 'success' | 'error' | 'info' | 'warning') => void;
   generateRelatorioProcessual: (content: AIMessageContent[]) => Promise<string>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   generateMiniReportsBatch: (
-    topics: any[],
+    topics: Topic[],
     options?: {
       batchSize?: number;
       delayBetweenBatches?: number;
@@ -608,8 +606,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       await new Promise(resolve => setTimeout(resolve, 300));
 
       const validated = parseAIResponse(textContent, TopicExtractionSchema);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let parsed: any;
+      let parsed: ReturnType<typeof TopicExtractionSchema['parse']>;
       if (validated.success) {
         parsed = validated.data;
       } else {
@@ -619,7 +616,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         parsed = JSON.parse(jsonStr);
       }
 
-      let topics = parsed.topics || [];
+      let topics = (parsed.topics || []) as Topic[];
 
       // Double Check - Verificação secundária da extração de tópicos
       if (aiIntegration.aiSettings.doubleCheck?.enabled &&

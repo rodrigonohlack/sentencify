@@ -20,8 +20,7 @@ import type {
   ToastState,
   DriveFile,
   DoubleCheckReviewData,
-  DoubleCheckReviewResult,
-  DoubleCheckOperation
+  DoubleCheckReviewResult
 } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -82,12 +81,6 @@ const initialToastState: ToastState = {
 interface PartesProcesso {
   reclamante: string;
   reclamadas: string[];
-}
-
-/** Estado do Model Generator Modal */
-interface ModelGeneratorModalState {
-  isOpen: boolean;
-  targetField: string | null;
 }
 
 /** Status de download (v1.37.73) */

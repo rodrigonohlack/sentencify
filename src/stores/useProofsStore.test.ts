@@ -12,7 +12,7 @@ import {
   selectProofTopicLinks,
   selectProofAnalysisResults
 } from './useProofsStore';
-import type { ProofFile, ProofText, Proof, ProcessingMode } from '../types';
+import type { ProofFile, ProofText, ProcessingMode } from '../types';
 
 describe('useProofsStore', () => {
   // Reset store before each test

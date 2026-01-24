@@ -36,7 +36,6 @@ import React from 'react';
 import { useUIStore } from '../../stores/useUIStore';
 import { useTopicsStore } from '../../stores/useTopicsStore';
 import { useModelsStore } from '../../stores/useModelsStore';
-import { useProofUIStore } from '../../stores/useProofUIStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HOOKS DE HANDLERS
@@ -44,7 +43,6 @@ import { useProofUIStore } from '../../stores/useProofUIStore';
 
 import { useTopicModalHandlers } from '../../hooks/useTopicModalHandlers';
 import { useModelModalHandlers } from '../../hooks/useModelModalHandlers';
-import { useProofModalHandlers } from '../../hooks/useProofModalHandlers';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MODAIS
@@ -203,9 +201,6 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
   const extractedModelPreview = useModelsStore((s) => s.extractedModelPreview);
   const setExtractedModelPreview = useModelsStore((s) => s.setExtractedModelPreview);
 
-  // Proofs Store
-  const proofToDelete = useProofUIStore((s) => s.proofToDelete);
-
   // ═══════════════════════════════════════════════════════════════════════════
   // HOOKS DE HANDLERS
   // ═══════════════════════════════════════════════════════════════════════════
@@ -213,7 +208,6 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
   const topicHandlers = useTopicModalHandlers();
   // v1.37.77: Passar trackChange para rastrear deletes para sync
   const modelHandlers = useModelModalHandlers({ trackChange });
-  const proofHandlers = useProofModalHandlers();
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER

@@ -37,7 +37,7 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
   onFocus,
   onBlur,
   onSlashCommand,
-  fieldType = 'text',
+  fieldType: _fieldType = 'text',
   quillReady,
   quillError,
   minHeight = '120px',

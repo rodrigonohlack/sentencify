@@ -10,7 +10,6 @@ import type {
   HistoricoFilters,
   BatchState,
   BatchFile,
-  ResultadoAudiencia,
   PautaGroup,
 } from '../types/analysis.types';
 
@@ -215,7 +214,7 @@ export const useAnalysesStore = create<AnalysesState & AnalysesActions>((set, ge
     }),
 
   selectAll: () =>
-    set((state) => ({
+    set((_state) => ({
       selectedIds: new Set(get().getFilteredAnalyses().map((a) => a.id)),
     })),
 

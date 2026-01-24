@@ -9,10 +9,9 @@
 
 import React from 'react';
 import { useAIStore } from '../stores/useAIStore';
-import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY } from '../prompts';
+import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_SAFETY } from '../prompts';
 import { API_BASE } from '../constants/api';
 import type {
-  AISettings,
   AIMessage,
   AIMessageContent,
   AITextContent,  // v1.37.68: adicionado para type guard no performDoubleCheck
@@ -26,6 +25,17 @@ import type {
   DoubleCheckCorrection
 } from '../types';
 import { extractJSON, parseAIResponse, DoubleCheckResponseSchema } from '../schemas/ai-responses';
+
+/** Tipo para resultado parseado do Double Check (campos verificados variam por operação) */
+interface DoubleCheckParsedResult {
+  verifiedTopics?: unknown;
+  verifiedResult?: unknown;
+  verifiedDispositivo?: string;
+  verifiedReview?: string;
+  corrections?: DoubleCheckCorrection[];
+  summary?: string;
+  confidence?: number;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // REDUCER PARA ESTADOS DE GERAÇÃO
@@ -401,7 +411,6 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     for (let attempt = 0; attempt < RETRY_MAX_ATTEMPTS; attempt++) {
       try {
         // Log summary (debug only)
-        const _contentSummary: string[] = [];
 
         // Fazer requisição à API (v1.30: via proxy local)
         const response = await fetch(`${API_BASE}/api/claude/messages`, {
@@ -447,14 +456,6 @@ ${AI_INSTRUCTIONS_SAFETY}`;
             console.log(thinkingBlock.thinking);
             console.groupEnd();
           }
-        }
-
-        if (data.usage) {
-          const u = data.usage;
-          const cacheRead = u.cache_read_input_tokens || 0;
-          const cacheCreation = u.cache_creation_input_tokens || 0;
-          const regularInput = u.input_tokens || 0;
-          const output = u.output_tokens || 0;
         }
 
         // Logar métricas de cache
@@ -1373,10 +1374,9 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         return { verified: originalResponse, corrections: [], summary: 'Falha ao parsear resposta', failed: true };
       }
       const dcValidated = parseAIResponse(jsonStr, DoubleCheckResponseSchema);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let result: any;
+      let result: DoubleCheckParsedResult;
       if (dcValidated.success) {
-        result = dcValidated.data;
+        result = dcValidated.data as unknown as DoubleCheckParsedResult;
       } else {
         console.warn('[DoubleCheck] Validação Zod falhou, usando fallback:', dcValidated.error);
         result = JSON.parse(jsonStr);
@@ -1392,7 +1392,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           : '[vazio]';
       console.log('[DoubleCheck] Resultado parseado:', {
         operation,
-        hasCorrections: result.corrections?.length > 0,
+        hasCorrections: (result.corrections?.length ?? 0) > 0,
         correctionsCount: result.corrections?.length || 0,
         verifiedResultPreview: verifiedPreview,
         originalResponsePreview: originalResponse.substring(0, 200) + '...',
@@ -1408,7 +1408,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           : operation === 'factsComparison'
             ? JSON.stringify(result.verifiedResult) || originalResponse
             : operation === 'proofAnalysis' || operation === 'quickPrompt'
-              ? result.verifiedResult || originalResponse
+              ? (result.verifiedResult as string) || originalResponse
               : result.verifiedReview || originalResponse;
 
       return {

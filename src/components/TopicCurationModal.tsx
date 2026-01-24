@@ -580,7 +580,7 @@ const TopicPreviewCard = React.memo<TopicPreviewCardProps>(({
 
 const SplitModal: React.FC<SplitModalProps> = ({ topic, onConfirm, onCancel, isDarkMode }) => {
   const [splitNames, setSplitNames] = useState<string[]>(['', '']);
-  const [category, setCategory] = useState<TopicCategory>(topic?.category || 'MÉRITO');
+  const [category, _setCategory] = useState<TopicCategory>(topic?.category || 'MÉRITO');
 
   const addField = () => {
     if (splitNames.length < 5) {
@@ -888,7 +888,7 @@ const AddTopicInline: React.FC<AddTopicInlineProps> = ({ onAdd, onCancel, isDark
 const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
   isOpen,
   onConfirm,
-  onCancel,
+  onCancel: _onCancel,
   initialTopics = [],
   model = 'claude-sonnet-4-20250514',
   parallelRequests = 5,

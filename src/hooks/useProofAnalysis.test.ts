@@ -14,7 +14,7 @@ import type {
   DocumentServicesForProofs,
   StorageForProofs,
 } from './useProofAnalysis';
-import type { Proof, Topic, AnalyzedDocuments, ProofFile, ProofText } from '../types';
+import type { Topic, AnalyzedDocuments, ProofFile, ProofText } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MOCKS
@@ -785,12 +785,13 @@ describe('useProofAnalysis', () => {
       const { result, rerender } = renderHook(() => useProofAnalysis(mockProps));
 
       // Create promise to track analysis completion
-      let analysisComplete = false;
+      // @ts-expect-error -- tracking variable for async test
+      let _analysisComplete = false;
 
       // Start analysis in a non-blocking way
       act(() => {
         result.current.analyzeProof(proof, 'livre').then(() => {
-          analysisComplete = true;
+          _analysisComplete = true;
         });
       });
 

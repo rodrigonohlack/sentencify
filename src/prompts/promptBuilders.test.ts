@@ -4,7 +4,7 @@
  * @version 1.38.39
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   buildDocumentContentArray,
   buildMiniReportPromptCore,

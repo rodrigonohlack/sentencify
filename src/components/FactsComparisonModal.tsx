@@ -225,7 +225,7 @@ const SourceSelector: React.FC<{
  * Não gerencia ESC, scroll lock, overlay - BaseModal faz isso.
  */
 export const FactsComparisonModalContent: React.FC<Omit<FactsComparisonModalProps, 'isOpen' | 'onClose'>> = ({
-  topicTitle,
+  topicTitle: _topicTitle,
   topicRelatorio,
   hasPeticao,
   hasContestacao,

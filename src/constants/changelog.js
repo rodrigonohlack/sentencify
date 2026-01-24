@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.48', feature: 'Redução de dívida técnica: strip console em produção (esbuild.drop), corrigir catch blocks vazios, eliminar any types (schemas Zod tipados), habilitar noUnusedLocals/Parameters e remover ~559 imports mortos' },
   { version: '1.38.47', feature: 'Default "Incluir petições e contestações" desativado: toggle inicia desligado para economizar tokens (antes: ativado por padrão)' },
   { version: '1.38.46', feature: 'Fix ditado por voz ignora modelo selecionado: corrigir stale closure no useVoiceToText (onTranscript capturava modelo antigo em gravações subsequentes) usando ref pattern' },
   { version: '1.38.45', feature: 'Fix import de projeto sobrescreve API keys: ler keys decriptadas do Zustand store ao invés do localStorage (onde estão criptografadas), evitando double-encryption que inutilizava as chaves' },

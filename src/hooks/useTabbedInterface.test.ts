@@ -4,7 +4,7 @@
  * @version 1.37.57
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useTabbedInterface, TABS, READONLY_TABS, type TabId } from './useTabbedInterface';
 

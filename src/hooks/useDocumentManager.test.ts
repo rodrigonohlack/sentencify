@@ -8,7 +8,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useDocumentManager } from './useDocumentManager';
 import { useDocumentsStore } from '../stores/useDocumentsStore';
-import type { UploadedFile, PastedText, AnalyzedDocuments, DocumentProcessingModes } from '../types';
+import type { UploadedFile, PastedText, DocumentProcessingModes } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MOCKS
@@ -39,7 +39,8 @@ describe('useDocumentManager', () => {
     return new File(['test content'], name, { type: 'application/pdf' });
   };
 
-  const createMockUploadedFile = (overrides: Partial<UploadedFile> = {}): UploadedFile => ({
+  // @ts-expect-error -- helper available for future tests
+  const _createMockUploadedFile = (overrides: Partial<UploadedFile> = {}): UploadedFile => ({
     file: createMockFile(),
     id: `file-${uuidCounter++}`,
     ...overrides,

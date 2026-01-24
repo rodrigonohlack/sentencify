@@ -346,7 +346,7 @@ describe('buildChatContext', () => {
     });
 
     it('proofFilter="oral" usa prepareOralProofsContext', async () => {
-      const { prepareProofsContext, prepareOralProofsContext } = await import('./context-helpers');
+      const { prepareProofsContext: _prepareProofsContext, prepareOralProofsContext } = await import('./context-helpers');
 
       await buildChatContext(createParams({
         options: { proofFilter: 'oral' },

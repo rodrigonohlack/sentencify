@@ -28,7 +28,7 @@ export const ProofCard = React.memo(({
   isPdf,
   proofManager,
   openModal,
-  setError,
+  setError: _setError,
   extractTextFromPDFWithMode,
   anonymizationEnabled = false,
   grokEnabled = false,

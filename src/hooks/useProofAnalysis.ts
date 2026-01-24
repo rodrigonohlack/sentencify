@@ -45,8 +45,7 @@ export interface AIIntegrationForProofs {
     temperature?: number;
     topP?: number;
     topK?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }) => Promise<any>;
+  }) => Promise<string>;
   // v1.37.65: Double Check para analise de provas
   // v1.37.68: context agora é AIMessageContent[] (não string)
   performDoubleCheck?: (

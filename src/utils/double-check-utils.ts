@@ -12,6 +12,12 @@ import type {
   DoubleCheckOperation
 } from '../types';
 
+/** Tipo para tópico parseado de JSON no Double Check */
+interface ParsedTopic { title: string; category: string; [key: string]: unknown; }
+
+/** Tipo para resultado de confronto de fatos parseado de JSON */
+interface ParsedFactsResult { tabela: Array<{ tema?: string; [key: string]: unknown }>; [key: string]: unknown; }
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTES
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -275,8 +281,7 @@ function applyTopicExtractionCorrections(
   originalResult: string,
   selectedCorrections: DoubleCheckCorrection[]
 ): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let topics: any[] = JSON.parse(originalResult);
+  let topics: ParsedTopic[] = JSON.parse(originalResult);
 
   for (const correction of selectedCorrections) {
     switch (correction.type) {
@@ -340,16 +345,14 @@ function applyFactsComparisonCorrections(
   originalResult: string,
   selectedCorrections: DoubleCheckCorrection[]
 ): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result: any = JSON.parse(originalResult);
+  const result: ParsedFactsResult = JSON.parse(originalResult);
 
   for (const correction of selectedCorrections) {
     switch (correction.type) {
       case 'fix_row': {
         // Encontrar linha pelo tema e atualizar campo específico
         if (result.tabela && correction.tema && correction.field && correction.newValue) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const rowToFix = result.tabela.find((r: any) => r.tema === correction.tema);
+          const rowToFix = result.tabela.find((r) => r.tema === correction.tema);
           if (rowToFix) {
             rowToFix[correction.field] = correction.newValue;
           }
@@ -368,8 +371,7 @@ function applyFactsComparisonCorrections(
       case 'remove_row': {
         // Remover linha pelo tema
         if (result.tabela && correction.tema) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          result.tabela = result.tabela.filter((r: any) => r.tema !== correction.tema);
+          result.tabela = result.tabela.filter((r) => r.tema !== correction.tema);
         }
         break;
       }
@@ -380,7 +382,7 @@ function applyFactsComparisonCorrections(
           if (!result[correction.list]) {
             result[correction.list] = [];
           }
-          result[correction.list].push(correction.fato);
+          (result[correction.list] as string[]).push(correction.fato);
         }
         break;
       }

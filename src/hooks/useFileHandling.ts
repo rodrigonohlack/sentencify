@@ -247,8 +247,7 @@ export function useFileHandling({
 
     // Parse e validação com schema Zod
     const validated = parseAIResponse(aiResponseText, BulkExtractionSchema);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let parsedModelos: any[];
+    let parsedModelos: ReturnType<typeof BulkExtractionSchema['parse']>['modelos'];
     if (validated.success) {
       parsedModelos = validated.data.modelos;
     } else {
@@ -361,7 +360,7 @@ export function useFileHandling({
 
   const processFileWithProgress = React.useCallback(async (
     file: File,
-    index: number,
+    _index: number,
     abortSignal: AbortSignal | null
   ): Promise<{ file: string; status: string; modelsCount?: number; models?: Model[]; error?: string; duration: string }> => {
     const startTime = Date.now();

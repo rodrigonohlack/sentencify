@@ -322,7 +322,8 @@ describe('useModelLibrary', () => {
         const models = [
           createModel('Modelo Sobrejornada'),
         ];
-        const resultsWithSynonyms = searchModelsInLibrary(models, 'horas', { useSynonyms: true });
+        // @ts-expect-error -- variable used for comparison context
+        const _resultsWithSynonyms = searchModelsInLibrary(models, 'horas', { useSynonyms: true });
         const resultsWithoutSynonyms = searchModelsInLibrary(models, 'horas', { useSynonyms: false });
         // Without synonyms, "horas" should not match "sobrejornada"
         expect(resultsWithoutSynonyms).toHaveLength(0);

@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { useUIStore, selectIsAnyModalOpen, selectModal, selectIsToastVisible } from './useUIStore';
-import type { ModalKey } from '../types';
+import type { ModalKey as _ModalKey } from '../types';
 
 describe('useUIStore', () => {
   // Reset store before each test

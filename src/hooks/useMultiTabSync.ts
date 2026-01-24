@@ -61,7 +61,7 @@ export function useMultiTabSync({
   // Registrar callback de sync
   useEffect(() => {
     // Handler para eventos de sync de outras tabs
-    const handleSync = async ({ action, timestamp }: { action: string; timestamp: number }) => {
+    const handleSync = async ({ action: _action, timestamp: _timestamp }: { action: string; timestamp: number }) => {
       // 🔑 ZUSTAND: Usa getState() diretamente - sem refs!
       const currentIndexedDB = indexedDBRef.current;
 

@@ -14,20 +14,16 @@
  * ╚════════════════════════════════════════════════════════════════════════════════════════╝
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { CHANGELOG } from './constants/changelog';
-import { EXPORT_STYLES } from './constants/export-styles';
-import { Upload, FileText, Plus, Search, Save, Trash2, ChevronDown, ChevronUp, Download, AlertCircle, AlertTriangle, Edit2, Edit3, Merge, Split, PlusCircle, Sparkles, Edit, GripVertical, BookOpen, Book, Zap, Scale, Loader2, Check, X, Clock, RefreshCw, Info, Code, Copy, ArrowRight, Eye, Wand2, LogOut, Share2, Link, Users, Mail, RotateCcw } from 'lucide-react';
-import LoginScreen, { useAuth } from './components/LoginScreen';
+import React, { useEffect, useRef } from 'react';
+import { Upload, FileText, Save, ChevronDown, ChevronUp, AlertCircle, Sparkles, Edit, BookOpen, Book, Scale, X, LogOut } from 'lucide-react';
+import { useAuth } from './components/LoginScreen';
 
 // v1.34.0: Cloud Sync - Magic Link Authentication + SQLite Sync
-import useCloudSync, { type UseCloudSyncReturn, type SharedLibrary } from './hooks/useCloudSync';
+import useCloudSync, { type UseCloudSyncReturn } from './hooks/useCloudSync';
 import LoginMagicModal from './components/LoginMagicModal';
-import SyncStatusIndicator from './components/SyncStatusIndicator';
 
 // v1.36.61+: Zustand Stores - Estado global gerenciado
 // useModalManagerCompat movido para src/hooks/useModalManager.ts (v1.36.78)
-import { useAIStore } from './stores/useAIStore';
 import { useUIStore } from './stores/useUIStore';
 import { useModelsStore } from './stores/useModelsStore';
 // useModelLibraryCompat movido para src/hooks/useModelLibrary.ts (v1.36.78)
@@ -46,10 +42,8 @@ import { useModelsStore } from './stores/useModelsStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useFullscreen, useSpacingControl, useFontSizeControl, useFeatureFlags, useThrottledBroadcast, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, validateModel, sanitizeModel, useLegislacao, LEIS_METADATA, getLeiFromId, saveArtigosToIndexedDB, loadArtigosFromIndexedDB, clearArtigosFromIndexedDB, sortArtigosNatural, useJurisprudencia, IRR_TYPES, isIRRType, JURIS_TIPOS_DISPONIVEIS, JURIS_TRIBUNAIS_DISPONIVEIS, savePrecedentesToIndexedDB, loadPrecedentesFromIndexedDB, clearPrecedentesFromIndexedDB, useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, useModelPreview, useLocalStorage, savePdfToIndexedDB, getPdfFromIndexedDB, removePdfFromIndexedDB, clearAllPdfsFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, removeAccents, SEARCH_STOPWORDS, SINONIMOS_JURIDICOS, useQuillEditor, sanitizeQuillHTML, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers, useReviewSentence, useSemanticSearchHandlers, useModelSuggestions, useMultiTabSync } from './hooks';
-import type { CurationData } from './hooks/useDocumentAnalysis';
+import { useSpacingControl, useFontSizeControl, useFeatureFlags, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, useLegislacao, useJurisprudencia, useChatAssistant, useModelPreview, useLocalStorage, removePdfFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers, useReviewSentence, type AIIntegrationForReview, useSemanticSearchHandlers, useModelSuggestions, useMultiTabSync } from './hooks';
 import { API_BASE } from './constants/api';
-import { SPACING_PRESETS, FONTSIZE_PRESETS } from './constants/presets';
 import { APP_VERSION } from './constants/app-version';
 
 // v1.34.4: Admin Panel - Gerenciamento de emails autorizados
@@ -65,20 +59,17 @@ import TopicCurationModal from './components/TopicCurationModal';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useGoogleDrive, GOOGLE_CLIENT_ID } from './hooks/useGoogleDrive';
 import { GoogleDriveButton, DriveFilesModal } from './components/GoogleDriveButton';
-import { VoiceButton } from './components/VoiceButton';
 import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 import { FactsComparisonModalContent } from './components/FactsComparisonModal';
-import { TopicCard, SortableTopicCard, ModelCard, ProofCard, VirtualList, SuggestionCard, SplitDivider, SpacingDropdown, FontSizeDropdown, ProcessingModeSelector, VersionCompareModal, VersionSelect, JurisprudenciaCard, ArtigoCard, ChatBubble, ChatHistoryArea, ChatInput, InsertDropdown, BaseModal, ModalFooter, ModalWarningBox, ModalInfoBox, ModalAmberBox, ModalContentPreview, DeleteAllPrecedentesModal, ExtractModelConfirmModal, ExtractedModelPreviewModal, AddProofTextModal, ProofAnalysisModal, LinkProofModal, RestoreSessionModal, ClearProjectModal, LogoutConfirmModal, ConfirmBulkCancelModal, DeleteProofModal, TextPreviewModal, FullscreenModelPanel, ModelSearchPanel, JurisprudenciaTab, LegislacaoTab, AIAssistantBaseLegacy, AIAssistantBase, AIAssistantModal, AIAssistantGlobalModal, AIAssistantModelModal, extractPlainText, isOralProof, hasOralProofsForTopic, AnalysisModal, AnonymizationNamesModal, LinkedProofsModal, ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal, ModelFormFields, SlashCommandMenu, JurisprudenciaModal, getQuillToolbarConfig, QuillEditorBase, QuillModelEditor, QuillDecisionEditor, QuillMiniRelatorioEditor, AIRegenerationSection, FieldEditor, InlineFormattingToolbar, ModelFormModal, ModelPreviewModal, GlobalEditorSection, DecisionEditorContainer, LockedTabOverlay, GlobalEditorModal, ConfigModal, DoubleCheckReviewModal, ModelsTab, UploadTab, ProofsTab, TopicsTab, ErrorBoundary, ModalRoot } from './components';  // v1.36.82+: UI, v1.36.85-91: Modals/AI, v1.36.86: Cards, v1.36.87: Panels, v1.36.94: Editors, v1.36.97: Editor Containers, v1.36.99: GlobalEditorModal, v1.37.30: ConfigModal, v1.37.31: ModelsTab, v1.37.32: UploadTab, v1.37.54: ProofsTab, v1.37.55: TopicsTab, v1.37.59: DoubleCheckReviewModal, v1.37.74: ModalRoot (topic modals)
-import useFactsComparisonCache, { openFactsDB, FACTS_STORE_NAME } from './hooks/useFactsComparisonCache';
-import useSentenceReviewCache, { openReviewDB, REVIEW_STORE_NAME } from './hooks/useSentenceReviewCache';
+import { SuggestionCard, BaseModal, ExtractModelConfirmModal, ExtractedModelPreviewModal, AddProofTextModal, ProofAnalysisModal, LinkProofModal, RestoreSessionModal, ClearProjectModal, LogoutConfirmModal, ConfirmBulkCancelModal, DeleteProofModal, TextPreviewModal, JurisprudenciaTab, LegislacaoTab, AIAssistantModal, AIAssistantModelModal, AnalysisModal, AnonymizationNamesModal, ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal, SlashCommandMenu, JurisprudenciaModal, ModelPreviewModal, DecisionEditorContainer, LockedTabOverlay, GlobalEditorModal, ConfigModal, DoubleCheckReviewModal, ModelsTab, UploadTab, ProofsTab, TopicsTab, ErrorBoundary, ModalRoot } from './components';
 import useChatHistoryCache from './hooks/useChatHistoryCache';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
 // v1.37.18: buildDocumentContentArray, buildMiniReportPrompt, buildBatchMiniReportPrompt extraídos
-import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_PROMPTS, INSTRUCAO_NAO_PRESUMIR, buildDocumentContentArray, buildMiniReportPromptCore, buildMiniReportPrompt, buildBatchMiniReportPrompt } from './prompts';
+import { AI_INSTRUCTIONS_STYLE, AI_PROMPTS, buildDocumentContentArray } from './prompts';
 
 // v1.36.95: Estilos centralizados
-import { CSS, RESULTADO_STYLES, getResultadoStyle } from './constants/styles';
+import { CSS } from './constants/styles';
 
 // v1.37.0: Estilos CSS-in-JS extraídos
 import { GlobalHoverStyles, ThemeStyles } from './styles';
@@ -89,85 +80,34 @@ import { AutoSaveIndicator } from './components/ui/AutoSaveIndicator';
 import { ChangelogModal } from './components/modals/ChangelogModal';
 import { SentenceReviewOptionsModal, SentenceReviewResultModal } from './components/modals/SentenceReviewModals';
 import { DataDownloadModal, EmbeddingsDownloadModal } from './components/modals/DownloadModals';
-import { buildMiniRelatorioComparisonPrompt, buildDocumentosComparisonPrompt, buildPdfComparisonPrompt } from './prompts/facts-comparison-prompts';
 
 // v1.36.60: AIModelService extraído para src/services/
 import AIModelService from './services/AIModelService';
 
 // v1.36.81: Serviços de embeddings extraídos
-import { TFIDFSimilarity, EmbeddingsService, JurisEmbeddingsService, EmbeddingsCDNService, chunkJurisText, JURIS_CHUNK_THRESHOLD, JURIS_CHUNK_SIZE, JURIS_CHUNK_OVERLAP } from './services/EmbeddingsServices';
+import { TFIDFSimilarity } from './services/EmbeddingsServices';
 
 // v1.36.81: Utilitários extraídos
-import { anonymizeText, normalizeHTMLSpacing, removeMetaComments, SPECIAL_TOPICS, isSpecialTopic, isRelatorio, isDispositivo, generateModelId } from './utils/text';
-import { STATUS_INVALIDOS, isStatusValido, jurisCache, JURIS_CACHE_TTL, hashJurisKey, stemJuridico, expandWithSynonyms, refineJurisWithAIHelper, findJurisprudenciaHelper } from './utils/jurisprudencia';
+import { anonymizeText, normalizeHTMLSpacing, isSpecialTopic, isRelatorio, isDispositivo, generateModelId } from './utils/text';
 import { searchModelsBySimilarity } from './utils/models';
 
 // v1.36.96: Context helpers extraídos
-import { prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext, fastHashUtil } from './utils/context-helpers';
-import { injectQuillStyles } from './utils/quill-styles-injector';
-import { htmlToPlainText, htmlToFormattedText, plainTextToHtml, cleanHtmlForExport } from './utils/html-conversion';
+import { fastHashUtil } from './utils/context-helpers';
+import { htmlToPlainText, htmlToFormattedText } from './utils/html-conversion';
 
 // v1.35.79: Tipos TypeScript centralizados (ETAPA 0 reorganização completa)
 import type {
-  // Core Types
-  ModalKey, ModalState, TextPreviewState, AISettings, TokenMetrics,
-  Topic, TopicCategory, TopicResultado, TopicoComplementar, Model, NewModelData, Proof, ProofFile, ProofText, ProofAnalysisResult,
-  ProcessingMode, InsertMode, FieldVersion, DriveFile, GeminiThinkingLevel,
-  ProgressState, ToastState, SlashMenuState, ModelGeneratorModalState,
-  FiltrosJuris, FiltrosLegislacao, PastedText, ChatMessage, Precedente, Artigo,
-  JurisSuggestion, ShareInfo, DownloadStatus, EmbeddingsDownloadStatus, DataDownloadStatus,
-  DocumentAnalysis, PartesProcesso, QuillInstance, QuillDelta, NewProofTextData, CacheEntry, CacheStats,
+  AISettings,
+  Topic, Model, Proof, ProofFile, ProofText,
+  DriveFile,
+  QuillInstance, QuillDelta,
   TargetField,
-  // FASE 8.2: Tipos adicionais para useState com objetos
-  LocalModelForm, SlashMenuStateExtended, DownloadItemStatus,
-  EmbeddingsDownloadStatusExtended, DataDownloadStatusExtended, ActiveFormatsState,
-  // FASE 8.7: Tipos para AIModelService e serviços
-  AIModelType, AIModelStatus, AIModelServiceStatus, AIModelServiceProgress,
-  NERRawEntity, NERProcessedEntity, AIModelStatusCallback, AIWorkerMessage, PendingWorkerPromise,
-  LegislacaoEmbeddingItem, JurisEmbeddingItem, JurisEmbeddingWithSimilarity, SimilaritySearchResult, JurisFiltros,
-  CDNDownloadType, DownloadProgressCallback, BatchCompleteCallback, CDNFileName, EstimatedSizes,
-  BulkFile, BulkGeneratedModel, BulkError,
-  AIGenContextItem, AIGenContext, AIGenState, AIGenAction, AnonymizationSettings,
-  QuickPrompt, AIMessage, AIMessageContent, AITextContent, AIDocumentContent, AICallOptions, AIProvider, GeminiRequest, GeminiGenerationConfig,
-  OpenAIMessage, OpenAIMessagePart, OpenAIReasoningConfig, OpenAIReasoningLevel,
-  FactsComparisonSource, FactsComparisonResult,  // v1.36.12
-  DoubleCheckSettings, DoubleCheckOperations, DoubleCheckResult, DoubleCheckCorrection,  // v1.36.50
-  // MODAL PROPS (movido de App.tsx v1.35.79)
-  ModelFormModalProps, ModelPreviewModalProps, RenameTopicModalProps, DeleteTopicModalProps, MergeTopicsModalProps, SplitTopicModalProps,
-  NewTopicModalProps, DeleteModelModalProps, DeleteAllModelsModalProps, DeleteAllPrecedentesModalProps,
-  ExportModalProps, JurisprudenciaModalProps, SimilarityWarningState, SimilarityWarningModalProps, ShareLibraryModalProps, AnalysisModalProps, DispositivoModalProps, BulkReviewModalProps, BulkUploadModalProps, SlashCommandMenuProps, LinkedProofsModalProps,
-  LogoutConfirmModalProps, RestoreSessionModalProps, ClearProjectModalProps,
-  AddProofTextModalProps, ProofAnalysisModalProps, DeleteProofModalProps,
-  ConfirmBulkCancelModalProps, BulkDiscardConfirmModalProps, TextPreviewModalProps,
-  ExtractModelConfirmModalProps, ExtractedModelPreviewModalProps, LinkProofModalProps,
-  // COMPONENT PROPS (movido de App.tsx v1.35.79)
-  FieldEditorProps, FieldEditorRef, GlobalEditorSectionProps,
-  QuillEditorBaseProps, QuillModelEditorProps, QuillDecisionEditorProps, QuillMiniRelatorioEditorProps,
-  DecisionEditorContainerProps, GlobalEditorModalProps, TopicCardProps, SortableTopicCardProps, ModelCardProps, ProofCardProps,
-  SuggestionCardProps, ArtigoCardProps, JurisprudenciaCardProps, ChatBubbleProps,
-  // UI/PANEL PROPS (movido de App.tsx v1.35.79)
-  VirtualListProps, ProcessingModeSelectorProps, InsertDropdownProps,
-  SpacingDropdownProps, FontSizeDropdownProps, ChatInputProps, ChatHistoryAreaProps,
-  LockedTabOverlayProps, LegislacaoTabProps, JurisprudenciaTabProps,
-  FullscreenModelPanelProps, ModelSearchPanelProps, AcceptSharePageProps,
-  // AI ASSISTANT PROPS (movido de App.tsx v1.35.79)
-  AIAssistantBaseLegacyProps, AIAssistantBaseProps, AIAssistantModalProps,
-  AIAssistantGlobalModalProps, AIAssistantModelModalProps,
-  // FUNCTION TYPES
-  CallAIFunction,
-  // SESSION/PROJECT TYPES (movido de App.tsx v1.35.79)
-  AnalyzedDocuments, ExtractedTexts, DocumentProcessingModes, UploadedFile,
-  SessionState, ProjectState, UploadPdfData, UploadPdfs, ImportedProject, ImportCallbacks, RestoreSessionCallbacks, ImportProjectCallbacks, ClearProjectCallbacks,
-  // BASE COMPONENT PROPS (movido de App.tsx v1.35.91)
-  BaseModalProps, AnonymizationNamesModalProps, ErrorBoundaryProps, ErrorBoundaryState,
-  // LIBRARY TYPES
-  PdfjsLib, PdfDocument, PdfPage, MammothLib, TesseractLib, TesseractWorker, TesseractScheduler
+  SimilarityWarningState,
+  SessionState, ImportedProject
 } from './types';
 
 // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
-import { CSS as DndCSS } from '@dnd-kit/utilities';
+import { PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 
 // 🔧 VERSÃO DA APLICAÇÃO - Importado de src/constants/app-version.ts
 
@@ -328,7 +268,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // 🎣 CUSTOM HOOKS
   // v1.37.38: toast, showToast, clearToast agora vêm do useUIStore via useModalManager
-  const { modals, openModal, closeModal, closeAllModals, isAnyModalOpen, textPreview, setTextPreview, toast, showToast, clearToast } = useModalManager();
+  const { modals, openModal, closeModal, textPreview, setTextPreview, showToast } = useModalManager();
   const aiIntegration = useAIIntegration();
   const featureFlags = useFeatureFlags();
   const indexedDB = useIndexedDB();   const apiCache = useAPICache(50, 5 * 60 * 1000); // 🚀 v1.8.2: Cache de API (50 entradas, TTL 5min)
@@ -605,33 +545,32 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   }, []);
 
   // 🎨 v1.37.37: Sistema de Tema - extraído para useThemeManagement (FASE 35)
-  const { appTheme, isDarkMode, editorTheme, toggleAppTheme, toggleEditorTheme } = useThemeManagement();
+  const { appTheme, editorTheme, toggleAppTheme, toggleEditorTheme } = useThemeManagement();
 
   // 🧠 v1.37.41: Estados NER - extraído para useNERManagement (FASE 40)
   const {
-    nerFilesStored, nerModelReady, nerInitializing, nerDownloadProgress,
+    nerModelReady, nerInitializing, nerDownloadProgress,
     detectingNames, nerEnabled, nerIncludeOrg,
-    setNerFilesStored, setNerModelReady, setNerInitializing, setNerDownloadProgress,
+    setNerModelReady, setNerInitializing, setNerDownloadProgress,
     setDetectingNames, setNerEnabled, setNerIncludeOrg
   } = useNERManagement();
 
   // 🔍 v1.37.43: Busca Semântica - extraído para useSemanticSearchManagement (FASE 42)
   const {
-    searchFilesStored, searchModelReady, searchInitializing, searchDownloadProgress,
+    searchModelReady, searchInitializing, searchDownloadProgress,
     searchEnabled,
-    setSearchFilesStored, setSearchModelReady, setSearchInitializing, setSearchDownloadProgress,
+    setSearchModelReady, setSearchInitializing, setSearchDownloadProgress,
     setSearchEnabled
   } = useSemanticSearchManagement();
 
   // 📝 v1.37.42: Quill/DOMPurify - extraído para useQuillInitialization (FASE 43)
   const {
-    domPurifyReady, quillReady, quillError, quillRetryCount,
+    quillReady, quillError,
     sanitizeHTML
   } = useQuillInitialization();
 
   // v1.32.24: Modal de changelog
   // v1.37.49: showChangelogModal migrado para useUIStore
-  const showChangelogModal = useUIStore((s) => s.modals.changelog);
   const setShowChangelogModal = React.useCallback((open: boolean) => {
     if (open) useUIStore.getState().openModal('changelog');
     else useUIStore.getState().closeModal('changelog');
@@ -690,27 +629,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // Antes: 3 innerHTML = 3 reflows (~300ms total)
   // Depois: 1 RAF batch = 1 reflow (~100ms)
   // v1.35.92: Tipo union para suportar refs diretos e Quill refs
-  const batchDOMUpdates = React.useCallback((updates: Array<{ ref: React.RefObject<HTMLElement | QuillInstance | null>; content: string; property?: string }>) => {
-    requestAnimationFrame(() => {
-      updates.forEach(({ ref, content, property = 'innerHTML' }) => {
-        if (!ref || !ref.current) return;
-
-        try {
-          // Suporta refs diretos ou Quill refs (com .root)
-          const element = ('root' in ref.current && ref.current.root) ? ref.current.root : ref.current as HTMLElement;
-
-          if (property === 'innerHTML') {
-            element.innerHTML = content;
-          } else if (property === 'innerText') {
-            element.innerText = content;
-          } else if (property === 'textContent') {
-            element.textContent = content;
-          }
-        } catch (err) {
-        }
-      });
-    });
-  }, []);
 
   // 🔄 MULTI-TAB SYNC: v1.37.46 - Hook extraído
   useMultiTabSync({
@@ -826,7 +744,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   }, [currentModelsHash, modelLibrary.isLoadingModels]); // Hash ao invés de models array
 
   // 🎨 v1.37.37: Navegação - extraído para useTabbedInterface (FASE 32)
-  const { activeTab, setActiveTab, goToTopics, goToEditor, goToModels } = useTabbedInterface();
+  const { activeTab, setActiveTab } = useTabbedInterface();
   // 🔔 v1.37.38: toast e showToast extraídos para useUIStore (vem do useModalManager acima)
   // v1.37.49: error, copySuccess migrados para useUIStore
   const error = useUIStore((s) => s.error);
@@ -873,23 +791,19 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     peticaoFiles, contestacaoFiles, complementaryFiles,
     pastedPeticaoTexts, pastedContestacaoTexts, pastedComplementaryTexts,
     analyzedDocuments,
-    analyzing, analysisProgress, extractingText, showPasteArea, extractedTexts, showTextPreview,
+    extractedTexts,
     // v1.12.18: Modos de processamento por documento
     documentProcessingModes,
     // Documentos - Setters
     setPeticaoFiles, setContestacaoFiles, setComplementaryFiles,
     setPastedPeticaoTexts, setPastedContestacaoTexts, setPastedComplementaryTexts,
     setAnalyzedDocuments,
-    setAnalyzing, setAnalysisProgress, setExtractingText, setShowPasteArea, setExtractedTexts, setShowTextPreview,
+    setAnalysisProgress, setExtractedTexts,
     // v1.12.18: Setters de modos de processamento
-    setDocumentProcessingModes, setPeticaoMode, setContestacaoMode, setComplementarMode,
+    setDocumentProcessingModes,
     // Documentos - Handlers
-    handlePastedText, removePastedText, removePeticaoFile,
-    handleUploadPeticao, handleUploadContestacao, handleUploadComplementary,
-    // Documentos - Persistência (com alias para evitar conflito)
-    serializeForPersistence: serializeDocuments,
-    restoreFromPersistence: restoreDocuments,
-    clearAll: clearDocuments
+    removePeticaoFile,
+    handleUploadPeticao, handleUploadContestacao, handleUploadComplementary
   } = documentManager;
 
   const {
@@ -897,12 +811,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     extractedTopics, selectedTopics,
     editingTopic, lastEditedTopicTitle, topicContextScope,
     savingTopic,
-    topicToDelete, topicToRename, newTopicName, topicsToMerge, topicToSplit, splitNames, newTopicData,
     // Tópicos - Setters
     setExtractedTopics, setSelectedTopics,
     setEditingTopic, setLastEditedTopicTitle, setTopicContextScope,
     setSavingTopic,
-    setTopicToDelete, setTopicToRename, setNewTopicName, setTopicsToMerge, setTopicToSplit, setSplitNames, setNewTopicData
+    setTopicToDelete
     // ⚠️ NOTA: Handlers de tópicos (prepareDeleteTopic, confirmDeleteTopic, etc.)
     // permanecem no componente principal pois dependem de modals e lógica complexa
     // Não fazemos destructuring deles para evitar conflitos
@@ -917,9 +830,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // ✅ v1.37.42: Validação de tópicos - extraído para useTopicValidation (FASE 49)
   const {
-    isTopicDecidido, topicsDecididos, topicsPendentes,
-    topicsSemDecisao, topicsSemResultado, topicsParaDispositivo,
-    unselectedTopics, canGenerateDispositivo, selectedTopicTitles
+    isTopicDecidido, topicsParaDispositivo,
+    canGenerateDispositivo
   } = useTopicValidation(selectedTopics, extractedTopics);
 
   // ✅ v1.37.42: Handlers de editor - extraído para useEditorHandlers (FASE 50)
@@ -944,10 +856,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // Destructure para uso mais fácil
   const {
-    draggedIndex, dragOverIndex, draggedComplementaryIndex, dragOverComplementaryIndex,
-    setDraggedIndex, setDragOverIndex, setDraggedComplementaryIndex, setDragOverComplementaryIndex,
-    specialTopicIds, customCollisionDetection,
-    handleDndDragEnd, handleDragStart, handleDragEnd, handleDragOver, handleDragLeave, handleDrop,
+    draggedComplementaryIndex, dragOverComplementaryIndex,
+    customCollisionDetection,
+    handleDndDragEnd,
     handleComplementaryDragStart, handleComplementaryDragEnd, handleComplementaryDragOver,
     handleComplementaryDragLeave, handleComplementaryDrop,
   } = dragDrop;
@@ -1018,10 +929,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   const {
     generateMiniReport,
-    generateMultipleMiniReports,
     generateMiniReportsBatch,
     generateRelatorioProcessual,
-    isGeneratingReport,
   } = reportGeneration;
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -1083,7 +992,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.37.9: embeddingsCount, jurisEmbeddingsCount, embeddingsProgress, jurisEmbeddingsProgress,
   // embeddingsDownloadStatus, dataDownloadStatus, generatingModelEmbeddings, modelEmbeddingsProgress
   // movidos para useEmbeddingsManagement hook
-  const jurisEmbeddingsFileInputRef = useRef<HTMLInputElement | null>(null);
   // v1.32.18: Jurisprudência via IA Local nos editores
   // v1.35.74: useLocalAIForJuris movido para aiSettings
 
@@ -1110,7 +1018,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // 🎯 REFS
   const bulkFileInputRef = useRef<HTMLInputElement | null>(null);
-  const bulkEditorRef = useRef<QuillInstance | null>(null); // v1.35.92: Tipar como QuillInstance
   const editorRef = useRef<QuillInstance | null>(null); // v1.35.92: Tipar como QuillInstance
   // v1.37.15: modelEditorRef movido para antes de useModelGeneration
   const modelFormRef = useRef<HTMLDivElement | null>(null);
@@ -1358,7 +1265,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 🛠️ FUNÇÕES UTILITÁRIAS
 
   React.useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = (_e: BeforeUnloadEvent) => {
       const skipBeforeunload = sessionStorage.getItem('sentencify-skip-beforeunload');
       if (skipBeforeunload) {
         sessionStorage.removeItem('sentencify-skip-beforeunload');
@@ -1376,7 +1283,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
             // ⚠️ NOTA: IndexedDB é assíncrono, mas tentamos salvar aqui
             // O navegador pode ou não aguardar a operação completar
             // Por isso mantemos também o auto-save com debounce
-            indexedDB.saveModels(modelLibrary.models).catch(err => {
+            indexedDB.saveModels(modelLibrary.models).catch(_err => {
             });
 
             // Atualizar ref imediatamente (otimista)
@@ -1404,7 +1311,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 🧠 v1.25: NER HANDLERS - IA Offline para detecção de nomes
 
   // Ref para garantir inicialização única (proteção contra StrictMode/re-renders)
-  const nerInitStartedRef = useRef(false);
 
   // Verificar arquivos do modelo NER + auto-inicializar se anonimização ativa
   const anonymizationEnabled = aiIntegration?.aiSettings?.anonymization?.enabled;
@@ -1431,7 +1337,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     setNerDownloadProgress(0);
 
     // Listener para progresso do download
-    const unsubscribe = AIModelService.subscribe((status, progress) => {
+    const unsubscribe = AIModelService.subscribe((_status, progress) => {
       if (progress.ner > 0) {
         setNerDownloadProgress(Math.round(progress.ner));
       }
@@ -1451,7 +1357,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   };
 
   // 🔍 v1.32.00: HANDLERS: Busca Semântica (E5-base) - Simplificado
-  const searchInitStartedRef = useRef(false);
 
   // v1.32.00: Verificar status do modelo de busca ao montar
   // v1.37.9: embeddingsCount agora gerenciado pelo useEmbeddingsManagement hook
@@ -1473,7 +1378,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     setSearchDownloadProgress(0);
 
     // Listener para progresso do download
-    const unsubscribe = AIModelService.subscribe((status, progress) => {
+    const unsubscribe = AIModelService.subscribe((_status, progress) => {
       if (progress.search > 0) {
         setSearchDownloadProgress(Math.round(progress.search));
       }
@@ -1601,8 +1506,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     exportAiSettings,
     importAiSettings,
     exportModels,
-    importModels,
-    checkDuplicate
+    importModels
   } = useExportImport({
     modelLibrary: modelLibrary as Parameters<typeof useExportImport>[0]['modelLibrary'],
     aiIntegration: aiIntegration as Parameters<typeof useExportImport>[0]['aiIntegration'],
@@ -1636,8 +1540,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     savingFromSimilarity,
     saveModel,
     saveModelWithoutClosing,
-    executeSaveModel,
-    executeSaveAsNew,
     executeExtractedModelSave,
     processBulkSaveNext,
     handleSimilarityCancel,
@@ -1665,7 +1567,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const {
     getBulkPendingFilesCount,
     handleConfirmBulkCancel,
-    generateModelsFromFileContent,
     processBulkFiles,
     handleBulkFileUpload,
     saveBulkModels,
@@ -1710,10 +1611,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const {
     embeddingsCount,
     jurisEmbeddingsCount,
-    embeddingsProgress,
-    jurisEmbeddingsProgress,
-    importingEmbeddings,
-    importingJurisEmbeddings,
     generatingModelEmbeddings,
     modelEmbeddingsProgress,
     showDataDownloadModal,
@@ -1723,9 +1620,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     showEmbeddingsDownloadModal,
     setShowEmbeddingsDownloadModal,
     embeddingsDownloadStatus,
-    embeddingsFileInputRef,
-    handleImportEmbeddings,
-    handleImportJurisEmbeddings,
     handleStartDataDownload,
     handleStartEmbeddingsDownload,
     handleDismissDataPrompt,
@@ -1987,19 +1881,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // reorderTopicsViaLLM → useTopicOrdering hook
   // ============================================================================
 
-  const regenerateRelatorio = async (topicTitle: string, topicContext: string) => {
-    aiIntegration.setRegenerating(true);
-    setAnalysisProgress(`🔄 Regenerando relatório para "${topicTitle}"...`);
-    try {
-      const result = await generateMiniReport({ title: topicTitle, context: topicContext });
-      return result;
-    } catch (err) {
-      setError('Erro ao regerar mini-relatório: ' + (err as Error).message);
-      return null;
-    } finally {
-      aiIntegration.setRegenerating(false);
-    }
-  };
 
   const regenerateRelatorioWithInstruction = async () => {
     if (!aiIntegration.relatorioInstruction?.trim()) {
@@ -2100,31 +1981,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // v1.38.0: executeDeleteModel removido (lógica já está em useModelModalHandlers.confirmDeleteModel)
 
-  const deleteAllModels = async () => {
-    if (modelLibrary.deleteAllConfirmText !== 'EXCLUIR') {
-      setError('Digite "EXCLUIR" para confirmar');
-      return;
-    }
-
-    try {
-      // v1.35.2: Rastrear cada modelo como delete para sync com servidor
-      const modelsToDelete = [...modelLibrary.models];
-      const now = new Date().toISOString();
-
-      for (const model of modelsToDelete) {
-        if (cloudSync?.trackChange) {
-          cloudSync.trackChange('delete', { ...model, updatedAt: now });
-        }
-      }
-
-      modelLibrary.setModels([]);
-      modelLibrary.setHasUnsavedChanges(true);
-      closeModal('deleteAllModels');
-      modelLibrary.setDeleteAllConfirmText('');
-    } catch (err) {
-      setError('Erro ao excluir todos os modelos: ' + (err as Error).message);
-    }
-  };
 
   // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
   // v1.33.7: Feedback visual ao duplicar modelo
@@ -2299,7 +2155,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // Destructure para uso mais fácil
   const {
-    analyzing: documentAnalyzing,
     analysisProgress: documentAnalysisProgress,
     showAnonymizationModal,
     showTopicCurationModal,
@@ -2309,9 +2164,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     handleCurationConfirm,
     handleCurationCancel,
     setShowAnonymizationModal,
-    setShowTopicCurationModal,
-    setAnalyzing: setDocumentAnalyzing,
-    setAnalysisProgress: setDocumentAnalysisProgress,
   } = documentAnalysis;
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -2439,11 +2291,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   };
 
   // Lista de stopwords para filtrar
-  const STOPWORDS = new Set([
-    'de', 'da', 'do', 'dos', 'das', 'para', 'com', 'sem', 'por', 'pelo', 'pela',
-    'em', 'no', 'na', 'nos', 'nas', 'ao', 'aos', 'à', 'às', 'um', 'uma', 'uns', 'umas',
-    'o', 'a', 'os', 'as', 'e', 'ou', 'mas', 'que', 'qual', 'quando', 'onde', 'como'
-  ]);
 
   // v1.37.45: FASE 47 - Hook de sugestões de modelos extraído
   const { findSuggestions } = useModelSuggestions({
@@ -2809,9 +2656,6 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
     showToast,
   });
   const {
-    generateAiText,
-    insertAiText,
-    buildContextForChat,
     handleInsertChatResponse,
     handleSendChatMessage,
     generateAiTextForModel,
@@ -2840,7 +2684,6 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
     setFactsComparisonError: setFactsComparisonErrorIndividual,
     handleOpenFactsComparison: handleOpenFactsComparisonIndividual,
     handleGenerateFactsComparison: handleGenerateFactsComparisonIndividual,
-    factsComparisonCache: factsComparisonCacheIndividual,
   } = factsComparison;
 
   // v1.37.21: handleOpenFactsComparisonIndividual e handleGenerateFactsComparisonIndividual
@@ -2879,7 +2722,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
 
   // ✅ v1.37.43: useReviewSentence - Revisão crítica de sentença extraída (FASE 44)
   const {
-    reviewScope, setReviewScope, reviewResult, setReviewResult,
+    reviewScope, setReviewScope, reviewResult,
     generatingReview, reviewFromCache, reviewSentence, clearReviewCache
   } = useReviewSentence({
     canGenerateDispositivo,
@@ -2887,7 +2730,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
     buildDecisionText,
     buildDocumentContentArray,
     analyzedDocuments,
-    aiIntegration: aiIntegration as any, // Type cast necessário para interface simplificada
+    aiIntegration: aiIntegration as unknown as AIIntegrationForReview,
     showToast,
     closeModal,
     openModal,
@@ -2954,7 +2797,6 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
 
   // v1.37.44: FASE 52 - Hook de busca semântica extraído
   const {
-    semanticManualSearchResults,
     setSemanticManualSearchResults,
     semanticManualSearching,
     setSemanticManualSearching,
@@ -2964,7 +2806,6 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
     setModelSemanticResults,
     searchingModelSemantics,
     modelSemanticAvailable,
-    performModelSemanticSearch,
   } = useSemanticSearchHandlers({
     aiSettings: aiIntegration.aiSettings,
     searchModelReady,
@@ -4573,7 +4414,9 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
           if (proofToDelete.isPdf || ('type' in proofToDelete && proofToDelete.type === 'pdf')) {
             try {
               await removePdfFromIndexedDB(`proof-${proofToDelete.id}`);
-            } catch (err) { }
+            } catch (err) {
+              console.warn('[App] Falha ao remover PDF do IndexedDB:', err);
+            }
           }
 
           // v1.36.32: Usar handler existente do hook (tipagem correta, limpa todos os estados)
@@ -4672,10 +4515,8 @@ const SentencifyAI = () => {
   // v1.34.1: Estado para modelos recebidos do servidor (para merge)
   // v1.37.49: receivedModels e activeSharedLibraries migrados para useModelsStore
   const receivedModels = useModelsStore((s) => s.receivedModels);
-  const setReceivedModels = useModelsStore((s) => s.setReceivedModels);
   // v1.35.24: Lista de bibliotecas compartilhadas ativas (para filtrar modelos de owners revogados)
   const activeSharedLibraries = useModelsStore((s) => s.activeSharedLibraries);
-  const setActiveSharedLibraries = useModelsStore((s) => s.setActiveSharedLibraries);
 
   // v1.35.1: Memoizar callbacks para evitar re-criação de pull/sync a cada render
   // v1.35.24: Receber sharedLibraries junto com models

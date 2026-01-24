@@ -15,7 +15,7 @@
  * - nerIncludeOrg: Se deve incluir organizações na detecção
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS

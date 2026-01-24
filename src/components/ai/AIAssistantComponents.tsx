@@ -28,8 +28,7 @@ import type {
   AIAssistantModelModalProps,
   QuickPrompt,
   ProofFile,
-  ProofText,
-  ContextScope
+  ProofText
 } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════

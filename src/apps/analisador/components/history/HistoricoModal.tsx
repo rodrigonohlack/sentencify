@@ -22,7 +22,7 @@ import {
   X,
   AlertCircle,
 } from 'lucide-react';
-import { Modal, Button } from '../ui';
+import { Modal } from '../ui';
 import { useAnalysesStore } from '../../stores';
 import { useAnalysesAPI } from '../../hooks';
 import type {
@@ -112,13 +112,6 @@ const getNumeroProcesso = (analysis: SavedAnalysis): string | null => {
     if (cnjMatch) return cnjMatch[1];
   }
   return null;
-};
-
-/** Retorna label legível para o resultado */
-const getResultadoLabel = (resultado: ResultadoAudiencia | null): string => {
-  if (!resultado) return 'Sem resultado';
-  const opt = RESULTADO_OPTIONS.find((o) => o.value === resultado);
-  return opt?.label || resultado;
 };
 
 // ═══════════════════════════════════════════════════════════════════════════

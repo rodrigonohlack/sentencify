@@ -63,7 +63,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
     nerDownloadProgress,
     initNerModel,
     searchEnabled,
-    setSearchEnabled,
+    setSearchEnabled: _setSearchEnabled,
     searchModelReady,
     setSearchModelReady,
     searchInitializing,

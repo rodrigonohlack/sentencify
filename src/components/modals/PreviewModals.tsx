@@ -14,7 +14,7 @@ import { QuillEditorBase, getQuillToolbarConfig } from '../editors';
 import { useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
 import { useAIStore } from '../../stores/useAIStore';
-import type { QuillInstance, ModelPreviewModalProps, Model } from '../../types';
+import type { QuillInstance, ModelPreviewModalProps } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // HELPER: extractPlainText
@@ -96,7 +96,7 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
       .then(() => {
         showToast?.('✅ Modelo copiado para área de transferência', 'success');
       })
-      .catch(err => {
+      .catch(_err => {
         showToast?.('❌ Erro ao copiar modelo', 'error');
       });
   }, [model?.content, showToast]);

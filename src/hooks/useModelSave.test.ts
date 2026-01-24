@@ -5,9 +5,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useModelSave, type UseModelSaveProps } from './useModelSave';
-import type { Model, NewModelData, SimilarityWarningState } from '../types';
+import type { Model, NewModelData } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MOCKS

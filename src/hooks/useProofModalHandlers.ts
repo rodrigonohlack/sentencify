@@ -64,9 +64,7 @@ export function useProofModalHandlers(): UseProofModalHandlersReturn {
 
   const proofToDelete = useProofUIStore((s) => s.proofToDelete);
   const setProofToDelete = useProofUIStore((s) => s.setProofToDelete);
-  const proofFiles = useProofsStore((s) => s.proofFiles);
   const setProofFiles = useProofsStore((s) => s.setProofFiles);
-  const proofTexts = useProofsStore((s) => s.proofTexts);
   const setProofTexts = useProofsStore((s) => s.setProofTexts);
   const setProofToLink = useProofUIStore((s) => s.setProofToLink);
   const setProofToAnalyze = useProofUIStore((s) => s.setProofToAnalyze);

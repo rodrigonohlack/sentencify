@@ -194,7 +194,7 @@ export function cleanHtmlForExport(html: string): string {
   // Google Docs precisa: <p style="text-align: center;">
   cleaned = cleaned.replace(
     /<(p|div|h[1-6])\s+class="ql-align-(center|right|justify)"([^>]*)>/gi,
-    (match: string, tag: string, align: string, rest: string) => {
+    (_match: string, tag: string, align: string, rest: string) => {
       // Se já tem style, adicionar text-align a ele
       if (rest.includes('style="')) {
         return `<${tag}${rest.replace('style="', `style="text-align: ${align}; `)}>`;
@@ -208,7 +208,7 @@ export function cleanHtmlForExport(html: string): string {
   // Google Docs não entende data-list, então converter para <ul>/<ol> corretos
   cleaned = cleaned.replace(
     /<ol>([\s\S]*?)<\/ol>/gi,
-    (match: string, content: string) => {
+    (_match: string, content: string) => {
       if (content.includes('data-list="bullet"')) {
         // Converter para <ul> e remover data-list
         const newContent = content.replace(/\s*data-list="bullet"/gi, '');
@@ -225,7 +225,7 @@ export function cleanHtmlForExport(html: string): string {
   // Google Docs precisa: <p style="margin-left: 3em;">
   cleaned = cleaned.replace(
     /<(p|li)([^>]*)\s+class="([^"]*ql-indent-(\d+)[^"]*)"([^>]*)>/gi,
-    (match: string, tag: string, before: string, classes: string, level: string, after: string) => {
+    (_match: string, tag: string, before: string, classes: string, level: string, after: string) => {
       const marginLeft = `${parseInt(level) * 3}em`;
       const newClasses = classes.replace(/ql-indent-\d+/g, '').trim();
       const classAttr = newClasses ? ` class="${newClasses}"` : '';

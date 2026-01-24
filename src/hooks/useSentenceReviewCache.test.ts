@@ -10,7 +10,7 @@ import useSentenceReviewCache, {
   REVIEW_DB_NAME,
   REVIEW_STORE_NAME,
   REVIEW_DB_VERSION,
-  openReviewDB
+  openReviewDB as _openReviewDB
 } from './useSentenceReviewCache';
 import type { ReviewScope, SentenceReviewCacheEntry } from '../types';
 

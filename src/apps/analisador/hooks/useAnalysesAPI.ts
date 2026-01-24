@@ -35,18 +35,6 @@ interface CreateAnalysisResponse {
   message: string;
 }
 
-/** Resposta da API de atualização */
-interface UpdateAnalysisResponse {
-  id: string;
-  message: string;
-}
-
-/** Resposta da API de exclusão */
-interface DeleteAnalysisResponse {
-  id: string;
-  message: string;
-}
-
 /** Resposta da API de atualização em lote */
 interface BatchUpdateResponse {
   message: string;

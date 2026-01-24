@@ -7,7 +7,7 @@
  * @version v1.37.95 - isOpen força reload ao abrir (sincroniza entre editores)
  */
 
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { ChatMessage, CallAIFunction, AIMessageContent } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════

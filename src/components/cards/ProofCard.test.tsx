@@ -7,7 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ProofCard } from './ProofCard';
-import type { ProofCardProps, ProofFile, ProofText, Proof, ProofAttachment, ProcessingMode, ProofAnalysisResult, AnonymizationSettings } from '../../types';
+import type { ProofCardProps, ProofFile, ProofText, ProofAttachment, ProcessingMode, ProofAnalysisResult, AnonymizationSettings } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MOCKS

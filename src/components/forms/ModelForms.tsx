@@ -10,7 +10,7 @@
 import React from 'react';
 import { CSS } from '../modals/BaseModal';
 import { QuillModelEditor } from '../editors';
-import type { Model, QuillInstance, ModelFormModalProps, LocalModelForm } from '../../types';
+import type { Model, ModelFormModalProps, LocalModelForm } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MODEL FORM FIELDS
@@ -162,7 +162,7 @@ export const ModelFormModal = React.forwardRef<HTMLDivElement, ModelFormModalPro
   generatingTitle,
   onSaveWithoutClosing,
   onOpenAIAssistant,
-  sanitizeHTML,
+  sanitizeHTML: _sanitizeHTML,
   modelEditorRef,
   quillReady = false,
   quillError = null,

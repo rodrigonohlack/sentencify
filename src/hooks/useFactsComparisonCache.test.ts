@@ -5,14 +5,14 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import useFactsComparisonCache, {
   FACTS_DB_NAME,
   FACTS_STORE_NAME,
   FACTS_DB_VERSION,
-  openFactsDB
+  openFactsDB as _openFactsDB
 } from './useFactsComparisonCache';
-import type { FactsComparisonResult, FactsComparisonSource, FactsComparisonRow } from '../types';
+import type { FactsComparisonResult } from '../types';
 
 // Helper to create valid FactsComparisonResult
 const createMockComparisonResult = (): FactsComparisonResult => ({

@@ -23,7 +23,7 @@ import type { DecisionEditorContainerProps, Topic, TopicCategory } from '../../t
 const DecisionEditorContainer = React.memo(React.forwardRef<HTMLDivElement, DecisionEditorContainerProps>(({
   editorRef,
   relatorioRef,
-  toolbarRef,
+  toolbarRef: _toolbarRef,
   topic,
   onSave,
   onCancel,
@@ -43,7 +43,7 @@ const DecisionEditorContainer = React.memo(React.forwardRef<HTMLDivElement, Deci
   relatorioInstruction,
   onInstructionChange,
   sanitizeHTML,
-  onTextSelection,
+  onTextSelection: _onTextSelection,
   // Para atualização de categoria
   selectedTopics,
   setSelectedTopics,

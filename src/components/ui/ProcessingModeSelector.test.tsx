@@ -4,7 +4,6 @@
  * @version 1.37.57
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ProcessingModeSelector } from './ProcessingModeSelector';
@@ -214,7 +213,7 @@ describe('ProcessingModeSelector', () => {
   describe('Event Propagation', () => {
     it('should stop click propagation', () => {
       const parentClick = vi.fn();
-      const { container } = render(
+      const { container: _container } = render(
         <div onClick={parentClick}>
           <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} />
         </div>

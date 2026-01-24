@@ -7,7 +7,7 @@
  * Os testes das funções puras (validateModel, sanitizeModel) cobrem a lógica de validação.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useIndexedDB, validateModel, sanitizeModel } from './useIndexedDB';
 import 'fake-indexeddb/auto';

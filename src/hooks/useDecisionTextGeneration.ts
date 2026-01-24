@@ -17,8 +17,6 @@ import React, { useRef, useEffect } from 'react';
 import type {
   Topic,
   InsertMode,
-  AITextContent,
-  AIDocumentContent,
   AnonymizationSettings,
   AIMessageContent,
   DoubleCheckReviewResult,

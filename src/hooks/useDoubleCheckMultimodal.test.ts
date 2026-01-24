@@ -9,7 +9,7 @@
  * @version 1.37.68
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import type { AIMessageContent, AITextContent, AIDocumentContent } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -85,7 +85,7 @@ const createTextContent = (text: string): AITextContent => ({
   text
 });
 
-const createPdfContent = (name: string, data: string = 'base64data'): AIDocumentContent => ({
+const createPdfContent = (_name: string, data: string = 'base64data'): AIDocumentContent => ({
   type: 'document',
   source: {
     type: 'base64',

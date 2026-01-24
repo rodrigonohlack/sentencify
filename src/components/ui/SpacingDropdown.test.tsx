@@ -4,7 +4,6 @@
  * @version 1.37.57
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { SpacingDropdown } from './SpacingDropdown';
@@ -31,7 +30,7 @@ describe('SpacingDropdown', () => {
     it('should render all spacing presets from constants', () => {
       render(<SpacingDropdown value="normal" onChange={mockOnChange} />);
 
-      Object.entries(SPACING_PRESETS).forEach(([key, preset]) => {
+      Object.entries(SPACING_PRESETS).forEach(([_key, preset]) => {
         expect(screen.getByText(`${preset.icon} ${preset.label}`)).toBeInTheDocument();
       });
     });

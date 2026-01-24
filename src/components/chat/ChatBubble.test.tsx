@@ -4,7 +4,6 @@
  * @version 1.37.57
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ChatBubble } from './ChatBubble';
@@ -105,7 +104,7 @@ describe('ChatBubble', () => {
         content: '**bold text**',
         ts: Date.now(),
       };
-      const { container } = render(
+      const { container: _container } = render(
         <ChatBubble msg={msg} onUse={mockOnUse} showUse={false} sanitizeHTML={mockSanitizeHTML} />
       );
 

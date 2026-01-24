@@ -33,7 +33,6 @@ import type {
   FactsComparisonResult,
   FactsComparisonSource,
   ModalKey,
-  TokenMetrics,
   ChatMessage,
   ChatHistoryCacheEntry,
 } from '../types';
@@ -544,7 +543,7 @@ export function useLocalStorage(): UseLocalStorageReturn {
         setProofSendFullContent,
         setActiveTab,
         closeModal,
-        setError,
+        setError: _setError,
         setProcessoNumero,
         setPeticaoFiles,
         setContestacaoFiles,
@@ -1411,7 +1410,7 @@ export function useLocalStorage(): UseLocalStorageReturn {
         clearAnalyzingProofs,
         setShowProofPanel,
         setNewProofTextData,
-        setError,
+        setError: _setError2,
         setProcessoNumero,
         setTokenMetrics // v1.20.3: Contador de tokens persistente
       } = callbacks;

@@ -54,7 +54,6 @@ import { normalizeHTMLSpacing } from '../../utils/text';
 import { buildChatContext } from '../../utils/chat-context-builder';
 
 // Prompts
-import { AI_PROMPTS } from '../../prompts';
 import {
   buildMiniRelatorioComparisonPrompt,
   buildDocumentosComparisonPrompt,
@@ -109,9 +108,9 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   detectResultadoAutomatico = null,
   onSlashCommand = null,
   fileToBase64 = null,
-  openModal = null,
-  closeModal = null,
-  useLocalAIForSuggestions = false,
+  openModal: _openModal = null,
+  closeModal: _closeModal = null,
+  useLocalAIForSuggestions: _useLocalAIForSuggestions = false,
   useLocalAIForJuris = false,
   jurisSemanticThreshold = 50,
   searchModelReady = false,
@@ -122,7 +121,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   // Estado local para os tópicos (cópia para edição)
   const [localTopics, setLocalTopics] = React.useState<Topic[]>([]);
   const [isDirty, setIsDirty] = React.useState(false);
-  const [originalTopics, setOriginalTopics] = React.useState<Topic[]>([]);
+  const [_originalTopics, setOriginalTopics] = React.useState<Topic[]>([]);
 
   // Estados para sugestoes de modelos - v1.12.2: inicia true para sugestoes funcionarem na primeira abertura
   const [isSplitMode, setIsSplitMode] = React.useState(true);

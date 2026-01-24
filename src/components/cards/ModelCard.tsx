@@ -18,7 +18,7 @@ export const ModelCard = React.memo(({
   onToggleFavorite,
   onDuplicate,
   onDelete,
-  onInsert,
+  onInsert: _onInsert,
   sanitizeHTML,
   isShared = false,
   ownerEmail = null,

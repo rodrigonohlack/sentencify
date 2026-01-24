@@ -110,7 +110,7 @@ const ProcessCard: React.FC<ProcessCardProps> = React.memo(({ index, group, onRe
     }
   };
 
-  const getFileLabel = (file: BatchFile | undefined, label: string) => {
+  const getFileLabel = (file: BatchFile | undefined, _label: string) => {
     if (!file) {
       return (
         <span className="text-sm text-slate-400 dark:text-slate-500 italic">
