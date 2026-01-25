@@ -456,4 +456,270 @@ describe('useChatAssistant', () => {
       expect(secondCallArgs[0].content).toBe('Full context content');
     });
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // UPDATE LAST ASSISTANT MESSAGE TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('updateLastAssistantMessage', () => {
+    it('should update the last assistant message content', async () => {
+      const mockAI = createMockAIIntegration('Original response');
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+      const contextBuilder = vi.fn(() => 'Context');
+
+      await act(async () => {
+        await result.current.send('Hello', contextBuilder);
+      });
+
+      expect(result.current.history[1].content).toBe('Original response');
+
+      act(() => {
+        result.current.updateLastAssistantMessage('Updated response');
+      });
+
+      expect(result.current.history[1].content).toBe('Updated response');
+    });
+
+    it('should not modify history if no assistant messages', () => {
+      const mockAI = createMockAIIntegration();
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+
+      act(() => {
+        result.current.updateLastAssistantMessage('New content');
+      });
+
+      expect(result.current.history).toEqual([]);
+    });
+
+    it('should update only the last assistant message when multiple exist', async () => {
+      const mockAI = {
+        callAI: vi.fn()
+          .mockResolvedValueOnce('First response')
+          .mockResolvedValueOnce('Second response')
+      };
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+      const contextBuilder = vi.fn(() => 'Context');
+
+      await act(async () => {
+        await result.current.send('Hello 1', contextBuilder);
+        await result.current.send('Hello 2', contextBuilder);
+      });
+
+      act(() => {
+        result.current.updateLastAssistantMessage('Updated last response');
+      });
+
+      expect(result.current.history[1].content).toBe('First response');
+      expect(result.current.history[3].content).toBe('Updated last response');
+    });
+
+    it('should update lastResponse after updating message', async () => {
+      const mockAI = createMockAIIntegration('Original');
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+      const contextBuilder = vi.fn(() => 'Context');
+
+      await act(async () => {
+        await result.current.send('Hello', contextBuilder);
+      });
+
+      act(() => {
+        result.current.updateLastAssistantMessage('Updated');
+      });
+
+      expect(result.current.lastResponse).toBe('Updated');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SET HISTORY TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('setHistory', () => {
+    it('should set history directly', () => {
+      const mockAI = createMockAIIntegration();
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+
+      const newHistory = [
+        { role: 'user' as const, content: 'Loaded message', ts: Date.now() },
+        { role: 'assistant' as const, content: 'Loaded response', ts: Date.now() },
+      ];
+
+      act(() => {
+        result.current.setHistory(newHistory);
+      });
+
+      expect(result.current.history).toEqual(newHistory);
+    });
+
+    it('should update lastResponse after setHistory', () => {
+      const mockAI = createMockAIIntegration();
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+
+      const newHistory = [
+        { role: 'user' as const, content: 'Message', ts: Date.now() },
+        { role: 'assistant' as const, content: 'Custom response', ts: Date.now() },
+      ];
+
+      act(() => {
+        result.current.setHistory(newHistory);
+      });
+
+      expect(result.current.lastResponse).toBe('Custom response');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CACHE OPTIONS TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Cache Options', () => {
+    it('should load history from cache on mount with topicTitle', async () => {
+      const mockAI = createMockAIIntegration();
+      const cachedMessages = [
+        { role: 'user' as const, content: 'Cached message', ts: Date.now() },
+        { role: 'assistant' as const, content: 'Cached response', ts: Date.now() },
+      ];
+      const getChat = vi.fn().mockResolvedValue(cachedMessages);
+      const saveChat = vi.fn().mockResolvedValue(undefined);
+
+      const { result } = renderHook(() => useChatAssistant(mockAI, {
+        topicTitle: 'Test Topic',
+        getChat,
+        saveChat,
+      }));
+
+      await waitFor(() => {
+        expect(result.current.history).toEqual(cachedMessages);
+      });
+
+      expect(getChat).toHaveBeenCalledWith('Test Topic');
+    });
+
+    it('should save history to cache when messages change', async () => {
+      const mockAI = createMockAIIntegration('Response');
+      const saveChat = vi.fn().mockResolvedValue(undefined);
+      const getChat = vi.fn().mockResolvedValue([]);
+
+      const { result } = renderHook(() => useChatAssistant(mockAI, {
+        topicTitle: 'Test Topic',
+        saveChat,
+        getChat,
+      }));
+
+      await waitFor(() => {
+        expect(getChat).toHaveBeenCalled();
+      });
+
+      await act(async () => {
+        await result.current.send('Hello', () => 'Context');
+      });
+
+      await waitFor(() => {
+        expect(saveChat).toHaveBeenCalledWith('Test Topic', expect.any(Array));
+      });
+    });
+
+    it('should call deleteChat when clear is called with cache', async () => {
+      const mockAI = createMockAIIntegration('Response');
+      const deleteChat = vi.fn().mockResolvedValue(undefined);
+      const getChat = vi.fn().mockResolvedValue([]);
+      const saveChat = vi.fn().mockResolvedValue(undefined);
+
+      const { result } = renderHook(() => useChatAssistant(mockAI, {
+        topicTitle: 'Test Topic',
+        deleteChat,
+        getChat,
+        saveChat,
+      }));
+
+      await waitFor(() => {
+        expect(getChat).toHaveBeenCalled();
+      });
+
+      act(() => {
+        result.current.clear();
+      });
+
+      expect(deleteChat).toHaveBeenCalledWith('Test Topic');
+    });
+
+    it('should handle cache load errors gracefully', async () => {
+      const mockAI = createMockAIIntegration();
+      const getChat = vi.fn().mockRejectedValue(new Error('Cache error'));
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const { result } = renderHook(() => useChatAssistant(mockAI, {
+        topicTitle: 'Test Topic',
+        getChat,
+      }));
+
+      await waitFor(() => {
+        expect(result.current.history).toEqual([]);
+      });
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should reload from cache when isOpen changes to true', async () => {
+      const mockAI = createMockAIIntegration();
+      const cachedMessages = [
+        { role: 'user' as const, content: 'Cached', ts: Date.now() },
+        { role: 'assistant' as const, content: 'Response', ts: Date.now() },
+      ];
+      const getChat = vi.fn().mockResolvedValue(cachedMessages);
+
+      const { result, rerender } = renderHook(
+        (props) => useChatAssistant(mockAI, props),
+        { initialProps: { topicTitle: 'Test', getChat, isOpen: false } }
+      );
+
+      await waitFor(() => {
+        expect(getChat).toHaveBeenCalled();
+      });
+
+      getChat.mockClear();
+
+      rerender({ topicTitle: 'Test', getChat, isOpen: true });
+
+      await waitFor(() => {
+        expect(getChat).toHaveBeenCalled();
+      });
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RESPONSE RETURN TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Response Return', () => {
+    it('should return response in send result', async () => {
+      const mockAI = createMockAIIntegration('Direct response');
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+      const contextBuilder = vi.fn(() => 'Context');
+
+      let sendResult: { success: boolean; response?: string | null };
+
+      await act(async () => {
+        sendResult = await result.current.send('Hello', contextBuilder);
+      });
+
+      expect(sendResult!.response).toBe('Direct response');
+    });
+
+    it('should return null response on error', async () => {
+      const mockAI = {
+        callAI: vi.fn().mockRejectedValue(new Error('Error'))
+      };
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+      const contextBuilder = vi.fn(() => 'Context');
+
+      let sendResult: { success: boolean; response?: string | null };
+
+      await act(async () => {
+        sendResult = await result.current.send('Hello', contextBuilder);
+      });
+
+      expect(sendResult!.response).toBeNull();
+    });
+  });
 });

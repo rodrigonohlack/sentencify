@@ -164,6 +164,161 @@ describe('VoiceButton', () => {
       // The interim preview div should not be present when not recording
       expect(container.querySelector('[style*="min-width"]')).not.toBeInTheDocument();
     });
+
+    it('should show preview when recording and has interim text', async () => {
+      // Capture onTranscript callback
+      let capturedCallback: ((text: string, isFinal: boolean) => void) | null = null;
+      const mockUseVoiceToText = await import('../hooks/useVoiceToText');
+      vi.mocked(mockUseVoiceToText.useVoiceToText).mockImplementation((options) => {
+        capturedCallback = options.onTranscript;
+        return {
+          ...mockVoiceToText,
+          isRecording: true,
+        };
+      });
+
+      const { container, rerender } = render(<VoiceButton {...defaultProps} />);
+
+      // Simulate interim transcript
+      if (capturedCallback) {
+        capturedCallback('texto em progresso', false);
+      }
+
+      rerender(<VoiceButton {...defaultProps} />);
+
+      // Preview should appear when recording with text
+      const previewDiv = container.querySelector('.absolute.top-full');
+      expect(previewDiv).toBeInTheDocument();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AI IMPROVEMENT
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('AI Improvement', () => {
+    it('should call onImproveText when improveWithAI is true and text is long enough', async () => {
+      const mockImprove = vi.fn().mockResolvedValue('texto melhorado');
+      const mockOnTranscript = vi.fn();
+
+      let capturedCallback: ((text: string, isFinal: boolean) => void) | null = null;
+      const mockUseVoiceToText = await import('../hooks/useVoiceToText');
+      vi.mocked(mockUseVoiceToText.useVoiceToText).mockImplementation((options) => {
+        capturedCallback = options.onTranscript;
+        return mockVoiceToText;
+      });
+
+      render(
+        <VoiceButton
+          onTranscript={mockOnTranscript}
+          improveWithAI={true}
+          onImproveText={mockImprove}
+        />
+      );
+
+      // Simulate final transcript with enough text
+      if (capturedCallback) {
+        await (capturedCallback as (text: string, isFinal: boolean) => Promise<void>)(
+          'este texto tem mais de 10 caracteres para teste',
+          true
+        );
+      }
+
+      expect(mockImprove).toHaveBeenCalledWith('este texto tem mais de 10 caracteres para teste');
+    });
+
+    it('should NOT call onImproveText when text is too short', async () => {
+      const mockImprove = vi.fn().mockResolvedValue('melhorado');
+      const mockOnTranscript = vi.fn();
+
+      let capturedCallback: ((text: string, isFinal: boolean) => void) | null = null;
+      const mockUseVoiceToText = await import('../hooks/useVoiceToText');
+      vi.mocked(mockUseVoiceToText.useVoiceToText).mockImplementation((options) => {
+        capturedCallback = options.onTranscript;
+        return mockVoiceToText;
+      });
+
+      render(
+        <VoiceButton
+          onTranscript={mockOnTranscript}
+          improveWithAI={true}
+          onImproveText={mockImprove}
+        />
+      );
+
+      // Simulate final transcript with short text
+      if (capturedCallback) {
+        await (capturedCallback as (text: string, isFinal: boolean) => Promise<void>)(
+          'curto',
+          true
+        );
+      }
+
+      expect(mockImprove).not.toHaveBeenCalled();
+      expect(mockOnTranscript).toHaveBeenCalledWith('curto');
+    });
+
+    it('should fallback to original text when AI improvement fails', async () => {
+      const mockImprove = vi.fn().mockRejectedValue(new Error('AI Error'));
+      const mockOnTranscript = vi.fn();
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      let capturedCallback: ((text: string, isFinal: boolean) => void) | null = null;
+      const mockUseVoiceToText = await import('../hooks/useVoiceToText');
+      vi.mocked(mockUseVoiceToText.useVoiceToText).mockImplementation((options) => {
+        capturedCallback = options.onTranscript;
+        return mockVoiceToText;
+      });
+
+      render(
+        <VoiceButton
+          onTranscript={mockOnTranscript}
+          improveWithAI={true}
+          onImproveText={mockImprove}
+        />
+      );
+
+      // Simulate final transcript
+      if (capturedCallback) {
+        await (capturedCallback as (text: string, isFinal: boolean) => Promise<void>)(
+          'texto original longo para testar fallback',
+          true
+        );
+      }
+
+      expect(mockOnTranscript).toHaveBeenCalledWith('texto original longo para testar fallback');
+      consoleSpy.mockRestore();
+    });
+
+    it('should call onTranscript with improved text on success', async () => {
+      const mockImprove = vi.fn().mockResolvedValue('texto melhorado');
+      const mockOnTranscript = vi.fn();
+
+      let capturedCallback: ((text: string, isFinal: boolean) => void) | null = null;
+      const mockUseVoiceToText = await import('../hooks/useVoiceToText');
+      vi.mocked(mockUseVoiceToText.useVoiceToText).mockImplementation((options) => {
+        capturedCallback = options.onTranscript;
+        return mockVoiceToText;
+      });
+
+      render(
+        <VoiceButton
+          onTranscript={mockOnTranscript}
+          improveWithAI={true}
+          onImproveText={mockImprove}
+        />
+      );
+
+      // Simulate final transcript
+      if (capturedCallback) {
+        await (capturedCallback as (text: string, isFinal: boolean) => Promise<void>)(
+          'texto original para melhorar',
+          true
+        );
+      }
+
+      expect(mockOnTranscript).toHaveBeenCalledWith('texto melhorado');
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
