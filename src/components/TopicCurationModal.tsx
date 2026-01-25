@@ -1,7 +1,7 @@
 /**
  * TopicCurationModal.tsx
  * Modal de curadoria de tópicos pré-geração de mini-relatórios
- * v1.39.02 - Fix: Auto-scroll durante drag (remover createPortal do DragOverlay)
+ * v1.39.03 - Fix: Auto-scroll durante drag (autoScroll={true} explícito no DndContext)
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -1211,6 +1211,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
+            autoScroll={true}
           >
             <SortableContext
               items={topics.map(t => t.id || t.title)}
