@@ -1,12 +1,12 @@
 /**
  * TopicCurationModal.tsx
  * Modal de curadoria de tópicos pré-geração de mini-relatórios
- * v1.39.04 - Fix: DndContext envolvendo scroll container para auto-scroll funcionar
+ * v1.39.05 - Fix: MeasuringStrategy.Always + touch-action:none para auto-scroll durante drag
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay, MeasuringStrategy } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 import {
   GripVertical,
@@ -454,7 +454,7 @@ const TopicPreviewCard = React.memo<TopicPreviewCardProps>(({
       {isSpecial ? (
         <Pin className="w-4 h-4 text-emerald-500 flex-shrink-0" aria-label="Posição fixa" />
       ) : (
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing" style={{ touchAction: 'none' }}>
           <GripVertical className="w-4 h-4 text-slate-500 hover:text-slate-300" />
         </div>
       )}
@@ -955,6 +955,9 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 }
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
     })
   );
 
@@ -1202,6 +1205,11 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
           autoScroll={true}
+          measuring={{
+            droppable: {
+              strategy: MeasuringStrategy.Always,
+            },
+          }}
         >
         <div className="flex-1 overflow-y-auto p-4 space-y-2" data-modal-scroll-container>
           {showMergeConfirm && selectedForMerge.length >= 2 && (

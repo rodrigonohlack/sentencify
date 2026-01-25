@@ -17,8 +17,10 @@ vi.mock('@dnd-kit/core', () => ({
   DragOverlay: ({ children }) => <div data-testid="drag-overlay">{children}</div>,
   closestCenter: vi.fn(),
   PointerSensor: vi.fn(),
+  KeyboardSensor: vi.fn(),
   useSensor: vi.fn(() => ({})),
-  useSensors: vi.fn(() => [])
+  useSensors: vi.fn(() => []),
+  MeasuringStrategy: { Always: 'always' }
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({
@@ -37,7 +39,8 @@ vi.mock('@dnd-kit/sortable', () => ({
     const [removed] = result.splice(from, 1);
     result.splice(to, 0, removed);
     return result;
-  })
+  }),
+  sortableKeyboardCoordinates: vi.fn()
 }));
 
 vi.mock('@dnd-kit/utilities', () => ({
