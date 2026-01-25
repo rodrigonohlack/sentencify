@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.39.00', feature: 'Eliminação total de any types: tipagem completa para APIs (Claude, OpenAI, Grok, Gemini), PDF.js e respostas de IA. 0 any types, 0 erros TypeScript, 88% cobertura, 5932 testes' },
   { version: '1.38.53', feature: 'Fix erros TypeScript em arquivos de teste: corrigir 10 erros de tipo (DOMPurify/Quill types, TopicCategory, PastedText[], imports não usados, variáveis não lidas). 0 erros TypeScript' },
   { version: '1.38.50', feature: 'Sprint 5 - Cobertura de testes de 60% para 86%: +2399 testes (5253 total), 133 arquivos de teste, 0 erros TypeScript. Cobertura: 86% linhas, 85% statements, 76% branches, 84% funções' },
   { version: '1.38.49', feature: 'Fix anonimização de VALOR ativa mesmo quando desligada: preservarAnonimizacao agora condicional a anonymization.enabled nos prompts de mini-relatório e relatório processual' },
