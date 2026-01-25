@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Upload, FileText, Save, ChevronDown, ChevronUp, AlertCircle, Sparkles, Edit, BookOpen, Book, Scale, X, LogOut } from 'lucide-react';
+import { Upload, FileText, Save, AlertCircle, BookOpen, Book, Scale, X, LogOut } from 'lucide-react';
 import { useAuth } from './components/LoginScreen';
 
 // v1.34.0: Cloud Sync - Magic Link Authentication + SQLite Sync
@@ -42,7 +42,7 @@ import { useModelsStore } from './stores/useModelsStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useSpacingControl, useFontSizeControl, useFeatureFlags, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, useLegislacao, useJurisprudencia, useChatAssistant, useModelPreview, useLocalStorage, removePdfFromIndexedDB, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers, useReviewSentence, type AIIntegrationForReview, useSemanticSearchHandlers, useModelSuggestions, useMultiTabSync } from './hooks';
+import { useSpacingControl, useFontSizeControl, useFeatureFlags, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, useLegislacao, useJurisprudencia, useChatAssistant, useModelPreview, useLocalStorage, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers, useReviewSentence, type AIIntegrationForReview, useSemanticSearchHandlers, useModelSuggestions, useMultiTabSync, useDriveFileHandlers, useSessionCallbacks, useTopicEditing, useModelEditing, useProofModalCallbacks, useGoogleDriveActions } from './hooks';
 import { API_BASE } from './constants/api';
 import { APP_VERSION } from './constants/app-version';
 
@@ -61,7 +61,7 @@ import { useGoogleDrive, GOOGLE_CLIENT_ID } from './hooks/useGoogleDrive';
 import { GoogleDriveButton, DriveFilesModal } from './components/GoogleDriveButton';
 import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 import { FactsComparisonModalContent } from './components/FactsComparisonModal';
-import { SuggestionCard, BaseModal, ExtractModelConfirmModal, ExtractedModelPreviewModal, AddProofTextModal, ProofAnalysisModal, LinkProofModal, RestoreSessionModal, ClearProjectModal, LogoutConfirmModal, ConfirmBulkCancelModal, DeleteProofModal, TextPreviewModal, JurisprudenciaTab, LegislacaoTab, AIAssistantModal, AIAssistantModelModal, AnalysisModal, AnonymizationNamesModal, ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal, SlashCommandMenu, JurisprudenciaModal, ModelPreviewModal, DecisionEditorContainer, LockedTabOverlay, GlobalEditorModal, ConfigModal, DoubleCheckReviewModal, ModelsTab, UploadTab, ProofsTab, TopicsTab, ErrorBoundary, ModalRoot } from './components';
+import { BaseModal, ExtractModelConfirmModal, ExtractedModelPreviewModal, AddProofTextModal, ProofAnalysisModal, LinkProofModal, RestoreSessionModal, ClearProjectModal, LogoutConfirmModal, ConfirmBulkCancelModal, DeleteProofModal, JurisprudenciaTab, LegislacaoTab, AIAssistantModal, AIAssistantModelModal, AnalysisModal, AnonymizationNamesModal, ShareLibraryModal, AcceptSharePage, DispositivoModal, BulkReviewModal, BulkUploadModal, SlashCommandMenu, JurisprudenciaModal, ModelPreviewModal, LockedTabOverlay, GlobalEditorModal, ConfigModal, ModelsTab, UploadTab, ProofsTab, TopicsTab, EditorTabContent, ErrorBoundary, ModalRoot } from './components';
 import useChatHistoryCache from './hooks/useChatHistoryCache';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
@@ -77,33 +77,30 @@ import { GlobalHoverStyles, ThemeStyles } from './styles';
 // v1.37.51: Componentes UI e Modais extraídos
 import { Toast } from './components/ui/Toast';
 import { AutoSaveIndicator } from './components/ui/AutoSaveIndicator';
-import { ChangelogModal } from './components/modals/ChangelogModal';
+// v1.38.51: ChangelogModal movido para ModalRoot
 import { SentenceReviewOptionsModal, SentenceReviewResultModal } from './components/modals/SentenceReviewModals';
 import { DataDownloadModal, EmbeddingsDownloadModal } from './components/modals/DownloadModals';
 
 // v1.36.60: AIModelService extraído para src/services/
 import AIModelService from './services/AIModelService';
 
-// v1.36.81: Serviços de embeddings extraídos
-import { TFIDFSimilarity } from './services/EmbeddingsServices';
+// v1.36.81: TFIDFSimilarity movido para useModelEditing hook
 
 // v1.36.81: Utilitários extraídos
-import { anonymizeText, normalizeHTMLSpacing, isSpecialTopic, isRelatorio, isDispositivo, generateModelId } from './utils/text';
+import { normalizeHTMLSpacing, isSpecialTopic, isRelatorio, isDispositivo, generateModelId } from './utils/text';
 import { searchModelsBySimilarity } from './utils/models';
 
 // v1.36.96: Context helpers extraídos
 import { fastHashUtil } from './utils/context-helpers';
-import { htmlToPlainText, htmlToFormattedText } from './utils/html-conversion';
+import { htmlToFormattedText } from './utils/html-conversion';
 
 // v1.35.79: Tipos TypeScript centralizados (ETAPA 0 reorganização completa)
 import type {
-  AISettings,
-  Topic, Model, Proof, ProofFile, ProofText,
-  DriveFile,
+  Topic, Model, ProofFile, ProofText,
   QuillInstance, QuillDelta,
   TargetField,
-  SimilarityWarningState,
-  SessionState, ImportedProject
+  SessionState,
+  ModalKey
 } from './types';
 
 // v1.33.58: dnd-kit para drag and drop com suporte a wheel scroll
@@ -268,7 +265,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // 🎣 CUSTOM HOOKS
   // v1.37.38: toast, showToast, clearToast agora vêm do useUIStore via useModalManager
-  const { modals, openModal, closeModal, textPreview, setTextPreview, showToast } = useModalManager();
+  // v1.38.51: textPreview, setTextPreview removidos - migrados para ModalRoot
+  const { modals, openModal, closeModal, showToast } = useModalManager();
   const aiIntegration = useAIIntegration();
   const featureFlags = useFeatureFlags();
   const indexedDB = useIndexedDB();   const apiCache = useAPICache(50, 5 * 60 * 1000); // 🚀 v1.8.2: Cache de API (50 entradas, TTL 5min)
@@ -814,11 +812,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     // Tópicos - Setters
     setExtractedTopics, setSelectedTopics,
     setEditingTopic, setLastEditedTopicTitle, setTopicContextScope,
-    setSavingTopic,
-    setTopicToDelete
-    // ⚠️ NOTA: Handlers de tópicos (prepareDeleteTopic, confirmDeleteTopic, etc.)
+    // ⚠️ NOTA: setSavingTopic, setTopicToDelete movidos para useTopicEditing
+    // Handlers de tópicos (prepareDeleteTopic, confirmDeleteTopic, etc.)
     // permanecem no componente principal pois dependem de modals e lógica complexa
-    // Não fazemos destructuring deles para evitar conflitos
   } = topicManager;
 
   // 🔄 v1.37.42: Hashes de detecção de mudanças - extraído para useChangeDetectionHashes (FASE 41)
@@ -1016,6 +1012,106 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // v1.37.9: Movido de dentro da seção de embeddings para cá
   const jurisprudencia = useJurisprudencia();
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.38.52: Handlers de modais de sessão e Google Drive extraídos para hooks
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  // Google Drive handlers
+  const driveFileHandlers = useDriveFileHandlers({
+    googleDrive,
+    storage,
+    proofManager,
+    aiIntegration,
+    setPastedPeticaoTexts,
+    setPastedContestacaoTexts,
+    setPastedComplementaryTexts,
+    setExtractedTopics,
+    setSelectedTopics,
+    setPartesProcesso,
+    setAnalyzedDocuments,
+    setActiveTab,
+    setError,
+    setProcessoNumero,
+    setPeticaoFiles,
+    setContestacaoFiles,
+    setComplementaryFiles,
+    setExtractedTexts,
+    setDocumentProcessingModes,
+    setDriveFilesModalOpen,
+    setDriveFiles,
+  });
+
+  // GoogleDriveButton actions (save, load, local save/load)
+  const googleDriveActions = useGoogleDriveActions({
+    googleDrive,
+    storage,
+    proofManager,
+    aiIntegration,
+    documentState: {
+      processoNumero,
+      pastedPeticaoTexts,
+      pastedContestacaoTexts,
+      pastedComplementaryTexts,
+      extractedTopics,
+      selectedTopics,
+      partesProcesso,
+      activeTab,
+      analyzedDocuments,
+      peticaoFiles,
+      contestacaoFiles,
+      complementaryFiles,
+      extractedTexts,
+      documentProcessingModes,
+    },
+    documentSetters: {
+      setPastedPeticaoTexts,
+      setPastedContestacaoTexts,
+      setPastedComplementaryTexts,
+      setExtractedTopics,
+      setSelectedTopics,
+      setPartesProcesso,
+      setAnalyzedDocuments,
+      setActiveTab,
+      setProcessoNumero,
+      setPeticaoFiles,
+      setContestacaoFiles,
+      setComplementaryFiles,
+      setExtractedTexts,
+      setDocumentProcessingModes,
+    },
+    setError,
+    showToast,
+    setDriveFiles,
+    setDriveFilesModalOpen,
+    openModal,
+  });
+
+  // Session modal handlers (RestoreSession, ClearProject, Logout)
+  const sessionCallbacks = useSessionCallbacks({
+    storage,
+    aiIntegration,
+    openModal,
+    closeModal,
+    proofManager,
+    setPastedPeticaoTexts,
+    setPastedContestacaoTexts,
+    setPastedComplementaryTexts,
+    setExtractedTopics,
+    setSelectedTopics,
+    setPartesProcesso,
+    setAnalyzedDocuments,
+    setActiveTab,
+    setError,
+    setProcessoNumero,
+    setPeticaoFiles,
+    setContestacaoFiles,
+    setComplementaryFiles,
+    setExtractedTexts,
+    setDocumentProcessingModes,
+    setAnonymizationNamesText,
+    onLogout,
+  });
+
   // 🎯 REFS
   const bulkFileInputRef = useRef<HTMLInputElement | null>(null);
   const editorRef = useRef<QuillInstance | null>(null); // v1.35.92: Tipar como QuillInstance
@@ -1033,6 +1129,51 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       if (!titles.has(title)) delete topicRefs.current[title];
     });
   }, []);
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // v1.38.52: useTopicEditing - Topic editing handlers extraídos para hook
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const topicEditing = useTopicEditing({
+    topicManager,
+    aiIntegration,
+    modelLibrary,
+    openModal,
+    setActiveTab,
+    sanitizeHTML,
+    editorRef,
+    relatorioRef,
+  });
+
+  const {
+    toggleTopicSelection,
+    deleteTopic,
+    saveTopicEdit,
+    saveTopicEditWithoutClosing,
+    detectResultadoAutomatico,
+  } = topicEditing;
+
+  // v1.38.52: useModelEditing - Model editing handlers extraídos para hook
+  const modelEditing = useModelEditing({
+    modelLibrary,
+    modelPreview,
+    aiIntegration,
+    cloudSync,
+    apiCache,
+    searchModelReady,
+    sanitizeHTML,
+    showToast,
+    setError,
+    openModal: openModal as (modal: string) => void,
+    modelFormRef,
+    modelEditorRef,
+  });
+
+  const {
+    saveQuickEdit,
+    confirmSaveAsNew,
+    startEditingModel,
+    duplicateModel,
+  } = modelEditing;
 
   // ⚡ EFFECTS
 
@@ -1688,185 +1829,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // Hook useModelLibrary já gerencia persistência via 'sentencify-models'
   // v1.37.8: generateKeywordsWithAI e generateTitleWithAI movidos para useModelGeneration hook
   // v1.37.14: executeSaveModel, saveModel, saveModelWithoutClosing movidos para useModelSave hook
-
-  // Salva edições rápidas de um modelo
-  // v1.27.02: Regenerar embedding se IA local estiver ativa
-  const saveQuickEdit = async (editorRef: React.RefObject<{ root?: HTMLElement } | null>) => {
-    if (!modelPreview.previewingModel) {
-      showToast('Erro: nenhum modelo selecionado', 'error');
-      return;
-    }
-
-    // Capturar conteúdo do editor Quill
-    const newContent = editorRef.current?.root
-      ? sanitizeHTML(editorRef.current.root.innerHTML)
-      : modelPreview.editedContent;
-
-    if (!newContent || !newContent.trim()) {
-      showToast('Conteúdo não pode estar vazio', 'error');
-      return;
-    }
-
-    try {
-      const modelId = modelPreview.previewingModel.id;
-      if (!modelLibrary.models.some(m => m.id === modelId)) {
-        showToast('Modelo não encontrado na biblioteca', 'error');
-        return;
-      }
-
-      const updatedModel = {
-        ...modelPreview.previewingModel,
-        content: newContent,
-        updatedAt: new Date().toISOString()
-      };
-
-      // v1.27.02: Regenerar embedding se IA local estiver ativa
-      if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
-        await new Promise(resolve => setTimeout(resolve, 50));
-        try {
-          const stripHTML = (html: string) => {
-            const div = document.createElement('div');
-            div.innerHTML = html || '';
-            return div.textContent || div.innerText || '';
-          };
-          const text = [updatedModel.title, updatedModel.keywords, stripHTML(updatedModel.content).slice(0, 2000)].filter(Boolean).join(' ');
-          updatedModel.embedding = await AIModelService.getEmbedding(text, 'passage');
-        } catch (err) {
-          console.warn('[MODEL-EMBED] Erro ao regenerar embedding:', err);
-        }
-      } else if (updatedModel.embedding) {
-        delete updatedModel.embedding;
-      }
-
-      modelLibrary.setModels(modelLibrary.models.map(m => m.id === modelId ? updatedModel : m));
-      // v1.34.0: Rastrear update para sync
-      if (cloudSync?.trackChange) cloudSync.trackChange('update', updatedModel);
-      modelLibrary.setHasUnsavedChanges(true);
-      TFIDFSimilarity.invalidate();
-      apiCache.invalidate('suggestions_');
-
-      // Sincronizar sugestões se existirem (evita mostrar conteúdo antigo ao clicar "Visualizar" novamente)
-      if (modelLibrary.suggestions?.length > 0) {
-        modelLibrary.setSuggestions(
-          modelLibrary.suggestions.map(s => s.id === modelId ? updatedModel : s)
-        );
-      }
-
-      // v1.19.2: Notificar listeners (ex: GlobalEditorModal) sobre atualização do modelo
-      if (modelPreview.onModelUpdatedRef?.current) {
-        modelPreview.onModelUpdatedRef.current(updatedModel);
-      }
-
-      // Atualizar o modelo no preview para refletir mudanças
-      modelPreview.openPreview(updatedModel);
-      modelPreview.cancelEditing();
-
-      showToast('Modelo salvo com sucesso!', 'success');
-    } catch (err) {
-      showToast('Erro ao salvar modelo: ' + (err as Error).message, 'error');
-    }
-  };
-
-  // v1.15.3: Salva como novo modelo (a partir do preview editado)
-  // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
-  const confirmSaveAsNew = async () => {
-    const data = modelPreview.saveAsNewData;
-    if (!data) {
-      showToast('Erro: nenhum modelo para salvar', 'error');
-      return;
-    }
-
-    const { title, keywords, category, content } = data;
-
-    if (!title?.trim()) {
-      showToast('Título é obrigatório', 'error');
-      return;
-    }
-
-    if (!content?.trim()) {
-      showToast('Conteúdo não pode estar vazio', 'error');
-      return;
-    }
-
-    const modelId = generateModelId();
-    const modelData: Model = {
-      id: modelId,
-      title: title.trim(),
-      content: sanitizeHTML(content),
-      keywords: keywords?.trim() || '',
-      category: category || 'Mérito',
-      createdAt: new Date().toISOString()
-    };
-
-    // Verificar similaridade com TF-IDF
-    const simResult = TFIDFSimilarity.findSimilar(modelData, modelLibrary.models, 0.80);
-    if (simResult.hasSimilar) {
-      modelLibrary.setSimilarityWarning({
-        newModel: modelData,
-        similarModel: simResult.similarModel,
-        similarity: simResult.similarity,
-        context: 'saveAsNew'
-      } as SimilarityWarningState);
-      return;
-    }
-
-    // v1.27.02: Gerar embedding se IA local estiver ativa
-    if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-      try {
-        const stripHTML = (html: string) => {
-          const div = document.createElement('div');
-          div.innerHTML = html || '';
-          return div.textContent || div.innerText || '';
-        };
-        const text = [modelData.title, modelData.keywords, stripHTML(modelData.content).slice(0, 2000)].filter(Boolean).join(' ');
-        modelData.embedding = await AIModelService.getEmbedding(text, 'passage');
-      } catch (err) {
-        console.warn('[MODEL-EMBED] Erro ao gerar embedding:', err);
-      }
-    }
-
-    // Salvar novo modelo
-    modelLibrary.setModels(prev => [...prev, modelData]);
-    // v1.34.0: Rastrear create para sync
-    if (cloudSync?.trackChange) cloudSync.trackChange('create', modelData);
-    modelLibrary.setHasUnsavedChanges(true);
-    TFIDFSimilarity.invalidate();
-    apiCache.invalidate('suggestions_');
-
-    showToast('Novo modelo criado com sucesso!', 'success');
-    modelPreview.closeSaveAsNew();
-    modelPreview.closePreview();
-  };
-
-  // v1.37.14: executeSaveAsNew movido para useModelSave hook
-
-  const startEditingModel = (model: Model) => {
-    modelLibrary.setEditingModel(model);
-    modelLibrary.setNewModel({
-      title: model.title,
-      content: model.content,
-      keywords: typeof model.keywords === 'string' ? model.keywords : (model.keywords || []).join(', '),
-      category: model.category || ''
-    });
-    openModal('modelForm');
-    
-    // Scroll suave para o formulário de edição
-    setTimeout(() => {
-      if (modelFormRef.current) {
-        modelFormRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
-    }, 100);
-
-    setTimeout(() => {
-      if (modelEditorRef.current?.root) {
-        modelEditorRef.current.root.innerHTML = sanitizeHTML(model.content);
-      }
-    }, 200);
-  };
+  // v1.38.52: saveQuickEdit, confirmSaveAsNew, startEditingModel, duplicateModel movidos para useModelEditing hook
 
   // v1.37.25: exportModels, importModels, checkDuplicate movidos para useExportImport hook
 
@@ -1980,56 +1943,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   };
 
   // v1.38.0: executeDeleteModel removido (lógica já está em useModelModalHandlers.confirmDeleteModel)
-
-
-  // v1.27.02: Gera embedding automaticamente se IA local estiver ativa
-  // v1.33.7: Feedback visual ao duplicar modelo
-  const duplicateModel = async (model: Model) => {
-    try {
-      showToast('⏳ Duplicando modelo...', 'info');
-      await new Promise(resolve => setTimeout(resolve, 50)); // yield para UI
-
-      const modelId = generateModelId();
-      const duplicatedModel: Model = {
-        ...model,
-        id: modelId,
-        title: `${model.title} (Cópia)`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        embedding: undefined, // Limpar para regenerar com novo título
-        // v1.35.22: Cópia é modelo próprio, não compartilhado
-        isShared: false,
-        ownerId: undefined,
-        ownerEmail: undefined,
-        sharedPermission: undefined,
-      };
-
-      // v1.27.02: Gerar novo embedding se IA local estiver ativa
-      if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
-        await new Promise(resolve => setTimeout(resolve, 50));
-        try {
-          const stripHTML = (html: string) => {
-            const div = document.createElement('div');
-            div.innerHTML = html || '';
-            return div.textContent || div.innerText || '';
-          };
-          const text = [duplicatedModel.title, duplicatedModel.keywords, stripHTML(duplicatedModel.content).slice(0, 2000)].filter(Boolean).join(' ');
-          duplicatedModel.embedding = await AIModelService.getEmbedding(text, 'passage');
-        } catch (err) {
-          console.warn('[MODEL-EMBED] Erro ao gerar embedding:', err);
-        }
-      }
-
-      modelLibrary.setModels(prev => [...prev, duplicatedModel]);
-      // v1.34.0: Rastrear create para sync (duplicação cria novo modelo)
-      if (cloudSync?.trackChange) cloudSync.trackChange('create', duplicatedModel);
-      modelLibrary.setHasUnsavedChanges(true);
-
-      showToast('✅ Modelo duplicado com sucesso!', 'success');
-    } catch (err) {
-      setError('Erro ao duplicar modelo: ' + (err as Error).message);
-    }
-  };
 
   // Função para extrair modelo do texto de decisão
   const confirmExtractModel = () => {
@@ -2182,49 +2095,36 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   const { analyzeProof } = proofAnalysis;
 
-  // v1.19.2: Normalizar comparações case-insensitive
-  const toggleTopicSelection = (topic: Topic) => {
-    const topicTitleUpper = (topic.title || '').toUpperCase().trim();
-    const exists = selectedTopics.find(t => (t.title || '').toUpperCase().trim() === topicTitleUpper);
-    if (exists) {
-      // Remover tópico se já está selecionado
-      setSelectedTopics(selectedTopics.filter(t => (t.title || '').toUpperCase().trim() !== topicTitleUpper));
-    } else {
-      // Adicionar tópico
-      const newTopic = { ...topic, order: selectedTopics.length };
-      
-      // Se for RELATÓRIO, adicionar no início
-      if (isRelatorio(topic)) {
-        setSelectedTopics([newTopic, ...selectedTopics]);
-        return;
-      }
+  // v1.38.52: useProofModalCallbacks - Proof modal callbacks extraídos para hook
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const proofModalCallbacks = useProofModalCallbacks({
+    proofManager,
+    aiIntegration,
+    documentServices,
+    openModal: openModal as (modal: ModalKey) => void,
+    closeModal: closeModal as (modal: ModalKey) => void,
+    showToast,
+    setDetectingNames,
+    detectarNomesAutomaticamente,
+    analyzeProof,
+  });
 
-      // Se for DISPOSITIVO, adicionar no final
-      if (isDispositivo(topic)) {
-        setSelectedTopics([...selectedTopics, newTopic]);
-        return;
-      }
+  const {
+    handleAddProofText,
+    handleProofTextAnonymizationClose,
+    handleProofTextAnonymizationConfirm,
+    handleProofTextAnonymizationDetect,
+    handleProofExtractionAnonymizationClose,
+    handleProofExtractionAnonymizationConfirm,
+    handleProofExtractionAnonymizationDetect,
+    handleProofAnalysisClose,
+    handleAnalyzeContextual,
+    handleAnalyzeFree,
+    handleDeleteProofClose,
+    handleDeleteProofConfirm,
+  } = proofModalCallbacks;
 
-      // Para qualquer outro tópico, inserir antes do DISPOSITIVO
-      const dispositivoIndex = selectedTopics.findIndex((t: Topic) => isDispositivo(t));
-      
-      if (dispositivoIndex !== -1) {
-        // DISPOSITIVO existe - inserir antes dele
-        const newTopics = [...selectedTopics];
-        newTopics.splice(dispositivoIndex, 0, newTopic);
-        setSelectedTopics(newTopics);
-      } else {
-        // DISPOSITIVO não existe - adicionar no final
-        setSelectedTopics([...selectedTopics, newTopic]);
-      }
-    }
-  };
-
-  const deleteTopic = (topicToDelete: Topic) => {
-    setTopicToDelete(topicToDelete);
-    openModal('deleteTopic');
-  };
-
+  // v1.38.52: toggleTopicSelection e deleteTopic extraídos para useTopicEditing hook
   // v1.37.99: confirmDeleteTopic movido para useTopicModalHandlers (usado pelo ModalRoot)
 
   const moveTopicUp = (index: number) => {
@@ -2376,209 +2276,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         ...editingTopic,
         editedFundamentacao: newHTML
       });
-    }
-  };
-
-  // Função para detectar automaticamente o resultado do julgamento usando IA
-  const detectResultadoAutomatico = async (topicTitle: string, decisionText: string, topicCategory: string) => {
-    // Não detectar para RELATÓRIO e DISPOSITIVO
-    if (topicTitle.toUpperCase() === 'RELATÓRIO' || topicTitle.toUpperCase() === 'DISPOSITIVO') {
-      return null;
-    }
-
-    // Se não há texto de decisão, não detectar
-    if (!decisionText || decisionText.trim() === '') {
-      return null;
-    }
-
-    try {
-      const plainText = htmlToPlainText(decisionText);
-
-      const prompt = `${AI_PROMPTS.roles.classificacao}
-
-TÓPICO SENDO ANALISADO:
-Título: ${topicTitle}
-Categoria: ${topicCategory || 'Não especificada'}
-
-TEXTO DA DECISÃO ESCRITA PELO USUÁRIO:
-${plainText}
-
-TAREFA:
-Analise o texto da decisão e identifique o resultado do julgamento.
-
-OPÇÕES POSSÍVEIS (escolha UMA):
-1. PROCEDENTE - quando o pedido foi totalmente deferido/acolhido
-2. IMPROCEDENTE - quando o pedido foi totalmente indeferido/rejeitado
-3. PARCIALMENTE PROCEDENTE - quando o pedido foi parcialmente deferido
-4. ACOLHIDO - quando uma preliminar, exceção ou questão processual foi acolhida
-5. REJEITADO - quando uma preliminar, exceção ou questão processual foi rejeitada
-6. SEM RESULTADO - para tópicos administrativos/acessórios sem julgamento de mérito
-7. INDEFINIDO - quando o texto não deixa claro o resultado ou está incompleto
-
-CRITÉRIOS DE ANÁLISE:
-- Procure por palavras-chave como: "defiro", "indefiro", "julgo procedente", "julgo improcedente", "parcialmente", "acolho", "rejeito"
-- Considere o contexto geral do texto
-- Se a categoria for PRELIMINAR, prefira ACOLHIDO/REJEITADO
-- Se a categoria for MÉRITO, prefira PROCEDENTE/IMPROCEDENTE/PARCIALMENTE PROCEDENTE
-- Se o tópico tratar de deduções previdenciárias, prazos e condições para cumprimento da decisão, juros ou correção monetária, retorne SEM RESULTADO
-- Se houver dúvida ou o texto estiver incompleto, retorne INDEFINIDO
-
-Responda APENAS com uma das palavras: PROCEDENTE, IMPROCEDENTE, PARCIALMENTE PROCEDENTE, ACOLHIDO, REJEITADO, SEM RESULTADO ou INDEFINIDO.
-Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavra.`;
-
-      // v1.21.26: Parametros deterministicos para classificacao
-      const textContent = await aiIntegration.callAI([{
-        role: 'user',
-        content: [{ type: 'text', text: prompt }]
-      }], {
-        maxTokens: 500,
-        useInstructions: false,
-        logMetrics: true,
-        temperature: 0.0,
-        topP: 0.9,
-        topK: 20
-      });
-
-      const resultado = textContent.toUpperCase();
-
-      // Validar resultado
-      const resultadosValidos = ['PROCEDENTE', 'IMPROCEDENTE', 'PARCIALMENTE PROCEDENTE', 'ACOLHIDO', 'REJEITADO', 'SEM RESULTADO', 'INDEFINIDO'];
-
-      if (resultadosValidos.includes(resultado)) {
-        // Se for INDEFINIDO, retornar null para não sobrescrever escolha manual do usuário
-        return resultado === 'INDEFINIDO' ? null : resultado;
-      } else {
-        return null;
-      }
-
-    } catch (error) {
-      return null;
-    }
-  };
-
-  const saveTopicEdit = async () => {
-    if (!editingTopic) return;
-    setSavingTopic(true);
-    try {
-      const isRelatorio = editingTopic.title.toUpperCase() === 'RELATÓRIO';
-      const isDispositivo = editingTopic.title.toUpperCase() === 'DISPOSITIVO';
-
-      // Validar refs baseado no tipo de tópico
-      if (isRelatorio && !relatorioRef.current) return;
-      if (isDispositivo && !editorRef.current) return;
-      if (!isRelatorio && !isDispositivo && (!editorRef.current || !relatorioRef.current)) return;
-
-      // Capturar conteúdo dos editores (apenas os que existem)
-            const content = editorRef.current ? sanitizeHTML(editorRef.current.root.innerHTML) : '';
-            const relatorio = relatorioRef.current ? sanitizeHTML(relatorioRef.current.root.innerHTML) : '';
-
-      let updatedTopic = {
-        ...editingTopic,
-        editedRelatorio: relatorio,
-        relatorio: htmlToPlainText(relatorio)
-      };
-
-            if (isDispositivo) {
-        updatedTopic.editedContent = content;
-      } else if (!isRelatorio) {
-        // Apenas tópicos normais (não RELATÓRIO, não DISPOSITIVO) usam editedFundamentacao
-        updatedTopic.editedFundamentacao = content;
-      }
-
-      // Detectar resultado automaticamente APENAS se não foi escolha manual do usuário
-      // Isso permite re-detecção quando o usuário muda o texto da decisão
-      if (!updatedTopic.resultadoManual) {
-        const resultadoDetectado = await detectResultadoAutomatico(
-          updatedTopic.title || '',
-          content,
-          updatedTopic.category || ''
-        );
-
-        if (resultadoDetectado) {
-          updatedTopic.resultado = resultadoDetectado;
-        }
-      }
-
-      const updatedTopics = selectedTopics.map(t =>
-        t.title === editingTopic.title ? updatedTopic : t
-      );
-      setSelectedTopics(updatedTopics);
-
-      // Atualizar também em extractedTopics
-      const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === editingTopic.title);
-      if (extractedIndex !== -1) {
-        const newExtracted = [...extractedTopics];
-        newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], resultado: updatedTopic.resultado };
-        setExtractedTopics(newExtracted);
-      }
-
-      setLastEditedTopicTitle(editingTopic.title);
-      setEditingTopic(null);
-      modelLibrary.setSuggestions([]);
-      setActiveTab('topics');
-    } finally {
-      setSavingTopic(false);
-    }
-  };
-
-  const saveTopicEditWithoutClosing = async () => {
-    if (!editingTopic) return;
-    setSavingTopic(true);
-    try {
-      const isRelatorio = editingTopic.title.toUpperCase() === 'RELATÓRIO';
-      const isDispositivo = editingTopic.title.toUpperCase() === 'DISPOSITIVO';
-
-      // Validar refs baseado no tipo de tópico
-      if (isRelatorio && !relatorioRef.current) return;
-      if (isDispositivo && !editorRef.current) return;
-      if (!isRelatorio && !isDispositivo && (!editorRef.current || !relatorioRef.current)) return;
-
-      // Capturar conteúdo dos editores (apenas os que existem)
-            const content = editorRef.current ? sanitizeHTML(editorRef.current.root.innerHTML) : '';
-            const relatorio = relatorioRef.current ? sanitizeHTML(relatorioRef.current.root.innerHTML) : '';
-
-      let updatedTopic = {
-        ...editingTopic,
-        editedRelatorio: relatorio,
-        relatorio: htmlToPlainText(relatorio)
-      };
-
-            if (isDispositivo) {
-        updatedTopic.editedContent = content;
-      } else if (!isRelatorio) {
-        // Apenas tópicos normais (não RELATÓRIO, não DISPOSITIVO) usam editedFundamentacao
-        updatedTopic.editedFundamentacao = content;
-      }
-
-      // Botão "Salvar e Fechar" (saveTopicEdit) continua com detecção automática
-
-      const updatedTopics = selectedTopics.map(t =>
-        t.title === editingTopic.title ? updatedTopic : t
-      );
-      setSelectedTopics(updatedTopics);
-
-      // Atualizar também em extractedTopics
-      const extractedIndex = extractedTopics.findIndex((t: Topic) => t.title === editingTopic.title);
-      if (extractedIndex !== -1) {
-        const newExtracted = [...extractedTopics];
-        newExtracted[extractedIndex] = { ...newExtracted[extractedIndex], resultado: updatedTopic.resultado };
-        setExtractedTopics(newExtracted);
-      }
-
-      // Atualizar também o editingTopic com os dados salvos
-      setEditingTopic(updatedTopic);
-
-      setLastEditedTopicTitle(editingTopic.title);
-
-      // Feedback visual simples (sem detecção de resultado)
-      const successMsg = document.createElement('div');
-      successMsg.className = 'fixed top-4 left-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-pulse';
-      successMsg.innerHTML = '<span>✓</span> Salvo!';
-
-      document.body.appendChild(successMsg);
-      setTimeout(() => successMsg.remove(), 3000);
-    } finally {
-      setSavingTopic(false);
     }
   };
 
@@ -2905,7 +2602,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
                   >
                     ⚙️ Configurações IA
                   </button>
-                  {/* ☁️ v1.35.40: Google Drive */}
+                  {/* ☁️ v1.35.40: Google Drive - callbacks extraídos para useGoogleDriveActions */}
                   <GoogleDriveButton
                     isConnected={googleDrive.isConnected}
                     isLoading={googleDrive.isLoading}
@@ -2913,121 +2610,11 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
                     userPhoto={googleDrive.userPhoto}
                     onConnect={googleDrive.connect}
                     onDisconnect={googleDrive.disconnect}
-                    onSave={async () => {
-                      try {
-                        const allStatesWithAI = {
-                          processoNumero,
-                          pastedPeticaoTexts,
-                          pastedContestacaoTexts,
-                          pastedComplementaryTexts,
-                          extractedTopics,
-                          selectedTopics,
-                          partesProcesso,
-                          activeTab,
-                          analyzedDocuments,
-                          proofFiles: proofManager.proofFiles,
-                          proofTexts: proofManager.proofTexts,
-                          proofUsePdfMode: proofManager.proofUsePdfMode,
-                          extractedProofTexts: proofManager.extractedProofTexts,
-                          proofExtractionFailed: proofManager.proofExtractionFailed,
-                          proofTopicLinks: proofManager.proofTopicLinks,
-                          proofAnalysisResults: proofManager.proofAnalysisResults,
-                          proofConclusions: proofManager.proofConclusions,
-                          aiSettings: aiIntegration.aiSettings,
-                          peticaoFiles,
-                          contestacaoFiles,
-                          complementaryFiles,
-                          extractedTexts,
-                          documentProcessingModes,
-                          tokenMetrics: aiIntegration.tokenMetrics
-                        };
-                        // Converter PDFs para base64 para salvar no Drive
-                        const projectJson = await storage.buildProjectJson(allStatesWithAI);
-                        const fileName = `sentencify-${processoNumero || 'projeto'}-${new Date().toISOString().split('T')[0]}.json`;
-                        await googleDrive.saveFile(fileName, projectJson);
-                        // v1.37.97: Usar showToast para feedback visível (antes: setError não aparecia)
-                        showToast(`Projeto salvo no Google Drive: ${fileName}`, 'success');
-                      } catch (err) {
-                        showToast(`Erro ao salvar no Drive: ${(err as Error).message}`, 'error');
-                      }
-                    }}
-                    onLoadClick={async () => {
-                      try {
-                        const files = await googleDrive.listFiles();
-                        setDriveFiles(files);
-                        setDriveFilesModalOpen(true);
-                      } catch (err) {
-                        showToast(`Erro ao listar arquivos: ${(err as Error).message}`, 'error');
-                      }
-                    }}
-                    // v1.35.51: Props para salvar/carregar local (consolidado no dropdown)
-                    onSaveLocal={() => {
-                      const allStatesWithAI = {
-                        processoNumero,
-                        pastedPeticaoTexts,
-                        pastedContestacaoTexts,
-                        pastedComplementaryTexts,
-                        extractedTopics,
-                        selectedTopics,
-                        partesProcesso,
-                        activeTab,
-                        analyzedDocuments,
-                        proofFiles: proofManager.proofFiles,
-                        proofTexts: proofManager.proofTexts,
-                        proofUsePdfMode: proofManager.proofUsePdfMode,
-                        extractedProofTexts: proofManager.extractedProofTexts,
-                        proofExtractionFailed: proofManager.proofExtractionFailed,
-                        proofTopicLinks: proofManager.proofTopicLinks,
-                        proofAnalysisResults: proofManager.proofAnalysisResults,
-                        proofConclusions: proofManager.proofConclusions,
-                        aiSettings: aiIntegration.aiSettings,
-                        peticaoFiles,
-                        contestacaoFiles,
-                        complementaryFiles,
-                        extractedTexts,
-                        documentProcessingModes,
-                        tokenMetrics: aiIntegration.tokenMetrics
-                      };
-                      storage.exportProject(allStatesWithAI, (err: string | null) => setError(err || ''));
-                    }}
-                    onLoadLocal={(e) => {
-                      const callbacks = {
-                        setPastedPeticaoTexts,
-                        setPastedContestacaoTexts,
-                        setPastedComplementaryTexts,
-                        setExtractedTopics,
-                        setSelectedTopics,
-                        setPartesProcesso,
-                        setAnalyzedDocuments,
-                        setProofFiles: proofManager.setProofFiles,
-                        setProofTexts: proofManager.setProofTexts,
-                        setProofUsePdfMode: proofManager.setProofUsePdfMode,
-                        setExtractedProofTexts: proofManager.setExtractedProofTexts,
-                        setProofExtractionFailed: proofManager.setProofExtractionFailed,
-                        setProofTopicLinks: proofManager.setProofTopicLinks,
-                        setProofAnalysisResults: proofManager.setProofAnalysisResults,
-                        setProofConclusions: proofManager.setProofConclusions,
-                        setProofSendFullContent: proofManager.setProofSendFullContent,
-                        setActiveTab,
-                        setAiSettings: aiIntegration.setAiSettings,
-                        setError,
-                        setProcessoNumero,
-                        setPeticaoFiles,
-                        setContestacaoFiles,
-                        setComplementaryFiles,
-                        setExtractedTexts,
-                        setDocumentProcessingModes,
-                        setTokenMetrics: aiIntegration.setTokenMetrics
-                      };
-
-                      const autoSaveFn = (states: SessionState, setErrorFn: (err: string | null) => void, immediate: boolean) => {
-                        return storage.autoSaveSession(states, setErrorFn, immediate);
-                      };
-
-                      storage.importProject(e, callbacks, autoSaveFn);
-                    }}
-                    // v1.35.52: Limpar projeto consolidado no dropdown
-                    onClear={() => openModal('clearProject')}
+                    onSave={googleDriveActions.handleDriveSave}
+                    onLoadClick={googleDriveActions.handleDriveLoadClick}
+                    onSaveLocal={googleDriveActions.handleLocalSave}
+                    onLoadLocal={googleDriveActions.handleLocalLoad}
+                    onClear={googleDriveActions.handleClear}
                     isDarkMode={appTheme === 'dark'}
                   />
                   {/* 🔄 v1.35.57: Botão Sair na mesma linha */}
@@ -3155,283 +2742,55 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
               />
             )}
 
+            {/* v1.38.52: Editor Tab extraído para src/components/tabs/EditorTabContent.tsx */}
             {activeTab === 'editor' && (
-              <div ref={editorContainerRef} className="space-y-6">
-                {!editingTopic ? (
-                  <div className="text-center py-12 theme-text-muted">
-                    <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p>Selecione um tópico na aba "Tópicos" para editar</p>
-                  </div>
-                ) : (
-                  <div className="relative grid lg:grid-cols-3 gap-6">
-                    {/* v1.32.00: Overlay removido - IA roda em worker */}
-                    <div className="lg:col-span-2">
-                      {/* Componente ExtraÃ­do - DecisionEditorContainer */}
-                      <DecisionEditorContainer
-                        ref={editorContainerRef}
-                        editorRef={editorRef}
-                        relatorioRef={relatorioRef}
-                        topic={editingTopic}
-                        onSave={saveTopicEdit}
-                        onCancel={() => {
-                          setLastEditedTopicTitle(editingTopic.title);
-                          setEditingTopic(null);
-                          modelLibrary.setSuggestions([]);
-                          setActiveTab('topics');
-                        }}
-                        onSaveWithoutClosing={saveTopicEditWithoutClosing}
-                        onCategoryChange={handleCategoryChange}
-                        onFundamentacaoChange={handleFundamentacaoChange}
-                        onRelatorioChange={handleRelatorioChange}
-                        onOpenAIAssistant={() => openModal('aiAssistant')}
-                        onOpenJurisModal={() => openModal('jurisIndividual')}
-                        onExtractModel={confirmExtractModel}
-                        onSaveAsModel={saveAsModel}
-                        onRegenerateRelatorio={
-                          isRelatorio(editingTopic)
-                            ? regenerateRelatorioProcessual
-                            : regenerateRelatorioWithInstruction
-                        }
-                        savingTopic={savingTopic}
-                        extractingModel={modelLibrary.extractingModelFromDecision}
-                        showExtractButton={modelLibrary.showExtractModelButton}
-                        regeneratingRelatorio={aiIntegration.regeneratingRelatorio}
-                        relatorioInstruction={aiIntegration.relatorioInstruction}
-                        onInstructionChange={aiIntegration.setRelatorioInstruction}
-                        sanitizeHTML={sanitizeHTML}
-                        selectedTopics={selectedTopics}
-                        setSelectedTopics={setSelectedTopics}
-                        extractedTopics={extractedTopics}
-                        setExtractedTopics={setExtractedTopics}
-                                              getTopicEditorConfig={getTopicEditorConfig}
-                                              quillReady={quillReady}
-                        quillError={quillError}
-                                              onRegenerateDispositivo={regenerateDispositivoWithInstruction}
-                        dispositivoInstruction={aiIntegration.dispositivoInstruction}
-                        onDispositivoInstructionChange={aiIntegration.setDispositivoInstruction}
-                        regeneratingDispositivo={aiIntegration.regeneratingDispositivo}
-                        editorTheme={editorTheme as 'dark' | 'light' | undefined}
-                        toggleEditorTheme={toggleEditorTheme}
-                        models={modelLibrary.models}
-                        onInsertModel={insertModelContent}
-                        onPreviewModel={modelPreview.openPreview}
-                        findSuggestions={findSuggestions}
-                        onSlashCommand={openSlashMenu}
-                        isDirty={isIndividualDirty}
-                        versioning={fieldVersioning}
-                        onOpenFactsComparison={editingTopic?.title?.toUpperCase() !== 'DISPOSITIVO' && editingTopic?.title?.toUpperCase() !== 'RELATÓRIO' ? handleOpenFactsComparisonIndividual : null}
-                      />
-                    </div>
-
-                    <div className="space-y-4">
-                          {/* Painel de Provas Vinculadas */}
-                          {linkedProofs.length > 0 && (
-                          <div className="theme-bg-green-accent rounded-lg border border-green-500/30 overflow-hidden">
-                            <div
-                              className="p-4 border-b border-green-500/30 flex items-center justify-between cursor-pointer hover-proof-panel"
-                              onClick={() => proofManager.setShowProofPanel(!proofManager.showProofPanel)}
-                            >
-                              <div className={CSS.flexGap2}>
-                                <Scale className="w-5 h-5 theme-text-green" />
-                                <h4 className="font-bold theme-text-green">
-                                  Provas Vinculadas ({linkedProofs.length})
-                                </h4>
-                              </div>
-                              <button className="theme-text-green hover-text-green-300">
-                                {proofManager.showProofPanel ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                              </button>
-                            </div>
-
-                            {proofManager.showProofPanel && (
-                              <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
-                                {linkedProofs.map((proof: Proof) => (
-                                  <div
-                                    key={proof.id}
-                                    className="theme-bg-secondary-50 rounded-lg p-3 border theme-border-input"
-                                  >
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                                      <h5 className="font-medium theme-text-secondary text-sm flex-1 truncate">{proof.name}</h5>
-                                      <span className={`px-2 py-0.5 text-xs rounded ${
-                                        (proof.isPdf && proofManager.proofUsePdfMode[proof.id] !== false)
-                                          ? 'theme-bg-red-accent theme-text-red'
-                                          : 'theme-bg-blue-accent theme-text-blue'
-                                      }`}>
-                                        {(proof.isPdf && proofManager.proofUsePdfMode[proof.id] !== false) ? 'PDF' : 'TEXTO'}
-                                      </span>
-                                    </div>
-
-                                    {/* Análises IA (v1.38.27: múltiplas análises) */}
-                                    {proofManager?.proofAnalysisResults?.[proof.id]?.length > 0 && (
-                                      <div className="mb-2 space-y-1">
-                                        {proofManager?.proofAnalysisResults?.[proof.id]?.map((analysis, idx) => (
-                                          <div key={analysis.id} className="p-2 theme-bg-blue-accent border border-blue-500/30 rounded text-xs">
-                                            <div className="flex items-center gap-1 mb-1">
-                                              <Sparkles className="w-3 h-3 theme-text-blue" />
-                                              <span className="font-medium theme-text-blue">
-                                                #{idx + 1} {analysis.type === 'livre' ? 'Análise Livre' : 'Análise Contextual'}
-                                              </span>
-                                            </div>
-                                            <div className="max-h-32 overflow-y-auto">
-                                              <p className="theme-text-tertiary whitespace-pre-wrap">
-                                                {analysis.result}
-                                              </p>
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-
-                                    {/* Conclusões Manuais */}
-                                    {proofManager.proofConclusions[proof.id] && (
-                                      <div className="p-2 theme-bg-green-accent border border-green-500/30 rounded text-xs">
-                                        <div className="flex items-center gap-1 mb-1">
-                                          <Edit className="w-3 h-3 theme-text-green" />
-                                          <span className="font-medium theme-text-green">Minhas Conclusões</span>
-                                        </div>
-                                        <div className="max-h-24 overflow-y-auto">
-                                          <p className="theme-text-tertiary whitespace-pre-wrap">
-                                            {proofManager.proofConclusions[proof.id]}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          )}
-
-                          <h4 className="font-bold text-purple-400">💡 Sugestões de Modelos</h4>
-
-                      {/* Campo de busca manual */}
-                      <div className="theme-bg-secondary-30 rounded-lg p-3 border theme-border-input">
-                        <label className={CSS.label}>
-                          🔍 Busca Manual
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={modelLibrary.manualSearchTerm}
-                            onChange={(e) => {
-                              modelLibrary.setManualSearchTerm(e.target.value);
-                              // v1.33.19: Só faz busca textual se não estiver em modo semântico
-                              if (!useSemanticManualSearch) {
-                                modelLibrary.debouncedManualSearch(e.target.value);
-                              }
-                            }}
-                            placeholder={useSemanticManualSearch ? "Busca por significado..." : "Digite para buscar modelos por título, palavras-chave ou conteúdo..."}
-                            className="flex-1 px-3 py-2 theme-bg-primary border theme-border-input rounded-lg theme-text-primary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
-                          />
-                          {modelLibrary.manualSearchTerm && (
-                            <button
-                              onClick={() => {
-                                modelLibrary.setManualSearchTerm('');
-                                modelLibrary.setManualSearchResults([]);
-                                setSemanticManualSearchResults(null);
-                              }}
-                              className="px-3 py-2 theme-bg-tertiary rounded-lg hover-slate-700 transition-colors text-sm"
-                              title="Limpar busca"
-                            >
-                              ✕
-                            </button>
-                          )}
-                          {/* v1.33.19: Toggle busca semântica/textual */}
-                          {searchModelReady && (
-                            <button
-                              onClick={() => {
-                                // v1.37.49: useModelsStore não aceita função, usar getState()
-                                const current = useModelsStore.getState().useSemanticManualSearch;
-                                setUseSemanticManualSearch(!current);
-                                // Limpar resultados ao alternar modo
-                                modelLibrary.setManualSearchResults([]);
-                                setSemanticManualSearchResults(null);
-                              }}
-                              className={`px-2 py-1 rounded text-sm transition-colors ${
-                                useSemanticManualSearch
-                                  ? 'bg-purple-600 text-white hover:bg-purple-700'
-                                  : 'theme-bg-tertiary theme-text-secondary hover:bg-slate-600'
-                              }`}
-                              title={useSemanticManualSearch ? 'Busca semântica (por significado)' : 'Busca textual (por palavras)'}
-                            >
-                              {useSemanticManualSearch ? '🧠' : '🔤'}
-                            </button>
-                          )}
-                        </div>
-                        {semanticManualSearching && (
-                          <p className="text-xs text-purple-400 mt-2 flex items-center gap-1">
-                            <span className="animate-spin inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full"></span>
-                            Buscando por significado...
-                          </p>
-                        )}
-                        {!semanticManualSearching && modelLibrary.manualSearchTerm && modelLibrary.manualSearchResults.length > 0 && (
-                          <p className="text-xs theme-text-muted mt-2">
-                            {modelLibrary.manualSearchResults.length} modelo{modelLibrary.manualSearchResults.length > 1 ? 's' : ''} encontrado{modelLibrary.manualSearchResults.length > 1 ? 's' : ''}
-                            {useSemanticManualSearch && <span className="ml-1 text-purple-400">(semântica)</span>}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Resultados da busca manual */}
-                      {modelLibrary.manualSearchResults.length > 0 ? (
-                        <div className="space-y-3">
-                          <p className="text-sm text-blue-400 font-medium">Resultados da Busca:</p>
-                          {modelLibrary.manualSearchResults.map((model, idx) => (
-                            <SuggestionCard
-                              key={model.id || `manual-${idx}`}
-                              model={model}
-                              similarity={model.similarity}
-                              index={idx}
-                              totalSuggestions={modelLibrary.manualSearchResults.length}
-                              onPreview={modelPreview.openPreview}
-                              onInsert={insertModelContent}
-                              sanitizeHTML={sanitizeHTML}
-                              showRanking={false}
-                            />
-                          ))}
-                        </div>
-                      ) : modelLibrary.manualSearchTerm && modelLibrary.manualSearchResults.length === 0 ? (
-                        <p className="theme-text-muted text-sm">Nenhum modelo encontrado para "{modelLibrary.manualSearchTerm}"</p>
-                      ) : (
-                        <>
-                          {/* Sugestões automáticas */}
-                          <div className="border-t theme-border-input pt-4">
-                            <p className="text-sm theme-text-muted font-medium mb-3 flex items-center gap-2">Sugestões Automáticas:{modelLibrary.suggestionsSource === 'local' && <span className="bg-purple-600 text-white px-1.5 py-0.5 rounded text-[10px]">🤖 IA Local</span>}</p>
-                            {modelLibrary.loadingSuggestions ? (
-                              <div className="flex flex-col items-center justify-center py-8 space-y-3">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
-                                <p className="theme-text-muted text-sm text-center">
-                                  Analisando modelos relevantes com IA...
-                                </p>
-                              </div>
-                            ) : modelLibrary.suggestions.length === 0 ? (
-                              <p className="theme-text-muted text-sm">Nenhum modelo sugerido automaticamente</p>
-                            ) : (
-                              <div className="space-y-3">
-                                {modelLibrary.suggestions.map((model, idx) => (
-                                  <SuggestionCard
-                                    key={model.id || idx}
-                                    model={model}
-                                    similarity={model.similarity}
-                                    index={idx}
-                                    totalSuggestions={modelLibrary.suggestions.length}
-                                    onPreview={modelPreview.openPreview}
-                                    onInsert={insertModelContent}
-                                    sanitizeHTML={sanitizeHTML}
-                                    showRanking={true}
-                                  />
-                                ))}
-                              </div>
-                              )
-                            }
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <EditorTabContent
+                editorContainerRef={editorContainerRef}
+                editorRef={editorRef}
+                relatorioRef={relatorioRef}
+                editingTopic={editingTopic}
+                selectedTopics={selectedTopics}
+                extractedTopics={extractedTopics}
+                setSelectedTopics={setSelectedTopics}
+                setExtractedTopics={setExtractedTopics}
+                setEditingTopic={setEditingTopic}
+                setLastEditedTopicTitle={setLastEditedTopicTitle}
+                setActiveTab={setActiveTab}
+                linkedProofs={linkedProofs}
+                modelLibrary={modelLibrary}
+                modelPreview={modelPreview}
+                proofManager={proofManager}
+                aiIntegration={aiIntegration}
+                saveTopicEdit={saveTopicEdit}
+                saveTopicEditWithoutClosing={saveTopicEditWithoutClosing}
+                savingTopic={savingTopic}
+                handleCategoryChange={handleCategoryChange}
+                handleFundamentacaoChange={handleFundamentacaoChange}
+                handleRelatorioChange={handleRelatorioChange}
+                regenerateRelatorioWithInstruction={regenerateRelatorioWithInstruction}
+                regenerateRelatorioProcessual={regenerateRelatorioProcessual}
+                regenerateDispositivoWithInstruction={regenerateDispositivoWithInstruction}
+                confirmExtractModel={confirmExtractModel}
+                saveAsModel={saveAsModel}
+                insertModelContent={insertModelContent}
+                findSuggestions={findSuggestions}
+                getTopicEditorConfig={getTopicEditorConfig}
+                quillReady={quillReady}
+                quillError={quillError}
+                editorTheme={editorTheme as 'dark' | 'light' | undefined}
+                toggleEditorTheme={toggleEditorTheme}
+                isIndividualDirty={isIndividualDirty}
+                fieldVersioning={fieldVersioning}
+                handleOpenFactsComparisonIndividual={handleOpenFactsComparisonIndividual}
+                openSlashMenu={openSlashMenu}
+                openModal={openModal as (modal: string) => void}
+                sanitizeHTML={sanitizeHTML}
+                searchModelReady={searchModelReady}
+                useSemanticManualSearch={useSemanticManualSearch}
+                setUseSemanticManualSearch={setUseSemanticManualSearch}
+                semanticManualSearching={semanticManualSearching}
+                setSemanticManualSearchResults={setSemanticManualSearchResults}
+              />
             )}
 
             {activeTab === 'jurisprudencia' && (
@@ -3668,82 +3027,18 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       />
 
       {/* v1.35.40: Modal de arquivos do Google Drive */}
+      {/* v1.38.52: Callbacks extraídos para useDriveFileHandlers hook */}
       <DriveFilesModal
         isOpen={driveFilesModalOpen}
         onClose={() => setDriveFilesModalOpen(false)}
         files={driveFiles}
         isLoading={googleDrive.isLoading}
-        onLoad={async (file: DriveFile) => {
-          try {
-            const projectData = await googleDrive.loadFile(file.id);
-            // Simular evento de importação de arquivo
-            const callbacks = {
-              setPastedPeticaoTexts,
-              setPastedContestacaoTexts,
-              setPastedComplementaryTexts,
-              setExtractedTopics,
-              setSelectedTopics,
-              setPartesProcesso,
-              setAnalyzedDocuments,
-              setProofFiles: proofManager.setProofFiles,
-              setProofTexts: proofManager.setProofTexts,
-              setProofUsePdfMode: proofManager.setProofUsePdfMode,
-              setExtractedProofTexts: proofManager.setExtractedProofTexts,
-              setProofExtractionFailed: proofManager.setProofExtractionFailed,
-              setProofTopicLinks: proofManager.setProofTopicLinks,
-              setProofAnalysisResults: proofManager.setProofAnalysisResults,
-              setProofConclusions: proofManager.setProofConclusions,
-              setProofSendFullContent: proofManager.setProofSendFullContent,
-              setActiveTab,
-              setAiSettings: aiIntegration.setAiSettings,
-              setError,
-              setProcessoNumero,
-              setPeticaoFiles,
-              setContestacaoFiles,
-              setComplementaryFiles,
-              setExtractedTexts,
-              setDocumentProcessingModes,
-              setTokenMetrics: aiIntegration.setTokenMetrics
-            };
-            await storage.importProjectFromJson(projectData as ImportedProject, callbacks, async (allStates) => {
-              await storage.autoSaveSession(allStates, (err) => err && setError(err), true);
-            });
-            setDriveFilesModalOpen(false);
-            setError({ type: 'success', message: `Projeto carregado do Google Drive: ${file.name}` });
-          } catch (err) {
-            setError({ type: 'error', message: `Erro ao carregar projeto: ${(err as Error).message}` });
-          }
-        }}
-        onDelete={async (file: DriveFile) => {
-          try {
-            await googleDrive.deleteFile(file.id);
-            // v1.37.49: useUIStore não aceita função, usar getState()
-            const currentFiles = useUIStore.getState().driveFilesList;
-            setDriveFiles(currentFiles.filter(f => f.id !== file.id));
-            setError({ type: 'success', message: `Arquivo excluído: ${file.name}` });
-          } catch (err) {
-            setError({ type: 'error', message: `Erro ao excluir: ${(err as Error).message}` });
-          }
-        }}
-        onShare={async (fileId, email, role) => {
-          try {
-            await googleDrive.shareFile(fileId, email, role as 'writer' | 'reader');
-            const roleText = role === 'writer' ? 'edição' : 'visualização';
-            setError({ type: 'success', message: `Compartilhado com ${email} (${roleText})` });
-          } catch (err) {
-            setError({ type: 'error', message: `Erro ao compartilhar: ${(err as Error).message}` });
-          }
-        }}
-        onRefresh={async () => {
-          try {
-            const files = await googleDrive.listFiles();
-            setDriveFiles(files);
-          } catch (err) {
-            setError({ type: 'error', message: `Erro ao atualizar: ${(err as Error).message}` });
-          }
-        }}
-        onGetPermissions={googleDrive.getPermissions}
-        onRemovePermission={googleDrive.removePermission}
+        onLoad={driveFileHandlers.handleDriveLoad}
+        onDelete={driveFileHandlers.handleDriveDelete}
+        onShare={driveFileHandlers.handleDriveShare}
+        onRefresh={driveFileHandlers.handleDriveRefresh}
+        onGetPermissions={driveFileHandlers.handleDriveGetPermissions}
+        onRemovePermission={driveFileHandlers.handleDriveRemovePermission}
         userEmail={googleDrive.userEmail}
         isDarkMode={appTheme === 'dark'}
       />
@@ -3816,11 +3111,7 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         API_BASE={API_BASE}
       />
 
-      {/* v1.37.51: ChangelogModal extraído para componente */}
-      <ChangelogModal />
-
-      {/* v1.37.59: Double Check Review Modal */}
-      <DoubleCheckReviewModal />
+      {/* v1.38.51: ChangelogModal e DoubleCheckReviewModal movidos para ModalRoot */}
 
       {/* v1.37.51: Modais de Download extraídos para componentes */}
       <DataDownloadModal
@@ -3838,113 +3129,30 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       />
 
       {/* Modal de Restaurar Sessão */}
+      {/* v1.38.52: Callbacks extraídos para useSessionCallbacks hook */}
       <RestoreSessionModal
         isOpen={modals.restoreSession}
         onClose={() => closeModal('restoreSession')}
         sessionLastSaved={storage.sessionLastSaved}
-        onRestoreSession={() => {
-          const callbacks = {
-            setPastedPeticaoTexts,
-            setPastedContestacaoTexts,
-            setPastedComplementaryTexts,
-            setExtractedTopics,
-            setSelectedTopics,
-            setPartesProcesso,
-            setAnalyzedDocuments,
-            // v1.13.7: Adicionar setters de arquivos de Upload para restaurar PDFs do IndexedDB
-            setPeticaoFiles,
-            setContestacaoFiles,
-            setComplementaryFiles,
-            setExtractedTexts,
-            setDocumentProcessingModes,
-            setProofFiles: proofManager.setProofFiles,
-            setProofTexts: proofManager.setProofTexts,
-            setProofUsePdfMode: proofManager.setProofUsePdfMode,
-            setExtractedProofTexts: proofManager.setExtractedProofTexts,
-            setProofExtractionFailed: proofManager.setProofExtractionFailed,
-            setProofTopicLinks: proofManager.setProofTopicLinks,
-            setProofAnalysisResults: proofManager.setProofAnalysisResults,
-            setProofConclusions: proofManager.setProofConclusions,
-            setProofSendFullContent: proofManager.setProofSendFullContent,
-            setActiveTab,
-            closeModal,
-            setError,
-            setProcessoNumero,
-            setTokenMetrics: aiIntegration.setTokenMetrics // v1.20.3: Contador de tokens
-          };
-          storage.restoreSession(callbacks);
-        }}
-        onStartNew={() => {
-          closeModal('restoreSession');
-          openModal('clearProject');
-        }}
+        onRestoreSession={sessionCallbacks.handleRestoreSession}
+        onStartNew={sessionCallbacks.handleStartNew}
       />
 
       {/* Modal de Confirmação de Limpeza de Projeto */}
+      {/* v1.38.52: Callbacks extraídos para useSessionCallbacks hook */}
       <ClearProjectModal
         isOpen={modals.clearProject}
-        onClose={() => {
-          closeModal('clearProject');
-          openModal('restoreSession');
-        }}
-        onConfirmClear={() => {
-          const callbacks = {
-            // Callbacks de restauração
-            setPastedPeticaoTexts,
-            setPastedContestacaoTexts,
-            setPastedComplementaryTexts,
-            setExtractedTopics,
-            setSelectedTopics,
-            setPartesProcesso,
-            setAnalyzedDocuments,
-            setProofFiles: proofManager.setProofFiles,
-            setProofTexts: proofManager.setProofTexts,
-            setProofUsePdfMode: proofManager.setProofUsePdfMode,
-            setExtractedProofTexts: proofManager.setExtractedProofTexts,
-            setProofExtractionFailed: proofManager.setProofExtractionFailed,
-            setProofTopicLinks: proofManager.setProofTopicLinks,
-            setProofAnalysisResults: proofManager.setProofAnalysisResults,
-            setProofConclusions: proofManager.setProofConclusions,
-            setProofSendFullContent: proofManager.setProofSendFullContent,
-            setActiveTab,
-            closeModal,
-            setError,
-            setProcessoNumero,
-            // Callbacks adicionais para limpeza (múltiplos)
-            setPeticaoFiles,
-            setContestacaoFiles,
-            setComplementaryFiles,
-            // v1.13.7: Adicionar setters de textos extraídos e modos de processamento
-            setExtractedTexts,
-            setDocumentProcessingModes,
-            setProofToDelete: proofManager.setProofToDelete,
-            setProofToLink: proofManager.setProofToLink,
-            setProofToAnalyze: proofManager.setProofToAnalyze,
-            clearAnalyzingProofs: proofManager.clearAnalyzingProofs,
-            setShowProofPanel: proofManager.setShowProofPanel,
-            setNewProofTextData: proofManager.setNewProofTextData,
-            setTokenMetrics: aiIntegration.setTokenMetrics // v1.20.3: Contador de tokens
-          };
-          storage.clearProject(callbacks);
-          // v1.25.19: Limpar nomes de anonimização ao limpar projeto
-          aiIntegration.setAiSettings(prev => ({
-            ...prev,
-            anonymization: { ...prev.anonymization, nomesUsuario: [] }
-          }));
-          setAnonymizationNamesText('');
-        }}
+        onClose={sessionCallbacks.handleCloseClearProject}
+        onConfirmClear={sessionCallbacks.handleConfirmClear}
       />
 
       {/* v1.33.57: Modal de Confirmação de Logout */}
-      {onLogout && (
+      {/* v1.38.52: Callbacks extraídos para useSessionCallbacks hook */}
+      {onLogout !== undefined && (
         <LogoutConfirmModal
           isOpen={modals.logout}
-          onClose={() => closeModal('logout')}
-          onConfirm={() => {
-            closeModal('logout');
-            onLogout();
-            window.location.reload();
-          }}
+          onClose={sessionCallbacks.handleCloseLogout}
+          onConfirm={sessionCallbacks.handleConfirmLogout}
         />
       )}
 
@@ -4185,175 +3393,47 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
       {/* v1.4.6: Removido Mini-toolbar flutuante (76 linhas) */}
       {/* v1.4.8: Removido Toolbar Fixa no Topo (82 linhas) - não mais necessária com editor de altura fixa */}
 
-      {/* Modal: Adicionar Prova (Texto) */}
+      {/* Modal: Adicionar Prova (Texto) - v1.38.52: callback extraído para useProofModalCallbacks */}
       <AddProofTextModal
         isOpen={modals.addProofText}
         onClose={() => closeModal('addProofText')}
         newProofData={proofManager.newProofTextData}
         setNewProofData={proofManager.setNewProofTextData}
-        onAddProof={() => {
-          if (proofManager.newProofTextData.text.trim()) {
-            const anonConfig = aiIntegration?.aiSettings?.anonymization;
-            const anonymizationEnabled = anonConfig?.enabled;
-
-            // v1.21.3: Se anonimização ativa, abrir modal para confirmar nomes
-            if (anonymizationEnabled) {
-              proofManager.setPendingProofText({
-                name: proofManager.newProofTextData.name.trim() || 'Prova (texto)',
-                text: proofManager.newProofTextData.text.trim()
-              });
-              closeModal('addProofText');
-              openModal('proofTextAnonymization');
-            } else {
-              // Salvar diretamente sem anonimização
-              const id = Date.now() + Math.random();
-              const name = proofManager.newProofTextData.name.trim() || 'Prova (texto)';
-              proofManager.setProofTexts(prev => [...prev, {
-                id,
-                text: proofManager.newProofTextData.text.trim(),
-                name,
-                type: 'text',
-                uploadDate: new Date().toISOString()
-              }]);
-              closeModal('addProofText');
-              proofManager.setNewProofTextData({ name: '', text: '' });
-            }
-          }
-        }}
+        onAddProof={handleAddProofText}
       />
 
-      {/* v1.21.3: Modal de Nomes para Anonimização de Prova de Texto */}
+      {/* v1.21.3: Modal de Nomes para Anonimização de Prova de Texto - v1.38.52: callbacks extraídos */}
       <AnonymizationNamesModal
         isOpen={modals.proofTextAnonymization}
-        onClose={() => {
-          closeModal('proofTextAnonymization');
-          proofManager.setPendingProofText(null);
-          proofManager.setNewProofTextData({ name: '', text: '' });
-        }}
-        onConfirm={(nomes: string[]) => {
-          if (proofManager.pendingProofText) {
-            const anonConfig = aiIntegration?.aiSettings?.anonymization;
-            // Persistir nomes para uso futuro
-            aiIntegration.setAiSettings((prev: AISettings) => ({
-              ...prev,
-              anonymization: {
-                ...prev.anonymization,
-                nomesUsuario: nomes
-              }
-            }));
-            // Anonimizar e salvar prova
-            const pendingProof = proofManager.pendingProofText;
-            if (!pendingProof) return;
-            const id = Date.now() + Math.random();
-            const anonText = anonymizeText(pendingProof.text, anonConfig, nomes);
-            proofManager.setProofTexts((prev: ProofText[]) => [...prev, {
-              id,
-              text: anonText,
-              name: pendingProof.name,
-              type: 'text',
-              uploadDate: new Date().toISOString()
-            }]);
-            closeModal('proofTextAnonymization');
-            proofManager.setPendingProofText(null);
-            proofManager.setNewProofTextData({ name: '', text: '' });
-            showToast('✅ Prova de texto adicionada com anonimização', 'success');
-          }
-        }}
+        onClose={handleProofTextAnonymizationClose}
+        onConfirm={handleProofTextAnonymizationConfirm}
         nomesTexto={anonymizationNamesText}
         setNomesTexto={setAnonymizationNamesText}
         nerEnabled={nerEnabled}
         detectingNames={detectingNames}
-        onDetectNames={async () => {
-          setDetectingNames(true);
-          try { await detectarNomesAutomaticamente(proofManager.pendingProofText?.text, true); }
-          catch { setDetectingNames(false); }
-        }}
+        onDetectNames={handleProofTextAnonymizationDetect}
         onOpenAiSettings={() => { closeModal('proofTextAnonymization'); openModal('settings'); }}
       />
 
-      {/* v1.21.5: Modal de Nomes para Anonimização de Extração de PDF */}
+      {/* v1.21.5: Modal de Nomes para Anonimização de Extração de PDF - v1.38.52: callbacks extraídos */}
       <AnonymizationNamesModal
         isOpen={modals.proofExtractionAnonymization}
-        onClose={() => {
-          closeModal('proofExtractionAnonymization');
-          proofManager.setPendingExtraction(null);
-        }}
-        onConfirm={(nomes: string[]) => {
-          if (proofManager.pendingExtraction) {
-            // Persistir nomes para uso futuro
-            aiIntegration.setAiSettings((prev: AISettings) => ({
-              ...prev,
-              anonymization: {
-                ...prev.anonymization,
-                nomesUsuario: nomes
-              }
-            }));
-            // Executar extração com nomes confirmados
-            proofManager.pendingExtraction?.executeExtraction?.(nomes);
-            closeModal('proofExtractionAnonymization');
-            proofManager.setPendingExtraction(null);
-            showToast('📝 Extraindo texto com anonimização...', 'info');
-          }
-        }}
+        onClose={handleProofExtractionAnonymizationClose}
+        onConfirm={handleProofExtractionAnonymizationConfirm}
         nomesTexto={anonymizationNamesText}
         setNomesTexto={setAnonymizationNamesText}
         nerEnabled={nerEnabled}
         detectingNames={detectingNames}
-        onDetectNames={async () => {
-          // v1.36.40: Fix - usar extractTextFromPDFWithMode com modo selecionado (Tesseract, etc.)
-          setDetectingNames(true);
-          try {
-            const proofId = proofManager.pendingExtraction?.proofId;
-            const proof = proofManager.pendingExtraction?.proof as ProofFile | undefined;
-
-            if (!proof || !proof.file) {
-              showToast('Prova não encontrada ou arquivo indisponível', 'error');
-              setDetectingNames(false);
-              return;
-            }
-
-            // Usar o modo de extração selecionado pelo usuário
-            const userMode = proofManager.proofProcessingModes[proofId as string] || 'pdfjs';
-            // Bloquear modos binários (anonimização sempre exige texto)
-            const blockedModes = ['claude-vision', 'pdf-puro'];
-            const selectedMode = blockedModes.includes(userMode) ? 'pdfjs' : userMode;
-
-            // Extrair texto com o modo correto (PDF.js ou Tesseract)
-            const extractedText = await documentServices.extractTextFromPDFWithMode(proof.file, selectedMode, null);
-
-            if (extractedText && extractedText.trim().length > 50) {
-              await detectarNomesAutomaticamente(extractedText, true);
-            } else {
-              showToast('PDF sem texto extraível. Tente modo Tesseract OCR.', 'error');
-              setDetectingNames(false);
-            }
-          } catch (err) {
-            console.error('[NER] Erro ao extrair PDF para NER:', err);
-            showToast('Erro ao extrair texto do PDF', 'error');
-            setDetectingNames(false);
-          }
-        }}
+        onDetectNames={handleProofExtractionAnonymizationDetect}
         onOpenAiSettings={() => { closeModal('proofExtractionAnonymization'); openModal('settings'); }}
       />
 
-      {/* v1.21.16: Modal de Preview de Texto Extraído */}
-      <TextPreviewModal
-        isOpen={textPreview.isOpen}
-        onClose={() => setTextPreview({ isOpen: false, title: '', text: '' })}
-        title={textPreview.title}
-        text={textPreview.text}
-      />
+      {/* v1.38.51: TextPreviewModal movido para ModalRoot */}
 
-      {/* Modal: Seleção de Tipo de Análise de Prova */}
+      {/* Modal: Seleção de Tipo de Análise de Prova - v1.38.52: callbacks extraídos */}
       <ProofAnalysisModal
         isOpen={modals.proofAnalysis}
-        onClose={() => {
-          closeModal('proofAnalysis');
-          proofManager.setProofToAnalyze(null);
-          proofManager.setProofAnalysisCustomInstructions('');
-          proofManager.setUseOnlyMiniRelatorios(false);
-          proofManager.setIncludeLinkedTopicsInFree(false);
-        }}
+        onClose={handleProofAnalysisClose}
         proofToAnalyze={proofManager.proofToAnalyze}
         customInstructions={proofManager.proofAnalysisCustomInstructions}
         setCustomInstructions={proofManager.setProofAnalysisCustomInstructions}
@@ -4363,26 +3443,8 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         setIncludeLinkedTopicsInFree={proofManager.setIncludeLinkedTopicsInFree}
         proofTopicLinks={proofManager.proofTopicLinks}
         editorTheme={editorTheme}
-        onAnalyzeContextual={async () => {
-          closeModal('proofAnalysis');
-          if (proofManager.proofToAnalyze) {
-            await analyzeProof(proofManager.proofToAnalyze, 'contextual', proofManager.proofAnalysisCustomInstructions, proofManager.useOnlyMiniRelatorios, false);
-          }
-          proofManager.setProofToAnalyze(null);
-          proofManager.setProofAnalysisCustomInstructions('');
-          proofManager.setUseOnlyMiniRelatorios(false);
-          proofManager.setIncludeLinkedTopicsInFree(false);
-        }}
-        onAnalyzeFree={async () => {
-          closeModal('proofAnalysis');
-          if (proofManager.proofToAnalyze) {
-            await analyzeProof(proofManager.proofToAnalyze, 'livre', proofManager.proofAnalysisCustomInstructions, false, proofManager.includeLinkedTopicsInFree);
-          }
-          proofManager.setProofToAnalyze(null);
-          proofManager.setProofAnalysisCustomInstructions('');
-          proofManager.setUseOnlyMiniRelatorios(false);
-          proofManager.setIncludeLinkedTopicsInFree(false);
-        }}
+        onAnalyzeContextual={handleAnalyzeContextual}
+        onAnalyzeFree={handleAnalyzeFree}
       />
 
       {/* Modal: Vincular Prova a Tópicos */}
@@ -4398,33 +3460,12 @@ Não adicione explicações, pontos finais ou outros caracteres. Apenas a palavr
         setProofTopicLinks={proofManager.setProofTopicLinks}
       />
 
-      {/* Modal: Confirmar Exclusão de Prova */}
+      {/* Modal: Confirmar Exclusão de Prova - v1.38.52: callbacks extraídos */}
       <DeleteProofModal
         isOpen={modals.deleteProof}
-        onClose={() => {
-          closeModal('deleteProof');
-          proofManager.setProofToDelete(null);
-        }}
+        onClose={handleDeleteProofClose}
         proofToDelete={proofManager.proofToDelete}
-        onConfirmDelete={async () => {
-          const proofToDelete = proofManager.proofToDelete;
-          if (!proofToDelete) return;
-
-          // v1.36.32: Limpar IndexedDB se for PDF
-          if (proofToDelete.isPdf || ('type' in proofToDelete && proofToDelete.type === 'pdf')) {
-            try {
-              await removePdfFromIndexedDB(`proof-${proofToDelete.id}`);
-            } catch (err) {
-              console.warn('[App] Falha ao remover PDF do IndexedDB:', err);
-            }
-          }
-
-          // v1.36.32: Usar handler existente do hook (tipagem correta, limpa todos os estados)
-          proofManager.handleDeleteProof(proofToDelete);
-
-          closeModal('deleteProof');
-          proofManager.setProofToDelete(null);
-        }}
+        onConfirmDelete={handleDeleteProofConfirm}
       />
 
       {/* v1.37.51: AutoSaveIndicator extraído para componente */}

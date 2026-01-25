@@ -1,7 +1,7 @@
 /**
  * @file ModalRoot.tsx
  * @description Componente centralizado para renderizar todos os modais da aplicação
- * @version 1.37.74
+ * @version 1.38.51
  *
  * Este componente lê estado diretamente dos stores Zustand, eliminando
  * a necessidade de prop drilling do App.tsx para a maioria dos modais.
@@ -11,7 +11,9 @@
  * - DeleteModelModal
  * - DeleteAllModelsModal
  * - ExportModal
- * - RestoreSessionModal, ClearProjectModal, LogoutConfirmModal
+ * - TextPreviewModal (v1.38.51)
+ * - ChangelogModal (v1.38.51)
+ * - DoubleCheckReviewModal (v1.38.51)
  * - BulkDiscardConfirmModal
  *
  * MODAIS COM HANDLERS (props mínimas):
@@ -23,6 +25,8 @@
  * - GlobalEditorModal (precisa de muitas dependências)
  * - DriveFilesModal (precisa de googleDrive hook)
  * - AIAssistantModal (precisa de chatAssistant hook)
+ * - RestoreSessionModal, ClearProjectModal (callbacks de storage)
+ * - LogoutConfirmModal (precisa de onLogout prop)
  *
  * @usedBy App.tsx
  */
@@ -59,7 +63,10 @@ import {
   BulkDiscardConfirmModal,
   ExportModal,
   ExtractedModelPreviewModal,
-  SimilarityWarningModal
+  SimilarityWarningModal,
+  TextPreviewModal,
+  ChangelogModal,
+  DoubleCheckReviewModal
 } from './index';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -114,6 +121,7 @@ export interface ModalRootProps {
 
   /** Callback para rastrear mudanças para sync na nuvem */
   trackChange?: (operation: 'create' | 'update' | 'delete', model: { id: string; updatedAt?: string }) => void;
+
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -174,6 +182,9 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
   const copySuccess = useUIStore((s) => s.copySuccess);
   const setCopySuccess = useUIStore((s) => s.setCopySuccess);
   const setError = useUIStore((s) => s.setError);
+  // v1.38.51: TextPreview (migrado do App.tsx)
+  const textPreview = useUIStore((s) => s.textPreview);
+  const closeTextPreview = useUIStore((s) => s.closeTextPreview);
 
   // Topics Store
   const topicToDelete = useTopicsStore((s) => s.topicToDelete);
@@ -365,6 +376,24 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
           onConfirm={onBulkDiscard}
         />
       )}
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* MODAIS DE PREVIEW (v1.38.51) */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+
+      <TextPreviewModal
+        isOpen={textPreview.isOpen}
+        onClose={closeTextPreview}
+        title={textPreview.title}
+        text={textPreview.text}
+      />
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* MODAIS AUTÔNOMOS (100% Zustand, sem props) - v1.38.51 */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+
+      <ChangelogModal />
+      <DoubleCheckReviewModal />
     </>
   );
 };

@@ -387,6 +387,19 @@ export interface DoubleCheckCorrectionWithSelection extends DoubleCheckCorrectio
   description: string;
 }
 
+/**
+ * Tipo centralizado para a função performDoubleCheck
+ * Usado em: useDocumentAnalysis, useDecisionTextGeneration, useProofAnalysis, useReportGeneration
+ * @since v1.38.50
+ */
+export type PerformDoubleCheckFunction = (
+  operation: DoubleCheckOperation,
+  originalResponse: string,
+  context: AIMessageContent[],
+  onProgress?: (msg: string) => void,
+  userPrompt?: string
+) => Promise<PerformDoubleCheckReturn & { failed?: boolean }>;
+
 // ═══════════════════════════════════════════════════════════════════════════
 // OPENAI/GROK TYPES (v1.35.97)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1864,11 +1877,7 @@ export interface GlobalEditorModalProps {
   aiIntegration?: {
     aiSettings: AISettings;
     callAI: (messages: AIMessage[], options?: AICallOptions) => Promise<string>;
-    performDoubleCheck?: (
-      operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison',
-      originalResponse: string,
-      context: AIMessageContent[]  // v1.37.68: mudou de string para array
-    ) => Promise<PerformDoubleCheckReturn>;
+    performDoubleCheck?: PerformDoubleCheckFunction;
   } | null;
   detectResultadoAutomatico?: ((topicTitle: string, fundamentacao: string, category: TopicCategory) => Promise<string | null>) | null;
   onSlashCommand?: OnSlashCommandCallback | null;

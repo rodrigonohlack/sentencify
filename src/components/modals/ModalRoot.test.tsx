@@ -26,6 +26,10 @@ vi.mock('./index', () => ({
   ExportModal: (props: any) => props.isOpen ? <div data-testid="export-modal">ExportModal</div> : null,
   ExtractedModelPreviewModal: (props: any) => props.isOpen ? <div data-testid="extracted-model-preview-modal">ExtractedModelPreviewModal</div> : null,
   SimilarityWarningModal: (props: any) => props.warning ? <div data-testid="similarity-warning-modal">SimilarityWarningModal</div> : null,
+  // v1.38.51: Novos modais migrados para ModalRoot
+  TextPreviewModal: (props: any) => props.isOpen ? <div data-testid="text-preview-modal">TextPreviewModal</div> : null,
+  ChangelogModal: () => <div data-testid="changelog-modal">ChangelogModal</div>,
+  DoubleCheckReviewModal: () => <div data-testid="double-check-review-modal">DoubleCheckReviewModal</div>,
 }));
 
 // Mock stores
@@ -47,6 +51,8 @@ const mockOpenModal = vi.fn();
 const mockSetCopySuccess = vi.fn();
 const mockSetError = vi.fn();
 
+const mockCloseTextPreview = vi.fn();
+
 vi.mock('../../stores/useUIStore', () => ({
   useUIStore: (selector: any) => {
     const state = {
@@ -56,6 +62,9 @@ vi.mock('../../stores/useUIStore', () => ({
       copySuccess: false,
       setCopySuccess: mockSetCopySuccess,
       setError: mockSetError,
+      // v1.38.51: TextPreview state
+      textPreview: { isOpen: false, title: '', text: '' },
+      closeTextPreview: mockCloseTextPreview,
     };
     return selector(state);
   },

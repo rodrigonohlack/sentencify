@@ -1,11 +1,12 @@
 /**
  * @file useLocalStorage.ts
  * @description Hook para persistência de sessão e projeto (localStorage + IndexedDB)
- * @version 1.38.16
+ * @version 1.38.52
  * @tier 0 (sem dependências de outros hooks do projeto, exceto cache helpers)
  * @extractedFrom App.tsx linhas 2452-3664
  * @usedBy App.tsx (autoSaveSession, restoreSession, exportProject, importProject, clearProject)
  *
+ * v1.38.52: PDF helpers extraídos para usePdfStorage.ts
  * v1.38.16: Export/import de chatHistory inclui includeMainDocs (suporta formato legado)
  */
 
@@ -39,234 +40,32 @@ import type {
 import { useAIStore } from '../stores/useAIStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// PDF INDEXEDDB HELPERS
+// PDF INDEXEDDB HELPERS (v1.38.52: Extracted to usePdfStorage.ts)
+// Re-export for backwards compatibility
 // ═══════════════════════════════════════════════════════════════════════════
 
-const PDF_DB_NAME = 'sentencify-pdfs';
-const PDF_STORE_NAME = 'pdfs';
-const PDF_DB_VERSION = 1;
+import {
+  savePdfToIndexedDB,
+  getPdfFromIndexedDB,
+  removePdfFromIndexedDB,
+  clearAllPdfsFromIndexedDB,
+} from './usePdfStorage';
 
-const openPdfDB = (): Promise<IDBDatabase> => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(PDF_DB_NAME, PDF_DB_VERSION);
+// Re-export all PDF functions for backwards compatibility
+export {
+  savePdfToIndexedDB,
+  getPdfFromIndexedDB,
+  removePdfFromIndexedDB,
+  clearAllPdfsFromIndexedDB,
+} from './usePdfStorage';
 
-    request.onerror = () => {
-      reject(request.error);
-    };
-
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(PDF_STORE_NAME)) {
-        // Store com chave 'id' (formato: 'upload-{index}' ou 'proof-{id}')
-        db.createObjectStore(PDF_STORE_NAME, { keyPath: 'id' });
-      }
-    };
-  });
-};
-
-// Tipo para registro de PDF no IndexedDB
-interface PdfRecord {
-  id: string;
-  data: ArrayBuffer;
-  mimeType: string;
-  fileName: string;
-  savedAt: number;
-}
-
-/**
- * Salva um PDF no IndexedDB
- */
-export const savePdfToIndexedDB = async (id: string, file: File, type: string) => {
-  try {
-    // Converter File para ArrayBuffer ANTES de abrir transação
-    // (evita TransactionInactiveError quando chamado em paralelo)
-    const arrayBuffer = await file.arrayBuffer();
-
-    const db = await openPdfDB();
-    const transaction = db.transaction([PDF_STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(PDF_STORE_NAME);
-
-    const pdfRecord = {
-      id,
-      type,
-      fileName: file.name,
-      fileSize: file.size,
-      mimeType: file.type,
-      data: arrayBuffer,
-      savedAt: Date.now()
-    };
-
-    await new Promise<void>((resolve, reject) => {
-      const request = store.put(pdfRecord);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-
-    db.close();
-  } catch (error) {
-    throw error;
-  }
-};
-
-/**
- * Recupera um PDF do IndexedDB
- */
-export const getPdfFromIndexedDB = async (id: string) => {
-  try {
-    const db = await openPdfDB();
-    const transaction = db.transaction([PDF_STORE_NAME], 'readonly');
-    const store = transaction.objectStore(PDF_STORE_NAME);
-
-    const record = await new Promise<PdfRecord | undefined>((resolve, reject) => {
-      const request = store.get(id);
-      request.onsuccess = () => resolve(request.result as PdfRecord | undefined);
-      request.onerror = () => reject(request.error);
-    });
-
-    db.close();
-
-    if (!record) {
-      return null;
-    }
-
-    // Reconstruir File a partir do ArrayBuffer
-    const blob = new Blob([record.data], { type: record.mimeType });
-    const file = new File([blob], record.fileName, {
-      type: record.mimeType,
-      lastModified: record.savedAt
-    });
-
-    return file;
-  } catch (error) {
-    return null;
-  }
-};
-
-/**
- * Remove um PDF específico do IndexedDB
- */
-export const removePdfFromIndexedDB = async (id: string) => {
-  try {
-    const db = await openPdfDB();
-    const transaction = db.transaction([PDF_STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(PDF_STORE_NAME);
-
-    await new Promise<void>((resolve, reject) => {
-      const request = store.delete(id);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-
-    db.close();
-  } catch (error) {
-    throw error;
-  }
-};
-
-/**
- * Remove todos os PDFs do IndexedDB
- */
-export const clearAllPdfsFromIndexedDB = async () => {
-  try {
-    const db = await openPdfDB();
-    const transaction = db.transaction([PDF_STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(PDF_STORE_NAME);
-
-    await new Promise<void>((resolve, reject) => {
-      const request = store.clear();
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-
-    db.close();
-  } catch (error) {
-    throw error;
-  }
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// ATTACHMENT INDEXEDDB HELPERS (v1.38.8)
-// Reutiliza o mesmo banco 'sentencify-pdfs' com prefixo diferente
-// ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * Gera ID do anexo no IndexedDB
- * Formato: attachment-{proofId}-{attachmentId}
- */
-export const getAttachmentIndexedDBKey = (proofId: string | number, attachmentId: string): string => {
-  return `attachment-${proofId}-${attachmentId}`;
-};
-
-/**
- * Salva um anexo PDF no IndexedDB
- */
-export const saveAttachmentToIndexedDB = async (
-  proofId: string | number,
-  attachmentId: string,
-  file: File
-) => {
-  const id = getAttachmentIndexedDBKey(proofId, attachmentId);
-  await savePdfToIndexedDB(id, file, 'attachment');
-};
-
-/**
- * Recupera um anexo PDF do IndexedDB
- */
-export const getAttachmentFromIndexedDB = async (
-  proofId: string | number,
-  attachmentId: string
-): Promise<File | null> => {
-  const id = getAttachmentIndexedDBKey(proofId, attachmentId);
-  return await getPdfFromIndexedDB(id);
-};
-
-/**
- * Remove um anexo específico do IndexedDB
- */
-export const removeAttachmentFromIndexedDB = async (
-  proofId: string | number,
-  attachmentId: string
-) => {
-  const id = getAttachmentIndexedDBKey(proofId, attachmentId);
-  await removePdfFromIndexedDB(id);
-};
-
-/**
- * Remove todos os anexos de uma prova do IndexedDB
- */
-export const removeAllAttachmentsFromIndexedDB = async (proofId: string | number) => {
-  try {
-    const db = await openPdfDB();
-    const transaction = db.transaction([PDF_STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(PDF_STORE_NAME);
-    const prefix = `attachment-${proofId}-`;
-
-    // Obter todas as chaves
-    const keys = await new Promise<IDBValidKey[]>((resolve, reject) => {
-      const request = store.getAllKeys();
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-
-    // Filtrar e deletar chaves com o prefixo
-    const deletePromises = keys
-      .filter((key) => typeof key === 'string' && key.startsWith(prefix))
-      .map((key) => new Promise<void>((resolve, reject) => {
-        const request = store.delete(key);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
-      }));
-
-    await Promise.all(deletePromises);
-    db.close();
-  } catch (error) {
-    console.error('[Attachments] Erro ao remover anexos:', error);
-  }
-};
+export {
+  getAttachmentIndexedDBKey,
+  saveAttachmentToIndexedDB,
+  getAttachmentFromIndexedDB,
+  removeAttachmentFromIndexedDB,
+  removeAllAttachmentsFromIndexedDB,
+} from './usePdfStorage';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS

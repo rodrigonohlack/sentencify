@@ -22,6 +22,7 @@ import type {
   DoubleCheckReviewResult,
   DoubleCheckCorrection,
   DoubleCheckCorrectionWithSelection,
+  PerformDoubleCheckFunction,
 } from '../types';
 import type { QuillInstance } from '../types';
 import { AI_PROMPTS } from '../prompts/ai-prompts';
@@ -72,20 +73,7 @@ export interface AIIntegrationForDecisionText {
     }
   ) => Promise<string>;
   // v1.37.65: Double Check para quick prompts
-  // v1.37.68: context agora é AIMessageContent[] (não string)
-  performDoubleCheck?: (
-    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison' | 'proofAnalysis' | 'quickPrompt',
-    originalResponse: string,
-    context: AIMessageContent[],  // v1.37.68: mudou de string para array
-    onProgress?: (msg: string) => void,
-    userPrompt?: string
-  ) => Promise<{
-    verified: string;
-    corrections: DoubleCheckCorrection[];
-    summary: string;
-    confidence?: number;
-    failed?: boolean;
-  }>;
+  performDoubleCheck?: PerformDoubleCheckFunction;
 }
 
 export interface ProofManagerForDecisionText {

@@ -104,14 +104,21 @@ export type { UseChatAssistantReturn, ChatCacheOptions } from './useChatAssistan
 export { useModelPreview } from './useModelPreview';
 export type { UseModelPreviewReturn, SaveAsNewData } from './useModelPreview';
 
-// LocalStorage hook (TIER 0 - dependências: useFactsComparisonCache, useSentenceReviewCache)
+// PDF Storage hook (TIER 0 - sem dependências, extraído de useLocalStorage v1.38.52)
 export {
-  useLocalStorage,
   savePdfToIndexedDB,
   getPdfFromIndexedDB,
   removePdfFromIndexedDB,
-  clearAllPdfsFromIndexedDB
-} from './useLocalStorage';
+  clearAllPdfsFromIndexedDB,
+  getAttachmentIndexedDBKey,
+  saveAttachmentToIndexedDB,
+  getAttachmentFromIndexedDB,
+  removeAttachmentFromIndexedDB,
+  removeAllAttachmentsFromIndexedDB,
+} from './usePdfStorage';
+
+// LocalStorage hook (TIER 0 - dependências: useFactsComparisonCache, useSentenceReviewCache, usePdfStorage)
+export { useLocalStorage } from './useLocalStorage';
 export type { UseLocalStorageReturn } from './useLocalStorage';
 
 // Cloud/Auth hooks (production - not test versions)
@@ -353,3 +360,27 @@ export type { UseModelModalHandlersReturn } from './useModelModalHandlers';
 // Proof Modal Handlers (TIER 0 - apenas Zustand)
 export { useProofModalHandlers } from './useProofModalHandlers';
 export type { UseProofModalHandlersReturn } from './useProofModalHandlers';
+
+// Drive File Handlers (v1.38.51 - Google Drive callbacks)
+export { useDriveFileHandlers } from './useDriveFileHandlers';
+export type { UseDriveFileHandlersProps } from './useDriveFileHandlers';
+
+// Session Callbacks (v1.38.52 - RestoreSession, ClearProject, Logout)
+export { useSessionCallbacks } from './useSessionCallbacks';
+export type { UseSessionCallbacksProps } from './useSessionCallbacks';
+
+// Topic Editing (v1.38.52 - toggleTopicSelection, deleteTopic, saveTopicEdit)
+export { useTopicEditing } from './useTopicEditing';
+export type { UseTopicEditingProps, UseTopicEditingReturn } from './useTopicEditing';
+
+// Model Editing (v1.38.52 - saveQuickEdit, confirmSaveAsNew, startEditingModel, duplicateModel)
+export { useModelEditing } from './useModelEditing';
+export type { UseModelEditingProps, UseModelEditingReturn } from './useModelEditing';
+
+// Google Drive Actions (v1.38.52 - onSave, onSaveLocal, onLoadClick, onLoadLocal)
+export { useGoogleDriveActions } from './useGoogleDriveActions';
+export type { UseGoogleDriveActionsProps, UseGoogleDriveActionsReturn } from './useGoogleDriveActions';
+
+// Proof Modal Callbacks (v1.38.52 - AddProofTextModal, AnonymizationNamesModal, ProofAnalysisModal, DeleteProofModal)
+export { useProofModalCallbacks } from './useProofModalCallbacks';
+export type { UseProofModalCallbacksProps, UseProofModalCallbacksReturn } from './useProofModalCallbacks';

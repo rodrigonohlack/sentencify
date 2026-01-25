@@ -30,6 +30,7 @@ import type {
   AIProvider,
   DoubleCheckReviewResult,
   DoubleCheckCorrection,
+  PerformDoubleCheckFunction,
 } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -103,12 +104,7 @@ export interface AIIntegrationForAnalysis {
   }) => Promise<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   extractResponseText: (data: any, provider: AIProvider) => string;
-  performDoubleCheck?: (
-    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison' | 'proofAnalysis' | 'quickPrompt',
-    originalResponse: string,
-    context: AIMessageContent[],  // v1.37.68: mudou de string para array
-    setProgress?: (msg: string) => void
-  ) => Promise<{ verified: string; corrections: { type: string; reason: string }[]; summary: string; confidence?: number; failed?: boolean }>;
+  performDoubleCheck?: PerformDoubleCheckFunction;
 }
 
 /** Props do hook */
