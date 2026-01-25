@@ -1,7 +1,7 @@
 /**
  * TopicCurationModal.tsx
  * Modal de curadoria de tópicos pré-geração de mini-relatórios
- * v1.39.03 - Fix: Auto-scroll durante drag (autoScroll={true} explícito no DndContext)
+ * v1.39.04 - Fix: DndContext envolvendo scroll container para auto-scroll funcionar
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -1195,6 +1195,14 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
           <span>🗑️ Apague desnecessários</span>
         </div>
 
+        <DndContext
+          sensors={sensors}
+          collisionDetection={customCollisionDetection}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
+          autoScroll={true}
+        >
         <div className="flex-1 overflow-y-auto p-4 space-y-2" data-modal-scroll-container>
           {showMergeConfirm && selectedForMerge.length >= 2 && (
             <MergeConfirm
@@ -1205,14 +1213,6 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
             />
           )}
 
-          <DndContext
-            sensors={sensors}
-            collisionDetection={customCollisionDetection}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-            autoScroll={true}
-          >
             <SortableContext
               items={topics.map(t => t.id || t.title)}
               strategy={verticalListSortingStrategy}
@@ -1244,20 +1244,6 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
               ))}
             </SortableContext>
 
-            {/* DragOverlay sem portal - permite @dnd-kit detectar scroll container do modal */}
-            <DragOverlay dropAnimation={null}>
-              {activeTopic && (
-                <TopicCardVisual
-                  topic={activeTopic}
-                  index={activeIndex}
-                  isDarkMode={isDarkMode}
-                  isOverlay={true}
-                  isSelectedForMerge={selectedForMerge.some(t => t.title === activeTopic.title)}
-                />
-              )}
-            </DragOverlay>
-          </DndContext>
-
           {isAddingTopic ? (
             <AddTopicInline
               onAdd={handleAddTopic}
@@ -1280,6 +1266,20 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
             </button>
           )}
         </div>
+
+          {/* DragOverlay fora do scroll container para posicionar livremente */}
+          <DragOverlay dropAnimation={null}>
+            {activeTopic && (
+              <TopicCardVisual
+                topic={activeTopic}
+                index={activeIndex}
+                isDarkMode={isDarkMode}
+                isOverlay={true}
+                isSelectedForMerge={selectedForMerge.some(t => t.title === activeTopic.title)}
+              />
+            )}
+          </DragOverlay>
+        </DndContext>
 
         <div className={`
           p-4 border-t
