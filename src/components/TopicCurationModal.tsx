@@ -1,7 +1,7 @@
 /**
  * TopicCurationModal.tsx
  * Modal de curadoria de tópicos pré-geração de mini-relatórios
- * v1.36.13 - UX: Auto-scroll e focus no MergeConfirm quando abre
+ * v1.39.01 - Fix: Body scroll lock e scroll lock durante drag
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -908,6 +908,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
   const [isAddingTopic, setIsAddingTopic] = useState(false);
   const [deletedTopics, setDeletedTopics] = useState<{topic: Topic, index: number}[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (isOpen && initialTopics.length > 0) {
@@ -923,6 +924,34 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
       setDeletedTopics([]);
     }
   }, [isOpen, initialTopics]);
+
+  // v1.39.01: Bloqueia scroll do body quando modal está aberto
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
+  // v1.39.01: Previne scroll da página durante drag (captura wheel fora do modal)
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const preventScroll = (e: WheelEvent) => {
+      // Permite scroll apenas dentro do container scrollável do modal
+      const target = e.target as HTMLElement;
+      const modalContent = document.querySelector('[data-modal-scroll-container]');
+      if (modalContent && !modalContent.contains(target)) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('wheel', preventScroll, { passive: false });
+    return () => document.removeEventListener('wheel', preventScroll);
+  }, [isDragging]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -970,14 +999,22 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
     return closestCenter({ ...rest, droppableContainers: filteredContainers });
   }, [specialTopicIds]);
 
-  // Handler para início do drag - salva o ID do item ativo
+  // Handler para início do drag - salva o ID do item ativo e ativa lock de scroll
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+    setIsDragging(true);
   }, []);
 
-  // Handler para fim do drag - reordena e limpa o ID ativo
+  // Handler para cancelamento do drag (ex: ESC) - limpa estados
+  const handleDragCancel = useCallback(() => {
+    setIsDragging(false);
+    setActiveId(null);
+  }, []);
+
+  // Handler para fim do drag - reordena e limpa o ID ativo e desativa lock de scroll
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
+    setIsDragging(false);
     setActiveId(null);  // Limpar sempre ao terminar
 
     if (!over || active.id === over.id) return;
@@ -1159,7 +1196,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
           <span>🗑️ Apague desnecessários</span>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2" data-modal-scroll-container>
           {showMergeConfirm && selectedForMerge.length >= 2 && (
             <MergeConfirm
               topics={selectedForMerge}
@@ -1174,6 +1211,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
             collisionDetection={customCollisionDetection}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
           >
             <SortableContext
               items={topics.map(t => t.id || t.title)}
