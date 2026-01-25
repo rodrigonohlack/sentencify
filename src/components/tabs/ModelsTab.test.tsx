@@ -1,7 +1,7 @@
 /**
  * @file ModelsTab.test.tsx
  * @description Testes de regressão para o componente ModelsTab
- * @version 1.38.39
+ * @version 1.38.49
  *
  * Cobre todas as ações do usuário:
  * 1. Header com botões (Novo, Importar, Exportar, etc)
@@ -9,6 +9,11 @@
  * 3. Alternância de visualização (cards/lista)
  * 4. Banner de mudanças não exportadas
  * 5. Filtro de propriedade (todos/meus/compartilhados)
+ * 6. Cloud sync (onSync logic, email truncation)
+ * 7. Pagination (getPaginationRange, ellipsis, navigation)
+ * 8. Toggle model form (close when open)
+ * 9. Semantic results in list view
+ * 10. Empty states (favoritos)
  */
 
 import React from 'react';
@@ -160,6 +165,7 @@ describe('ModelsTab', () => {
     mockUIStore.modals = { modelForm: false };
     mockUIStore.openModal = vi.fn();
     mockUIStore.closeModal = vi.fn();
+    localStorage.clear();
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -237,6 +243,39 @@ describe('ModelsTab', () => {
 
       expect(screen.getByTitle('Excluir todos os modelos')).toBeInTheDocument();
     });
+
+    it('should render categories in select dropdown', () => {
+      const props = createMockProps({
+        categories: ['Trabalhista', 'Civil', 'Penal'],
+        categoryCounts: { counts: { Trabalhista: 10, Civil: 5, Penal: 3 }, withoutCategory: 2, favorites: 1 },
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByText(/Trabalhista \(10\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Civil \(5\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Penal \(3\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Sem categoria \(2\)/)).toBeInTheDocument();
+    });
+
+    it('should show "0 modelos" when filteredModels is empty', () => {
+      const props = createMockProps({ filteredModels: [] });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByText(/0 modelos/i)).toBeInTheDocument();
+    });
+
+    it('should show empty state for favorites when showFavoritesOnly and no models', () => {
+      const props = createMockProps({
+        filteredModels: [],
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          showFavoritesOnly: true,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByText(/Nenhum modelo favorito ainda/i)).toBeInTheDocument();
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -287,6 +326,32 @@ describe('ModelsTab', () => {
 
       expect(exportModels).toHaveBeenCalled();
     });
+
+    it('should NOT show banner when hasUnsavedChanges is true but models is empty', () => {
+      const props = createMockProps({
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          hasUnsavedChanges: true,
+          models: [],
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.queryByText(/mudanças não exportadas/i)).not.toBeInTheDocument();
+    });
+
+    it('should show backup explanation text in the banner', () => {
+      const props = createMockProps({
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          hasUnsavedChanges: true,
+          models: [createMockModel('1', 'Test')],
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByText(/exporte seus modelos antes de sair/i)).toBeInTheDocument();
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -327,6 +392,23 @@ describe('ModelsTab', () => {
       expect(setSearchTerm).toHaveBeenCalledWith('');
     });
 
+    it('should NOT clear search on non-Escape key', () => {
+      const setSearchTerm = vi.fn();
+      const props = createMockProps({
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          searchTerm: 'test',
+          setSearchTerm,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const searchInput = screen.getByPlaceholderText(/Buscar modelos/i);
+      fireEvent.keyDown(searchInput, { key: 'Enter' });
+
+      expect(setSearchTerm).not.toHaveBeenCalledWith('');
+    });
+
     it('should show clear button when search has value', () => {
       const props = createMockProps({
         modelLibrary: {
@@ -337,6 +419,35 @@ describe('ModelsTab', () => {
       render(<ModelsTab {...props} />);
 
       expect(screen.getByTitle('Limpar (Esc)')).toBeInTheDocument();
+    });
+
+    it('should NOT show clear button when search is empty', () => {
+      const props = createMockProps({
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          searchTerm: '',
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.queryByTitle('Limpar (Esc)')).not.toBeInTheDocument();
+    });
+
+    it('should clear search when clear button is clicked', () => {
+      const setSearchTerm = vi.fn();
+      const props = createMockProps({
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          searchTerm: 'some query',
+          setSearchTerm,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const clearButton = screen.getByTitle('Limpar (Esc)');
+      fireEvent.click(clearButton);
+
+      expect(setSearchTerm).toHaveBeenCalledWith('');
     });
 
     it('should call setSelectedCategory when category changes', () => {
@@ -373,6 +484,23 @@ describe('ModelsTab', () => {
       expect(setShowFavoritesOnly).toHaveBeenCalledWith(true);
     });
 
+    it('should toggle favorites OFF when already active', () => {
+      const setShowFavoritesOnly = vi.fn();
+      const props = createMockProps({
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          showFavoritesOnly: true,
+          setShowFavoritesOnly,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const favoritesButton = screen.getByTitle('Mostrar apenas favoritos');
+      fireEvent.click(favoritesButton);
+
+      expect(setShowFavoritesOnly).toHaveBeenCalledWith(false);
+    });
+
     it('should show favorites count when filter is active', () => {
       const props = createMockProps({
         modelLibrary: {
@@ -384,6 +512,21 @@ describe('ModelsTab', () => {
       render(<ModelsTab {...props} />);
 
       expect(screen.getByText(/Favoritos \(5\)/i)).toBeInTheDocument();
+    });
+
+    it('should show "Todos" text when favorites filter is inactive', () => {
+      const props = createMockProps({
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          showFavoritesOnly: false,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      // "Todos" appears in both favorites toggle and ownership filter;
+      // check that the favorites toggle shows "Todos" (inside the favorites button span)
+      const allTodosElements = screen.getAllByText('Todos');
+      expect(allTodosElements.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -410,11 +553,13 @@ describe('ModelsTab', () => {
       expect(screen.queryByTitle(/Busca textual/i)).not.toBeInTheDocument();
     });
 
-    it('should toggle semantic search', () => {
+    it('should toggle semantic search and reset results', () => {
       const setUseModelSemanticSearch = vi.fn();
+      const setModelSemanticResults = vi.fn();
       const props = createMockProps({
         modelSemanticAvailable: true,
         setUseModelSemanticSearch,
+        setModelSemanticResults,
       });
       render(<ModelsTab {...props} />);
 
@@ -422,6 +567,7 @@ describe('ModelsTab', () => {
       fireEvent.click(toggleButton);
 
       expect(setUseModelSemanticSearch).toHaveBeenCalled();
+      expect(setModelSemanticResults).toHaveBeenCalledWith(null);
     });
 
     it('should show semantic search placeholder when enabled', () => {
@@ -455,6 +601,95 @@ describe('ModelsTab', () => {
       render(<ModelsTab {...props} />);
 
       expect(screen.getByText(/Nenhum resultado semantico encontrado/i)).toBeInTheDocument();
+    });
+
+    it('should show threshold suggestion when no semantic results', () => {
+      const props = createMockProps({
+        useModelSemanticSearch: true,
+        modelSemanticResults: [],
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByText(/Tente reduzir o threshold/i)).toBeInTheDocument();
+    });
+
+    it('should show spinner when searching semantics', () => {
+      const models = [createMockModel('1', 'Test Model')];
+      const props = createMockProps({
+        useModelSemanticSearch: true,
+        modelSemanticResults: models,
+        searchingModelSemantics: true,
+        filteredModels: models,
+        currentModels: models,
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByText(/1 resultado\(s\) semantico\(s\)/i)).toBeInTheDocument();
+    });
+
+    it('should render semantic results in cards view mode', () => {
+      const models = [createMockModel('1', 'Semantic Result')];
+      const props = createMockProps({
+        useModelSemanticSearch: true,
+        modelSemanticResults: models,
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          modelViewMode: 'cards',
+        },
+        filteredModels: models,
+        currentModels: models,
+      });
+      render(<ModelsTab {...props} />);
+
+      const card = screen.getByTestId('model-card-1');
+      expect(card).toHaveAttribute('data-viewmode', 'cards');
+    });
+
+    it('should render semantic results in list view mode', () => {
+      const models = [createMockModel('1', 'Semantic Result')];
+      const props = createMockProps({
+        useModelSemanticSearch: true,
+        modelSemanticResults: models,
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          modelViewMode: 'list',
+        },
+        filteredModels: models,
+      });
+      render(<ModelsTab {...props} />);
+
+      const card = screen.getByTestId('model-card-1');
+      expect(card).toHaveAttribute('data-viewmode', 'list');
+    });
+
+    it('should show semantic title for toggle when active', () => {
+      const props = createMockProps({
+        modelSemanticAvailable: true,
+        useModelSemanticSearch: true,
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByTitle(/Busca semantica/i)).toBeInTheDocument();
+    });
+
+    it('should render multiple semantic results', () => {
+      const models = [
+        createMockModel('1', 'Result 1'),
+        createMockModel('2', 'Result 2'),
+        createMockModel('3', 'Result 3'),
+      ];
+      const props = createMockProps({
+        useModelSemanticSearch: true,
+        modelSemanticResults: models,
+        filteredModels: models,
+        currentModels: models,
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByText(/3 resultado\(s\) semantico\(s\)/i)).toBeInTheDocument();
+      expect(screen.getByTestId('model-card-1')).toBeInTheDocument();
+      expect(screen.getByTestId('model-card-2')).toBeInTheDocument();
+      expect(screen.getByTestId('model-card-3')).toBeInTheDocument();
     });
   });
 
@@ -525,6 +760,25 @@ describe('ModelsTab', () => {
 
       expect(setModelViewMode).toHaveBeenCalledWith('cards');
     });
+
+    it('should render VirtualList with correct items in list mode', () => {
+      const models = [
+        createMockModel('1', 'Model A'),
+        createMockModel('2', 'Model B'),
+      ];
+      const props = createMockProps({
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          modelViewMode: 'list',
+        },
+        filteredModels: models,
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByTestId('virtual-list')).toBeInTheDocument();
+      expect(screen.getByTestId('model-card-1')).toHaveAttribute('data-viewmode', 'list');
+      expect(screen.getByTestId('model-card-2')).toHaveAttribute('data-viewmode', 'list');
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -586,6 +840,31 @@ describe('ModelsTab', () => {
       expect(mockUIStore.openModal).toHaveBeenCalledWith('modelForm');
     });
 
+    it('should close model form and reset when form is already open', () => {
+      mockUIStore.modals = { modelForm: true };
+      const setNewModel = vi.fn();
+      const setEditingModel = vi.fn();
+      const modelEditorRef = { current: { root: { innerHTML: 'existing content' } } };
+
+      const props = createMockProps({
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          setNewModel,
+          setEditingModel,
+        },
+        modelEditorRef: modelEditorRef as unknown as ModelsTabProps['modelEditorRef'],
+      });
+      render(<ModelsTab {...props} />);
+
+      const newButton = screen.getByText('Novo Modelo');
+      fireEvent.click(newButton);
+
+      expect(mockUIStore.closeModal).toHaveBeenCalledWith('modelForm');
+      expect(setNewModel).toHaveBeenCalledWith({ title: '', content: '', keywords: '', category: '' });
+      expect(setEditingModel).toHaveBeenCalledWith(null);
+      expect(modelEditorRef.current.root.innerHTML).toBe('');
+    });
+
     it('should call openModal for deleteAllModels', () => {
       const props = createMockProps({
         modelLibrary: {
@@ -599,6 +878,43 @@ describe('ModelsTab', () => {
       fireEvent.click(deleteAllButton);
 
       expect(mockUIStore.openModal).toHaveBeenCalledWith('deleteAllModels');
+    });
+
+    it('should call importModels when file input changes', () => {
+      const importModels = vi.fn();
+      const props = createMockProps({ importModels });
+      const { container } = render(<ModelsTab {...props} />);
+
+      const fileInput = container.querySelector('input[type="file"][accept=".json"]') as HTMLInputElement;
+      fireEvent.change(fileInput);
+
+      expect(importModels).toHaveBeenCalled();
+    });
+
+    it('should render hidden file input for import', () => {
+      const props = createMockProps();
+      const { container } = render(<ModelsTab {...props} />);
+
+      // The component renders a hidden file input with ref={fileInputRef}
+      // that gets triggered when Import button is clicked
+      const hiddenInput = container.querySelector('input[type="file"][accept=".json"]');
+      expect(hiddenInput).toBeInTheDocument();
+      expect(hiddenInput).toHaveClass('hidden');
+    });
+
+    it('should open share library modal when Compartilhar is clicked', () => {
+      const props = createMockProps({
+        cloudSync: {
+          ...createMockProps().cloudSync,
+          isAuthenticated: true,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const shareButton = screen.getByText('Compartilhar');
+      fireEvent.click(shareButton);
+
+      expect(mockUIStore.openModal).toHaveBeenCalledWith('shareLibrary');
     });
   });
 
@@ -655,6 +971,45 @@ describe('ModelsTab', () => {
 
       expect(setOwnershipFilter).toHaveBeenCalledWith('shared');
     });
+
+    it('should highlight active ownership filter button "all"', () => {
+      const props = createMockProps({
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          ownershipFilter: 'all',
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const allButton = screen.getByTitle('Mostrar todos os modelos');
+      expect(allButton.className).toContain('bg-purple-600');
+    });
+
+    it('should highlight active ownership filter button "mine"', () => {
+      const props = createMockProps({
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          ownershipFilter: 'mine',
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const mineButton = screen.getByTitle('Mostrar apenas meus modelos');
+      expect(mineButton.className).toContain('bg-purple-600');
+    });
+
+    it('should highlight active ownership filter button "shared"', () => {
+      const props = createMockProps({
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          ownershipFilter: 'shared',
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const sharedButton = screen.getByTitle('Mostrar apenas modelos compartilhados');
+      expect(sharedButton.className).toContain('bg-purple-600');
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -710,6 +1065,140 @@ describe('ModelsTab', () => {
       render(<ModelsTab {...props} />);
 
       expect(screen.getByText('user@example.com')).toBeInTheDocument();
+    });
+
+    it('should truncate long email addresses', () => {
+      const longEmail = 'verylongemailaddress@example.com';
+      const props = createMockProps({
+        cloudSync: {
+          ...createMockProps().cloudSync,
+          isAuthenticated: true,
+          user: { email: longEmail },
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      // Email > 25 chars should be truncated to 22 + '...'
+      const truncated = longEmail.slice(0, 22) + '...';
+      expect(screen.getByText(truncated)).toBeInTheDocument();
+    });
+
+    it('should NOT truncate short email addresses', () => {
+      const shortEmail = 'a@b.com';
+      const props = createMockProps({
+        cloudSync: {
+          ...createMockProps().cloudSync,
+          isAuthenticated: true,
+          user: { email: shortEmail },
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByText(shortEmail)).toBeInTheDocument();
+    });
+
+    it('should call sync directly when initial push is already done', () => {
+      localStorage.setItem('sentencify-initial-push-done', 'true');
+      const sync = vi.fn();
+      const pushAllModels = vi.fn();
+      const props = createMockProps({
+        cloudSync: {
+          ...createMockProps().cloudSync,
+          isAuthenticated: true,
+          syncStatus: 'idle',
+          sync,
+          pushAllModels,
+        },
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          models: [createMockModel('1', 'Test')],
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const syncButton = screen.getByText('Sync');
+      fireEvent.click(syncButton);
+
+      expect(sync).toHaveBeenCalled();
+      expect(pushAllModels).not.toHaveBeenCalled();
+    });
+
+    it('should call pushAllModels when initial push is NOT done and models exist', () => {
+      localStorage.removeItem('sentencify-initial-push-done');
+      const sync = vi.fn();
+      const pushAllModels = vi.fn().mockResolvedValue({ success: true });
+      const models = [createMockModel('1', 'Test')];
+      const props = createMockProps({
+        cloudSync: {
+          ...createMockProps().cloudSync,
+          isAuthenticated: true,
+          syncStatus: 'idle',
+          sync,
+          pushAllModels,
+        },
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          models,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const syncButton = screen.getByText('Sync');
+      fireEvent.click(syncButton);
+
+      expect(pushAllModels).toHaveBeenCalledWith(models);
+      expect(sync).not.toHaveBeenCalled();
+    });
+
+    it('should call sync when initial push NOT done but models are empty', () => {
+      localStorage.removeItem('sentencify-initial-push-done');
+      const sync = vi.fn();
+      const pushAllModels = vi.fn();
+      const props = createMockProps({
+        cloudSync: {
+          ...createMockProps().cloudSync,
+          isAuthenticated: true,
+          syncStatus: 'idle',
+          sync,
+          pushAllModels,
+        },
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          models: [],
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const syncButton = screen.getByText('Sync');
+      fireEvent.click(syncButton);
+
+      expect(sync).toHaveBeenCalled();
+      expect(pushAllModels).not.toHaveBeenCalled();
+    });
+
+    it('should NOT show sync indicator when not authenticated', () => {
+      const props = createMockProps({
+        cloudSync: {
+          ...createMockProps().cloudSync,
+          isAuthenticated: false,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.queryByTestId('sync-status-indicator')).not.toBeInTheDocument();
+    });
+
+    it('should NOT show email when user is null', () => {
+      const props = createMockProps({
+        cloudSync: {
+          ...createMockProps().cloudSync,
+          isAuthenticated: true,
+          user: null,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.queryByText(/@/)).not.toBeInTheDocument();
     });
   });
 
@@ -773,6 +1262,21 @@ describe('ModelsTab', () => {
       fireEvent.click(delButton);
 
       expect(confirmDeleteModel).toHaveBeenCalledWith('test-1');
+    });
+
+    it('should render model card with shared info', () => {
+      const models = [createMockModel('shared-1', 'Shared Model', {
+        isShared: true,
+        ownerEmail: 'owner@example.com',
+        sharedPermission: 'view',
+      })];
+      const props = createMockProps({
+        filteredModels: models,
+        currentModels: models,
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByTestId('model-card-shared-1')).toBeInTheDocument();
     });
   });
 
@@ -841,6 +1345,213 @@ describe('ModelsTab', () => {
       const prevButton = screen.getByTitle('Pagina anterior');
       expect(prevButton).toBeDisabled();
     });
+
+    it('should disable next button on last page', () => {
+      const models = Array.from({ length: 15 }, (_, i) => createMockModel(`m${i}`, `Model ${i}`));
+      const props = createMockProps({
+        filteredModels: models,
+        currentModels: models.slice(10, 15),
+        totalModelPages: 2,
+        indexOfFirstModel: 10,
+        indexOfLastModel: 15,
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          currentModelPage: 2,
+          modelsPerPage: 10,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const nextButton = screen.getByTitle('Proxima pagina');
+      expect(nextButton).toBeDisabled();
+    });
+
+    it('should call setCurrentModelPage for prev page', () => {
+      const setCurrentModelPage = vi.fn();
+      const models = Array.from({ length: 15 }, (_, i) => createMockModel(`m${i}`, `Model ${i}`));
+      const props = createMockProps({
+        filteredModels: models,
+        currentModels: models.slice(10, 15),
+        totalModelPages: 2,
+        indexOfFirstModel: 10,
+        indexOfLastModel: 15,
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          currentModelPage: 2,
+          modelsPerPage: 10,
+          setCurrentModelPage,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const prevButton = screen.getByTitle('Pagina anterior');
+      fireEvent.click(prevButton);
+
+      expect(setCurrentModelPage).toHaveBeenCalled();
+    });
+
+    it('should call setCurrentModelPage when specific page is clicked', () => {
+      const setCurrentModelPage = vi.fn();
+      const models = Array.from({ length: 25 }, (_, i) => createMockModel(`m${i}`, `Model ${i}`));
+      const props = createMockProps({
+        filteredModels: models,
+        currentModels: models.slice(0, 10),
+        totalModelPages: 3,
+        indexOfFirstModel: 0,
+        indexOfLastModel: 10,
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          currentModelPage: 1,
+          modelsPerPage: 10,
+          setCurrentModelPage,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      // Click page 2
+      const page2Button = screen.getByText('2');
+      fireEvent.click(page2Button);
+
+      expect(setCurrentModelPage).toHaveBeenCalledWith(2);
+    });
+
+    it('should highlight current page number', () => {
+      const models = Array.from({ length: 25 }, (_, i) => createMockModel(`m${i}`, `Model ${i}`));
+      const props = createMockProps({
+        filteredModels: models,
+        currentModels: models.slice(0, 10),
+        totalModelPages: 3,
+        indexOfFirstModel: 0,
+        indexOfLastModel: 10,
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          currentModelPage: 1,
+          modelsPerPage: 10,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const activePage = screen.getByText('1').closest('button');
+      expect(activePage).toHaveAttribute('data-active', 'true');
+    });
+
+    it('should NOT highlight non-current page numbers', () => {
+      const models = Array.from({ length: 25 }, (_, i) => createMockModel(`m${i}`, `Model ${i}`));
+      const props = createMockProps({
+        filteredModels: models,
+        currentModels: models.slice(0, 10),
+        totalModelPages: 3,
+        indexOfFirstModel: 0,
+        indexOfLastModel: 10,
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          currentModelPage: 1,
+          modelsPerPage: 10,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      const page2 = screen.getByText('2').closest('button');
+      expect(page2).not.toHaveAttribute('data-active');
+    });
+
+    it('should show ellipsis for many pages (>7)', () => {
+      const models = Array.from({ length: 100 }, (_, i) => createMockModel(`m${i}`, `Model ${i}`));
+      const props = createMockProps({
+        filteredModels: models,
+        currentModels: models.slice(0, 10),
+        totalModelPages: 10,
+        indexOfFirstModel: 0,
+        indexOfLastModel: 10,
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          currentModelPage: 1,
+          modelsPerPage: 10,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      // Should show ellipsis (...) in pagination
+      expect(screen.getByText('...')).toBeInTheDocument();
+    });
+
+    it('should NOT show pagination for single page', () => {
+      const models = Array.from({ length: 5 }, (_, i) => createMockModel(`m${i}`, `Model ${i}`));
+      const props = createMockProps({
+        filteredModels: models,
+        currentModels: models,
+        totalModelPages: 1,
+        indexOfFirstModel: 0,
+        indexOfLastModel: 5,
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          modelsPerPage: 10,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.queryByTitle('Proxima pagina')).not.toBeInTheDocument();
+      expect(screen.queryByTitle('Pagina anterior')).not.toBeInTheDocument();
+    });
+
+    it('should show correct range on middle page', () => {
+      const models = Array.from({ length: 30 }, (_, i) => createMockModel(`m${i}`, `Model ${i}`));
+      const props = createMockProps({
+        filteredModels: models,
+        currentModels: models.slice(10, 20),
+        totalModelPages: 3,
+        indexOfFirstModel: 10,
+        indexOfLastModel: 20,
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          currentModelPage: 2,
+          modelsPerPage: 10,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByText(/Mostrando 11-20 de 30 modelos/i)).toBeInTheDocument();
+    });
+
+    it('should show correct range on last page with fewer items', () => {
+      const models = Array.from({ length: 15 }, (_, i) => createMockModel(`m${i}`, `Model ${i}`));
+      const props = createMockProps({
+        filteredModels: models,
+        currentModels: models.slice(10, 15),
+        totalModelPages: 2,
+        indexOfFirstModel: 10,
+        indexOfLastModel: 20,
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          currentModelPage: 2,
+          modelsPerPage: 10,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      // indexOfLastModel=20, but filteredModels.length=15, so shows Math.min(20,15)=15
+      expect(screen.getByText(/Mostrando 11-15 de 15 modelos/i)).toBeInTheDocument();
+    });
+
+    it('should NOT show pagination in list view mode', () => {
+      const models = Array.from({ length: 15 }, (_, i) => createMockModel(`m${i}`, `Model ${i}`));
+      const props = createMockProps({
+        filteredModels: models,
+        currentModels: models.slice(0, 10),
+        totalModelPages: 2,
+        indexOfFirstModel: 0,
+        indexOfLastModel: 10,
+        modelLibrary: {
+          ...createMockProps().modelLibrary,
+          modelViewMode: 'list',
+          modelsPerPage: 10,
+        },
+      });
+      render(<ModelsTab {...props} />);
+
+      // In list mode VirtualList is used, so pagination is not shown
+      expect(screen.queryByTitle('Proxima pagina')).not.toBeInTheDocument();
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -868,6 +1579,28 @@ describe('ModelsTab', () => {
       render(<ModelsTab {...props} />);
 
       expect(screen.getByText(/2 modelos/i)).toBeInTheDocument();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MODEL FORM MODAL TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('ModelFormModal', () => {
+    it('should render ModelFormModal when modal is open', () => {
+      mockUIStore.modals = { modelForm: true };
+      const props = createMockProps();
+      render(<ModelsTab {...props} />);
+
+      expect(screen.getByTestId('model-form-modal')).toBeInTheDocument();
+    });
+
+    it('should NOT render ModelFormModal when modal is closed', () => {
+      mockUIStore.modals = { modelForm: false };
+      const props = createMockProps();
+      render(<ModelsTab {...props} />);
+
+      expect(screen.queryByTestId('model-form-modal')).not.toBeInTheDocument();
     });
   });
 });

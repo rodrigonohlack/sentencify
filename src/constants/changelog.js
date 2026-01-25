@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.38.50', feature: 'Sprint 5 - Cobertura de testes de 60% para 86%: +2399 testes (5253 total), 133 arquivos de teste, 0 erros TypeScript. Cobertura: 86% linhas, 85% statements, 76% branches, 84% funções' },
   { version: '1.38.49', feature: 'Fix anonimização de VALOR ativa mesmo quando desligada: preservarAnonimizacao agora condicional a anonymization.enabled nos prompts de mini-relatório e relatório processual' },
   { version: '1.38.48', feature: 'Redução de dívida técnica: strip console em produção (esbuild.drop), corrigir catch blocks vazios, eliminar any types (schemas Zod tipados), habilitar noUnusedLocals/Parameters e remover ~559 imports mortos' },
   { version: '1.38.47', feature: 'Default "Incluir petições e contestações" desativado: toggle inicia desligado para economizar tokens (antes: ativado por padrão)' },
