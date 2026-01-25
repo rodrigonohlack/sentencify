@@ -11,8 +11,10 @@ import type { FactsComparisonResult } from '../types';
 
 describe('FactsComparisonModalContent', () => {
   const createCachedResult = (): FactsComparisonResult => ({
+    topicTitle: 'Tópico de Teste',
     resumo: 'Resumo da análise',
     fatosIncontroversos: ['Fato 1 incontroverso', 'Fato 2 incontroverso'],
+    fatosControversos: ['Fato controverso 1', 'Fato controverso 2'],
     tabela: [
       {
         tema: 'Tema 1',

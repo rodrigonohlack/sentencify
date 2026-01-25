@@ -10,7 +10,7 @@ import { ChatHistoryArea } from './ChatHistoryArea';
 
 // Mock ChatBubble component
 vi.mock('./ChatBubble', () => ({
-  ChatBubble: ({ msg, onUse, showUse }: { msg: { role: string; content: string }; onUse: () => void; showUse: boolean }) => (
+  ChatBubble: ({ msg, onUse: _onUse, showUse }: { msg: { role: string; content: string }; onUse: () => void; showUse: boolean }) => (
     <div data-testid="chat-bubble" data-role={msg.role} data-show-use={showUse}>
       {msg.content}
     </div>

@@ -57,15 +57,12 @@ vi.mock('../', () => ({
 
 describe('SentenceReviewOptionsModal', () => {
   const createAnalyzedDocuments = (hasPeticoes = true, hasContestacoes = true): AnalyzedDocuments => ({
-    peticoesText: hasPeticoes ? ['Petição inicial...'] : [],
-    contestacoesText: hasContestacoes ? ['Contestação...'] : [],
-    impugnacaoText: null,
-    acordosText: null,
-    outrosText: null,
-    totalPages: 10,
-    totalDocs: 2,
-    extractionDate: new Date().toISOString(),
-    hasOcr: false,
+    peticoes: hasPeticoes ? ['peticao.pdf'] : [],
+    peticoesText: hasPeticoes ? [{ id: '1', text: 'Petição inicial...', name: 'Petição 1' }] : [],
+    contestacoes: hasContestacoes ? ['contestacao.pdf'] : [],
+    contestacoesText: hasContestacoes ? [{ id: '2', text: 'Contestação...', name: 'Contestação 1' }] : [],
+    complementares: [],
+    complementaresText: [],
   });
 
   const defaultProps = {

@@ -668,7 +668,7 @@ describe('useChatAssistant', () => {
       ];
       const getChat = vi.fn().mockResolvedValue(cachedMessages);
 
-      const { result, rerender } = renderHook(
+      const { rerender } = renderHook(
         (props) => useChatAssistant(mockAI, props),
         { initialProps: { topicTitle: 'Test', getChat, isOpen: false } }
       );

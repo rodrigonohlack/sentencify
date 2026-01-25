@@ -5,8 +5,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { useQuillInitialization } from './useQuillInitialization';
+import type { DOMPurifyInstance, QuillConstructor } from '../types';
 
 // Mock injectQuillStyles
 vi.mock('../utils/quill-styles-injector', () => ({
@@ -78,7 +79,7 @@ describe('useQuillInitialization', () => {
       window.DOMPurify = {
         sanitize: vi.fn((str: string) => str),
         version: '3.0.6',
-      } as unknown as typeof DOMPurify;
+      } as unknown as DOMPurifyInstance;
 
       const { result } = renderHook(() => useQuillInitialization());
 
@@ -95,7 +96,7 @@ describe('useQuillInitialization', () => {
   describe('Quill Already Loaded', () => {
     it('should set quillReady if Quill and scripts already exist', async () => {
       // Setup Quill before rendering
-      window.Quill = vi.fn() as unknown as typeof Quill;
+      window.Quill = vi.fn() as unknown as QuillConstructor;
 
       // Add existing scripts
       const existingScript = document.createElement('script');
@@ -145,7 +146,7 @@ describe('useQuillInitialization', () => {
       window.DOMPurify = {
         sanitize: mockSanitize,
         version: '3.0.6',
-      } as unknown as typeof DOMPurify;
+      } as unknown as DOMPurifyInstance;
 
       const { result } = renderHook(() => useQuillInitialization());
 
@@ -153,7 +154,7 @@ describe('useQuillInitialization', () => {
         expect(result.current.domPurifyReady).toBe(true);
       });
 
-      const sanitized = result.current.sanitizeHTML('<p>Test</p>');
+      result.current.sanitizeHTML('<p>Test</p>');
       expect(mockSanitize).toHaveBeenCalled();
     });
 
@@ -161,7 +162,7 @@ describe('useQuillInitialization', () => {
       window.DOMPurify = {
         sanitize: vi.fn(() => ''),
         version: '3.0.6',
-      } as unknown as typeof DOMPurify;
+      } as unknown as DOMPurifyInstance;
 
       const { result } = renderHook(() => useQuillInitialization());
 
@@ -234,7 +235,7 @@ describe('useQuillInitialization', () => {
       window.DOMPurify = {
         sanitize: vi.fn(),
         version: '3.0.6',
-      } as unknown as typeof DOMPurify;
+      } as unknown as DOMPurifyInstance;
 
       const script = document.querySelector('script[src*="purify"]') as HTMLScriptElement;
       if (script) {
@@ -250,7 +251,7 @@ describe('useQuillInitialization', () => {
       const { result } = renderHook(() => useQuillInitialization());
 
       // Simulate Quill loading
-      window.Quill = vi.fn() as unknown as typeof Quill;
+      window.Quill = vi.fn() as unknown as QuillConstructor;
 
       const script = document.querySelector('script[src*="quill.js"]') as HTMLScriptElement;
       if (script) {
@@ -342,7 +343,7 @@ describe('useQuillInitialization', () => {
       window.DOMPurify = {
         sanitize: vi.fn((str: string) => str),
         version: '3.0.6',
-      } as unknown as typeof DOMPurify;
+      } as unknown as DOMPurifyInstance;
 
       renderHook(() => useQuillInitialization());
 
@@ -355,7 +356,7 @@ describe('useQuillInitialization', () => {
       window.DOMPurify = {
         sanitize: vi.fn(),
         version: '3.0.6',
-      } as unknown as typeof DOMPurify;
+      } as unknown as DOMPurifyInstance;
 
       renderHook(() => useQuillInitialization());
 
@@ -368,7 +369,7 @@ describe('useQuillInitialization', () => {
       window.DOMPurify = {
         sanitize: vi.fn(),
         version: '3.0.6',
-      } as unknown as typeof DOMPurify;
+      } as unknown as DOMPurifyInstance;
 
       const { result } = renderHook(() => useQuillInitialization());
 
@@ -383,12 +384,11 @@ describe('useQuillInitialization', () => {
   });
 });
 
-// Add type declarations for window
+// Add type declarations for window (testSanitization and checkDOMPurify only)
+// DOMPurify and Quill are already declared in src/types/index.ts
 declare global {
   interface Window {
     testSanitization?: (html: string) => string;
     checkDOMPurify?: () => { version: string; isSupported: boolean };
-    DOMPurify: typeof DOMPurify;
-    Quill: typeof Quill;
   }
 }

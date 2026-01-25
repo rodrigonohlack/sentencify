@@ -166,11 +166,11 @@ describe('VoiceButton', () => {
     });
 
     it('should show preview when recording and has interim text', async () => {
-      // Capture onTranscript callback
-      let capturedCallback: ((text: string, isFinal: boolean) => void) | null = null;
+      // Capture onTranscript callback using a ref object to avoid TypeScript narrowing issues
+      const callbackRef: { current: ((text: string, isFinal: boolean) => void) | null } = { current: null };
       const mockUseVoiceToText = await import('../hooks/useVoiceToText');
       vi.mocked(mockUseVoiceToText.useVoiceToText).mockImplementation((options) => {
-        capturedCallback = options.onTranscript;
+        callbackRef.current = options.onTranscript;
         return {
           ...mockVoiceToText,
           isRecording: true,
@@ -180,8 +180,8 @@ describe('VoiceButton', () => {
       const { container, rerender } = render(<VoiceButton {...defaultProps} />);
 
       // Simulate interim transcript
-      if (capturedCallback) {
-        capturedCallback('texto em progresso', false);
+      if (callbackRef.current) {
+        callbackRef.current('texto em progresso', false);
       }
 
       rerender(<VoiceButton {...defaultProps} />);

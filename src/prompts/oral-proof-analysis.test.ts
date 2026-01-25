@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { ORAL_PROOF_ANALYSIS_INSTRUCTIONS, buildOralProofSynthesisSection } from './oral-proof-analysis';
-import type { Topic } from '../types';
+import type { Topic, TopicCategory } from '../types';
 
 describe('oral-proof-analysis', () => {
   // ═══════════════════════════════════════════════════════════════════════════
@@ -84,17 +84,8 @@ describe('oral-proof-analysis', () => {
     const createTopic = (title: string, category?: string): Topic => ({
       id: Math.random().toString(),
       title,
-      category: category || null,
-      miniRelatorio: '',
+      category: (category || 'MÉRITO') as TopicCategory,
       text: '',
-      status: 'pending' as const,
-      customPrompt: null,
-      sourceFile: null,
-      manuallyAdded: false,
-      isReferenceOnly: false,
-      processNumber: null,
-      position: 0,
-      version: 1,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -130,7 +121,8 @@ describe('oral-proof-analysis', () => {
 
         const result = buildOralProofSynthesisSection(topics);
 
-        expect(result).toContain('1. Tópico Sem Categoria (Categoria não especificada)');
+        // createTopic uses 'MÉRITO' as default category
+        expect(result).toContain('1. Tópico Sem Categoria (MÉRITO)');
       });
 
       it('should contain table structure for topics', () => {
