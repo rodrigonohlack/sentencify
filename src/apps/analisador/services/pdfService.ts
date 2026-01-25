@@ -5,20 +5,32 @@
  * para evitar conflitos de versão com o pdfjs-dist npm
  */
 
+import type { PdfjsLib } from '../../../types';
+
 export interface PDFExtractionResult {
   text: string;
   pageCount: number;
   base64?: string;
 }
 
+/** PDF.js TextItem - item de texto extraído de uma página */
+interface PDFTextItem {
+  str?: string;
+  dir?: string;
+  transform?: number[];
+  width?: number;
+  height?: number;
+  fontName?: string;
+}
+
 /**
  * Carrega pdf.js de forma compatível com o Sentencify
  * Reutiliza window.pdfjsLib se já existir, ou carrega via CDN
  */
-const loadPDFJS = async (): Promise<any> => {
+const loadPDFJS = async (): Promise<PdfjsLib> => {
   // Se já existe (carregado pelo Sentencify), reutiliza
-  if ((window as any).pdfjsLib) {
-    return (window as any).pdfjsLib;
+  if (window.pdfjsLib) {
+    return window.pdfjsLib;
   }
 
   // Fallback: carrega via CDN (mesma versão do Sentencify)
@@ -26,7 +38,7 @@ const loadPDFJS = async (): Promise<any> => {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     script.onload = () => {
-      const pdfjsLib = (window as any).pdfjsLib;
+      const pdfjsLib = window.pdfjsLib;
       if (pdfjsLib) {
         pdfjsLib.GlobalWorkerOptions.workerSrc =
           'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -54,7 +66,7 @@ export async function extractTextFromPDF(file: File): Promise<PDFExtractionResul
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
     const pageText = textContent.items
-      .map((item: any) => item.str)
+      .map((item: PDFTextItem) => item.str || '')
       .join(' ');
     textParts.push(pageText);
   }

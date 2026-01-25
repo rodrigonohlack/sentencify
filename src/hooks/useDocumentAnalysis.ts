@@ -100,10 +100,8 @@ export interface AIIntegrationForAnalysis {
     temperature?: number;
     topP?: number;
     topK?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }) => Promise<any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  extractResponseText: (data: any, provider: AIProvider) => string;
+  }) => Promise<Record<string, unknown>>;
+  extractResponseText: (data: Record<string, unknown>, provider: AIProvider) => string;
   performDoubleCheck?: PerformDoubleCheckFunction;
 }
 
@@ -584,9 +582,10 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
       // Verificar se a resposta foi truncada por limite de tokens
       const provider = aiIntegration.aiSettings.provider || 'claude';
+      const responseData = data as { candidates?: Array<{ finishReason?: string }>; stop_reason?: string };
       const isTruncated = provider === 'gemini'
-        ? data.candidates?.[0]?.finishReason === 'MAX_TOKENS'
-        : data.stop_reason === 'max_tokens';
+        ? responseData.candidates?.[0]?.finishReason === 'MAX_TOKENS'
+        : responseData.stop_reason === 'max_tokens';
 
       if (isTruncated) {
         throw new Error('O documento e muito extenso e a análise foi truncada. Tente: 1) Dividir o PDF em partes menores, 2) Usar documentos com menos páginas, ou 3) Colar apenas trechos relevantes do texto.');

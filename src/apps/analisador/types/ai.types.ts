@@ -68,3 +68,40 @@ export interface TokenMetrics {
   requestCount: number;
   lastUpdated: string | null;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// API RESPONSE TYPES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Claude API response content block */
+export interface ClaudeContentBlock {
+  type: 'text' | 'thinking' | 'tool_use';
+  text?: string;
+  thinking?: string;
+  id?: string;
+  name?: string;
+  input?: Record<string, unknown>;
+}
+
+/** OpenAI/Grok API message format */
+export interface OpenAIMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string | Array<{ type: string; text?: string }>;
+}
+
+/** Grok API message format (simplified content) */
+export interface GrokMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+/** Gemini API message format */
+export interface GeminiMessage {
+  role: 'user' | 'model';
+  parts: Array<{ text?: string }>;
+}
+
+/** Gemini API system instruction format */
+export interface GeminiSystemInstruction {
+  parts: Array<{ text: string }>;
+}

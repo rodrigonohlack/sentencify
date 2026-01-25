@@ -6,7 +6,7 @@
 import { useCallback } from 'react';
 import { useAIStore } from '../stores';
 import { API_BASE } from '../constants';
-import type { AIMessage, AICallOptions } from '../types';
+import type { AIMessage, AICallOptions, ClaudeContentBlock, OpenAIMessage, GrokMessage, GeminiMessage } from '../types';
 
 const RETRY_MAX_ATTEMPTS = 3;
 const RETRY_INITIAL_DELAY = 3000;
@@ -81,7 +81,7 @@ export const useAIIntegration = () => {
           });
         }
 
-        const textContent = data.content?.find((c: any) => c.type === 'text')?.text || '';
+        const textContent = data.content?.find((c: ClaudeContentBlock) => c.type === 'text')?.text || '';
         return textContent.trim();
 
       } catch (err) {
@@ -107,8 +107,8 @@ export const useAIIntegration = () => {
       model = aiSettings.geminiModel
     } = options;
 
-    const contents = messages.map(msg => ({
-      role: msg.role === 'assistant' ? 'model' : 'user',
+    const contents: GeminiMessage[] = messages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' as const : 'user' as const,
       parts: Array.isArray(msg.content)
         ? msg.content.map(c => {
             if (typeof c === 'string') return { text: c };
@@ -191,7 +191,7 @@ export const useAIIntegration = () => {
       model = aiSettings.openaiModel
     } = options;
 
-    const openaiMessages: any[] = [];
+    const openaiMessages: OpenAIMessage[] = [];
 
     if (systemPrompt) {
       openaiMessages.push({ role: 'system', content: systemPrompt });
@@ -281,7 +281,7 @@ export const useAIIntegration = () => {
       model = aiSettings.grokModel
     } = options;
 
-    const grokMessages: any[] = [];
+    const grokMessages: GrokMessage[] = [];
 
     if (systemPrompt) {
       grokMessages.push({ role: 'system', content: systemPrompt });
