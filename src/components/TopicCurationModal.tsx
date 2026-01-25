@@ -1,11 +1,10 @@
 /**
  * TopicCurationModal.tsx
  * Modal de curadoria de tópicos pré-geração de mini-relatórios
- * v1.39.01 - Fix: Body scroll lock e scroll lock durante drag
+ * v1.39.02 - Fix: Auto-scroll durante drag (remover createPortal do DragOverlay)
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
@@ -1244,21 +1243,18 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
               ))}
             </SortableContext>
 
-            {/* DragOverlay renderizado via portal no body - escapa do modal para evitar lag */}
-            {createPortal(
-              <DragOverlay dropAnimation={null}>
-                {activeTopic && (
-                  <TopicCardVisual
-                    topic={activeTopic}
-                    index={activeIndex}
-                    isDarkMode={isDarkMode}
-                    isOverlay={true}
-                    isSelectedForMerge={selectedForMerge.some(t => t.title === activeTopic.title)}
-                  />
-                )}
-              </DragOverlay>,
-              document.body
-            )}
+            {/* DragOverlay sem portal - permite @dnd-kit detectar scroll container do modal */}
+            <DragOverlay dropAnimation={null}>
+              {activeTopic && (
+                <TopicCardVisual
+                  topic={activeTopic}
+                  index={activeIndex}
+                  isDarkMode={isDarkMode}
+                  isOverlay={true}
+                  isSelectedForMerge={selectedForMerge.some(t => t.title === activeTopic.title)}
+                />
+              )}
+            </DragOverlay>
           </DndContext>
 
           {isAddingTopic ? (

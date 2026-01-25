@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.39.02', feature: 'Fix auto-scroll durante drag no TopicCurationModal: remover createPortal do DragOverlay para @dnd-kit detectar scroll container do modal' },
   { version: '1.39.01', feature: 'Fix scroll no TopicCurationModal: body scroll lock quando modal aberto, prevenção de scroll externo durante drag, handler para drag cancelado (ESC)' },
   { version: '1.39.00', feature: 'Eliminação total de any types: tipagem completa para APIs (Claude, OpenAI, Grok, Gemini), PDF.js e respostas de IA. 0 any types, 0 erros TypeScript, 88% cobertura, 5932 testes' },
   { version: '1.38.53', feature: 'Fix erros TypeScript em arquivos de teste: corrigir 10 erros de tipo (DOMPurify/Quill types, TopicCategory, PastedText[], imports não usados, variáveis não lidas). 0 erros TypeScript' },
