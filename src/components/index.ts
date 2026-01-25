@@ -34,6 +34,9 @@ export * from './editors';
 // Tab Components (v1.37.31)
 export * from './tabs';
 
+// Layout Components (v1.38.53)
+export * from './layout';
+
 // ErrorBoundary (v1.37.1)
 export { ErrorBoundary } from './ErrorBoundary';
 
