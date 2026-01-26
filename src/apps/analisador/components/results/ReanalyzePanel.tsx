@@ -102,11 +102,6 @@ export const ReanalyzePanel: React.FC = () => {
   // Verifica se tem docs em memória
   const hasDocsInMemory = documentStore.peticao?.status === 'ready';
 
-  // Se tem contestação, não mostra o painel
-  if (nomesArquivosContestacoes.length > 0) {
-    return null;
-  }
-
   // ═══════════════════════════════════════════════════════════════════════════
   // COMPUTED
   // ═══════════════════════════════════════════════════════════════════════════
@@ -311,6 +306,14 @@ export const ReanalyzePanel: React.FC = () => {
     setError(null);
     setIsExpanded(false);
   }, []);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EARLY RETURN - Se já tem contestação, não renderiza o painel
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  if (nomesArquivosContestacoes.length > 0) {
+    return null;
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER - File Item
