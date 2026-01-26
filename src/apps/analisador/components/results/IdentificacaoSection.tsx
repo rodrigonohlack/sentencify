@@ -40,7 +40,7 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
             <FileText className="w-5 h-5 text-indigo-500 mt-0.5" />
             <div>
               <p className="text-sm text-slate-500">Processo</p>
-              <p className="font-medium text-slate-800">{data.numeroProcesso}</p>
+              <p className="font-medium text-slate-800">{safeRender(data.numeroProcesso)}</p>
             </div>
           </div>
         )}
@@ -52,7 +52,7 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
             <div>
               <p className="text-sm text-slate-500">Rito</p>
               <Badge variant={data.rito === 'sumarissimo' ? 'warning' : 'info'}>
-                {ritoLabel[data.rito] || data.rito}
+                {ritoLabel[data.rito] || safeRender(data.rito)}
               </Badge>
             </div>
           </div>
@@ -64,7 +64,7 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
             <Building2 className="w-5 h-5 text-indigo-500 mt-0.5" />
             <div>
               <p className="text-sm text-slate-500">Vara</p>
-              <p className="font-medium text-slate-800">{data.vara}</p>
+              <p className="font-medium text-slate-800">{safeRender(data.vara)}</p>
             </div>
           </div>
         )}
@@ -75,7 +75,7 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
             <Calendar className="w-5 h-5 text-indigo-500 mt-0.5" />
             <div>
               <p className="text-sm text-slate-500">Ajuizamento</p>
-              <p className="font-medium text-slate-800">{data.dataAjuizamento}</p>
+              <p className="font-medium text-slate-800">{safeRender(data.dataAjuizamento)}</p>
             </div>
           </div>
         )}

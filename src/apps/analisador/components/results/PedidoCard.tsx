@@ -71,7 +71,7 @@ const PedidoField: React.FC<PedidoFieldProps> = ({ label, value, icon }) => {
           {label}
         </span>
       </div>
-      <div className="text-slate-700 dark:text-slate-200 text-sm pl-6">{value}</div>
+      <div className="text-slate-700 dark:text-slate-200 text-sm pl-6">{safeRender(value)}</div>
     </div>
   );
 };
@@ -234,7 +234,7 @@ export const PedidoCard: React.FC<PedidoCardProps> = ({
                   </span>
                 </div>
                 <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap">
-                  {safeRender(fatosReclamante) || teseAutor}
+                  {safeRender(fatosReclamante) || safeRender(teseAutor)}
                 </p>
               </div>
             )}
@@ -249,7 +249,7 @@ export const PedidoCard: React.FC<PedidoCardProps> = ({
                   </span>
                 </div>
                 <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap">
-                  {safeRender(defesaReclamada) || teseRe}
+                  {safeRender(defesaReclamada) || safeRender(teseRe)}
                 </p>
               </div>
             )}
@@ -280,7 +280,7 @@ export const PedidoCard: React.FC<PedidoCardProps> = ({
                     className="text-sm text-slate-700 dark:text-slate-200 flex items-start gap-2"
                   >
                     <span className="text-amber-500 dark:text-amber-400 mt-0.5">•</span>
-                    {ponto}
+                    {safeRender(ponto)}
                   </li>
                 ))}
               </ul>
