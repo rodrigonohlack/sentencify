@@ -1,6 +1,7 @@
 /**
  * @file useIndexedDB.ts
- * @description Hook para persistência de modelos no IndexedDB com retry, cache e multi-tab sync
+ * @description Hook para persistencia de modelos no IndexedDB com retry, cache e multi-tab sync
+ * @version v1.39.03
  * @tier 1 (depende de useThrottledBroadcast)
  * @extractedFrom App.tsx linhas 2447-2861, 5062-5173
  * @usedBy useModelLibrary
@@ -8,6 +9,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useThrottledBroadcast } from './useThrottledBroadcast';
+import { withStorageRetry } from '../utils/retry';
 import type { Model } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -17,8 +19,6 @@ import type { Model } from '../types';
 const DB_NAME = 'SentencifyAI';
 const DB_VERSION = 1;
 const STORE_NAME = 'models';
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 1000; // Exponential backoff base
 const BROADCAST_CHANNEL_NAME = 'sentencify-models-sync';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -199,20 +199,6 @@ export function useIndexedDB(): UseIndexedDBReturn {
   // Throttled broadcast via hook
   const notifyOtherTabs = useThrottledBroadcast(broadcastChannelRef, 1000);
 
-  // Helper: Exponential Backoff Retry
-  const retryWithBackoff = useCallback(async <T,>(fn: () => Promise<T>, retries: number = MAX_RETRIES): Promise<T> => {
-    for (let i = 0; i < retries; i++) {
-      try {
-        return await fn();
-      } catch (err) {
-        if (i === retries - 1) throw err;
-        const delay = RETRY_DELAY_MS * Math.pow(2, i);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-    throw new Error('retryWithBackoff: max retries exceeded');
-  }, []);
-
   // Open Database
   const openDB = useCallback((): Promise<IDBDatabase> => {
     return new Promise<IDBDatabase>((resolve, reject) => {
@@ -254,7 +240,7 @@ export function useIndexedDB(): UseIndexedDBReturn {
 
     const init = async () => {
       try {
-        const db = await retryWithBackoff(openDB);
+        const db = await withStorageRetry(openDB);
         if (isMounted) {
           setDbInstance(db);
           setIsAvailable(true);
@@ -332,7 +318,7 @@ export function useIndexedDB(): UseIndexedDBReturn {
         broadcastChannelRef.current.close();
       }
     };
-  }, [openDB, retryWithBackoff]);
+  }, [openDB]);
 
   // Load Models
   const loadModels = useCallback(async () => {
@@ -349,7 +335,7 @@ export function useIndexedDB(): UseIndexedDBReturn {
     setError(null);
 
     try {
-      const models = await retryWithBackoff(async () => {
+      const models = await withStorageRetry(async () => {
         return new Promise((resolve, reject) => {
           const transaction = dbInstance.transaction([STORE_NAME], 'readonly');
           const store = transaction.objectStore(STORE_NAME);
@@ -373,7 +359,7 @@ export function useIndexedDB(): UseIndexedDBReturn {
       setIsLoading(false);
       throw err;
     }
-  }, [isAvailable, dbInstance, retryWithBackoff]);
+  }, [isAvailable, dbInstance]);
 
   // Save Models (Diff-based) + Multi-tab Sync
   const saveModels = useCallback(async (newModels: Model[]) => {
@@ -403,7 +389,7 @@ export function useIndexedDB(): UseIndexedDBReturn {
         console.warn(`[IndexedDB] ${rejectedModels.length} modelos rejeitados pela validação:`, rejectedModels);
       }
 
-      await retryWithBackoff(async () => {
+      await withStorageRetry(async () => {
         return new Promise<void>((resolve, reject) => {
           const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
           const store = transaction.objectStore(STORE_NAME);
@@ -451,7 +437,7 @@ export function useIndexedDB(): UseIndexedDBReturn {
       setIsLoading(false);
       throw err;
     }
-  }, [isAvailable, dbInstance, retryWithBackoff, notifyOtherTabs]);
+  }, [isAvailable, dbInstance, withStorageRetry, notifyOtherTabs]);
 
   // Delete Model + Multi-tab Sync
   const deleteModel = useCallback(async (modelId: string) => {
@@ -463,7 +449,7 @@ export function useIndexedDB(): UseIndexedDBReturn {
     setError(null);
 
     try {
-      await retryWithBackoff(async () => {
+      await withStorageRetry(async () => {
         return new Promise<void>((resolve, reject) => {
           const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
           const store = transaction.objectStore(STORE_NAME);
@@ -503,7 +489,7 @@ export function useIndexedDB(): UseIndexedDBReturn {
       setIsLoading(false);
       throw err;
     }
-  }, [isAvailable, dbInstance, retryWithBackoff, notifyOtherTabs]);
+  }, [isAvailable, dbInstance, withStorageRetry, notifyOtherTabs]);
 
   // Clear All + Multi-tab Sync
   const clearAll = useCallback(async () => {
@@ -515,7 +501,7 @@ export function useIndexedDB(): UseIndexedDBReturn {
     setError(null);
 
     try {
-      await retryWithBackoff(async () => {
+      await withStorageRetry(async () => {
         return new Promise<void>((resolve, reject) => {
           const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
           const store = transaction.objectStore(STORE_NAME);
@@ -554,7 +540,7 @@ export function useIndexedDB(): UseIndexedDBReturn {
       setIsLoading(false);
       throw err;
     }
-  }, [isAvailable, dbInstance, retryWithBackoff, notifyOtherTabs]);
+  }, [isAvailable, dbInstance, withStorageRetry, notifyOtherTabs]);
 
   // Invalidate Cache (for external updates)
   const invalidateCache = useCallback(() => {

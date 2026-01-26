@@ -1,7 +1,7 @@
 /**
  * @file useFileHandling.ts
- * @description Hook para gerenciamento de upload em lote e operações de arquivo
- * @version v1.37.28
+ * @description Hook para gerenciamento de upload em lote e operacoes de arquivo
+ * @version v1.39.03
  *
  * Funções extraídas do App.tsx:
  * - getBulkPendingFilesCount
@@ -20,6 +20,7 @@ import React from 'react';
 import { Model, AISettings } from '../types';
 import { TFIDFSimilarity } from '../services/EmbeddingsServices';
 import { parseAIResponse, extractJSON, BulkExtractionSchema } from '../schemas/ai-responses';
+import { withRetry, AI_RETRY_DEFAULTS } from '../utils/retry';
 import {
   AI_PROMPTS,
   buildBulkAnalysisPrompt,
@@ -284,77 +285,6 @@ export function useFileHandling({
   }, [aiIntegration, apiCache]);
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // RETRY COM BACKOFF EXPONENCIAL
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  const callWithRetry = React.useCallback(async <T>(
-    fn: () => Promise<T>,
-    maxRetries: number,
-    fileName: string | null = null,
-    abortSignal: AbortSignal | null = null
-  ): Promise<T> => {
-    const TIMEOUT_MS = BULK_API_TIMEOUT_MS;
-
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      // Verificar cancelamento ANTES de cada tentativa
-      if (abortSignal?.aborted) {
-        throw new Error('Processamento cancelado pelo usuário');
-      }
-
-      try {
-        // Adicionar timeout para evitar requisições que travam
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`Timeout: API não respondeu em ${Math.round(TIMEOUT_MS/1000)}s`)), TIMEOUT_MS)
-        );
-        return await Promise.race([fn(), timeoutPromise]);
-      } catch (err) {
-        const errWithStatus = err as Error & { status?: number };
-        const isRetryable = errWithStatus.message?.includes('Timeout') ||
-          errWithStatus.status === 429 ||
-          errWithStatus.status === 529 ||
-          errWithStatus.status === 520 ||
-          errWithStatus.status === 502 ||
-          errWithStatus.message?.includes('rate limit') ||
-          errWithStatus.message?.includes('429') ||
-          errWithStatus.message?.includes('529') ||
-          errWithStatus.message?.includes('520') ||
-          errWithStatus.message?.includes('502') ||
-          errWithStatus.message?.includes('Overloaded') ||
-          errWithStatus.message?.includes('Failed to fetch') ||
-          errWithStatus.message?.includes('parsear resposta');
-        const isLastAttempt = attempt === maxRetries - 1;
-        const attemptNum = attempt + 1;
-
-        // Log de erro para debug
-        console.warn(`[callWithRetry] ❌ Erro na tentativa ${attemptNum}/${maxRetries}${fileName ? ` (${fileName})` : ''}:`, (err as Error).message || err);
-
-        if (isRetryable) {
-          if (!isLastAttempt) {
-            // Delay maior para 429: 4s, 8s, 16s
-            const delay = Math.pow(2, attempt + 2) * 1000;
-            await new Promise(resolve => setTimeout(resolve, delay));
-
-            // Verificar se foi cancelado DEPOIS do delay
-            if (abortSignal?.aborted) {
-              throw new Error('Processamento cancelado pelo usuário');
-            }
-            continue;
-          } else {
-            console.error(`[callWithRetry] 💀 FALHA FINAL: Todas as ${maxRetries} tentativas esgotadas${fileName ? ` (${fileName})` : ''}`);
-            throw new Error(`Rate limit excedido após ${maxRetries} tentativas. O sistema de lotes está ativo, mas a API ainda atingiu o limite. Aguarde alguns minutos antes de tentar novamente.`);
-          }
-        }
-
-        // Não é rate limit - propagar erro original
-        console.error(`[callWithRetry] ⚠️ Erro não-retryable${fileName ? ` (${fileName})` : ''}:`, (err as Error).message || err);
-        throw err;
-      }
-    }
-    // TypeScript: se o loop terminar sem retorno, lançar erro
-    throw new Error(`Todas as ${maxRetries} tentativas falharam`);
-  }, []);
-
-  // ═══════════════════════════════════════════════════════════════════════════
   // PROCESSAMENTO DE ARQUIVO COM PROGRESSO
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -380,11 +310,16 @@ export function useFileHandling({
       }
 
       // PASSO 2: Gerar modelos com IA (API call com retry)
-      const models = await callWithRetry(
+      const models = await withRetry(
         () => generateModelsFromFileContent(textContent, file.name, abortSignal),
-        3, // maxRetries
-        file.name,
-        abortSignal
+        {
+          ...AI_RETRY_DEFAULTS,
+          timeoutMs: BULK_API_TIMEOUT_MS,
+          abortSignal,
+          onRetry: (attempt, err, delay) => {
+            console.warn(`[processFile] Erro na tentativa ${attempt} (${file.name}), retry em ${delay}ms:`, err.message);
+          }
+        }
       );
 
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -407,7 +342,7 @@ export function useFileHandling({
         duration
       };
     }
-  }, [documentServices, callWithRetry, generateModelsFromFileContent]);
+  }, [documentServices, generateModelsFromFileContent]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // PROCESSAMENTO EM LOTE

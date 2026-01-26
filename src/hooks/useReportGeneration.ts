@@ -1,7 +1,7 @@
 /**
  * @file useReportGeneration.ts
- * @description Hook para geração de relatórios processuais e mini-relatórios
- * @version 1.36.73
+ * @description Hook para geracao de relatorios processuais e mini-relatorios
+ * @version 1.39.03
  *
  * Extraído do App.tsx
  * Funções:
@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { normalizeHTMLSpacing, removeMetaComments } from '../utils/text';
+import { withRetry, AI_RETRY_DEFAULTS } from '../utils/retry';
 import { AI_PROMPTS } from '../prompts';
 import type {
   Topic,
@@ -360,70 +361,6 @@ IMPORTANTE: Responda APENAS com um JSON válido no formato:
 Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado, na mesma ordem.`;
   }, [buildMiniReportPromptCore]);
 
-  /**
-   * Chama função com retry para rate limit
-   */
-  const callWithRetry = React.useCallback(async <T,>(
-    fn: () => Promise<T>,
-    maxRetries = 3,
-    fileName = '',
-    abortSignal: AbortSignal | null = null,
-    timeoutMs = 180000
-  ): Promise<T> => {
-    const TIMEOUT_MS = timeoutMs;
-
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      if (abortSignal?.aborted) {
-        throw new Error('Processamento cancelado pelo usuário');
-      }
-
-      try {
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`Timeout: API não respondeu em ${Math.round(TIMEOUT_MS/1000)}s`)), TIMEOUT_MS)
-        );
-        return await Promise.race([fn(), timeoutPromise]);
-      } catch (err) {
-        const errWithStatus = err as Error & { status?: number };
-        const isRetryable = errWithStatus.message?.includes('Timeout') ||
-          errWithStatus.status === 429 ||
-          errWithStatus.status === 529 ||
-          errWithStatus.status === 520 ||
-          errWithStatus.status === 502 ||
-          errWithStatus.message?.includes('rate limit') ||
-          errWithStatus.message?.includes('429') ||
-          errWithStatus.message?.includes('529') ||
-          errWithStatus.message?.includes('520') ||
-          errWithStatus.message?.includes('502') ||
-          errWithStatus.message?.includes('Overloaded') ||
-          errWithStatus.message?.includes('Failed to fetch') ||
-          errWithStatus.message?.includes('parsear resposta');
-        const isLastAttempt = attempt === maxRetries - 1;
-        const attemptNum = attempt + 1;
-
-        console.warn(`[callWithRetry] ❌ Erro na tentativa ${attemptNum}/${maxRetries}${fileName ? ` (${fileName})` : ''}:`, (err as Error).message || err);
-
-        if (isRetryable) {
-          if (!isLastAttempt) {
-            const delay = Math.pow(2, attempt + 2) * 1000;
-            await new Promise(resolve => setTimeout(resolve, delay));
-
-            if (abortSignal?.aborted) {
-              throw new Error('Processamento cancelado pelo usuário');
-            }
-            continue;
-          } else {
-            console.error(`[callWithRetry] 💀 FALHA FINAL: Todas as ${maxRetries} tentativas esgotadas${fileName ? ` (${fileName})` : ''}`);
-            throw new Error(`Rate limit excedido após ${maxRetries} tentativas. O sistema de lotes está ativo, mas a API ainda atingiu o limite. Aguarde alguns minutos antes de tentar novamente.`);
-          }
-        }
-
-        console.error(`[callWithRetry] ⚠️ Erro não-retryable${fileName ? ` (${fileName})` : ''}:`, (err as Error).message || err);
-        throw err;
-      }
-    }
-    throw new Error(`Todas as ${maxRetries} tentativas falharam`);
-  }, []);
-
   // ═══════════════════════════════════════════════════════════════════════════════
   // FUNÇÕES PRINCIPAIS
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -605,7 +542,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
             let groupResults: Array<{ title: string; relatorio?: string; status?: string }>;
             if (group.length === 1) {
               const topic = group[0];
-              const result = await callWithRetry(
+              const result = await withRetry(
                 () => generateMiniReport({
                   title: topic.title,
                   context: topic.context || '',
@@ -614,23 +551,30 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
                   isInitialGeneration: topic.isInitialGeneration || false,
                   documentsOverride: (topic.documentsOverride && Object.keys(topic.documentsOverride as object).length > 0) ? topic.documentsOverride as AnalyzedDocuments : null
                 }),
-                3,
-                topic.title,
-                null,
-                timeoutMs
+                {
+                  ...AI_RETRY_DEFAULTS,
+                  timeoutMs,
+                  onRetry: (attempt, err, delay) => {
+                    console.warn(`[MiniReport] Retry ${attempt} (${topic.title}), aguardando ${delay}ms:`, err.message);
+                  }
+                }
               );
               groupResults = [{ title: topic.title, relatorio: result, status: 'success' }];
             } else {
-              const multiResults = await callWithRetry(
+              const multiResults = await withRetry(
                 () => generateMultipleMiniReports(group, {
                   includeComplementares: group[0]?.includeComplementares || false,
                   isInitialGeneration: group[0]?.isInitialGeneration || false,
                   documentsOverride: (group[0]?.documentsOverride && Object.keys(group[0].documentsOverride as object).length > 0) ? group[0].documentsOverride as AnalyzedDocuments : null
                 }),
-                2,
-                group.map((t: Topic) => t.title).join(', '),
-                null,
-                timeoutMs
+                {
+                  ...AI_RETRY_DEFAULTS,
+                  maxRetries: 2,
+                  timeoutMs,
+                  onRetry: (attempt, err, delay) => {
+                    console.warn(`[MultiReport] Retry ${attempt}, aguardando ${delay}ms:`, err.message);
+                  }
+                }
               );
               groupResults = multiResults.map((r: { title: string; relatorio?: string }) => ({ ...r, status: 'success' }));
             }
@@ -674,7 +618,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
     } finally {
       setIsGeneratingReport(false);
     }
-  }, [aiIntegration.aiSettings, generateMiniReport, generateMultipleMiniReports, callWithRetry]);
+  }, [aiIntegration.aiSettings, generateMiniReport, generateMultipleMiniReports]);
 
   /**
    * Gera relatório processual completo

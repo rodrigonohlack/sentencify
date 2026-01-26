@@ -1,7 +1,7 @@
 /**
  * @file useAIIntegration.ts
- * @description Hook de integração com provedores de IA (Claude, Gemini, OpenAI, Grok)
- * @version 1.36.80
+ * @description Hook de integracao com provedores de IA (Claude, Gemini, OpenAI, Grok)
+ * @version 1.39.03
  *
  * Extraído do App.tsx
  * Gerencia: chamadas de API, tokens, cache, double check, multi-provider
@@ -11,6 +11,7 @@ import React from 'react';
 import { useAIStore } from '../stores/useAIStore';
 import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_SAFETY } from '../prompts';
 import { API_BASE } from '../constants/api';
+import { withRetry } from '../utils/retry';
 import type {
   AIMessage,
   AIMessageContent,
@@ -373,11 +374,9 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     };
   }, []);
 
-  // Wrapper para chamadas à API Anthropic (com retry, timeout e caching)
-  // Constantes para retry com backoff exponencial
-  const RETRY_MAX_ATTEMPTS = 3;
-  const RETRY_INITIAL_DELAY = 5000; // 5 segundos
-  const RETRY_BACKOFF_MULTIPLIER = 2; // 5s, 10s, 20s
+  // Wrapper para chamadas a API Anthropic (com retry via withRetry, timeout e caching)
+  // v1.39.03: Refatorado para usar withRetry centralizado
+  const CLAUDE_RETRY_CODES = [429, 529, 520, 502];
 
   const callLLM = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
     const {
@@ -402,17 +401,12 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     const internalController = effectiveTimeout ? new AbortController() : null;
     const timeoutId = effectiveTimeout && internalController ? setTimeout(() => internalController.abort(), effectiveTimeout) : null;
 
-    // Combinar signals: externo tem prioridade, senão interno
+    // Combinar signals: externo tem prioridade, senao interno
     const signal = abortSignal || internalController?.signal;
 
-    let lastError = null;
-
-    // Loop de retry para erros 429
-    for (let attempt = 0; attempt < RETRY_MAX_ATTEMPTS; attempt++) {
+    // Funcao de requisicao que sera retentada
+    const makeRequest = async () => {
       try {
-        // Log summary (debug only)
-
-        // Fazer requisição à API (v1.30: via proxy local)
         const response = await fetch(`${API_BASE}/api/claude/messages`, {
           method: 'POST',
           headers: {
@@ -429,15 +423,12 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           signal
         });
 
-        // Se erro 429 (rate limit), 529 (overloaded) ou 520 (cloudflare), aguardar e tentar novamente
-        if ((response.status === 429 || response.status === 529 || response.status === 520 || response.status === 502) && attempt < RETRY_MAX_ATTEMPTS - 1) {
-          const delay = RETRY_INITIAL_DELAY * Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          continue;
+        // Se status retryable, lancar erro com status para withRetry detectar
+        if (CLAUDE_RETRY_CODES.includes(response.status)) {
+          const error = new Error(`HTTP ${response.status}`) as Error & { status: number };
+          error.status = response.status;
+          throw error;
         }
-
-        // Limpar timeout se completou
-        if (timeoutId) clearTimeout(timeoutId);
 
         // Validar status HTTP
         if (validateResponse && !response.ok) {
@@ -448,7 +439,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         // Parsear JSON
         const data = await response.json();
 
-        // v1.32.39: Log thinking no console do browser (v1.32.40: toggle)
+        // v1.32.39: Log thinking no console do browser
         if (aiSettings.logThinking) {
           const thinkingBlock = data.content?.find((c: Record<string, unknown>) => c.type === 'thinking');
           if (thinkingBlock?.thinking) {
@@ -458,8 +449,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           }
         }
 
-        // Logar métricas de cache
-        // v1.37.91: Passa model/provider para tracking por modelo
+        // Logar metricas de cache
         if (logMetrics) {
           const effectiveModel = model || aiSettings?.claudeModel || 'claude-sonnet-4-20250514';
           logCacheMetrics(data, effectiveModel, 'claude');
@@ -478,44 +468,40 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         // Extrair texto da resposta
         const textContent = data.content?.find((c: Record<string, unknown>) => c.type === 'text')?.text || '';
 
-        // Validar se encontrou conteúdo
+        // Validar se encontrou conteudo
         if (validateResponse && !textContent) {
-          throw new Error('Nenhum conteúdo de texto encontrado na resposta da API');
+          throw new Error('Nenhum conteudo de texto encontrado na resposta da API');
         }
 
         return textContent.trim();
-
       } catch (err) {
-        lastError = err;
-
-        // Limpar timeout em caso de erro
-        if (timeoutId) clearTimeout(timeoutId);
-
-        // Tratar erros de abort (não retentar)
+        // Tratar erros de abort (nao retentar)
         const errObj = err as Error;
         if (errObj.name === 'AbortError') {
           if (abortSignal?.aborted) {
-            throw new Error('Operação cancelada pelo usuário');
+            throw new Error('Operacao cancelada pelo usuario');
           } else {
-            throw new Error(`Timeout: operação demorou mais de ${(effectiveTimeout || 0) / 1000}s`);
+            throw new Error(`Timeout: operacao demorou mais de ${(effectiveTimeout || 0) / 1000}s`);
           }
         }
-
-        // Se não é última tentativa e erro parece ser de rate limit, overload, conexão ou JSON malformado da API
-        const errMsg = errObj.message || '';
-        if (attempt < RETRY_MAX_ATTEMPTS - 1 && (errMsg.includes('429') || errMsg.includes('529') || errMsg.includes('520') || errMsg.includes('502') || errMsg.includes('Overloaded') || errMsg.includes('Failed to fetch') || errMsg.includes('parsear resposta'))) {
-          const delay = RETRY_INITIAL_DELAY * Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          continue;
-        }
-
-        // Re-lançar outros erros
         throw err;
       }
-    }
+    };
 
-    // Se chegou aqui, todas as tentativas falharam
-    throw lastError || new Error('Todas as tentativas falharam');
+    try {
+      return await withRetry(makeRequest, {
+        maxRetries: 3,
+        initialDelayMs: 5000,
+        backoffType: 'exponential',
+        backoffMultiplier: 2,
+        retryableStatusCodes: CLAUDE_RETRY_CODES,
+        onRetry: (attempt, err, delay) => {
+          console.warn(`[Claude] Retry ${attempt}, aguardando ${delay}ms:`, err.message);
+        }
+      });
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
   }, [getApiHeaders, buildApiRequest, logCacheMetrics, aiSettings]);
 
   // ========================================
@@ -743,15 +729,16 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     return { thinking_level: level };
   }, [aiSettings.geminiThinkingLevel]);
 
-  // Códigos de status para retry por provider
+  // Codigos de status para retry por provider
+  // v1.39.03: Refatorado para usar withRetry centralizado
   const GEMINI_RETRY_CODES = [429, 500, 502, 503, 529];
 
-  // Chamada à API Gemini
+  // Chamada a API Gemini
   const callGeminiAPI = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
     const {
       maxTokens = 4000,
       systemPrompt = null,
-      useInstructions = false,  // v1.32.29: Suporte a useInstructions igual ao Claude
+      useInstructions = false,
       model = aiSettings.geminiModel || 'gemini-3-flash-preview',
       temperature = null,
       topP = null,
@@ -763,28 +750,22 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       disableThinking = false
     } = options;
 
-    // v1.32.29: Resolver systemPrompt igual ao Claude (useInstructions → getAiInstructions)
+    // v1.32.29: Resolver systemPrompt igual ao Claude (useInstructions -> getAiInstructions)
     let finalSystemPrompt = systemPrompt;
     if (!finalSystemPrompt && useInstructions) {
       const instructions = getAiInstructions();
-      // getAiInstructions() retorna array [{text: "...", cache_control: ...}]
-      // Converter para string para o Gemini
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map(i => i.text || i).join('\n\n')
         : instructions;
     }
-
-    const RETRY_MAX = 3;
-    const RETRY_DELAY = 5000;
 
     // AbortController para timeout
     const internalController = timeout ? new AbortController() : null;
     const timeoutId = timeout && internalController ? setTimeout(() => internalController.abort(), timeout) : null;
     const signal = abortSignal || internalController?.signal;
 
-    let lastError = null;
-
-    for (let attempt = 0; attempt < RETRY_MAX; attempt++) {
+    // Funcao de requisicao que sera retentada
+    const makeRequest = async () => {
       try {
         // Converter mensagens para formato Gemini
         const geminiRequest = convertToGeminiFormat(messages, finalSystemPrompt);
@@ -806,12 +787,10 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           maxOutputTokens: maxTokens + thinkingBuffer
         };
 
-        // Gemini 3: forçar temperature 1.0 para evitar bugs
-        // Gemini 2.x: mínimo 0.5 para evitar filtro RECITATION (Google recomenda temp alta)
+        // Gemini 3: forcar temperature 1.0 para evitar bugs
         if (isGemini3) {
-          geminiRequest.generationConfig.temperature = 1.0;  // Recomendado pelo Google
+          geminiRequest.generationConfig.temperature = 1.0;
         } else {
-          // Gemini 2.x: usar temperatura fornecida, mas mínimo 0.7 para evitar RECITATION
           const minTemp = 0.7;
           geminiRequest.generationConfig.temperature = temperature !== null
             ? Math.max(temperature, minTemp)
@@ -821,7 +800,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         if (topP !== null) geminiRequest.generationConfig.topP = topP;
         if (topK !== null) geminiRequest.generationConfig.topK = topK;
 
-        // Só adicionar thinking_config para Gemini 3
+        // So adicionar thinking_config para Gemini 3
         if (isGemini3) {
           geminiRequest.generationConfig.thinking_config = {
             thinking_budget: thinkingBuffer,
@@ -829,7 +808,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           };
         }
 
-        // Fazer requisição via proxy local
+        // Fazer requisicao via proxy local
         const response = await fetch(`${API_BASE}/api/gemini/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -841,15 +820,12 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           signal
         });
 
-        // Retry em caso de rate limit ou erro temporário
-        if (GEMINI_RETRY_CODES.includes(response.status) && attempt < RETRY_MAX - 1) {
-          const delay = RETRY_DELAY * Math.pow(2, attempt);
-          console.warn(`[Gemini] Retry ${attempt + 1}/${RETRY_MAX} após ${delay}ms`);
-          await new Promise(r => setTimeout(r, delay));
-          continue;
+        // Se status retryable, lancar erro com status para withRetry detectar
+        if (GEMINI_RETRY_CODES.includes(response.status)) {
+          const error = new Error(`HTTP ${response.status}`) as Error & { status: number };
+          error.status = response.status;
+          throw error;
         }
-
-        if (timeoutId) clearTimeout(timeoutId);
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -858,7 +834,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
         const data = await response.json();
 
-        // v1.32.39: Log thinking no console do browser (v1.32.40: toggle)
+        // v1.32.39: Log thinking no console do browser
         if (aiSettings.logThinking) {
           const parts = data.candidates?.[0]?.content?.parts || [];
           const thinkingPart = parts.find((p: { thought?: boolean; text?: string }) => p.thought === true);
@@ -869,8 +845,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           }
         }
 
-        // Logar métricas
-        // v1.37.91: Usa addTokenUsage com model/provider para tracking por modelo
+        // Logar metricas
         if (logMetrics && data.usageMetadata) {
           const metrics = extractTokenMetrics(data, 'gemini');
           addTokenUsage({
@@ -891,45 +866,46 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         // Extrair texto
         const textContent = extractResponseText(data, 'gemini');
         return textContent.trim();
-
       } catch (err) {
-        lastError = err;
-        if (timeoutId) clearTimeout(timeoutId);
-
         if ((err as Error).name === 'AbortError') {
-          throw new Error(abortSignal?.aborted ? 'Operação cancelada' : `Timeout após ${(timeout ?? 0)/1000}s`);
+          throw new Error(abortSignal?.aborted ? 'Operacao cancelada' : `Timeout apos ${(timeout ?? 0)/1000}s`);
         }
-
-        if (attempt < RETRY_MAX - 1) {
-          const delay = RETRY_DELAY * Math.pow(2, attempt);
-          await new Promise(r => setTimeout(r, delay));
-          continue;
-        }
-
         throw err;
       }
-    }
+    };
 
-    throw lastError || new Error('Todas as tentativas falharam');
+    try {
+      return await withRetry(makeRequest, {
+        maxRetries: 3,
+        initialDelayMs: 5000,
+        backoffType: 'exponential',
+        backoffMultiplier: 2,
+        retryableStatusCodes: GEMINI_RETRY_CODES,
+        onRetry: (attempt, err, delay) => {
+          console.warn(`[Gemini] Retry ${attempt}, aguardando ${delay}ms:`, err.message);
+        }
+      });
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
   }, [aiSettings, convertToGeminiFormat, extractTokenMetrics, extractResponseText, getGeminiThinkingConfig, setTokenMetrics, getAiInstructions]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // OPENAI GPT-5.2 INTEGRATION (v1.35.97)
+  // v1.39.03: Refatorado para usar withRetry centralizado
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /** Códigos HTTP que disparam retry automático */
+  /** Codigos HTTP que disparam retry automatico */
   const OPENAI_RETRY_CODES = [429, 500, 502, 503, 529];
 
-  /** Configurações padrão OpenAI */
+  /** Configuracoes padrao OpenAI */
   const OPENAI_CONFIG = {
     MAX_TOKENS_DEFAULT: 4000,
-    REASONING_TIMEOUT_MS: 300000,  // 5 min para reasoning xhigh
-    RETRY_MAX_ATTEMPTS: 3,
-    RETRY_DELAY_MS: 5000
+    REASONING_TIMEOUT_MS: 300000  // 5 min para reasoning xhigh
   } as const;
 
   /**
-   * Faz chamada à API OpenAI (GPT-5.2)
+   * Faz chamada a API OpenAI (GPT-5.2)
    */
   const callOpenAIAPI = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
     const {
@@ -965,9 +941,8 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     const timeoutId = effectiveTimeout ? setTimeout(() => internalController?.abort(), effectiveTimeout) : null;
     const signal = abortSignal || internalController?.signal;
 
-    let lastError: Error | null = null;
-
-    for (let attempt = 0; attempt < OPENAI_CONFIG.RETRY_MAX_ATTEMPTS; attempt++) {
+    // Funcao de requisicao que sera retentada
+    const makeRequest = async () => {
       try {
         const openaiMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
 
@@ -977,7 +952,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           max_tokens: maxTokens
         };
 
-        // Adicionar reasoning apenas para gpt-5.2 (não gpt-5.2-chat-latest)
+        // Adicionar reasoning apenas para gpt-5.2 (nao gpt-5.2-chat-latest)
         if (model === 'gpt-5.2' && !disableThinking) {
           requestBody.reasoning = { effort: reasoningLevel };
         }
@@ -992,12 +967,11 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           signal
         });
 
-        if (timeoutId) clearTimeout(timeoutId);
-
-        if (OPENAI_RETRY_CODES.includes(response.status) && attempt < OPENAI_CONFIG.RETRY_MAX_ATTEMPTS - 1) {
-          console.warn(`[OpenAI] Retry ${attempt + 1}/${OPENAI_CONFIG.RETRY_MAX_ATTEMPTS} - status ${response.status}`);
-          await new Promise(r => setTimeout(r, OPENAI_CONFIG.RETRY_DELAY_MS * (attempt + 1)));
-          continue;
+        // Se status retryable, lancar erro com status para withRetry detectar
+        if (OPENAI_RETRY_CODES.includes(response.status)) {
+          const error = new Error(`HTTP ${response.status}`) as Error & { status: number };
+          error.status = response.status;
+          throw error;
         }
 
         const data = await response.json();
@@ -1024,43 +998,44 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           return extractResponseText(data, 'openai');
         }
         return data;
-
-      } catch (err: unknown) {
-        lastError = err as Error;
-        if (timeoutId) clearTimeout(timeoutId);
-
-        if (lastError.name === 'AbortError') {
-          throw new Error('Requisição cancelada (timeout)');
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') {
+          throw new Error('Requisicao cancelada (timeout)');
         }
-
-        if (attempt < OPENAI_CONFIG.RETRY_MAX_ATTEMPTS - 1) {
-          console.warn(`[OpenAI] Retry ${attempt + 1}/${OPENAI_CONFIG.RETRY_MAX_ATTEMPTS} - ${lastError.message}`);
-          await new Promise(r => setTimeout(r, OPENAI_CONFIG.RETRY_DELAY_MS * (attempt + 1)));
-          continue;
-        }
-        throw lastError;
+        throw err;
       }
-    }
+    };
 
-    throw lastError || new Error('OpenAI: todas as tentativas falharam');
+    try {
+      return await withRetry(makeRequest, {
+        maxRetries: 3,
+        initialDelayMs: 5000,
+        backoffType: 'linear',  // OpenAI usa backoff linear
+        retryableStatusCodes: OPENAI_RETRY_CODES,
+        onRetry: (attempt, err, delay) => {
+          console.warn(`[OpenAI] Retry ${attempt}, aguardando ${delay}ms:`, err.message);
+        }
+      });
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
   }, [aiSettings, convertToOpenAIFormat, extractTokenMetrics, extractResponseText, setTokenMetrics, getAiInstructions]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // XAI GROK 4.1 INTEGRATION (v1.35.97)
+  // v1.39.03: Refatorado para usar withRetry centralizado
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /** Códigos HTTP que disparam retry automático (mesmo do OpenAI) */
+  /** Codigos HTTP que disparam retry automatico (mesmo do OpenAI) */
   const GROK_RETRY_CODES = [429, 500, 502, 503, 529];
 
-  /** Configurações padrão Grok */
+  /** Configuracoes padrao Grok */
   const GROK_CONFIG = {
-    MAX_TOKENS_DEFAULT: 4000,
-    RETRY_MAX_ATTEMPTS: 3,
-    RETRY_DELAY_MS: 5000
+    MAX_TOKENS_DEFAULT: 4000
   } as const;
 
   /**
-   * Faz chamada à API xAI Grok (OpenAI-compatible)
+   * Faz chamada a API xAI Grok (OpenAI-compatible)
    */
   const callGrokAPI = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
     const {
@@ -1081,9 +1056,8 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         : instructions;
     }
 
-    let lastError: Error | null = null;
-
-    for (let attempt = 0; attempt < GROK_CONFIG.RETRY_MAX_ATTEMPTS; attempt++) {
+    // Funcao de requisicao que sera retentada
+    const makeRequest = async () => {
       try {
         const grokMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
 
@@ -1103,10 +1077,11 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           signal: abortSignal
         });
 
-        if (GROK_RETRY_CODES.includes(response.status) && attempt < GROK_CONFIG.RETRY_MAX_ATTEMPTS - 1) {
-          console.warn(`[Grok] Retry ${attempt + 1}/${GROK_CONFIG.RETRY_MAX_ATTEMPTS} - status ${response.status}`);
-          await new Promise(r => setTimeout(r, GROK_CONFIG.RETRY_DELAY_MS * (attempt + 1)));
-          continue;
+        // Se status retryable, lancar erro com status para withRetry detectar
+        if (GROK_RETRY_CODES.includes(response.status)) {
+          const error = new Error(`HTTP ${response.status}`) as Error & { status: number };
+          error.status = response.status;
+          throw error;
         }
 
         const data = await response.json();
@@ -1115,7 +1090,6 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         if (aiSettings.logThinking) {
           const choices = data.choices as Record<string, unknown>[] | undefined;
           const message = choices?.[0]?.message as Record<string, unknown> | undefined;
-          // Grok pode retornar reasoning em diferentes campos
           const reasoning = message?.reasoning || message?.reasoning_content || message?.thinking;
           if (reasoning) {
             console.group('[Grok] Thinking');
@@ -1146,24 +1120,23 @@ ${AI_INSTRUCTIONS_SAFETY}`;
           return extractResponseText(data, 'grok');
         }
         return data;
-
-      } catch (err: unknown) {
-        lastError = err as Error;
-
-        if (lastError.name === 'AbortError') {
-          throw new Error('Requisição cancelada');
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') {
+          throw new Error('Requisicao cancelada');
         }
-
-        if (attempt < GROK_CONFIG.RETRY_MAX_ATTEMPTS - 1) {
-          console.warn(`[Grok] Retry ${attempt + 1}/${GROK_CONFIG.RETRY_MAX_ATTEMPTS} - ${lastError.message}`);
-          await new Promise(r => setTimeout(r, GROK_CONFIG.RETRY_DELAY_MS * (attempt + 1)));
-          continue;
-        }
-        throw lastError;
+        throw err;
       }
-    }
+    };
 
-    throw lastError || new Error('Grok: todas as tentativas falharam');
+    return await withRetry(makeRequest, {
+      maxRetries: 3,
+      initialDelayMs: 5000,
+      backoffType: 'linear',  // Grok usa backoff linear
+      retryableStatusCodes: GROK_RETRY_CODES,
+      onRetry: (attempt, err, delay) => {
+        console.warn(`[Grok] Retry ${attempt}, aguardando ${delay}ms:`, err.message);
+      }
+    });
   }, [aiSettings, convertToOpenAIFormat, extractTokenMetrics, extractResponseText, setTokenMetrics, getAiInstructions]);
 
   // Função unificada que escolhe Claude, Gemini, OpenAI ou Grok baseado no provider

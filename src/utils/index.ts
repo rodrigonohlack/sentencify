@@ -56,3 +56,14 @@ export {
 
 // Color stripper (v1.37.81) - Sistema color-free
 export { stripInlineColors } from './color-stripper';
+
+// Retry utilities (v1.39.03)
+export {
+  withRetry,
+  withStorageRetry,
+  RETRYABLE_STATUS_CODES,
+  RETRYABLE_ERROR_MESSAGES,
+  AI_RETRY_DEFAULTS,
+  STORAGE_RETRY_DEFAULTS
+} from './retry';
+export type { RetryOptions } from './retry';
