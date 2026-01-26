@@ -231,7 +231,7 @@ export interface BatchState {
 export interface BatchFile {
   id: string;
   file: File;
-  tipo: 'peticao' | 'contestacao';
+  tipo: 'peticao' | 'emenda' | 'contestacao';
   numeroProcesso: string | null;
   status: 'pending' | 'processing' | 'success' | 'error';
   error?: string;
@@ -241,7 +241,8 @@ export interface BatchFile {
 /** Par de arquivos para análise */
 export interface BatchPair {
   peticao: BatchFile;
-  contestacao?: BatchFile;
+  emendas: BatchFile[];
+  contestacoes: BatchFile[];
 }
 
 /** Resultado do batch processing */

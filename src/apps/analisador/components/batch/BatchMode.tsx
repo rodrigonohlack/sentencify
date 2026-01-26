@@ -28,7 +28,8 @@ import type { BatchFile, BatchPair } from '../../types/analysis.types';
 interface ProcessGroup {
   numeroProcesso: string;
   peticao?: BatchFile;
-  contestacao?: BatchFile;
+  emendas: BatchFile[];
+  contestacoes: BatchFile[];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -61,9 +62,10 @@ const extractNumeroProcesso = (filename: string): string | null => {
 /**
  * Detecta tipo de documento pelo nome do arquivo
  */
-const detectTipoDocumento = (filename: string): 'peticao' | 'contestacao' => {
+const detectTipoDocumento = (filename: string): 'peticao' | 'emenda' | 'contestacao' => {
   const lower = filename.toLowerCase();
 
+  // Contestação
   if (
     lower.includes('contestacao') ||
     lower.includes('contestação') ||
@@ -73,6 +75,12 @@ const detectTipoDocumento = (filename: string): 'peticao' | 'contestacao' => {
     return 'contestacao';
   }
 
+  // Emenda
+  if (lower.includes('emenda')) {
+    return 'emenda';
+  }
+
+  // Default: petição
   return 'peticao';
 };
 
@@ -125,12 +133,11 @@ const ProcessCard: React.FC<ProcessCardProps> = React.memo(({ index, group, onRe
     );
   };
 
-  // Determine card status based on files
-  const isProcessing = group.peticao?.status === 'processing' || group.contestacao?.status === 'processing';
-  const hasError = group.peticao?.status === 'error' || group.contestacao?.status === 'error';
-  const isSuccess = (group.peticao?.status === 'success' || !group.peticao) &&
-    (group.contestacao?.status === 'success' || !group.contestacao) &&
-    (group.peticao?.status === 'success' || group.contestacao?.status === 'success');
+  // Determine card status based on all files
+  const allFiles = [group.peticao, ...group.emendas, ...group.contestacoes].filter(Boolean) as BatchFile[];
+  const isProcessing = allFiles.some(f => f.status === 'processing');
+  const hasError = allFiles.some(f => f.status === 'error');
+  const isSuccess = allFiles.length > 0 && allFiles.every(f => f.status === 'success');
 
   return (
     <div
@@ -167,8 +174,8 @@ const ProcessCard: React.FC<ProcessCardProps> = React.memo(({ index, group, onRe
         </button>
       </div>
 
-      {/* Files Grid */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Files List */}
+      <div className="space-y-2">
         {/* Petição */}
         <div className="flex items-start gap-2 min-w-0">
           {getStatusIcon(group.peticao)}
@@ -183,16 +190,58 @@ const ProcessCard: React.FC<ProcessCardProps> = React.memo(({ index, group, onRe
           </div>
         </div>
 
-        {/* Contestação */}
+        {/* Emendas (se houver) */}
+        {group.emendas.length > 0 && (
+          <div className="flex items-start gap-2 min-w-0">
+            <FileText className="w-4 h-4 text-amber-500 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">
+                Emendas ({group.emendas.length})
+              </p>
+              <div className="space-y-1">
+                {group.emendas.map(emenda => (
+                  <div key={emenda.id} className="flex items-center gap-1.5">
+                    {getStatusIcon(emenda)}
+                    <span className="text-sm text-slate-700 dark:text-slate-200 truncate" title={emenda.file.name}>
+                      {emenda.file.name}
+                    </span>
+                    {emenda.error && (
+                      <span className="text-xs text-red-500 truncate">{emenda.error}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Contestações */}
         <div className="flex items-start gap-2 min-w-0">
-          {getStatusIcon(group.contestacao)}
+          <Scale className="w-4 h-4 text-indigo-500 mt-0.5" />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">
-              Contestação
+              {group.contestacoes.length > 0
+                ? `Contestações (${group.contestacoes.length})`
+                : 'Contestação'}
             </p>
-            {getFileLabel(group.contestacao, 'Contestação')}
-            {group.contestacao?.error && (
-              <p className="text-xs text-red-500 mt-0.5 truncate">{group.contestacao.error}</p>
+            {group.contestacoes.length === 0 ? (
+              <span className="text-sm text-slate-400 dark:text-slate-500 italic">
+                Não fornecida (opcional)
+              </span>
+            ) : (
+              <div className="space-y-1">
+                {group.contestacoes.map(cont => (
+                  <div key={cont.id} className="flex items-center gap-1.5">
+                    {getStatusIcon(cont)}
+                    <span className="text-sm text-slate-700 dark:text-slate-200 truncate" title={cont.file.name}>
+                      {cont.file.name}
+                    </span>
+                    {cont.error && (
+                      <span className="text-xs text-red-500 truncate">{cont.error}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -234,16 +283,18 @@ export const BatchMode: React.FC = () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   const { processGroups, unmatchedFiles } = useMemo(() => {
-    const byProcesso = new Map<string, { peticao?: BatchFile; contestacao?: BatchFile }>();
+    const byProcesso = new Map<string, { peticao?: BatchFile; emendas: BatchFile[]; contestacoes: BatchFile[] }>();
     const unmatched: BatchFile[] = [];
 
     batch.files.forEach((file) => {
       if (file.numeroProcesso) {
-        const existing = byProcesso.get(file.numeroProcesso) || {};
+        const existing = byProcesso.get(file.numeroProcesso) || { emendas: [], contestacoes: [] };
         if (file.tipo === 'peticao') {
           existing.peticao = file;
+        } else if (file.tipo === 'emenda') {
+          existing.emendas.push(file);
         } else {
-          existing.contestacao = file;
+          existing.contestacoes.push(file);
         }
         byProcesso.set(file.numeroProcesso, existing);
       } else {
@@ -254,7 +305,8 @@ export const BatchMode: React.FC = () => {
     const groups: ProcessGroup[] = Array.from(byProcesso.entries()).map(([numero, files]) => ({
       numeroProcesso: numero,
       peticao: files.peticao,
-      contestacao: files.contestacao,
+      emendas: files.emendas,
+      contestacoes: files.contestacoes,
     }));
 
     return { processGroups: groups, unmatchedFiles: unmatched };
@@ -263,10 +315,11 @@ export const BatchMode: React.FC = () => {
   // Convert processGroups to BatchPairs for processing
   const pairs = useMemo((): BatchPair[] => {
     return processGroups
-      .filter((g) => g.peticao || g.contestacao)
+      .filter((g) => g.peticao || g.contestacoes.length > 0)
       .map((g) => ({
-        peticao: g.peticao || g.contestacao!,
-        contestacao: g.peticao ? g.contestacao : undefined,
+        peticao: g.peticao || g.contestacoes[0],
+        emendas: g.emendas,
+        contestacoes: g.peticao ? g.contestacoes : g.contestacoes.slice(1),
       }));
   }, [processGroups]);
 
@@ -399,20 +452,40 @@ export const BatchMode: React.FC = () => {
     const concurrencyLimit = settings.concurrencyLimit;
 
     const processPair = async (pair: BatchPair): Promise<void> => {
-      const { peticao, contestacao } = pair;
+      const { peticao, emendas, contestacoes } = pair;
 
       try {
+        // Mark all files as processing
         updateBatchFile(peticao.id, { status: 'processing' });
-        if (contestacao) {
-          updateBatchFile(contestacao.id, { status: 'processing' });
+        emendas.forEach(e => updateBatchFile(e.id, { status: 'processing' }));
+        contestacoes.forEach(c => updateBatchFile(c.id, { status: 'processing' }));
+
+        // Extract text from petição
+        const peticaoResult = await extractPDFText(peticao.file);
+
+        // Extract text from emendas
+        const emendasTexts: string[] = [];
+        for (const emenda of emendas) {
+          const result = await extractPDFText(emenda.file);
+          emendasTexts.push(result.text);
         }
 
-        const peticaoResult = await extractPDFText(peticao.file);
-        const contestacaoResult = contestacao ? await extractPDFText(contestacao.file) : null;
+        // Extract text from contestações
+        const contestacoesTexts: string[] = [];
+        for (const contestacao of contestacoes) {
+          const result = await extractPDFText(contestacao.file);
+          contestacoesTexts.push(result.text);
+        }
+
+        // Concatenate contestações for analysis
+        const contestacaoTextoCompleto = contestacoesTexts.length > 0
+          ? contestacoesTexts.join('\n\n---\n\n')
+          : null;
 
         const analysisResult = await analyzeWithAI(
           peticaoResult.text,
-          contestacaoResult?.text || null
+          contestacaoTextoCompleto,
+          emendasTexts
         );
 
         if (!analysisResult) {
@@ -422,25 +495,25 @@ export const BatchMode: React.FC = () => {
         const id = await createAnalysis({
           resultado: analysisResult,
           nomeArquivoPeticao: peticao.file.name,
-          nomeArquivoContestacao: contestacao?.file.name,
+          nomesArquivosEmendas: emendas.map(e => e.file.name),
+          nomesArquivosContestacoes: contestacoes.map(c => c.file.name),
         });
 
         if (!id) {
           throw new Error('Falha ao salvar análise');
         }
 
+        // Mark all files as success
         updateBatchFile(peticao.id, { status: 'success' });
-        if (contestacao) {
-          updateBatchFile(contestacao.id, { status: 'success' });
-        }
+        emendas.forEach(e => updateBatchFile(e.id, { status: 'success' }));
+        contestacoes.forEach(c => updateBatchFile(c.id, { status: 'success' }));
 
         processed++;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
         updateBatchFile(peticao.id, { status: 'error', error: errorMessage });
-        if (contestacao) {
-          updateBatchFile(contestacao.id, { status: 'error', error: errorMessage });
-        }
+        emendas.forEach(e => updateBatchFile(e.id, { status: 'error', error: errorMessage }));
+        contestacoes.forEach(c => updateBatchFile(c.id, { status: 'error', error: errorMessage }));
         errors++;
       }
 
@@ -532,17 +605,14 @@ export const BatchMode: React.FC = () => {
           </div>
 
           {/* Format hint */}
-          <div className="mt-3 w-full max-w-sm bg-slate-100 dark:bg-slate-700/50 rounded-lg px-4 py-3">
+          <div className="mt-3 w-full max-w-md bg-slate-100 dark:bg-slate-700/50 rounded-lg px-4 py-3">
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
-              Formato esperado do nome:
+              O sistema identifica automaticamente pelo nome:
             </p>
-            <div className="space-y-1">
-              <p className="text-xs text-slate-600 dark:text-slate-300 font-mono">
-                [0000272-52.2025.5.08.0201] 1. Petição Inicial
-              </p>
-              <p className="text-xs text-slate-600 dark:text-slate-300 font-mono">
-                [0000272-52.2025.5.08.0201] 2. Contestação
-              </p>
+            <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
+              <p>• <span className="font-mono">petição</span>, <span className="font-mono">inicial</span> → Petição Inicial</p>
+              <p>• <span className="font-mono">emenda</span> → Emenda à Inicial</p>
+              <p>• <span className="font-mono">contestação</span>, <span className="font-mono">defesa</span> → Contestação</p>
             </div>
           </div>
         </div>
