@@ -470,7 +470,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
         // Validar se encontrou conteudo
         if (validateResponse && !textContent) {
-          throw new Error('Nenhum conteudo de texto encontrado na resposta da API');
+          throw new Error('Nenhum conteúdo de texto encontrado na resposta da API');
         }
 
         return textContent.trim();
@@ -479,7 +479,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         const errObj = err as Error;
         if (errObj.name === 'AbortError') {
           if (abortSignal?.aborted) {
-            throw new Error('Operacao cancelada pelo usuario');
+            throw new Error('Operação cancelada pelo usuário');
           } else {
             throw new Error(`Timeout: operacao demorou mais de ${(effectiveTimeout || 0) / 1000}s`);
           }
@@ -881,6 +881,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         backoffType: 'exponential',
         backoffMultiplier: 2,
         retryableStatusCodes: GEMINI_RETRY_CODES,
+        abortSignal,
         onRetry: (attempt, err, delay) => {
           console.warn(`[Gemini] Retry ${attempt}, aguardando ${delay}ms:`, err.message);
         }
@@ -1000,7 +1001,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         return data;
       } catch (err) {
         if ((err as Error).name === 'AbortError') {
-          throw new Error('Requisicao cancelada (timeout)');
+          throw new Error('Operação cancelada pelo usuário');
         }
         throw err;
       }
@@ -1012,6 +1013,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         initialDelayMs: 5000,
         backoffType: 'linear',  // OpenAI usa backoff linear
         retryableStatusCodes: OPENAI_RETRY_CODES,
+        abortSignal,
         onRetry: (attempt, err, delay) => {
           console.warn(`[OpenAI] Retry ${attempt}, aguardando ${delay}ms:`, err.message);
         }
@@ -1122,7 +1124,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         return data;
       } catch (err) {
         if ((err as Error).name === 'AbortError') {
-          throw new Error('Requisicao cancelada');
+          throw new Error('Operação cancelada pelo usuário');
         }
         throw err;
       }
@@ -1133,6 +1135,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       initialDelayMs: 5000,
       backoffType: 'linear',  // Grok usa backoff linear
       retryableStatusCodes: GROK_RETRY_CODES,
+      abortSignal,
       onRetry: (attempt, err, delay) => {
         console.warn(`[Grok] Retry ${attempt}, aguardando ${delay}ms:`, err.message);
       }

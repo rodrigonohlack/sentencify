@@ -1219,7 +1219,7 @@ describe('useAIIntegration', () => {
       });
       expect(error).not.toBeNull();
       expect(error!.message).toContain('cancelada');
-    });
+    }, 15000);
 
     it('should handle network errors (Failed to fetch) with retry', async () => {
       const networkError = new Error('Failed to fetch');
@@ -1381,7 +1381,7 @@ describe('useAIIntegration', () => {
       expect(response).toBe('Success');
     }, 15000);
 
-    it('should throw error after retries exhausted on Gemini 400', async () => {
+    it('should throw error immediately on Gemini 400 (non-retryable)', async () => {
       const badRequest = createMockResponse({ error: { message: 'Bad request' } }, 400, false);
       vi.mocked(global.fetch).mockResolvedValue(badRequest as any);
 
@@ -1399,9 +1399,8 @@ describe('useAIIntegration', () => {
         }
       });
       expect(error).not.toBeNull();
-      // 400 errors are also retried via catch block (all non-abort errors are retried)
-      expect(global.fetch).toHaveBeenCalledTimes(3);
-    }, 45000);
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    }, 15000);
 
     it('should log token metrics for Gemini', async () => {
       const mockResponse = createMockResponse({
@@ -1478,7 +1477,7 @@ describe('useAIIntegration', () => {
       });
       expect(error).not.toBeNull();
       expect(error!.message).toContain('cancelada');
-    });
+    }, 15000);
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1628,7 +1627,7 @@ describe('useAIIntegration', () => {
       expect(response).toBe('OK');
     }, 15000);
 
-    it('should throw error after retries exhausted on OpenAI 400', async () => {
+    it('should throw error immediately on OpenAI 400 (non-retryable)', async () => {
       const badRequest = createMockResponse({ error: { message: 'Bad request' } }, 400, false);
       vi.mocked(global.fetch).mockResolvedValue(badRequest as any);
 
@@ -1647,9 +1646,8 @@ describe('useAIIntegration', () => {
       });
       expect(error).not.toBeNull();
       expect(error!.message).toContain('Bad request');
-      // 400 errors are also retried via catch block (all non-abort errors are retried)
-      expect(global.fetch).toHaveBeenCalledTimes(3);
-    }, 30000);
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    }, 15000);
 
     it('should log token metrics for OpenAI', async () => {
       const mockResponse = createMockResponse({
@@ -1703,6 +1701,9 @@ describe('useAIIntegration', () => {
       abortError.name = 'AbortError';
       vi.mocked(global.fetch).mockRejectedValue(abortError);
 
+      const controller = new AbortController();
+      controller.abort();
+
       const { result } = renderHook(() => useAIIntegration());
 
       let error: Error | null = null;
@@ -1710,7 +1711,7 @@ describe('useAIIntegration', () => {
         try {
           await result.current.callOpenAIAPI(
             [{ role: 'user', content: 'Hi' }] as any,
-            {}
+            { abortSignal: controller.signal }
           );
         } catch (e) {
           error = e as Error;
@@ -1718,7 +1719,7 @@ describe('useAIIntegration', () => {
       });
       expect(error).not.toBeNull();
       expect(error!.message).toContain('cancelada');
-    });
+    }, 15000);
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1826,7 +1827,7 @@ describe('useAIIntegration', () => {
       expect(response).toBe('OK');
     }, 15000);
 
-    it('should throw error after retries exhausted on Grok 400', async () => {
+    it('should throw error immediately on Grok 400 (non-retryable)', async () => {
       const badRequest = createMockResponse({ error: { message: 'Invalid model' } }, 400, false);
       vi.mocked(global.fetch).mockResolvedValue(badRequest as any);
 
@@ -1845,9 +1846,8 @@ describe('useAIIntegration', () => {
       });
       expect(error).not.toBeNull();
       expect(error!.message).toContain('Invalid model');
-      // 400 errors are also retried via catch block (all non-abort errors are retried)
-      expect(global.fetch).toHaveBeenCalledTimes(3);
-    }, 30000);
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    }, 15000);
 
     it('should log token metrics for Grok', async () => {
       const mockResponse = createMockResponse({
@@ -1901,6 +1901,9 @@ describe('useAIIntegration', () => {
       abortError.name = 'AbortError';
       vi.mocked(global.fetch).mockRejectedValue(abortError);
 
+      const controller = new AbortController();
+      controller.abort();
+
       const { result } = renderHook(() => useAIIntegration());
 
       let error: Error | null = null;
@@ -1908,7 +1911,7 @@ describe('useAIIntegration', () => {
         try {
           await result.current.callGrokAPI(
             [{ role: 'user', content: 'Hi' }] as any,
-            {}
+            { abortSignal: controller.signal }
           );
         } catch (e) {
           error = e as Error;
@@ -1916,7 +1919,7 @@ describe('useAIIntegration', () => {
       });
       expect(error).not.toBeNull();
       expect(error!.message).toContain('cancelada');
-    });
+    }, 15000);
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

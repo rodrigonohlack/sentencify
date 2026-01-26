@@ -11,6 +11,17 @@ import { ANALYSIS_SYSTEM_PROMPT, buildAnalysisPrompt } from '../prompts';
 import type { AnalysisResult, AIMessage } from '../types';
 import { parseAIResponse, extractJSON, AnalysisResponseSchema } from '../../../schemas/ai-responses';
 
+/**
+ * Converte qualquer valor para string de forma segura
+ * Evita React Error #300 quando LLM retorna objetos ao invés de strings
+ */
+const ensureString = (value: unknown): string => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+};
+
 export const useAnalysis = () => {
   const { peticao, emendas, contestacoes, getAllDocumentsText, canAnalyze } = useDocumentStore();
   const { setResult, setIsAnalyzing, setProgress, setError, reset } = useResultStore();
@@ -66,14 +77,21 @@ export const useAnalysis = () => {
         throw new Error('Resultado incompleto: falta identificacao');
       }
 
-      // Ensure arrays are present
+      // Ensure arrays are present and string fields are coerced
       return {
         identificacao: parsed.identificacao || { reclamantes: [], reclamadas: [] },
         contrato: parsed.contrato || { dadosInicial: {}, controversias: [] },
         tutelasProvisoras: parsed.tutelasProvisoras || [],
         preliminares: parsed.preliminares || [],
         prejudiciais: parsed.prejudiciais || {},
-        pedidos: parsed.pedidos || [],
+        // Coerce string fields in pedidos to avoid React Error #300
+        pedidos: (parsed.pedidos || []).map((p: Record<string, unknown>) => ({
+          ...p,
+          fatosReclamante: ensureString(p.fatosReclamante),
+          defesaReclamada: ensureString(p.defesaReclamada),
+          teseJuridica: ensureString(p.teseJuridica),
+          confissaoFicta: p.confissaoFicta ? ensureString(p.confissaoFicta) : null,
+        })),
         reconvencao: parsed.reconvencao,
         defesasAutonomas: parsed.defesasAutonomas || [],
         impugnacoes: parsed.impugnacoes || { documentos: [], documentosNaoImpugnados: [] },
