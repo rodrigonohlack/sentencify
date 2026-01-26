@@ -95,12 +95,12 @@ Retorne APENAS um JSON válido no seguinte formato (sem texto adicional antes ou
     {
       "numero": 1,
       "tema": "string (ex: HORAS EXTRAS, ADICIONAL NOTURNO)",
-      "descricao": "string detalhada do pedido",
+      "descricao": "string DETALHADA do pedido conforme petição",
       "periodo": "string ou null",
       "valor": "number ou null",
-      "fatosReclamante": "string - o que o reclamante alega",
-      "defesaReclamada": "string ou null - o que a reclamada contesta",
-      "teseJuridica": "string ou null - fundamento jurídico",
+      "fatosReclamante": "string COMPLETA com TODOS os argumentos, valores, horários, datas e fundamentos alegados pelo reclamante - transcreva fielmente sem resumir",
+      "defesaReclamada": "string COMPLETA com TODOS os argumentos da defesa, incluindo teses numeradas, citações de normas coletivas, jurisprudência citada - transcreva fielmente sem resumir. Se não houver contestação: 'Não houve contestação (Ausência de manifestação)'",
+      "teseJuridica": "string ou null - fundamento jurídico principal",
       "controversia": true/false,
       "confissaoFicta": "string ou null - se há confissão ficta por ausência de impugnação específica",
       "pontosEsclarecer": ["array de pontos a esclarecer em audiência"]
@@ -178,11 +178,12 @@ Retorne APENAS um JSON válido no seguinte formato (sem texto adicional antes ou
 INSTRUÇÕES ADICIONAIS:
 1. Se não houver contestação, marque todos os pedidos como controversos por ausência de manifestação
 2. Identifique confissão ficta quando a reclamada não impugnar especificamente um fato
-3. Na tabela sintética, resuma as teses de forma concisa (máximo 100 caracteres cada)
-4. Alertas devem incluir: prazos próximos, possíveis nulidades, documentos faltantes, etc.
-5. Se o valor da causa não corresponder à soma dos pedidos, marque como inconsistência
-6. Considere que emendas podem adicionar pedidos, modificar valores ou corrigir informações da petição inicial
-7. Em caso de múltiplas contestações, consolide as defesas indicando qual réu apresentou cada uma`;
+3. IMPORTANTE: Nos campos 'fatosReclamante' e 'defesaReclamada' dos PEDIDOS, inclua TODOS os detalhes: valores específicos, horários, datas, argumentos numerados, citações de normas coletivas (ex: "cláusula 30ª do ACT"), jurisprudência citada. NÃO RESUMA.
+4. APENAS na tabela sintética ('tabelaSintetica'), resuma as teses de forma concisa (máximo 100 caracteres cada)
+5. Alertas devem incluir: prazos próximos, possíveis nulidades, documentos faltantes, etc.
+6. Se o valor da causa não corresponder à soma dos pedidos, marque como inconsistência
+7. Considere que emendas podem adicionar pedidos, modificar valores ou corrigir informações da petição inicial
+8. Em caso de múltiplas contestações, consolide as defesas indicando qual réu apresentou cada uma`;
 
 /**
  * Constrói o prompt de análise com os documentos
