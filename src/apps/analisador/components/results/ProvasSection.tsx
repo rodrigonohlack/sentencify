@@ -6,6 +6,7 @@
 import React from 'react';
 import { FileSearch, Check, X } from 'lucide-react';
 import { AccordionItem } from '../ui';
+import { safeRender } from '../../utils/safe-render';
 import type { Provas } from '../../types';
 
 interface ProvasSectionProps {
@@ -43,14 +44,14 @@ export const ProvasSection: React.FC<ProvasSectionProps> = ({ provas }) => {
                 <p className="text-emerald-700 font-medium mb-1">Outras:</p>
                 <ul className="space-y-1">
                   {provas.reclamante.outras.map((item, idx) => (
-                    <li key={idx} className="text-emerald-600">• {item}</li>
+                    <li key={idx} className="text-emerald-600">• {safeRender(item)}</li>
                   ))}
                 </ul>
               </div>
             )}
             {provas.reclamante.especificacoes && (
               <div className="pt-2 border-t border-emerald-200">
-                <p className="text-emerald-700 italic">{provas.reclamante.especificacoes}</p>
+                <p className="text-emerald-700 italic">{safeRender(provas.reclamante.especificacoes)}</p>
               </div>
             )}
           </div>
@@ -69,14 +70,14 @@ export const ProvasSection: React.FC<ProvasSectionProps> = ({ provas }) => {
                 <p className="text-amber-700 font-medium mb-1">Outras:</p>
                 <ul className="space-y-1">
                   {provas.reclamada.outras.map((item, idx) => (
-                    <li key={idx} className="text-amber-600">• {item}</li>
+                    <li key={idx} className="text-amber-600">• {safeRender(item)}</li>
                   ))}
                 </ul>
               </div>
             )}
             {provas.reclamada.especificacoes && (
               <div className="pt-2 border-t border-amber-200">
-                <p className="text-amber-700 italic">{provas.reclamada.especificacoes}</p>
+                <p className="text-amber-700 italic">{safeRender(provas.reclamada.especificacoes)}</p>
               </div>
             )}
           </div>

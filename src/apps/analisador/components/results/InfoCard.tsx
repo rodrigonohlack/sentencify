@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
+import { safeRender } from '../../utils/safe-render';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -210,7 +211,7 @@ export const InfoList: React.FC<InfoListProps> = ({
               className="text-slate-800 dark:text-slate-100 text-sm flex items-start gap-2"
             >
               <span className="text-indigo-500 dark:text-indigo-400 mt-1">•</span>
-              {item}
+              {safeRender(item)}
             </li>
           ))}
         </ul>

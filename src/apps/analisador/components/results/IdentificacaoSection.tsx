@@ -6,6 +6,7 @@
 import React from 'react';
 import { User, Building2, FileText, Calendar, Scale, DollarSign } from 'lucide-react';
 import { Badge } from '../ui';
+import { safeRender } from '../../utils/safe-render';
 import type { Identificacao, ValorCausa } from '../../types';
 
 interface IdentificacaoSectionProps {
@@ -99,7 +100,7 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
           <div>
             <p className="text-sm text-slate-500">Reclamante(s)</p>
             {data.reclamantes.map((nome, idx) => (
-              <p key={idx} className="font-medium text-slate-800">{nome}</p>
+              <p key={idx} className="font-medium text-slate-800">{safeRender(nome)}</p>
             ))}
           </div>
         </div>
@@ -110,7 +111,7 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
           <div>
             <p className="text-sm text-slate-500">Reclamada(s)</p>
             {data.reclamadas.map((nome, idx) => (
-              <p key={idx} className="font-medium text-slate-800">{nome}</p>
+              <p key={idx} className="font-medium text-slate-800">{safeRender(nome)}</p>
             ))}
           </div>
         </div>

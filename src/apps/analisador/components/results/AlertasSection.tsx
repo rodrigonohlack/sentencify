@@ -6,6 +6,7 @@
 import React from 'react';
 import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import { AccordionItem, Badge } from '../ui';
+import { safeRender } from '../../utils/safe-render';
 import type { Alerta, AlertaSeveridade } from '../../types';
 
 interface AlertasSectionProps {
@@ -93,11 +94,11 @@ export const AlertasSection: React.FC<AlertasSectionProps> = ({ alertas }) => {
                       </Badge>
                     </div>
                     <p className={`text-sm ${config.textColor} opacity-90`}>
-                      {alerta.descricao}
+                      {safeRender(alerta.descricao)}
                     </p>
                     {alerta.recomendacao && (
                       <p className={`text-sm ${config.textColor} opacity-75 mt-2 italic`}>
-                        <strong>Recomendação:</strong> {alerta.recomendacao}
+                        <strong>Recomendação:</strong> {safeRender(alerta.recomendacao)}
                       </p>
                     )}
                   </div>

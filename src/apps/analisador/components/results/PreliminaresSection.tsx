@@ -6,6 +6,7 @@
 import React from 'react';
 import { Shield, Clock, AlertTriangle } from 'lucide-react';
 import { AccordionItem, Badge } from '../ui';
+import { safeRender } from '../../utils/safe-render';
 import type { Preliminar, Prejudiciais } from '../../types';
 
 interface PreliminaresSectionProps {
@@ -42,10 +43,10 @@ export const PreliminaresSection: React.FC<PreliminaresSectionProps> = ({
                       {item.alegadaPor === 'reclamante' ? 'Reclamante' : 'Reclamada'}
                     </Badge>
                   </div>
-                  <p className="text-sm text-slate-600">{item.descricao}</p>
+                  <p className="text-sm text-slate-600">{safeRender(item.descricao)}</p>
                   {item.fundamentacao && (
                     <p className="text-sm text-slate-500 mt-2 italic">
-                      {item.fundamentacao}
+                      {safeRender(item.fundamentacao)}
                     </p>
                   )}
                 </div>
@@ -70,7 +71,7 @@ export const PreliminaresSection: React.FC<PreliminaresSectionProps> = ({
                 <strong>Data base:</strong> {prescricao.dataBase}
               </p>
             )}
-            <p className="text-sm text-amber-700">{prescricao.fundamentacao}</p>
+            <p className="text-sm text-amber-700">{safeRender(prescricao.fundamentacao)}</p>
           </div>
         )}
 
@@ -85,7 +86,7 @@ export const PreliminaresSection: React.FC<PreliminaresSectionProps> = ({
             <p className="text-sm text-red-700 mb-1">
               <strong>Prazo:</strong> {decadencia.prazo}
             </p>
-            <p className="text-sm text-red-700">{decadencia.fundamentacao}</p>
+            <p className="text-sm text-red-700">{safeRender(decadencia.fundamentacao)}</p>
           </div>
         )}
 

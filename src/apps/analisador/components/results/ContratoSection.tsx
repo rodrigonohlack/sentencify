@@ -6,6 +6,7 @@
 import React from 'react';
 import { Briefcase, AlertTriangle } from 'lucide-react';
 import { AccordionItem } from '../ui';
+import { safeRender } from '../../utils/safe-render';
 import type { Contrato } from '../../types';
 
 interface ContratoSectionProps {
@@ -106,7 +107,7 @@ export const ContratoSection: React.FC<ContratoSectionProps> = ({ data }) => {
               {controversias.map((item, idx) => (
                 <li key={idx} className="text-sm text-amber-700 flex items-start gap-2">
                   <span className="text-amber-400">•</span>
-                  {item}
+                  {safeRender(item)}
                 </li>
               ))}
             </ul>
