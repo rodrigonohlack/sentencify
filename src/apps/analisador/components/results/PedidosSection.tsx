@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { ListChecks, ChevronDown, AlertCircle, CheckCircle, HelpCircle } from 'lucide-react';
 import { AccordionItem, Badge } from '../ui';
+import { safeRender } from '../../utils/safe-render';
 import type { PedidoAnalise } from '../../types';
 
 interface PedidosSectionProps {
@@ -56,7 +57,7 @@ const PedidoCard: React.FC<{ pedido: PedidoAnalise }> = ({ pedido }) => {
           {/* Descrição */}
           <div>
             <h5 className="text-sm font-medium text-slate-600 mb-1">Descrição do Pedido</h5>
-            <p className="text-sm text-slate-800">{pedido.descricao}</p>
+            <p className="text-sm text-slate-800">{safeRender(pedido.descricao)}</p>
             {pedido.periodo && (
               <p className="text-sm text-slate-500 mt-1">
                 <strong>Período:</strong> {pedido.periodo}
@@ -67,14 +68,14 @@ const PedidoCard: React.FC<{ pedido: PedidoAnalise }> = ({ pedido }) => {
           {/* Tese do Reclamante */}
           <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
             <h5 className="text-sm font-medium text-emerald-800 mb-1">Tese do Reclamante</h5>
-            <p className="text-sm text-emerald-700">{pedido.fatosReclamante}</p>
+            <p className="text-sm text-emerald-700">{safeRender(pedido.fatosReclamante)}</p>
           </div>
 
           {/* Defesa da Reclamada */}
           {pedido.defesaReclamada && (
             <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
               <h5 className="text-sm font-medium text-amber-800 mb-1">Defesa da Reclamada</h5>
-              <p className="text-sm text-amber-700">{pedido.defesaReclamada}</p>
+              <p className="text-sm text-amber-700">{safeRender(pedido.defesaReclamada)}</p>
             </div>
           )}
 
@@ -82,7 +83,7 @@ const PedidoCard: React.FC<{ pedido: PedidoAnalise }> = ({ pedido }) => {
           {pedido.teseJuridica && (
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
               <h5 className="text-sm font-medium text-blue-800 mb-1">Fundamento Jurídico</h5>
-              <p className="text-sm text-blue-700">{pedido.teseJuridica}</p>
+              <p className="text-sm text-blue-700">{safeRender(pedido.teseJuridica)}</p>
             </div>
           )}
 
@@ -92,7 +93,7 @@ const PedidoCard: React.FC<{ pedido: PedidoAnalise }> = ({ pedido }) => {
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div>
                 <h5 className="text-sm font-medium text-red-800">Confissão Ficta</h5>
-                <p className="text-sm text-red-700">{pedido.confissaoFicta}</p>
+                <p className="text-sm text-red-700">{safeRender(pedido.confissaoFicta)}</p>
               </div>
             </div>
           )}
@@ -108,7 +109,7 @@ const PedidoCard: React.FC<{ pedido: PedidoAnalise }> = ({ pedido }) => {
                 {pedido.pontosEsclarecer.map((ponto, idx) => (
                   <li key={idx} className="text-sm text-violet-700 flex items-start gap-2">
                     <span className="text-violet-400">•</span>
-                    {ponto}
+                    {safeRender(ponto)}
                   </li>
                 ))}
               </ul>

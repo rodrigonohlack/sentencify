@@ -6,6 +6,7 @@
 import React from 'react';
 import { DollarSign, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Badge } from '../ui';
+import { safeRender } from '../../utils/safe-render';
 import type { TabelaPedido, ValorCausa } from '../../types';
 
 interface TabelaComparativaProps {
@@ -98,13 +99,13 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
                   {formatCurrency(pedido.valor)}
                 </td>
                 <td className="px-4 py-3 text-slate-600 max-w-[200px]">
-                  <p className="truncate" title={pedido.teseAutor}>
-                    {pedido.teseAutor}
+                  <p className="truncate" title={safeRender(pedido.teseAutor)}>
+                    {safeRender(pedido.teseAutor)}
                   </p>
                 </td>
                 <td className="px-4 py-3 text-slate-600 max-w-[200px]">
-                  <p className="truncate" title={pedido.teseRe}>
-                    {pedido.teseRe || '-'}
+                  <p className="truncate" title={safeRender(pedido.teseRe)}>
+                    {safeRender(pedido.teseRe) || '-'}
                   </p>
                 </td>
                 <td className="px-4 py-3 text-center">
@@ -138,7 +139,7 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
             {pedidos.filter(p => p.confissaoFicta || p.observacoes).map((p) => (
               <div key={p.numero} className="text-sm text-red-700">
                 <strong>#{p.numero} {p.tema}:</strong>{' '}
-                {p.confissaoFicta || p.observacoes}
+                {safeRender(p.confissaoFicta || p.observacoes)}
               </div>
             ))}
           </div>
