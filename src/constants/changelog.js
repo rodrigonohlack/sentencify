@@ -2,11 +2,6 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
-  { version: '1.39.06', feature: 'Fix auto-scroll durante drag no TopicCurationModal: TraversalOrder.ReversedTreeOrder para priorizar scroll container do modal (antes: window era priorizada, impedindo scroll interno)' },
-  { version: '1.39.05', feature: 'Fix auto-scroll durante drag no TopicCurationModal: MeasuringStrategy.Always para recalcular posições durante scroll + touch-action:none no drag handle + KeyboardSensor para acessibilidade' },
-  { version: '1.39.04', feature: 'Fix auto-scroll durante drag no TopicCurationModal: mover DndContext para envolver scroll container (antes estava dentro, impedindo @dnd-kit de detectar e gerenciar scroll automático)' },
-  { version: '1.39.03', feature: 'Fix auto-scroll durante drag no TopicCurationModal: adicionar autoScroll={true} explícito no DndContext para garantir funcionamento em modais com position:fixed' },
-  { version: '1.39.02', feature: 'Fix auto-scroll durante drag no TopicCurationModal: remover createPortal do DragOverlay para @dnd-kit detectar scroll container do modal' },
   { version: '1.39.01', feature: 'Fix scroll no TopicCurationModal: body scroll lock quando modal aberto, prevenção de scroll externo durante drag, handler para drag cancelado (ESC)' },
   { version: '1.39.00', feature: 'Eliminação total de any types: tipagem completa para APIs (Claude, OpenAI, Grok, Gemini), PDF.js e respostas de IA. 0 any types, 0 erros TypeScript, 88% cobertura, 5932 testes' },
   { version: '1.38.53', feature: 'Fix erros TypeScript em arquivos de teste: corrigir 10 erros de tipo (DOMPurify/Quill types, TopicCategory, PastedText[], imports não usados, variáveis não lidas). 0 erros TypeScript' },

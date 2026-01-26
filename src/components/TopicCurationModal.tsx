@@ -1,12 +1,13 @@
 /**
  * TopicCurationModal.tsx
  * Modal de curadoria de tópicos pré-geração de mini-relatórios
- * v1.39.06 - Fix: TraversalOrder.ReversedTreeOrder para auto-scroll priorizar scroll container do modal
+ * v1.39.01 - Fix: Body scroll lock e scroll lock durante drag
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay, MeasuringStrategy, TraversalOrder } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { createPortal } from 'react-dom';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 import {
   GripVertical,
@@ -454,7 +455,7 @@ const TopicPreviewCard = React.memo<TopicPreviewCardProps>(({
       {isSpecial ? (
         <Pin className="w-4 h-4 text-emerald-500 flex-shrink-0" aria-label="Posição fixa" />
       ) : (
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing" style={{ touchAction: 'none' }}>
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
           <GripVertical className="w-4 h-4 text-slate-500 hover:text-slate-300" />
         </div>
       )}
@@ -955,9 +956,6 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 }
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
     })
   );
 
@@ -1198,23 +1196,6 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
           <span>🗑️ Apague desnecessários</span>
         </div>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={customCollisionDetection}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragCancel={handleDragCancel}
-          autoScroll={{
-            order: TraversalOrder.ReversedTreeOrder,
-            threshold: { x: 0.1, y: 0.1 },
-            acceleration: 15,
-          }}
-          measuring={{
-            droppable: {
-              strategy: MeasuringStrategy.Always,
-            },
-          }}
-        >
         <div className="flex-1 overflow-y-auto p-4 space-y-2" data-modal-scroll-container>
           {showMergeConfirm && selectedForMerge.length >= 2 && (
             <MergeConfirm
@@ -1225,6 +1206,13 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
             />
           )}
 
+          <DndContext
+            sensors={sensors}
+            collisionDetection={customCollisionDetection}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
             <SortableContext
               items={topics.map(t => t.id || t.title)}
               strategy={verticalListSortingStrategy}
@@ -1256,6 +1244,23 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
               ))}
             </SortableContext>
 
+            {/* DragOverlay renderizado via portal no body - escapa do modal para evitar lag */}
+            {createPortal(
+              <DragOverlay dropAnimation={null}>
+                {activeTopic && (
+                  <TopicCardVisual
+                    topic={activeTopic}
+                    index={activeIndex}
+                    isDarkMode={isDarkMode}
+                    isOverlay={true}
+                    isSelectedForMerge={selectedForMerge.some(t => t.title === activeTopic.title)}
+                  />
+                )}
+              </DragOverlay>,
+              document.body
+            )}
+          </DndContext>
+
           {isAddingTopic ? (
             <AddTopicInline
               onAdd={handleAddTopic}
@@ -1278,20 +1283,6 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
             </button>
           )}
         </div>
-
-          {/* DragOverlay fora do scroll container para posicionar livremente */}
-          <DragOverlay dropAnimation={null}>
-            {activeTopic && (
-              <TopicCardVisual
-                topic={activeTopic}
-                index={activeIndex}
-                isDarkMode={isDarkMode}
-                isOverlay={true}
-                isSelectedForMerge={selectedForMerge.some(t => t.title === activeTopic.title)}
-              />
-            )}
-          </DragOverlay>
-        </DndContext>
 
         <div className={`
           p-4 border-t
