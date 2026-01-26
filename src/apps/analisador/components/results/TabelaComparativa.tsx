@@ -67,7 +67,7 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
           <div>
             <p className="font-medium text-amber-800">Inconsistência no Valor da Causa</p>
             <p className="text-sm text-amber-700 mt-1">
-              {valorCausa.detalhes || 'O valor da causa não corresponde à soma dos pedidos.'}
+              {safeRender(valorCausa.detalhes) || 'O valor da causa não corresponde à soma dos pedidos.'}
             </p>
           </div>
         </div>

@@ -45,23 +45,23 @@ export const ContratoSection: React.FC<ContratoSectionProps> = ({ data }) => {
             <tbody className="divide-y divide-slate-100">
               <tr>
                 <td className="px-4 py-3 text-slate-600">Admissão</td>
-                <td className="px-4 py-3 text-slate-800">{dadosInicial.dataAdmissao || '-'}</td>
+                <td className="px-4 py-3 text-slate-800">{safeRender(dadosInicial.dataAdmissao) || '-'}</td>
                 {hasContestacao && (
-                  <td className="px-4 py-3 text-slate-800">{dadosContestacao?.dataAdmissao || '-'}</td>
+                  <td className="px-4 py-3 text-slate-800">{safeRender(dadosContestacao?.dataAdmissao) || '-'}</td>
                 )}
               </tr>
               <tr>
                 <td className="px-4 py-3 text-slate-600">Demissão</td>
-                <td className="px-4 py-3 text-slate-800">{dadosInicial.dataDemissao || '-'}</td>
+                <td className="px-4 py-3 text-slate-800">{safeRender(dadosInicial.dataDemissao) || '-'}</td>
                 {hasContestacao && (
-                  <td className="px-4 py-3 text-slate-800">{dadosContestacao?.dataDemissao || '-'}</td>
+                  <td className="px-4 py-3 text-slate-800">{safeRender(dadosContestacao?.dataDemissao) || '-'}</td>
                 )}
               </tr>
               <tr>
                 <td className="px-4 py-3 text-slate-600">Função</td>
-                <td className="px-4 py-3 text-slate-800">{dadosInicial.funcao || '-'}</td>
+                <td className="px-4 py-3 text-slate-800">{safeRender(dadosInicial.funcao) || '-'}</td>
                 {hasContestacao && (
-                  <td className="px-4 py-3 text-slate-800">{dadosContestacao?.funcao || '-'}</td>
+                  <td className="px-4 py-3 text-slate-800">{safeRender(dadosContestacao?.funcao) || '-'}</td>
                 )}
               </tr>
               <tr>
@@ -73,23 +73,23 @@ export const ContratoSection: React.FC<ContratoSectionProps> = ({ data }) => {
               </tr>
               <tr>
                 <td className="px-4 py-3 text-slate-600">Tipo de Contrato</td>
-                <td className="px-4 py-3 text-slate-800">{dadosInicial.tipoContrato || '-'}</td>
+                <td className="px-4 py-3 text-slate-800">{safeRender(dadosInicial.tipoContrato) || '-'}</td>
                 {hasContestacao && (
-                  <td className="px-4 py-3 text-slate-800">{dadosContestacao?.tipoContrato || '-'}</td>
+                  <td className="px-4 py-3 text-slate-800">{safeRender(dadosContestacao?.tipoContrato) || '-'}</td>
                 )}
               </tr>
               <tr>
                 <td className="px-4 py-3 text-slate-600">Motivo Rescisão</td>
-                <td className="px-4 py-3 text-slate-800">{dadosInicial.motivoRescisao || '-'}</td>
+                <td className="px-4 py-3 text-slate-800">{safeRender(dadosInicial.motivoRescisao) || '-'}</td>
                 {hasContestacao && (
-                  <td className="px-4 py-3 text-slate-800">{dadosContestacao?.motivoRescisao || '-'}</td>
+                  <td className="px-4 py-3 text-slate-800">{safeRender(dadosContestacao?.motivoRescisao) || '-'}</td>
                 )}
               </tr>
               <tr>
                 <td className="px-4 py-3 text-slate-600">Jornada Alegada</td>
-                <td className="px-4 py-3 text-slate-800">{dadosInicial.jornadaAlegada || '-'}</td>
+                <td className="px-4 py-3 text-slate-800">{safeRender(dadosInicial.jornadaAlegada) || '-'}</td>
                 {hasContestacao && (
-                  <td className="px-4 py-3 text-slate-800">{dadosContestacao?.jornadaAlegada || '-'}</td>
+                  <td className="px-4 py-3 text-slate-800">{safeRender(dadosContestacao?.jornadaAlegada) || '-'}</td>
                 )}
               </tr>
             </tbody>
