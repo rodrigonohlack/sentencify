@@ -124,7 +124,11 @@ function describeTopicCorrection(correction: DoubleCheckCorrection): string {
       }
       return `Adicionar novo tópico`;
     case 'merge':
-      return `Mesclar "${correction.topics?.join('" + "')}" → "${correction.into}"`;
+      // into pode ser string ou objeto { title: string }
+      const intoTitle = typeof correction.into === 'string'
+        ? correction.into
+        : (correction.into as unknown as { title?: string })?.title || 'tópico mesclado';
+      return `Mesclar "${correction.topics?.join('" + "')}" → "${intoTitle}"`;
     case 'reclassify':
       const reclassifyTopic = typeof correction.topic === 'string'
         ? correction.topic
@@ -311,7 +315,14 @@ function applyTopicExtractionCorrections(
           // Encontrar categoria do primeiro tópico mesclado ou usar MÉRITO
           const firstMergedTopic = topics.find(t => correction.topics!.includes(t.title));
           const category = firstMergedTopic?.category || 'MÉRITO';
-          topics.push({ title: correction.into, category });
+          // into pode ser string ou objeto { title: string, category?: string }
+          const mergedTitle = typeof correction.into === 'string'
+            ? correction.into
+            : (correction.into as { title?: string })?.title || 'tópico mesclado';
+          const mergedCategory = typeof correction.into === 'object'
+            ? (correction.into as { category?: string })?.category || category
+            : category;
+          topics.push({ title: mergedTitle, category: mergedCategory });
         }
         break;
       }
