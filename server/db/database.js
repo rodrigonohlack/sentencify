@@ -54,6 +54,7 @@ const runMigrations = () => {
     { name: '003_library_sharing', fn: migration003LibrarySharing },
     { name: '004_share_recipient_email', fn: migration004ShareRecipientEmail },
     { name: '005_analyses', fn: migration005Analyses },
+    { name: '006_analyses_plural', fn: migration006AnalysesPlural },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -250,6 +251,34 @@ function migration005Analyses(db) {
     CREATE INDEX IF NOT EXISTS idx_analyses_processo ON analyses(numero_processo);
     CREATE INDEX IF NOT EXISTS idx_analyses_deleted ON analyses(deleted_at);
   `);
+}
+
+// Migration 006: Suporte a múltiplos arquivos emenda/contestação
+function migration006AnalysesPlural(db) {
+  // Adicionar colunas para arrays
+  db.exec(`
+    ALTER TABLE analyses ADD COLUMN nomes_arquivos_emendas TEXT;
+    ALTER TABLE analyses ADD COLUMN nomes_arquivos_contestacoes TEXT;
+  `);
+
+  // Migrar dados existentes (nome_arquivo_contestacao → nomes_arquivos_contestacoes)
+  const analyses = db.prepare(`
+    SELECT id, nome_arquivo_contestacao
+    FROM analyses
+    WHERE nome_arquivo_contestacao IS NOT NULL
+  `).all();
+
+  const updateStmt = db.prepare(`
+    UPDATE analyses
+    SET nomes_arquivos_contestacoes = ?
+    WHERE id = ?
+  `);
+
+  for (const analysis of analyses) {
+    updateStmt.run(JSON.stringify([analysis.nome_arquivo_contestacao]), analysis.id);
+  }
+
+  console.log(`[Database] Migration 006: Migrated ${analyses.length} analyses with contestação`);
 }
 
 // Exportar

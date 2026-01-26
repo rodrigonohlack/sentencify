@@ -48,6 +48,7 @@ router.get('/', (req, res) => {
     let query = `
       SELECT id, numero_processo, reclamante, reclamadas,
              nome_arquivo_peticao, nome_arquivo_contestacao,
+             nomes_arquivos_emendas, nomes_arquivos_contestacoes,
              data_pauta, horario_audiencia, resultado_audiencia,
              pendencias, resultado, created_at, updated_at
       FROM analyses
@@ -85,6 +86,9 @@ router.get('/', (req, res) => {
       reclamadas: safeJsonParse(a.reclamadas, []),
       nomeArquivoPeticao: a.nome_arquivo_peticao,
       nomeArquivoContestacao: a.nome_arquivo_contestacao,
+      nomesArquivosEmendas: safeJsonParse(a.nomes_arquivos_emendas, []),
+      nomesArquivosContestacoes: safeJsonParse(a.nomes_arquivos_contestacoes, [])
+        || (a.nome_arquivo_contestacao ? [a.nome_arquivo_contestacao] : []),
       dataPauta: a.data_pauta,
       horarioAudiencia: a.horario_audiencia,
       resultadoAudiencia: a.resultado_audiencia,
@@ -114,6 +118,7 @@ router.get('/:id', (req, res) => {
     const analysis = db.prepare(`
       SELECT id, numero_processo, reclamante, reclamadas,
              nome_arquivo_peticao, nome_arquivo_contestacao,
+             nomes_arquivos_emendas, nomes_arquivos_contestacoes,
              data_pauta, horario_audiencia, resultado_audiencia,
              pendencias, resultado, created_at, updated_at
       FROM analyses
@@ -131,6 +136,9 @@ router.get('/:id', (req, res) => {
       reclamadas: safeJsonParse(analysis.reclamadas, []),
       nomeArquivoPeticao: analysis.nome_arquivo_peticao,
       nomeArquivoContestacao: analysis.nome_arquivo_contestacao,
+      nomesArquivosEmendas: safeJsonParse(analysis.nomes_arquivos_emendas, []),
+      nomesArquivosContestacoes: safeJsonParse(analysis.nomes_arquivos_contestacoes, [])
+        || (analysis.nome_arquivo_contestacao ? [analysis.nome_arquivo_contestacao] : []),
       dataPauta: analysis.data_pauta,
       horarioAudiencia: analysis.horario_audiencia,
       resultadoAudiencia: analysis.resultado_audiencia,
@@ -156,7 +164,9 @@ router.post('/', (req, res) => {
     const {
       resultado,
       nomeArquivoPeticao,
-      nomeArquivoContestacao,
+      nomeArquivoContestacao,      // Legacy (singular)
+      nomesArquivosEmendas,        // NOVO: array
+      nomesArquivosContestacoes,   // NOVO: array
       dataPauta,
       horarioAudiencia,
     } = req.body;
@@ -183,10 +193,11 @@ router.post('/', (req, res) => {
       INSERT INTO analyses (
         id, user_id, numero_processo, reclamante, reclamadas,
         nome_arquivo_peticao, nome_arquivo_contestacao,
+        nomes_arquivos_emendas, nomes_arquivos_contestacoes,
         data_pauta, horario_audiencia, resultado,
         created_at, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       userId,
@@ -195,6 +206,8 @@ router.post('/', (req, res) => {
       reclamadas,
       nomeArquivoPeticao || null,
       nomeArquivoContestacao || null,
+      nomesArquivosEmendas ? JSON.stringify(nomesArquivosEmendas) : null,
+      nomesArquivosContestacoes ? JSON.stringify(nomesArquivosContestacoes) : null,
       dataPauta || null,
       horarioAudiencia || null,
       JSON.stringify(resultado),
@@ -209,6 +222,77 @@ router.post('/', (req, res) => {
   } catch (error) {
     console.error('[Analyses] Create error:', error);
     res.status(500).json({ error: 'Erro ao criar análise' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PUT /api/analyses/:id/replace - Substituir resultado completo (reanálise)
+// IMPORTANTE: Deve vir ANTES de PUT /:id para não ser capturado como parâmetro
+// ═══════════════════════════════════════════════════════════════════════════
+
+router.put('/:id/replace', (req, res) => {
+  try {
+    const db = getDb();
+    const userId = req.user.id;
+    const { id } = req.params;
+    const {
+      resultado,
+      nomeArquivoPeticao,
+      nomesArquivosEmendas,
+      nomesArquivosContestacoes,
+    } = req.body;
+
+    if (!resultado) {
+      return res.status(400).json({ error: 'Resultado da análise é obrigatório' });
+    }
+
+    // Verificar se análise existe
+    const existing = db.prepare(`
+      SELECT id FROM analyses
+      WHERE id = ? AND user_id = ? AND deleted_at IS NULL
+    `).get(id, userId);
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Análise não encontrada' });
+    }
+
+    const now = new Date().toISOString();
+
+    // Extrair dados do resultado para facilitar buscas
+    const numeroProcesso = resultado.identificacao?.numeroProcesso || null;
+    const reclamante = resultado.identificacao?.reclamantes?.[0] || null;
+    const reclamadas = resultado.identificacao?.reclamadas
+      ? JSON.stringify(resultado.identificacao.reclamadas)
+      : null;
+
+    db.prepare(`
+      UPDATE analyses
+      SET resultado = ?,
+          numero_processo = ?,
+          reclamante = ?,
+          reclamadas = ?,
+          nome_arquivo_peticao = COALESCE(?, nome_arquivo_peticao),
+          nomes_arquivos_emendas = COALESCE(?, nomes_arquivos_emendas),
+          nomes_arquivos_contestacoes = ?,
+          updated_at = ?
+      WHERE id = ? AND user_id = ?
+    `).run(
+      JSON.stringify(resultado),
+      numeroProcesso,
+      reclamante,
+      reclamadas,
+      nomeArquivoPeticao || null,
+      nomesArquivosEmendas ? JSON.stringify(nomesArquivosEmendas) : null,
+      JSON.stringify(nomesArquivosContestacoes || []),
+      now,
+      id,
+      userId
+    );
+
+    res.json({ id, message: 'Análise substituída com sucesso' });
+  } catch (error) {
+    console.error('[Analyses] Replace error:', error);
+    res.status(500).json({ error: 'Erro ao substituir análise' });
   }
 });
 
