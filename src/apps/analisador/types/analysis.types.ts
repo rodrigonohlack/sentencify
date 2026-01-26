@@ -190,7 +190,10 @@ export interface SavedAnalysis {
   reclamante: string | null;
   reclamadas: string[];
   nomeArquivoPeticao: string | null;
-  nomeArquivoContestacao: string | null;
+  nomesArquivosEmendas: string[];
+  nomesArquivosContestacoes: string[];
+  /** @deprecated Use nomesArquivosContestacoes. Mantido para migração de dados antigos. */
+  nomeArquivoContestacao?: string | null;
   dataPauta: string | null;
   horarioAudiencia: string | null;
   resultadoAudiencia: ResultadoAudiencia | null;

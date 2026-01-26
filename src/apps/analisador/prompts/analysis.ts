@@ -1,19 +1,22 @@
 /**
  * @file analysis.ts
  * @description Prompts para análise de prepauta trabalhista
+ * Suporta múltiplas emendas à petição inicial e múltiplas contestações
  */
 
 export const ANALYSIS_SYSTEM_PROMPT = `Você é um assistente jurídico especializado em Direito do Trabalho brasileiro.
-Sua função é analisar petições trabalhistas (petição inicial e contestação) e extrair informações estruturadas para preparação de audiências (prepauta).
+Sua função é analisar petições trabalhistas (petição inicial, emendas e contestações) e extrair informações estruturadas para preparação de audiências (prepauta).
 
 Você deve ser PRECISO, OBJETIVO e IMPARCIAL na análise, extraindo fielmente o que está nos documentos sem fazer julgamentos sobre o mérito.
 
 REGRAS IMPORTANTES:
 1. Extraia apenas informações que estão explicitamente nos documentos
-2. Quando houver divergência entre petição e contestação, indique claramente a controvérsia
+2. Quando houver divergência entre petição/emendas e contestações, indique claramente a controvérsia
 3. Use linguagem técnica jurídica adequada
 4. Identifique pontos que precisam ser esclarecidos em audiência
-5. Destaque alertas importantes (prazos, nulidades, etc.)`;
+5. Destaque alertas importantes (prazos, nulidades, etc.)
+6. Considere que emendas modificam ou complementam a petição inicial
+7. Em caso de múltiplas contestações (vários réus), identifique as defesas de cada um`;
 
 export const ANALYSIS_USER_PROMPT = `Analise os documentos abaixo e retorne um JSON estruturado com a análise completa para prepauta.
 
@@ -22,8 +25,11 @@ DOCUMENTOS:
 === PETIÇÃO INICIAL ===
 {PETICAO}
 
-=== CONTESTAÇÃO ===
-{CONTESTACAO}
+=== EMENDAS À PETIÇÃO INICIAL ===
+{EMENDAS}
+
+=== CONTESTAÇÕES ===
+{CONTESTACOES}
 
 Retorne APENAS um JSON válido no seguinte formato (sem texto adicional antes ou depois):
 
@@ -174,10 +180,34 @@ INSTRUÇÕES ADICIONAIS:
 2. Identifique confissão ficta quando a reclamada não impugnar especificamente um fato
 3. Na tabela sintética, resuma as teses de forma concisa (máximo 100 caracteres cada)
 4. Alertas devem incluir: prazos próximos, possíveis nulidades, documentos faltantes, etc.
-5. Se o valor da causa não corresponder à soma dos pedidos, marque como inconsistência`;
+5. Se o valor da causa não corresponder à soma dos pedidos, marque como inconsistência
+6. Considere que emendas podem adicionar pedidos, modificar valores ou corrigir informações da petição inicial
+7. Em caso de múltiplas contestações, consolide as defesas indicando qual réu apresentou cada uma`;
 
-export const buildAnalysisPrompt = (peticao: string, contestacao?: string): string => {
+/**
+ * Constrói o prompt de análise com os documentos
+ * @param peticao Texto da petição inicial
+ * @param emendas Array de textos das emendas
+ * @param contestacoes Array de textos das contestações
+ * @returns Prompt formatado para a IA
+ */
+export const buildAnalysisPrompt = (
+  peticao: string,
+  emendas: string[] = [],
+  contestacoes: string[] = []
+): string => {
+  // Formatar seção de emendas
+  const emendasSection = emendas.length > 0
+    ? emendas.map((e, i) => `--- Emenda ${i + 1} ---\n${e}`).join('\n\n')
+    : 'Não há emendas à petição inicial.';
+
+  // Formatar seção de contestações
+  const contestacoesSection = contestacoes.length > 0
+    ? contestacoes.map((c, i) => `--- Contestação ${i + 1} ---\n${c}`).join('\n\n')
+    : 'Não há contestação nos autos.';
+
   return ANALYSIS_USER_PROMPT
     .replace('{PETICAO}', peticao || 'Não fornecida')
-    .replace('{CONTESTACAO}', contestacao || 'Não fornecida');
+    .replace('{EMENDAS}', emendasSection)
+    .replace('{CONTESTACOES}', contestacoesSection);
 };

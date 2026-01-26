@@ -29,6 +29,24 @@ const DEFAULT_SETTINGS: AnalysesSettings = {
 const SETTINGS_STORAGE_KEY = 'analisador-settings';
 const EXPANDED_GROUPS_STORAGE_KEY = 'analisador-expanded-groups';
 
+/**
+ * Normaliza análises do formato antigo para o novo formato
+ * Converte nomeArquivoContestacao (string) para nomesArquivosContestacoes (array)
+ */
+function normalizeAnalysis(analysis: SavedAnalysis): SavedAnalysis {
+  // Se já tem os novos campos, retorna sem modificação
+  if (analysis.nomesArquivosEmendas !== undefined && analysis.nomesArquivosContestacoes !== undefined) {
+    return analysis;
+  }
+
+  return {
+    ...analysis,
+    nomesArquivosEmendas: analysis.nomesArquivosEmendas ?? [],
+    nomesArquivosContestacoes: analysis.nomesArquivosContestacoes
+      ?? (analysis.nomeArquivoContestacao ? [analysis.nomeArquivoContestacao] : []),
+  };
+}
+
 /** Carrega settings do localStorage com fallback para DEFAULT_SETTINGS */
 function loadSettings(): AnalysesSettings {
   try {
@@ -185,7 +203,7 @@ export const useAnalysesStore = create<AnalysesState & AnalysesActions>((set, ge
   // AÇÕES - ANÁLISES
   // ═══════════════════════════════════════════════════════════════════════════
 
-  setAnalyses: (analyses) => set({ analyses }),
+  setAnalyses: (analyses) => set({ analyses: analyses.map(normalizeAnalysis) }),
 
   addAnalysis: (analysis) =>
     set((state) => ({

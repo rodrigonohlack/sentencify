@@ -1,6 +1,7 @@
 /**
  * @file useAnalysis.ts
  * @description Hook para análise de prepauta
+ * Suporta múltiplas emendas à petição inicial e múltiplas contestações
  */
 
 import { useCallback } from 'react';
@@ -11,7 +12,7 @@ import type { AnalysisResult, AIMessage } from '../types';
 import { parseAIResponse, extractJSON, AnalysisResponseSchema } from '../../../schemas/ai-responses';
 
 export const useAnalysis = () => {
-  const { peticao, contestacao } = useDocumentStore();
+  const { peticao, emendas, contestacoes, getAllDocumentsText, canAnalyze } = useDocumentStore();
   const { setResult, setIsAnalyzing, setProgress, setError, reset } = useResultStore();
   const { callAI } = useAIIntegration();
 
@@ -91,7 +92,7 @@ export const useAnalysis = () => {
   };
 
   const analyze = useCallback(async () => {
-    if (!peticao || peticao.status !== 'ready') {
+    if (!canAnalyze()) {
       setError('É necessário fazer upload da petição inicial');
       return;
     }
@@ -101,18 +102,17 @@ export const useAnalysis = () => {
     setProgress(10, 'Preparando documentos...');
 
     try {
-      // Build the prompt
-      const userPrompt = buildAnalysisPrompt(
-        peticao.text,
-        contestacao?.text
-      );
+      // Obter todos os textos dos documentos
+      const { peticao: peticaoText, emendas: emendasTexts, contestacoes: contestacoesTexts } =
+        getAllDocumentsText();
+
+      // Build the prompt with all documents
+      const userPrompt = buildAnalysisPrompt(peticaoText, emendasTexts, contestacoesTexts);
 
       setProgress(30, 'Enviando para análise...');
 
       // Call AI
-      const messages: AIMessage[] = [
-        { role: 'user', content: userPrompt }
-      ];
+      const messages: AIMessage[] = [{ role: 'user', content: userPrompt }];
 
       setProgress(50, 'Analisando documentos...');
 
@@ -128,34 +128,38 @@ export const useAnalysis = () => {
 
       setProgress(100, 'Análise concluída!');
       setResult(result);
-
     } catch (error) {
       console.error('Erro na análise:', error);
       setError(error instanceof Error ? error.message : 'Erro ao realizar análise');
     }
-  }, [peticao, contestacao, callAI, setResult, setIsAnalyzing, setProgress, setError, reset]);
+  }, [canAnalyze, getAllDocumentsText, callAI, setResult, setIsAnalyzing, setProgress, setError, reset]);
 
   /**
-   * Analisa textos de petição e contestação diretamente (sem usar o store)
+   * Analisa textos de petição, emendas e contestações diretamente (sem usar o store)
    * Usado pelo BatchMode para processar múltiplos arquivos
    */
   const analyzeWithAI = useCallback(
-    async (peticaoText: string, contestacaoText: string | null): Promise<AnalysisResult | null> => {
+    async (
+      peticaoText: string,
+      contestacaoText: string | null,
+      emendasTexts: string[] = []
+    ): Promise<AnalysisResult | null> => {
       const MAX_PARSE_RETRIES = 2;
-      const userPrompt = buildAnalysisPrompt(peticaoText, contestacaoText || undefined);
+      const contestacoesArray = contestacaoText ? [contestacaoText] : [];
+      const userPrompt = buildAnalysisPrompt(peticaoText, emendasTexts, contestacoesArray);
       const messages: AIMessage[] = [{ role: 'user', content: userPrompt }];
 
       for (let attempt = 0; attempt <= MAX_PARSE_RETRIES; attempt++) {
         try {
           const response = await callAI(messages, {
             maxTokens: 16000,
-            systemPrompt: ANALYSIS_SYSTEM_PROMPT,
+            systemPrompt: ANALYSIS_SYSTEM_PROMPT
           });
           return parseAnalysisResult(response);
         } catch (error) {
           if (attempt < MAX_PARSE_RETRIES) {
             console.warn(`[Analisador] Tentativa ${attempt + 1} falhou, retentando...`);
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise((r) => setTimeout(r, 2000));
             continue;
           }
           console.error('Erro na análise com IA:', error);
@@ -170,8 +174,10 @@ export const useAnalysis = () => {
   return {
     analyze,
     analyzeWithAI,
-    canAnalyze: peticao?.status === 'ready',
-    hasContestacao: contestacao?.status === 'ready'
+    canAnalyze: canAnalyze(),
+    hasDocuments: peticao !== null,
+    hasEmendas: emendas.length > 0,
+    hasContestacoes: contestacoes.length > 0
   };
 };
 

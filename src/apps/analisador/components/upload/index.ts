@@ -5,3 +5,5 @@
 
 export { FileUploader } from './FileUploader';
 export { UploadSection } from './UploadSection';
+export { DocumentCard } from './DocumentCard';
+export { DocumentList } from './DocumentList';

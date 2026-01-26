@@ -51,6 +51,9 @@ interface BatchDeleteResponse {
 export interface CreateAnalysisParams {
   resultado: AnalysisResult;
   nomeArquivoPeticao?: string;
+  nomesArquivosEmendas?: string[];
+  nomesArquivosContestacoes?: string[];
+  /** @deprecated Use nomesArquivosContestacoes */
   nomeArquivoContestacao?: string;
   dataPauta?: string;
   horarioAudiencia?: string;
@@ -240,6 +243,10 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
 
         const data: CreateAnalysisResponse = await res.json();
 
+        // Migrar contestação antiga para novo formato
+        const contestacoesArray = params.nomesArquivosContestacoes
+          || (params.nomeArquivoContestacao ? [params.nomeArquivoContestacao] : []);
+
         // Criar objeto SavedAnalysis para adicionar ao store
         const newAnalysis: SavedAnalysis = {
           id: data.id,
@@ -249,7 +256,8 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
           reclamante: params.resultado.identificacao?.reclamantes?.[0] || null,
           reclamadas: params.resultado.identificacao?.reclamadas || [],
           nomeArquivoPeticao: params.nomeArquivoPeticao || null,
-          nomeArquivoContestacao: params.nomeArquivoContestacao || null,
+          nomesArquivosEmendas: params.nomesArquivosEmendas || [],
+          nomesArquivosContestacoes: contestacoesArray,
           dataPauta: params.dataPauta || null,
           horarioAudiencia: params.horarioAudiencia || null,
           resultadoAudiencia: null,
