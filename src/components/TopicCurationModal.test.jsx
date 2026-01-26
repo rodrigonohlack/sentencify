@@ -20,7 +20,8 @@ vi.mock('@dnd-kit/core', () => ({
   KeyboardSensor: vi.fn(),
   useSensor: vi.fn(() => ({})),
   useSensors: vi.fn(() => []),
-  MeasuringStrategy: { Always: 'always' }
+  MeasuringStrategy: { Always: 'always' },
+  TraversalOrder: { ReversedTreeOrder: 'reversed', TreeOrder: 'tree' }
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({

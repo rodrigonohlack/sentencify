@@ -1,11 +1,11 @@
 /**
  * TopicCurationModal.tsx
  * Modal de curadoria de tópicos pré-geração de mini-relatórios
- * v1.39.05 - Fix: MeasuringStrategy.Always + touch-action:none para auto-scroll durante drag
+ * v1.39.06 - Fix: TraversalOrder.ReversedTreeOrder para auto-scroll priorizar scroll container do modal
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay, MeasuringStrategy } from '@dnd-kit/core';
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay, MeasuringStrategy, TraversalOrder } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 import {
@@ -1204,7 +1204,11 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
-          autoScroll={true}
+          autoScroll={{
+            order: TraversalOrder.ReversedTreeOrder,
+            threshold: { x: 0.1, y: 0.1 },
+            acceleration: 15,
+          }}
           measuring={{
             droppable: {
               strategy: MeasuringStrategy.Always,

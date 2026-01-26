@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.39.06', feature: 'Fix auto-scroll durante drag no TopicCurationModal: TraversalOrder.ReversedTreeOrder para priorizar scroll container do modal (antes: window era priorizada, impedindo scroll interno)' },
   { version: '1.39.05', feature: 'Fix auto-scroll durante drag no TopicCurationModal: MeasuringStrategy.Always para recalcular posições durante scroll + touch-action:none no drag handle + KeyboardSensor para acessibilidade' },
   { version: '1.39.04', feature: 'Fix auto-scroll durante drag no TopicCurationModal: mover DndContext para envolver scroll container (antes estava dentro, impedindo @dnd-kit de detectar e gerenciar scroll automático)' },
   { version: '1.39.03', feature: 'Fix auto-scroll durante drag no TopicCurationModal: adicionar autoScroll={true} explícito no DndContext para garantir funcionamento em modais com position:fixed' },
