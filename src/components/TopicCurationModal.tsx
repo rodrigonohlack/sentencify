@@ -1,7 +1,7 @@
 /**
  * TopicCurationModal.tsx
  * Modal de curadoria de tópicos pré-geração de mini-relatórios
- * v1.39.01 - Fix: Body scroll lock e scroll lock durante drag
+ * v1.39.02 - Fix: Wheel scroll funciona durante drag (redireciona para container)
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -936,21 +936,24 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
     }
   }, [isOpen]);
 
-  // v1.39.01: Previne scroll da página durante drag (captura wheel fora do modal)
+  // v1.39.02: Redireciona wheel events para scroll container durante drag
   useEffect(() => {
     if (!isDragging) return;
 
-    const preventScroll = (e: WheelEvent) => {
-      // Permite scroll apenas dentro do container scrollável do modal
-      const target = e.target as HTMLElement;
-      const modalContent = document.querySelector('[data-modal-scroll-container]');
-      if (modalContent && !modalContent.contains(target)) {
-        e.preventDefault();
-      }
+    const scrollContainer = document.querySelector('[data-modal-scroll-container]');
+    if (!scrollContainer) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Durante drag, redireciona wheel events para o scroll container
+      scrollContainer.scrollBy({
+        top: e.deltaY,
+        behavior: 'instant' as ScrollBehavior
+      });
+      e.preventDefault(); // Previne scroll da página
     };
 
-    document.addEventListener('wheel', preventScroll, { passive: false });
-    return () => document.removeEventListener('wheel', preventScroll);
+    document.addEventListener('wheel', handleWheel, { passive: false });
+    return () => document.removeEventListener('wheel', handleWheel);
   }, [isDragging]);
 
   const sensors = useSensors(
