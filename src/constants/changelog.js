@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.39.04', feature: 'Exibir data/hora audiencia no ResultsContainer (ao abrir analise do historico) + persistir estado expanded/collapsed dos grupos de pauta no HistoricoModal (localStorage)' },
   { version: '1.39.03', feature: 'Consolidar retry logic: centralizar 7 implementacoes duplicadas em src/utils/retry.ts (withRetry, withStorageRetry). Reducao de ~200 linhas de codigo duplicado' },
   { version: '1.39.02', feature: 'Fix wheel scroll durante drag no TopicCurationModal: redireciona wheel events para o scroll container (antes: wheel bloqueado porque target era o DragOverlay)' },
   { version: '1.39.01', feature: 'Fix scroll no TopicCurationModal: body scroll lock quando modal aberto, prevenção de scroll externo durante drag, handler para drag cancelado (ESC)' },

@@ -44,7 +44,7 @@ const AnalisadorContent: React.FC = () => {
 
   // Stores
   const { openHistorico, analyses } = useAnalysesStore();
-  const { result, setResult, reset: resetResult } = useResultStore();
+  const { result, setResult, setAnalysisContext, clearAnalysisContext, reset: resetResult } = useResultStore();
 
   // API
   const { fetchAnalyses } = useAnalysesAPI();
@@ -73,18 +73,20 @@ const AnalisadorContent: React.FC = () => {
   const handleSelectAnalysis = useCallback(
     (analysis: SavedAnalysis) => {
       setResult(analysis.resultado);
+      setAnalysisContext(analysis.dataPauta ?? null, analysis.horarioAudiencia ?? null);
       setCameFromHistorico(true);
     },
-    [setResult]
+    [setResult, setAnalysisContext]
   );
 
   const handleVoltar = useCallback(() => {
     resetResult();
+    clearAnalysisContext();
     if (cameFromHistorico) {
       setCameFromHistorico(false);
       openHistorico();
     }
-  }, [resetResult, cameFromHistorico, openHistorico]);
+  }, [resetResult, clearAnalysisContext, cameFromHistorico, openHistorico]);
 
   const handleLogout = useCallback(async () => {
     await logout();

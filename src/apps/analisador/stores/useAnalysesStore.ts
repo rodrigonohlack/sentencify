@@ -27,6 +27,7 @@ const DEFAULT_SETTINGS: AnalysesSettings = {
 };
 
 const SETTINGS_STORAGE_KEY = 'analisador-settings';
+const EXPANDED_GROUPS_STORAGE_KEY = 'analisador-expanded-groups';
 
 /** Carrega settings do localStorage com fallback para DEFAULT_SETTINGS */
 function loadSettings(): AnalysesSettings {
@@ -42,6 +43,28 @@ function loadSettings(): AnalysesSettings {
     // Fallback silencioso em caso de erro de parsing
   }
   return DEFAULT_SETTINGS;
+}
+
+/** Carrega estado expanded dos grupos de pauta do localStorage */
+function loadExpandedGroups(): Record<string, boolean> {
+  try {
+    const stored = localStorage.getItem(EXPANDED_GROUPS_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch {
+    // Fallback silencioso em caso de erro de parsing
+  }
+  return {};
+}
+
+/** Salva estado expanded dos grupos de pauta no localStorage */
+function saveExpandedGroups(groups: Record<string, boolean>): void {
+  try {
+    localStorage.setItem(EXPANDED_GROUPS_STORAGE_KEY, JSON.stringify(groups));
+  } catch {
+    // Falha silenciosa se localStorage não disponível
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -67,6 +90,9 @@ interface AnalysesState {
 
   // Histórico modal
   isHistoricoOpen: boolean;
+
+  // Estado expanded/collapsed dos grupos de pauta (chave = dataPauta, valor = isExpanded)
+  expandedPautaGroups: Record<string, boolean>;
 }
 
 interface AnalysesActions {
@@ -110,6 +136,10 @@ interface AnalysesActions {
   openHistorico: () => void;
   closeHistorico: () => void;
 
+  // Pauta groups expanded state
+  togglePautaGroupExpanded: (dataPauta: string) => void;
+  isPautaGroupExpanded: (dataPauta: string) => boolean;
+
   // Computed
   getFilteredAnalyses: () => SavedAnalysis[];
   getGroupedByPauta: () => PautaGroup[];
@@ -149,6 +179,7 @@ export const useAnalysesStore = create<AnalysesState & AnalysesActions>((set, ge
   batch: initialBatchState,
   settings: loadSettings(),
   isHistoricoOpen: false,
+  expandedPautaGroups: loadExpandedGroups(),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // AÇÕES - ANÁLISES
@@ -322,6 +353,26 @@ export const useAnalysesStore = create<AnalysesState & AnalysesActions>((set, ge
   openHistorico: () => set({ isHistoricoOpen: true }),
 
   closeHistorico: () => set({ isHistoricoOpen: false }),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AÇÕES - PAUTA GROUPS EXPANDED STATE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  togglePautaGroupExpanded: (dataPauta) => {
+    const { expandedPautaGroups } = get();
+    // Se não existe no registro, assume expandido (true) - toggle vai colapsar
+    const currentState = expandedPautaGroups[dataPauta] ?? true;
+    const newState = !currentState;
+    const newGroups = { ...expandedPautaGroups, [dataPauta]: newState };
+    set({ expandedPautaGroups: newGroups });
+    saveExpandedGroups(newGroups);
+  },
+
+  isPautaGroupExpanded: (dataPauta) => {
+    const { expandedPautaGroups } = get();
+    // Default: expandido (true)
+    return expandedPautaGroups[dataPauta] ?? true;
+  },
 
   // ═══════════════════════════════════════════════════════════════════════════
   // COMPUTED - FILTROS E AGRUPAMENTO

@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { FileText, Table2 } from 'lucide-react';
+import { FileText, Table2, Calendar, Clock } from 'lucide-react';
 import { Card, Tabs } from '../ui';
 import { useResultStore } from '../../stores';
 import { IdentificacaoSection } from './IdentificacaoSection';
@@ -15,6 +15,21 @@ import { ProvasSection } from './ProvasSection';
 import { AlertasSection } from './AlertasSection';
 import { TabelaComparativa } from './TabelaComparativa';
 
+// ═══════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Formata data ISO (YYYY-MM-DD) para exibição legível */
+const formatDateLabel = (dateStr: string): string => {
+  const date = new Date(dateStr + 'T12:00:00');
+  return date.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
 const tabs = [
   { id: 'analise', label: 'Análise Completa', icon: <FileText className="w-4 h-4" /> },
   { id: 'tabela', label: 'Tabela Sintética', icon: <Table2 className="w-4 h-4" /> }
@@ -22,6 +37,8 @@ const tabs = [
 
 export const ResultsContainer: React.FC = () => {
   const result = useResultStore((s) => s.result);
+  const dataPauta = useResultStore((s) => s.dataPauta);
+  const horarioAudiencia = useResultStore((s) => s.horarioAudiencia);
 
   if (!result) {
     return (
@@ -39,6 +56,26 @@ export const ResultsContainer: React.FC = () => {
 
   return (
     <Card className="overflow-hidden">
+      {/* Header com Data/Hora da Audiência (quando vem do histórico) */}
+      {(dataPauta || horarioAudiencia) && (
+        <div className="flex items-center gap-4 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800/40">
+          {dataPauta && (
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+              <span className="font-medium text-slate-700 dark:text-slate-200 capitalize">
+                {formatDateLabel(dataPauta)}
+              </span>
+            </div>
+          )}
+          {horarioAudiencia && (
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+              <span className="font-medium text-slate-700 dark:text-slate-200">{horarioAudiencia}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       <Tabs tabs={tabs} defaultTab="analise">
         {(activeTab) => (
           <>

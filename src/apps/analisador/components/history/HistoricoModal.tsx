@@ -303,7 +303,10 @@ const PautaGroupSection: React.FC<PautaGroupSectionProps> = ({
   onView,
   onUpdate,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  // Usar store ao invés de useState local para persistência
+  const groupKey = group.dataPauta || '__sem_data__';
+  const isExpanded = useAnalysesStore((s) => s.isPautaGroupExpanded(groupKey));
+  const toggleExpanded = useAnalysesStore((s) => s.togglePautaGroupExpanded);
 
   const ChevronIcon = isExpanded ? ChevronDown : ChevronRight;
   const dateLabel = group.dataPauta ? formatDate(group.dataPauta) : 'Sem data de pauta';
@@ -312,7 +315,7 @@ const PautaGroupSection: React.FC<PautaGroupSectionProps> = ({
     <div className="mb-6">
       {/* Group Header */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => toggleExpanded(groupKey)}
         className="flex items-center gap-2 w-full text-left mb-3"
       >
         <ChevronIcon className="w-5 h-5 text-slate-400" />
