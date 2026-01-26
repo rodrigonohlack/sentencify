@@ -4,6 +4,7 @@
  */
 
 export { ResultsContainer } from './ResultsContainer';
+export { ReanalyzePanel } from './ReanalyzePanel';
 export { IdentificacaoSection } from './IdentificacaoSection';
 export { ContratoSection } from './ContratoSection';
 export { PreliminaresSection } from './PreliminaresSection';

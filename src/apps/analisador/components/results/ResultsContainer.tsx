@@ -14,6 +14,7 @@ import { PedidosSection } from './PedidosSection';
 import { ProvasSection } from './ProvasSection';
 import { AlertasSection } from './AlertasSection';
 import { TabelaComparativa } from './TabelaComparativa';
+import { ReanalyzePanel } from './ReanalyzePanel';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -55,9 +56,13 @@ export const ResultsContainer: React.FC = () => {
   }
 
   return (
-    <Card className="overflow-hidden">
-      {/* Header com Data/Hora da Audiência (quando vem do histórico) */}
-      {(dataPauta || horarioAudiencia) && (
+    <>
+      {/* Painel de reanálise (quando não há contestação) */}
+      <ReanalyzePanel />
+
+      <Card className="overflow-hidden">
+        {/* Header com Data/Hora da Audiência (quando vem do histórico) */}
+        {(dataPauta || horarioAudiencia) && (
         <div className="flex items-center gap-4 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800/40">
           {dataPauta && (
             <div className="flex items-center gap-2 text-sm">
@@ -121,7 +126,8 @@ export const ResultsContainer: React.FC = () => {
           </>
         )}
       </Tabs>
-    </Card>
+      </Card>
+    </>
   );
 };
 

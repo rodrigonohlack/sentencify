@@ -74,12 +74,21 @@ export interface ListFilters {
   dataPauta?: string;
 }
 
+/** Parâmetros para substituição completa de análise */
+export interface ReplaceAnalysisParams {
+  resultado: AnalysisResult;
+  nomesArquivosContestacoes: string[];
+  nomeArquivoPeticao?: string;
+  nomesArquivosEmendas?: string[];
+}
+
 /** Retorno do hook useAnalysesAPI */
 export interface UseAnalysesAPIReturn {
   fetchAnalyses: (filters?: ListFilters) => Promise<SavedAnalysis[]>;
   fetchAnalysis: (id: string) => Promise<SavedAnalysis | null>;
   createAnalysis: (params: CreateAnalysisParams) => Promise<string | null>;
   updateAnalysis: (id: string, params: UpdateAnalysisParams) => Promise<boolean>;
+  replaceAnalysisResult: (id: string, params: ReplaceAnalysisParams) => Promise<boolean>;
   deleteAnalysis: (id: string) => Promise<boolean>;
   updateBatchDataPauta: (ids: string[], dataPauta: string | null) => Promise<number>;
   deleteBatch: (ids: string[]) => Promise<number>;
@@ -333,6 +342,58 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
   );
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // SUBSTITUIR RESULTADO DA ANÁLISE (REANÁLISE)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Substitui completamente o resultado de uma análise (para reanálise com contestação)
+   * @param id - ID da análise
+   * @param params - Novo resultado e nomes de arquivos
+   * @returns true se atualizou, false se falhou
+   */
+  const replaceAnalysisResult = useCallback(
+    async (id: string, params: ReplaceAnalysisParams): Promise<boolean> => {
+      if (!isAuthenticated) {
+        setError('Usuário não autenticado');
+        return false;
+      }
+
+      setError(null);
+
+      try {
+        const res = await authFetch(`${API_BASE}/${id}/replace`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Erro ao substituir análise');
+        }
+
+        // Atualizar no store local
+        updateStoreAnalysis(id, {
+          resultado: params.resultado,
+          nomesArquivosContestacoes: params.nomesArquivosContestacoes,
+          ...(params.nomeArquivoPeticao && { nomeArquivoPeticao: params.nomeArquivoPeticao }),
+          ...(params.nomesArquivosEmendas && { nomesArquivosEmendas: params.nomesArquivosEmendas }),
+          numeroProcesso: params.resultado.identificacao?.numeroProcesso || null,
+          reclamante: params.resultado.identificacao?.reclamantes?.[0] || null,
+          reclamadas: params.resultado.identificacao?.reclamadas || [],
+        });
+
+        return true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Erro desconhecido';
+        setError(message);
+        return false;
+      }
+    },
+    [isAuthenticated, authFetch, updateStoreAnalysis, setError]
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // EXCLUIR ANÁLISE
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -467,6 +528,7 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
     fetchAnalysis,
     createAnalysis,
     updateAnalysis,
+    replaceAnalysisResult,
     deleteAnalysis,
     updateBatchDataPauta,
     deleteBatch,

@@ -44,7 +44,15 @@ const AnalisadorContent: React.FC = () => {
 
   // Stores
   const { openHistorico, analyses } = useAnalysesStore();
-  const { result, setResult, setAnalysisContext, clearAnalysisContext, reset: resetResult } = useResultStore();
+  const {
+    result,
+    setResult,
+    setAnalysisContext,
+    setSavedAnalysisId,
+    setFileNames,
+    clearAnalysisContext,
+    reset: resetResult
+  } = useResultStore();
 
   // API
   const { fetchAnalyses } = useAnalysesAPI();
@@ -74,9 +82,15 @@ const AnalisadorContent: React.FC = () => {
     (analysis: SavedAnalysis) => {
       setResult(analysis.resultado);
       setAnalysisContext(analysis.dataPauta ?? null, analysis.horarioAudiencia ?? null);
+      setSavedAnalysisId(analysis.id);
+      setFileNames(
+        analysis.nomeArquivoPeticao,
+        analysis.nomesArquivosEmendas || [],
+        analysis.nomesArquivosContestacoes || []
+      );
       setCameFromHistorico(true);
     },
-    [setResult, setAnalysisContext]
+    [setResult, setAnalysisContext, setSavedAnalysisId, setFileNames]
   );
 
   const handleVoltar = useCallback(() => {
