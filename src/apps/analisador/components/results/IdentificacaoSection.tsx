@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { User, Building2, FileText, Calendar, Scale, DollarSign, Calculator } from 'lucide-react';
+import { User, Building2, FileText, Calendar, Scale, DollarSign } from 'lucide-react';
 import { Badge } from '../ui';
 import { safeRender } from '../../utils/safe-render';
 import type { Identificacao, ValorCausa, RitoType } from '../../types';
@@ -71,13 +71,13 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
       return {
         rito: 'ordinario',
         calculado: true,
-        motivo: 'Ente da administração pública no polo passivo'
+        motivo: 'ente público'
       };
     }
 
     // Se não tem valor, não pode calcular
     if (!valor || valor <= 0) {
-      return { rito: 'ordinario', calculado: true, motivo: 'Valor da causa não informado' };
+      return { rito: 'ordinario', calculado: true, motivo: 'valor não informado' };
     }
 
     // Até 2 salários mínimos: Sumário (Lei 5.584/70)
@@ -85,7 +85,7 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
       return {
         rito: 'sumario',
         calculado: true,
-        motivo: `Valor até 2 SM (${formatCurrency(LIMITE_SUMARIO)})`
+        motivo: 'até 2 SM'
       };
     }
 
@@ -94,7 +94,7 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
       return {
         rito: 'sumarissimo',
         calculado: true,
-        motivo: `Valor até 40 SM (${formatCurrency(LIMITE_SUMARISSIMO)})`
+        motivo: 'até 40 SM'
       };
     }
 
@@ -102,7 +102,7 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
     return {
       rito: 'ordinario',
       calculado: true,
-      motivo: `Valor acima de 40 SM (${formatCurrency(LIMITE_SUMARISSIMO)})`
+      motivo: 'acima de 40 SM'
     };
   }, [data.rito, valorCausa?.valorTotal, hasEntePublico]);
 
@@ -130,25 +130,19 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
 
         {/* Rito - Sempre exibe (da IA ou calculado) */}
         <div className="flex items-start gap-3">
-          {ritoCalculado.calculado ? (
-            <Calculator className="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5" />
-          ) : (
-            <Scale className="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5" />
-          )}
+          <Scale className="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5" />
           <div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Rito{ritoCalculado.calculado && ' (calculado)'}
-            </p>
-            <div className="flex items-center gap-2">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Rito</p>
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge variant={ritoBadgeVariant}>
                 {ritoLabel[ritoCalculado.rito]}
               </Badge>
+              {ritoCalculado.motivo && (
+                <span className="text-sm text-slate-500 dark:text-slate-400">
+                  ({ritoCalculado.motivo})
+                </span>
+              )}
             </div>
-            {ritoCalculado.calculado && ritoCalculado.motivo && (
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                {ritoCalculado.motivo}
-              </p>
-            )}
           </div>
         </div>
 
