@@ -25,6 +25,7 @@ import {
 import { Modal } from '../ui';
 import { useAnalysesStore } from '../../stores';
 import { useAnalysesAPI } from '../../hooks';
+import { safeRender } from '../../utils/safe-render';
 import type {
   SavedAnalysis,
   ResultadoAudiencia,
@@ -210,14 +211,14 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
               <div className="flex items-center gap-2 mt-1">
                 <User className="w-3 h-3 text-slate-400" />
                 <span className="text-sm text-slate-600 dark:text-slate-300 truncate">
-                  {analysis.reclamante || '—'}
+                  {safeRender(analysis.reclamante) || '—'}
                 </span>
               </div>
               {analysis.reclamadas.length > 0 && (
                 <div className="flex items-center gap-2 mt-1">
                   <Building2 className="w-3 h-3 text-slate-400" />
                   <span className="text-sm text-slate-500 dark:text-slate-400 truncate">
-                    {analysis.reclamadas.join(', ')}
+                    {analysis.reclamadas.map(r => safeRender(r)).join(', ')}
                   </span>
                 </div>
               )}
