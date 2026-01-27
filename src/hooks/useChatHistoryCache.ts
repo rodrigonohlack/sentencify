@@ -20,10 +20,11 @@ export const CHAT_DB_VERSION = 1;
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** Dados exportados de um tópico (v1.38.16) */
+/** Dados exportados de um tópico (v1.38.16, v1.39.06) */
 export interface ChatExportEntry {
   messages: ChatMessage[];
   includeMainDocs?: boolean;
+  includeComplementaryDocs?: boolean;  // v1.39.06: Toggle "Incluir documentos complementares" no chat
 }
 
 /** Retorno do hook useChatHistoryCache */
@@ -37,6 +38,9 @@ export interface UseChatHistoryCacheReturn {
   // v1.38.16: Funções para includeMainDocs
   getIncludeMainDocs: (topicTitle: string) => Promise<boolean>;
   setIncludeMainDocs: (topicTitle: string, value: boolean) => Promise<void>;
+  // v1.39.06: Funções para includeComplementaryDocs
+  getIncludeComplementaryDocs: (topicTitle: string) => Promise<boolean>;
+  setIncludeComplementaryDocs: (topicTitle: string, value: boolean) => Promise<void>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -88,6 +92,7 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
         topicTitle,
         messages,
         includeMainDocs: existing?.includeMainDocs,  // v1.38.16: Preservar configuração existente
+        includeComplementaryDocs: existing?.includeComplementaryDocs,  // v1.39.06: Preservar configuração existente
         createdAt: existing?.createdAt || now,
         updatedAt: now
       };
@@ -213,7 +218,8 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
       for (const entry of entries) {
         result[entry.topicTitle] = {
           messages: entry.messages,
-          includeMainDocs: entry.includeMainDocs
+          includeMainDocs: entry.includeMainDocs,
+          includeComplementaryDocs: entry.includeComplementaryDocs  // v1.39.06
         };
       }
 
@@ -239,9 +245,11 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
         if (!topicTitle) continue;
 
         // v1.38.16: Suportar novo formato (objeto com messages) e legado (array direto)
+        // v1.39.06: Inclui includeComplementaryDocs
         const isNewFormat = value && typeof value === 'object' && !Array.isArray(value) && 'messages' in value;
         const messages = isNewFormat ? (value as ChatExportEntry).messages : (value as ChatMessage[]);
         const includeMainDocs = isNewFormat ? (value as ChatExportEntry).includeMainDocs : undefined;
+        const includeComplementaryDocs = isNewFormat ? (value as ChatExportEntry).includeComplementaryDocs : undefined;
 
         if (!Array.isArray(messages) || messages.length === 0) continue;
 
@@ -261,6 +269,7 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
           topicTitle,
           messages,
           includeMainDocs,
+          includeComplementaryDocs,  // v1.39.06
           createdAt: existing?.createdAt || now,
           updatedAt: now
         };
@@ -360,6 +369,83 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
     }
   }, []);
 
+  /**
+   * v1.39.06: Obtém configuração includeComplementaryDocs de um tópico
+   * @returns false (default) se não existir configuração salva
+   */
+  const getIncludeComplementaryDocs = useCallback(async (
+    topicTitle: string
+  ): Promise<boolean> => {
+    if (!topicTitle) return false;
+    try {
+      const db = await openChatDB();
+      const store = db.transaction(CHAT_STORE_NAME).objectStore(CHAT_STORE_NAME);
+      const index = store.index('topicTitle');
+
+      const entry = await new Promise<ChatHistoryCacheEntry | undefined>((resolve) => {
+        const req = index.get(topicTitle);
+        req.onsuccess = () => resolve(req.result as ChatHistoryCacheEntry | undefined);
+        req.onerror = () => resolve(undefined);
+      });
+
+      db.close();
+      return entry?.includeComplementaryDocs ?? false;  // Default: false (economizar tokens)
+    } catch (e) {
+      console.warn('[ChatHistoryCache] Erro ao obter includeComplementaryDocs:', e);
+      return false;
+    }
+  }, []);
+
+  /**
+   * v1.39.06: Salva configuração includeComplementaryDocs de um tópico
+   * Cria entrada se não existir (sem mensagens)
+   */
+  const setIncludeComplementaryDocs = useCallback(async (
+    topicTitle: string,
+    value: boolean
+  ): Promise<void> => {
+    if (!topicTitle) return;
+    try {
+      const db = await openChatDB();
+      const tx = db.transaction(CHAT_STORE_NAME, 'readwrite');
+      const store = tx.objectStore(CHAT_STORE_NAME);
+      const index = store.index('topicTitle');
+
+      // Verificar se já existe entrada para este tópico
+      const existing = await new Promise<ChatHistoryCacheEntry | undefined>((resolve) => {
+        const req = index.get(topicTitle);
+        req.onsuccess = () => resolve(req.result as ChatHistoryCacheEntry | undefined);
+        req.onerror = () => resolve(undefined);
+      });
+
+      const now = Date.now();
+      const entry: ChatHistoryCacheEntry = {
+        topicTitle,
+        messages: existing?.messages || [],
+        includeMainDocs: existing?.includeMainDocs,
+        includeComplementaryDocs: value,
+        createdAt: existing?.createdAt || now,
+        updatedAt: now
+      };
+
+      if (existing?.id) {
+        entry.id = existing.id;
+        store.put(entry);
+      } else {
+        store.add(entry);
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+
+      db.close();
+    } catch (e) {
+      console.warn('[ChatHistoryCache] Erro ao salvar includeComplementaryDocs:', e);
+    }
+  }, []);
+
   return useMemo(() => ({
     saveChat,
     getChat,
@@ -368,8 +454,10 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
     exportAll,
     importAll,
     getIncludeMainDocs,
-    setIncludeMainDocs
-  }), [saveChat, getChat, deleteChat, clearAllChats, exportAll, importAll, getIncludeMainDocs, setIncludeMainDocs]);
+    setIncludeMainDocs,
+    getIncludeComplementaryDocs,
+    setIncludeComplementaryDocs
+  }), [saveChat, getChat, deleteChat, clearAllChats, exportAll, importAll, getIncludeMainDocs, setIncludeMainDocs, getIncludeComplementaryDocs, setIncludeComplementaryDocs]);
 };
 
 export default useChatHistoryCache;

@@ -289,14 +289,18 @@ describe('buildChatContext', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Toggle includeMainDocs', () => {
-    it('includeMainDocs=true (padrão) mantém todos os documentos', async () => {
+    it('includeMainDocs=true (padrão) mantém petições e contestações', async () => {
       const { prepareDocumentsContext } = await import('./context-helpers');
 
       await buildChatContext(createParams({
         options: { includeMainDocs: true },
       }));
 
-      expect(prepareDocumentsContext).toHaveBeenCalledWith(mockDocuments);
+      const callArgs = (prepareDocumentsContext as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(callArgs.peticoes).toEqual(mockDocuments.peticoes);
+      expect(callArgs.peticoesText).toEqual(mockDocuments.peticoesText);
+      expect(callArgs.contestacoes).toEqual(mockDocuments.contestacoes);
+      expect(callArgs.contestacoesText).toEqual(mockDocuments.contestacoesText);
     });
 
     it('includeMainDocs=false exclui petições e contestações', async () => {
@@ -306,26 +310,94 @@ describe('buildChatContext', () => {
         options: { includeMainDocs: false },
       }));
 
-      expect(prepareDocumentsContext).toHaveBeenCalledWith({
-        peticoes: [],
-        peticoesText: [],
-        contestacoes: [],
-        contestacoesText: [],
-        complementares: mockDocuments.complementares,
-        complementaresText: mockDocuments.complementaresText,
-      });
+      const callArgs = (prepareDocumentsContext as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(callArgs.peticoes).toEqual([]);
+      expect(callArgs.peticoesText).toEqual([]);
+      expect(callArgs.contestacoes).toEqual([]);
+      expect(callArgs.contestacoesText).toEqual([]);
     });
+  });
 
-    it('includeMainDocs=false mantém complementares', async () => {
+  // v1.39.06: Testes para includeComplementaryDocs
+  describe('Toggle includeComplementaryDocs', () => {
+    it('includeComplementaryDocs=false (padrão) exclui complementares', async () => {
       const { prepareDocumentsContext } = await import('./context-helpers');
 
       await buildChatContext(createParams({
-        options: { includeMainDocs: false },
+        options: { includeComplementaryDocs: false },
+      }));
+
+      const callArgs = (prepareDocumentsContext as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(callArgs.complementares).toEqual([]);
+      expect(callArgs.complementaresText).toEqual([]);
+    });
+
+    it('includeComplementaryDocs=true mantém complementares', async () => {
+      const { prepareDocumentsContext } = await import('./context-helpers');
+
+      await buildChatContext(createParams({
+        options: { includeComplementaryDocs: true },
       }));
 
       const callArgs = (prepareDocumentsContext as ReturnType<typeof vi.fn>).mock.calls[0][0];
       expect(callArgs.complementares).toEqual(mockDocuments.complementares);
       expect(callArgs.complementaresText).toEqual(mockDocuments.complementaresText);
+    });
+
+    it('includeMainDocs=true + includeComplementaryDocs=false mantém apenas petições e contestações', async () => {
+      const { prepareDocumentsContext } = await import('./context-helpers');
+
+      await buildChatContext(createParams({
+        options: { includeMainDocs: true, includeComplementaryDocs: false },
+      }));
+
+      const callArgs = (prepareDocumentsContext as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(callArgs.peticoes).toEqual(mockDocuments.peticoes);
+      expect(callArgs.contestacoes).toEqual(mockDocuments.contestacoes);
+      expect(callArgs.complementares).toEqual([]);
+      expect(callArgs.complementaresText).toEqual([]);
+    });
+
+    it('includeMainDocs=false + includeComplementaryDocs=true mantém apenas complementares', async () => {
+      const { prepareDocumentsContext } = await import('./context-helpers');
+
+      await buildChatContext(createParams({
+        options: { includeMainDocs: false, includeComplementaryDocs: true },
+      }));
+
+      const callArgs = (prepareDocumentsContext as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(callArgs.peticoes).toEqual([]);
+      expect(callArgs.peticoesText).toEqual([]);
+      expect(callArgs.contestacoes).toEqual([]);
+      expect(callArgs.contestacoesText).toEqual([]);
+      expect(callArgs.complementares).toEqual(mockDocuments.complementares);
+      expect(callArgs.complementaresText).toEqual(mockDocuments.complementaresText);
+    });
+
+    it('includeMainDocs=true + includeComplementaryDocs=true mantém todos os documentos', async () => {
+      const { prepareDocumentsContext } = await import('./context-helpers');
+
+      await buildChatContext(createParams({
+        options: { includeMainDocs: true, includeComplementaryDocs: true },
+      }));
+
+      const callArgs = (prepareDocumentsContext as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(callArgs.peticoes).toEqual(mockDocuments.peticoes);
+      expect(callArgs.contestacoes).toEqual(mockDocuments.contestacoes);
+      expect(callArgs.complementares).toEqual(mockDocuments.complementares);
+    });
+
+    it('includeMainDocs=false + includeComplementaryDocs=false exclui todos os documentos', async () => {
+      const { prepareDocumentsContext } = await import('./context-helpers');
+
+      await buildChatContext(createParams({
+        options: { includeMainDocs: false, includeComplementaryDocs: false },
+      }));
+
+      const callArgs = (prepareDocumentsContext as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(callArgs.peticoes).toEqual([]);
+      expect(callArgs.contestacoes).toEqual([]);
+      expect(callArgs.complementares).toEqual([]);
     });
   });
 
@@ -501,11 +573,13 @@ describe('Tipos exportados', () => {
     const options: ChatContextOptions = {
       proofFilter: 'oral',
       includeMainDocs: false,
+      includeComplementaryDocs: true,  // v1.39.06
       selectedContextTopics: ['Horas Extras'],
     };
 
     expect(options.proofFilter).toBe('oral');
     expect(options.includeMainDocs).toBe(false);
+    expect(options.includeComplementaryDocs).toBe(true);
     expect(options.selectedContextTopics).toHaveLength(1);
   });
 
@@ -514,6 +588,7 @@ describe('Tipos exportados', () => {
 
     expect(options.proofFilter).toBeUndefined();
     expect(options.includeMainDocs).toBeUndefined();
+    expect(options.includeComplementaryDocs).toBeUndefined();
     expect(options.selectedContextTopics).toBeUndefined();
   });
 

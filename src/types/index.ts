@@ -870,6 +870,7 @@ export interface ChatHistoryCacheEntry {
   topicTitle: string;
   messages: ChatMessage[];
   includeMainDocs?: boolean;  // v1.38.16: Persistir toggle "Incluir petições e contestações" por tópico
+  includeComplementaryDocs?: boolean;  // v1.39.06: Toggle "Incluir documentos complementares" no chat
   createdAt: number;
   updatedAt: number;
 }
@@ -2169,7 +2170,7 @@ export interface AIAssistantModalProps {
   setContextScope: (scope: ContextScope) => void;
   topicTitle?: string;
   chatHistory: ChatMessage[];
-  onSendMessage: (message: string, options?: { proofFilter?: string; includeMainDocs?: boolean; selectedContextTopics?: string[] }) => void;
+  onSendMessage: (message: string, options?: { proofFilter?: string; includeMainDocs?: boolean; includeComplementaryDocs?: boolean; selectedContextTopics?: string[] }) => void;
   onInsertResponse: (mode: InsertMode) => void;
   generating: boolean;
   onClear: () => void;
@@ -2183,6 +2184,9 @@ export interface AIAssistantModalProps {
   setSelectedContextTopics?: (topics: string[]) => void;
   includeMainDocs?: boolean;
   setIncludeMainDocs?: (include: boolean) => void;
+  // v1.39.06: Toggle "Incluir documentos complementares" no chat
+  includeComplementaryDocs?: boolean;
+  setIncludeComplementaryDocs?: (include: boolean) => void;
 }
 
 export interface AIAssistantGlobalModalProps {
@@ -2192,7 +2196,7 @@ export interface AIAssistantGlobalModalProps {
   setContextScope: (scope: ContextScope) => void;
   topicTitle?: string;
   chatHistory: ChatMessage[];
-  onSendMessage: (message: string, options?: { proofFilter?: string; includeMainDocs?: boolean; selectedContextTopics?: string[] }) => void;
+  onSendMessage: (message: string, options?: { proofFilter?: string; includeMainDocs?: boolean; includeComplementaryDocs?: boolean; selectedContextTopics?: string[] }) => void;
   onInsertResponse: (mode: InsertMode) => void;
   generating: boolean;
   onClear: () => void;
@@ -2206,6 +2210,9 @@ export interface AIAssistantGlobalModalProps {
   setSelectedContextTopics?: (topics: string[]) => void;
   includeMainDocs?: boolean;
   setIncludeMainDocs?: (include: boolean) => void;
+  // v1.39.06: Toggle "Incluir documentos complementares" no chat
+  includeComplementaryDocs?: boolean;
+  setIncludeComplementaryDocs?: (include: boolean) => void;
 }
 
 export interface AIAssistantModelModalProps {

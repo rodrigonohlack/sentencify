@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.39.06', feature: 'Toggle para incluir/excluir documentos complementares no contexto do chat IA (desativado por padrão, persistido por tópico, sobrevive F5 e export/import)' },
   { version: '1.39.05', feature: 'Fix [object Object] na descricao de merge do Double Check: tratar correction.into como string ou objeto { title: string } (antes: IA retornava objeto e interpolacao mostrava [object Object])' },
   { version: '1.39.04', feature: 'Exibir data/hora audiencia no ResultsContainer (ao abrir analise do historico) + persistir estado expanded/collapsed dos grupos de pauta no HistoricoModal (localStorage)' },
   { version: '1.39.03', feature: 'Consolidar retry logic: centralizar 7 implementacoes duplicadas em src/utils/retry.ts (withRetry, withStorageRetry). Reducao de ~200 linhas de codigo duplicado' },

@@ -288,4 +288,127 @@ describe('useChatHistoryCache', () => {
       expect(value).toBe(true);
     });
   });
+
+  // v1.39.06: Testes para includeComplementaryDocs
+  describe('includeComplementaryDocs', () => {
+    it('should return false by default (no entry)', async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+
+      let value = true;
+      await act(async () => {
+        value = await result.current.getIncludeComplementaryDocs('New Topic');
+      });
+
+      expect(value).toBe(false);
+    });
+
+    it('should set and get includeComplementaryDocs', async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+
+      await act(async () => {
+        await result.current.setIncludeComplementaryDocs('My Topic', true);
+      });
+
+      let value = false;
+      await act(async () => {
+        value = await result.current.getIncludeComplementaryDocs('My Topic');
+      });
+
+      expect(value).toBe(true);
+    });
+
+    it('should preserve messages when setting includeComplementaryDocs', async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+      const messages = [makeChatMessage('user', 'Keep me')];
+
+      await act(async () => {
+        await result.current.saveChat('Topic', messages);
+        await result.current.setIncludeComplementaryDocs('Topic', true);
+      });
+
+      let retrieved: ChatMessage[] = [];
+      await act(async () => {
+        retrieved = await result.current.getChat('Topic');
+      });
+
+      expect(retrieved[0].content).toBe('Keep me');
+    });
+
+    it('should preserve includeComplementaryDocs when saving new messages', async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+
+      await act(async () => {
+        await result.current.setIncludeComplementaryDocs('Topic', true);
+        await result.current.saveChat('Topic', [makeChatMessage('user', 'New msg')]);
+      });
+
+      let value = false;
+      await act(async () => {
+        value = await result.current.getIncludeComplementaryDocs('Topic');
+      });
+
+      expect(value).toBe(true);
+    });
+
+    it('should preserve includeMainDocs when setting includeComplementaryDocs', async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+
+      await act(async () => {
+        await result.current.setIncludeMainDocs('Topic', true);
+        await result.current.setIncludeComplementaryDocs('Topic', true);
+      });
+
+      let mainDocs = false;
+      let complementaryDocs = false;
+      await act(async () => {
+        mainDocs = await result.current.getIncludeMainDocs('Topic');
+        complementaryDocs = await result.current.getIncludeComplementaryDocs('Topic');
+      });
+
+      expect(mainDocs).toBe(true);
+      expect(complementaryDocs).toBe(true);
+    });
+
+    it('should export includeComplementaryDocs', async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+
+      await act(async () => {
+        await result.current.saveChat('Topic A', [makeChatMessage('user', 'Test')]);
+        await result.current.setIncludeComplementaryDocs('Topic A', true);
+      });
+
+      let exported: Record<string, { messages: ChatMessage[]; includeMainDocs?: boolean; includeComplementaryDocs?: boolean }> = {};
+      await act(async () => {
+        exported = await result.current.exportAll();
+      });
+
+      expect(exported['Topic A'].includeComplementaryDocs).toBe(true);
+    });
+
+    it('should import includeComplementaryDocs', async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+
+      const importData = {
+        'Topic Imported': {
+          messages: [makeChatMessage('user', 'Imported msg')],
+          includeMainDocs: true,
+          includeComplementaryDocs: true,
+        },
+      };
+
+      await act(async () => {
+        await result.current.importAll(importData);
+      });
+
+      let mainDocs = false;
+      let complementaryDocs = false;
+      await act(async () => {
+        mainDocs = await result.current.getIncludeMainDocs('Topic Imported');
+        complementaryDocs = await result.current.getIncludeComplementaryDocs('Topic Imported');
+      });
+
+      expect(mainDocs).toBe(true);
+      expect(complementaryDocs).toBe(true);
+    });
+  });
 });

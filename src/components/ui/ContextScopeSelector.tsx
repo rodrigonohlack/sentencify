@@ -39,6 +39,10 @@ export interface ContextScopeSelectorProps {
   includeMainDocs: boolean;
   /** Callback para alterar o toggle de documentos */
   setIncludeMainDocs: (include: boolean) => void;
+  /** v1.39.06: Se deve incluir documentos complementares no contexto */
+  includeComplementaryDocs: boolean;
+  /** v1.39.06: Callback para alterar o toggle de documentos complementares */
+  setIncludeComplementaryDocs: (include: boolean) => void;
   /** v1.38.16: Tamanho do histórico de chat (0 = limpo, >0 = tem histórico) */
   chatHistoryLength?: number;
 }
@@ -56,6 +60,8 @@ export const ContextScopeSelector: React.FC<ContextScopeSelectorProps> = ({
   setSelectedContextTopics,
   includeMainDocs,
   setIncludeMainDocs,
+  includeComplementaryDocs,  // v1.39.06
+  setIncludeComplementaryDocs,  // v1.39.06
   chatHistoryLength = 0  // v1.38.16
 }) => {
   // v1.38.16: Toggle bloqueado quando chat tem histórico
@@ -276,7 +282,30 @@ export const ContextScopeSelector: React.FC<ContextScopeSelectorProps> = ({
           {isToggleLocked ? (
             <p className="text-xs text-amber-500">Limpe o chat para alterar esta opção</p>
           ) : (
-            <p className="text-xs theme-text-muted">Desative para economizar tokens (envia apenas complementares)</p>
+            <p className="text-xs theme-text-muted">Desative para economizar tokens</p>
+          )}
+        </div>
+      </label>
+
+      {/* v1.39.06: Toggle de documentos complementares */}
+      <label className={`flex items-center gap-3 mt-2 p-3 rounded-lg border theme-border-input transition-all ${
+        isToggleLocked
+          ? 'opacity-60 cursor-not-allowed'
+          : 'cursor-pointer hover:border-purple-500/50'
+      }`}>
+        <input
+          type="checkbox"
+          checked={includeComplementaryDocs}
+          onChange={(e) => !isToggleLocked && setIncludeComplementaryDocs(e.target.checked)}
+          disabled={isToggleLocked}
+          className="w-4 h-4 text-purple-600 rounded border-gray-400 focus:ring-purple-500 focus:ring-offset-0 disabled:opacity-50"
+        />
+        <div>
+          <span className="text-sm font-medium theme-text-primary">Incluir documentos complementares</span>
+          {isToggleLocked ? (
+            <p className="text-xs text-amber-500">Limpe o chat para alterar esta opção</p>
+          ) : (
+            <p className="text-xs theme-text-muted">Ative para enviar docs complementares no contexto</p>
           )}
         </div>
       </label>

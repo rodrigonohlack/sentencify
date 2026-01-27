@@ -454,6 +454,30 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     loadIncludeMainDocs();
   }, [modals.aiAssistant, topicManager.editingTopic?.title, chatHistoryCache]);
 
+  // v1.39.06: Toggle "Incluir documentos complementares" persistido por tópico
+  const [topicIncludeComplementaryDocs, setTopicIncludeComplementaryDocsState] = React.useState(false);
+
+  // v1.39.06: Wrapper que persiste no cache
+  const setTopicIncludeComplementaryDocs = React.useCallback((value: boolean) => {
+    setTopicIncludeComplementaryDocsState(value);
+    const topicTitle = topicManager.editingTopic?.title;
+    if (topicTitle) {
+      chatHistoryCache.setIncludeComplementaryDocs(topicTitle, value);
+    }
+  }, [topicManager.editingTopic?.title, chatHistoryCache]);
+
+  // v1.39.06: Carregar includeComplementaryDocs do cache ao abrir assistente
+  React.useEffect(() => {
+    const loadIncludeComplementaryDocs = async () => {
+      const topicTitle = topicManager.editingTopic?.title;
+      if (modals.aiAssistant && topicTitle) {
+        const savedInclude = await chatHistoryCache.getIncludeComplementaryDocs(topicTitle);
+        setTopicIncludeComplementaryDocsState(savedInclude);
+      }
+    };
+    loadIncludeComplementaryDocs();
+  }, [modals.aiAssistant, topicManager.editingTopic?.title, chatHistoryCache]);
+
   // v1.13.9: Ref para auto-save debounced no Editor Individual
   const individualAutoSaveTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -2821,6 +2845,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
       {/* v1.38.12: Adicionado allTopics para ContextScopeSelector */}
       {/* v1.38.16: Adicionado includeMainDocs com persistência por tópico */}
+      {/* v1.39.06: Adicionado includeComplementaryDocs com persistência por tópico */}
       <AIAssistantModal
         isOpen={modals.aiAssistant}
         onClose={() => closeModal('aiAssistant')}
@@ -2835,6 +2860,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         lastResponse={chatAssistant.lastResponse}
         includeMainDocs={topicIncludeMainDocs}
         setIncludeMainDocs={setTopicIncludeMainDocs}
+        includeComplementaryDocs={topicIncludeComplementaryDocs}
+        setIncludeComplementaryDocs={setTopicIncludeComplementaryDocs}
         sanitizeHTML={sanitizeHTML}
         quickPrompts={aiIntegration.aiSettings.quickPrompts}
         proofManager={proofManager}

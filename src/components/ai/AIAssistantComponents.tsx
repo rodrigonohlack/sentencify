@@ -530,7 +530,10 @@ export const AIAssistantModal = React.memo(({
   selectedContextTopics: externalSelectedTopics,
   setSelectedContextTopics: externalSetSelectedTopics,
   includeMainDocs: externalIncludeMainDocs,
-  setIncludeMainDocs: externalSetIncludeMainDocs
+  setIncludeMainDocs: externalSetIncludeMainDocs,
+  // v1.39.06: Toggle "Incluir documentos complementares" no chat
+  includeComplementaryDocs: externalIncludeComplementaryDocs,
+  setIncludeComplementaryDocs: externalSetIncludeComplementaryDocs
 }: AIAssistantModalProps) => {
   // v1.21.2: Estado para erro no botão do quick prompt
   const [qpError, setQpError] = React.useState<{ id: string; message: string } | null>(null);
@@ -538,25 +541,31 @@ export const AIAssistantModal = React.memo(({
   // v1.38.12: Estados locais que resetam ao reabrir modal (se não fornecidos externamente)
   const [localSelectedTopics, setLocalSelectedTopics] = React.useState<string[]>([]);
   const [localIncludeMainDocs, setLocalIncludeMainDocs] = React.useState(true);
+  const [localIncludeComplementaryDocs, setLocalIncludeComplementaryDocs] = React.useState(false);  // v1.39.06
 
   // Usar props externas se fornecidas, senão usar estado local
   const selectedContextTopics = externalSelectedTopics ?? localSelectedTopics;
   const setSelectedContextTopics = externalSetSelectedTopics ?? setLocalSelectedTopics;
   const includeMainDocs = externalIncludeMainDocs ?? localIncludeMainDocs;
   const setIncludeMainDocs = externalSetIncludeMainDocs ?? setLocalIncludeMainDocs;
+  const includeComplementaryDocs = externalIncludeComplementaryDocs ?? localIncludeComplementaryDocs;  // v1.39.06
+  const setIncludeComplementaryDocs = externalSetIncludeComplementaryDocs ?? setLocalIncludeComplementaryDocs;  // v1.39.06
 
   // v1.38.12: Resetar estados locais ao reabrir modal
   React.useEffect(() => {
     if (isOpen) {
       if (!externalSelectedTopics) setLocalSelectedTopics([]);
       if (externalIncludeMainDocs === undefined) setLocalIncludeMainDocs(true);
+      if (externalIncludeComplementaryDocs === undefined) setLocalIncludeComplementaryDocs(false);  // v1.39.06
     }
-  }, [isOpen, externalSelectedTopics, externalIncludeMainDocs]);
+  }, [isOpen, externalSelectedTopics, externalIncludeMainDocs, externalIncludeComplementaryDocs]);
 
   // v1.38.12: Handler para quick prompts com validação - passa opções de contexto
+  // v1.39.06: Inclui includeComplementaryDocs
   const handleQuickPromptClick = React.useCallback((qp: QuickPrompt, resolvedPrompt: string) => {
-    const options: { proofFilter?: string; includeMainDocs?: boolean; selectedContextTopics?: string[] } = {
+    const options: { proofFilter?: string; includeMainDocs?: boolean; includeComplementaryDocs?: boolean; selectedContextTopics?: string[] } = {
       includeMainDocs,
+      includeComplementaryDocs,
       selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
     };
 
@@ -572,20 +581,23 @@ export const AIAssistantModal = React.memo(({
     } else {
       onSendMessage(resolvedPrompt, options);
     }
-  }, [proofManager, topicTitle, onSendMessage, includeMainDocs, contextScope, selectedContextTopics]);
+  }, [proofManager, topicTitle, onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics]);
 
   // v1.38.12: Handler para mensagens normais - passa opções de contexto
+  // v1.39.06: Inclui includeComplementaryDocs
   const handleSendMessage = React.useCallback((message: string, extraOptions?: { proofFilter?: string }) => {
     const options = {
       ...extraOptions,
       includeMainDocs,
+      includeComplementaryDocs,
       selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
     };
     onSendMessage(message, options);
-  }, [onSendMessage, includeMainDocs, contextScope, selectedContextTopics]);
+  }, [onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics]);
 
   // v1.38.12: Usa ContextScopeSelector unificado
   // v1.38.16: Passa chatHistoryLength para bloquear toggle quando chat tem histórico
+  // v1.39.06: Passa includeComplementaryDocs
   const scopeSelector = (
     <ContextScopeSelector
       contextScope={contextScope}
@@ -596,6 +608,8 @@ export const AIAssistantModal = React.memo(({
       setSelectedContextTopics={setSelectedContextTopics}
       includeMainDocs={includeMainDocs}
       setIncludeMainDocs={setIncludeMainDocs}
+      includeComplementaryDocs={includeComplementaryDocs}
+      setIncludeComplementaryDocs={setIncludeComplementaryDocs}
       chatHistoryLength={chatHistory.length}
     />
   );
@@ -649,7 +663,10 @@ export const AIAssistantGlobalModal = React.memo(({
   selectedContextTopics: externalSelectedTopics,
   setSelectedContextTopics: externalSetSelectedTopics,
   includeMainDocs: externalIncludeMainDocs,
-  setIncludeMainDocs: externalSetIncludeMainDocs
+  setIncludeMainDocs: externalSetIncludeMainDocs,
+  // v1.39.06: Toggle "Incluir documentos complementares" no chat
+  includeComplementaryDocs: externalIncludeComplementaryDocs,
+  setIncludeComplementaryDocs: externalSetIncludeComplementaryDocs
 }: AIAssistantGlobalModalProps) => {
   // v1.21.2: Estado para erro no botão do quick prompt
   const [qpError, setQpError] = React.useState<{ id: string; message: string } | null>(null);
@@ -657,25 +674,31 @@ export const AIAssistantGlobalModal = React.memo(({
   // v1.38.12: Estados locais que resetam ao reabrir modal (se não fornecidos externamente)
   const [localSelectedTopics, setLocalSelectedTopics] = React.useState<string[]>([]);
   const [localIncludeMainDocs, setLocalIncludeMainDocs] = React.useState(true);
+  const [localIncludeComplementaryDocs, setLocalIncludeComplementaryDocs] = React.useState(false);  // v1.39.06
 
   // Usar props externas se fornecidas, senão usar estado local
   const selectedContextTopics = externalSelectedTopics ?? localSelectedTopics;
   const setSelectedContextTopics = externalSetSelectedTopics ?? setLocalSelectedTopics;
   const includeMainDocs = externalIncludeMainDocs ?? localIncludeMainDocs;
   const setIncludeMainDocs = externalSetIncludeMainDocs ?? setLocalIncludeMainDocs;
+  const includeComplementaryDocs = externalIncludeComplementaryDocs ?? localIncludeComplementaryDocs;  // v1.39.06
+  const setIncludeComplementaryDocs = externalSetIncludeComplementaryDocs ?? setLocalIncludeComplementaryDocs;  // v1.39.06
 
   // v1.38.12: Resetar estados locais ao reabrir modal
   React.useEffect(() => {
     if (isOpen) {
       if (!externalSelectedTopics) setLocalSelectedTopics([]);
       if (externalIncludeMainDocs === undefined) setLocalIncludeMainDocs(true);
+      if (externalIncludeComplementaryDocs === undefined) setLocalIncludeComplementaryDocs(false);  // v1.39.06
     }
-  }, [isOpen, externalSelectedTopics, externalIncludeMainDocs]);
+  }, [isOpen, externalSelectedTopics, externalIncludeMainDocs, externalIncludeComplementaryDocs]);
 
   // v1.38.12: Handler para quick prompts com validação - passa opções de contexto
+  // v1.39.06: Inclui includeComplementaryDocs
   const handleQuickPromptClick = React.useCallback((qp: QuickPrompt, resolvedPrompt: string) => {
-    const options: { proofFilter?: string; includeMainDocs?: boolean; selectedContextTopics?: string[] } = {
+    const options: { proofFilter?: string; includeMainDocs?: boolean; includeComplementaryDocs?: boolean; selectedContextTopics?: string[] } = {
       includeMainDocs,
+      includeComplementaryDocs,
       selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
     };
 
@@ -691,20 +714,23 @@ export const AIAssistantGlobalModal = React.memo(({
     } else {
       onSendMessage(resolvedPrompt, options);
     }
-  }, [proofManager, topicTitle, onSendMessage, includeMainDocs, contextScope, selectedContextTopics]);
+  }, [proofManager, topicTitle, onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics]);
 
   // v1.38.12: Handler para mensagens normais - passa opções de contexto
+  // v1.39.06: Inclui includeComplementaryDocs
   const handleSendMessage = React.useCallback((message: string, extraOptions?: { proofFilter?: string }) => {
     const options = {
       ...extraOptions,
       includeMainDocs,
+      includeComplementaryDocs,
       selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
     };
     onSendMessage(message, options);
-  }, [onSendMessage, includeMainDocs, contextScope, selectedContextTopics]);
+  }, [onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics]);
 
   // v1.38.12: Usa ContextScopeSelector unificado
   // v1.38.16: Passa chatHistoryLength para bloquear toggle quando chat tem histórico
+  // v1.39.06: Passa includeComplementaryDocs
   const scopeSelector = (
     <ContextScopeSelector
       contextScope={contextScope}
@@ -715,6 +741,8 @@ export const AIAssistantGlobalModal = React.memo(({
       setSelectedContextTopics={setSelectedContextTopics}
       includeMainDocs={includeMainDocs}
       setIncludeMainDocs={setIncludeMainDocs}
+      includeComplementaryDocs={includeComplementaryDocs}
+      setIncludeComplementaryDocs={setIncludeComplementaryDocs}
       chatHistoryLength={chatHistory.length}
     />
   );

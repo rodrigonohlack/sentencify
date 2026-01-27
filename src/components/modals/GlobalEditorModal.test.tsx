@@ -45,6 +45,8 @@ vi.mock('../../hooks/useChatHistoryCache', () => ({
     deleteChat: vi.fn(),
     getIncludeMainDocs: vi.fn().mockResolvedValue(true),
     setIncludeMainDocs: vi.fn(),
+    getIncludeComplementaryDocs: vi.fn().mockResolvedValue(false),  // v1.39.06
+    setIncludeComplementaryDocs: vi.fn(),  // v1.39.06
   })),
 }));
 

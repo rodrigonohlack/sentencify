@@ -162,6 +162,8 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   const [globalContextScope, setGlobalContextScope] = React.useState<ContextScope>('current'); // v1.38.12: 'current' | 'selected' | 'all'
   // v1.38.16: Toggle de documentos persistido por tópico
   const [globalIncludeMainDocs, setGlobalIncludeMainDocsState] = React.useState(true);
+  // v1.39.06: Toggle de documentos complementares persistido por tópico
+  const [globalIncludeComplementaryDocs, setGlobalIncludeComplementaryDocsState] = React.useState(false);
 
   // v1.37.92: Cache de histórico de chat por tópico
   const chatHistoryCache = useChatHistoryCache();
@@ -601,7 +603,17 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     }
   }, [aiAssistantTopicIndex, localTopics, chatHistoryCache]);
 
+  // v1.39.06: Wrapper para setIncludeComplementaryDocs que persiste no cache
+  const setGlobalIncludeComplementaryDocs = React.useCallback((value: boolean) => {
+    setGlobalIncludeComplementaryDocsState(value);
+    // Salvar no cache se houver tópico ativo
+    if (aiAssistantTopicIndex !== null && localTopics[aiAssistantTopicIndex]) {
+      chatHistoryCache.setIncludeComplementaryDocs(localTopics[aiAssistantTopicIndex].title, value);
+    }
+  }, [aiAssistantTopicIndex, localTopics, chatHistoryCache]);
+
   // v1.38.16: Carrega includeMainDocs do cache ao abrir assistente
+  // v1.39.06: Carrega includeComplementaryDocs também
   const handleOpenAIAssistant = React.useCallback(async (topicIndex: number) => {
     setAiAssistantTopicIndex(topicIndex);
     // Carregar config do cache
@@ -609,6 +621,8 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     if (topicTitle) {
       const savedInclude = await chatHistoryCache.getIncludeMainDocs(topicTitle);
       setGlobalIncludeMainDocsState(savedInclude);
+      const savedComplementary = await chatHistoryCache.getIncludeComplementaryDocs(topicTitle);
+      setGlobalIncludeComplementaryDocsState(savedComplementary);
     }
     setShowAIAssistant(true);
   }, [localTopics, chatHistoryCache]);
@@ -1315,6 +1329,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
       {/* v1.19.0: Modal Assistente IA Global - Chat Interativo */}
       {/* v1.38.12: Adicionado allTopics para ContextScopeSelector */}
       {/* v1.38.16: Adicionado includeMainDocs com persistência por tópico */}
+      {/* v1.39.06: Adicionado includeComplementaryDocs com persistência por tópico */}
       {showAIAssistant && aiAssistantTopicIndex !== null && (
         <AIAssistantGlobalModal
           isOpen={showAIAssistant}
@@ -1335,6 +1350,8 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
           setContextScope={setGlobalContextScope}
           includeMainDocs={globalIncludeMainDocs}
           setIncludeMainDocs={setGlobalIncludeMainDocs}
+          includeComplementaryDocs={globalIncludeComplementaryDocs}
+          setIncludeComplementaryDocs={setGlobalIncludeComplementaryDocs}
           sanitizeHTML={sanitizeHTML}
           quickPrompts={aiIntegration?.aiSettings?.quickPrompts}
           proofManager={proofManager}

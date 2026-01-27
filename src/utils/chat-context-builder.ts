@@ -25,6 +25,7 @@ import type { AIMessageContent, AnonymizationSettings } from '../types';
 export interface ChatContextOptions {
   proofFilter?: string;
   includeMainDocs?: boolean;
+  includeComplementaryDocs?: boolean;  // v1.39.06: Toggle "Incluir documentos complementares" no chat
   selectedContextTopics?: string[];
 }
 
@@ -92,18 +93,26 @@ export async function buildChatContext(params: BuildChatContextParams): Promise<
     anonymizationSettings,
   } = params;
 
-  const { proofFilter, includeMainDocs = true, selectedContextTopics } = options;
+  const { proofFilter, includeMainDocs = true, includeComplementaryDocs = false, selectedContextTopics } = options;
 
-  // 1. Filtrar documentos baseado no toggle includeMainDocs
+  // 1. Filtrar documentos baseado nos toggles includeMainDocs e includeComplementaryDocs
+  // v1.39.06: includeComplementaryDocs controla se complementares são enviados (default: false)
   const docsToSend = includeMainDocs
-    ? analyzedDocuments
+    ? {
+        peticoes: analyzedDocuments.peticoes || [],
+        peticoesText: analyzedDocuments.peticoesText || [],
+        contestacoes: analyzedDocuments.contestacoes || [],
+        contestacoesText: analyzedDocuments.contestacoesText || [],
+        complementares: includeComplementaryDocs ? (analyzedDocuments.complementares || []) : [],
+        complementaresText: includeComplementaryDocs ? (analyzedDocuments.complementaresText || []) : [],
+      }
     : {
         peticoes: [],
         peticoesText: [],
         contestacoes: [],
         contestacoesText: [],
-        complementares: analyzedDocuments.complementares || [],
-        complementaresText: analyzedDocuments.complementaresText || [],
+        complementares: includeComplementaryDocs ? (analyzedDocuments.complementares || []) : [],
+        complementaresText: includeComplementaryDocs ? (analyzedDocuments.complementaresText || []) : [],
       };
 
   // 2. Preparar documentos usando helper

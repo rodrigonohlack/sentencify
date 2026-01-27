@@ -20,6 +20,7 @@ describe('ContextScopeSelector', () => {
   const mockSetContextScope = vi.fn();
   const mockSetSelectedContextTopics = vi.fn();
   const mockSetIncludeMainDocs = vi.fn();
+  const mockSetIncludeComplementaryDocs = vi.fn();  // v1.39.06
 
   const mockTopics = [
     { title: 'Horas Extras', category: 'Jornada', content: '' },
@@ -38,6 +39,8 @@ describe('ContextScopeSelector', () => {
     setSelectedContextTopics: mockSetSelectedContextTopics,
     includeMainDocs: false,
     setIncludeMainDocs: mockSetIncludeMainDocs,
+    includeComplementaryDocs: false,  // v1.39.06
+    setIncludeComplementaryDocs: mockSetIncludeComplementaryDocs,  // v1.39.06
     chatHistoryLength: 0,
   };
 
@@ -322,22 +325,23 @@ describe('ContextScopeSelector', () => {
     it('should render checkbox unchecked when includeMainDocs is false', () => {
       render(<ContextScopeSelector {...defaultProps} includeMainDocs={false} />);
 
-      const checkbox = screen.getByRole('checkbox');
-      expect(checkbox).not.toBeChecked();
+      // First checkbox is includeMainDocs, second is includeComplementaryDocs
+      const checkboxes = screen.getAllByRole('checkbox');
+      expect(checkboxes[0]).not.toBeChecked();
     });
 
     it('should render checkbox checked when includeMainDocs is true', () => {
       render(<ContextScopeSelector {...defaultProps} includeMainDocs={true} />);
 
-      const checkbox = screen.getByRole('checkbox');
-      expect(checkbox).toBeChecked();
+      const checkboxes = screen.getAllByRole('checkbox');
+      expect(checkboxes[0]).toBeChecked();
     });
 
     it('should call setIncludeMainDocs when checkbox is toggled', () => {
       render(<ContextScopeSelector {...defaultProps} includeMainDocs={false} />);
 
-      const checkbox = screen.getByRole('checkbox');
-      fireEvent.click(checkbox);
+      const checkboxes = screen.getAllByRole('checkbox');
+      fireEvent.click(checkboxes[0]);
 
       expect(mockSetIncludeMainDocs).toHaveBeenCalledWith(true);
     });
@@ -345,8 +349,9 @@ describe('ContextScopeSelector', () => {
     it('should not call setIncludeMainDocs when toggle is locked', () => {
       render(<ContextScopeSelector {...defaultProps} chatHistoryLength={5} />);
 
-      const checkbox = screen.getByRole('checkbox');
-      fireEvent.click(checkbox);
+      // First checkbox is includeMainDocs, second is includeComplementaryDocs
+      const checkboxes = screen.getAllByRole('checkbox');
+      fireEvent.click(checkboxes[0]);
 
       expect(mockSetIncludeMainDocs).not.toHaveBeenCalled();
     });
@@ -354,20 +359,75 @@ describe('ContextScopeSelector', () => {
     it('should show disabled state when chat has history', () => {
       render(<ContextScopeSelector {...defaultProps} chatHistoryLength={3} />);
 
-      const checkbox = screen.getByRole('checkbox');
-      expect(checkbox).toBeDisabled();
+      const checkboxes = screen.getAllByRole('checkbox');
+      expect(checkboxes[0]).toBeDisabled();
+      expect(checkboxes[1]).toBeDisabled();  // v1.39.06: both should be disabled
     });
 
     it('should show lock warning when chat has history', () => {
       render(<ContextScopeSelector {...defaultProps} chatHistoryLength={2} />);
 
-      expect(screen.getByText('Limpe o chat para alterar esta opção')).toBeInTheDocument();
+      // v1.39.06: Now there are 2 messages (one for each toggle)
+      const warnings = screen.getAllByText('Limpe o chat para alterar esta opção');
+      expect(warnings).toHaveLength(2);
     });
 
     it('should show economy hint when toggle is unlocked', () => {
       render(<ContextScopeSelector {...defaultProps} chatHistoryLength={0} />);
 
       expect(screen.getByText(/Desative para economizar tokens/)).toBeInTheDocument();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INCLUDE COMPLEMENTARY DOCS TOGGLE TESTS (v1.39.06)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Include Complementary Docs Toggle', () => {
+    it('should render checkbox unchecked when includeComplementaryDocs is false', () => {
+      render(<ContextScopeSelector {...defaultProps} includeComplementaryDocs={false} />);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      expect(checkboxes[1]).not.toBeChecked();
+    });
+
+    it('should render checkbox checked when includeComplementaryDocs is true', () => {
+      render(<ContextScopeSelector {...defaultProps} includeComplementaryDocs={true} />);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      expect(checkboxes[1]).toBeChecked();
+    });
+
+    it('should call setIncludeComplementaryDocs when checkbox is toggled', () => {
+      render(<ContextScopeSelector {...defaultProps} includeComplementaryDocs={false} />);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      fireEvent.click(checkboxes[1]);
+
+      expect(mockSetIncludeComplementaryDocs).toHaveBeenCalledWith(true);
+    });
+
+    it('should not call setIncludeComplementaryDocs when toggle is locked', () => {
+      render(<ContextScopeSelector {...defaultProps} chatHistoryLength={5} />);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      fireEvent.click(checkboxes[1]);
+
+      expect(mockSetIncludeComplementaryDocs).not.toHaveBeenCalled();
+    });
+
+    it('should show hint text when toggle is unlocked', () => {
+      render(<ContextScopeSelector {...defaultProps} chatHistoryLength={0} />);
+
+      expect(screen.getByText(/Ative para enviar docs complementares no contexto/)).toBeInTheDocument();
+    });
+
+    it('should render both toggles independently', () => {
+      render(<ContextScopeSelector {...defaultProps} includeMainDocs={true} includeComplementaryDocs={false} />);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      expect(checkboxes[0]).toBeChecked();  // includeMainDocs
+      expect(checkboxes[1]).not.toBeChecked();  // includeComplementaryDocs
     });
   });
 
