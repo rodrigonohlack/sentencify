@@ -8,7 +8,7 @@ import { useCallback } from 'react';
 import { useDocumentStore, useResultStore } from '../stores';
 import { useAIIntegration } from './useAIIntegration';
 import { ANALYSIS_SYSTEM_PROMPT, buildAnalysisPrompt } from '../prompts';
-import type { AnalysisResult, AIMessage } from '../types';
+import type { AnalysisResult, AIMessage, PedidoAnalise, TabelaPedido } from '../types';
 import { parseAIResponse, extractJSON, AnalysisResponseSchema } from '../../../schemas/ai-responses';
 
 /**
@@ -20,6 +20,34 @@ const ensureString = (value: unknown): string => {
   if (typeof value === 'string') return value;
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
+};
+
+/**
+ * Trunca texto para tamanho máximo, preservando palavras
+ */
+const truncateText = (text: string, maxLength: number = 100): string => {
+  if (!text || text.length <= maxLength) return text || '';
+  return text.substring(0, maxLength - 3).replace(/\s+\S*$/, '') + '...';
+};
+
+/**
+ * Gera tabelaSintetica a partir do array de pedidos
+ * Garante que todos os pedidos apareçam em ambas as views
+ */
+const generateTabelaSintetica = (pedidos: PedidoAnalise[]): TabelaPedido[] => {
+  return pedidos.map(p => ({
+    numero: p.numero,
+    tema: p.tema,
+    valor: p.valor,
+    teseAutor: truncateText(p.fatosReclamante),
+    teseRe: truncateText(p.defesaReclamada || 'Não houve contestação'),
+    controversia: p.controversia,
+    confissaoFicta: p.confissaoFicta,
+    observacoes: p.pontosEsclarecer?.length > 0 ? p.pontosEsclarecer[0] : undefined,
+    tipoPedido: p.tipoPedido,
+    pedidoPrincipalNumero: p.pedidoPrincipalNumero,
+    condicao: p.condicao,
+  }));
 };
 
 export const useAnalysis = () => {
@@ -64,7 +92,8 @@ export const useAnalysis = () => {
           },
           valorCausa: data.valorCausa || { valorTotal: 0, somaPedidos: 0, inconsistencia: false },
           alertas: data.alertas || [],
-          tabelaSintetica: data.tabelaSintetica || []
+          // Gera tabelaSintetica a partir dos pedidos para garantir consistência
+          tabelaSintetica: generateTabelaSintetica((data.pedidos || []) as PedidoAnalise[])
         } as unknown as AnalysisResult;
       }
 
@@ -77,6 +106,15 @@ export const useAnalysis = () => {
         throw new Error('Resultado incompleto: falta identificacao');
       }
 
+      // Coerce string fields in pedidos to avoid React Error #300
+      const processedPedidos = (parsed.pedidos || []).map((p: Record<string, unknown>) => ({
+        ...p,
+        fatosReclamante: ensureString(p.fatosReclamante),
+        defesaReclamada: ensureString(p.defesaReclamada),
+        teseJuridica: ensureString(p.teseJuridica),
+        confissaoFicta: p.confissaoFicta ? ensureString(p.confissaoFicta) : null,
+      })) as PedidoAnalise[];
+
       // Ensure arrays are present and string fields are coerced
       return {
         identificacao: parsed.identificacao || { reclamantes: [], reclamadas: [] },
@@ -84,14 +122,7 @@ export const useAnalysis = () => {
         tutelasProvisoras: parsed.tutelasProvisoras || [],
         preliminares: parsed.preliminares || [],
         prejudiciais: parsed.prejudiciais || {},
-        // Coerce string fields in pedidos to avoid React Error #300
-        pedidos: (parsed.pedidos || []).map((p: Record<string, unknown>) => ({
-          ...p,
-          fatosReclamante: ensureString(p.fatosReclamante),
-          defesaReclamada: ensureString(p.defesaReclamada),
-          teseJuridica: ensureString(p.teseJuridica),
-          confissaoFicta: p.confissaoFicta ? ensureString(p.confissaoFicta) : null,
-        })),
+        pedidos: processedPedidos,
         reconvencao: parsed.reconvencao,
         defesasAutonomas: parsed.defesasAutonomas || [],
         impugnacoes: parsed.impugnacoes || { documentos: [], documentosNaoImpugnados: [] },
@@ -101,7 +132,8 @@ export const useAnalysis = () => {
         },
         valorCausa: parsed.valorCausa || { valorTotal: 0, somaPedidos: 0, inconsistencia: false },
         alertas: parsed.alertas || [],
-        tabelaSintetica: parsed.tabelaSintetica || []
+        // Gera tabelaSintetica a partir dos pedidos para garantir consistência
+        tabelaSintetica: generateTabelaSintetica(processedPedidos)
       };
     } catch (error) {
       console.error('Erro ao parsear resultado:', error);
