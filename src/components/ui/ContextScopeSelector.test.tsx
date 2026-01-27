@@ -88,13 +88,15 @@ describe('ContextScopeSelector', () => {
     it('should render include documents toggle', () => {
       render(<ContextScopeSelector {...defaultProps} />);
 
-      expect(screen.getByText('Incluir petições e contestações')).toBeInTheDocument();
+      expect(screen.getByText('Petições e contestações')).toBeInTheDocument();
+      expect(screen.getByText('Docs complementares')).toBeInTheDocument();
     });
 
-    it('should render token economy hint when toggle is unlocked', () => {
+    it('should render hint text when toggle is unlocked', () => {
       render(<ContextScopeSelector {...defaultProps} />);
 
-      expect(screen.getByText(/Desative para economizar tokens/)).toBeInTheDocument();
+      expect(screen.getByText(/Docs principais/)).toBeInTheDocument();
+      expect(screen.getByText(/Arquivos extras/)).toBeInTheDocument();
     });
   });
 
@@ -368,14 +370,14 @@ describe('ContextScopeSelector', () => {
       render(<ContextScopeSelector {...defaultProps} chatHistoryLength={2} />);
 
       // v1.39.06: Now there are 2 messages (one for each toggle)
-      const warnings = screen.getAllByText('Limpe o chat para alterar esta opção');
+      const warnings = screen.getAllByText('Limpe o chat para alterar');
       expect(warnings).toHaveLength(2);
     });
 
-    it('should show economy hint when toggle is unlocked', () => {
+    it('should show hint text when toggle is unlocked', () => {
       render(<ContextScopeSelector {...defaultProps} chatHistoryLength={0} />);
 
-      expect(screen.getByText(/Desative para economizar tokens/)).toBeInTheDocument();
+      expect(screen.getByText(/Docs principais/)).toBeInTheDocument();
     });
   });
 
@@ -419,7 +421,7 @@ describe('ContextScopeSelector', () => {
     it('should show hint text when toggle is unlocked', () => {
       render(<ContextScopeSelector {...defaultProps} chatHistoryLength={0} />);
 
-      expect(screen.getByText(/Ative para enviar docs complementares no contexto/)).toBeInTheDocument();
+      expect(screen.getByText(/Arquivos extras/)).toBeInTheDocument();
     });
 
     it('should render both toggles independently', () => {

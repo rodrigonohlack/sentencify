@@ -263,52 +263,55 @@ export const ContextScopeSelector: React.FC<ContextScopeSelectorProps> = ({
         </div>
       )}
 
-      {/* Toggle de documentos principais */}
+      {/* v1.39.06: Toggles de documentos em duas colunas */}
       {/* v1.38.16: Bloqueado quando chat tem histórico */}
-      <label className={`flex items-center gap-3 mt-3 p-3 rounded-lg border theme-border-input transition-all ${
-        isToggleLocked
-          ? 'opacity-60 cursor-not-allowed'
-          : 'cursor-pointer hover:border-purple-500/50'
-      }`}>
-        <input
-          type="checkbox"
-          checked={includeMainDocs}
-          onChange={(e) => !isToggleLocked && setIncludeMainDocs(e.target.checked)}
-          disabled={isToggleLocked}
-          className="w-4 h-4 text-purple-600 rounded border-gray-400 focus:ring-purple-500 focus:ring-offset-0 disabled:opacity-50"
-        />
-        <div>
-          <span className="text-sm font-medium theme-text-primary">Incluir petições e contestações</span>
-          {isToggleLocked ? (
-            <p className="text-xs text-amber-500">Limpe o chat para alterar esta opção</p>
-          ) : (
-            <p className="text-xs theme-text-muted">Desative para economizar tokens</p>
-          )}
-        </div>
-      </label>
+      <div className="grid grid-cols-2 gap-3 mt-3">
+        {/* Toggle de petições e contestações */}
+        <label className={`flex items-center gap-3 p-3 rounded-lg border theme-border-input transition-all ${
+          isToggleLocked
+            ? 'opacity-60 cursor-not-allowed'
+            : 'cursor-pointer hover:border-purple-500/50'
+        }`}>
+          <input
+            type="checkbox"
+            checked={includeMainDocs}
+            onChange={(e) => !isToggleLocked && setIncludeMainDocs(e.target.checked)}
+            disabled={isToggleLocked}
+            className="w-4 h-4 text-purple-600 rounded border-gray-400 focus:ring-purple-500 focus:ring-offset-0 disabled:opacity-50"
+          />
+          <div>
+            <span className="text-sm font-medium theme-text-primary">Petições e contestações</span>
+            {isToggleLocked ? (
+              <p className="text-xs text-amber-500">Limpe o chat para alterar</p>
+            ) : (
+              <p className="text-xs theme-text-muted">Docs principais</p>
+            )}
+          </div>
+        </label>
 
-      {/* v1.39.06: Toggle de documentos complementares */}
-      <label className={`flex items-center gap-3 mt-2 p-3 rounded-lg border theme-border-input transition-all ${
-        isToggleLocked
-          ? 'opacity-60 cursor-not-allowed'
-          : 'cursor-pointer hover:border-purple-500/50'
-      }`}>
-        <input
-          type="checkbox"
-          checked={includeComplementaryDocs}
-          onChange={(e) => !isToggleLocked && setIncludeComplementaryDocs(e.target.checked)}
-          disabled={isToggleLocked}
-          className="w-4 h-4 text-purple-600 rounded border-gray-400 focus:ring-purple-500 focus:ring-offset-0 disabled:opacity-50"
-        />
-        <div>
-          <span className="text-sm font-medium theme-text-primary">Incluir documentos complementares</span>
-          {isToggleLocked ? (
-            <p className="text-xs text-amber-500">Limpe o chat para alterar esta opção</p>
-          ) : (
-            <p className="text-xs theme-text-muted">Ative para enviar docs complementares no contexto</p>
-          )}
-        </div>
-      </label>
+        {/* Toggle de documentos complementares */}
+        <label className={`flex items-center gap-3 p-3 rounded-lg border theme-border-input transition-all ${
+          isToggleLocked
+            ? 'opacity-60 cursor-not-allowed'
+            : 'cursor-pointer hover:border-purple-500/50'
+        }`}>
+          <input
+            type="checkbox"
+            checked={includeComplementaryDocs}
+            onChange={(e) => !isToggleLocked && setIncludeComplementaryDocs(e.target.checked)}
+            disabled={isToggleLocked}
+            className="w-4 h-4 text-purple-600 rounded border-gray-400 focus:ring-purple-500 focus:ring-offset-0 disabled:opacity-50"
+          />
+          <div>
+            <span className="text-sm font-medium theme-text-primary">Docs complementares</span>
+            {isToggleLocked ? (
+              <p className="text-xs text-amber-500">Limpe o chat para alterar</p>
+            ) : (
+              <p className="text-xs theme-text-muted">Arquivos extras</p>
+            )}
+          </div>
+        </label>
+      </div>
     </div>
   );
 };
