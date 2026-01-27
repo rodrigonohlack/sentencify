@@ -67,40 +67,36 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
 
   /**
    * Calcula o rito processual baseado no valor da causa e partes
-   * CLT Art. 852-A (sumaríssimo) e Art. 2º Lei 5.584/70 (sumário)
+   * SEMPRE calcula - regras são objetivas (CLT Art. 852-A e Lei 5.584/70)
+   * Não confia no rito retornado pela IA pois pode estar incorreto
    */
-  const ritoCalculado = useMemo((): { rito: RitoType; calculado: boolean; motivo: string } => {
+  const ritoCalculado = useMemo((): { rito: RitoType; motivo: string } => {
     const valor = valorCausa?.valorTotal;
     const motivo = calcularMotivo(valor);
 
-    // Se já veio o rito da IA, usa ele mas ainda mostra o motivo calculado
-    if (data.rito) {
-      return { rito: data.rito, calculado: false, motivo };
-    }
-
     // Se tem ente público, é sempre ordinário (CLT Art. 852-A, parágrafo único)
     if (hasEntePublico) {
-      return { rito: 'ordinario', calculado: true, motivo };
+      return { rito: 'ordinario', motivo };
     }
 
     // Se não tem valor, assume ordinário
     if (!valor || valor <= 0) {
-      return { rito: 'ordinario', calculado: true, motivo };
+      return { rito: 'ordinario', motivo };
     }
 
     // Até 2 salários mínimos: Sumário (Lei 5.584/70)
     if (valor <= LIMITE_SUMARIO) {
-      return { rito: 'sumario', calculado: true, motivo };
+      return { rito: 'sumario', motivo };
     }
 
     // Até 40 salários mínimos: Sumaríssimo (CLT Art. 852-A)
     if (valor <= LIMITE_SUMARISSIMO) {
-      return { rito: 'sumarissimo', calculado: true, motivo };
+      return { rito: 'sumarissimo', motivo };
     }
 
     // Acima de 40 salários mínimos: Ordinário
-    return { rito: 'ordinario', calculado: true, motivo };
-  }, [data.rito, valorCausa?.valorTotal, hasEntePublico]);
+    return { rito: 'ordinario', motivo };
+  }, [valorCausa?.valorTotal, hasEntePublico]);
 
   const ritoBadgeVariant = ritoCalculado.rito === 'sumarissimo' ? 'warning' :
                           ritoCalculado.rito === 'sumario' ? 'success' : 'info';
