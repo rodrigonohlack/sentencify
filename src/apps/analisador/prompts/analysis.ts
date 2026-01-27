@@ -97,6 +97,9 @@ Retorne APENAS um JSON válido no seguinte formato (sem texto adicional antes ou
       "numero": 1,
       "tema": "string (ex: HORAS EXTRAS, ADICIONAL NOTURNO)",
       "descricao": "string DETALHADA do pedido conforme petição",
+      "tipoPedido": "principal | subsidiario | alternativo | sucessivo",
+      "pedidoPrincipalNumero": "number ou null - se for subsidiário/alternativo/sucessivo, indica o número do pedido principal relacionado",
+      "condicao": "string ou null - condição para aplicação do pedido (ex: 'caso não seja reconhecido o turno ininterrupto de revezamento')",
       "periodo": "string ou null",
       "valor": "number ou null",
       "fatosReclamante": "string COMPLETA com TODOS os argumentos, valores, horários, datas e fundamentos alegados pelo reclamante - transcreva fielmente sem resumir",
@@ -166,6 +169,9 @@ Retorne APENAS um JSON válido no seguinte formato (sem texto adicional antes ou
     {
       "numero": 1,
       "tema": "string",
+      "tipoPedido": "principal | subsidiario | alternativo | sucessivo",
+      "pedidoPrincipalNumero": "number ou null",
+      "condicao": "string ou null",
       "valor": number ou null,
       "teseAutor": "string resumida",
       "teseRe": "string resumida",
@@ -185,7 +191,14 @@ INSTRUÇÕES ADICIONAIS:
 6. Se o valor da causa não corresponder à soma dos pedidos, marque como inconsistência
 7. Considere que emendas podem adicionar pedidos, modificar valores ou corrigir informações da petição inicial
 8. Em caso de múltiplas contestações, consolide as defesas indicando qual réu apresentou cada uma
-9. temEntePublico: marque TRUE se alguma reclamada for ente da administração pública direta (União, Estados, Municípios, Prefeituras) ou indireta (autarquias, fundações públicas, empresas públicas, sociedades de economia mista)`;
+9. temEntePublico: marque TRUE se alguma reclamada for ente da administração pública direta (União, Estados, Municípios, Prefeituras) ou indireta (autarquias, fundações públicas, empresas públicas, sociedades de economia mista)
+10. PEDIDOS SUBSIDIÁRIOS/ALTERNATIVOS/SUCESSIVOS: Identifique TODOS os pedidos, incluindo:
+    - Pedidos SUBSIDIÁRIOS: formulados para o caso de não acolhimento do pedido principal (ex: "subsidiariamente, caso não seja reconhecido X, requer Y")
+    - Pedidos ALTERNATIVOS: o autor aceita qualquer um (ex: "alternativamente, requer X ou Y")
+    - Pedidos SUCESSIVOS: dependem do acolhimento de outro pedido (ex: "caso acolhido o pedido de vínculo, requer verbas rescisórias")
+    - Marque 'tipoPedido' adequadamente ('principal' se não especificado, ou 'subsidiario'/'alternativo'/'sucessivo')
+    - Indique em 'pedidoPrincipalNumero' qual pedido este complementa
+    - Em 'condicao', descreva a condição de aplicação (ex: "caso não reconhecido o turno ininterrupto de revezamento")`;
 
 /**
  * Constrói o prompt de análise com os documentos

@@ -3,17 +3,59 @@
  * @description Seção de análise dos pedidos
  */
 
-import React, { useState } from 'react';
-import { ListChecks, ChevronDown, AlertCircle, CheckCircle, HelpCircle } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ListChecks, ChevronDown, AlertCircle, CheckCircle, HelpCircle, GitBranch, ArrowRightLeft, Link2 } from 'lucide-react';
 import { AccordionItem, Badge } from '../ui';
 import { safeRender } from '../../utils/safe-render';
-import type { PedidoAnalise } from '../../types';
+import type { PedidoAnalise, TipoPedido } from '../../types';
 
 interface PedidosSectionProps {
   pedidos: PedidoAnalise[];
 }
 
-const PedidoCard: React.FC<{ pedido: PedidoAnalise }> = ({ pedido }) => {
+// ═══════════════════════════════════════════════════════════════════════════
+// HELPERS E SUBCOMPONENTES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Badge visual para indicar o tipo do pedido
+ */
+const TipoPedidoBadge: React.FC<{ tipo?: TipoPedido }> = ({ tipo }) => {
+  if (!tipo || tipo === 'principal') return null;
+
+  const config: Record<TipoPedido, { label: string; bgClass: string; textClass: string; icon: React.ReactNode }> = {
+    principal: { label: '', bgClass: '', textClass: '', icon: null },
+    subsidiario: {
+      label: 'Subsidiário',
+      bgClass: 'bg-violet-100 dark:bg-violet-900/40',
+      textClass: 'text-violet-700 dark:text-violet-300',
+      icon: <GitBranch className="w-3 h-3" />,
+    },
+    alternativo: {
+      label: 'Alternativo',
+      bgClass: 'bg-blue-100 dark:bg-blue-900/40',
+      textClass: 'text-blue-700 dark:text-blue-300',
+      icon: <ArrowRightLeft className="w-3 h-3" />,
+    },
+    sucessivo: {
+      label: 'Sucessivo',
+      bgClass: 'bg-orange-100 dark:bg-orange-900/40',
+      textClass: 'text-orange-700 dark:text-orange-300',
+      icon: <Link2 className="w-3 h-3" />,
+    },
+  };
+
+  const { label, bgClass, textClass, icon } = config[tipo];
+
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium ${bgClass} ${textClass} rounded-full`}>
+      {icon}
+      {label}
+    </span>
+  );
+};
+
+const PedidoCard: React.FC<{ pedido: PedidoAnalise; isChild?: boolean }> = ({ pedido, isChild = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const formatCurrency = (value?: number) => {
@@ -35,22 +77,36 @@ const PedidoCard: React.FC<{ pedido: PedidoAnalise }> = ({ pedido }) => {
 
   const { cleanTema, extractedValor } = parseThemeAndValue(pedido.tema, pedido.valor);
 
+  const isNotPrincipal = pedido.tipoPedido && pedido.tipoPedido !== 'principal';
+
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+    <div className={`border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden ${isChild ? 'ml-6 border-l-4 border-l-violet-300 dark:border-l-violet-700' : ''}`}>
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full px-4 py-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-between text-left transition-colors"
       >
         <div className="flex items-center gap-3">
-          <span className="w-8 h-8 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-semibold rounded-lg text-sm">
+          <span className={`w-8 h-8 flex items-center justify-center font-semibold rounded-lg text-sm ${
+            isNotPrincipal
+              ? 'bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300'
+              : 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
+          }`}>
             {pedido.numero}
           </span>
-          <div>
-            <span className="font-medium text-slate-800 dark:text-slate-200">{cleanTema}</span>
-            {extractedValor !== undefined && extractedValor !== null && (
-              <span className="ml-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-                {formatCurrency(extractedValor)}
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-slate-800 dark:text-slate-200">{cleanTema}</span>
+              <TipoPedidoBadge tipo={pedido.tipoPedido} />
+              {extractedValor !== undefined && extractedValor !== null && (
+                <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                  {formatCurrency(extractedValor)}
+                </span>
+              )}
+            </div>
+            {pedido.condicao && (
+              <span className="text-xs text-slate-500 dark:text-slate-400 italic mt-0.5">
+                {pedido.condicao}
               </span>
             )}
           </div>
@@ -139,6 +195,39 @@ export const PedidosSection: React.FC<PedidosSectionProps> = ({ pedidos }) => {
   const controvertidos = pedidos.filter(p => p.controversia).length;
   const incontroversos = pedidos.length - controvertidos;
 
+  // Contagem por tipo de pedido
+  const countByType = useMemo(() => ({
+    principais: pedidos.filter(p => !p.tipoPedido || p.tipoPedido === 'principal').length,
+    subsidiarios: pedidos.filter(p => p.tipoPedido === 'subsidiario').length,
+    alternativos: pedidos.filter(p => p.tipoPedido === 'alternativo').length,
+    sucessivos: pedidos.filter(p => p.tipoPedido === 'sucessivo').length,
+  }), [pedidos]);
+
+  // Organiza pedidos: principais primeiro, depois filhos agrupados
+  const organizedPedidos = useMemo(() => {
+    const principais = pedidos.filter(p => !p.tipoPedido || p.tipoPedido === 'principal');
+    const filhos = pedidos.filter(p => p.tipoPedido && p.tipoPedido !== 'principal');
+
+    // Cria estrutura agrupada
+    const result: { pedido: PedidoAnalise; filhos: PedidoAnalise[] }[] = [];
+
+    // Adiciona principais com seus filhos
+    for (const principal of principais) {
+      const pedidosRelacionados = filhos.filter(f => f.pedidoPrincipalNumero === principal.numero);
+      result.push({ pedido: principal, filhos: pedidosRelacionados });
+    }
+
+    // Adiciona filhos órfãos (sem principal identificado)
+    const filhosOrfaos = filhos.filter(f => !principais.some(p => p.numero === f.pedidoPrincipalNumero));
+    for (const orfao of filhosOrfaos) {
+      result.push({ pedido: orfao, filhos: [] });
+    }
+
+    return result;
+  }, [pedidos]);
+
+  const hasNonPrincipalPedidos = countByType.subsidiarios > 0 || countByType.alternativos > 0 || countByType.sucessivos > 0;
+
   return (
     <AccordionItem
       title={`Pedidos (${pedidos.length})`}
@@ -147,7 +236,7 @@ export const PedidosSection: React.FC<PedidosSectionProps> = ({ pedidos }) => {
     >
       <div className="space-y-4">
         {/* Resumo */}
-        <div className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
+        <div className="flex flex-wrap items-center gap-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-amber-500" />
             <span className="text-sm text-slate-600 dark:text-slate-400">
@@ -160,12 +249,50 @@ export const PedidosSection: React.FC<PedidosSectionProps> = ({ pedidos }) => {
               <strong className="text-emerald-600 dark:text-emerald-400">{incontroversos}</strong> incontroversos
             </span>
           </div>
+          {hasNonPrincipalPedidos && (
+            <>
+              <span className="text-slate-300 dark:text-slate-600">|</span>
+              {countByType.subsidiarios > 0 && (
+                <div className="flex items-center gap-1">
+                  <GitBranch className="w-3.5 h-3.5 text-violet-500" />
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    <strong className="text-violet-600 dark:text-violet-400">{countByType.subsidiarios}</strong> subsidiário{countByType.subsidiarios !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+              {countByType.alternativos > 0 && (
+                <div className="flex items-center gap-1">
+                  <ArrowRightLeft className="w-3.5 h-3.5 text-blue-500" />
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    <strong className="text-blue-600 dark:text-blue-400">{countByType.alternativos}</strong> alternativo{countByType.alternativos !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+              {countByType.sucessivos > 0 && (
+                <div className="flex items-center gap-1">
+                  <Link2 className="w-3.5 h-3.5 text-orange-500" />
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    <strong className="text-orange-600 dark:text-orange-400">{countByType.sucessivos}</strong> sucessivo{countByType.sucessivos !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
-        {/* Lista de Pedidos */}
+        {/* Lista de Pedidos (agrupados) */}
         <div className="space-y-3">
-          {pedidos.map((pedido) => (
-            <PedidoCard key={pedido.numero} pedido={pedido} />
+          {organizedPedidos.map(({ pedido, filhos }) => (
+            <div key={pedido.numero}>
+              <PedidoCard pedido={pedido} />
+              {filhos.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {filhos.map((filho) => (
+                    <PedidoCard key={filho.numero} pedido={filho} isChild />
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </div>

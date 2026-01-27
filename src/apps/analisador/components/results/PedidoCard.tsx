@@ -16,8 +16,12 @@ import {
   DollarSign,
   Calendar,
   FileText,
+  GitBranch,
+  ArrowRightLeft,
+  Link2,
+  Info,
 } from 'lucide-react';
-import type { PedidoAnalise, TabelaPedido } from '../../types/analysis.types';
+import type { PedidoAnalise, TabelaPedido, TipoPedido } from '../../types/analysis.types';
 import { safeRender } from '../../utils/safe-render';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -54,6 +58,44 @@ const formatCurrency = (value?: number): string => {
     style: 'currency',
     currency: 'BRL',
   }).format(value);
+};
+
+/**
+ * Badge visual para indicar o tipo do pedido
+ */
+const TipoPedidoBadge: React.FC<{ tipo?: TipoPedido }> = ({ tipo }) => {
+  if (!tipo || tipo === 'principal') return null;
+
+  const config: Record<TipoPedido, { label: string; bgClass: string; textClass: string; icon: React.ReactNode }> = {
+    principal: { label: '', bgClass: '', textClass: '', icon: null },
+    subsidiario: {
+      label: 'Subsidiário',
+      bgClass: 'bg-violet-100 dark:bg-violet-900/40',
+      textClass: 'text-violet-700 dark:text-violet-300',
+      icon: <GitBranch className="w-3 h-3" />,
+    },
+    alternativo: {
+      label: 'Alternativo',
+      bgClass: 'bg-blue-100 dark:bg-blue-900/40',
+      textClass: 'text-blue-700 dark:text-blue-300',
+      icon: <ArrowRightLeft className="w-3 h-3" />,
+    },
+    sucessivo: {
+      label: 'Sucessivo',
+      bgClass: 'bg-orange-100 dark:bg-orange-900/40',
+      textClass: 'text-orange-700 dark:text-orange-300',
+      icon: <Link2 className="w-3 h-3" />,
+    },
+  };
+
+  const { label, bgClass, textClass, icon } = config[tipo];
+
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium ${bgClass} ${textClass} rounded-full`}>
+      {icon}
+      {label}
+    </span>
+  );
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -101,6 +143,8 @@ export const PedidoCard: React.FC<PedidoCardProps> = ({
   const valor = pedido?.valor ?? tabelaPedido?.valor;
   const controversia = pedido?.controversia ?? tabelaPedido?.controversia ?? false;
   const confissaoFicta = pedido?.confissaoFicta ?? tabelaPedido?.confissaoFicta;
+  const tipoPedido = pedido?.tipoPedido ?? tabelaPedido?.tipoPedido;
+  const condicao = pedido?.condicao ?? tabelaPedido?.condicao;
 
   // Dados específicos do pedido completo
   const descricao = pedido?.descricao;
@@ -114,6 +158,9 @@ export const PedidoCard: React.FC<PedidoCardProps> = ({
   const teseAutor = tabelaPedido?.teseAutor;
   const teseRe = tabelaPedido?.teseRe;
   const observacoes = tabelaPedido?.observacoes;
+
+  // Verificar se não é pedido principal
+  const isNotPrincipal = tipoPedido && tipoPedido !== 'principal';
 
   const ChevronIcon = isExpanded ? ChevronDown : ChevronRight;
 
@@ -146,13 +193,25 @@ export const PedidoCard: React.FC<PedidoCardProps> = ({
   if (compact) {
     // Versão compacta para lista
     return (
-      <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+      <div className={`flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 ${isNotPrincipal ? 'border-l-4 border-l-violet-300 dark:border-l-violet-700' : ''}`}>
         <div className="flex items-center gap-3">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-sm font-semibold">
+          <span className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold ${
+            isNotPrincipal
+              ? 'bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300'
+              : 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
+          }`}>
             {numero}
           </span>
           <div>
-            <p className="font-medium text-slate-800 dark:text-slate-100">{tema}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-medium text-slate-800 dark:text-slate-100">{tema}</p>
+              <TipoPedidoBadge tipo={tipoPedido} />
+            </div>
+            {condicao && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic">
+                {condicao}
+              </p>
+            )}
             {valor !== undefined && (
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 {formatCurrency(valor)}
@@ -166,7 +225,7 @@ export const PedidoCard: React.FC<PedidoCardProps> = ({
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <div className={`bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden ${isNotPrincipal ? 'border-l-4 border-l-violet-300 dark:border-l-violet-700' : ''}`}>
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800/50 cursor-pointer select-none"
@@ -174,11 +233,23 @@ export const PedidoCard: React.FC<PedidoCardProps> = ({
       >
         <div className="flex items-center gap-3">
           <ChevronIcon className="w-5 h-5 text-slate-400 dark:text-slate-500" />
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-sm font-semibold">
+          <span className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold ${
+            isNotPrincipal
+              ? 'bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300'
+              : 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
+          }`}>
             {numero}
           </span>
-          <div>
-            <h4 className="font-semibold text-slate-800 dark:text-slate-100">{tema}</h4>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="font-semibold text-slate-800 dark:text-slate-100">{tema}</h4>
+              <TipoPedidoBadge tipo={tipoPedido} />
+            </div>
+            {condicao && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic mt-0.5">
+                {condicao}
+              </p>
+            )}
             {valor !== undefined && (
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 {formatCurrency(valor)}
@@ -217,6 +288,21 @@ export const PedidoCard: React.FC<PedidoCardProps> = ({
               value={formatCurrency(valor)}
               icon={<DollarSign className="w-4 h-4" />}
             />
+          )}
+
+          {/* Condição de aplicação (pedidos subsidiários/alternativos/sucessivos) */}
+          {condicao && (
+            <div className="p-3 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800/40">
+              <div className="flex items-center gap-2 mb-1">
+                <Info className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                <span className="text-xs font-medium text-violet-600 dark:text-violet-400 uppercase tracking-wider">
+                  Condição de Aplicação
+                </span>
+              </div>
+              <p className="text-sm text-violet-700 dark:text-violet-300 italic pl-6">
+                {safeRender(condicao)}
+              </p>
+            </div>
           )}
 
           {/* Divider */}

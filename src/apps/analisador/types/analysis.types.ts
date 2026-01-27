@@ -5,6 +5,9 @@
 
 export type RitoType = 'ordinario' | 'sumarissimo' | 'sumario';
 
+/** Tipo de pedido processual */
+export type TipoPedido = 'principal' | 'subsidiario' | 'alternativo' | 'sucessivo';
+
 export interface Identificacao {
   numeroProcesso?: string;
   reclamantes: string[];
@@ -74,6 +77,12 @@ export interface PedidoAnalise {
   controversia: boolean;
   confissaoFicta?: string;
   pontosEsclarecer: string[];
+  /** Tipo do pedido: principal, subsidiário, alternativo ou sucessivo */
+  tipoPedido?: TipoPedido;
+  /** Número do pedido principal relacionado (para pedidos subsidiários/alternativos/sucessivos) */
+  pedidoPrincipalNumero?: number;
+  /** Condição de aplicação do pedido (ex: "caso não seja reconhecido o turno ininterrupto") */
+  condicao?: string;
 }
 
 export interface Reconvencao {
@@ -139,6 +148,12 @@ export interface TabelaPedido {
   controversia: boolean;
   confissaoFicta?: string;
   observacoes?: string;
+  /** Tipo do pedido: principal, subsidiário, alternativo ou sucessivo */
+  tipoPedido?: TipoPedido;
+  /** Número do pedido principal relacionado (para pedidos subsidiários/alternativos/sucessivos) */
+  pedidoPrincipalNumero?: number;
+  /** Condição de aplicação do pedido (ex: "caso não seja reconhecido o turno ininterrupto") */
+  condicao?: string;
 }
 
 export interface AnalysisResult {
