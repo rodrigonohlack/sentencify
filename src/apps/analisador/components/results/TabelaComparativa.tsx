@@ -16,7 +16,10 @@ interface TabelaComparativaProps {
 }
 
 export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, valorCausa }) => {
-  const totalPedidos = pedidos.reduce((sum, p) => sum + (p.valor || 0), 0);
+  const totalPedidos = pedidos.reduce((sum, p) => {
+    const { extractedValor } = parseThemeAndValue(p.tema, p.valor);
+    return sum + (extractedValor || 0);
+  }, 0);
   const controvertidos = pedidos.filter(p => p.controversia).length;
   const incontroversos = pedidos.length - controvertidos;
 
