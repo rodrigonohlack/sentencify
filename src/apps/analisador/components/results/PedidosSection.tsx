@@ -7,6 +7,7 @@ import React, { useState, useMemo } from 'react';
 import { ListChecks, ChevronDown, AlertCircle, CheckCircle, HelpCircle, GitBranch, ArrowRightLeft, Link2 } from 'lucide-react';
 import { AccordionItem, Badge } from '../ui';
 import { safeRender } from '../../utils/safe-render';
+import { formatCurrency, parseThemeAndValue } from '../../utils/format-pedido';
 import type { PedidoAnalise, TipoPedido } from '../../types';
 
 interface PedidosSectionProps {
@@ -57,23 +58,6 @@ const TipoPedidoBadge: React.FC<{ tipo?: TipoPedido }> = ({ tipo }) => {
 
 const PedidoCard: React.FC<{ pedido: PedidoAnalise; isChild?: boolean }> = ({ pedido, isChild = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-
-  const formatCurrency = (value?: number) => {
-    if (!value && value !== 0) return null;
-    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
-
-  // Extrai valor numérico do tema se a IA concatenou (ex: "HORAS EXTRAS(12316.19)")
-  const parseThemeAndValue = (tema: string, valor?: number) => {
-    const match = tema.match(/^(.+?)\s*\((\d+(?:\.\d+)?)\)$/);
-    if (match) {
-      return {
-        cleanTema: match[1].trim(),
-        extractedValor: valor ?? parseFloat(match[2])
-      };
-    }
-    return { cleanTema: tema, extractedValor: valor };
-  };
 
   const { cleanTema, extractedValor } = parseThemeAndValue(pedido.tema, pedido.valor);
 

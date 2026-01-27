@@ -7,6 +7,7 @@ import React from 'react';
 import { DollarSign, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Badge } from '../ui';
 import { safeRender } from '../../utils/safe-render';
+import { formatCurrency, parseThemeAndValue } from '../../utils/format-pedido';
 import type { TabelaPedido, ValorCausa } from '../../types';
 
 interface TabelaComparativaProps {
@@ -15,11 +16,6 @@ interface TabelaComparativaProps {
 }
 
 export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, valorCausa }) => {
-  const formatCurrency = (value?: number) => {
-    if (!value) return '-';
-    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
-
   const totalPedidos = pedidos.reduce((sum, p) => sum + (p.valor || 0), 0);
   const controvertidos = pedidos.filter(p => p.controversia).length;
   const incontroversos = pedidos.length - controvertidos;
@@ -87,34 +83,37 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {pedidos.map((pedido) => (
-              <tr key={pedido.numero} className="hover:bg-slate-50 transition-colors">
-                <td className="px-4 py-3 text-slate-800 font-medium">
-                  {pedido.numero}
-                </td>
-                <td className="px-4 py-3 text-slate-800 font-medium">
-                  {pedido.tema}
-                </td>
-                <td className="px-4 py-3 text-right text-slate-700">
-                  {formatCurrency(pedido.valor)}
-                </td>
-                <td className="px-4 py-3 text-slate-600 max-w-[200px]">
-                  <p className="truncate" title={safeRender(pedido.teseAutor)}>
-                    {safeRender(pedido.teseAutor)}
-                  </p>
-                </td>
-                <td className="px-4 py-3 text-slate-600 max-w-[200px]">
-                  <p className="truncate" title={safeRender(pedido.teseRe)}>
-                    {safeRender(pedido.teseRe) || '-'}
-                  </p>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <Badge variant={pedido.controversia ? 'warning' : 'success'}>
-                    {pedido.controversia ? 'Controvertido' : 'Incontroverso'}
-                  </Badge>
-                </td>
-              </tr>
-            ))}
+            {pedidos.map((pedido) => {
+              const { cleanTema } = parseThemeAndValue(pedido.tema, pedido.valor);
+              return (
+                <tr key={pedido.numero} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-4 py-3 text-slate-800 font-medium">
+                    {pedido.numero}
+                  </td>
+                  <td className="px-4 py-3 text-slate-800 font-medium">
+                    {cleanTema}
+                  </td>
+                  <td className="px-4 py-3 text-right text-slate-700">
+                    {formatCurrency(pedido.valor)}
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 max-w-[200px]">
+                    <p className="truncate" title={safeRender(pedido.teseAutor)}>
+                      {safeRender(pedido.teseAutor)}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 max-w-[200px]">
+                    <p className="truncate" title={safeRender(pedido.teseRe)}>
+                      {safeRender(pedido.teseRe) || '-'}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <Badge variant={pedido.controversia ? 'warning' : 'success'}>
+                      {pedido.controversia ? 'Controvertido' : 'Incontroverso'}
+                    </Badge>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
           <tfoot>
             <tr className="bg-slate-100 font-medium">
@@ -136,12 +135,15 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
             Confissões Fictas e Observações
           </h4>
           <div className="space-y-2">
-            {pedidos.filter(p => p.confissaoFicta || p.observacoes).map((p) => (
-              <div key={p.numero} className="text-sm text-red-700">
-                <strong>#{p.numero} {p.tema}:</strong>{' '}
-                {safeRender(p.confissaoFicta || p.observacoes)}
-              </div>
-            ))}
+            {pedidos.filter(p => p.confissaoFicta || p.observacoes).map((p) => {
+              const { cleanTema } = parseThemeAndValue(p.tema, p.valor);
+              return (
+                <div key={p.numero} className="text-sm text-red-700">
+                  <strong>#{p.numero} {cleanTema}:</strong>{' '}
+                  {safeRender(p.confissaoFicta || p.observacoes)}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

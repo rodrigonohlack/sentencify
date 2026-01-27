@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import type { PedidoAnalise, TabelaPedido, TipoPedido } from '../../types/analysis.types';
 import { safeRender } from '../../utils/safe-render';
+import { formatCurrency, parseThemeAndValue } from '../../utils/format-pedido';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -48,17 +49,6 @@ interface PedidoFieldProps {
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * Formata valor monetário em Real brasileiro
- */
-const formatCurrency = (value?: number): string => {
-  if (value === undefined || value === null) return '—';
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-};
 
 /**
  * Badge visual para indicar o tipo do pedido
@@ -139,12 +129,15 @@ export const PedidoCard: React.FC<PedidoCardProps> = ({
 
   // Usar dados do pedido completo ou da tabela
   const numero = pedido?.numero ?? tabelaPedido?.numero ?? 0;
-  const tema = pedido?.tema ?? tabelaPedido?.tema ?? '';
-  const valor = pedido?.valor ?? tabelaPedido?.valor;
+  const temaRaw = pedido?.tema ?? tabelaPedido?.tema ?? '';
+  const valorRaw = pedido?.valor ?? tabelaPedido?.valor;
   const controversia = pedido?.controversia ?? tabelaPedido?.controversia ?? false;
   const confissaoFicta = pedido?.confissaoFicta ?? tabelaPedido?.confissaoFicta;
   const tipoPedido = pedido?.tipoPedido ?? tabelaPedido?.tipoPedido;
   const condicao = pedido?.condicao ?? tabelaPedido?.condicao;
+
+  // Extrai valor do tema se necessário
+  const { cleanTema: tema, extractedValor: valor } = parseThemeAndValue(temaRaw, valorRaw);
 
   // Dados específicos do pedido completo
   const descricao = pedido?.descricao;
