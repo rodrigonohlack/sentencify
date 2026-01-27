@@ -20,9 +20,32 @@ const LIMITE_SUMARISSIMO = 40 * SALARIO_MINIMO_2026;   // R$ 64.840,00
 interface IdentificacaoSectionProps {
   data: Identificacao;
   valorCausa?: ValorCausa;
+  nomeArquivoPeticao?: string | null;
 }
 
-export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data, valorCausa }) => {
+/**
+ * Extrai número do processo do nome do arquivo (fallback quando IA não retorna)
+ * Mesma lógica usada no HistoricoModal
+ */
+const extractNumeroProcesso = (
+  numeroProcesso?: string,
+  nomeArquivo?: string | null
+): string | null => {
+  if (numeroProcesso) return numeroProcesso;
+  if (nomeArquivo) {
+    // Tenta [NUMERO] primeiro (formato padrão de exportação)
+    const match = nomeArquivo.match(/\[(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\]/);
+    if (match) return match[1];
+    // Tenta número CNJ solto no nome do arquivo
+    const cnjMatch = nomeArquivo.match(/(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/);
+    if (cnjMatch) return cnjMatch[1];
+  }
+  return null;
+};
+
+export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data, valorCausa, nomeArquivoPeticao }) => {
+  // Extrai número do processo: da IA ou do nome do arquivo (fallback)
+  const numeroProcesso = extractNumeroProcesso(data.numeroProcesso, nomeArquivoPeticao);
   const formatCurrency = (value?: number) => {
     if (value == null) return '';
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -93,12 +116,12 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Número do Processo */}
-        {data.numeroProcesso && (
+        {numeroProcesso && (
           <div className="flex items-start gap-3">
             <FileText className="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5" />
             <div>
               <p className="text-sm text-slate-500 dark:text-slate-400">Processo</p>
-              <p className="font-medium text-slate-800 dark:text-slate-200">{safeRender(data.numeroProcesso)}</p>
+              <p className="font-medium text-slate-800 dark:text-slate-200">{safeRender(numeroProcesso)}</p>
             </div>
           </div>
         )}

@@ -54,6 +54,7 @@ export const ResultsContainer: React.FC = () => {
   const result = useResultStore((s) => s.result);
   const dataPauta = useResultStore((s) => s.dataPauta);
   const horarioAudiencia = useResultStore((s) => s.horarioAudiencia);
+  const nomeArquivoPeticao = useResultStore((s) => s.nomeArquivoPeticao);
 
   if (!result) {
     return (
@@ -101,7 +102,11 @@ export const ResultsContainer: React.FC = () => {
             {activeTab === 'analise' && (
               <div className="space-y-6 p-4">
                 {/* Identificação */}
-                <IdentificacaoSection data={result.identificacao} valorCausa={result.valorCausa} />
+                <IdentificacaoSection
+                  data={result.identificacao}
+                  valorCausa={result.valorCausa}
+                  nomeArquivoPeticao={nomeArquivoPeticao}
+                />
 
                 {/* Contrato */}
                 <ContratoSection data={result.contrato} />
