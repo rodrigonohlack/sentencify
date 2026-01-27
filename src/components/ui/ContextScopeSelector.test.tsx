@@ -89,13 +89,13 @@ describe('ContextScopeSelector', () => {
       render(<ContextScopeSelector {...defaultProps} />);
 
       expect(screen.getByText('Petições e contestações')).toBeInTheDocument();
-      expect(screen.getByText('Docs complementares')).toBeInTheDocument();
+      expect(screen.getByText('Documentos complementares')).toBeInTheDocument();
     });
 
     it('should render hint text when toggle is unlocked', () => {
       render(<ContextScopeSelector {...defaultProps} />);
 
-      expect(screen.getByText(/Docs principais/)).toBeInTheDocument();
+      expect(screen.getByText(/Documentos principais/)).toBeInTheDocument();
       expect(screen.getByText(/Arquivos extras/)).toBeInTheDocument();
     });
   });
@@ -377,7 +377,7 @@ describe('ContextScopeSelector', () => {
     it('should show hint text when toggle is unlocked', () => {
       render(<ContextScopeSelector {...defaultProps} chatHistoryLength={0} />);
 
-      expect(screen.getByText(/Docs principais/)).toBeInTheDocument();
+      expect(screen.getByText(/Documentos principais/)).toBeInTheDocument();
     });
   });
 

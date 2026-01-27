@@ -284,7 +284,7 @@ export const ContextScopeSelector: React.FC<ContextScopeSelectorProps> = ({
             {isToggleLocked ? (
               <p className="text-xs text-amber-500">Limpe o chat para alterar</p>
             ) : (
-              <p className="text-xs theme-text-muted">Docs principais</p>
+              <p className="text-xs theme-text-muted">Documentos principais</p>
             )}
           </div>
         </label>
@@ -303,7 +303,7 @@ export const ContextScopeSelector: React.FC<ContextScopeSelectorProps> = ({
             className="w-4 h-4 text-purple-600 rounded border-gray-400 focus:ring-purple-500 focus:ring-offset-0 disabled:opacity-50"
           />
           <div>
-            <span className="text-sm font-medium theme-text-primary">Docs complementares</span>
+            <span className="text-sm font-medium theme-text-primary">Documentos complementares</span>
             {isToggleLocked ? (
               <p className="text-xs text-amber-500">Limpe o chat para alterar</p>
             ) : (
