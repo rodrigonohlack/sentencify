@@ -9,6 +9,7 @@ export interface Identificacao {
   numeroProcesso?: string;
   reclamantes: string[];
   reclamadas: string[];
+  temEntePublico?: boolean;
   rito?: RitoType;
   vara?: string;
   dataAjuizamento?: string;

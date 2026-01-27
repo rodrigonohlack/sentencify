@@ -38,6 +38,7 @@ Retorne APENAS um JSON válido no seguinte formato (sem texto adicional antes ou
     "numeroProcesso": "string ou null",
     "reclamantes": ["array de nomes"],
     "reclamadas": ["array de nomes"],
+    "temEntePublico": true/false,
     "rito": "ordinario | sumarissimo | sumario | null",
     "vara": "string ou null",
     "dataAjuizamento": "string ou null"
@@ -183,7 +184,8 @@ INSTRUÇÕES ADICIONAIS:
 5. Alertas devem incluir: prazos próximos, possíveis nulidades, documentos faltantes, etc.
 6. Se o valor da causa não corresponder à soma dos pedidos, marque como inconsistência
 7. Considere que emendas podem adicionar pedidos, modificar valores ou corrigir informações da petição inicial
-8. Em caso de múltiplas contestações, consolide as defesas indicando qual réu apresentou cada uma`;
+8. Em caso de múltiplas contestações, consolide as defesas indicando qual réu apresentou cada uma
+9. temEntePublico: marque TRUE se alguma reclamada for ente da administração pública direta (União, Estados, Municípios, Prefeituras) ou indireta (autarquias, fundações públicas, empresas públicas, sociedades de economia mista)`;
 
 /**
  * Constrói o prompt de análise com os documentos

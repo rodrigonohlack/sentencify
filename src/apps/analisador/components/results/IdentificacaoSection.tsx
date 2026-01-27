@@ -17,16 +17,6 @@ const SALARIO_MINIMO_2026 = 1621.00;
 const LIMITE_SUMARIO = 2 * SALARIO_MINIMO_2026;        // R$ 3.242,00
 const LIMITE_SUMARISSIMO = 40 * SALARIO_MINIMO_2026;   // R$ 64.840,00
 
-// Palavras-chave para identificar entes públicos
-const ENTES_PUBLICOS_KEYWORDS = [
-  'união', 'estado', 'município', 'municipio', 'prefeitura',
-  'autarquia', 'fundação', 'fundacao', 'empresa pública', 'empresa publica',
-  'sociedade de economia mista', 'inss', 'ibge', 'incra', 'anatel',
-  'anvisa', 'anac', 'antaq', 'aneel', 'ans', 'funasa', 'fiocruz',
-  'banco central', 'caixa econômica', 'caixa economica', 'correios',
-  'ect', 'ebct', 'petrobras', 'eletrobras', 'furnas'
-];
-
 interface IdentificacaoSectionProps {
   data: Identificacao;
   valorCausa?: ValorCausa;
@@ -44,15 +34,8 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
     sumario: 'Sumário'
   };
 
-  /**
-   * Verifica se alguma reclamada é ente da administração pública
-   */
-  const hasEntePublico = useMemo(() => {
-    return data.reclamadas.some(reclamada => {
-      const nome = reclamada.toLowerCase();
-      return ENTES_PUBLICOS_KEYWORDS.some(keyword => nome.includes(keyword));
-    });
-  }, [data.reclamadas]);
+  // Usa o campo temEntePublico retornado pela IA (que analisa o contexto completo)
+  const hasEntePublico = data.temEntePublico === true;
 
   /**
    * Calcula o motivo do rito baseado no valor da causa e partes
