@@ -55,55 +55,51 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
   }, [data.reclamadas]);
 
   /**
+   * Calcula o motivo do rito baseado no valor da causa e partes
+   */
+  const calcularMotivo = (valor?: number): string => {
+    if (hasEntePublico) return 'ente público';
+    if (!valor || valor <= 0) return 'valor não informado';
+    if (valor <= LIMITE_SUMARIO) return 'até 2 SM';
+    if (valor <= LIMITE_SUMARISSIMO) return 'até 40 SM';
+    return 'acima de 40 SM';
+  };
+
+  /**
    * Calcula o rito processual baseado no valor da causa e partes
    * CLT Art. 852-A (sumaríssimo) e Art. 2º Lei 5.584/70 (sumário)
    */
-  const ritoCalculado = useMemo((): { rito: RitoType; calculado: boolean; motivo?: string } => {
-    // Se já veio o rito da IA, usa ele
-    if (data.rito) {
-      return { rito: data.rito, calculado: false };
-    }
-
+  const ritoCalculado = useMemo((): { rito: RitoType; calculado: boolean; motivo: string } => {
     const valor = valorCausa?.valorTotal;
+    const motivo = calcularMotivo(valor);
+
+    // Se já veio o rito da IA, usa ele mas ainda mostra o motivo calculado
+    if (data.rito) {
+      return { rito: data.rito, calculado: false, motivo };
+    }
 
     // Se tem ente público, é sempre ordinário (CLT Art. 852-A, parágrafo único)
     if (hasEntePublico) {
-      return {
-        rito: 'ordinario',
-        calculado: true,
-        motivo: 'ente público'
-      };
+      return { rito: 'ordinario', calculado: true, motivo };
     }
 
-    // Se não tem valor, não pode calcular
+    // Se não tem valor, assume ordinário
     if (!valor || valor <= 0) {
-      return { rito: 'ordinario', calculado: true, motivo: 'valor não informado' };
+      return { rito: 'ordinario', calculado: true, motivo };
     }
 
     // Até 2 salários mínimos: Sumário (Lei 5.584/70)
     if (valor <= LIMITE_SUMARIO) {
-      return {
-        rito: 'sumario',
-        calculado: true,
-        motivo: 'até 2 SM'
-      };
+      return { rito: 'sumario', calculado: true, motivo };
     }
 
     // Até 40 salários mínimos: Sumaríssimo (CLT Art. 852-A)
     if (valor <= LIMITE_SUMARISSIMO) {
-      return {
-        rito: 'sumarissimo',
-        calculado: true,
-        motivo: 'até 40 SM'
-      };
+      return { rito: 'sumarissimo', calculado: true, motivo };
     }
 
     // Acima de 40 salários mínimos: Ordinário
-    return {
-      rito: 'ordinario',
-      calculado: true,
-      motivo: 'acima de 40 SM'
-    };
+    return { rito: 'ordinario', calculado: true, motivo };
   }, [data.rito, valorCausa?.valorTotal, hasEntePublico]);
 
   const ritoBadgeVariant = ritoCalculado.rito === 'sumarissimo' ? 'warning' :
@@ -137,11 +133,9 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
               <Badge variant={ritoBadgeVariant}>
                 {ritoLabel[ritoCalculado.rito]}
               </Badge>
-              {ritoCalculado.motivo && (
-                <span className="text-sm text-slate-500 dark:text-slate-400">
-                  ({ritoCalculado.motivo})
-                </span>
-              )}
+              <span className="text-sm text-slate-500 dark:text-slate-400">
+                ({ritoCalculado.motivo})
+              </span>
             </div>
           </div>
         </div>
