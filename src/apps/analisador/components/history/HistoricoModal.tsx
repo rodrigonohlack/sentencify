@@ -367,6 +367,7 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
     filters,
     setFilters,
     selectedIds,
+    setSelectedIds,
     toggleSelection,
     selectAll,
     clearSelection,
@@ -441,6 +442,12 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
   const handleSelectAll = useCallback(() => {
     selectAll();
   }, [selectAll]);
+
+  const handleSelectWithoutPauta = useCallback(() => {
+    const filteredAnalyses = groupedAnalyses.flatMap(g => g.analyses);
+    const withoutPauta = filteredAnalyses.filter(a => !a.dataPauta);
+    setSelectedIds(new Set(withoutPauta.map(a => a.id)));
+  }, [groupedAnalyses, setSelectedIds]);
 
   const handleDeleteClick = useCallback(() => {
     if (selectedIds.size === 0) return;
@@ -581,6 +588,12 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
                   className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
                   Selecionar todos
+                </button>
+                <button
+                  onClick={handleSelectWithoutPauta}
+                  className="px-3 py-1.5 text-sm text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/30 rounded-lg transition-colors"
+                >
+                  Sem pauta
                 </button>
                 <button
                   onClick={clearSelection}
