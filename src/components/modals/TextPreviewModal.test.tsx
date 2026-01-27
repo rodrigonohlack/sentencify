@@ -69,8 +69,8 @@ describe('TextPreviewModal', () => {
     it('should format large character counts with locale', () => {
       const longText = 'a'.repeat(1500);
       render(<TextPreviewModal {...defaultProps} text={longText} />);
-      // Should show 1.500 (pt-BR format)
-      expect(screen.getByText(/1\.500 caracteres/)).toBeInTheDocument();
+      // Should show 1.500 (pt-BR) or 1,500 (en-US) depending on locale
+      expect(screen.getByText(/1[.,]500 caracteres/)).toBeInTheDocument();
     });
 
     it('should render Eye icon', () => {
