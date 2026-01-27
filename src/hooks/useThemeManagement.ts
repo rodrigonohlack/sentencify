@@ -58,6 +58,14 @@ export function useThemeManagement(): UseThemeManagementReturn {
   useEffect(() => {
     // Aplicar data-theme no HTML root para CSS Variables
     document.documentElement.setAttribute('data-theme', appTheme);
+
+    // Aplicar classe 'dark' para Tailwind dark: variants
+    if (appTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
     // Persistir no localStorage
     localStorage.setItem(THEME_STORAGE_KEY, appTheme);
   }, [appTheme]);

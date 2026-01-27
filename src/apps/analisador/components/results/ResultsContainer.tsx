@@ -9,8 +9,10 @@ import { Card, Tabs } from '../ui';
 import { useResultStore } from '../../stores';
 import { IdentificacaoSection } from './IdentificacaoSection';
 import { ContratoSection } from './ContratoSection';
+import { TutelasSection } from './TutelasSection';
 import { PreliminaresSection } from './PreliminaresSection';
 import { PedidosSection } from './PedidosSection';
+import { ReconvencaoSection } from './ReconvencaoSection';
 import { ProvasSection } from './ProvasSection';
 import { AlertasSection } from './AlertasSection';
 import { TabelaComparativa } from './TabelaComparativa';
@@ -29,6 +31,18 @@ const formatDateLabel = (dateStr: string): string => {
     month: 'long',
     year: 'numeric',
   });
+};
+
+/** Verifica se a prescrição tem conteúdo real */
+const hasPrescricaoContent = (prescricao?: { fundamentacao?: string; dataBase?: string }): boolean => {
+  if (!prescricao) return false;
+  return Boolean(prescricao.fundamentacao?.trim() || prescricao.dataBase?.trim());
+};
+
+/** Verifica se a decadência tem conteúdo real */
+const hasDecadenciaContent = (decadencia?: { fundamentacao?: string; prazo?: string }): boolean => {
+  if (!decadencia) return false;
+  return Boolean(decadencia.fundamentacao?.trim() || decadencia.prazo?.trim());
 };
 
 const tabs = [
@@ -92,8 +106,13 @@ export const ResultsContainer: React.FC = () => {
                 {/* Contrato */}
                 <ContratoSection data={result.contrato} />
 
-                {/* Preliminares e Prejudiciais */}
-                {(result.preliminares.length > 0 || result.prejudiciais.prescricao || result.prejudiciais.decadencia) && (
+                {/* Tutelas Provisórias */}
+                {result.tutelasProvisoras && result.tutelasProvisoras.length > 0 && (
+                  <TutelasSection tutelas={result.tutelasProvisoras} />
+                )}
+
+                {/* Preliminares e Prejudiciais - só exibe se tiver conteúdo real */}
+                {(result.preliminares.length > 0 || hasPrescricaoContent(result.prejudiciais.prescricao) || hasDecadenciaContent(result.prejudiciais.decadencia)) && (
                   <PreliminaresSection
                     preliminares={result.preliminares}
                     prejudiciais={result.prejudiciais}
@@ -103,6 +122,11 @@ export const ResultsContainer: React.FC = () => {
                 {/* Pedidos */}
                 {result.pedidos.length > 0 && (
                   <PedidosSection pedidos={result.pedidos} />
+                )}
+
+                {/* Reconvenção */}
+                {result.reconvencao?.existe && (
+                  <ReconvencaoSection reconvencao={result.reconvencao} />
                 )}
 
                 {/* Provas */}

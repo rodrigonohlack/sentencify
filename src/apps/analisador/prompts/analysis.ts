@@ -198,7 +198,20 @@ INSTRUÇÕES ADICIONAIS:
     - Pedidos SUCESSIVOS: dependem do acolhimento de outro pedido (ex: "caso acolhido o pedido de vínculo, requer verbas rescisórias")
     - Marque 'tipoPedido' adequadamente ('principal' se não especificado, ou 'subsidiario'/'alternativo'/'sucessivo')
     - Indique em 'pedidoPrincipalNumero' qual pedido este complementa
-    - Em 'condicao', descreva a condição de aplicação (ex: "caso não reconhecido o turno ininterrupto de revezamento")`;
+    - Em 'condicao', descreva a condição de aplicação (ex: "caso não reconhecido o turno ininterrupto de revezamento")
+11. TUTELAS PROVISÓRIAS: Identifique e extraia TODOS os pedidos de tutela provisória, incluindo:
+    - Tutela de URGÊNCIA (art. 300 CPC): pedidos de liminar, antecipação de tutela, reintegração imediata
+    - Tutela de EVIDÊNCIA (art. 311 CPC): pedidos baseados em prova documental suficiente
+    - Pedidos típicos: manutenção de plano de saúde, reintegração ao emprego, suspensão de ato, fornecimento de documentos
+    - Em "tipo": use "Tutela de Urgência" ou "Tutela de Evidência"
+    - Em "pedido": descreva o que está sendo pedido
+    - Em "fundamentacao": cite os fundamentos legais apresentados
+    - Em "urgencia": se houver, descreva o motivo da urgência alegado
+12. RECONVENÇÃO: Identifique pedidos reconvencionais na contestação:
+    - Marque "existe": true quando o réu formular pedidos contra o autor
+    - Pedidos típicos: restituição de valores, compensação, devolução de equipamentos, indenização por danos
+    - Em "pedidos": liste cada pedido reconvencional no mesmo formato dos pedidos principais
+    - Em "fundamentacao": descreva os fundamentos da reconvenção`;
 
 /**
  * Constrói o prompt de análise com os documentos
