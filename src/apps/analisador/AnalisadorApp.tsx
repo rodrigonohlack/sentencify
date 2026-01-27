@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { History, Settings, LogOut, FileSearch, ArrowLeft } from 'lucide-react';
+import { History, Settings, LogOut, FileSearch, ArrowLeft, Sun, Moon } from 'lucide-react';
 
 // Auth
 import { LoginGate, useLoginGate } from './components/auth/LoginGate';
@@ -28,6 +28,7 @@ import { Button, ToastProvider, useToast } from './components/ui';
 // Stores & Hooks
 import { useAnalysesStore, useResultStore } from './stores';
 import { useAnalysesAPI } from './hooks';
+import { useThemeManagement } from '../../hooks';
 import type { SavedAnalysis } from './types/analysis.types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -38,6 +39,7 @@ const AnalisadorContent: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [cameFromHistorico, setCameFromHistorico] = useState(false);
   const { showToast } = useToast();
+  const { appTheme, toggleAppTheme } = useThemeManagement();
 
   // Auth
   const { logout } = useLoginGate();
@@ -113,8 +115,15 @@ const AnalisadorContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-slate-900 dark:to-slate-800 relative">
-      {/* Top-right: Settings + Logout icons */}
+      {/* Top-right: Theme Toggle + Settings + Logout icons */}
       <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+        <button
+          onClick={toggleAppTheme}
+          className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:border-amber-300 dark:hover:border-amber-600 transition-all shadow-sm"
+          title={appTheme === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
+        >
+          {appTheme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
         <button
           onClick={handleOpenSettings}
           className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all shadow-sm"
