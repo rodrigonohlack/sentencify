@@ -156,8 +156,21 @@ export const useAnalysis = () => {
       const { peticao: peticaoText, emendas: emendasTexts, contestacoes: contestacoesTexts } =
         getAllDocumentsText();
 
-      // Build the prompt with all documents
-      const userPrompt = buildAnalysisPrompt(peticaoText, emendasTexts, contestacoesTexts);
+      // Obter nomes dos arquivos do store
+      const state = useDocumentStore.getState();
+      const nomeArquivoPeticao = state.peticao?.name;
+      const nomesArquivosEmendas = state.emendas.map(e => e.name);
+      const nomesArquivosContestacoes = state.contestacoes.map(c => c.name);
+
+      // Build the prompt with all documents and file names
+      const userPrompt = buildAnalysisPrompt(
+        peticaoText,
+        emendasTexts,
+        contestacoesTexts,
+        nomeArquivoPeticao,
+        nomesArquivosEmendas,
+        nomesArquivosContestacoes
+      );
 
       setProgress(30, 'Enviando para análise...');
 

@@ -23,6 +23,7 @@ export const ANALYSIS_USER_PROMPT = `Analise os documentos abaixo e retorne um J
 DOCUMENTOS:
 
 === PETIÇÃO INICIAL ===
+Arquivo: {PETICAO_NOME}
 {PETICAO}
 
 === EMENDAS À PETIÇÃO INICIAL ===
@@ -211,31 +212,47 @@ INSTRUÇÕES ADICIONAIS:
     - Marque "existe": true quando o réu formular pedidos contra o autor
     - Pedidos típicos: restituição de valores, compensação, devolução de equipamentos, indenização por danos
     - Em "pedidos": liste cada pedido reconvencional no mesmo formato dos pedidos principais
-    - Em "fundamentacao": descreva os fundamentos da reconvenção`;
+    - Em "fundamentacao": descreva os fundamentos da reconvenção
+13. NÚMERO DO PROCESSO: Se não encontrar o número do processo no texto do documento,
+    verifique o NOME DO ARQUIVO (campo "Arquivo:") - frequentemente contém o número no formato CNJ
+    (ex: "0001234-56.2024.5.01.0001 - Petição.pdf")`;
 
 /**
  * Constrói o prompt de análise com os documentos
  * @param peticao Texto da petição inicial
  * @param emendas Array de textos das emendas
  * @param contestacoes Array de textos das contestações
+ * @param nomeArquivoPeticao Nome do arquivo da petição inicial (opcional)
+ * @param nomesArquivosEmendas Nomes dos arquivos das emendas (opcional)
+ * @param nomesArquivosContestacoes Nomes dos arquivos das contestações (opcional)
  * @returns Prompt formatado para a IA
  */
 export const buildAnalysisPrompt = (
   peticao: string,
   emendas: string[] = [],
-  contestacoes: string[] = []
+  contestacoes: string[] = [],
+  nomeArquivoPeticao?: string,
+  nomesArquivosEmendas?: string[],
+  nomesArquivosContestacoes?: string[]
 ): string => {
-  // Formatar seção de emendas
+  // Formatar seção de emendas (incluir nomes)
   const emendasSection = emendas.length > 0
-    ? emendas.map((e, i) => `--- Emenda ${i + 1} ---\n${e}`).join('\n\n')
+    ? emendas.map((e, i) => {
+        const nome = nomesArquivosEmendas?.[i] || `Emenda ${i + 1}`;
+        return `--- ${nome} ---\n${e}`;
+      }).join('\n\n')
     : 'Não há emendas à petição inicial.';
 
-  // Formatar seção de contestações
+  // Formatar seção de contestações (incluir nomes)
   const contestacoesSection = contestacoes.length > 0
-    ? contestacoes.map((c, i) => `--- Contestação ${i + 1} ---\n${c}`).join('\n\n')
+    ? contestacoes.map((c, i) => {
+        const nome = nomesArquivosContestacoes?.[i] || `Contestação ${i + 1}`;
+        return `--- ${nome} ---\n${c}`;
+      }).join('\n\n')
     : 'Não há contestação nos autos.';
 
   return ANALYSIS_USER_PROMPT
+    .replace('{PETICAO_NOME}', nomeArquivoPeticao || 'Não informado')
     .replace('{PETICAO}', peticao || 'Não fornecida')
     .replace('{EMENDAS}', emendasSection)
     .replace('{CONTESTACOES}', contestacoesSection);
