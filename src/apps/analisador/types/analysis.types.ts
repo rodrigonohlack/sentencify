@@ -197,7 +197,9 @@ export type ResultadoAudiencia =
   | 'arquivamento'
   | 'instrucao_encerrada'
   | 'aguardando_pericia'
-  | 'suspenso';
+  | 'suspenso'
+  | 'emenda_determinada'
+  | 'aditamento_deferido';
 
 /** Análise salva no banco de dados */
 export interface SavedAnalysis {

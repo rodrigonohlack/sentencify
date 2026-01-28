@@ -50,6 +50,8 @@ const RESULTADO_OPTIONS: { value: ResultadoAudiencia | 'todos'; label: string }[
   { value: 'instrucao_encerrada', label: '✔️ Instrução encerrada' },
   { value: 'aguardando_pericia', label: '🔬 Aguardando perícia' },
   { value: 'suspenso', label: '⏸️ Suspenso' },
+  { value: 'emenda_determinada', label: '📝 Emenda determinada' },
+  { value: 'aditamento_deferido', label: '➕ Aditamento deferido' },
 ];
 
 const RESULTADO_COLORS: Record<ResultadoAudiencia | 'null', string> = {
@@ -65,6 +67,8 @@ const RESULTADO_COLORS: Record<ResultadoAudiencia | 'null', string> = {
   instrucao_encerrada: 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300',
   aguardando_pericia: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300',
   suspenso: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
+  emenda_determinada: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300',
+  aditamento_deferido: 'bg-lime-100 dark:bg-lime-900/40 text-lime-700 dark:text-lime-300',
   null: 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400',
 };
 
@@ -79,6 +83,7 @@ const PENDENCIAS_OPCOES = [
   { value: 'calculo_liquidacao', label: 'Cálculo de liquidação' },
   { value: 'aguardando_transito', label: 'Aguardando trânsito' },
   { value: 'intimacao_testemunha', label: 'Intimação de testemunha' },
+  { value: 'oficio_determinado', label: 'Ofício determinado' },
   { value: 'outra', label: 'Outra pendência' },
 ] as const;
 
