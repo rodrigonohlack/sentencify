@@ -23,11 +23,23 @@ interface PreliminaresSectionProps {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
+ * Verifica se o valor é conteúdo válido (não null, undefined, vazio ou string "null")
+ */
+const isValidContent = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string') {
+    const trimmed = value.trim().toLowerCase();
+    return trimmed !== '' && trimmed !== 'null';
+  }
+  return true;
+};
+
+/**
  * Verifica se a prescrição tem conteúdo real (não apenas campos vazios)
  */
 const hasPrescricaoContent = (prescricao: Prejudiciais['prescricao']): boolean => {
   if (!prescricao) return false;
-  return Boolean(prescricao.fundamentacao?.trim() || prescricao.dataBase?.trim());
+  return isValidContent(prescricao.fundamentacao) || isValidContent(prescricao.dataBase);
 };
 
 /**
@@ -35,7 +47,7 @@ const hasPrescricaoContent = (prescricao: Prejudiciais['prescricao']): boolean =
  */
 const hasDecadenciaContent = (decadencia: Prejudiciais['decadencia']): boolean => {
   if (!decadencia) return false;
-  return Boolean(decadencia.fundamentacao?.trim() || decadencia.prazo?.trim());
+  return isValidContent(decadencia.fundamentacao) || isValidContent(decadencia.prazo);
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -98,12 +110,12 @@ export const PreliminaresSection: React.FC<PreliminaresSectionProps> = ({
                  prescricao.tipo === 'bienal' ? 'Bienal' : 'Parcial'}
               </Badge>
             </div>
-            {prescricao.dataBase && (
+            {isValidContent(prescricao.dataBase) && (
               <p className="text-sm text-amber-700 dark:text-amber-400 mb-1">
                 <strong>Data base:</strong> {prescricao.dataBase}
               </p>
             )}
-            {prescricao.fundamentacao?.trim() && (
+            {isValidContent(prescricao.fundamentacao) && (
               <p className="text-sm text-amber-700 dark:text-amber-400">{safeRender(prescricao.fundamentacao)}</p>
             )}
           </div>
@@ -115,14 +127,14 @@ export const PreliminaresSection: React.FC<PreliminaresSectionProps> = ({
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               <h4 className="font-medium text-red-800 dark:text-red-300">Decadência</h4>
-              <Badge variant="danger">{decadencia.tipo}</Badge>
+              {isValidContent(decadencia.tipo) && <Badge variant="danger">{decadencia.tipo}</Badge>}
             </div>
-            {decadencia.prazo?.trim() && (
+            {isValidContent(decadencia.prazo) && (
               <p className="text-sm text-red-700 dark:text-red-400 mb-1">
                 <strong>Prazo:</strong> {decadencia.prazo}
               </p>
             )}
-            {decadencia.fundamentacao?.trim() && (
+            {isValidContent(decadencia.fundamentacao) && (
               <p className="text-sm text-red-700 dark:text-red-400">{safeRender(decadencia.fundamentacao)}</p>
             )}
           </div>
