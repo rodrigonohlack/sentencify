@@ -12,3 +12,4 @@ export { Tabs } from './Tabs';
 export { Badge } from './Badge';
 export { ProgressBar } from './ProgressBar';
 export { Accordion, AccordionItem } from './Accordion';
+export { TeseModal } from './TeseModal';

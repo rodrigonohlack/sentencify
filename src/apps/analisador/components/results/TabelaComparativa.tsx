@@ -5,8 +5,7 @@
 
 import React, { useState } from 'react';
 import { DollarSign, AlertTriangle, CheckCircle } from 'lucide-react';
-import { Badge } from '../ui';
-import { BaseModal } from '../../../../components/modals/BaseModal';
+import { Badge, TeseModal } from '../ui';
 import { safeRender } from '../../utils/safe-render';
 import { formatCurrency, parseThemeAndValue } from '../../utils/format-pedido';
 import type { TabelaPedido, ValorCausa } from '../../types';
@@ -199,21 +198,14 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
         </div>
       )}
 
-      {/* Modal de Tese Expandida - renderizado fora da tabela */}
-      {selectedTese && (
-        <BaseModal
-          isOpen={true}
-          onClose={() => setSelectedTese(null)}
-          title={selectedTese.label}
-          icon={selectedTese.variant === 'autor' ? <CheckCircle /> : <AlertTriangle />}
-          iconColor={selectedTese.variant === 'autor' ? 'green' : 'yellow'}
-          size="md"
-        >
-          <p className="theme-text-secondary whitespace-pre-wrap leading-relaxed">
-            {selectedTese.text}
-          </p>
-        </BaseModal>
-      )}
+      {/* Modal de Tese Expandida - usa createPortal para escapar do overflow-hidden */}
+      <TeseModal
+        isOpen={selectedTese !== null}
+        onClose={() => setSelectedTese(null)}
+        title={selectedTese?.label || ''}
+        text={selectedTese?.text || ''}
+        variant={selectedTese?.variant || 'autor'}
+      />
     </div>
   );
 };
