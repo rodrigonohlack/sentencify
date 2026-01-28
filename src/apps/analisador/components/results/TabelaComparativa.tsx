@@ -3,15 +3,16 @@
  * @description Tabela sintética comparativa dos pedidos
  */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { DollarSign, AlertTriangle, CheckCircle, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { DollarSign, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Badge } from '../ui';
+import { BaseModal } from '../../../../components/modals/BaseModal';
 import { safeRender } from '../../utils/safe-render';
 import { formatCurrency, parseThemeAndValue } from '../../utils/format-pedido';
 import type { TabelaPedido, ValorCausa } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// COMPONENTE DE TEXTO EXPANSÍVEL
+// COMPONENTE DE TEXTO EXPANSÍVEL (usa BaseModal)
 // ═══════════════════════════════════════════════════════════════════════════
 
 interface ExpandableTextProps {
@@ -22,125 +23,38 @@ interface ExpandableTextProps {
 
 const ExpandableText: React.FC<ExpandableTextProps> = ({ text, label, variant }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  const handleClose = useCallback(() => setIsOpen(false), []);
-
-  // Calcula se deve abrir para cima ou para baixo
-  const handleOpen = useCallback(() => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      // Se o botão está na metade inferior da tela, abre para cima
-      setOpenUpward(rect.bottom > viewportHeight / 2);
-    }
-    setIsOpen(true);
-  }, []);
-
-  // Fecha ao clicar fora
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(e.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(e.target as Node)
-      ) {
-        handleClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, handleClose]);
-
-  // Fecha ao pressionar ESC
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose();
-    };
-
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [isOpen, handleClose]);
 
   const displayText = safeRender(text);
   if (!displayText || displayText === '-') {
-    return <span className="text-slate-400">-</span>;
+    return <span className="text-slate-400 dark:text-slate-500">-</span>;
   }
 
-  const variantStyles = {
-    autor: {
-      bg: 'bg-emerald-50 dark:bg-emerald-900/30',
-      border: 'border-emerald-200 dark:border-emerald-800',
-      header: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200',
-      text: 'text-emerald-700 dark:text-emerald-300',
-    },
-    reu: {
-      bg: 'bg-amber-50 dark:bg-amber-900/30',
-      border: 'border-amber-200 dark:border-amber-800',
-      header: 'bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200',
-      text: 'text-amber-700 dark:text-amber-300',
-    },
-  };
-
-  const styles = variantStyles[variant];
+  const iconColor = variant === 'autor' ? 'green' : 'yellow';
+  const Icon = variant === 'autor' ? CheckCircle : AlertTriangle;
 
   return (
-    <div className="relative">
+    <>
       <button
-        ref={buttonRef}
-        onClick={() => isOpen ? handleClose() : handleOpen()}
+        onClick={() => setIsOpen(true)}
         className="text-left w-full truncate cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
         title="Clique para expandir"
       >
         {displayText}
       </button>
 
-      {isOpen && (
-        <>
-          {/* Backdrop sutil */}
-          <div className="fixed inset-0 z-40" onClick={handleClose} />
-
-          {/* Popover */}
-          <div
-            ref={popoverRef}
-            className={`
-              absolute z-50 left-0
-              ${openUpward ? 'bottom-full mb-2' : 'top-full mt-2'}
-              w-80 max-w-[90vw] max-h-[300px]
-              ${styles.bg} ${styles.border}
-              border rounded-xl shadow-xl
-              ${openUpward
-                ? 'animate-in fade-in slide-in-from-bottom-2 duration-200'
-                : 'animate-in fade-in slide-in-from-top-2 duration-200'}
-            `}
-          >
-            {/* Header */}
-            <div className={`flex items-center justify-between px-3 py-2 ${styles.header}`}>
-              <span className="font-medium text-sm">{label}</span>
-              <button
-                onClick={handleClose}
-                className="p-1 rounded-lg hover:bg-white/50 dark:hover:bg-black/20 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Conteúdo */}
-            <div className={`p-3 text-sm ${styles.text} overflow-y-auto max-h-[240px]`}>
-              {displayText}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+      <BaseModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title={label}
+        icon={<Icon />}
+        iconColor={iconColor}
+        size="md"
+      >
+        <p className="theme-text-secondary whitespace-pre-wrap leading-relaxed">
+          {displayText}
+        </p>
+      </BaseModal>
+    </>
   );
 };
 
