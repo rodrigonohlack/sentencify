@@ -22,10 +22,22 @@ interface ExpandableTextProps {
 
 const ExpandableText: React.FC<ExpandableTextProps> = ({ text, label, variant }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleClose = useCallback(() => setIsOpen(false), []);
+
+  // Calcula se deve abrir para cima ou para baixo
+  const handleOpen = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      // Se o botão está na metade inferior da tela, abre para cima
+      setOpenUpward(rect.bottom > viewportHeight / 2);
+    }
+    setIsOpen(true);
+  }, []);
 
   // Fecha ao clicar fora
   useEffect(() => {
@@ -84,7 +96,7 @@ const ExpandableText: React.FC<ExpandableTextProps> = ({ text, label, variant })
     <div className="relative">
       <button
         ref={buttonRef}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => isOpen ? handleClose() : handleOpen()}
         className="text-left w-full truncate cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
         title="Clique para expandir"
       >
@@ -100,12 +112,14 @@ const ExpandableText: React.FC<ExpandableTextProps> = ({ text, label, variant })
           <div
             ref={popoverRef}
             className={`
-              absolute z-50 left-0 top-full mt-2
+              absolute z-50 left-0
+              ${openUpward ? 'bottom-full mb-2' : 'top-full mt-2'}
               w-80 max-w-[90vw] max-h-[300px]
               ${styles.bg} ${styles.border}
               border rounded-xl shadow-xl
-              overflow-hidden
-              animate-in fade-in slide-in-from-top-2 duration-200
+              ${openUpward
+                ? 'animate-in fade-in slide-in-from-bottom-2 duration-200'
+                : 'animate-in fade-in slide-in-from-top-2 duration-200'}
             `}
           >
             {/* Header */}
