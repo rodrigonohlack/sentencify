@@ -12,49 +12,40 @@ import { formatCurrency, parseThemeAndValue } from '../../utils/format-pedido';
 import type { TabelaPedido, ValorCausa } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// COMPONENTE DE TEXTO EXPANSÍVEL (usa BaseModal)
+// TIPO PARA TESE SELECIONADA
+// ═══════════════════════════════════════════════════════════════════════════
+
+interface SelectedTese {
+  text: string;
+  label: string;
+  variant: 'autor' | 'reu';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPONENTE DE TEXTO EXPANSÍVEL (apenas botão, modal renderizado fora)
 // ═══════════════════════════════════════════════════════════════════════════
 
 interface ExpandableTextProps {
   text: string;
   label: string;
   variant: 'autor' | 'reu';
+  onExpand: (data: SelectedTese) => void;
 }
 
-const ExpandableText: React.FC<ExpandableTextProps> = ({ text, label, variant }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
+const ExpandableText: React.FC<ExpandableTextProps> = ({ text, label, variant, onExpand }) => {
   const displayText = safeRender(text);
   if (!displayText || displayText === '-') {
     return <span className="text-slate-400 dark:text-slate-500">-</span>;
   }
 
-  const iconColor = variant === 'autor' ? 'green' : 'yellow';
-  const Icon = variant === 'autor' ? CheckCircle : AlertTriangle;
-
   return (
-    <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="text-left w-full truncate cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-        title="Clique para expandir"
-      >
-        {displayText}
-      </button>
-
-      <BaseModal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        title={label}
-        icon={<Icon />}
-        iconColor={iconColor}
-        size="md"
-      >
-        <p className="theme-text-secondary whitespace-pre-wrap leading-relaxed">
-          {displayText}
-        </p>
-      </BaseModal>
-    </>
+    <button
+      onClick={() => onExpand({ text: displayText, label, variant })}
+      className="text-left w-full truncate cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+      title="Clique para expandir"
+    >
+      {displayText}
+    </button>
   );
 };
 
@@ -64,6 +55,9 @@ interface TabelaComparativaProps {
 }
 
 export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, valorCausa }) => {
+  // Estado para o modal de tese expandida (renderizado fora da tabela)
+  const [selectedTese, setSelectedTese] = useState<SelectedTese | null>(null);
+
   const totalPedidos = pedidos.reduce((sum, p) => {
     const { extractedValor } = parseThemeAndValue(p.tema, p.valor);
     return sum + (extractedValor || 0);
@@ -152,6 +146,7 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
                       text={pedido.teseAutor}
                       label="Tese do Autor"
                       variant="autor"
+                      onExpand={setSelectedTese}
                     />
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400 max-w-[200px]">
@@ -159,6 +154,7 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
                       text={pedido.teseRe || ''}
                       label="Tese do Réu"
                       variant="reu"
+                      onExpand={setSelectedTese}
                     />
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -201,6 +197,22 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
             })}
           </div>
         </div>
+      )}
+
+      {/* Modal de Tese Expandida - renderizado fora da tabela */}
+      {selectedTese && (
+        <BaseModal
+          isOpen={true}
+          onClose={() => setSelectedTese(null)}
+          title={selectedTese.label}
+          icon={selectedTese.variant === 'autor' ? <CheckCircle /> : <AlertTriangle />}
+          iconColor={selectedTese.variant === 'autor' ? 'green' : 'yellow'}
+          size="md"
+        >
+          <p className="theme-text-secondary whitespace-pre-wrap leading-relaxed">
+            {selectedTese.text}
+          </p>
+        </BaseModal>
       )}
     </div>
   );
