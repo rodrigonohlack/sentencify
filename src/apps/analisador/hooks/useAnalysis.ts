@@ -23,14 +23,6 @@ const ensureString = (value: unknown): string => {
 };
 
 /**
- * Trunca texto para tamanho máximo, preservando palavras
- */
-const truncateText = (text: string, maxLength: number = 100): string => {
-  if (!text || text.length <= maxLength) return text || '';
-  return text.substring(0, maxLength - 3).replace(/\s+\S*$/, '') + '...';
-};
-
-/**
  * Gera tabelaSintetica a partir do array de pedidos
  * Garante que todos os pedidos apareçam em ambas as views
  */
@@ -39,8 +31,8 @@ const generateTabelaSintetica = (pedidos: PedidoAnalise[]): TabelaPedido[] => {
     numero: p.numero,
     tema: p.tema,
     valor: p.valor,
-    teseAutor: truncateText(p.fatosReclamante),
-    teseRe: truncateText(p.defesaReclamada || 'Não houve contestação'),
+    teseAutor: p.fatosReclamante || '',
+    teseRe: p.defesaReclamada || 'Não houve contestação',
     controversia: p.controversia,
     confissaoFicta: p.confissaoFicta,
     observacoes: p.pontosEsclarecer?.length > 0 ? p.pontosEsclarecer[0] : undefined,
