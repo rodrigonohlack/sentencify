@@ -104,7 +104,12 @@ export const ResultsContainer: React.FC = () => {
               <DepoentesTab depoentes={result.depoentes} />
             )}
             {currentTab === 'sinteses' && (
-              <SintesesTab sinteses={result.sinteses} />
+              <SintesesTab
+                sinteses={result.sinteses}
+                sintesesCondensadas={result.sintesesCondensadas}
+                sintesesPorTema={result.sintesesPorTema}
+                depoentes={result.depoentes}
+              />
             )}
             {currentTab === 'analises' && (
               <AnalisesTab analises={result.analises} />
@@ -116,7 +121,7 @@ export const ResultsContainer: React.FC = () => {
               <ConfissoesTab confissoes={result.confissoes} />
             )}
             {currentTab === 'credibilidade' && (
-              <CredibilidadeTab credibilidade={result.credibilidade} />
+              <CredibilidadeTab credibilidade={result.credibilidade} depoentes={result.depoentes} />
             )}
             {currentTab === 'comparativo' && (
               <ComparativoTab resultado={result} />

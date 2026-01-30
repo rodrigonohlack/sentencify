@@ -7,7 +7,7 @@ import React from 'react';
 import { Table, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Card, CardContent, Badge } from '../ui';
 import { getStatusStyle, getStatusLabel } from '../../constants';
-import type { AnaliseTemaPedido, ProvaOralResult } from '../../types';
+import type { AnaliseTemaPedido, ProvaOralResult, StatusAnalise } from '../../types';
 
 interface ComparativoTabProps {
   resultado: ProvaOralResult;
@@ -27,13 +27,16 @@ export const ComparativoTab: React.FC<ComparativoTabProps> = ({ resultado }) => 
     );
   }
 
-  // Estatísticas gerais
+  // Estatísticas gerais (suporta novo formato: status, e antigo: conclusao)
+  const getStatus = (a: AnaliseTemaPedido): StatusAnalise =>
+    (a.status || a.conclusao) as StatusAnalise;
+
   const stats = {
     total: analises.length,
-    favoravelAutor: analises.filter(a => a.conclusao === 'favoravel-autor').length,
-    favoravelRe: analises.filter(a => a.conclusao === 'favoravel-re').length,
-    parcial: analises.filter(a => a.conclusao === 'parcial').length,
-    inconclusivo: analises.filter(a => a.conclusao === 'inconclusivo').length,
+    favoravelAutor: analises.filter(a => getStatus(a) === 'favoravel-autor').length,
+    favoravelRe: analises.filter(a => getStatus(a) === 'favoravel-re').length,
+    parcial: analises.filter(a => getStatus(a) === 'parcial').length,
+    inconclusivo: analises.filter(a => getStatus(a) === 'inconclusivo').length,
   };
 
   return (
@@ -190,17 +193,28 @@ const StatCard: React.FC<{
 
 // Linha da tabela
 const ComparativoRow: React.FC<{ analise: AnaliseTemaPedido }> = ({ analise }) => {
-  const statusStyle = getStatusStyle(analise.conclusao);
-  const favoraveisAutor = analise.declaracoes.filter(d => d.favoravel === 'autor').length;
-  const favoraveisRe = analise.declaracoes.filter(d => d.favoravel === 're').length;
-  const neutros = analise.declaracoes.filter(d => d.favoravel === 'neutro').length;
+  // Suporta novo formato (status) e antigo (conclusao como StatusAnalise)
+  const statusValue = (analise.status || analise.conclusao) as StatusAnalise;
+  const statusStyle = getStatusStyle(statusValue);
+
+  // Novo formato usa provaOral, antigo usa declaracoes
+  const declaracoes = analise.declaracoes || [];
+  const provaOral = analise.provaOral || [];
+
+  // Contagem para formato antigo (declaracoes)
+  const favoraveisAutor = declaracoes.filter(d => d.favoravel === 'autor').length;
+  const favoraveisRe = declaracoes.filter(d => d.favoravel === 're').length;
+  const neutros = declaracoes.filter(d => d.favoravel === 'neutro').length;
+
+  // Para novo formato, conta depoentes únicos
+  const totalDepoentes = provaOral.length > 0 ? provaOral.length : declaracoes.length;
 
   return (
     <tr className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
       <td className="px-4 py-3">
         <div>
           <p className="font-medium text-slate-800 dark:text-slate-100">
-            {analise.tema}
+            {analise.titulo || analise.tema}
           </p>
           {analise.descricao && (
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
@@ -210,28 +224,36 @@ const ComparativoRow: React.FC<{ analise: AnaliseTemaPedido }> = ({ analise }) =
         </div>
       </td>
       <td className="px-4 py-3 text-center">
-        <div className="flex items-center justify-center gap-2 text-xs">
-          <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
-            {favoraveisAutor} A
-          </span>
-          <span className="px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
-            {favoraveisRe} R
-          </span>
-          {neutros > 0 && (
-            <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400">
-              {neutros} N
+        {declaracoes.length > 0 ? (
+          <div className="flex items-center justify-center gap-2 text-xs">
+            <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
+              {favoraveisAutor} A
             </span>
-          )}
-        </div>
+            <span className="px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+              {favoraveisRe} R
+            </span>
+            {neutros > 0 && (
+              <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400">
+                {neutros} N
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="text-sm text-slate-500 dark:text-slate-400">
+            {totalDepoentes} depoente{totalDepoentes !== 1 ? 's' : ''}
+          </span>
+        )}
       </td>
       <td className="px-4 py-3 text-center">
         <Badge className={`${statusStyle.bg} ${statusStyle.text}`}>
-          {getStatusLabel(analise.conclusao)}
+          {getStatusLabel(statusValue)}
         </Badge>
       </td>
       <td className="px-4 py-3">
         <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2">
-          {analise.fundamentacao}
+          {typeof analise.conclusao === 'string' && analise.conclusao.length > 50
+            ? analise.conclusao
+            : analise.fundamentacao || analise.conclusao}
         </p>
       </td>
     </tr>

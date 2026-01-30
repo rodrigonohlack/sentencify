@@ -1,20 +1,72 @@
 /**
  * @file SintesesTab.tsx
- * @description Tab de sínteses dos depoimentos
+ * @description Tab de sínteses dos depoimentos com 3 modos de visualização
+ * Baseado no protótipo v2
  */
 
-import React from 'react';
-import { FileText, Quote } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent, Badge } from '../ui';
+import React, { useState } from 'react';
+import { FileText, Clock, ChevronDown, Target } from 'lucide-react';
+import { Card, CardContent, Badge } from '../ui';
 import { getQualificacaoStyle, getQualificacaoLabel } from '../../constants';
-import type { Sintese } from '../../types';
+import type { Sintese, SinteseCondensada, SintesePorTema, Depoente, SinteseViewMode, Qualificacao } from '../../types';
 
 interface SintesesTabProps {
   sinteses: Sintese[];
+  sintesesCondensadas?: SinteseCondensada[];
+  sintesesPorTema?: SintesePorTema[];
+  depoentes?: Depoente[];
 }
 
-export const SintesesTab: React.FC<SintesesTabProps> = ({ sinteses }) => {
-  if (!sinteses || sinteses.length === 0) {
+/** Badge de timestamp */
+const TimestampBadge: React.FC<{ timestamp: string }> = ({ timestamp }) => (
+  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-full font-mono flex-shrink-0">
+    <Clock className="w-3 h-3" />{timestamp}
+  </span>
+);
+
+/** Botão de modo de visualização */
+const ViewModeButton: React.FC<{
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}> = ({ active, onClick, children }) => (
+  <button
+    onClick={onClick}
+    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+      active
+        ? 'bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 shadow-sm'
+        : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+    }`}
+  >
+    {children}
+  </button>
+);
+
+/** Cor da borda por qualificação */
+const getQualBorderColor = (qual: Qualificacao | undefined): string => ({
+  'autor': 'border-l-blue-500',
+  'preposto': 'border-l-rose-500',
+  'testemunha-autor': 'border-l-emerald-500',
+  'testemunha-re': 'border-l-amber-500'
+}[qual || 'autor'] || 'border-l-slate-300');
+
+export const SintesesTab: React.FC<SintesesTabProps> = ({
+  sinteses,
+  sintesesCondensadas,
+  sintesesPorTema,
+  depoentes = []
+}) => {
+  const [viewMode, setViewMode] = useState<SinteseViewMode>('detalhada');
+  const [expandedId, setExpandedId] = useState<string | null>(sinteses?.[0]?.deponenteId || null);
+
+  // Função para buscar depoente pelo ID
+  const getDepoente = (id: string): Depoente | undefined =>
+    depoentes.find(d => d.id === id);
+
+  // Se não tem dados em nenhum formato
+  if ((!sinteses || sinteses.length === 0) &&
+      (!sintesesCondensadas || sintesesCondensadas.length === 0) &&
+      (!sintesesPorTema || sintesesPorTema.length === 0)) {
     return (
       <div className="text-center py-12">
         <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
@@ -26,56 +78,171 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({ sinteses }) => {
   }
 
   return (
-    <div className="space-y-6">
-      {sinteses.map((sintese, index) => {
-        const style = getQualificacaoStyle(sintese.qualificacao);
+    <div className="space-y-4">
+      {/* Seletor de visualização */}
+      <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit">
+        <ViewModeButton
+          active={viewMode === 'detalhada'}
+          onClick={() => setViewMode('detalhada')}
+        >
+          Detalhada
+        </ViewModeButton>
+        <ViewModeButton
+          active={viewMode === 'condensada'}
+          onClick={() => setViewMode('condensada')}
+        >
+          Por Depoente
+        </ViewModeButton>
+        <ViewModeButton
+          active={viewMode === 'tema'}
+          onClick={() => setViewMode('tema')}
+        >
+          Por Tema
+        </ViewModeButton>
+      </div>
 
-        return (
-          <Card key={`${sintese.deponenteId}-${index}`}>
-            <CardHeader>
-              <div className="flex items-center justify-between gap-4">
-                <CardTitle icon={<FileText className="w-5 h-5" />}>
-                  {sintese.deponenteNome}
-                </CardTitle>
-                <Badge className={`${style.bg} ${style.text}`}>
-                  {getQualificacaoLabel(sintese.qualificacao)}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Pontos Principais */}
-              <div>
-                <h4 className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
-                  Pontos Principais
-                </h4>
-                <ul className="space-y-2">
-                  {sintese.pontosPrincipais.map((ponto, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300"
-                    >
-                      <span className="text-indigo-500 mt-1">•</span>
-                      <span>{ponto}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* VISUALIZAÇÃO DETALHADA (cada declaração com timestamp) */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {viewMode === 'detalhada' && (
+        <div className="space-y-3">
+          {sinteses?.map((sintese, i) => {
+            const dep = getDepoente(sintese.deponenteId);
+            const isExpanded = expandedId === sintese.deponenteId;
 
-              {/* Trecho Relevante */}
-              {sintese.trechoRelevante && (
-                <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border-l-4 border-indigo-500">
-                  <div className="flex items-start gap-2">
-                    <Quote className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-slate-600 dark:text-slate-300 italic">
-                      "{sintese.trechoRelevante}"
-                    </p>
+            // Verifica se tem o novo formato (conteudo) ou o antigo (pontosPrincipais)
+            const hasNewFormat = sintese.conteudo && sintese.conteudo.length > 0;
+            const declaracoesCount = hasNewFormat
+              ? sintese.conteudo.length
+              : (sintese.pontosPrincipais?.length || 0);
+
+            return (
+              <Card key={`${sintese.deponenteId}-${i}`} className="overflow-hidden">
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : sintese.deponenteId)}
+                  className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-100">
+                      {dep
+                        ? `${getQualificacaoLabel(dep.qualificacao).toUpperCase()} (${dep.nome})`
+                        : sintese.deponenteNome || sintese.deponenteId}
+                    </h3>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {declaracoesCount} declarações
+                    </span>
                   </div>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isExpanded && (
+                  <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-700 space-y-2 pt-3">
+                    {hasNewFormat ? (
+                      // Novo formato com timestamps
+                      sintese.conteudo.map((item, j) => (
+                        <div key={j} className="flex gap-2 text-sm">
+                          {item.timestamp && <TimestampBadge timestamp={item.timestamp} />}
+                          <p className="text-slate-700 dark:text-slate-300">{item.texto}</p>
+                        </div>
+                      ))
+                    ) : (
+                      // Formato antigo (pontosPrincipais)
+                      sintese.pontosPrincipais?.map((ponto, j) => (
+                        <div key={j} className="flex gap-2 text-sm">
+                          <span className="text-indigo-500 mt-0.5">•</span>
+                          <p className="text-slate-700 dark:text-slate-300">{ponto}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* VISUALIZAÇÃO CONDENSADA (texto corrido por depoente) */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {viewMode === 'condensada' && (
+        <div className="space-y-4">
+          {sintesesCondensadas && sintesesCondensadas.length > 0 ? (
+            sintesesCondensadas.map((s, i) => {
+              const style = getQualificacaoStyle(s.qualificacao);
+              return (
+                <Card key={i} className={`border-l-4 ${getQualBorderColor(s.qualificacao)}`}>
+                  <CardContent>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge className={`${style.bg} ${style.text} font-bold`}>
+                        {s.deponente}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                      {s.textoCorrente}
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })
+          ) : (
+            <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+              <CardContent>
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  Sínteses condensadas não disponíveis. Tente gerar nova análise.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* VISUALIZAÇÃO POR TEMA */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {viewMode === 'tema' && (
+        <div className="space-y-6">
+          {sintesesPorTema && sintesesPorTema.length > 0 ? (
+            sintesesPorTema.map((tema, i) => (
+              <div key={i}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center">
+                    <Target className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <h3 className="font-semibold text-slate-800 dark:text-slate-100">{tema.tema}</h3>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        );
-      })}
+                <div className="space-y-3 pl-10">
+                  {tema.declaracoes?.map((dec, j) => {
+                    const style = getQualificacaoStyle(dec.qualificacao);
+                    return (
+                      <Card key={j} className={`border-l-4 ${getQualBorderColor(dec.qualificacao)}`}>
+                        <CardContent>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className={`${style.bg} ${style.text} font-bold`}>
+                              {dec.deponente}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                            {dec.textoCorrente}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          ) : (
+            <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+              <CardContent>
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  Sínteses por tema não disponíveis. Tente gerar nova análise.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 };
