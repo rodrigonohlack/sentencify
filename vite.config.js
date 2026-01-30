@@ -4,9 +4,9 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  // Strip console.log/warn/error e debugger no bundle de produção
+  // Strip debugger no bundle de produção (mantém console para debug)
   esbuild: {
-    drop: mode === 'production' ? ['console', 'debugger'] : [],
+    drop: mode === 'production' ? ['debugger'] : [],
   },
   // Configuração do Vitest para testes unitários
   test: {
