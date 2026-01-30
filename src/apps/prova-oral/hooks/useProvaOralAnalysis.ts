@@ -7,6 +7,7 @@ import { useCallback } from 'react';
 import { useAIIntegration } from './useAIIntegration';
 import { useProvaOralStore } from '../stores';
 import { PROVA_ORAL_SYSTEM_PROMPT } from '../prompts';
+import { getMaxOutputTokens } from '../constants';
 import type { ProvaOralResult } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -62,7 +63,7 @@ export interface UseProvaOralAnalysisReturn {
 }
 
 export function useProvaOralAnalysis(): UseProvaOralAnalysisReturn {
-  const { callAI } = useAIIntegration();
+  const { callAI, aiSettings } = useAIIntegration();
   const {
     isAnalyzing,
     progress,
@@ -100,12 +101,19 @@ Analise a transcrição e a síntese acima. Retorne APENAS o JSON estruturado co
 
         setProgress(30, 'Enviando para análise...');
 
-        // Chamar a IA
+        // Determinar modelo atual baseado no provedor
+        const currentModel =
+          aiSettings.provider === 'claude' ? aiSettings.claudeModel :
+          aiSettings.provider === 'gemini' ? aiSettings.geminiModel :
+          aiSettings.provider === 'openai' ? aiSettings.openaiModel :
+          aiSettings.grokModel;
+
+        // Chamar a IA com max tokens dinâmico baseado no modelo
         const response = await callAI(
           [{ role: 'user', content: userPrompt }],
           {
             systemPrompt: PROVA_ORAL_SYSTEM_PROMPT,
-            maxTokens: 16000,
+            maxTokens: getMaxOutputTokens(currentModel),
           }
         );
 
@@ -138,7 +146,7 @@ Analise a transcrição e a síntese acima. Retorne APENAS o JSON estruturado co
         return null;
       }
     },
-    [callAI, setIsAnalyzing, setProgress, setError, setResult]
+    [callAI, aiSettings, setIsAnalyzing, setProgress, setError, setResult]
   );
 
   return {

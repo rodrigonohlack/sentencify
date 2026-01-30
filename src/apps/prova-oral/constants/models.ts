@@ -103,3 +103,40 @@ export const getModelName = (provider: AIProvider, modelId: string): string => {
 export const getProviderName = (provider: AIProvider): string => {
   return AI_PROVIDERS[provider].name;
 };
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MAX OUTPUT TOKENS POR MODELO
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Limite máximo de tokens de output por modelo
+ * Usado para garantir que análises longas não sejam truncadas
+ */
+export const MODEL_MAX_OUTPUT_TOKENS: Record<string, number> = {
+  // Claude
+  'claude-sonnet-4-20250514': 64000,
+  'claude-opus-4-5-20251101': 32000,
+
+  // Gemini
+  'gemini-3-flash-preview': 65536,
+  'gemini-3-pro-preview': 65536,
+
+  // OpenAI
+  'gpt-5.2-chat-latest': 128000,
+  'gpt-5.2': 128000,
+
+  // Grok
+  'grok-4-1-fast-reasoning': 32000,
+  'grok-4-1-fast-non-reasoning': 32000,
+};
+
+export const DEFAULT_MAX_OUTPUT_TOKENS = 16000;
+
+/**
+ * Retorna o limite máximo de tokens de output para um modelo
+ * @param modelId - ID do modelo
+ * @returns Número máximo de tokens de output
+ */
+export const getMaxOutputTokens = (modelId: string): number => {
+  return MODEL_MAX_OUTPUT_TOKENS[modelId] || DEFAULT_MAX_OUTPUT_TOKENS;
+};
