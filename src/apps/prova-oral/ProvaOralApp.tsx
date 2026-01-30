@@ -179,10 +179,21 @@ const AppContent: React.FC = () => {
         ) : (
           /* Tela de Entrada */
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <Mic className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              Entrada de Dados
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <Mic className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                Entrada de Dados
+              </h2>
+              {result && (
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowResults(true)}
+                  icon={<Scale className="w-4 h-4" />}
+                >
+                  Ver Resultados
+                </Button>
+              )}
+            </div>
             <InputForm onAnalysisComplete={() => setShowResults(true)} />
           </div>
         )}
