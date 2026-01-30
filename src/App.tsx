@@ -52,6 +52,9 @@ import AdminPanel from './components/AdminPanel';
 // v1.38.0: Analisador de Prepauta - Rota /analise
 import { AnalisadorApp } from './apps/analisador';
 
+// v1.39.08: Análise de Prova Oral - Rota /prova-oral
+import { ProvaOralApp } from './apps/prova-oral';
+
 // v1.35.30: Modal de curadoria de tópicos pré-geração
 import TopicCurationModal from './components/TopicCurationModal';
 
@@ -3483,6 +3486,11 @@ const SentencifyAI = () => {
   // v1.38.0: Rota /analise abre Analisador de Prepauta
   if (window.location.pathname.startsWith('/analise')) {
     return <AnalisadorApp />;
+  }
+
+  // v1.39.08: Rota /prova-oral abre Análise de Prova Oral
+  if (window.location.pathname.startsWith('/prova-oral')) {
+    return <ProvaOralApp />;
   }
 
   // v1.35.0: Rota /share/:token abre página de aceite de compartilhamento

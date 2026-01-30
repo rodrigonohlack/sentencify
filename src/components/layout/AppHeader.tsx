@@ -77,6 +77,12 @@ export function AppHeader({
             >
               [Analisador]
             </a>
+            <a
+              href="/prova-oral"
+              className="text-xs theme-text-disabled hover:[color:var(--text-muted)] transition-colors"
+            >
+              [Prova Oral]
+            </a>
           </div>
 
           {/* Process Number Input */}

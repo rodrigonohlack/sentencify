@@ -31,6 +31,7 @@ import syncRoutes from './routes/sync.js';
 import adminRoutes from './routes/admin.js';
 import shareRoutes from './routes/share.js';
 import analysesRoutes from './routes/analyses.js';
+import provaOralRoutes from './routes/prova-oral.js';
 import { initDatabase } from './db/database.js';
 
 // Inicializar banco de dados SQLite
@@ -182,6 +183,9 @@ app.use('/api/share', shareRoutes);
 
 // Rotas de análises do Analisador de Prepauta (v1.39.0)
 app.use('/api/analyses', analysesRoutes);
+
+// Rotas de análises de Prova Oral (v1.39.08)
+app.use('/api/prova-oral', provaOralRoutes);
 
 // Rotas de proxy para APIs de IA
 app.use('/api/claude', claudeRoutes);

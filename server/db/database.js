@@ -55,6 +55,7 @@ const runMigrations = () => {
     { name: '004_share_recipient_email', fn: migration004ShareRecipientEmail },
     { name: '005_analyses', fn: migration005Analyses },
     { name: '006_analyses_plural', fn: migration006AnalysesPlural },
+    { name: '007_prova_oral', fn: migration007ProvaOral },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -279,6 +280,34 @@ function migration006AnalysesPlural(db) {
   }
 
   console.log(`[Database] Migration 006: Migrated ${analyses.length} analyses with contestação`);
+}
+
+// Migration 007: Tabela de análises de prova oral
+function migration007ProvaOral(db) {
+  db.exec(`
+    -- ═══════════════════════════════════════════════════════════════
+    -- TABELA: prova_oral_analyses
+    -- Análises de prova oral trabalhista
+    -- ═══════════════════════════════════════════════════════════════
+    CREATE TABLE IF NOT EXISTS prova_oral_analyses (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      numero_processo TEXT,
+      reclamante TEXT,
+      reclamada TEXT,
+      vara TEXT,
+      transcricao TEXT,
+      sintese_processo TEXT,
+      resultado TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      deleted_at TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_prova_oral_user ON prova_oral_analyses(user_id);
+    CREATE INDEX IF NOT EXISTS idx_prova_oral_processo ON prova_oral_analyses(numero_processo);
+    CREATE INDEX IF NOT EXISTS idx_prova_oral_deleted ON prova_oral_analyses(deleted_at);
+  `);
 }
 
 // Exportar
