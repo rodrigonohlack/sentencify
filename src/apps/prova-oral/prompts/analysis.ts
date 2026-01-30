@@ -104,16 +104,45 @@ Retorne APENAS um JSON válido (sem markdown, sem explicações) com a seguinte 
 - Inclua relação com as partes quando mencionada (ex: "ex-colega de trabalho do autor")
 
 ### 2. Síntese dos Depoimentos
-- Extraia os PONTOS PRINCIPAIS de cada depoimento
-- Seja objetivo e factual
-- Preserve trechos literais relevantes quando importantes para a prova
+⚠️ **REGRA CRÍTICA**: O array "sinteses" DEVE ter EXATAMENTE o mesmo número de itens que "depoentes".
+Se você identificou 6 depoentes, DEVE haver 6 sínteses. Nenhum depoente pode ser omitido.
+
+Para CADA depoente:
+- Liste TODOS os pontos principais mencionados no depoimento
+- Inclua detalhes específicos: datas, horários, valores, nomes, locais, circunstâncias
+- Seja minucioso - não resuma excessivamente, capture a essência completa do depoimento
+- Preserve trechos literais que sejam importantes para a prova (em "trechoRelevante")
+- Inclua tanto o que o depoente afirmou quanto o que negou conhecer
+
+Estruture os pontos principais por assunto quando possível:
+- Jornada de trabalho
+- Condições de trabalho
+- Relacionamento com colegas/superiores
+- Fatos específicos presenciados
+- O que não presenciou/não sabe
 
 ### 3. Análise por Tema/Pedido
-- Organize a análise por CADA PEDIDO/TEMA controvertido mencionado na síntese do processo
-- Para cada tema, liste as declarações relevantes de CADA depoente
-- Classifique se a declaração é favorável ao autor, à ré, ou neutra
-- Conclua sobre a prova produzida para aquele tema específico
-- Fundamente a conclusão de forma objetiva
+Organize a análise por CADA PEDIDO/TEMA controvertido mencionado na síntese do processo.
+Se a síntese não mencionar pedidos específicos, extraia os temas controvertidos da transcrição.
+
+⚠️ **REGRA CRÍTICA**: Para CADA tema, o array "declaracoes" DEVE incluir TODOS os depoentes identificados.
+Se você identificou 6 depoentes, cada tema DEVE ter 6 declarações (uma para cada depoente).
+
+Para cada depoente em cada tema:
+- Se o depoente se manifestou sobre o tema: inclua TODAS as declarações relevantes (pode haver múltiplas frases)
+- Se o depoente confirmou ou negou algo: indique claramente
+- Se o depoente disse "não saber" ou "não lembrar": registre como declaração neutra
+- Se o depoente não foi perguntado sobre o tema: use "Não foi questionado sobre este tema" com favoravel: "neutro"
+
+Seja MINUCIOSO na extração:
+- Inclua detalhes específicos: datas, horários, frequência, presenciou/soube de terceiros
+- Se houver contradição com outro depoente, inclua ambas as versões
+- Cite declarações com precisão, evitando paráfrases genéricas
+
+Classificação:
+- "autor": declaração favorece a tese do reclamante
+- "re": declaração favorece a tese da reclamada
+- "neutro": não favorece nenhuma das partes ou não se manifestou
 
 ### 4. Contradições
 - Identifique contradições ENTRE depoentes (testemunhas vs. partes, testemunhas entre si)
@@ -126,27 +155,88 @@ Retorne APENAS um JSON válido (sem markdown, sem explicações) com a seguinte 
 - Classifique como real (expressa) ou ficta (por ausência/omissão)
 
 ### 6. Credibilidade
-- Avalie a credibilidade de CADA depoente
-- Considere: coerência interna, conhecimento dos fatos, contradições, relação com as partes
-- Liste pontos positivos e negativos
+⚠️ **REGRA CRÍTICA**: O array "credibilidade" DEVE ter EXATAMENTE o mesmo número de itens que "depoentes".
+Avalie a credibilidade de CADA depoente, sem exceção.
+
+Considere:
+- Coerência interna do depoimento (se contradisse a si mesmo)
+- Conhecimento direto vs. indireto dos fatos (presenciou vs. ouviu dizer)
+- Contradições com outros depoentes
+- Relação com as partes (amizade, parentesco, subordinação)
+- Precisão nas respostas vs. respostas evasivas
+- Motivação para favorecer alguma das partes
+
+Para cada depoente, liste:
+- Pontos positivos: o que fortalece a credibilidade
+- Pontos negativos: o que enfraquece a credibilidade
+- Fundamentação: explique o nível de credibilidade atribuído
 
 ## REGRAS IMPORTANTES
 
-1. **Objetividade**: Seja imparcial. Não faça juízo de valor além da análise técnica.
-2. **Fundamentação**: Toda conclusão deve ser fundamentada nos depoimentos.
-3. **Completude**: Analise TODOS os temas/pedidos mencionados na síntese.
-4. **Precisão**: Cite declarações específicas, não generalize.
-5. **Estrutura**: Retorne APENAS o JSON, sem texto adicional.
+1. **Completude de Depoentes**:
+   - Se identificou N depoentes → DEVE haver N sínteses
+   - Cada tema DEVE ter declarações de TODOS os N depoentes
+   - DEVE haver N avaliações de credibilidade
+   - NUNCA omita testemunhas - elas são tão importantes quanto autor e preposto
 
-## EXEMPLO DE ANÁLISE DE TEMA
+2. **Minuciosidade**: Extraia TODAS as informações relevantes de cada declaração:
+   - Datas, horários, frequência, valores
+   - O que foi presenciado vs. ouvido de terceiros
+   - Afirmações E negações
 
-Para o tema "Horas Extras":
-- Se autor diz que trabalhava das 8h às 20h
-- Se preposto diz que jornada era das 8h às 17h com intervalo
-- Se testemunha do autor confirma jornada estendida
-- Se testemunha da ré confirma versão do preposto
+3. **Objetividade**: Seja imparcial. Não faça juízo de valor além da análise técnica.
 
-Análise: Prova dividida, mas com peso maior para testemunhas do autor que tinham contato diário.
+4. **Fundamentação**: Toda conclusão deve ser fundamentada nos depoimentos.
+
+5. **Completude de Temas**: Analise TODOS os temas/pedidos mencionados na síntese.
+
+6. **Precisão**: Cite declarações específicas, não generalize.
+
+7. **Estrutura**: Retorne APENAS o JSON, sem texto adicional.
+
+## EXEMPLO DE ANÁLISE COMPLETA DE TEMA
+
+Para o tema "Horas Extras" com 4 depoentes identificados:
+
+{
+  "tema": "Horas Extras",
+  "descricao": "Jornada de trabalho e horas extraordinárias",
+  "declaracoes": [
+    {
+      "deponenteId": "1",
+      "deponenteNome": "João Silva",
+      "qualificacao": "autor",
+      "declaracao": "Afirmou que trabalhava das 8h às 20h, de segunda a sábado. Disse que raramente conseguia fazer intervalo para almoço, no máximo 20 minutos. Confirmou que não havia controle de ponto.",
+      "favoravel": "autor"
+    },
+    {
+      "deponenteId": "2",
+      "deponenteNome": "Maria Souza",
+      "qualificacao": "preposto",
+      "declaracao": "Disse que a jornada era das 8h às 17h com 1 hora de intervalo. Afirmou que havia controle de ponto biométrico. Quando questionada sobre os registros, disse que não os trouxe.",
+      "favoravel": "re"
+    },
+    {
+      "deponenteId": "3",
+      "deponenteNome": "Pedro Santos",
+      "qualificacao": "testemunha-autor",
+      "declaracao": "Confirmou que trabalhava junto com o autor e que a jornada se estendia até 20h-21h frequentemente. Disse que presenciava o autor no local de trabalho até tarde. Afirmou que não havia controle de ponto.",
+      "favoravel": "autor"
+    },
+    {
+      "deponenteId": "4",
+      "deponenteNome": "Ana Lima",
+      "qualificacao": "testemunha-re",
+      "declaracao": "Disse que trabalha em setor diferente e não sabe a jornada do autor. Afirmou que no seu setor a jornada é das 8h às 17h. Quando perguntada sobre o autor, disse que o via chegar pela manhã mas não sabe que horas saía.",
+      "favoravel": "neutro"
+    }
+  ],
+  "conclusao": "favoravel-autor",
+  "fundamentacao": "A versão do autor foi corroborada pela testemunha Pedro Santos, que trabalhava no mesmo setor e presenciava a jornada estendida. A preposta não apresentou controle de ponto. A testemunha da ré não tinha conhecimento direto da jornada do autor.",
+  "relevancia": "alta"
+}
+
+Note que TODOS os 4 depoentes foram incluídos, mesmo a testemunha que não tinha conhecimento direto.
 
 RETORNE APENAS O JSON VÁLIDO.`;
 
