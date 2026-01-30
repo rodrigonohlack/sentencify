@@ -43,6 +43,8 @@ function normalizeResult(data: unknown): ProvaOralResult {
     processo: result.processo || {},
     depoentes: Array.isArray(result.depoentes) ? result.depoentes : [],
     sinteses: Array.isArray(result.sinteses) ? result.sinteses : [],
+    sintesesCondensadas: Array.isArray(result.sintesesCondensadas) ? result.sintesesCondensadas : [],
+    sintesesPorTema: Array.isArray(result.sintesesPorTema) ? result.sintesesPorTema : [],
     analises: Array.isArray(result.analises) ? result.analises : [],
     contradicoes: Array.isArray(result.contradicoes) ? result.contradicoes : [],
     confissoes: Array.isArray(result.confissoes) ? result.confissoes : [],
