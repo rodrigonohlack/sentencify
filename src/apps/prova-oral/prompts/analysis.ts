@@ -61,13 +61,21 @@ REGRAS DE VALORAÇÃO DE PROVA ORAL:
 INSTRUÇÕES DE ANÁLISE:
 1. Identifique todos os depoentes na transcrição (nome, qualificação, função se mencionada)
 2. Extraia síntese de cada depoimento no formato de ata judicial (terceira pessoa, pretérito) com timestamps (formato Xm YYs)
-3. Gere SÍNTESES CONDENSADAS: para cada depoente, um texto corrido único unindo todas as declarações com timestamps, separadas por ponto e vírgula
-4. Gere SÍNTESES POR TEMA: agrupe as declarações de todos os depoentes por tema/pedido da inicial
+3. Gere SÍNTESES CONDENSADAS: para cada depoente, um texto corrido único unindo TODAS as declarações (não resuma - inclua CADA UMA) com timestamps, separadas por ponto e vírgula
+4. Gere SÍNTESES POR TEMA: para cada tema, inclua TODAS as declarações relevantes de CADA depoente (não apenas uma por depoente)
 5. Para cada pedido/tema identificado na síntese, confronte: alegação do autor x defesa da ré x prova oral produzida
 6. Identifique contradições INTERNAS (mesmo depoente se contradiz) e EXTERNAS (entre depoentes ou com as peças)
 7. Extraia CONFISSÕES (declarações contra o próprio interesse)
 8. Avalie a credibilidade de cada testemunha (conhecimento direto, contemporaneidade, coerência, interesse no litígio)
 9. Elabore conclusão probatória aplicando as regras de valoração
+
+## ⚠️ AVISO CRÍTICO SOBRE COMPLETUDE - NÃO RESUMA EXCESSIVAMENTE!
+
+- sintesesCondensadas: inclua TODAS as declarações de cada depoente (se falou 20 coisas, liste as 20 separadas por ponto e vírgula)
+- sintesesPorTema: para cada tema, inclua TODAS as declarações relevantes de cada depoente (não apenas 1 por depoente)
+- O formato correto tem parágrafos longos com 5-10+ declarações por depoente/tema
+- ERRADO: "afirmou início em julho (1m 10s); negou abandono (5m 30s)" ← muito curto, faltam declarações
+- CORRETO: "afirmou início em 17/07/2024 (1m 10s); disse trabalhar sem carteira até dez/2024 (2m 29s); relatou carteira assinada em fev/2025 e baixa um mês depois mas continuou trabalhando (3m 57s); declarou jornada de terça a domingo das 17h às 02h30 (5m 37s); negou trabalhar em outro local (16m 36s); afirmou não ter intervalo para refeição (11m 37s); denunciou xingamentos homofóbicos (9m 11s)" ← todas as declarações!
 
 FORMATO - RETORNE APENAS JSON VÁLIDO (sem markdown, sem backticks, sem explicações):
 {
@@ -96,19 +104,24 @@ FORMATO - RETORNE APENAS JSON VÁLIDO (sem markdown, sem backticks, sem explica�
   ],
   "sintesesCondensadas": [
     {
-      "deponente": "string (ex: AUTOR, PREPOSTO, TESTEMUNHA FULANO)",
+      "deponente": "string (ex: AUTOR FULANO, PREPOSTO SICRANO, TESTEMUNHA BELTRANO)",
       "qualificacao": "autor|preposto|testemunha-autor|testemunha-re",
-      "textoCorrente": "string - texto corrido unindo todas as declarações com timestamps entre parênteses, separadas por ponto e vírgula. Ex: 'afirmou trabalhar desde julho/2024 (1m 10s); negou ter abandonado o emprego (5m 30s); disse que não tinha intervalo (8m 45s)'"
+      "textoCorrente": "⚠️ INCLUIR TODAS AS DECLARAÇÕES - Exemplo com nível de detalhe esperado: 'afirmou ter começado desde 17/07/2024 (1m 10s); disse trabalhar sem carteira assinada de julho até dezembro/2024 (2m 29s); relatou que a carteira foi assinada em fevereiro/2025 e dada baixa um mês depois, mas continuou trabalhando normalmente (3m 57s); declarou jornada de terça a domingo das 17h às 02h30 (5m 37s); negou ter trabalhado em outro local entre 11/03 e 30/04/2025 (16m 36s); afirmou não ter intervalo para refeição (11m 37s); denunciou xingamentos homofóbicos pelo patrão (9m 11s); relatou envio de vídeo pornográfico (9m 57s)' ← note que são 8+ declarações, não apenas 2-3!"
     }
   ],
   "sintesesPorTema": [
     {
-      "tema": "string (pedido/tema da inicial)",
+      "tema": "string (pedido/tema da inicial, ex: 'Vínculo empregatício e registro em CTPS')",
       "declaracoes": [
         {
-          "deponente": "string (AUTOR, PREPOSTO, etc)",
-          "qualificacao": "autor|preposto|testemunha-autor|testemunha-re",
-          "textoCorrente": "string - o que esse depoente disse sobre este tema específico, com timestamps"
+          "deponente": "AUTOR FULANO",
+          "qualificacao": "autor",
+          "textoCorrente": "⚠️ TODAS as declarações deste depoente sobre ESTE tema: afirmou início em 17/07/2024 (1m 10s); disse trabalhar sem carteira até dez/2024 (2m 29s); relatou carteira assinada em fev/2025 com baixa um mês depois mas continuou trabalhando (3m 57s); negou trabalhar em outro local entre 11/03 e 30/04/2025 (16m 36s)"
+        },
+        {
+          "deponente": "PREPOSTO SICRANO",
+          "qualificacao": "preposto",
+          "textoCorrente": "declarou que autor fazia diárias desde março/2024 (19m 59s); afirmou que só começou efetivamente quando carteira foi assinada (20m 40s); disse que autor abandonou para trabalhar em outro lugar (21m 13s); negou trabalho no período entre baixa e nova assinatura (21m 59s)"
         }
       ]
     }
@@ -173,7 +186,9 @@ IMPORTANTE:
 
 ☐ Cada timestamp da transcrição gerou um item separado em sinteses[].conteudo?
 ☐ sintesesCondensadas tem exatamente um item para CADA depoente?
+☐ sintesesCondensadas.textoCorrente tem TODAS as declarações (5-10+ por depoente, não apenas 2-3)?
 ☐ sintesesPorTema agrupa declarações por cada tema/pedido da inicial?
+☐ sintesesPorTema.declaracoes[].textoCorrente tem TODAS as declarações relevantes ao tema (não apenas 1)?
 ☐ Em provaOral[], o campo "deponente" identifica QUEM disse (nunca vazio)?
 ☐ Todos os 7 arrays estão presentes no JSON?`;
 
