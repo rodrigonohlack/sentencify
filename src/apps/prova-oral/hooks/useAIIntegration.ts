@@ -183,7 +183,11 @@ export const useAIIntegration = () => {
           });
         }
 
-        const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        // v1.32.35: Com thinking habilitado, parts[0] é o thinking block
+        // Buscar o primeiro part que NÃO seja thinking (thought !== true)
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        const textPart = parts.find((p: { thought?: boolean; text?: string }) => !p.thought && p.text);
+        const textContent = textPart?.text || '';
         return textContent.trim();
 
       } catch (err) {
