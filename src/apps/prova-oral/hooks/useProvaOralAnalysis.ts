@@ -109,25 +109,34 @@ Analise a transcrição e a síntese acima. Retorne APENAS o JSON estruturado co
           aiSettings.grokModel;
 
         // Chamar a IA com max tokens dinâmico baseado no modelo
+        const maxTokens = getMaxOutputTokens(currentModel);
+        console.log('[ProvaOralAnalysis] Chamando IA:', { provider: aiSettings.provider, model: currentModel, maxTokens });
+
         const response = await callAI(
           [{ role: 'user', content: userPrompt }],
           {
             systemPrompt: PROVA_ORAL_SYSTEM_PROMPT,
-            maxTokens: getMaxOutputTokens(currentModel),
+            maxTokens,
           }
         );
+
+        console.log('[ProvaOralAnalysis] Resposta recebida, tamanho:', response?.length || 0);
+        console.log('[ProvaOralAnalysis] Primeiros 500 chars:', response?.substring(0, 500));
 
         setProgress(70, 'Processando resultado...');
 
         // Extrair e parsear o JSON
         const jsonStr = extractJSON(response);
+        console.log('[ProvaOralAnalysis] JSON extraído, tamanho:', jsonStr?.length || 0);
+
         let parsed: unknown;
 
         try {
           parsed = JSON.parse(jsonStr);
         } catch (parseError) {
           console.error('[ProvaOralAnalysis] Erro ao parsear JSON:', parseError);
-          console.error('[ProvaOralAnalysis] Resposta da IA:', response);
+          console.error('[ProvaOralAnalysis] Resposta completa da IA:', response);
+          console.error('[ProvaOralAnalysis] JSON extraído:', jsonStr);
           throw new Error('Erro ao processar resposta da IA. Tente novamente.');
         }
 
