@@ -119,7 +119,13 @@ export const useAIIntegration = () => {
     }));
 
     // v1.32.38: Gemini thinking consome maxOutputTokens - adicionar buffer
-    const thinkingLevel = aiSettings.geminiThinkingLevel || 'high';
+    // Gemini Pro só aceita low/high - converter valores inválidos
+    let thinkingLevel = aiSettings.geminiThinkingLevel || 'high';
+    const isPro = model?.includes('pro');
+    if (isPro && (thinkingLevel === 'minimal' || thinkingLevel === 'medium')) {
+      thinkingLevel = 'low';
+    }
+
     const thinkingBuffer: Record<string, number> = {
       'minimal': 1024,
       'low': 4000,
@@ -132,10 +138,11 @@ export const useAIIntegration = () => {
       contents,
       generationConfig: {
         maxOutputTokens: maxTokens + effectiveBuffer,
-        thinking_config: thinkingLevel !== 'minimal' ? {
+        temperature: 1.0,  // Gemini 3 requer temperature 1.0
+        thinking_config: {
           thinking_budget: effectiveBuffer,
           includeThoughts: true
-        } : undefined
+        }
       }
     };
 
