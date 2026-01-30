@@ -78,6 +78,8 @@ function formatCurrency(value: number | undefined): string {
  */
 function formatDate(date: string | undefined): string {
   if (!date) return 'não informada';
+  // Se já está em formato legível (contém "/"), retornar direto
+  if (date.includes('/')) return date;
   try {
     return new Date(date).toLocaleDateString('pt-BR');
   } catch {
