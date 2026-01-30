@@ -18,7 +18,11 @@ import { AnalysisSelectorModal } from './AnalysisSelectorModal';
 import { useProvaOralStore } from '../../stores';
 import { useProvaOralAnalysis, useProvaOralAPI } from '../../hooks';
 
-export const InputForm: React.FC = () => {
+interface InputFormProps {
+  onAnalysisComplete?: () => void;
+}
+
+export const InputForm: React.FC<InputFormProps> = ({ onAnalysisComplete }) => {
   const {
     transcricao,
     sinteseProcesso,
@@ -48,8 +52,10 @@ export const InputForm: React.FC = () => {
         transcricao,
         sinteseProcesso,
       });
+      // Notificar que análise completou
+      onAnalysisComplete?.();
     }
-  }, [analyze, createAnalysis, transcricao, sinteseProcesso]);
+  }, [analyze, createAnalysis, transcricao, sinteseProcesso, onAnalysisComplete]);
 
   const handleClear = useCallback(() => {
     clearInputs();

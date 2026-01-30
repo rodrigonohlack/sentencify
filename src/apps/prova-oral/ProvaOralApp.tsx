@@ -3,7 +3,7 @@
  * @description Componente principal do App de Análise de Prova Oral
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Mic,
   Settings,
@@ -12,6 +12,7 @@ import {
   Scale,
   Moon,
   Sun,
+  ArrowLeft,
 } from 'lucide-react';
 import {
   LoginGate,
@@ -68,6 +69,8 @@ const AppContent: React.FC = () => {
     openHistorico,
     closeHistorico,
   } = useProvaOralStore();
+
+  const [showResults, setShowResults] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
@@ -152,30 +155,37 @@ const AppContent: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Input Section */}
+        {showResults && result ? (
+          /* Tela de Resultados */
           <div>
+            <div className="flex items-center gap-4 mb-6">
+              <Button
+                variant="ghost"
+                onClick={() => setShowResults(false)}
+                icon={<ArrowLeft className="w-4 h-4" />}
+              >
+                Voltar
+              </Button>
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <Scale className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                Resultados da Análise
+                <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+                  ({result.depoentes?.length || 0} depoentes, {result.analises?.length || 0} temas)
+                </span>
+              </h2>
+            </div>
+            <ResultsContainer />
+          </div>
+        ) : (
+          /* Tela de Entrada */
+          <div className="max-w-4xl mx-auto">
             <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
               <Mic className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               Entrada de Dados
             </h2>
-            <InputForm />
+            <InputForm onAnalysisComplete={() => setShowResults(true)} />
           </div>
-
-          {/* Results Section */}
-          <div>
-            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <Scale className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              Resultados da Análise
-              {result && (
-                <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
-                  ({result.depoentes?.length || 0} depoentes, {result.analises?.length || 0} temas)
-                </span>
-              )}
-            </h2>
-            <ResultsContainer />
-          </div>
-        </div>
+        )}
       </main>
 
       {/* Modals */}
