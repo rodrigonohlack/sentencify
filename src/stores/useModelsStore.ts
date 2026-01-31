@@ -1,7 +1,7 @@
 /**
  * @file useModelsStore.ts
  * @description Store Zustand para biblioteca de modelos (CRUD, busca, filtros)
- * @version 1.37.49
+ * @version 1.40.05
  *
  * Este store centraliza o estado da biblioteca de modelos que antes estava
  * no hook useModelLibrary.
@@ -97,6 +97,17 @@ interface ModelsStoreState {
   deleteAllConfirmText: string;
 
   // ─────────────────────────────────────────────────────────────────────────
+  // PREVIEW CONTEXTUAL (v1.40.05)
+  // Usado no GlobalEditorModal para preview/inserção de modelos
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /** Modelo atualmente em preview no editor contextual */
+  previewingModel: Model | null;
+
+  /** Função de inserção contextual (passada pelo editor ativo) */
+  contextualInsertFn: ((html: string) => void) | null;
+
+  // ─────────────────────────────────────────────────────────────────────────
   // ACTIONS - DADOS CORE
   // ─────────────────────────────────────────────────────────────────────────
   setModels: (models: Model[] | ((prev: Model[]) => Model[])) => void;
@@ -146,6 +157,13 @@ interface ModelsStoreState {
   // Form helpers
   resetForm: () => void;
   startEditingModel: (model: Model) => void;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ACTIONS - PREVIEW CONTEXTUAL (v1.40.05)
+  // ─────────────────────────────────────────────────────────────────────────
+  setPreviewingModel: (model: Model | null) => void;
+  setContextualInsertFn: (fn: ((html: string) => void) | null) => void;
+  clearContextualState: () => void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -209,6 +227,10 @@ export const useModelsStore = create<ModelsStoreState>()(
       modelToDelete: null,
       similarityWarning: null,
       deleteAllConfirmText: '',
+
+      // v1.40.05: Preview contextual
+      previewingModel: null,
+      contextualInsertFn: null,
 
       // ─────────────────────────────────────────────────────────────────────
       // ACTIONS - DADOS CORE
@@ -571,6 +593,38 @@ export const useModelsStore = create<ModelsStoreState>()(
           false,
           `startEditingModel/${model.id}`
         ),
+
+      // ─────────────────────────────────────────────────────────────────────
+      // ACTIONS - PREVIEW CONTEXTUAL (v1.40.05)
+      // ─────────────────────────────────────────────────────────────────────
+
+      setPreviewingModel: (model) =>
+        set(
+          (state) => {
+            state.previewingModel = model;
+          },
+          false,
+          model ? `setPreviewingModel/${model.id}` : 'setPreviewingModel/null'
+        ),
+
+      setContextualInsertFn: (fn) =>
+        set(
+          (state) => {
+            state.contextualInsertFn = fn;
+          },
+          false,
+          'setContextualInsertFn'
+        ),
+
+      clearContextualState: () =>
+        set(
+          (state) => {
+            state.previewingModel = null;
+            state.contextualInsertFn = null;
+          },
+          false,
+          'clearContextualState'
+        ),
     })),
     { name: 'ModelsStore' }
   )
@@ -622,5 +676,17 @@ export const selectReceivedModels = (state: ModelsStoreState): Model[] | null =>
 /** Selector: Retorna bibliotecas compartilhadas ativas (v1.37.49) */
 export const selectActiveSharedLibraries = (state: ModelsStoreState): SharedLibraryInfo[] | null =>
   state.activeSharedLibraries;
+
+/** Selector: Retorna modelo em preview contextual (v1.40.05) */
+export const selectPreviewingModel = (state: ModelsStoreState): Model | null =>
+  state.previewingModel;
+
+/** Selector: Verifica se há modelo em preview (v1.40.05) */
+export const selectHasPreviewingModel = (state: ModelsStoreState): boolean =>
+  state.previewingModel !== null;
+
+/** Selector: Retorna função de inserção contextual (v1.40.05) */
+export const selectContextualInsertFn = (state: ModelsStoreState): ((html: string) => void) | null =>
+  state.contextualInsertFn;
 
 export default useModelsStore;

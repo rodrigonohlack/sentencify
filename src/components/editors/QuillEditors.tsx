@@ -1,9 +1,10 @@
 /**
  * @file QuillEditors.tsx
  * @description Componentes de editor Quill (Base, Model, Decision, MiniRelatorio)
- * @version 1.36.94
+ * @version 1.40.05
  *
  * Extraído do App.tsx v1.36.93
+ * Refatorado para usar Zustand stores (v1.40.05)
  */
 
 import React from 'react';
@@ -15,6 +16,8 @@ import { useQuillEditor, sanitizeQuillHTML } from '../../hooks/useQuillEditor';
 import { useSpacingControl, useFontSizeControl, useFullscreen, useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
 import { useAIStore } from '../../stores/useAIStore';
+import { useEditorStore } from '../../stores/useEditorStore';
+import { useRegenerationStore } from '../../stores/useRegenerationStore';
 import { stripInlineColors } from '../../utils/color-stripper';
 import { FullscreenModelPanel } from '../panels';
 import { VersionSelect } from '../version';
@@ -666,23 +669,23 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
   placeholder = 'Digite aqui sua decisão...',
   topicTitle = '',
   topicCategory = '',
-  quillReady = false,
-  quillError = null,
+  quillReady: propsQuillReady,
+  quillError: propsQuillError,
   onRegenerate,
-  customInstruction = '',
-  onInstructionChange,
-  regenerating = false,
+  customInstruction: propsCustomInstruction,
+  onInstructionChange: propsOnInstructionChange,
+  regenerating: propsRegenerating,
   showRegenerateSection = false,
-  editorTheme,
-  toggleEditorTheme: _toggleEditorTheme2,
-  models = [],
+  editorTheme: propsEditorTheme,
+  toggleEditorTheme: propsToggleEditorTheme,
+  models: propsModels,
   onInsertModel,
   onPreviewModel,
   sanitizeHTML,
   topicRelatorio = '',
   onFindSuggestions,
   onSlashCommand,
-  isDirty = false,
+  isDirty: propsIsDirty,
   versioning = null,
   onBlur = null,
   onOpenFactsComparison = null
@@ -699,6 +702,39 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
   const { spacing, setSpacing } = useSpacingControl();
   const { fontSize, setFontSize } = useFontSizeControl();
   const { isFullscreen, toggleFullscreen, isSplitMode, toggleSplitMode, splitPosition, handleSplitDrag, containerRef } = useFullscreen();
+
+  // v1.40.05: Usar stores como fallback
+  const {
+    editorTheme: storeEditorTheme,
+    toggleEditorTheme: storeToggleEditorTheme,
+    quillReady: storeQuillReady,
+    quillError: storeQuillError,
+    isDirty: storeIsDirty
+  } = useEditorStore();
+
+  const {
+    dispositivoInstruction: storeDispositivoInstruction,
+    setDispositivoInstruction,
+    regeneratingDispositivo: storeRegeneratingDispositivo
+  } = useRegenerationStore();
+
+  // Usar props se passadas, senão usar store
+  const quillReady = propsQuillReady ?? storeQuillReady ?? false;
+  const quillError = propsQuillError ?? storeQuillError ?? null;
+  const editorTheme = propsEditorTheme ?? storeEditorTheme;
+  // toggleEditorTheme é disponível via props ou store mas não é usado diretamente neste componente
+  void propsToggleEditorTheme; // Evita warning de variável não utilizada
+  void storeToggleEditorTheme;
+  const isDirty = propsIsDirty ?? storeIsDirty ?? false;
+
+  // Para dispositivo, usar store de regeneração
+  const isDispositivo = topicTitle.toUpperCase() === 'DISPOSITIVO';
+  const customInstruction = propsCustomInstruction ?? (isDispositivo ? storeDispositivoInstruction : '') ?? '';
+  const onInstructionChange = propsOnInstructionChange ?? (isDispositivo ? setDispositivoInstruction : undefined);
+  const regenerating = propsRegenerating ?? (isDispositivo ? storeRegeneratingDispositivo : false) ?? false;
+
+  // Modelos: usar props se passados
+  const models = propsModels ?? [];
 
   // v1.38.5: Voice improvement com IA
   const aiSettings = useAIStore((state) => state.aiSettings);
@@ -1028,15 +1064,15 @@ export const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstanc
   onChange,
   onRegenerate,
   onSaveWithoutClosing,
-  customInstruction = '',
-  onInstructionChange,
-  regenerating = false,
+  customInstruction: propsCustomInstruction,
+  onInstructionChange: propsOnInstructionChange,
+  regenerating: propsRegenerating,
   topicTitle = '',
   label = 'Mini-relatório (editável):',
   showRegenerateSection = true,
-  quillReady = false,
-  quillError = null,
-  editorTheme,
+  quillReady: propsQuillReady,
+  quillError: propsQuillError,
+  editorTheme: propsEditorTheme,
   toggleEditorTheme: _toggleEditorTheme3,
   onSlashCommand
 }, ref) => {
@@ -1051,6 +1087,27 @@ export const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstanc
 
   const { spacing } = useSpacingControl();
   const { fontSize } = useFontSizeControl();
+
+  // v1.40.05: Usar stores como fallback
+  const {
+    editorTheme: storeEditorTheme,
+    quillReady: storeQuillReady,
+    quillError: storeQuillError
+  } = useEditorStore();
+
+  const {
+    relatorioInstruction: storeRelatorioInstruction,
+    setRelatorioInstruction,
+    regeneratingRelatorio: storeRegeneratingRelatorio
+  } = useRegenerationStore();
+
+  // Usar props se passadas, senão usar store
+  const quillReady = propsQuillReady ?? storeQuillReady ?? false;
+  const quillError = propsQuillError ?? storeQuillError ?? null;
+  const editorTheme = propsEditorTheme ?? storeEditorTheme;
+  const customInstruction = propsCustomInstruction ?? storeRelatorioInstruction ?? '';
+  const onInstructionChange = propsOnInstructionChange ?? setRelatorioInstruction;
+  const regenerating = propsRegenerating ?? storeRegeneratingRelatorio ?? false;
 
   // v1.38.5: Voice improvement com IA
   const aiSettings = useAIStore((state) => state.aiSettings);

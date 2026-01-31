@@ -1,10 +1,10 @@
 /**
  * @file GlobalEditorSection.tsx
  * @description Seção de editor global para tópico individual
- * @version 1.36.97
+ * @version 1.40.05
  *
  * Extraído de App.tsx para modularização.
- * Usado no GlobalEditorModal para edição de cada tópico.
+ * Refatorado para usar Zustand stores.
  *
  * @usedBy GlobalEditorModal
  */
@@ -15,6 +15,7 @@ import { FieldEditor, InlineFormattingToolbar } from './FieldEditor';
 import { VoiceButton } from '../VoiceButton';
 import { VersionSelect } from '../version';
 import { useAIStore } from '../../stores/useAIStore';
+import { useEditorStore } from '../../stores/useEditorStore';
 import { useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
 import type { GlobalEditorSectionProps, FieldEditorRef } from '../../types';
@@ -45,9 +46,9 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
   onFieldChange,
   onFieldFocus,
   onSlashCommand,
-  quillReady,
-  quillError,
-  editorTheme = 'dark',
+  quillReady: propsQuillReady,
+  quillError: propsQuillError,
+  editorTheme: propsEditorTheme,
   onOpenAIAssistant = null,
   onOpenProofsModal = null,
   onOpenJurisModal = null,
@@ -69,6 +70,18 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
   const { improveText } = useVoiceImprovement({ callAI });
+
+  // v1.40.05: Usar stores com fallback para props
+  const {
+    editorTheme: storeEditorTheme,
+    quillReady: storeQuillReady,
+    quillError: storeQuillError
+  } = useEditorStore();
+
+  // Usar props se passadas, senão usar store
+  const quillReady = propsQuillReady ?? storeQuillReady;
+  const quillError = propsQuillError ?? storeQuillError;
+  const editorTheme = propsEditorTheme ?? storeEditorTheme ?? 'dark';
 
   return (
     <div className="global-editor-section mb-6 border theme-border-secondary rounded-lg overflow-hidden">

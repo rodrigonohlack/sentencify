@@ -26,6 +26,11 @@ import LoginMagicModal from './components/LoginMagicModal';
 // useModalManagerCompat movido para src/hooks/useModalManager.ts (v1.36.78)
 import { useUIStore } from './stores/useUIStore';
 import { useModelsStore } from './stores/useModelsStore';
+// v1.40.05: Novas stores para editor e regeneração
+import { useEditorStore } from './stores/useEditorStore';
+// useRegenerationStore disponível para componentes que precisam de estado de regeneração
+// Componentes filhos importam diretamente quando necessário
+// import { useRegenerationStore } from './stores/useRegenerationStore';
 // useModelLibraryCompat movido para src/hooks/useModelLibrary.ts (v1.36.78)
 // useTopicManagerCompat movido para src/hooks/useTopicManager.ts (v1.36.77)
 // useProofManagerCompat movido para src/hooks/useProofManager.ts (v1.36.76)
@@ -580,6 +585,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // 🎨 v1.37.37: Sistema de Tema - extraído para useThemeManagement (FASE 35)
   const { appTheme, editorTheme, toggleAppTheme, toggleEditorTheme } = useThemeManagement();
 
+  // v1.40.05: Sincronizar stores com hooks existentes
+  const editorStoreSetTheme = useEditorStore((s) => s.setEditorTheme);
+  const editorStoreSetQuillReady = useEditorStore((s) => s.setQuillReady);
+  const editorStoreSetQuillError = useEditorStore((s) => s.setQuillError);
+
   // 🧠 v1.37.41: Estados NER - extraído para useNERManagement (FASE 40)
   const {
     nerModelReady, nerInitializing, nerDownloadProgress,
@@ -601,6 +611,21 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     quillReady, quillError,
     sanitizeHTML
   } = useQuillInitialization();
+
+  // v1.40.05: Sincronizar stores com valores dos hooks
+  React.useEffect(() => {
+    if (editorTheme) {
+      editorStoreSetTheme(editorTheme as 'dark' | 'light');
+    }
+  }, [editorTheme, editorStoreSetTheme]);
+
+  React.useEffect(() => {
+    editorStoreSetQuillReady(quillReady);
+  }, [quillReady, editorStoreSetQuillReady]);
+
+  React.useEffect(() => {
+    editorStoreSetQuillError(quillError);
+  }, [quillError, editorStoreSetQuillError]);
 
   // v1.32.24: Modal de changelog
   // v1.37.49: showChangelogModal migrado para useUIStore

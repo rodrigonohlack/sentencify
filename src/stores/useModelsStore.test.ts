@@ -1,10 +1,10 @@
 /**
  * @file useModelsStore.test.ts
  * @description Testes para o store de modelos (CRUD, busca, filtros)
- * @version 1.37.57
+ * @version 1.40.05
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   useModelsStore,
   selectModelsByCategory,
@@ -15,7 +15,11 @@ import {
   selectIsEditing,
   selectUseSemanticManualSearch,
   selectReceivedModels,
-  selectActiveSharedLibraries
+  selectActiveSharedLibraries,
+  // v1.40.05: Novos selectors para preview contextual
+  selectPreviewingModel,
+  selectHasPreviewingModel,
+  selectContextualInsertFn
 } from './useModelsStore';
 import type { Model } from '../types';
 
@@ -35,6 +39,8 @@ describe('useModelsStore', () => {
     store.setSuggestionsSource(null);
     store.setLoadingSuggestions(false);
     store.setUseSemanticManualSearch(false);
+    // v1.40.05: Reset contextual preview state
+    store.clearContextualState();
   });
 
   // Helper to create mock models
@@ -625,6 +631,178 @@ describe('useModelsStore', () => {
       store.setActiveSharedLibraries(libraries);
 
       expect(selectActiveSharedLibraries(useModelsStore.getState())).toEqual(libraries);
+    });
+
+    // v1.40.05: Testes para preview contextual
+    it('selectPreviewingModel should return previewing model', () => {
+      const store = useModelsStore.getState();
+      const model = createMockModel({ id: 'preview-1', title: 'Preview Model' });
+      store.setPreviewingModel(model);
+
+      expect(selectPreviewingModel(useModelsStore.getState())).toEqual(model);
+    });
+
+    it('selectHasPreviewingModel should return true when model is being previewed', () => {
+      const store = useModelsStore.getState();
+
+      expect(selectHasPreviewingModel(useModelsStore.getState())).toBe(false);
+
+      store.setPreviewingModel(createMockModel());
+      expect(selectHasPreviewingModel(useModelsStore.getState())).toBe(true);
+    });
+
+    it('selectContextualInsertFn should return insert function', () => {
+      const store = useModelsStore.getState();
+      const insertFn = vi.fn();
+      store.setContextualInsertFn(insertFn);
+
+      expect(selectContextualInsertFn(useModelsStore.getState())).toBe(insertFn);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONTEXTUAL PREVIEW TESTS (v1.40.05)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Contextual Preview (v1.40.05)', () => {
+    describe('setPreviewingModel', () => {
+      it('should set previewing model', () => {
+        const model = createMockModel({ id: 'model-1', title: 'Test Model' });
+        useModelsStore.getState().setPreviewingModel(model);
+
+        expect(useModelsStore.getState().previewingModel).toEqual(model);
+      });
+
+      it('should update previewing model', () => {
+        const model1 = createMockModel({ id: 'model-1', title: 'Model 1' });
+        const model2 = createMockModel({ id: 'model-2', title: 'Model 2' });
+
+        useModelsStore.getState().setPreviewingModel(model1);
+        expect(useModelsStore.getState().previewingModel?.title).toBe('Model 1');
+
+        useModelsStore.getState().setPreviewingModel(model2);
+        expect(useModelsStore.getState().previewingModel?.title).toBe('Model 2');
+      });
+
+      it('should clear previewing model by setting null', () => {
+        const model = createMockModel();
+        useModelsStore.getState().setPreviewingModel(model);
+        useModelsStore.getState().setPreviewingModel(null);
+
+        expect(useModelsStore.getState().previewingModel).toBeNull();
+      });
+    });
+
+    describe('setContextualInsertFn', () => {
+      it('should set contextual insert function', () => {
+        const insertFn = vi.fn();
+        useModelsStore.getState().setContextualInsertFn(insertFn);
+
+        expect(useModelsStore.getState().contextualInsertFn).toBe(insertFn);
+      });
+
+      it('should update contextual insert function', () => {
+        const insertFn1 = vi.fn();
+        const insertFn2 = vi.fn();
+
+        useModelsStore.getState().setContextualInsertFn(insertFn1);
+        expect(useModelsStore.getState().contextualInsertFn).toBe(insertFn1);
+
+        useModelsStore.getState().setContextualInsertFn(insertFn2);
+        expect(useModelsStore.getState().contextualInsertFn).toBe(insertFn2);
+      });
+
+      it('should clear contextual insert function by setting null', () => {
+        const insertFn = vi.fn();
+        useModelsStore.getState().setContextualInsertFn(insertFn);
+        useModelsStore.getState().setContextualInsertFn(null);
+
+        expect(useModelsStore.getState().contextualInsertFn).toBeNull();
+      });
+
+      it('should allow calling the stored function', () => {
+        const insertFn = vi.fn();
+        useModelsStore.getState().setContextualInsertFn(insertFn);
+
+        const storedFn = useModelsStore.getState().contextualInsertFn;
+        storedFn?.('<p>Test content</p>');
+
+        expect(insertFn).toHaveBeenCalledWith('<p>Test content</p>');
+      });
+    });
+
+    describe('clearContextualState', () => {
+      it('should clear both previewingModel and contextualInsertFn', () => {
+        const model = createMockModel();
+        const insertFn = vi.fn();
+
+        useModelsStore.getState().setPreviewingModel(model);
+        useModelsStore.getState().setContextualInsertFn(insertFn);
+
+        expect(useModelsStore.getState().previewingModel).not.toBeNull();
+        expect(useModelsStore.getState().contextualInsertFn).not.toBeNull();
+
+        useModelsStore.getState().clearContextualState();
+
+        expect(useModelsStore.getState().previewingModel).toBeNull();
+        expect(useModelsStore.getState().contextualInsertFn).toBeNull();
+      });
+
+      it('should not affect other state', () => {
+        const model = createMockModel({ id: 'lib-model' });
+        const previewModel = createMockModel({ id: 'preview-model' });
+
+        useModelsStore.getState().setModels([model]);
+        useModelsStore.getState().setPreviewingModel(previewModel);
+        useModelsStore.getState().clearContextualState();
+
+        // Library models should not be affected
+        expect(useModelsStore.getState().models).toHaveLength(1);
+        expect(useModelsStore.getState().models[0].id).toBe('lib-model');
+      });
+    });
+
+    describe('Combined Contextual Workflow', () => {
+      it('should handle typical preview workflow', () => {
+        const store = useModelsStore.getState();
+        const model = createMockModel({ id: 'preview-1', content: '<p>Model content</p>' });
+        const insertFn = vi.fn();
+
+        // 1. Set insert function from active editor
+        store.setContextualInsertFn(insertFn);
+        expect(useModelsStore.getState().contextualInsertFn).toBe(insertFn);
+
+        // 2. Open model preview
+        store.setPreviewingModel(model);
+        expect(useModelsStore.getState().previewingModel).toEqual(model);
+
+        // 3. Insert content from preview
+        const storedFn = useModelsStore.getState().contextualInsertFn;
+        storedFn?.(model.content);
+        expect(insertFn).toHaveBeenCalledWith('<p>Model content</p>');
+
+        // 4. Close preview
+        useModelsStore.getState().setPreviewingModel(null);
+        expect(useModelsStore.getState().previewingModel).toBeNull();
+
+        // 5. Editor closed - clear contextual state
+        useModelsStore.getState().clearContextualState();
+        expect(useModelsStore.getState().contextualInsertFn).toBeNull();
+      });
+
+      it('should handle switching between models in preview', () => {
+        const model1 = createMockModel({ id: 'model-1', title: 'First Model' });
+        const model2 = createMockModel({ id: 'model-2', title: 'Second Model' });
+
+        useModelsStore.getState().setPreviewingModel(model1);
+        expect(useModelsStore.getState().previewingModel?.id).toBe('model-1');
+
+        useModelsStore.getState().setPreviewingModel(model2);
+        expect(useModelsStore.getState().previewingModel?.id).toBe('model-2');
+
+        // Previous model should be completely replaced
+        expect(useModelsStore.getState().previewingModel?.title).toBe('Second Model');
+      });
     });
   });
 

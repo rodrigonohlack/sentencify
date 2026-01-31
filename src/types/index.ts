@@ -1785,8 +1785,86 @@ export interface QuillMiniRelatorioEditorProps {
   onSlashCommand?: OnSlashCommandCallback;
 }
 
-/** Props para DecisionEditorContainer - v1.35.94 */
+// ═══════════════════════════════════════════════════════════════════════════
+// EDITOR CALLBACKS INTERFACE (v1.40.05)
+// Agrupa callbacks do editor para reduzir prop drilling
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Interface para callbacks agrupados do editor
+ * Reduz prop drilling de ~12 callbacks → 1 objeto
+ */
+export interface EditorCallbacks {
+  /** Salva e fecha o editor */
+  onSave: () => void;
+  /** Cancela edição e fecha o editor */
+  onCancel: () => void;
+  /** Salva sem fechar o editor (auto-save) */
+  onSaveWithoutClosing?: () => void;
+  /** Mudança na fundamentação */
+  onFundamentacaoChange: (html: string) => void;
+  /** Mudança no relatório */
+  onRelatorioChange: (html: string) => void;
+  /** Mudança na categoria do tópico */
+  onCategoryChange: (category: string) => void;
+  /** Abre modal do assistente de IA */
+  onOpenAIAssistant?: () => void;
+  /** Abre modal de jurisprudência individual */
+  onOpenJurisModal?: () => void;
+  /** Extrai modelo do texto atual */
+  onExtractModel?: () => void;
+  /** Salva texto como modelo */
+  onSaveAsModel?: () => void;
+  /** Abre modal de confronto de fatos */
+  onOpenFactsComparison?: () => void;
+  /** Regenera o relatório */
+  onRegenerateRelatorio?: () => void;
+  /** Regenera o dispositivo */
+  onRegenerateDispositivo?: () => void;
+  /** Callback de seleção de texto */
+  onTextSelection?: (text: string) => void;
+  /** Callback de slash command */
+  onSlashCommand?: OnSlashCommandCallback;
+}
+
+/** Props para DecisionEditorContainer - v1.40.05 (refatorado para usar stores) */
 export interface DecisionEditorContainerProps {
+  /** Ref do editor Quill principal */
+  editorRef: React.RefObject<QuillInstance | null>;
+  /** Ref do editor de relatório */
+  relatorioRef: React.RefObject<QuillInstance | null>;
+  /** Ref da toolbar (opcional) */
+  toolbarRef?: React.RefObject<HTMLDivElement | null>;
+  /** Tópico sendo editado */
+  topic: Topic;
+  /** Callbacks agrupados */
+  callbacks: EditorCallbacks;
+  /** Sanitizador de HTML */
+  sanitizeHTML?: (html: string) => string;
+  /** Função para buscar sugestões de modelos */
+  findSuggestions?: (topic: Topic) => Promise<{ suggestions: Model[]; source: string | null }>;
+  /** Config do editor para o tópico */
+  getTopicEditorConfig: (title: string) => {
+    showCategory?: boolean;
+    showMiniRelatorio?: boolean;
+    showDecisionEditor?: boolean;
+    showRelatorio?: boolean;
+    showFundamentacao?: boolean;
+    relatorioConfig?: { label?: string; minHeight?: string; showRegenerateSection?: boolean };
+    editorConfig?: { label?: string; placeholder?: string; showRegenerateSection?: boolean };
+  };
+  /** Versionamento de campos */
+  versioning?: { saveVersion: (title: string, content: string) => void; getVersions: (title: string) => Promise<FieldVersion[]> } | null;
+  /** Estado de salvamento (loading) */
+  savingTopic?: boolean;
+  /** Estado de extração de modelo (loading) */
+  extractingModel?: boolean;
+  /** Mostrar botão de extração */
+  showExtractButton?: boolean;
+}
+
+/** Props legadas para DecisionEditorContainer (compatibilidade backwards) - v1.35.94 */
+export interface DecisionEditorContainerPropsLegacy {
   editorRef: React.RefObject<QuillInstance | null>;
   relatorioRef: React.RefObject<QuillInstance | null>;
   toolbarRef?: React.RefObject<HTMLDivElement | null>;

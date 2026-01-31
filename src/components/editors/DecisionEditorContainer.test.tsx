@@ -15,7 +15,9 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { DecisionEditorContainer } from './DecisionEditorContainer';
-import type { DecisionEditorContainerProps, Topic } from '../../types';
+import type { DecisionEditorContainerPropsLegacy, Topic } from '../../types';
+
+// v1.40.05: Usar interface legada para testes que usam props individuais
 
 // Mock QuillEditors
 vi.mock('./QuillEditors', () => ({
@@ -56,6 +58,46 @@ vi.mock('../../constants/styles', () => ({
   },
 }));
 
+// Mock Zustand stores (v1.40.05)
+vi.mock('../../stores/useEditorStore', () => ({
+  useEditorStore: () => ({
+    editorTheme: 'dark',
+    toggleEditorTheme: vi.fn(),
+    quillReady: true,
+    quillError: null,
+    isDirty: false,
+  }),
+}));
+
+vi.mock('../../stores/useRegenerationStore', () => ({
+  useRegenerationStore: () => ({
+    relatorioInstruction: '',
+    setRelatorioInstruction: vi.fn(),
+    regeneratingRelatorio: false,
+    dispositivoInstruction: '',
+    setDispositivoInstruction: vi.fn(),
+    regeneratingDispositivo: false,
+  }),
+}));
+
+vi.mock('../../stores/useTopicsStore', () => ({
+  useTopicsStore: () => ({
+    selectedTopics: [],
+    setSelectedTopics: vi.fn(),
+    extractedTopics: [],
+    setExtractedTopics: vi.fn(),
+    savingTopic: false,
+  }),
+}));
+
+vi.mock('../../stores/useModelsStore', () => ({
+  useModelsStore: () => ({
+    models: [],
+    setPreviewingModel: vi.fn(),
+    contextualInsertFn: null,
+  }),
+}));
+
 describe('DecisionEditorContainer', () => {
   // ═══════════════════════════════════════════════════════════════════════════
   // DEFAULT PROPS FACTORY
@@ -70,7 +112,7 @@ describe('DecisionEditorContainer', () => {
     ...overrides,
   });
 
-  const createMockProps = (overrides: Partial<DecisionEditorContainerProps> = {}): DecisionEditorContainerProps => ({
+  const createMockProps = (overrides: Partial<DecisionEditorContainerPropsLegacy> = {}): DecisionEditorContainerPropsLegacy => ({
     editorRef: { current: null },
     relatorioRef: { current: null },
     toolbarRef: { current: null },
