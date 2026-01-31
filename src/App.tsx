@@ -392,10 +392,6 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     targetField: modelGeneratorTargetField
   }), [modelGeneratorModalOpen, modelGeneratorTargetField]);
 
-  const openModelGenerator = React.useCallback((targetField: TargetField) => {
-    useUIStore.getState().openModelGenerator(targetField);
-  }, []);
-
   const closeModelGenerator = React.useCallback(() => {
     useUIStore.getState().closeModelGenerator();
   }, []);
@@ -591,19 +587,17 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const editorStoreSetQuillError = useEditorStore((s) => s.setQuillError);
 
   // 🧠 v1.37.41: Estados NER - extraído para useNERManagement (FASE 40)
+  // v1.40.07: Removidas variáveis não utilizadas (agora em ConfigModal)
   const {
-    nerModelReady, nerInitializing, nerDownloadProgress,
     detectingNames, nerEnabled, nerIncludeOrg,
-    setNerModelReady, setNerInitializing, setNerDownloadProgress,
-    setDetectingNames, setNerEnabled, setNerIncludeOrg
+    setNerModelReady, setDetectingNames
   } = useNERManagement();
 
   // 🔍 v1.37.43: Busca Semântica - extraído para useSemanticSearchManagement (FASE 42)
+  // v1.40.07: Removidas variáveis não utilizadas (agora em ConfigModal)
   const {
-    searchModelReady, searchInitializing, searchDownloadProgress,
-    searchEnabled,
-    setSearchModelReady, setSearchInitializing, setSearchDownloadProgress,
-    setSearchEnabled
+    searchModelReady,
+    setSearchModelReady
   } = useSemanticSearchManagement();
 
   // 📝 v1.37.42: Quill/DOMPurify - extraído para useQuillInitialization (FASE 43)
@@ -911,12 +905,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   });
 
   // Destructure para uso mais fácil
+  // v1.40.07: Removidas variáveis drag complementary (agora em ConfigModal via useDragDropTopics)
   const {
-    draggedComplementaryIndex, dragOverComplementaryIndex,
     customCollisionDetection,
     handleDndDragEnd,
-    handleComplementaryDragStart, handleComplementaryDragEnd, handleComplementaryDragOver,
-    handleComplementaryDragLeave, handleComplementaryDrop,
   } = dragDrop;
 
   // 🆕 v1.12.18: Helper para determinar modo padrão baseado nas configurações globais
@@ -1531,31 +1523,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     }
   }, [anonymizationEnabled]);
 
-  // v1.32.00: Handlers simplificados (modelos são baixados automaticamente)
-  const initNerModel = async () => {
-    if (nerInitializing || nerModelReady) return;
-    setNerInitializing(true);
-    setNerDownloadProgress(0);
-
-    // Listener para progresso do download
-    const unsubscribe = AIModelService.subscribe((_status, progress) => {
-      if (progress.ner > 0) {
-        setNerDownloadProgress(Math.round(progress.ner));
-      }
-    });
-
-    try {
-      await AIModelService.init('ner');
-      setNerModelReady(true);
-      showToast('Modelo NER pronto!', 'success');
-    } catch (err) {
-      showToast('Erro ao inicializar NER: ' + (err as Error).message, 'error');
-    } finally {
-      setNerInitializing(false);
-      setNerDownloadProgress(0);
-      unsubscribe();
-    }
-  };
+  // v1.40.07: initNerModel movido para ConfigModal (usa diretamente via hook)
 
   // 🔍 v1.32.00: HANDLERS: Busca Semântica (E5-base) - Simplificado
 
@@ -1572,84 +1540,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     checkSearchModel();
   }, []);
 
-  // v1.32.00: Inicializar modelo de busca com progresso
-  const initSearchModel = async () => {
-    if (searchInitializing || searchModelReady) return;
-    setSearchInitializing(true);
-    setSearchDownloadProgress(0);
-
-    // Listener para progresso do download
-    const unsubscribe = AIModelService.subscribe((_status, progress) => {
-      if (progress.search > 0) {
-        setSearchDownloadProgress(Math.round(progress.search));
-      }
-    });
-
-    try {
-      await AIModelService.init('search');
-      setSearchModelReady(true);
-      showToast('Modelo de busca pronto!', 'success');
-    } catch (err) {
-      showToast('Erro ao inicializar: ' + (err as Error).message, 'error');
-    } finally {
-      setSearchInitializing(false);
-      setSearchDownloadProgress(0);
-      unsubscribe();
-    }
-  };
-
-  // v1.32.00: Handler MASTER - controla carregamento/descarregamento do modelo E5
-  const handleSearchToggle = async (newEnabled: boolean) => {
-    setSearchEnabled(newEnabled);
-    localStorage.setItem('searchEnabled', JSON.stringify(newEnabled));
-
-    if (!newEnabled) {
-      // Desligando: descarregar modelo E5 da memória
-      if (AIModelService.isReady('search')) {
-        await AIModelService.unload('search');
-        setSearchModelReady(false);
-        console.log('[SEARCH] Modelo E5 descarregado');
-      }
-    }
-  };
-
-  // v1.32.17: NER agora é carregado sob demanda (ao clicar "Detectar Nomes")
-  // Removido auto-init para economizar ~2GB de RAM
-  // O modelo será carregado automaticamente em extractEntities() quando necessário
-
-  // v1.32.06: Auto-inicializar Search ao carregar página se estava ativado
-  React.useEffect(() => {
-    if (searchEnabled && !searchModelReady && !searchInitializing) {
-      if (import.meta.env.DEV) console.log('[SEARCH] Auto-inicializando modelo (estava ativado)...');
-      // Delay para não bloquear render inicial
-      const timer = setTimeout(() => {
-        initSearchModel();
-      }, 1000); // Delay maior para não competir com NER
-      return () => clearTimeout(timer);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // v1.28.00: Toggle individual de legislação (não afeta modelo E5)
-  // v1.28.01: Ao habilitar, também seta modo semântico como padrão na aba
-  // v1.35.74: Agora usa aiIntegration.setAiSettings (persiste automaticamente)
-  const handleLegislacaoToggle = (newEnabled: boolean) => {
-    aiIntegration.setAiSettings(prev => ({ ...prev, semanticSearchEnabled: newEnabled }));
-    if (newEnabled) localStorage.setItem('legislacaoSemanticMode', 'true');
-  };
-
-  // v1.28.01: Handler para toggle de Jurisprudência
-  // v1.35.74: Agora usa aiIntegration.setAiSettings
-  const handleJurisToggle = (newEnabled: boolean) => {
-    aiIntegration.setAiSettings(prev => ({ ...prev, jurisSemanticEnabled: newEnabled }));
-    if (newEnabled) localStorage.setItem('jurisSemanticMode', 'true');
-  };
-
-  // v1.28.01: Handler para toggle de Modelos
-  // v1.35.74: Agora usa aiIntegration.setAiSettings
-  const handleModelToggle = (newEnabled: boolean) => {
-    aiIntegration.setAiSettings(prev => ({ ...prev, modelSemanticEnabled: newEnabled }));
-    if (newEnabled) localStorage.setItem('modelSemanticMode', 'true');
-  };
+  // v1.40.07: initSearchModel, handleSearchToggle, handleLegislacaoToggle,
+  // handleJurisToggle, handleModelToggle movidos para ConfigModal (usa diretamente via hooks)
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // v1.37.9: Embeddings functions movidos para useEmbeddingsManagement hook
@@ -1702,10 +1594,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // v1.37.25: useExportImport - Hook extraído para exportar/importar configurações e modelos
+  // v1.40.07: exportAiSettings, importAiSettings movidos para ConfigModal
   // ═══════════════════════════════════════════════════════════════════════════════
   const {
-    exportAiSettings,
-    importAiSettings,
     exportModels,
     importModels
   } = useExportImport({
@@ -1809,26 +1700,18 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     searchModelReady,
   });
 
+  // v1.40.07: Variáveis não utilizadas removidas (agora em ConfigModal via useEmbeddingsManagement)
   const {
     embeddingsCount,
     jurisEmbeddingsCount,
-    generatingModelEmbeddings,
-    modelEmbeddingsProgress,
     showDataDownloadModal,
-    setShowDataDownloadModal,
     dataDownloadStatus,
-    setDataDownloadStatus,
     showEmbeddingsDownloadModal,
-    setShowEmbeddingsDownloadModal,
     embeddingsDownloadStatus,
     handleStartDataDownload,
     handleStartEmbeddingsDownload,
     handleDismissDataPrompt,
     handleDismissEmbeddingsPrompt,
-    clearEmbeddings,
-    clearJurisEmbeddings,
-    clearModelEmbeddings,
-    generateModelEmbeddings,
   } = embeddingsManagement;
 
   // v1.37.27: Funções do Slash Menu movidas para useSlashMenu hook
