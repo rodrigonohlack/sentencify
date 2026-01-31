@@ -95,4 +95,88 @@ router.get('/models', async (req, res) => {
   }
 });
 
+/**
+ * Streaming SSE para evitar timeout do Render
+ * POST /api/openai/stream
+ */
+router.post('/stream', async (req, res) => {
+  try {
+    const apiKey = req.headers['x-api-key'] || process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
+      return res.status(401).json({
+        error: { message: 'API key não fornecida' }
+      });
+    }
+
+    // Headers SSE
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({ ...req.body, stream: true, stream_options: { include_usage: true } })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      res.write(`data: ${JSON.stringify({ type: 'error', error: errorData.error })}\n\n`);
+      return res.end();
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let usage = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        res.write(`data: ${JSON.stringify({ type: 'done', usage })}\n\n`);
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          if (data === '[DONE]') continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              res.write(`data: ${JSON.stringify({ type: 'text', text: content })}\n\n`);
+            }
+            if (parsed.usage) {
+              usage = parsed.usage;
+            }
+          } catch (e) {
+            // Ignorar erros de parse
+          }
+        }
+      }
+    }
+
+    res.end();
+
+  } catch (error) {
+    if (!res.headersSent) {
+      res.status(500).json({ error: { message: error.message } });
+    } else {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: { message: error.message } })}\n\n`);
+      res.end();
+    }
+  }
+});
+
 export default router;

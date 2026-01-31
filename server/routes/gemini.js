@@ -111,4 +111,92 @@ router.get('/models', async (req, res) => {
   }
 });
 
+/**
+ * Streaming SSE para evitar timeout do Render
+ * POST /api/gemini/stream
+ */
+router.post('/stream', async (req, res) => {
+  try {
+    const { model, apiKey, request } = req.body;
+    const key = apiKey || process.env.GOOGLE_API_KEY;
+
+    if (!key) {
+      return res.status(401).json({
+        error: { message: 'API key não fornecida' }
+      });
+    }
+
+    // Headers SSE
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    // URL com streamGenerateContent e alt=sse
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${key}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      res.write(`data: ${JSON.stringify({ type: 'error', error: errorData.error })}\n\n`);
+      return res.end();
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let usage = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        res.write(`data: ${JSON.stringify({ type: 'done', usage })}\n\n`);
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const parsed = JSON.parse(line.slice(6));
+
+            // Extrair texto (ignorar thinking blocks)
+            const parts = parsed.candidates?.[0]?.content?.parts || [];
+            for (const part of parts) {
+              if (!part.thought && part.text) {
+                res.write(`data: ${JSON.stringify({ type: 'text', text: part.text })}\n\n`);
+              }
+            }
+
+            // Capturar usage metadata
+            if (parsed.usageMetadata) {
+              usage = parsed.usageMetadata;
+            }
+          } catch (e) {
+            // Ignorar erros de parse
+          }
+        }
+      }
+    }
+
+    res.end();
+
+  } catch (error) {
+    if (!res.headersSent) {
+      res.status(500).json({ error: { message: error.message } });
+    } else {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: { message: error.message } })}\n\n`);
+      res.end();
+    }
+  }
+});
+
 export default router;

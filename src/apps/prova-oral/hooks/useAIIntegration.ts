@@ -436,7 +436,7 @@ export const useAIIntegration = () => {
       };
     }
 
-    const response = await fetch(`${API_BASE}/api/claude-stream`, {
+    const response = await fetch(`${API_BASE}/api/claude/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -539,7 +539,7 @@ export const useAIIntegration = () => {
       requestBody.reasoning_effort = reasoningLevel;
     }
 
-    const response = await fetch(`${API_BASE}/api/openai-stream`, {
+    const response = await fetch(`${API_BASE}/api/openai/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -629,7 +629,7 @@ export const useAIIntegration = () => {
       });
     }
 
-    const response = await fetch(`${API_BASE}/api/grok-stream`, {
+    const response = await fetch(`${API_BASE}/api/grok/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -745,7 +745,7 @@ export const useAIIntegration = () => {
       request.systemInstruction = { parts: [{ text: systemPrompt }] };
     }
 
-    const response = await fetch(`${API_BASE}/api/gemini-stream`, {
+    const response = await fetch(`${API_BASE}/api/gemini/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
