@@ -69,7 +69,7 @@ export const StreamingModal: React.FC<StreamingModalProps> = ({
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <Loader2 className="w-8 h-8 text-purple-500 animate-spin mx-auto mb-3" />
-              <p className="text-sm theme-text-muted">Iniciando conexao...</p>
+              <p className="text-sm theme-text-muted">Iniciando conexão...</p>
             </div>
           </div>
         )}
@@ -89,7 +89,7 @@ export const StreamingModal: React.FC<StreamingModalProps> = ({
           </div>
         ) : (
           <div className="flex items-center gap-2 text-xs text-emerald-500 dark:text-emerald-400">
-            <span>Concluido!</span>
+            <span>Concluído!</span>
           </div>
         )}
       </div>
@@ -98,7 +98,7 @@ export const StreamingModal: React.FC<StreamingModalProps> = ({
       {!isComplete && (
         <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
           <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
-            Aguarde a conclusao da analise. Fechar esta janela pode interromper o processamento.
+            Aguarde a conclusão da análise. Fechar esta janela pode interromper o processamento.
           </p>
         </div>
       )}
