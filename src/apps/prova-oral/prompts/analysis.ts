@@ -62,7 +62,7 @@ INSTRUÇÕES DE ANÁLISE:
 1. Identifique todos os depoentes na transcrição (nome, qualificação, função se mencionada)
 2. Extraia síntese de cada depoimento no formato de ata judicial (terceira pessoa, pretérito) com timestamps (formato Xm YYs)
 3. Gere SÍNTESES CONDENSADAS: para cada depoente, um texto corrido único unindo TODAS as declarações (não resuma - inclua CADA UMA) com timestamps, separadas por ponto e vírgula
-4. Gere SÍNTESES POR TEMA: para cada tema, inclua TODAS as declarações relevantes de CADA depoente (não apenas uma por depoente)
+4. Gere SÍNTESES POR TEMA: para cada tema, inclua OBRIGATORIAMENTE todas as declarações que CARACTERIZAM aquele tema - período/função/dias da semana para Vínculo, horários/intervalos para Jornada. NÃO filtre baseado em palavras-chave!
 5. CRÍTICO: Incluir TANTO quem CONFIRMA quanto quem NEGA cada tema - negações são prova contrária essencial
 6. Para cada pedido/tema identificado na síntese, confronte: alegação do autor x defesa da ré x prova oral produzida
 7. Identifique contradições INTERNAS (mesmo depoente se contradiz) e EXTERNAS (entre depoentes ou com as peças)
@@ -81,11 +81,57 @@ INSTRUÇÕES DE ANÁLISE:
 - Se testemunha NEGOU horas extras → incluir no tema "Jornada"
 - Omitir negações distorce a análise probatória!
 
+## ❌ ERRO COMUM QUE VOCÊ NÃO DEVE COMETER!
+
+Ao gerar sintesesPorTema, NÃO filtre declarações baseado apenas em palavras-chave!
+
+**EXEMPLO DE ERRO (NÃO FAZER):**
+Tema: "Vínculo Empregatício"
+Declarações da testemunha na aba detalhada:
+- "trabalho como chapeiro de maio/2024 a julho/2025" (32m 14s)
+- "trabalhavam de terça a domingo" (33m 43s)
+- "autor se afastou por 4-5 dias e retornou" (35m 10s)
+
+❌ ERRADO - incluir apenas:
+"autor se afastou por 4-5 dias e retornou (35m 10s)"
+
+✅ CORRETO - incluir TODAS:
+"trabalho como chapeiro de maio/2024 a julho/2025 (32m 14s); trabalhavam de terça a domingo (33m 43s); autor se afastou por 4-5 dias e retornou (35m 10s)"
+
+**POR QUE?** As declarações sobre período ("maio/2024 a julho/2025") e dias da semana ("terça a domingo") são FUNDAMENTAIS para caracterizar vínculo empregatício:
+- Período = continuidade/não-eventualidade
+- Dias da semana = habitualidade
+- Ambos são requisitos do art. 3º da CLT!
+
+**EXEMPLO 2 - Jornada:**
+Declarações: "chegava às 8h" (12m 10s); "saía às 22h" (12m 45s); "não tinha intervalo" (13m 02s)
+❌ ERRADO: incluir apenas "não tinha intervalo"
+✅ CORRETO: incluir TODAS - horário de entrada e saída CARACTERIZAM jornada!
+
+**EXEMPLO 3 - Dano Moral:**
+Declarações: "ambiente muito tenso" (8m 20s); "chefe gritava com todos" (8m 45s); "autor saía chorando" (9m 10s)
+❌ ERRADO: incluir apenas "chefe gritava"
+✅ CORRETO: incluir TODAS - ambiente hostil e impacto emocional CARACTERIZAM dano moral!
+
+## REGRA DE OURO PARA QUALQUER TEMA
+
+Antes de decidir se uma declaração entra em um tema, pergunte-se:
+"Esta declaração ajuda a PROVAR ou REFUTAR este pedido?"
+
+Se SIM → INCLUA, mesmo que não mencione o tema explicitamente.
+
+Exemplos de raciocínio correto:
+- "trabalhava de terça a domingo" → prova habitualidade → INCLUI em Vínculo
+- "chegava às 8h e saía às 22h" → prova jornada → INCLUI em Horas Extras
+- "ambiente era muito tenso" → prova ambiente hostil → INCLUI em Dano Moral
+- "nunca vi xingamentos" → refuta alegação → INCLUI em Dano Moral (negação)
+- "recebia R$ 2.000 por fora" → prova salário → INCLUI em Diferenças Salariais
+
 ## ESCOPO DE RELEVÂNCIA POR TEMA - PEQUE POR INCLUSÃO!
 
 Na dúvida se uma declaração é relevante para um tema, INCLUA. É melhor incluir demais do que omitir prova relevante.
 
-**Tema "Vínculo Empregatício" deve incluir declarações sobre:**
+**Tema "Vínculo Empregatício" - OBRIGATÓRIO incluir declarações sobre:**
 - Período de trabalho (datas de início/fim)
 - Dias da semana trabalhados (habitualidade)
 - Função exercida
@@ -107,6 +153,24 @@ Na dúvida se uma declaração é relevante para um tema, INCLUA. É melhor incl
 - Tratamento discriminatório
 - Ambiente hostil
 - NEGAÇÕES de tais fatos (prova contrária)
+
+**Tema "Diferenças Salariais/Equiparação" - OBRIGATÓRIO incluir:**
+- Função exercida e atividades
+- Valores recebidos (por fora, comissões)
+- Comparação com outros empregados
+- Período na função
+
+**Tema "Rescisão Indireta/Justa Causa" - OBRIGATÓRIO incluir:**
+- Fatos que motivaram a rescisão
+- Datas dos eventos
+- Testemunhos sobre gravidade
+- Continuidade ou não do trabalho após o evento
+
+**Tema "Acidente de Trabalho/Doença Ocupacional" - OBRIGATÓRIO incluir:**
+- Descrição do acidente/condições de trabalho
+- Datas e local
+- Consequências/afastamentos
+- Uso de EPIs
 
 ## ⚠️ REPETIÇÃO ENTRE TEMAS É OBRIGATÓRIA!
 
@@ -269,6 +333,8 @@ IMPORTANTE:
 ☐ sintesesPorTema.declaracoes[].textoCorrente tem TODAS as declarações relevantes ao tema (não apenas 1)?
 ☐ sintesesPorTema inclui TODOS os depoentes que falaram sobre cada tema (tanto quem confirma quanto quem nega)?
 ☐ sintesesPorTema inclui declarações que CARACTERIZAM o tema (período, função, dias = Vínculo; horários = Jornada)?
+☐ VALIDAÇÃO PARA CADA TEMA: Compare sintesesPorTema[tema] com sinteses[] - está faltando alguma declaração que CARACTERIZA o tema?
+☐ VALIDAÇÃO: Para cada tema, verifique: horários/intervalos para Jornada, período/dias/função para Vínculo, ofensas/ambiente para Dano Moral, valores/pagamentos para Diferenças Salariais
 ☐ Declarações relevantes para múltiplos temas aparecem em TODOS os temas aplicáveis (repetição é esperada)?
 ☐ Em provaOral[], o campo "deponente" identifica QUEM disse (nunca vazio)?
 ☐ Todos os 7 arrays estão presentes no JSON?`;
