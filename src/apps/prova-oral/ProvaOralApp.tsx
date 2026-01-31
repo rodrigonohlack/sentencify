@@ -39,14 +39,21 @@ const useTheme = () => {
     return false;
   });
 
+  // Sincronizar data-theme attribute na inicialização
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  }, []);
+
   const toggleTheme = React.useCallback(() => {
     const newIsDark = !isDark;
     setIsDark(newIsDark);
     if (newIsDark) {
       document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
       localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
       localStorage.setItem('theme', 'light');
     }
   }, [isDark]);
