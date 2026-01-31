@@ -1,7 +1,9 @@
 /**
  * @file ConfigModal.tsx
- * @description Modal de configurações de IA extraído do App.tsx
- * @version 1.37.30
+ * @description Modal de configurações de IA - Refatorado para usar hooks/stores diretamente
+ * @version 1.40.06
+ *
+ * v1.40.06: Refatoração MAJOR - eliminou 52 props via import direto de hooks/stores
  *
  * 18 seções:
  * 1. Provedor de IA (Claude/Gemini/OpenAI/Grok)
@@ -30,9 +32,22 @@ import { ProviderIcon } from '../ui/ProviderIcon';
 import { CSS } from '../../constants/styles';
 import AIModelService from '../../services/AIModelService';
 import { useAIStore } from '../../stores/useAIStore';
+import { useUIStore } from '../../stores/useUIStore';
+import { useModelsStore } from '../../stores/useModelsStore';
 import { EmbeddingsCDNService } from '../../services/EmbeddingsServices';
+import { API_BASE } from '../../constants/api';
+import {
+  useNERManagement,
+  useSemanticSearchManagement,
+  useEmbeddingsManagement,
+  useLegislacao,
+  useJurisprudencia,
+  useDragDropTopics,
+  useExportImport,
+  useIndexedDB,
+  VOICE_MODEL_CONFIG
+} from '../../hooks';
 import type {
-  ConfigModalProps,
   AIProvider,
   GeminiThinkingLevel,
   QuickPrompt,
@@ -40,19 +55,70 @@ import type {
   TopicCategory,
   VoiceImprovementModel
 } from '../../types';
-import { VOICE_MODEL_CONFIG } from '../../hooks/useVoiceImprovement';
 
-export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
+// ═══════════════════════════════════════════════════════════════════════════════
+// TIPOS - Props simplificadas (v1.40.06)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface ConfigModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HELPER - getModelDisplayName (extraído de useAIIntegration)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const getModelDisplayName = (modelId: string): string => {
+  const models: Record<string, string> = {
+    // Claude
+    'claude-sonnet-4-20250514': 'Claude Sonnet 4.5',
+    'claude-opus-4-5-20251101': 'Claude Opus 4.5',
+    // Gemini 3
+    'gemini-3-flash-preview': 'Gemini 3 Flash',
+    'gemini-3-pro-preview': 'Gemini 3 Pro',
+    // OpenAI GPT-5.2
+    'gpt-5.2': 'GPT-5.2 Thinking',
+    'gpt-5.2-chat-latest': 'GPT-5.2 Instant',
+    // xAI Grok 4.1
+    'grok-4-1-fast-reasoning': 'Grok 4.1 Fast',
+    'grok-4-1-fast-non-reasoning': 'Grok 4.1 Instant'
+  };
+  return models[modelId] || modelId;
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMPONENTE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // STORES (Zustand)
+  // ─────────────────────────────────────────────────────────────────────────────
+  const aiSettings = useAIStore((s) => s.aiSettings);
+  const setAiSettings = useAIStore((s) => s.setAiSettings);
+  const tokenMetrics = useAIStore((s) => s.tokenMetrics);
+  const apiTestStatuses = useAIStore((s) => s.apiTestStatuses);
+  const setApiTestStatus = useAIStore((s) => s.setApiTestStatus);
+
+  const showToast = useUIStore((s) => s.showToast);
+  const openModelGenerator = useUIStore((s) => s.openModelGenerator);
+  const setShowDataDownloadModal = useUIStore((s) => s.setShowDataDownloadModal);
+  const setShowEmbeddingsDownloadModal = useUIStore((s) => s.setShowEmbeddingsDownloadModal);
+
+  const modelsCount = useModelsStore((s) => s.models.length);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // HOOKS
+  // ─────────────────────────────────────────────────────────────────────────────
+  const legislacao = useLegislacao();
+  const jurisprudencia = useJurisprudencia();
+  const legislacaoCount = legislacao.artigos?.length || 0;
+  const jurisprudenciaCount = jurisprudencia.precedentes?.length || 0;
+
+  // NER Management
+  const nerManagement = useNERManagement();
   const {
-    isOpen,
-    onClose,
-    aiSettings,
-    setAiSettings,
-    tokenMetrics,
-    getModelDisplayName,
-    modelsCount,
-    legislacaoCount,
-    jurisprudenciaCount,
     nerEnabled,
     setNerEnabled,
     nerIncludeOrg,
@@ -60,48 +126,184 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
     nerModelReady,
     setNerModelReady,
     nerInitializing,
+    setNerInitializing,
     nerDownloadProgress,
-    initNerModel,
+    setNerDownloadProgress
+  } = nerManagement;
+
+  // Semantic Search Management
+  const searchManagement = useSemanticSearchManagement();
+  const {
     searchEnabled,
-    setSearchEnabled: _setSearchEnabled,
+    setSearchEnabled,
     searchModelReady,
     setSearchModelReady,
     searchInitializing,
+    setSearchInitializing,
     searchDownloadProgress,
-    initSearchModel,
-    handleSearchToggle,
-    handleLegislacaoToggle,
-    handleJurisToggle,
-    handleModelToggle,
+    setSearchDownloadProgress
+  } = searchManagement;
+
+  // IndexedDB (para saveModels)
+  const indexedDB = useIndexedDB();
+
+  // Models store para embeddings
+  const models = useModelsStore((s) => s.models);
+  const setModels = useModelsStore((s) => s.setModels);
+
+  // Embeddings Management
+  const embeddingsManagement = useEmbeddingsManagement({
+    showToast,
+    modelLibrary: { models, setModels },
+    legislacao: { reloadArtigos: legislacao.reloadArtigos },
+    jurisprudencia: { reloadPrecedentes: jurisprudencia.reloadPrecedentes },
+    indexedDB: { saveModels: indexedDB.saveModels },
+    searchModelReady
+  });
+
+  const {
     embeddingsCount,
     jurisEmbeddingsCount,
-    modelEmbeddingsCount,
-    generatingModelEmbeddings,
-    modelEmbeddingsProgress,
     clearEmbeddings,
     clearJurisEmbeddings,
     clearModelEmbeddings,
     generateModelEmbeddings,
-    setShowDataDownloadModal,
-    setShowEmbeddingsDownloadModal,
-    setDataDownloadStatus,
-    exportAiSettings,
-    importAiSettings,
-    openModelGenerator,
-    showToast,
+    generatingModelEmbeddings,
+    modelEmbeddingsProgress,
+    setDataDownloadStatus
+  } = embeddingsManagement;
+
+  // Calcular modelEmbeddingsCount
+  const modelEmbeddingsCount = React.useMemo(() =>
+    models.filter(m => m.embedding && m.embedding.length === 768).length,
+    [models]
+  );
+
+  // Drag & Drop para tópicos complementares
+  const dragDrop = useDragDropTopics({
+    selectedTopics: [], // Não usado para complementares
+    setSelectedTopics: () => {}, // Não usado para complementares
+    aiIntegration: { aiSettings, setAiSettings }
+  });
+
+  const {
     draggedComplementaryIndex,
     dragOverComplementaryIndex,
     handleComplementaryDragStart,
     handleComplementaryDragEnd,
     handleComplementaryDragOver,
     handleComplementaryDragLeave,
-    handleComplementaryDrop,
-    API_BASE
-  } = props;
+    handleComplementaryDrop
+  } = dragDrop;
 
-  // v1.38.24: API test status direto do store (removido props intermediárias)
-  const apiTestStatuses = useAIStore((s) => s.apiTestStatuses);
-  const setApiTestStatus = useAIStore((s) => s.setApiTestStatus);
+  // Export/Import
+  const exportImport = useExportImport({
+    modelLibrary: {
+      models,
+      selectedCategory: 'all',
+      setModels,
+      setHasUnsavedChanges: () => {}
+    },
+    aiIntegration: { aiSettings, setAiSettings },
+    cloudSync: null,
+    searchModelReady,
+    showToast,
+    setError: (err) => showToast(err, 'error'),
+    generateModelId: () => `model_${Date.now()}_${Math.random().toString(36).slice(2)}`
+  });
+
+  const { exportAiSettings, importAiSettings } = exportImport;
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // HANDLERS LOCAIS (antes eram passados como props)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // initNerModel - inicializar modelo NER
+  const initNerModel = React.useCallback(async () => {
+    if (nerInitializing || nerModelReady) return;
+    setNerInitializing(true);
+    setNerDownloadProgress(0);
+
+    const unsubscribe = AIModelService.subscribe((_status, progress) => {
+      if (progress.ner > 0) {
+        setNerDownloadProgress(Math.round(progress.ner));
+      }
+    });
+
+    try {
+      await AIModelService.init('ner');
+      setNerModelReady(true);
+    } catch (err) {
+      console.error('[NER] Erro ao inicializar:', err);
+      showToast('Erro ao carregar modelo NER: ' + (err as Error).message, 'error');
+    } finally {
+      setNerInitializing(false);
+      unsubscribe();
+    }
+  }, [nerInitializing, nerModelReady, setNerInitializing, setNerDownloadProgress, setNerModelReady, showToast]);
+
+  // initSearchModel - inicializar modelo de busca semântica
+  const initSearchModel = React.useCallback(async () => {
+    if (searchInitializing || searchModelReady) return;
+    setSearchInitializing(true);
+    setSearchDownloadProgress(0);
+
+    const unsubscribe = AIModelService.subscribe((_status, progress) => {
+      if (progress.search > 0) {
+        setSearchDownloadProgress(Math.round(progress.search));
+      }
+    });
+
+    try {
+      await AIModelService.init('search');
+      setSearchModelReady(true);
+    } catch (err) {
+      console.error('[Search] Erro ao inicializar:', err);
+      showToast('Erro ao carregar modelo de busca: ' + (err as Error).message, 'error');
+    } finally {
+      setSearchInitializing(false);
+      unsubscribe();
+    }
+  }, [searchInitializing, searchModelReady, setSearchInitializing, setSearchDownloadProgress, setSearchModelReady, showToast]);
+
+  // handleSearchToggle - toggle master de busca semântica
+  const handleSearchToggle = React.useCallback(async (newEnabled: boolean) => {
+    setSearchEnabled(newEnabled);
+    localStorage.setItem('searchEnabled', JSON.stringify(newEnabled));
+
+    if (!newEnabled) {
+      // Desligando: descarregar modelo E5 da memória
+      if (AIModelService.isReady('search')) {
+        console.log('[E5] Descarregando modelo...');
+        AIModelService.unload('search').then(() => {
+          setSearchModelReady(false);
+        });
+      }
+    } else {
+      // Ligando: inicializar modelo E5 se necessário
+      if (!searchModelReady && !searchInitializing) {
+        await initSearchModel();
+      }
+    }
+  }, [setSearchEnabled, searchModelReady, searchInitializing, setSearchModelReady, initSearchModel]);
+
+  // handleLegislacaoToggle
+  const handleLegislacaoToggle = React.useCallback((newEnabled: boolean) => {
+    setAiSettings(prev => ({ ...prev, semanticSearchEnabled: newEnabled }));
+    if (newEnabled) localStorage.setItem('legislacaoSemanticMode', 'true');
+  }, [setAiSettings]);
+
+  // handleJurisToggle
+  const handleJurisToggle = React.useCallback((newEnabled: boolean) => {
+    setAiSettings(prev => ({ ...prev, jurisSemanticEnabled: newEnabled }));
+    if (newEnabled) localStorage.setItem('jurisSemanticMode', 'true');
+  }, [setAiSettings]);
+
+  // handleModelToggle
+  const handleModelToggle = React.useCallback((newEnabled: boolean) => {
+    setAiSettings(prev => ({ ...prev, modelSemanticEnabled: newEnabled }));
+    if (newEnabled) localStorage.setItem('modelSemanticMode', 'true');
+  }, [setAiSettings]);
 
   // v1.38.46: Auto-reset modelo de voice improvement quando key do provider é removida
   React.useEffect(() => {
@@ -129,7 +331,11 @@ export const ConfigModal: React.FC<ConfigModalProps> = (props) => {
         });
       }
     }
-  }, [aiSettings.apiKeys, aiSettings.voiceImprovement?.enabled, aiSettings.voiceImprovement?.model]);
+  }, [aiSettings, setAiSettings]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────────────────────
 
   if (!isOpen) return null;
 

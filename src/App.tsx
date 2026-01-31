@@ -3088,61 +3088,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       />
 
 
-      {/* v1.37.30: ConfigModal extraído para src/components/modals/ConfigModal.tsx */}
+      {/* v1.40.06: ConfigModal refatorado - usa hooks/stores diretamente (52 → 2 props) */}
       <ConfigModal
         isOpen={modals.settings}
         onClose={() => closeModal('settings')}
-        aiSettings={aiIntegration.aiSettings}
-        setAiSettings={aiIntegration.setAiSettings}
-        tokenMetrics={aiIntegration.tokenMetrics}
-        getModelDisplayName={aiIntegration.getModelDisplayName}
-        modelsCount={modelLibrary.models.length}
-        legislacaoCount={legislacao.artigos?.length || 0}
-        jurisprudenciaCount={jurisprudencia.precedentes?.length || 0}
-        nerEnabled={nerEnabled}
-        setNerEnabled={setNerEnabled}
-        nerIncludeOrg={nerIncludeOrg}
-        setNerIncludeOrg={setNerIncludeOrg}
-        nerModelReady={nerModelReady}
-        setNerModelReady={setNerModelReady}
-        nerInitializing={nerInitializing}
-        nerDownloadProgress={nerDownloadProgress}
-        initNerModel={initNerModel}
-        searchEnabled={searchEnabled}
-        setSearchEnabled={setSearchEnabled}
-        searchModelReady={searchModelReady}
-        setSearchModelReady={setSearchModelReady}
-        searchInitializing={searchInitializing}
-        searchDownloadProgress={searchDownloadProgress}
-        initSearchModel={initSearchModel}
-        handleSearchToggle={handleSearchToggle}
-        handleLegislacaoToggle={handleLegislacaoToggle}
-        handleJurisToggle={handleJurisToggle}
-        handleModelToggle={handleModelToggle}
-        embeddingsCount={embeddingsCount}
-        jurisEmbeddingsCount={jurisEmbeddingsCount}
-        modelEmbeddingsCount={modelEmbeddingsCount}
-        generatingModelEmbeddings={generatingModelEmbeddings}
-        modelEmbeddingsProgress={modelEmbeddingsProgress}
-        clearEmbeddings={clearEmbeddings}
-        clearJurisEmbeddings={clearJurisEmbeddings}
-        clearModelEmbeddings={clearModelEmbeddings}
-        generateModelEmbeddings={generateModelEmbeddings}
-        setShowDataDownloadModal={setShowDataDownloadModal}
-        setShowEmbeddingsDownloadModal={setShowEmbeddingsDownloadModal}
-        setDataDownloadStatus={setDataDownloadStatus}
-        exportAiSettings={exportAiSettings}
-        importAiSettings={importAiSettings}
-        openModelGenerator={openModelGenerator}
-        showToast={showToast}
-        draggedComplementaryIndex={draggedComplementaryIndex}
-        dragOverComplementaryIndex={dragOverComplementaryIndex}
-        handleComplementaryDragStart={handleComplementaryDragStart}
-        handleComplementaryDragEnd={handleComplementaryDragEnd}
-        handleComplementaryDragOver={handleComplementaryDragOver}
-        handleComplementaryDragLeave={handleComplementaryDragLeave}
-        handleComplementaryDrop={handleComplementaryDrop}
-        API_BASE={API_BASE}
       />
 
       {/* v1.38.51: ChangelogModal e DoubleCheckReviewModal movidos para ModalRoot */}

@@ -2505,81 +2505,13 @@ export interface AnonymizationNamesModalProps {
 
 export type APITestStatus = 'testing' | 'ok' | 'error' | null;
 
+/**
+ * v1.40.06: ConfigModalProps simplificado
+ * Anteriormente tinha 52 props. Agora ConfigModal importa hooks/stores diretamente.
+ */
 export interface ConfigModalProps {
-  // Modal control
   isOpen: boolean;
   onClose: () => void;
-
-  // AI Integration (from useAIIntegration)
-  aiSettings: AISettings;
-  setAiSettings: (settings: AISettings | ((prev: AISettings) => AISettings)) => void;
-  tokenMetrics: TokenMetrics;
-  getModelDisplayName: (modelId: string) => string;
-
-  // Model Library (subset)
-  modelsCount: number;
-
-  // Legislação/Jurisprudência counts
-  legislacaoCount: number;
-  jurisprudenciaCount: number;
-
-  // NER states
-  nerEnabled: boolean;
-  setNerEnabled: (v: boolean) => void;
-  nerIncludeOrg: boolean;
-  setNerIncludeOrg: (v: boolean) => void;
-  nerModelReady: boolean;
-  setNerModelReady: (v: boolean) => void;
-  nerInitializing: boolean;
-  nerDownloadProgress: number;
-  initNerModel: () => Promise<void>;
-
-  // Search states (E5-base)
-  searchEnabled: boolean;
-  setSearchEnabled: (v: boolean) => void;
-  searchModelReady: boolean;
-  setSearchModelReady: (v: boolean) => void;
-  searchInitializing: boolean;
-  searchDownloadProgress: number;
-  initSearchModel: () => Promise<void>;
-  handleSearchToggle: (enabled: boolean) => Promise<void>;
-  handleLegislacaoToggle: (enabled: boolean) => void;
-  handleJurisToggle: (enabled: boolean) => void;
-  handleModelToggle: (enabled: boolean) => void;
-
-  // Embeddings management
-  embeddingsCount: number;
-  jurisEmbeddingsCount: number;
-  modelEmbeddingsCount: number;
-  generatingModelEmbeddings: boolean;
-  modelEmbeddingsProgress: { current: number; total: number };
-  clearEmbeddings: () => void;
-  clearJurisEmbeddings: () => void;
-  clearModelEmbeddings: () => void;
-  generateModelEmbeddings: () => Promise<void>;
-  setShowDataDownloadModal: (v: boolean) => void;
-  setShowEmbeddingsDownloadModal: (v: boolean) => void;
-  setDataDownloadStatus: React.Dispatch<React.SetStateAction<DataDownloadStatusExtended>>;
-
-  // Export/Import
-  exportAiSettings: () => void;
-  importAiSettings: (e: React.ChangeEvent<HTMLInputElement>) => void;
-
-  // Callbacks
-  openModelGenerator: (field: 'modeloRelatorio' | 'modeloDispositivo' | 'modeloTopicoRelatorio' | 'estiloRedacao') => void;
-  showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
-
-  // Drag-drop for complementary topics
-  draggedComplementaryIndex: number | null;
-  dragOverComplementaryIndex: number | null;
-  handleComplementaryDragStart: (e: React.DragEvent<HTMLElement>, idx: number) => void;
-  handleComplementaryDragEnd: (e: React.DragEvent<HTMLElement>) => void;
-  handleComplementaryDragOver: (e: React.DragEvent<HTMLElement>, idx: number) => void;
-  handleComplementaryDragLeave: (e: React.DragEvent<HTMLElement>) => void;
-  handleComplementaryDrop: (e: React.DragEvent<HTMLElement>, idx: number) => void;
-
-  // Constants
-  API_BASE: string;
 }
 
 export interface ErrorBoundaryProps {
