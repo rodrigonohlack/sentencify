@@ -257,11 +257,16 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
           || (params.nomeArquivoContestacao ? [params.nomeArquivoContestacao] : []);
 
         // Criar objeto SavedAnalysis para adicionar ao store
+        // Priorizar número do arquivo (sempre correto) sobre extração da IA
+        const numeroFromFilename = extractNumeroFromFilename(params.nomeArquivoPeticao);
+        const numeroFromIA = params.resultado.identificacao?.numeroProcesso;
+        const isValidNumeroFromIA = numeroFromIA
+          && !numeroFromIA.toLowerCase().includes('não informado')
+          && !numeroFromIA.toLowerCase().includes('nao informado');
+
         const newAnalysis: SavedAnalysis = {
           id: data.id,
-          numeroProcesso: params.resultado.identificacao?.numeroProcesso
-            || extractNumeroFromFilename(params.nomeArquivoPeticao)
-            || null,
+          numeroProcesso: numeroFromFilename || (isValidNumeroFromIA ? numeroFromIA : null),
           reclamante: params.resultado.identificacao?.reclamantes?.[0] || null,
           reclamadas: params.resultado.identificacao?.reclamadas || [],
           nomeArquivoPeticao: params.nomeArquivoPeticao || null,
