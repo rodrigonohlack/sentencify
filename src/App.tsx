@@ -1310,6 +1310,16 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     return () => clearTimeout(timeoutId);
   }, [useSemanticManualSearch, modelLibrary.manualSearchTerm, searchModelReady, modelLibrary.models]);
 
+  // v1.40.09: Toast quando modelo de busca fica pronto
+  const searchModelReadyPrevRef = useRef(false);
+  useEffect(() => {
+    // Só mostrar toast quando muda de false para true (não na montagem)
+    if (searchModelReady && !searchModelReadyPrevRef.current) {
+      showToast('Modelo de busca pronto!', 'success');
+    }
+    searchModelReadyPrevRef.current = searchModelReady;
+  }, [searchModelReady, showToast]);
+
   // 📝 v1.37.42: Quill.js Loader movido para useQuillInitialization (FASE 43)
 
   useEffect(() => {
