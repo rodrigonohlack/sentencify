@@ -384,3 +384,7 @@ export type { UseGoogleDriveActionsProps, UseGoogleDriveActionsReturn } from './
 // Proof Modal Callbacks (v1.38.52 - AddProofTextModal, AnonymizationNamesModal, ProofAnalysisModal, DeleteProofModal)
 export { useProofModalCallbacks } from './useProofModalCallbacks';
 export type { UseProofModalCallbacksProps, UseProofModalCallbacksReturn } from './useProofModalCallbacks';
+
+// Prova Oral Import hook (v1.39.08 - importar análises de prova oral)
+export { useProvaOralImport } from './useProvaOralImport';
+export type { UseProvaOralImportReturn } from './useProvaOralImport';

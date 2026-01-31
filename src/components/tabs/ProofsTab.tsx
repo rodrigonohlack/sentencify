@@ -11,12 +11,12 @@
  */
 
 import React from 'react';
-import { Upload, FileText, Scale, AlertCircle } from 'lucide-react';
+import { Upload, FileText, Scale, AlertCircle, Mic } from 'lucide-react';
 import { ProofCard } from '../cards';
 import { useUIStore } from '../../stores/useUIStore';
 import { useTopicsStore } from '../../stores/useTopicsStore';
 import { useAIStore } from '../../stores/useAIStore';
-import { useThemeManagement } from '../../hooks';
+import { useThemeManagement, useAuthMagicLink } from '../../hooks';
 import type { ProofsTabProps, Proof } from '../../types';
 
 export const ProofsTab: React.FC<ProofsTabProps> = ({
@@ -33,6 +33,7 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
   const extractedTopics = useTopicsStore((s) => s.extractedTopics);
   const aiSettings = useAIStore((s) => s.aiSettings);
   const { appTheme } = useThemeManagement();
+  const { isAuthenticated } = useAuthMagicLink();
 
   return (
     <div className="space-y-6">
@@ -92,6 +93,17 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
               <FileText className="w-4 h-4" />
               Colar Texto como Prova
             </button>
+
+            {/* Botão Importar Análise de Prova Oral - visível apenas se autenticado */}
+            {isAuthenticated && (
+              <button
+                onClick={() => openModal('importProvaOralList')}
+                className="w-full py-3 rounded-lg transition-colors flex items-center justify-center gap-2 bg-purple-600/20 border border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-500/50 text-purple-300"
+              >
+                <Mic className="w-4 h-4" />
+                Importar Análise de Prova Oral
+              </button>
+            )}
           </div>
         </div>
 

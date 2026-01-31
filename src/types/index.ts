@@ -151,10 +151,11 @@ export type Proof = ProofFile | ProofText;
 
 export interface ProofAnalysisResult {
   id: string;
-  type: 'contextual' | 'livre';
+  type: 'contextual' | 'livre' | 'importada';
   result: string;
   topicTitle?: string;
   timestamp: string;
+  sourceProvaOralId?: string;  // Rastreabilidade para análises importadas de Prova Oral
 }
 
 /** Limite máximo de análises por prova */
@@ -582,7 +583,9 @@ export type ModalKey =
   | 'regenerateRelatorioCustom'
   | 'bulkModal'
   | 'factsComparisonIndividual' // v1.36.21: Confronto de Fatos (editor individual)
-  | 'driveFiles'; // v1.37.49: Modal de arquivos do Google Drive
+  | 'driveFiles' // v1.37.49: Modal de arquivos do Google Drive
+  | 'importProvaOralList' // v1.39.08: Lista de análises de Prova Oral para importar
+  | 'importProvaOralSections'; // v1.39.08: Seleção de seções da Prova Oral
 
 export type ModalState = Record<ModalKey, boolean>;
 

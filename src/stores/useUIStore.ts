@@ -43,7 +43,8 @@ const ALL_MODAL_KEYS: ModalKey[] = [
   'linkProof', 'proofAnalysis', 'globalEditor', 'jurisIndividual', 'factsComparisonIndividual',
   'proofTextAnonymization', 'proofExtractionAnonymization', 'sentenceReview', 'sentenceReviewResult',
   'logout', 'shareLibrary', 'changelog', 'topicCuration', 'modelGenerator',
-  'regenerateRelatorioCustom', 'bulkModal', 'driveFiles'
+  'regenerateRelatorioCustom', 'bulkModal', 'driveFiles',
+  'importProvaOralList', 'importProvaOralSections'  // v1.39.08: Importar Prova Oral
 ];
 
 /**

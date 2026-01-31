@@ -58,3 +58,7 @@ export { DataDownloadModal, EmbeddingsDownloadModal } from './DownloadModals';
 // ModalRoot (v1.37.73)
 export { ModalRoot } from './ModalRoot';
 export type { ModalRootProps } from './ModalRoot';
+
+// Import Prova Oral Modals (v1.39.08)
+export { ImportProvaOralListModal, ImportProvaOralSectionsModal } from './ImportProvaOralModals';
+export type { ImportProvaOralListModalProps, ImportProvaOralSectionsModalProps } from './ImportProvaOralModals';

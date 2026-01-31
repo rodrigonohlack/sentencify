@@ -42,7 +42,7 @@ import { useModelsStore } from './stores/useModelsStore';
 // v1.36.79: useQuillEditor, useDocumentServices extraídos
 // v1.36.80: useAIIntegration extraído
 // v1.36.81: useDocumentAnalysis extraído
-import { useSpacingControl, useFontSizeControl, useFeatureFlags, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, useLegislacao, useJurisprudencia, useChatAssistant, useModelPreview, useLocalStorage, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers, useReviewSentence, type AIIntegrationForReview, useSemanticSearchHandlers, useModelSuggestions, useMultiTabSync, useDriveFileHandlers, useSessionCallbacks, useTopicEditing, useModelEditing, useProofModalCallbacks, useGoogleDriveActions } from './hooks';
+import { useSpacingControl, useFontSizeControl, useFeatureFlags, useAPICache, usePrimaryTabLock, useFieldVersioning, useThemeManagement, useTabbedInterface, useIndexedDB, useLegislacao, useJurisprudencia, useChatAssistant, useModelPreview, useLocalStorage, useProofManager, useDocumentManager, useTopicManager, useModalManager, useModelLibrary, searchModelsInLibrary, useDocumentServices, useAIIntegration, useDocumentAnalysis, useReportGeneration, useProofAnalysis, useTopicOrdering, useDragDropTopics, useTopicOperations, useModelGeneration, useEmbeddingsManagement, useModelSave, useDispositivoGeneration, useDecisionTextGeneration, useFactsComparison, useModelExtraction, useDetectEntities, useExportImport, useDecisionExport, useSlashMenu, useFileHandling, useNERManagement, useChangeDetectionHashes, useSemanticSearchManagement, useQuillInitialization, useTopicValidation, useKeyboardShortcuts, useEditorHandlers, useReviewSentence, type AIIntegrationForReview, useSemanticSearchHandlers, useModelSuggestions, useMultiTabSync, useDriveFileHandlers, useSessionCallbacks, useTopicEditing, useModelEditing, useProofModalCallbacks, useGoogleDriveActions, useProvaOralImport } from './hooks';
 import { API_BASE } from './constants/api';
 import { APP_VERSION } from './constants/app-version';
 
@@ -54,6 +54,8 @@ import { AnalisadorApp } from './apps/analisador';
 
 // v1.39.08: Análise de Prova Oral - Rota /prova-oral
 import { ProvaOralApp } from './apps/prova-oral';
+import type { SavedProvaOralAnalysis } from './apps/prova-oral/types';
+import { formatProvaOralSections, type ProvaOralSectionKey } from './utils/formatProvaOralImport';
 
 // v1.35.30: Modal de curadoria de tópicos pré-geração
 import TopicCurationModal from './components/TopicCurationModal';
@@ -420,6 +422,12 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const documentServices = useDocumentServices(aiIntegration);
 
   const proofManager = useProofManager(documentServices);   const documentManager = useDocumentManager(storage.clearPdfCache);   const topicManager = useTopicManager();   const modelPreview = useModelPreview(); // Preview de modelos sugeridos
+
+  // v1.39.08: Import de análises de Prova Oral
+  const provaOralImport = useProvaOralImport();
+  const [provaOralAnalyses, setProvaOralAnalyses] = React.useState<SavedProvaOralAnalysis[]>([]);
+  const [selectedProvaOralAnalysis, setSelectedProvaOralAnalysis] = React.useState<SavedProvaOralAnalysis | null>(null);
+  const [isImportingProvaOral, setIsImportingProvaOral] = React.useState(false);
 
   // 🤖 v1.19.0: Chat interativo do assistente IA (Editor Individual)
   // v1.37.94: Adicionado cache para persistência do histórico
@@ -2151,6 +2159,69 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     handleDeleteProofConfirm,
   } = proofModalCallbacks;
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // v1.39.08: Handlers de importação de Prova Oral
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const handleRefreshProvaOralAnalyses = React.useCallback(async () => {
+    const analyses = await provaOralImport.listAnalyses();
+    setProvaOralAnalyses(analyses);
+  }, [provaOralImport]);
+
+  const handleSelectProvaOralAnalysis = React.useCallback((analysis: SavedProvaOralAnalysis) => {
+    setSelectedProvaOralAnalysis(analysis);
+    closeModal('importProvaOralList');
+    openModal('importProvaOralSections');
+  }, [closeModal, openModal]);
+
+  const handleImportProvaOral = React.useCallback(async (
+    analysis: SavedProvaOralAnalysis,
+    sections: ProvaOralSectionKey[]
+  ) => {
+    setIsImportingProvaOral(true);
+    try {
+      // Formatar seções selecionadas como texto
+      const analysisText = formatProvaOralSections(analysis.resultado, sections);
+
+      // Nome da prova
+      const proofName = analysis.numeroProcesso
+        ? `Prova Oral - ${analysis.numeroProcesso}`
+        : `Prova Oral - ${new Date(analysis.createdAt).toLocaleDateString('pt-BR')}`;
+
+      // Criar nova ProofText com a transcrição
+      const newProofId = crypto.randomUUID();
+      const newProofText: import('./types').ProofText = {
+        id: newProofId,
+        name: proofName,
+        text: analysis.transcricao,
+        type: 'text',
+        uploadDate: new Date().toISOString()
+      };
+
+      // Adicionar ao store de provas
+      proofManager.setProofTexts((prev) => [...prev, newProofText]);
+
+      // Adicionar análise importada se houver seções selecionadas
+      if (analysisText.trim()) {
+        proofManager.addProofAnalysis(newProofId, {
+          type: 'importada',
+          result: analysisText,
+          sourceProvaOralId: analysis.id
+        });
+      }
+
+      // Fechar modal e mostrar sucesso
+      closeModal('importProvaOralSections');
+      setSelectedProvaOralAnalysis(null);
+      showToast('Análise de Prova Oral importada com sucesso!', 'success');
+    } catch (err) {
+      console.error('Erro ao importar Prova Oral:', err);
+      showToast('Erro ao importar análise', 'error');
+    } finally {
+      setIsImportingProvaOral(false);
+    }
+  }, [proofManager, closeModal, showToast]);
+
   // v1.38.52: toggleTopicSelection e deleteTopic extraídos para useTopicEditing hook
   // v1.37.99: confirmDeleteTopic movido para useTopicModalHandlers (usado pelo ModalRoot)
 
@@ -3326,6 +3397,15 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         hasDocuments={!!(analyzedDocuments.peticoes?.length > 0 || analyzedDocuments.peticoesText?.length > 0)}
         // v1.37.77: trackChange para rastrear deletes de modelos para sync
         trackChange={cloudSync?.trackChange}
+        // v1.39.08: Import Prova Oral
+        provaOralAnalyses={provaOralAnalyses}
+        provaOralLoading={provaOralImport.isLoading}
+        provaOralError={provaOralImport.error}
+        onRefreshProvaOralAnalyses={handleRefreshProvaOralAnalyses}
+        selectedProvaOralAnalysis={selectedProvaOralAnalysis}
+        onSelectProvaOralAnalysis={handleSelectProvaOralAnalysis}
+        onImportProvaOral={handleImportProvaOral}
+        isImportingProvaOral={isImportingProvaOral}
       />
 
       {/* v1.4.6: Removido Mini-toolbar flutuante (76 linhas) */}

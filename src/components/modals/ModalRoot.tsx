@@ -66,8 +66,13 @@ import {
   SimilarityWarningModal,
   TextPreviewModal,
   ChangelogModal,
-  DoubleCheckReviewModal
+  DoubleCheckReviewModal,
+  ImportProvaOralListModal,
+  ImportProvaOralSectionsModal
 } from './index';
+
+import type { SavedProvaOralAnalysis } from '../../apps/prova-oral/types';
+import type { ProvaOralSectionKey } from '../../utils/formatProvaOralImport';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -122,6 +127,34 @@ export interface ModalRootProps {
   /** Callback para rastrear mudanças para sync na nuvem */
   trackChange?: (operation: 'create' | 'update' | 'delete', model: { id: string; updatedAt?: string }) => void;
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IMPORT PROVA ORAL (v1.39.08)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Lista de análises de prova oral */
+  provaOralAnalyses?: SavedProvaOralAnalysis[];
+
+  /** Indica se está carregando análises */
+  provaOralLoading?: boolean;
+
+  /** Erro ao carregar análises */
+  provaOralError?: string | null;
+
+  /** Callback para atualizar lista de análises */
+  onRefreshProvaOralAnalyses?: () => void;
+
+  /** Análise selecionada para importar */
+  selectedProvaOralAnalysis?: SavedProvaOralAnalysis | null;
+
+  /** Callback quando seleciona análise da lista */
+  onSelectProvaOralAnalysis?: (analysis: SavedProvaOralAnalysis) => void;
+
+  /** Callback quando confirma importação */
+  onImportProvaOral?: (analysis: SavedProvaOralAnalysis, sections: ProvaOralSectionKey[]) => void;
+
+  /** Indica se está importando */
+  isImportingProvaOral?: boolean;
+
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -169,7 +202,16 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
   isRegenerating = false,
   hasDocuments = false,
   // Sync (v1.37.77)
-  trackChange
+  trackChange,
+  // Import Prova Oral (v1.39.08)
+  provaOralAnalyses = [],
+  provaOralLoading = false,
+  provaOralError = null,
+  onRefreshProvaOralAnalyses,
+  selectedProvaOralAnalysis = null,
+  onSelectProvaOralAnalysis,
+  onImportProvaOral,
+  isImportingProvaOral = false
 }) => {
   // ═══════════════════════════════════════════════════════════════════════════
   // ESTADO DOS STORES
@@ -394,6 +436,32 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
 
       <ChangelogModal />
       <DoubleCheckReviewModal />
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* MODAIS DE IMPORT PROVA ORAL (v1.39.08) */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+
+      {onRefreshProvaOralAnalyses && onSelectProvaOralAnalysis && (
+        <ImportProvaOralListModal
+          isOpen={modals.importProvaOralList}
+          onClose={() => closeModal('importProvaOralList')}
+          analyses={provaOralAnalyses}
+          isLoading={provaOralLoading}
+          error={provaOralError}
+          onSelect={onSelectProvaOralAnalysis}
+          onRefresh={onRefreshProvaOralAnalyses}
+        />
+      )}
+
+      {onImportProvaOral && (
+        <ImportProvaOralSectionsModal
+          isOpen={modals.importProvaOralSections}
+          onClose={() => closeModal('importProvaOralSections')}
+          analysis={selectedProvaOralAnalysis}
+          onImport={onImportProvaOral}
+          isImporting={isImportingProvaOral}
+        />
+      )}
     </>
   );
 };
