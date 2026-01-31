@@ -183,7 +183,7 @@ export function useProvaOralAPI(): UseProvaOralAPIReturn {
         // Criar objeto SavedProvaOralAnalysis para adicionar ao store
         const newAnalysis: SavedProvaOralAnalysis = {
           id: data.id,
-          numeroProcesso: params.resultado.processo?.numeroProcesso || null,
+          numeroProcesso: params.resultado.processo?.numero || params.resultado.processo?.numeroProcesso || null,
           reclamante: params.resultado.processo?.reclamante || null,
           reclamada: params.resultado.processo?.reclamada || null,
           vara: params.resultado.processo?.vara || null,
