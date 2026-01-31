@@ -80,6 +80,7 @@ interface ProofsStoreState {
 
   addProofAnalysis: (proofId: string, analysis: Omit<ProofAnalysisResult, 'id' | 'timestamp'>) => void;
   removeProofAnalysis: (proofId: string, analysisId: string) => void;
+  updateProofAnalysis: (proofId: string, analysisId: string, newResult: string) => void;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ACTIONS DE MANIPULAÇÃO
@@ -264,6 +265,14 @@ export const useProofsStore = create<ProofsStoreState>()(
             delete state.proofAnalysisResults[proofId];
           }
         }, false, 'removeProofAnalysis'),
+
+      updateProofAnalysis: (proofId, analysisId, newResult) =>
+        set((state) => {
+          const analyses = state.proofAnalysisResults[proofId] || [];
+          state.proofAnalysisResults[proofId] = analyses.map(a =>
+            a.id === analysisId ? { ...a, result: newResult } : a
+          );
+        }, false, 'updateProofAnalysis'),
 
       // ═══════════════════════════════════════════════════════════════════════
       // ACTIONS DE MANIPULAÇÃO

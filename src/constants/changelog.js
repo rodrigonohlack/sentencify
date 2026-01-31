@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.11', feature: 'Edição inline de análises de prova: botão de editar aparece no hover, textarea editável com botões Cancelar/Salvar, persistência automática via Zustand store' },
   { version: '1.40.10', feature: 'Streaming para Confronto de Fatos: useFactsComparison agora usa callAIStream para evitar timeout de 30s no Render em operações longas' },
   { version: '1.40.09', feature: 'Fix estado compartilhado do modelo E5: migrar useSemanticSearchManagement de useState local para Zustand store (useSearchStore). Quando ConfigModal inicializa o modelo, TODOS os componentes (App.tsx, tabs) agora veem searchModelReady=true instantaneamente, sem precisar F5. Restaurar toast "Modelo de busca pronto!" que foi perdido na refatoração v1.40.06' },
   { version: '1.40.08', feature: 'Fix bug de auto-inicialização do modelo E5: restaurar useEffect removido acidentalmente na refatoração v1.40.06 (agora no hook useSemanticSearchManagement). Modelo E5 é auto-carregado após F5 quando toggle de Busca Semântica está habilitado' },

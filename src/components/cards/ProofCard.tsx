@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { FileText, Sparkles, AlertCircle, Loader2, Check, Scale, Trash2, Paperclip, Plus, X } from 'lucide-react';
+import { FileText, Sparkles, AlertCircle, Loader2, Check, Scale, Trash2, Paperclip, Plus, X, Edit2 } from 'lucide-react';
 import { ProcessingModeSelector } from '../ui/ProcessingModeSelector';
 import VoiceButton from '../VoiceButton';
 import { anonymizeText } from '../../utils/text';
@@ -39,6 +39,10 @@ export const ProofCard = React.memo(({
 }: ProofCardProps) => {
   // Estado local para progresso de extração
   const [extractionProgress, setExtractionProgress] = React.useState<{ current: number; total: number; mode: string } | null>(null);
+
+  // Estado local para edição inline de análises
+  const [editingAnalysisId, setEditingAnalysisId] = React.useState<string | null>(null);
+  const [editingText, setEditingText] = React.useState('');
 
   // v1.37.88: Voice improvement com IA
   // v1.37.90: Usa callAI do useAIIntegration para tracking de tokens
@@ -170,6 +174,27 @@ export const ProofCard = React.memo(({
   const handleRemoveAnalysis = React.useCallback((analysisId: string) => {
     proofManager.removeProofAnalysis(String(proof.id), analysisId);
   }, [proof.id, proofManager]);
+
+  // Handler: Iniciar edição inline de análise
+  const handleStartEdit = React.useCallback((analysis: { id: string; result: string }) => {
+    setEditingAnalysisId(analysis.id);
+    setEditingText(analysis.result);
+  }, []);
+
+  // Handler: Salvar edição inline de análise
+  const handleSaveEdit = React.useCallback(() => {
+    if (editingAnalysisId && proofManager?.updateProofAnalysis) {
+      proofManager.updateProofAnalysis(String(proof.id), editingAnalysisId, editingText);
+    }
+    setEditingAnalysisId(null);
+    setEditingText('');
+  }, [editingAnalysisId, editingText, proof.id, proofManager]);
+
+  // Handler: Cancelar edição inline de análise
+  const handleCancelEdit = React.useCallback(() => {
+    setEditingAnalysisId(null);
+    setEditingText('');
+  }, []);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ANEXOS (v1.38.8)
@@ -724,7 +749,7 @@ export const ProofCard = React.memo(({
 
               {proofManager?.proofAnalysisResults?.[proof.id]?.map((analysis, idx) => (
                 <div key={analysis.id} className="theme-info-box relative group">
-                  {/* Header com tipo, data e botão excluir */}
+                  {/* Header com tipo, data e botões de ação */}
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium theme-text-blue">
@@ -736,25 +761,62 @@ export const ProofCard = React.memo(({
                         })}
                       </span>
                     </div>
-                    {/* Botão excluir - tema claro/escuro compatível */}
-                    <button
-                      onClick={() => handleRemoveAnalysis(analysis.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-500 dark:text-red-400 transition-all"
-                      title="Excluir esta análise"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+                    {/* Botões de ação - tema claro/escuro compatível */}
+                    <div className="flex items-center gap-1">
+                      {/* Botão editar */}
+                      <button
+                        onClick={() => handleStartEdit(analysis)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:theme-bg-tertiary transition-all"
+                        title="Editar análise"
+                      >
+                        <Edit2 className="w-3 h-3 theme-text-muted" />
+                      </button>
+                      {/* Botão excluir */}
+                      <button
+                        onClick={() => handleRemoveAnalysis(analysis.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-500 dark:text-red-400 transition-all"
+                        title="Excluir esta análise"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Conteúdo da análise */}
-                  <div
-                    className="overflow-y-auto"
-                    style={{ resize: 'vertical', height: '10rem', minHeight: '6rem', maxHeight: '30rem' }}
-                  >
-                    <p className="text-xs theme-text-tertiary whitespace-pre-wrap">
-                      {analysis.result}
-                    </p>
-                  </div>
+                  {/* Conteúdo da análise - modo edição ou visualização */}
+                  {editingAnalysisId === analysis.id ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        className="w-full px-2 py-1 text-xs theme-bg-secondary theme-border rounded resize-none focus:ring-1 focus:ring-blue-500 theme-text-secondary"
+                        style={{ height: '10rem', minHeight: '6rem', maxHeight: '30rem' }}
+                        autoFocus
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={handleCancelEdit}
+                          className="text-xs theme-text-muted hover:theme-text-primary transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleSaveEdit}
+                          className="text-xs text-blue-500 hover:text-blue-400 font-medium transition-colors"
+                        >
+                          Salvar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="overflow-y-auto"
+                      style={{ resize: 'vertical', height: '10rem', minHeight: '6rem', maxHeight: '30rem' }}
+                    >
+                      <p className="text-xs theme-text-tertiary whitespace-pre-wrap">
+                        {analysis.result}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

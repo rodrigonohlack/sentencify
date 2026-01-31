@@ -129,6 +129,7 @@ describe('ProofCard', () => {
     setPendingExtraction: vi.fn(),
     isAnalyzingProof: vi.fn().mockReturnValue(false),
     removeProofAnalysis: vi.fn(),
+    updateProofAnalysis: vi.fn(),
     proofTopicLinks: {},
     proofConclusions: {},
     proofUsePdfMode: {},

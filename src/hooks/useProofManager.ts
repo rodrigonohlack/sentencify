@@ -91,6 +91,7 @@ const useProofManager = (_documentServices: unknown = null) => {
   // Proof Analysis Actions (v1.38.27)
   const addProofAnalysis = useProofsStore((s) => s.addProofAnalysis);
   const removeProofAnalysis = useProofsStore((s) => s.removeProofAnalysis);
+  const updateProofAnalysis = useProofsStore((s) => s.updateProofAnalysis);
 
   // Attachment Actions (v1.38.8)
   const addAttachment = useProofsStore((s) => s.addAttachment);
@@ -248,9 +249,10 @@ const useProofManager = (_documentServices: unknown = null) => {
     handleUnlinkProof,
     handleSaveProofConclusion,
 
-    // Proof Analysis Actions (2) - v1.38.27
+    // Proof Analysis Actions (3) - v1.38.27
     addProofAnalysis,
     removeProofAnalysis,
+    updateProofAnalysis,
 
     // Attachment Actions (4) - v1.38.8, v1.38.10
     addAttachment,

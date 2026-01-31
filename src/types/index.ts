@@ -2042,6 +2042,7 @@ export interface ProofCardProps {
     proofAnalysisResults: Record<string, ProofAnalysisResult[]>;
     proofSendFullContent: Record<string, boolean>;
     removeProofAnalysis: (proofId: string, analysisId: string) => void;
+    updateProofAnalysis: (proofId: string, analysisId: string, newResult: string) => void;
   };
   openModal: (name: ModalKey) => void;
   setError: (error: string) => void;
