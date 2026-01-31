@@ -66,8 +66,8 @@ export function useProvaOralImport(): UseProvaOralImportReturn {
         throw new Error(data.error || 'Erro ao listar análises');
       }
 
-      const analyses = await response.json() as SavedProvaOralAnalysis[];
-      return analyses;
+      const data = await response.json() as { analyses: SavedProvaOralAnalysis[]; count: number };
+      return data.analyses;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(message);
