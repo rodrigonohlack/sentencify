@@ -21,21 +21,21 @@ const severidadeConfig: Record<AlertaSeveridade, {
 }> = {
   alta: {
     icon: <AlertTriangle className="w-5 h-5" />,
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
-    textColor: 'text-red-800'
+    bgColor: 'bg-red-50 dark:bg-red-900/20',
+    borderColor: 'border-red-200 dark:border-red-800/40',
+    textColor: 'text-red-800 dark:text-red-300'
   },
   media: {
     icon: <AlertCircle className="w-5 h-5" />,
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-200',
-    textColor: 'text-amber-800'
+    bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    borderColor: 'border-amber-200 dark:border-amber-800/40',
+    textColor: 'text-amber-800 dark:text-amber-300'
   },
   baixa: {
     icon: <Info className="w-5 h-5" />,
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    textColor: 'text-blue-800'
+    bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+    borderColor: 'border-blue-200 dark:border-blue-800/40',
+    textColor: 'text-blue-800 dark:text-blue-300'
   }
 };
 
@@ -54,7 +54,7 @@ export const AlertasSection: React.FC<AlertasSectionProps> = ({ alertas }) => {
     >
       <div className="space-y-3">
         {/* Resumo por severidade */}
-        <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
+        <div className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
           {alertasAlta.length > 0 && (
             <Badge variant="danger">{alertasAlta.length} alta</Badge>
           )}
