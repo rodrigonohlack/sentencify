@@ -42,6 +42,10 @@ export interface GenerateMiniReportOptions {
   isInitialGeneration?: boolean;
   maxTokens?: number;
   documentsOverride?: AnalyzedDocuments | null;
+  /** v1.39.09: Usar streaming para evitar timeout */
+  useStreaming?: boolean;
+  /** v1.39.09: Callback para receber texto conforme chega */
+  onChunk?: StreamChunkCallback;
 }
 
 /** Opções para geração de múltiplos mini-relatórios */
@@ -49,6 +53,10 @@ export interface MultipleReportsOptions {
   includeComplementares?: boolean;
   isInitialGeneration?: boolean;
   documentsOverride?: AnalyzedDocuments | null;
+  /** v1.39.09: Usar streaming para evitar timeout */
+  useStreaming?: boolean;
+  /** v1.39.09: Callback para receber texto conforme chega */
+  onChunk?: StreamChunkCallback;
 }
 
 /** Opções para geração em batch */
@@ -64,6 +72,9 @@ export interface BatchResult {
   errors: Array<{ title: string; error?: string; status?: string }>;
 }
 
+/** Callback para receber chunks de texto durante streaming */
+export type StreamChunkCallback = (fullText: string) => void;
+
 /** Interface mínima de AI Integration necessária para geração de relatórios */
 export interface AIIntegrationForReports {
   callAI: (messages: AIMessage[], options?: {
@@ -74,6 +85,14 @@ export interface AIIntegrationForReports {
     topK?: number;
     extractText?: boolean;
     logMetrics?: boolean;
+  }) => Promise<string>;
+  callAIStream?: (messages: AIMessage[], options?: {
+    maxTokens?: number;
+    useInstructions?: boolean;
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    onChunk?: StreamChunkCallback;
   }) => Promise<string>;
   extractResponseText: (data: Record<string, unknown>, provider: AIProvider) => string;
   aiSettings: AISettings;
@@ -367,6 +386,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
 
   /**
    * Gera um mini-relatório individual
+   * v1.39.09: Suporte a streaming para evitar timeout no Render
    */
   const generateMiniReport = React.useCallback(async (options: GenerateMiniReportOptions = {}) => {
     const {
@@ -377,7 +397,9 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
       includeComplementares = false,
       isInitialGeneration = false,
       maxTokens = 4000,
-      documentsOverride = null
+      documentsOverride = null,
+      useStreaming = false,
+      onChunk
     } = options;
 
     // 1. Construir array de documentos
@@ -399,17 +421,30 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
 
     contentArray.push({ type: 'text', text: prompt });
 
-    // 3. Chamar API
-    const result = await aiIntegration.callAI([{
-      role: 'user',
-      content: contentArray
-    }], {
-      maxTokens,
-      useInstructions: true,
-      temperature: 0.4,
-      topP: 0.9,
-      topK: 60
-    });
+    // 3. Chamar API (com ou sem streaming)
+    let result: string;
+
+    if (useStreaming && aiIntegration.callAIStream) {
+      result = await aiIntegration.callAIStream([{
+        role: 'user',
+        content: contentArray
+      }], {
+        maxTokens,
+        useInstructions: true,
+        onChunk
+      });
+    } else {
+      result = await aiIntegration.callAI([{
+        role: 'user',
+        content: contentArray
+      }], {
+        maxTokens,
+        useInstructions: true,
+        temperature: 0.4,
+        topP: 0.9,
+        topK: 60
+      });
+    }
 
     // 4. Normalizar e retornar
     return removeMetaComments(normalizeHTMLSpacing(result));
@@ -417,6 +452,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
 
   /**
    * Gera múltiplos mini-relatórios em UMA requisição
+   * v1.39.09: Suporte a streaming para evitar timeout no Render
    */
   const generateMultipleMiniReports = React.useCallback(async (
     topics: Topic[],
@@ -425,7 +461,9 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
     const {
       includeComplementares = false,
       isInitialGeneration = false,
-      documentsOverride = null
+      documentsOverride = null,
+      useStreaming = false,
+      onChunk
     } = options;
 
     // 1. Construir array de documentos
@@ -444,22 +482,39 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
     const isAllInOne = aiIntegration.aiSettings?.topicsPerRequest === 'all';
     const tokenCap = isAllInOne ? 48000 : 24000;
     const maxTokens = Math.min(4000 * topics.length, tokenCap);
-    const result = await aiIntegration.callAI([{
-      role: 'user',
-      content: contentArray
-    }], {
-      maxTokens,
-      useInstructions: true,
-      extractText: false,
-      temperature: 0.4,
-      topP: 0.9,
-      topK: 60
-    });
+
+    let textContent: string;
+
+    if (useStreaming && aiIntegration.callAIStream) {
+      // Streaming: recebe texto diretamente
+      textContent = await aiIntegration.callAIStream([{
+        role: 'user',
+        content: contentArray
+      }], {
+        maxTokens,
+        useInstructions: true,
+        onChunk
+      });
+    } else {
+      // Sem streaming: usa extractText: false para parsear JSON
+      const result = await aiIntegration.callAI([{
+        role: 'user',
+        content: contentArray
+      }], {
+        maxTokens,
+        useInstructions: true,
+        extractText: false,
+        temperature: 0.4,
+        topP: 0.9,
+        topK: 60
+      });
+
+      // Nota: quando extractText: false, callAI retorna o objeto raw da API
+      const provider = aiIntegration.aiSettings.provider || 'claude';
+      textContent = aiIntegration.extractResponseText(result as unknown as Record<string, unknown>, provider);
+    }
 
     // 4. Parsear resposta JSON
-    // Nota: quando extractText: false, callAI retorna o objeto raw da API
-    const provider = aiIntegration.aiSettings.provider || 'claude';
-    const textContent = aiIntegration.extractResponseText(result as unknown as Record<string, unknown>, provider);
     let cleanText = textContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
     try {

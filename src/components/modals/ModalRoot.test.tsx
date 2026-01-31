@@ -30,6 +30,11 @@ vi.mock('./index', () => ({
   TextPreviewModal: (props: any) => props.isOpen ? <div data-testid="text-preview-modal">TextPreviewModal</div> : null,
   ChangelogModal: () => <div data-testid="changelog-modal">ChangelogModal</div>,
   DoubleCheckReviewModal: () => <div data-testid="double-check-review-modal">DoubleCheckReviewModal</div>,
+  // v1.39.09: Import Prova Oral modals
+  ImportProvaOralListModal: (props: any) => props.isOpen ? <div data-testid="import-prova-oral-list-modal">ImportProvaOralListModal</div> : null,
+  ImportProvaOralSectionsModal: (props: any) => props.isOpen ? <div data-testid="import-prova-oral-sections-modal">ImportProvaOralSectionsModal</div> : null,
+  // v1.39.09: Streaming modal
+  StreamingModal: (props: any) => props.isOpen ? <div data-testid="streaming-modal">StreamingModal</div> : null,
 }));
 
 // Mock stores
@@ -44,6 +49,8 @@ const mockModals = {
   export: false,
   extractedModelPreview: false,
   bulkDiscardConfirm: false,
+  importProvaOralList: false,
+  importProvaOralSections: false,
 };
 
 const mockCloseModal = vi.fn();
@@ -65,6 +72,8 @@ vi.mock('../../stores/useUIStore', () => ({
       // v1.38.51: TextPreview state
       textPreview: { isOpen: false, title: '', text: '' },
       closeTextPreview: mockCloseTextPreview,
+      // v1.39.08: Import Prova Oral
+      processoNumero: '',
     };
     return selector(state);
   },
@@ -125,6 +134,24 @@ vi.mock('../../stores/useModelsStore', () => ({
       similarityWarning: mockSimilarityWarning,
       extractedModelPreview: mockExtractedModelPreview,
       setExtractedModelPreview: mockSetExtractedModelPreview,
+    };
+    return selector(state);
+  },
+}));
+
+// v1.39.09: Mock useAIStore for streaming state
+const mockSetShowStreamingModal = vi.fn();
+vi.mock('../../stores/useAIStore', () => ({
+  useAIStore: (selector: any) => {
+    const state = {
+      streamingState: {
+        isStreaming: false,
+        streamingText: '',
+        showModal: false,
+        operationType: 'generic',
+      },
+      setShowStreamingModal: mockSetShowStreamingModal,
+      aiSettings: { provider: 'claude' },
     };
     return selector(state);
   },

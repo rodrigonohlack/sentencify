@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Button, TextArea, Card, CardHeader, CardTitle, CardContent } from '../ui';
 import { AnalysisSelectorModal } from './AnalysisSelectorModal';
-import { StreamingModal } from '../StreamingModal';
+import { StreamingModal } from '../../../../components/modals/StreamingModal';
 import { useProvaOralStore } from '../../stores';
 import { useProvaOralAnalysis, useProvaOralAPI } from '../../hooks';
 import { useAIStore } from '../../stores';
@@ -250,6 +250,7 @@ Você pode:
         isComplete={!isStreaming}
         onClose={closeStreamingModal}
         providerName={providerName}
+        operationType="prova-oral"
       />
     </>
   );

@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.39.09', feature: 'Streaming para operações de IA: evita timeout do Render (30s) mostrando resposta em tempo real. Inclui StreamingModal compartilhado, funções callAIStream para todos os providers (Claude, Gemini, OpenAI, Grok), e integração opcional nos hooks useReportGeneration, useProofAnalysis e useDispositivoGeneration' },
   { version: '1.39.08', feature: 'Importar análise de Prova Oral na aba Provas: botão visível quando autenticado, modal de listagem com busca, seleção de seções (sínteses, contradições, confissões, credibilidade), transcrição vira ProofText + seções viram ProofAnalysisResult tipo importada' },
   { version: '1.39.07', feature: 'Fix toggle de tema no Analisador: adicionar darkMode class ao tailwind.config.js (antes: classes dark:* não tinham efeito)' },
   { version: '1.39.06', feature: 'Toggle para incluir/excluir documentos complementares no contexto do chat IA (desativado por padrão, persistido por tópico, sobrevive F5 e export/import)' },

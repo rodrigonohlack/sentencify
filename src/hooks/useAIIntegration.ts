@@ -1399,6 +1399,458 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     }
   }, [aiSettings, callDoubleCheckAPI]);
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STREAMING APIs - v1.39.09: Evita timeout do Render com resposta em chunks
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Callback para receber chunks de texto durante streaming */
+  type StreamChunkCallback = (fullText: string) => void;
+
+  /** Opções adicionais para chamadas com streaming */
+  interface AIStreamOptions extends AICallOptions {
+    onChunk?: StreamChunkCallback;
+  }
+
+  /**
+   * Chamada Claude com streaming
+   * Retorna texto conforme chega em chunks via SSE
+   */
+  const callClaudeAPIStream = React.useCallback(async (
+    messages: AIMessage[],
+    options: AIStreamOptions = {}
+  ): Promise<string> => {
+    const {
+      maxTokens = 8000,
+      systemPrompt = null,
+      useInstructions = false,
+      model = aiSettings.claudeModel,
+      disableThinking = false,
+      onChunk
+    } = options;
+
+    const useThinking = aiSettings.useExtendedThinking && !disableThinking;
+    const thinkingBudget = parseInt(aiSettings.thinkingBudget) || 10000;
+
+    // Resolver systemPrompt
+    let finalSystemPrompt = systemPrompt;
+    if (!finalSystemPrompt && useInstructions) {
+      const instructions = getAiInstructions();
+      finalSystemPrompt = Array.isArray(instructions)
+        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
+        : instructions;
+    }
+
+    const requestBody: Record<string, unknown> = {
+      model,
+      max_tokens: useThinking ? Math.max(maxTokens, thinkingBudget + 2000) : maxTokens,
+      messages
+    };
+
+    if (finalSystemPrompt) {
+      requestBody.system = finalSystemPrompt;
+    }
+
+    if (useThinking) {
+      requestBody.thinking = {
+        type: 'enabled',
+        budget_tokens: thinkingBudget
+      };
+    }
+
+    const response = await fetch(`${API_BASE}/api/claude/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': aiSettings.apiKeys?.claude || ''
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error?.message || `HTTP ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('Stream não disponível');
+
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const parsed = JSON.parse(line.slice(6));
+
+            if (parsed.type === 'text') {
+              fullText += parsed.text;
+              onChunk?.(fullText);
+            }
+
+            if (parsed.type === 'error') {
+              throw new Error(parsed.error?.message || 'Erro no streaming');
+            }
+
+            if (parsed.type === 'done' && parsed.usage) {
+              addTokenUsage({
+                input: parsed.usage.input_tokens || 0,
+                output: parsed.usage.output_tokens || 0,
+                model,
+                provider: 'claude'
+              });
+            }
+          } catch (e) {
+            if (e instanceof SyntaxError) continue;
+            throw e;
+          }
+        }
+      }
+    }
+
+    return fullText.trim();
+  }, [aiSettings, addTokenUsage, getAiInstructions]);
+
+  /**
+   * Chamada OpenAI com streaming
+   */
+  const callOpenAIAPIStream = React.useCallback(async (
+    messages: AIMessage[],
+    options: AIStreamOptions = {}
+  ): Promise<string> => {
+    const {
+      maxTokens = 8000,
+      systemPrompt = null,
+      useInstructions = false,
+      model = aiSettings.openaiModel,
+      disableThinking = false,
+      onChunk
+    } = options;
+
+    // Resolver systemPrompt
+    let finalSystemPrompt = systemPrompt as string | null;
+    if (!finalSystemPrompt && useInstructions) {
+      const instructions = getAiInstructions();
+      finalSystemPrompt = Array.isArray(instructions)
+        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
+        : instructions;
+    }
+
+    const openaiMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
+
+    const isReasoningModel = model === 'gpt-5.2';
+    const reasoningLevel = aiSettings.openaiReasoningLevel || 'medium';
+
+    const requestBody: Record<string, unknown> = {
+      model,
+      messages: openaiMessages,
+      max_tokens: maxTokens
+    };
+
+    if (isReasoningModel && !disableThinking) {
+      requestBody.reasoning_effort = reasoningLevel;
+    }
+
+    const response = await fetch(`${API_BASE}/api/openai/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': aiSettings.apiKeys?.openai || ''
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error?.message || `HTTP ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('Stream não disponível');
+
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const parsed = JSON.parse(line.slice(6));
+
+            if (parsed.type === 'text') {
+              fullText += parsed.text;
+              onChunk?.(fullText);
+            }
+
+            if (parsed.type === 'error') {
+              throw new Error(parsed.error?.message || 'Erro no streaming');
+            }
+
+            if (parsed.type === 'done' && parsed.usage) {
+              addTokenUsage({
+                input: parsed.usage.prompt_tokens || 0,
+                output: parsed.usage.completion_tokens || 0,
+                model,
+                provider: 'openai'
+              });
+            }
+          } catch (e) {
+            if (e instanceof SyntaxError) continue;
+            throw e;
+          }
+        }
+      }
+    }
+
+    return fullText.trim();
+  }, [aiSettings, addTokenUsage, convertToOpenAIFormat, getAiInstructions]);
+
+  /**
+   * Chamada Grok com streaming
+   */
+  const callGrokAPIStream = React.useCallback(async (
+    messages: AIMessage[],
+    options: AIStreamOptions = {}
+  ): Promise<string> => {
+    const {
+      maxTokens = 8000,
+      systemPrompt = null,
+      useInstructions = false,
+      model = aiSettings.grokModel,
+      onChunk
+    } = options;
+
+    // Resolver systemPrompt
+    let finalSystemPrompt = systemPrompt as string | null;
+    if (!finalSystemPrompt && useInstructions) {
+      const instructions = getAiInstructions();
+      finalSystemPrompt = Array.isArray(instructions)
+        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
+        : instructions;
+    }
+
+    const grokMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
+
+    const response = await fetch(`${API_BASE}/api/grok/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': aiSettings.apiKeys?.grok || ''
+      },
+      body: JSON.stringify({
+        model,
+        messages: grokMessages,
+        max_tokens: maxTokens
+      })
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error?.message || `HTTP ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('Stream não disponível');
+
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const parsed = JSON.parse(line.slice(6));
+
+            if (parsed.type === 'text') {
+              fullText += parsed.text;
+              onChunk?.(fullText);
+            }
+
+            if (parsed.type === 'error') {
+              throw new Error(parsed.error?.message || 'Erro no streaming');
+            }
+
+            if (parsed.type === 'done' && parsed.usage) {
+              addTokenUsage({
+                input: parsed.usage.prompt_tokens || 0,
+                output: parsed.usage.completion_tokens || 0,
+                model,
+                provider: 'grok'
+              });
+            }
+          } catch (e) {
+            if (e instanceof SyntaxError) continue;
+            throw e;
+          }
+        }
+      }
+    }
+
+    return fullText.trim();
+  }, [aiSettings, addTokenUsage, convertToOpenAIFormat, getAiInstructions]);
+
+  /**
+   * Chamada Gemini com streaming
+   */
+  const callGeminiAPIStream = React.useCallback(async (
+    messages: AIMessage[],
+    options: AIStreamOptions = {}
+  ): Promise<string> => {
+    const {
+      maxTokens = 8000,
+      systemPrompt = null,
+      useInstructions = false,
+      model = aiSettings.geminiModel,
+      disableThinking = false,
+      onChunk
+    } = options;
+
+    // Resolver systemPrompt
+    let finalSystemPrompt = systemPrompt;
+    if (!finalSystemPrompt && useInstructions) {
+      const instructions = getAiInstructions();
+      finalSystemPrompt = Array.isArray(instructions)
+        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
+        : instructions;
+    }
+
+    const geminiRequest = convertToGeminiFormat(messages, finalSystemPrompt);
+
+    // Detectar Gemini 3 antes de calcular buffer
+    const isGemini3 = model.includes('gemini-3') || model.includes('3-flash') || model.includes('3-pro');
+
+    // Thinking config
+    const effectiveThinkingLevel = disableThinking ? 'minimal' : (aiSettings.geminiThinkingLevel || 'high');
+    const thinkingBuffer = isGemini3 ? ({
+      'minimal': 1024,
+      'low': 4000,
+      'medium': 8000,
+      'high': 16000
+    }[effectiveThinkingLevel] || 8000) : 0;
+
+    geminiRequest.generationConfig = {
+      maxOutputTokens: maxTokens + thinkingBuffer,
+      temperature: isGemini3 ? 1.0 : 0.7
+    };
+
+    if (isGemini3) {
+      geminiRequest.generationConfig.thinking_config = {
+        thinking_budget: thinkingBuffer,
+        includeThoughts: !disableThinking
+      };
+    }
+
+    const response = await fetch(`${API_BASE}/api/gemini/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        apiKey: aiSettings.apiKeys?.gemini || '',
+        request: geminiRequest
+      })
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error?.message || `HTTP ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('Stream não disponível');
+
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const parsed = JSON.parse(line.slice(6));
+
+            if (parsed.type === 'text') {
+              fullText += parsed.text;
+              onChunk?.(fullText);
+            }
+
+            if (parsed.type === 'error') {
+              throw new Error(parsed.error?.message || 'Erro no streaming');
+            }
+
+            if (parsed.type === 'done' && parsed.usage) {
+              addTokenUsage({
+                input: parsed.usage.promptTokenCount || 0,
+                output: parsed.usage.candidatesTokenCount || 0,
+                model,
+                provider: 'gemini'
+              });
+            }
+          } catch (e) {
+            if (e instanceof SyntaxError) continue;
+            throw e;
+          }
+        }
+      }
+    }
+
+    return fullText.trim();
+  }, [aiSettings, addTokenUsage, convertToGeminiFormat, getAiInstructions]);
+
+  /**
+   * Chamada com streaming - escolhe provider automaticamente
+   * Usa callback onChunk para atualizar UI em tempo real
+   */
+  const callAIStream = React.useCallback(async (
+    messages: AIMessage[],
+    options: AIStreamOptions = {}
+  ): Promise<string> => {
+    const provider = options.provider || aiSettings.provider;
+
+    switch (provider) {
+      case 'claude':
+        return callClaudeAPIStream(messages, options);
+      case 'gemini':
+        return callGeminiAPIStream(messages, options);
+      case 'openai':
+        return callOpenAIAPIStream(messages, options);
+      case 'grok':
+        return callGrokAPIStream(messages, options);
+      default:
+        return callClaudeAPIStream(messages, options);
+    }
+  }, [aiSettings.provider, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream]);
+
   return {
     // Estados
     aiSettings,
@@ -1456,6 +1908,13 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
     // v1.36.50: Double Check
     performDoubleCheck,
+
+    // v1.39.09: Streaming APIs
+    callClaudeAPIStream,
+    callOpenAIAPIStream,
+    callGrokAPIStream,
+    callGeminiAPIStream,
+    callAIStream,
 
     // v1.20.3: Contador de tokens persistente
     tokenMetrics,

@@ -180,6 +180,31 @@ const initialTokenMetrics: TokenMetrics = {
   lastUpdated: null
 };
 
+/** Tipos de operação para streaming (v1.39.09) */
+export type StreamingOperationType =
+  | 'report'
+  | 'proof'
+  | 'dispositivo'
+  | 'chat'
+  | 'prova-oral'
+  | 'generic';
+
+/** Estado de streaming (v1.39.09) */
+export interface StreamingState {
+  isStreaming: boolean;
+  streamingText: string;
+  showModal: boolean;
+  operationType: StreamingOperationType;
+}
+
+/** Estado inicial do streaming */
+const initialStreamingState: StreamingState = {
+  isStreaming: false,
+  streamingText: '',
+  showModal: false,
+  operationType: 'generic'
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SEÇÃO 2: TIPOS DO STORE
 // ═══════════════════════════════════════════════════════════════════════════
@@ -192,6 +217,9 @@ interface AIStoreState {
 
   // Estado - API Test (v1.37.49)
   apiTestStatuses: ApiTestStatuses;
+
+  // Estado - Streaming (v1.39.09)
+  streamingState: StreamingState;
 
   // Actions - Settings
   setAiSettings: (settings: AISettings | ((prev: AISettings) => AISettings)) => void;
@@ -232,6 +260,12 @@ interface AIStoreState {
   // Actions - API Test (v1.37.49)
   setApiTestStatus: (provider: AIProvider, status: ApiTestStatus) => void;
   resetApiTestStatuses: () => void;
+
+  // Actions - Streaming (v1.39.09)
+  startStreaming: (operationType: StreamingOperationType) => void;
+  updateStreamingText: (text: string) => void;
+  stopStreaming: () => void;
+  setShowStreamingModal: (show: boolean) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -261,6 +295,9 @@ export const useAIStore = create<AIStoreState>()(
 
         // Estado - API Test (v1.37.49)
         apiTestStatuses: initialApiTestStatuses,
+
+        // Estado - Streaming (v1.39.09)
+        streamingState: initialStreamingState,
 
         // ─────────────────────────────────────────────────────────────────────
         // Actions - Settings Completo
@@ -605,6 +642,54 @@ export const useAIStore = create<AIStoreState>()(
             false,
             'resetApiTestStatuses'
           ),
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Actions - Streaming (v1.39.09)
+        // ─────────────────────────────────────────────────────────────────────
+
+        startStreaming: (operationType) =>
+          set(
+            (state) => {
+              state.streamingState.isStreaming = true;
+              state.streamingState.streamingText = '';
+              state.streamingState.showModal = true;
+              state.streamingState.operationType = operationType;
+            },
+            false,
+            `startStreaming/${operationType}`
+          ),
+
+        updateStreamingText: (text) =>
+          set(
+            (state) => {
+              state.streamingState.streamingText = text;
+            },
+            false,
+            'updateStreamingText'
+          ),
+
+        stopStreaming: () =>
+          set(
+            (state) => {
+              state.streamingState.isStreaming = false;
+            },
+            false,
+            'stopStreaming'
+          ),
+
+        setShowStreamingModal: (show) =>
+          set(
+            (state) => {
+              state.streamingState.showModal = show;
+              // Se fechando o modal, resetar estado
+              if (!show) {
+                state.streamingState.isStreaming = false;
+                state.streamingState.streamingText = '';
+              }
+            },
+            false,
+            `setShowStreamingModal/${show}`
+          ),
       })),
       {
         name: 'sentencify-ai-store',
@@ -719,5 +804,9 @@ export const selectApiTestStatuses = (state: AIStoreState): ApiTestStatuses =>
 /** Selector: Retorna status de teste de um provider específico (v1.37.49) */
 export const selectApiTestStatus = (provider: AIProvider) => (state: AIStoreState): ApiTestStatus =>
   state.apiTestStatuses[provider];
+
+/** Selector: Retorna estado de streaming (v1.39.09) */
+export const selectStreamingState = (state: AIStoreState): StreamingState =>
+  state.streamingState;
 
 export default useAIStore;

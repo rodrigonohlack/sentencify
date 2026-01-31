@@ -40,6 +40,7 @@ import React from 'react';
 import { useUIStore } from '../../stores/useUIStore';
 import { useTopicsStore } from '../../stores/useTopicsStore';
 import { useModelsStore } from '../../stores/useModelsStore';
+import { useAIStore } from '../../stores/useAIStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HOOKS DE HANDLERS
@@ -68,7 +69,8 @@ import {
   ChangelogModal,
   DoubleCheckReviewModal,
   ImportProvaOralListModal,
-  ImportProvaOralSectionsModal
+  ImportProvaOralSectionsModal,
+  StreamingModal
 } from './index';
 
 import type { SavedProvaOralAnalysis } from '../../apps/prova-oral/types';
@@ -255,6 +257,11 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
   const similarityWarning = useModelsStore((s) => s.similarityWarning);
   const extractedModelPreview = useModelsStore((s) => s.extractedModelPreview);
   const setExtractedModelPreview = useModelsStore((s) => s.setExtractedModelPreview);
+
+  // AI Store - Streaming (v1.39.09)
+  const streamingState = useAIStore((s) => s.streamingState);
+  const setShowStreamingModal = useAIStore((s) => s.setShowStreamingModal);
+  const aiSettings = useAIStore((s) => s.aiSettings);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // HOOKS DE HANDLERS
@@ -465,6 +472,24 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
           isImporting={isImportingProvaOral}
         />
       )}
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* STREAMING MODAL (v1.39.09) */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+
+      <StreamingModal
+        isOpen={streamingState.showModal}
+        text={streamingState.streamingText}
+        isComplete={!streamingState.isStreaming}
+        onClose={() => setShowStreamingModal(false)}
+        operationType={streamingState.operationType}
+        providerName={{
+          claude: 'Claude',
+          gemini: 'Gemini',
+          openai: 'OpenAI',
+          grok: 'Grok'
+        }[aiSettings.provider] || 'IA'}
+      />
     </>
   );
 };

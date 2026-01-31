@@ -36,6 +36,9 @@ import type {
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════════
 
+/** Callback para receber chunks de texto durante streaming */
+export type StreamChunkCallback = (fullText: string) => void;
+
 /** Interface para AI Integration necessaria para analise de provas */
 export interface AIIntegrationForProofs {
   aiSettings: AISettings;
@@ -46,6 +49,12 @@ export interface AIIntegrationForProofs {
     temperature?: number;
     topP?: number;
     topK?: number;
+  }) => Promise<string>;
+  // v1.39.09: Streaming para evitar timeout
+  callAIStream?: (messages: AIMessage[], options?: {
+    maxTokens?: number;
+    useInstructions?: boolean;
+    onChunk?: StreamChunkCallback;
   }) => Promise<string>;
   // v1.37.65: Double Check para analise de provas
   performDoubleCheck?: PerformDoubleCheckFunction;
@@ -92,6 +101,14 @@ export interface UseProofAnalysisProps {
   showToast: (msg: string, type: 'success' | 'error' | 'info' | 'warning') => void;
 }
 
+/** Opções adicionais para análise de prova */
+export interface AnalyzeProofOptions {
+  /** v1.39.09: Usar streaming para evitar timeout */
+  useStreaming?: boolean;
+  /** v1.39.09: Callback para receber texto conforme chega */
+  onChunk?: StreamChunkCallback;
+}
+
 /** Retorno do hook */
 export interface UseProofAnalysisReturn {
   analyzeProof: (
@@ -99,7 +116,8 @@ export interface UseProofAnalysisReturn {
     analysisType: string,
     customInstructions?: string,
     useOnlyMiniRelatorios?: boolean,
-    includeLinkedTopics?: boolean
+    includeLinkedTopics?: boolean,
+    options?: AnalyzeProofOptions
   ) => Promise<void>;
 }
 
@@ -240,20 +258,24 @@ export const useProofAnalysis = ({
 
   /**
    * Analisa uma prova documental
+   * v1.39.09: Suporte a streaming para evitar timeout no Render
    *
    * @param proof - Prova a ser analisada (PDF ou texto)
    * @param analysisType - Tipo de analise ('livre' ou 'contextual')
    * @param customInstructions - Instruções personalizadas do usuário
    * @param useOnlyMiniRelatorios - Usar apenas mini-relatórios ao inves de documentos completos
    * @param includeLinkedTopics - Incluir tópicos vinculados na analise livre
+   * @param options - Opções adicionais (streaming)
    */
   const analyzeProof = useCallback(async (
     proof: Proof,
     analysisType: string,
     customInstructions = '',
     useOnlyMiniRelatorios = false,
-    includeLinkedTopics = false
+    includeLinkedTopics = false,
+    options: AnalyzeProofOptions = {}
   ): Promise<void> => {
+    const { useStreaming = false, onChunk } = options;
     const proofId = String(proof.id);
     try {
       proofManager.addAnalyzingProof(proofId);
@@ -516,16 +538,30 @@ ${customInstructions ? `INSTRUÇÕES DO MAGISTRADO:\n${customInstructions}\n` : 
 
       // Fazer chamada à API
       // v1.21.26: Parâmetros para análise crítica de provas
-      const textContent = await aiIntegration.callAI([{
-        role: 'user',
-        content: contentArray
-      }], {
-        maxTokens: 20000,
-        useInstructions: true,
-        temperature: 0.3,
-        topP: 0.9,
-        topK: 50
-      });
+      // v1.39.09: Suporte a streaming para evitar timeout
+      let textContent: string;
+
+      if (useStreaming && aiIntegration.callAIStream) {
+        textContent = await aiIntegration.callAIStream([{
+          role: 'user',
+          content: contentArray
+        }], {
+          maxTokens: 20000,
+          useInstructions: true,
+          onChunk
+        });
+      } else {
+        textContent = await aiIntegration.callAI([{
+          role: 'user',
+          content: contentArray
+        }], {
+          maxTokens: 20000,
+          useInstructions: true,
+          temperature: 0.3,
+          topP: 0.9,
+          topK: 50
+        });
+      }
 
       // ═══════════════════════════════════════════════════════════════════════════
       // DOUBLE CHECK DA ANÁLISE DE PROVA (v1.37.65)

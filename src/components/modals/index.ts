@@ -62,3 +62,7 @@ export type { ModalRootProps } from './ModalRoot';
 // Import Prova Oral Modals (v1.39.08)
 export { ImportProvaOralListModal, ImportProvaOralSectionsModal } from './ImportProvaOralModals';
 export type { ImportProvaOralListModalProps, ImportProvaOralSectionsModalProps } from './ImportProvaOralModals';
+
+// Streaming Modal (v1.39.09)
+export { StreamingModal } from './StreamingModal';
+export type { StreamingModalProps, StreamingOperationType } from './StreamingModal';

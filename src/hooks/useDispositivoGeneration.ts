@@ -18,8 +18,17 @@ import { useUIStore } from '../stores/useUIStore';
 
 export type DoubleCheckOperation = 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison';
 
+/** Callback para receber chunks de texto durante streaming */
+export type StreamChunkCallback = (fullText: string) => void;
+
 export interface AIIntegrationForDispositivo {
   callAI: (messages: AIMessage[], options?: AICallOptions) => Promise<string>;
+  // v1.39.09: Streaming para evitar timeout
+  callAIStream?: (messages: AIMessage[], options?: {
+    maxTokens?: number;
+    useInstructions?: boolean;
+    onChunk?: StreamChunkCallback;
+  }) => Promise<string>;
   aiSettings: {
     modeloDispositivo?: string;
     doubleCheck?: {
@@ -70,9 +79,17 @@ export interface UseDispositivoGenerationProps {
   htmlToFormattedText: (html: string) => string;
 }
 
+/** Opções para geração de dispositivo */
+export interface GenerateDispositivoOptions {
+  /** v1.39.09: Usar streaming para evitar timeout */
+  useStreaming?: boolean;
+  /** v1.39.09: Callback para receber texto conforme chega */
+  onChunk?: StreamChunkCallback;
+}
+
 export interface UseDispositivoGenerationReturn {
-  generateDispositivo: () => Promise<void>;
-  regenerateDispositivoWithInstruction: () => Promise<void>;
+  generateDispositivo: (options?: GenerateDispositivoOptions) => Promise<void>;
+  regenerateDispositivoWithInstruction: (options?: GenerateDispositivoOptions) => Promise<void>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -126,8 +143,10 @@ export function useDispositivoGeneration({
 
   /**
    * Gera o DISPOSITIVO inicial baseado nos tópicos decididos
+   * v1.39.09: Suporte a streaming para evitar timeout no Render
    */
-  const generateDispositivo = useCallback(async () => {
+  const generateDispositivo = useCallback(async (options: GenerateDispositivoOptions = {}) => {
+    const { useStreaming = false, onChunk } = options;
     if (selectedTopics.length === 0) {
       setError('Nenhum tópico selecionado. Adicione e preencha os tópicos antes de gerar o dispositivo.');
       return;
@@ -274,17 +293,31 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         text: promptText
       }];
 
-      const textContent = await aiIntegration.callAI([{
-        role: 'user',
-        content: contentArray
-      }], {
-        maxTokens: 8000,
-        useInstructions: true,
-        logMetrics: true,
-        temperature: 0.3,
-        topP: 0.9,
-        topK: 50
-      });
+      // v1.39.09: Suporte a streaming para evitar timeout
+      let textContent: string;
+
+      if (useStreaming && aiIntegration.callAIStream) {
+        textContent = await aiIntegration.callAIStream([{
+          role: 'user',
+          content: contentArray
+        }], {
+          maxTokens: 8000,
+          useInstructions: true,
+          onChunk
+        });
+      } else {
+        textContent = await aiIntegration.callAI([{
+          role: 'user',
+          content: contentArray
+        }], {
+          maxTokens: 8000,
+          useInstructions: true,
+          logMetrics: true,
+          temperature: 0.3,
+          topP: 0.9,
+          topK: 50
+        });
+      }
 
       let dispositivoFinal = normalizeHTMLSpacing(textContent.trim());
 
@@ -366,8 +399,10 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 
   /**
    * Regenera o DISPOSITIVO com instrução customizada do usuário
+   * v1.39.09: Suporte a streaming para evitar timeout no Render
    */
-  const regenerateDispositivoWithInstruction = useCallback(async () => {
+  const regenerateDispositivoWithInstruction = useCallback(async (options: GenerateDispositivoOptions = {}) => {
+    const { useStreaming = false, onChunk } = options;
     if (!editingTopic || editingTopic.title.toUpperCase() !== 'DISPOSITIVO') {
       setError('Esta função só pode ser usada para o tópico DISPOSITIVO');
       return;
@@ -520,17 +555,31 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         text: promptText
       }];
 
-      const textContent = await aiIntegration.callAI([{
-        role: 'user',
-        content: contentArray
-      }], {
-        maxTokens: 8000,
-        useInstructions: true,
-        logMetrics: true,
-        temperature: 0.3,
-        topP: 0.9,
-        topK: 50
-      });
+      // v1.39.09: Suporte a streaming para evitar timeout
+      let textContent: string;
+
+      if (useStreaming && aiIntegration.callAIStream) {
+        textContent = await aiIntegration.callAIStream([{
+          role: 'user',
+          content: contentArray
+        }], {
+          maxTokens: 8000,
+          useInstructions: true,
+          onChunk
+        });
+      } else {
+        textContent = await aiIntegration.callAI([{
+          role: 'user',
+          content: contentArray
+        }], {
+          maxTokens: 8000,
+          useInstructions: true,
+          logMetrics: true,
+          temperature: 0.3,
+          topP: 0.9,
+          topK: 50
+        });
+      }
 
       if (!textContent || textContent.trim() === '') {
         throw new Error('Dispositivo gerado está vazio');
