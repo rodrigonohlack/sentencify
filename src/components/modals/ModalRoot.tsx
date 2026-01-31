@@ -227,6 +227,8 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
   // v1.38.51: TextPreview (migrado do App.tsx)
   const textPreview = useUIStore((s) => s.textPreview);
   const closeTextPreview = useUIStore((s) => s.closeTextPreview);
+  // Número do processo atual para filtrar importação de Prova Oral
+  const processoNumero = useUIStore((s) => s.processoNumero);
 
   // Topics Store
   const topicToDelete = useTopicsStore((s) => s.topicToDelete);
@@ -450,6 +452,7 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
           error={provaOralError}
           onSelect={onSelectProvaOralAnalysis}
           onRefresh={onRefreshProvaOralAnalyses}
+          currentProcessoNumero={processoNumero}
         />
       )}
 

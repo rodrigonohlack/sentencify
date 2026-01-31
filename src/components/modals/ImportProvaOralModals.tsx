@@ -28,6 +28,8 @@ export interface ImportProvaOralListModalProps {
   error: string | null;
   onSelect: (analysis: SavedProvaOralAnalysis) => void;
   onRefresh: () => void;
+  /** Número do processo atual para pré-filtrar análises */
+  currentProcessoNumero?: string;
 }
 
 export interface ImportProvaOralSectionsModalProps {
@@ -82,31 +84,49 @@ export const ImportProvaOralListModal: React.FC<ImportProvaOralListModalProps> =
   isLoading,
   error,
   onSelect,
-  onRefresh
+  onRefresh,
+  currentProcessoNumero
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAll, setShowAll] = useState(false);
 
   // Reset search ao abrir (sem onRefresh nas deps para evitar loop infinito)
   useEffect(() => {
     if (isOpen && !isLoading) {
       setSearchTerm('');
+      setShowAll(false);
       onRefresh();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Filtrar análises por termo de busca
+  // Análises que correspondem ao processo atual
+  const matchingAnalyses = useMemo(() => {
+    if (!currentProcessoNumero?.trim()) return analyses;
+
+    const normalized = currentProcessoNumero.replace(/[.\-\/]/g, '').toLowerCase();
+    return analyses.filter(a => {
+      if (!a.numeroProcesso) return false;
+      const aNormalized = a.numeroProcesso.replace(/[.\-\/]/g, '').toLowerCase();
+      return aNormalized.includes(normalized) || normalized.includes(aNormalized);
+    });
+  }, [analyses, currentProcessoNumero]);
+
+  // Análises base (matching ou todas)
+  const baseAnalyses = showAll ? analyses : matchingAnalyses;
+
+  // Filtrar por termo de busca
   const filteredAnalyses = useMemo(() => {
-    if (!searchTerm.trim()) return analyses;
+    if (!searchTerm.trim()) return baseAnalyses;
 
     const term = searchTerm.toLowerCase();
-    return analyses.filter(a =>
+    return baseAnalyses.filter(a =>
       a.numeroProcesso?.toLowerCase().includes(term) ||
       a.reclamante?.toLowerCase().includes(term) ||
       a.reclamada?.toLowerCase().includes(term) ||
       a.vara?.toLowerCase().includes(term)
     );
-  }, [analyses, searchTerm]);
+  }, [baseAnalyses, searchTerm]);
 
   return (
     <BaseModal
@@ -130,6 +150,24 @@ export const ImportProvaOralListModal: React.FC<ImportProvaOralListModalProps> =
           autoFocus
         />
       </div>
+
+      {/* Aviso de filtro ativo */}
+      {currentProcessoNumero && !showAll && (
+        <div className="mb-4 p-3 rounded-lg theme-info-box">
+          <p className="text-sm theme-text-blue">
+            Mostrando análises do processo {currentProcessoNumero}
+            {matchingAnalyses.length === 0 && ' (nenhuma encontrada)'}
+          </p>
+          {analyses.length > matchingAnalyses.length && (
+            <button
+              onClick={() => setShowAll(true)}
+              className="text-sm theme-text-purple hover:underline mt-1"
+            >
+              Ver todas ({analyses.length} análises)
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Erro */}
       {error && (
