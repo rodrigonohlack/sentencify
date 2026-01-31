@@ -98,7 +98,7 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
             {isAuthenticated && (
               <button
                 onClick={() => openModal('importProvaOralList')}
-                className="w-full py-3 rounded-lg transition-colors flex items-center justify-center gap-2 bg-purple-600/20 border border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-500/50 text-purple-300"
+                className="w-full py-3 rounded-lg transition-colors flex items-center justify-center gap-2 bg-purple-600/20 dark:bg-purple-600/20 border border-purple-500/50 dark:border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-500/50 text-purple-700 dark:text-purple-300"
               >
                 <Mic className="w-4 h-4" />
                 Importar Análise de Prova Oral

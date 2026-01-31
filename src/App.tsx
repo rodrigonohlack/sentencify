@@ -2166,7 +2166,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const handleRefreshProvaOralAnalyses = React.useCallback(async () => {
     const analyses = await provaOralImport.listAnalyses();
     setProvaOralAnalyses(analyses);
-  }, [provaOralImport]);
+  }, [provaOralImport.listAnalyses]);
 
   const handleSelectProvaOralAnalysis = React.useCallback((analysis: SavedProvaOralAnalysis) => {
     setSelectedProvaOralAnalysis(analysis);

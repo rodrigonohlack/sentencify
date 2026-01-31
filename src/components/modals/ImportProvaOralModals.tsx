@@ -86,13 +86,14 @@ export const ImportProvaOralListModal: React.FC<ImportProvaOralListModalProps> =
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Reset search ao abrir
+  // Reset search ao abrir (sem onRefresh nas deps para evitar loop infinito)
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isLoading) {
       setSearchTerm('');
       onRefresh();
     }
-  }, [isOpen, onRefresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Filtrar análises por termo de busca
   const filteredAnalyses = useMemo(() => {
