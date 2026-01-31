@@ -81,6 +81,51 @@ INSTRUÇÕES DE ANÁLISE:
 - Se testemunha NEGOU horas extras → incluir no tema "Jornada"
 - Omitir negações distorce a análise probatória!
 
+## ESCOPO DE RELEVÂNCIA POR TEMA - PEQUE POR INCLUSÃO!
+
+Na dúvida se uma declaração é relevante para um tema, INCLUA. É melhor incluir demais do que omitir prova relevante.
+
+**Tema "Vínculo Empregatício" deve incluir declarações sobre:**
+- Período de trabalho (datas de início/fim)
+- Dias da semana trabalhados (habitualidade)
+- Função exercida
+- Subordinação
+- Onerosidade (pagamento)
+- Pessoalidade
+- Afastamentos e retornos
+- Trabalho em outro local
+
+**Tema "Jornada/Horas Extras" deve incluir:**
+- Horário de entrada/saída
+- Intervalos (ou falta deles)
+- Trabalho em feriados/domingos
+- Hora de fechamento do estabelecimento
+- Controle de ponto
+
+**Tema "Dano Moral/Assédio" deve incluir:**
+- Xingamentos, ofensas, humilhações
+- Tratamento discriminatório
+- Ambiente hostil
+- NEGAÇÕES de tais fatos (prova contrária)
+
+## ⚠️ REPETIÇÃO ENTRE TEMAS É OBRIGATÓRIA!
+
+NÃO evite repetir declarações entre temas! A MESMA declaração frequentemente é relevante para MÚLTIPLOS temas:
+
+**EXEMPLO 1:** "trabalhava de terça a domingo das 17h às 02h" (34m 02s)
+- ✅ Incluir em "Vínculo" → comprova HABITUALIDADE (não-eventualidade)
+- ✅ Incluir em "Jornada/Horas Extras" → comprova horário extenso
+
+**EXEMPLO 2:** "trabalhava como chapeiro desde maio/2024" (32m 14s)
+- ✅ Incluir em "Vínculo" → comprova período e função
+- ✅ Incluir em "Diferenças Salariais" (se houver) → comprova função
+
+**EXEMPLO 3:** "não havia intervalo para alimentação" (34m 23s)
+- ✅ Incluir em "Jornada" → intervalo intrajornada
+- ✅ Incluir em "Vínculo" → caracteriza subordinação
+
+Cada tema deve ser AUTOSSUFICIENTE - o juiz pode ler apenas um tema e ter todas as provas relevantes!
+
 - ERRADO: "afirmou início em julho (1m 10s); negou abandono (5m 30s)" ← muito curto, faltam declarações
 - CORRETO: "afirmou início em 17/07/2024 (1m 10s); disse trabalhar sem carteira até dez/2024 (2m 29s); relatou carteira assinada em fev/2025 e baixa um mês depois mas continuou trabalhando (3m 57s); declarou jornada de terça a domingo das 17h às 02h30 (5m 37s); negou trabalhar em outro local (16m 36s); afirmou não ter intervalo para refeição (11m 37s); denunciou xingamentos homofóbicos (9m 11s)" ← todas as declarações!
 
@@ -124,6 +169,11 @@ FORMATO - RETORNE APENAS JSON VÁLIDO (sem markdown, sem backticks, sem explica�
           "deponente": "AUTOR FULANO",
           "qualificacao": "autor",
           "textoCorrente": "⚠️ TODAS as declarações deste depoente sobre ESTE tema: afirmou início em 17/07/2024 (1m 10s); disse trabalhar sem carteira até dez/2024 (2m 29s); relatou carteira assinada em fev/2025 com baixa um mês depois mas continuou trabalhando (3m 57s); negou trabalhar em outro local entre 11/03 e 30/04/2025 (16m 36s)"
+        },
+        {
+          "deponente": "TESTEMUNHA ALFRE (testemunha do autor)",
+          "qualificacao": "testemunha-autor",
+          "textoCorrente": "⚠️ INCLUIR TUDO QUE CARACTERIZA VÍNCULO: informou trabalho como chapeiro de maio/2024 a julho/2025 (32m 14s); confirmou que autor trabalhava de terça a domingo (33m 43s); relatou que autor se afastou apenas 4-5 dias e retornou (35m 10s); confirmou que autor trabalhou em outro local durante breve afastamento (37m 40s)"
         },
         {
           "deponente": "PREPOSTO SICRANO",
@@ -208,6 +258,7 @@ IMPORTANTE:
 - CRÍTICO: Em "provaOral", o campo "deponente" NUNCA pode ser vazio - sempre identificar quem disse (Autor, Preposto, ou nome da testemunha)
 - CRÍTICO: Extraia TODAS as declarações de cada depoente - não resuma excessivamente
 - CRÍTICO: Cada declaração individual deve ter seu próprio timestamp
+- CRÍTICO: sintesesPorTema deve incluir TODAS as declarações que CARACTERIZAM cada tema, não apenas as que mencionam o tema explicitamente (ex: período e dias da semana CARACTERIZAM vínculo mesmo sem mencionar "vínculo")
 
 ## CHECKLIST OBRIGATÓRIO (verifique antes de responder)
 
@@ -217,6 +268,8 @@ IMPORTANTE:
 ☐ sintesesPorTema agrupa declarações por cada tema/pedido da inicial?
 ☐ sintesesPorTema.declaracoes[].textoCorrente tem TODAS as declarações relevantes ao tema (não apenas 1)?
 ☐ sintesesPorTema inclui TODOS os depoentes que falaram sobre cada tema (tanto quem confirma quanto quem nega)?
+☐ sintesesPorTema inclui declarações que CARACTERIZAM o tema (período, função, dias = Vínculo; horários = Jornada)?
+☐ Declarações relevantes para múltiplos temas aparecem em TODOS os temas aplicáveis (repetição é esperada)?
 ☐ Em provaOral[], o campo "deponente" identifica QUEM disse (nunca vazio)?
 ☐ Todos os 7 arrays estão presentes no JSON?`;
 
