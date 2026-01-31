@@ -108,15 +108,17 @@ const formatShortDate = (dateStr: string | null): string => {
   return date.toLocaleDateString('pt-BR');
 };
 
-/** Extrai número do processo do campo ou do nome do arquivo */
+/** Extrai número do processo priorizando nome do arquivo (sempre correto) */
 const getNumeroProcesso = (analysis: SavedAnalysis): string | null => {
-  if (analysis.numeroProcesso) return analysis.numeroProcesso;
+  // PRIORIDADE 1: Número do arquivo (sempre correto)
   if (analysis.nomeArquivoPeticao) {
     const match = analysis.nomeArquivoPeticao.match(/\[(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\]/);
     if (match) return match[1];
     const cnjMatch = analysis.nomeArquivoPeticao.match(/(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/);
     if (cnjMatch) return cnjMatch[1];
   }
+  // PRIORIDADE 2: Número salvo/IA (fallback)
+  if (analysis.numeroProcesso) return analysis.numeroProcesso;
   return null;
 };
 
