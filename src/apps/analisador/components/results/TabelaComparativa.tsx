@@ -68,30 +68,30 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
     <div className="space-y-6">
       {/* Resumo Financeiro */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 bg-gradient-to-br from-indigo-50 to-violet-50 rounded-xl border border-indigo-100">
+        <div className="p-4 bg-gradient-to-br from-indigo-50 dark:from-indigo-900/20 to-violet-50 dark:to-violet-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800/40">
           <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="w-5 h-5 text-indigo-600" />
-            <span className="text-sm text-slate-600">Valor da Causa</span>
+            <DollarSign className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <span className="text-sm text-slate-600 dark:text-slate-300">Valor da Causa</span>
           </div>
-          <p className="text-xl font-bold text-indigo-700">
+          <p className="text-xl font-bold text-indigo-700 dark:text-indigo-300">
             {formatCurrency(valorCausa.valorTotal)}
           </p>
         </div>
 
-        <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
+        <div className="p-4 bg-gradient-to-br from-emerald-50 dark:from-emerald-900/20 to-teal-50 dark:to-teal-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800/40">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle className="w-5 h-5 text-emerald-600" />
-            <span className="text-sm text-slate-600">Soma dos Pedidos</span>
+            <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-sm text-slate-600 dark:text-slate-300">Soma dos Pedidos</span>
           </div>
-          <p className="text-xl font-bold text-emerald-700">
+          <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">
             {formatCurrency(valorCausa.somaPedidos || totalPedidos)}
           </p>
         </div>
 
-        <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200">
+        <div className="p-4 bg-gradient-to-br from-slate-50 dark:from-slate-800 to-slate-100 dark:to-slate-700 rounded-xl border border-slate-200 dark:border-slate-600">
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-5 h-5 text-slate-500" />
-            <span className="text-sm text-slate-600">Controvérsias</span>
+            <AlertTriangle className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+            <span className="text-sm text-slate-600 dark:text-slate-300">Controvérsias</span>
           </div>
           <div className="flex items-center gap-3">
             <Badge variant="warning">{controvertidos} controvertidos</Badge>
@@ -102,11 +102,11 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
 
       {/* Alerta de Inconsistência */}
       {valorCausa.inconsistencia && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-lg flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium text-amber-800">Inconsistência no Valor da Causa</p>
-            <p className="text-sm text-amber-700 mt-1">
+            <p className="font-medium text-amber-800 dark:text-amber-300">Inconsistência no Valor da Causa</p>
+            <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
               {safeRender(valorCausa.detalhes) || 'O valor da causa não corresponde à soma dos pedidos.'}
             </p>
           </div>
@@ -114,30 +114,30 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
       )}
 
       {/* Tabela */}
-      <div className="overflow-x-auto border border-slate-200 rounded-xl">
+      <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-slate-50">
-              <th className="px-4 py-3 text-left font-medium text-slate-600 w-12">#</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-600">Tema</th>
-              <th className="px-4 py-3 text-right font-medium text-slate-600">Valor</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-600">Tese do Autor</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-600">Tese do Réu</th>
-              <th className="px-4 py-3 text-center font-medium text-slate-600">Status</th>
+            <tr className="bg-slate-50 dark:bg-slate-800/50">
+              <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300 w-12">#</th>
+              <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Tema</th>
+              <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-300">Valor</th>
+              <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Tese do Autor</th>
+              <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Tese do Réu</th>
+              <th className="px-4 py-3 text-center font-medium text-slate-600 dark:text-slate-300">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
             {pedidos.map((pedido) => {
               const { cleanTema } = parseThemeAndValue(pedido.tema, pedido.valor);
               return (
-                <tr key={pedido.numero} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 text-slate-800 font-medium">
+                <tr key={pedido.numero} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <td className="px-4 py-3 text-slate-800 dark:text-slate-100 font-medium">
                     {pedido.numero}
                   </td>
-                  <td className="px-4 py-3 text-slate-800 font-medium">
+                  <td className="px-4 py-3 text-slate-800 dark:text-slate-100 font-medium">
                     {cleanTema}
                   </td>
-                  <td className="px-4 py-3 text-right text-slate-700">
+                  <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-200">
                     {formatCurrency(pedido.valor)}
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400 max-w-[200px]">
@@ -166,9 +166,9 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
             })}
           </tbody>
           <tfoot>
-            <tr className="bg-slate-100 font-medium">
-              <td colSpan={2} className="px-4 py-3 text-slate-700">Total</td>
-              <td className="px-4 py-3 text-right text-slate-800">
+            <tr className="bg-slate-100 dark:bg-slate-800 font-medium">
+              <td colSpan={2} className="px-4 py-3 text-slate-700 dark:text-slate-200">Total</td>
+              <td className="px-4 py-3 text-right text-slate-800 dark:text-slate-100">
                 {formatCurrency(totalPedidos)}
               </td>
               <td colSpan={3}></td>
@@ -179,8 +179,8 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
 
       {/* Observações e Confissões Fictas */}
       {pedidos.some(p => p.confissaoFicta || p.observacoes) && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <h4 className="font-medium text-red-800 mb-3 flex items-center gap-2">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-lg">
+          <h4 className="font-medium text-red-800 dark:text-red-300 mb-3 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
             Confissões Fictas e Observações
           </h4>
@@ -188,7 +188,7 @@ export const TabelaComparativa: React.FC<TabelaComparativaProps> = ({ pedidos, v
             {pedidos.filter(p => p.confissaoFicta || p.observacoes).map((p) => {
               const { cleanTema } = parseThemeAndValue(p.tema, p.valor);
               return (
-                <div key={p.numero} className="text-sm text-red-700">
+                <div key={p.numero} className="text-sm text-red-700 dark:text-red-400">
                   <strong>#{p.numero} {cleanTema}:</strong>{' '}
                   {safeRender(p.confissaoFicta || p.observacoes)}
                 </div>

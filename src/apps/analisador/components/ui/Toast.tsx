@@ -17,32 +17,32 @@ interface ToastProps {
 
 const typeStyles = {
   success: {
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-200',
-    text: 'text-emerald-800',
+    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+    border: 'border-emerald-200 dark:border-emerald-800/40',
+    text: 'text-emerald-800 dark:text-emerald-300',
     icon: CheckCircle,
-    iconColor: 'text-emerald-500'
+    iconColor: 'text-emerald-500 dark:text-emerald-400'
   },
   error: {
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    text: 'text-red-800',
+    bg: 'bg-red-50 dark:bg-red-900/20',
+    border: 'border-red-200 dark:border-red-800/40',
+    text: 'text-red-800 dark:text-red-300',
     icon: XCircle,
-    iconColor: 'text-red-500'
+    iconColor: 'text-red-500 dark:text-red-400'
   },
   warning: {
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
-    text: 'text-amber-800',
+    bg: 'bg-amber-50 dark:bg-amber-900/20',
+    border: 'border-amber-200 dark:border-amber-800/40',
+    text: 'text-amber-800 dark:text-amber-300',
     icon: AlertCircle,
-    iconColor: 'text-amber-500'
+    iconColor: 'text-amber-500 dark:text-amber-400'
   },
   info: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    text: 'text-blue-800',
+    bg: 'bg-blue-50 dark:bg-blue-900/20',
+    border: 'border-blue-200 dark:border-blue-800/40',
+    text: 'text-blue-800 dark:text-blue-300',
     icon: Info,
-    iconColor: 'text-blue-500'
+    iconColor: 'text-blue-500 dark:text-blue-400'
   }
 };
 

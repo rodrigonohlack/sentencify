@@ -22,21 +22,21 @@ export const AccordionItem: React.FC<AccordionItemProps> = ({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-slate-200 rounded-lg overflow-hidden">
+    <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-left font-medium text-slate-700 transition-colors"
+        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between text-left font-medium text-slate-700 dark:text-slate-100 transition-colors"
       >
         <div className="flex items-center gap-2">
-          {icon && <span className="text-indigo-600">{icon}</span>}
+          {icon && <span className="text-indigo-600 dark:text-indigo-400">{icon}</span>}
           <span>{title}</span>
         </div>
         <ChevronDown
-          className={`w-5 h-5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
       {isOpen && (
-        <div className="px-4 py-4 bg-white">
+        <div className="px-4 py-4 bg-white dark:bg-slate-900">
           {children}
         </div>
       )}

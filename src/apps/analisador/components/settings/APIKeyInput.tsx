@@ -35,16 +35,16 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
   return (
     <div className="space-y-2">
       <label className="flex items-center justify-between">
-        <span className="text-sm font-medium text-slate-700">{label}</span>
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
         {hasKey && (
-          <span className="flex items-center gap-1 text-xs text-emerald-600">
+          <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
             <CheckCircle className="w-3 h-3" />
             Configurada
           </span>
         )}
       </label>
       <div className="relative">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
           <Key className="w-4 h-4" />
         </div>
         <input
@@ -52,12 +52,12 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
           value={currentKey}
           onChange={handleChange}
           placeholder={placeholder}
-          className="w-full pl-10 pr-10 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+          className="w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
         />
         <button
           type="button"
           onClick={() => setShowKey(!showKey)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
         >
           {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </button>

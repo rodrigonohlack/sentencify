@@ -89,8 +89,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         <ModelSelector />
 
         {/* Configurações de Thinking/Reasoning */}
-        <div className="pt-4 border-t border-slate-200">
-          <h3 className="text-sm font-medium text-slate-700 mb-4">
+        <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+          <h3 className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-4">
             Configurações de Raciocínio
           </h3>
 
@@ -102,13 +102,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   type="checkbox"
                   checked={useExtendedThinking}
                   onChange={(e) => setUseExtendedThinking(e.target.checked)}
-                  className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                  className="w-4 h-4 text-indigo-600 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm text-slate-700">Extended Thinking</span>
+                <span className="text-sm text-slate-700 dark:text-slate-300">Extended Thinking</span>
               </label>
               {useExtendedThinking && (
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">
+                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
                     Budget de Thinking (tokens)
                   </label>
                   <input
@@ -117,7 +117,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     onChange={(e) => setThinkingBudget(e.target.value)}
                     min="1000"
                     max="100000"
-                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               )}
@@ -127,13 +127,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {/* Gemini: Thinking Level */}
           {provider === 'gemini' && (
             <div>
-              <label className="block text-xs text-slate-500 mb-1">
+              <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
                 Nível de Thinking
               </label>
               <select
                 value={geminiThinkingLevel}
                 onChange={(e) => setGeminiThinkingLevel(e.target.value as GeminiThinkingLevel)}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="minimal">Minimal</option>
                 <option value="low">Low</option>
@@ -146,13 +146,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {/* OpenAI: Reasoning Level (só para gpt-5.2) */}
           {provider === 'openai' && openaiModel === 'gpt-5.2' && (
             <div>
-              <label className="block text-xs text-slate-500 mb-1">
+              <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
                 Nível de Reasoning
               </label>
               <select
                 value={openaiReasoningLevel}
                 onChange={(e) => setOpenAIReasoningLevel(e.target.value as OpenAIReasoningLevel)}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium (Recomendado)</option>
@@ -163,14 +163,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
           {/* OpenAI: Instant mode info */}
           {provider === 'openai' && openaiModel === 'gpt-5.2-chat-latest' && (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Modo Instant: respostas rápidas sem thinking explícito.
             </p>
           )}
 
           {/* Grok: Model info */}
           {provider === 'grok' && (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {grokModel === 'grok-4-1-fast-reasoning'
                 ? 'Modo Reasoning: raciocínio avançado ativado.'
                 : 'Modo Instant: respostas rápidas sem thinking.'}
@@ -186,8 +186,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         />
 
         {/* Outras API Keys */}
-        <div className="pt-4 border-t border-slate-200">
-          <h3 className="text-sm font-medium text-slate-700 mb-4">
+        <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+          <h3 className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-4">
             Outras API Keys (para trocar de provedor)
           </h3>
           <div className="space-y-4">

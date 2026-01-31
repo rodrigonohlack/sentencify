@@ -30,7 +30,7 @@ interface CardContentProps {
 export const Card: React.FC<CardProps> = ({ children, className = '', onClick }) => {
   return (
     <div
-      className={`bg-white rounded-xl shadow-sm border border-slate-200 transition-all hover:shadow-md ${className}`}
+      className={`bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-all hover:shadow-md ${className}`}
       onClick={onClick}
     >
       {children}
@@ -40,7 +40,7 @@ export const Card: React.FC<CardProps> = ({ children, className = '', onClick })
 
 export const CardHeader: React.FC<CardHeaderProps> = ({ children, className = '' }) => {
   return (
-    <div className={`px-5 py-4 border-b border-slate-200 ${className}`}>
+    <div className={`px-5 py-4 border-b border-slate-200 dark:border-slate-700 ${className}`}>
       {children}
     </div>
   );
@@ -49,8 +49,8 @@ export const CardHeader: React.FC<CardHeaderProps> = ({ children, className = ''
 export const CardTitle: React.FC<CardTitleProps> = ({ children, icon, className = '' }) => {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      {icon && <span className="text-indigo-600">{icon}</span>}
-      <h3 className="text-lg font-semibold text-slate-800">{children}</h3>
+      {icon && <span className="text-indigo-600 dark:text-indigo-400">{icon}</span>}
+      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{children}</h3>
     </div>
   );
 };

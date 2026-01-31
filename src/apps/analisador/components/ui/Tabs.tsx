@@ -34,7 +34,7 @@ export const Tabs: React.FC<TabsProps> = ({
   return (
     <div>
       {/* Tab List */}
-      <div className="flex border-b border-slate-200">
+      <div className="flex border-b border-slate-200 dark:border-slate-700">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -43,8 +43,8 @@ export const Tabs: React.FC<TabsProps> = ({
               flex items-center gap-2 px-4 py-3 font-medium text-sm
               border-b-2 transition-colors
               ${activeTab === tab.id
-                ? 'text-indigo-600 border-indigo-600'
-                : 'text-slate-600 border-transparent hover:text-slate-800 hover:border-slate-300'
+                ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
+                : 'text-slate-600 dark:text-slate-300 border-transparent hover:text-slate-800 dark:hover:text-slate-100 hover:border-slate-300 dark:hover:border-slate-600'
               }
             `}
           >
