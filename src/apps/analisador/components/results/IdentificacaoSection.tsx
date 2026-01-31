@@ -24,14 +24,14 @@ interface IdentificacaoSectionProps {
 }
 
 /**
- * Extrai número do processo do nome do arquivo (fallback quando IA não retorna)
+ * Extrai número do processo priorizando o nome do arquivo (sempre correto)
  * Mesma lógica usada no HistoricoModal
  */
 const extractNumeroProcesso = (
   numeroProcesso?: string,
   nomeArquivo?: string | null
 ): string | null => {
-  if (numeroProcesso) return numeroProcesso;
+  // PRIORIDADE 1: Número do arquivo (sempre correto)
   if (nomeArquivo) {
     // Tenta [NUMERO] primeiro (formato padrão de exportação)
     const match = nomeArquivo.match(/\[(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\]/);
@@ -40,11 +40,13 @@ const extractNumeroProcesso = (
     const cnjMatch = nomeArquivo.match(/(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})/);
     if (cnjMatch) return cnjMatch[1];
   }
+  // PRIORIDADE 2: Número da IA (fallback)
+  if (numeroProcesso) return numeroProcesso;
   return null;
 };
 
 export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data, valorCausa, nomeArquivoPeticao }) => {
-  // Extrai número do processo: da IA ou do nome do arquivo (fallback)
+  // Extrai número do processo: do nome do arquivo (prioridade) ou da IA (fallback)
   const numeroProcesso = extractNumeroProcesso(data.numeroProcesso, nomeArquivoPeticao);
   const formatCurrency = (value?: number) => {
     if (value == null) return '';
