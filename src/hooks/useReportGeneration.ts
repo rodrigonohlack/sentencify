@@ -604,7 +604,8 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
                   instruction: topic.instruction || '',
                   includeComplementares: topic.includeComplementares || false,
                   isInitialGeneration: topic.isInitialGeneration || false,
-                  documentsOverride: (topic.documentsOverride && Object.keys(topic.documentsOverride as object).length > 0) ? topic.documentsOverride as AnalyzedDocuments : null
+                  documentsOverride: (topic.documentsOverride && Object.keys(topic.documentsOverride as object).length > 0) ? topic.documentsOverride as AnalyzedDocuments : null,
+                  useStreaming: true  // v1.40.00: Streaming silencioso para evitar timeout
                 }),
                 {
                   ...AI_RETRY_DEFAULTS,
@@ -620,7 +621,8 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
                 () => generateMultipleMiniReports(group, {
                   includeComplementares: group[0]?.includeComplementares || false,
                   isInitialGeneration: group[0]?.isInitialGeneration || false,
-                  documentsOverride: (group[0]?.documentsOverride && Object.keys(group[0].documentsOverride as object).length > 0) ? group[0].documentsOverride as AnalyzedDocuments : null
+                  documentsOverride: (group[0]?.documentsOverride && Object.keys(group[0].documentsOverride as object).length > 0) ? group[0].documentsOverride as AnalyzedDocuments : null,
+                  useStreaming: true  // v1.40.00: Streaming silencioso para evitar timeout
                 }),
                 {
                   ...AI_RETRY_DEFAULTS,

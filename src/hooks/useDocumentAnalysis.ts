@@ -101,6 +101,15 @@ export interface AIIntegrationForAnalysis {
     topP?: number;
     topK?: number;
   }) => Promise<Record<string, unknown>>;
+  /** v1.40.00: Streaming para evitar timeout no Render */
+  callAIStream?: (messages: AIMessage[], options?: {
+    maxTokens?: number;
+    useInstructions?: boolean;
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    onChunk?: (text: string) => void;
+  }) => Promise<string>;
   extractResponseText: (data: Record<string, unknown>, provider: AIProvider) => string;
   performDoubleCheck?: PerformDoubleCheckFunction;
 }
@@ -570,28 +579,43 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
 
       setAnalysisProgress('Aguardando análise da IA (isso pode levar alguns minutos)...');
 
-      // Chamar IA com parametros para análise critica
-      const data = await aiIntegration.callAI(messages, {
-        maxTokens: 16000,
-        useInstructions: true,
-        extractText: false,
-        temperature: 0.2,
-        topP: 0.85,
-        topK: 40
-      });
-
-      // Verificar se a resposta foi truncada por limite de tokens
+      // v1.40.00: Usar streaming silencioso para evitar timeout de 30s no Render
+      // SSE mantém conexão viva enquanto recebe dados, sem mostrar texto em tempo real
+      let textContent: string;
       const provider = aiIntegration.aiSettings.provider || 'claude';
-      const responseData = data as { candidates?: Array<{ finishReason?: string }>; stop_reason?: string };
-      const isTruncated = provider === 'gemini'
-        ? responseData.candidates?.[0]?.finishReason === 'MAX_TOKENS'
-        : responseData.stop_reason === 'max_tokens';
 
-      if (isTruncated) {
-        throw new Error('O documento e muito extenso e a análise foi truncada. Tente: 1) Dividir o PDF em partes menores, 2) Usar documentos com menos páginas, ou 3) Colar apenas trechos relevantes do texto.');
+      if (aiIntegration.callAIStream) {
+        // Streaming silencioso: evita timeout, não mostra texto parcial
+        textContent = await aiIntegration.callAIStream(messages, {
+          maxTokens: 16000,
+          useInstructions: true,
+          temperature: 0.2,
+          topP: 0.85,
+          topK: 40
+        });
+      } else {
+        // Fallback: chamada tradicional (pode dar timeout em documentos grandes)
+        const data = await aiIntegration.callAI(messages, {
+          maxTokens: 16000,
+          useInstructions: true,
+          extractText: false,
+          temperature: 0.2,
+          topP: 0.85,
+          topK: 40
+        });
+
+        // Verificar se a resposta foi truncada por limite de tokens
+        const responseData = data as { candidates?: Array<{ finishReason?: string }>; stop_reason?: string };
+        const isTruncated = provider === 'gemini'
+          ? responseData.candidates?.[0]?.finishReason === 'MAX_TOKENS'
+          : responseData.stop_reason === 'max_tokens';
+
+        if (isTruncated) {
+          throw new Error('O documento e muito extenso e a análise foi truncada. Tente: 1) Dividir o PDF em partes menores, 2) Usar documentos com menos páginas, ou 3) Colar apenas trechos relevantes do texto.');
+        }
+
+        textContent = aiIntegration.extractResponseText(data, provider);
       }
-
-      const textContent = aiIntegration.extractResponseText(data, provider);
 
       if (!textContent) {
         throw new Error(`Nenhum conteúdo de texto encontrado na resposta da API (${provider}). Verifique a chave API e modelo configurados.`);

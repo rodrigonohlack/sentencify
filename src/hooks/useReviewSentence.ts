@@ -42,6 +42,16 @@ export interface AIIntegrationForReview {
     topP?: number;
     topK?: number;
   }) => Promise<string>;
+  /** v1.40.01: Streaming para evitar timeout no Render */
+  callAIStream?: (messages: Array<{ role: string; content: AIMessageContent[] }>, options?: {
+    maxTokens?: number;
+    systemPrompt?: string;
+    useInstructions?: boolean;
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    onChunk?: (text: string) => void;
+  }) => Promise<string>;
   aiSettings: {
     doubleCheck?: {
       enabled: boolean;
@@ -175,19 +185,38 @@ export function useReviewSentence({
         text: `DECISÃO PARA REVISÃO:\n\n${buildDecisionText()}`
       });
 
+      // v1.40.01: Usar streaming silencioso para evitar timeout de 30s no Render
       // Parâmetros específicos para revisão crítica (mais rigoroso, menos criativo)
-      const result = await aiIntegration.callAI([{
-        role: 'user',
-        content: contentArray
-      }], {
-        maxTokens: 8192,
-        systemPrompt: AI_PROMPTS.revisaoSentenca(reviewScope === 'decisionWithDocs'),
-        useInstructions: false,
-        logMetrics: true,
-        temperature: 0.2,
-        topP: 0.9,
-        topK: 40
-      });
+      let result: string;
+
+      if (aiIntegration.callAIStream) {
+        // Streaming silencioso: evita timeout, não mostra texto parcial
+        result = await aiIntegration.callAIStream([{
+          role: 'user',
+          content: contentArray
+        }], {
+          maxTokens: 8192,
+          systemPrompt: AI_PROMPTS.revisaoSentenca(reviewScope === 'decisionWithDocs'),
+          useInstructions: false,
+          temperature: 0.2,
+          topP: 0.9,
+          topK: 40
+        });
+      } else {
+        // Fallback: chamada tradicional
+        result = await aiIntegration.callAI([{
+          role: 'user',
+          content: contentArray
+        }], {
+          maxTokens: 8192,
+          systemPrompt: AI_PROMPTS.revisaoSentenca(reviewScope === 'decisionWithDocs'),
+          useInstructions: false,
+          logMetrics: true,
+          temperature: 0.2,
+          topP: 0.9,
+          topK: 40
+        });
+      }
 
       let reviewFinal = normalizeHTMLSpacing(result.trim());
 
