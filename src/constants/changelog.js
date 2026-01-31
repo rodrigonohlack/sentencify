@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.08', feature: 'Fix bug de auto-inicialização do modelo E5: restaurar useEffect removido acidentalmente na refatoração v1.40.06 (agora no hook useSemanticSearchManagement). Modelo E5 é auto-carregado após F5 quando toggle de Busca Semântica está habilitado' },
   { version: '1.40.07', feature: 'Limpeza pós-refatoração ConfigModal: remover variáveis e handlers não utilizados do App.tsx (~120 linhas removidas). TypeScript sem erros, 5904 testes passando' },
   { version: '1.40.06', feature: 'Refatoração ConfigModal: eliminar 52 props via import direto de hooks/stores (useAIStore, useUIStore, useModelsStore, useNERManagement, useSemanticSearchManagement, useEmbeddingsManagement, useLegislacao, useJurisprudencia, useDragDropTopics, useExportImport). Props reduzidas de 52 para 2 (96% redução)' },
   { version: '1.40.05', feature: 'Refatoração prop drilling: criar useEditorStore e useRegenerationStore (Zustand), expandir useModelsStore com preview contextual, reduzir props de DecisionEditorContainer de 54 para ~6 (89% redução)' },

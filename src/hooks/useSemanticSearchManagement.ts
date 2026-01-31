@@ -13,7 +13,8 @@
  * - searchEnabled: Toggle master para habilitar busca semântica (persistido)
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import AIModelService from '../services/AIModelService';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -77,6 +78,42 @@ export function useSemanticSearchManagement(): UseSemanticSearchManagementReturn
       console.warn('[SemanticSearch] Erro ao salvar searchEnabled:', err);
     }
   }, []);
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // AUTO-INICIALIZAÇÃO DO MODELO E5
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  // v1.40.08: Auto-inicializar modelo E5 se toggle está habilitado
+  // Isso foi removido acidentalmente na refatoração v1.40.06
+  useEffect(() => {
+    if (searchEnabled && !searchModelReady && !searchInitializing) {
+      if (import.meta.env.DEV) console.log('[Search] Auto-inicializando modelo E5...');
+
+      const timer = setTimeout(async () => {
+        setSearchInitializing(true);
+        setSearchDownloadProgress(0);
+
+        const unsubscribe = AIModelService.subscribe((_status, progress) => {
+          if (progress.search !== undefined) {
+            setSearchDownloadProgress(Math.round(progress.search));
+          }
+        });
+
+        try {
+          await AIModelService.init('search');
+          setSearchModelReady(true);
+          if (import.meta.env.DEV) console.log('[Search] Modelo E5 pronto!');
+        } catch (err) {
+          console.error('[Search] Erro ao auto-inicializar:', err);
+        } finally {
+          setSearchInitializing(false);
+          unsubscribe();
+        }
+      }, 1000); // Delay para não bloquear render inicial
+
+      return () => clearTimeout(timer);
+    }
+  }, [searchEnabled, searchModelReady, searchInitializing]);
 
   return {
     // Estados
