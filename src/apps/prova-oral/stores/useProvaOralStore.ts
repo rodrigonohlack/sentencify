@@ -10,6 +10,7 @@ interface ProvaOralStoreState {
   // Inputs
   transcricao: string;
   sinteseProcesso: string;
+  instrucoesExtras: string;
 
   // Estado da análise
   result: ProvaOralResult | null;
@@ -34,6 +35,7 @@ interface ProvaOralStoreState {
   // Actions - Inputs
   setTranscricao: (text: string) => void;
   setSinteseProcesso: (text: string) => void;
+  setInstrucoesExtras: (text: string) => void;
   clearInputs: () => void;
 
   // Actions - Análise
@@ -68,6 +70,7 @@ interface ProvaOralStoreState {
 const initialState = {
   transcricao: '',
   sinteseProcesso: '',
+  instrucoesExtras: '',
   result: null,
   isAnalyzing: false,
   progress: 0,
@@ -93,9 +96,12 @@ export const useProvaOralStore = create<ProvaOralStoreState>((set) => ({
 
   setSinteseProcesso: (text) => set({ sinteseProcesso: text }),
 
+  setInstrucoesExtras: (text) => set({ instrucoesExtras: text }),
+
   clearInputs: () => set({
     transcricao: '',
     sinteseProcesso: '',
+    instrucoesExtras: '',
     loadedAnalysisId: null
   }),
 

@@ -58,7 +58,7 @@ function normalizeResult(data: unknown): ProvaOralResult {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export interface UseProvaOralAnalysisReturn {
-  analyze: (transcricao: string, sinteseProcesso: string) => Promise<ProvaOralResult | null>;
+  analyze: (transcricao: string, sinteseProcesso: string, instrucoesExtras?: string) => Promise<ProvaOralResult | null>;
   isAnalyzing: boolean;
   progress: number;
   progressMessage: string;
@@ -94,7 +94,7 @@ export function useProvaOralAnalysis(): UseProvaOralAnalysisReturn {
   }, [setShowStreamingModal]);
 
   const analyze = useCallback(
-    async (transcricao: string, sinteseProcesso: string): Promise<ProvaOralResult | null> => {
+    async (transcricao: string, sinteseProcesso: string, instrucoesExtras?: string): Promise<ProvaOralResult | null> => {
       if (!transcricao.trim()) {
         setError('A transcrição é obrigatória');
         return null;
@@ -106,6 +106,16 @@ export function useProvaOralAnalysis(): UseProvaOralAnalysisReturn {
 
       try {
         // Montar o prompt do usuário
+        const instrucoesSection = instrucoesExtras?.trim()
+          ? `## INSTRUÇÕES ESPECÍFICAS DO USUÁRIO
+
+${instrucoesExtras}
+
+IMPORTANTE: Siga as instruções acima ao realizar a análise.
+
+`
+          : '';
+
         const userPrompt = `## TRANSCRIÇÃO DA AUDIÊNCIA
 
 ${transcricao}
@@ -114,7 +124,7 @@ ${transcricao}
 
 ${sinteseProcesso || 'Não fornecida. Analise a transcrição identificando os temas/pedidos mencionados.'}
 
----
+${instrucoesSection}---
 
 Analise a transcrição e a síntese acima. Retorne APENAS o JSON estruturado conforme especificado.`;
 

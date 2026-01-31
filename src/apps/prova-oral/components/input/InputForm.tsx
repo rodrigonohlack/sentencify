@@ -13,6 +13,7 @@ import {
   Import,
   Loader2,
   AlertCircle,
+  Lightbulb,
 } from 'lucide-react';
 import { Button, TextArea, Card, CardHeader, CardTitle, CardContent } from '../ui';
 import { AnalysisSelectorModal } from './AnalysisSelectorModal';
@@ -29,6 +30,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onAnalysisComplete }) => {
   const {
     transcricao,
     sinteseProcesso,
+    instrucoesExtras,
     isAnalyzing,
     progress,
     progressMessage,
@@ -36,6 +38,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onAnalysisComplete }) => {
     result,
     setTranscricao,
     setSinteseProcesso,
+    setInstrucoesExtras,
     clearInputs,
     clearResult,
   } = useProvaOralStore();
@@ -62,7 +65,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onAnalysisComplete }) => {
   const [showImportModal, setShowImportModal] = useState(false);
 
   const handleAnalyze = useCallback(async () => {
-    const analysisResult = await analyze(transcricao, sinteseProcesso);
+    const analysisResult = await analyze(transcricao, sinteseProcesso, instrucoesExtras);
 
     // Salvar automaticamente no backend se análise foi bem-sucedida
     if (analysisResult) {
@@ -74,7 +77,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onAnalysisComplete }) => {
       // Notificar que análise completou
       onAnalysisComplete?.();
     }
-  }, [analyze, createAnalysis, transcricao, sinteseProcesso, onAnalysisComplete]);
+  }, [analyze, createAnalysis, transcricao, sinteseProcesso, instrucoesExtras, onAnalysisComplete]);
 
   const handleClear = useCallback(() => {
     clearInputs();
@@ -141,6 +144,30 @@ Você pode:
           </CardContent>
         </Card>
 
+        {/* Card de Instruções Extras */}
+        <Card>
+          <CardHeader>
+            <CardTitle icon={<Lightbulb className="w-5 h-5 text-amber-500" />}>
+              Instruções Extras
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TextArea
+              placeholder="Digite instruções específicas para direcionar a análise. Exemplos:
+
+• Foque na análise de horas extras e intervalo
+• Verifique contradições sobre o acidente de trabalho
+• O tema principal é assédio moral - analise com profundidade
+• Compare os depoimentos sobre a jornada de trabalho"
+              value={instrucoesExtras}
+              onChange={(e) => setInstrucoesExtras(e.target.value)}
+              rows={4}
+              disabled={isAnalyzing}
+              hint="Opcional - a IA seguirá suas instruções ao realizar a análise"
+            />
+          </CardContent>
+        </Card>
+
         {/* Barra de Progresso */}
         {isAnalyzing && (
           <Card className="border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20">
@@ -192,7 +219,7 @@ Você pode:
           <Button
             variant="secondary"
             onClick={handleClear}
-            disabled={isAnalyzing || (!transcricao && !sinteseProcesso && !result)}
+            disabled={isAnalyzing || (!transcricao && !sinteseProcesso && !instrucoesExtras && !result)}
             icon={<Trash2 className="w-4 h-4" />}
           >
             Limpar
