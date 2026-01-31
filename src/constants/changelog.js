@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.04', feature: 'Streaming silencioso para app Analisador: useAIIntegration e useAnalysis agora usam SSE para evitar timeout em análises longas de prepauta' },
   { version: '1.40.03', feature: 'Streaming silencioso para geração de relatório processual: generateRelatorioProcessual agora usa SSE para evitar timeout em operações longas' },
   { version: '1.40.02', feature: 'Streaming silencioso para Double Check e ordenação de tópicos: performDoubleCheck e reorderTopicsViaLLM agora usam SSE para evitar timeout em operações longas' },
   { version: '1.40.01', feature: 'Ativar streaming silencioso por padrão: mini-relatórios (useReportGeneration), análise de documentos (useDocumentAnalysis) e revisão de sentença (useReviewSentence) agora usam SSE para evitar timeout de 30s no Render sem mostrar texto parcial' },

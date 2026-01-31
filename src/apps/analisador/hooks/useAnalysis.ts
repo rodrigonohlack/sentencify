@@ -45,7 +45,7 @@ const generateTabelaSintetica = (pedidos: PedidoAnalise[]): TabelaPedido[] => {
 export const useAnalysis = () => {
   const { peticao, emendas, contestacoes, getAllDocumentsText, canAnalyze } = useDocumentStore();
   const { setResult, setIsAnalyzing, setProgress, setError, reset } = useResultStore();
-  const { callAI } = useAIIntegration();
+  const { callAIStream } = useAIIntegration();
 
   const parseAnalysisResult = (response: string): AnalysisResult => {
     // Try to extract JSON from the response
@@ -171,7 +171,8 @@ export const useAnalysis = () => {
 
       setProgress(50, 'Analisando documentos...');
 
-      const response = await callAI(messages, {
+      // Usa streaming para evitar timeout em análises longas
+      const response = await callAIStream(messages, {
         maxTokens: 16000,
         systemPrompt: ANALYSIS_SYSTEM_PROMPT
       });
@@ -187,7 +188,7 @@ export const useAnalysis = () => {
       console.error('Erro na análise:', error);
       setError(error instanceof Error ? error.message : 'Erro ao realizar análise');
     }
-  }, [canAnalyze, getAllDocumentsText, callAI, setResult, setIsAnalyzing, setProgress, setError, reset]);
+  }, [canAnalyze, getAllDocumentsText, callAIStream, setResult, setIsAnalyzing, setProgress, setError, reset]);
 
   /**
    * Analisa textos de petição, emendas e contestações diretamente (sem usar o store)
@@ -206,7 +207,8 @@ export const useAnalysis = () => {
 
       for (let attempt = 0; attempt <= MAX_PARSE_RETRIES; attempt++) {
         try {
-          const response = await callAI(messages, {
+          // Usa streaming para evitar timeout em análises longas
+          const response = await callAIStream(messages, {
             maxTokens: 16000,
             systemPrompt: ANALYSIS_SYSTEM_PROMPT
           });
@@ -223,7 +225,7 @@ export const useAnalysis = () => {
       }
       return null;
     },
-    [callAI]
+    [callAIStream]
   );
 
   return {
