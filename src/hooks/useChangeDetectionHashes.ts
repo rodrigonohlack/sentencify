@@ -130,7 +130,8 @@ function computeProofsHash(proofManager: ProofManagerData): string {
           const type = a.type || '';
           const result = a.result || '';
           const resultPreview = typeof result === 'string' ? result.substring(0, 50) : '';
-          return `${idx}:${type}:${resultPreview}`;
+          const resultLen = typeof result === 'string' ? result.length : 0;
+          return `${idx}:${type}:${resultPreview}:${resultLen}`;
         });
         return `${id}:[${analysisSigs.join(';')}]`;
       })
