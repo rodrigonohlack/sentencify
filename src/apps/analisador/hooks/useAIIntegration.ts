@@ -423,13 +423,14 @@ export const useAIIntegration = () => {
         if (line.startsWith('data: ')) {
           try {
             const parsed = JSON.parse(line.slice(6));
-            if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
-              fullText += parsed.delta.text;
+            // Formato simplificado do servidor proxy
+            if (parsed.type === 'text' && parsed.text) {
+              fullText += parsed.text;
             }
             if (parsed.type === 'error') {
               throw new Error(parsed.error?.message || 'Erro no streaming');
             }
-            if (parsed.type === 'message_stop' && parsed.usage) {
+            if (parsed.type === 'done' && parsed.usage) {
               addTokenUsage({
                 input: parsed.usage.input_tokens || 0,
                 output: parsed.usage.output_tokens || 0,
@@ -521,13 +522,17 @@ export const useAIIntegration = () => {
         if (line.startsWith('data: ')) {
           try {
             const parsed = JSON.parse(line.slice(6));
-            if (parsed.candidates?.[0]?.content?.parts?.[0]?.text) {
-              fullText += parsed.candidates[0].content.parts[0].text;
+            // Formato simplificado do servidor proxy
+            if (parsed.type === 'text' && parsed.text) {
+              fullText += parsed.text;
             }
-            if (parsed.usageMetadata) {
+            if (parsed.type === 'error') {
+              throw new Error(parsed.error?.message || 'Erro no streaming');
+            }
+            if (parsed.type === 'done' && parsed.usage) {
               addTokenUsage({
-                input: parsed.usageMetadata.promptTokenCount || 0,
-                output: parsed.usageMetadata.candidatesTokenCount || 0
+                input: parsed.usage.promptTokenCount || parsed.usage.input_tokens || 0,
+                output: parsed.usage.candidatesTokenCount || parsed.usage.output_tokens || 0
               });
             }
           } catch (e) {
@@ -619,15 +624,16 @@ export const useAIIntegration = () => {
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') continue;
           try {
-            const parsed = JSON.parse(data);
-            const delta = parsed.choices?.[0]?.delta?.content;
-            if (delta) {
-              fullText += delta;
+            const parsed = JSON.parse(line.slice(6));
+            // Formato simplificado do servidor proxy
+            if (parsed.type === 'text' && parsed.text) {
+              fullText += parsed.text;
             }
-            if (parsed.usage) {
+            if (parsed.type === 'error') {
+              throw new Error(parsed.error?.message || 'Erro no streaming');
+            }
+            if (parsed.type === 'done' && parsed.usage) {
               addTokenUsage({
                 input: parsed.usage.prompt_tokens || 0,
                 output: parsed.usage.completion_tokens || 0
@@ -713,15 +719,16 @@ export const useAIIntegration = () => {
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') continue;
           try {
-            const parsed = JSON.parse(data);
-            const delta = parsed.choices?.[0]?.delta?.content;
-            if (delta) {
-              fullText += delta;
+            const parsed = JSON.parse(line.slice(6));
+            // Formato simplificado do servidor proxy
+            if (parsed.type === 'text' && parsed.text) {
+              fullText += parsed.text;
             }
-            if (parsed.usage) {
+            if (parsed.type === 'error') {
+              throw new Error(parsed.error?.message || 'Erro no streaming');
+            }
+            if (parsed.type === 'done' && parsed.usage) {
               addTokenUsage({
                 input: parsed.usage.prompt_tokens || 0,
                 output: parsed.usage.completion_tokens || 0
