@@ -1,6 +1,7 @@
 /**
  * @file useProvaOralAnalysis.ts
  * @description Hook para análise de prova oral usando IA
+ * v1.39.08: Streaming para evitar timeout do Render
  */
 
 import { useCallback } from 'react';
@@ -62,20 +63,35 @@ export interface UseProvaOralAnalysisReturn {
   progress: number;
   progressMessage: string;
   error: string | null;
+  isStreaming: boolean;
+  streamingText: string;
+  showStreamingModal: boolean;
+  closeStreamingModal: () => void;
 }
 
 export function useProvaOralAnalysis(): UseProvaOralAnalysisReturn {
-  const { callAI, aiSettings } = useAIIntegration();
+  const { callAIStream, aiSettings } = useAIIntegration();
   const {
     isAnalyzing,
     progress,
     progressMessage,
     error,
+    isStreaming,
+    streamingText,
+    showStreamingModal,
     setIsAnalyzing,
     setProgress,
     setError,
     setResult,
+    startStreaming,
+    stopStreaming,
+    setStreamingText,
+    setShowStreamingModal,
   } = useProvaOralStore();
+
+  const closeStreamingModal = useCallback(() => {
+    setShowStreamingModal(false);
+  }, [setShowStreamingModal]);
 
   const analyze = useCallback(
     async (transcricao: string, sinteseProcesso: string): Promise<ProvaOralResult | null> => {
@@ -86,6 +102,7 @@ export function useProvaOralAnalysis(): UseProvaOralAnalysisReturn {
 
       setIsAnalyzing(true);
       setProgress(10, 'Preparando análise...');
+      startStreaming(); // Abre o modal de streaming
 
       try {
         // Montar o prompt do usuário
@@ -101,7 +118,7 @@ ${sinteseProcesso || 'Não fornecida. Analise a transcrição identificando os t
 
 Analise a transcrição e a síntese acima. Retorne APENAS o JSON estruturado conforme especificado.`;
 
-        setProgress(30, 'Enviando para análise...');
+        setProgress(30, 'Conectando ao provedor...');
 
         // Determinar modelo atual baseado no provedor
         const currentModel =
@@ -110,20 +127,24 @@ Analise a transcrição e a síntese acima. Retorne APENAS o JSON estruturado co
           aiSettings.provider === 'openai' ? aiSettings.openaiModel :
           aiSettings.grokModel;
 
-        // Chamar a IA com max tokens dinâmico baseado no modelo
+        // Chamar a IA com streaming e callback para atualizar UI
         const maxTokens = getMaxOutputTokens(currentModel);
-        console.log('[ProvaOralAnalysis] Chamando IA:', { provider: aiSettings.provider, model: currentModel, maxTokens });
+        console.log('[ProvaOralAnalysis] Iniciando streaming:', { provider: aiSettings.provider, model: currentModel, maxTokens });
 
-        const response = await callAI(
+        const response = await callAIStream(
           [{ role: 'user', content: userPrompt }],
           {
             systemPrompt: PROVA_ORAL_SYSTEM_PROMPT,
             maxTokens,
+            onChunk: (fullText) => {
+              // Atualiza o texto no modal em tempo real
+              setStreamingText(fullText);
+            }
           }
         );
 
-        console.log('[ProvaOralAnalysis] Resposta recebida, tamanho:', response?.length || 0);
-        console.log('[ProvaOralAnalysis] Primeiros 500 chars:', response?.substring(0, 500));
+        stopStreaming(); // Marca streaming como completo
+        console.log('[ProvaOralAnalysis] Streaming completo, tamanho:', response?.length || 0);
 
         setProgress(70, 'Processando resultado...');
 
@@ -153,11 +174,13 @@ Analise a transcrição e a síntese acima. Retorne APENAS o JSON estruturado co
 
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Erro desconhecido';
+        stopStreaming();
+        setShowStreamingModal(false);
         setError(message);
         return null;
       }
     },
-    [callAI, aiSettings, setIsAnalyzing, setProgress, setError, setResult]
+    [callAIStream, aiSettings, setIsAnalyzing, setProgress, setError, setResult, startStreaming, stopStreaming, setStreamingText, setShowStreamingModal]
   );
 
   return {
@@ -166,6 +189,10 @@ Analise a transcrição e a síntese acima. Retorne APENAS o JSON estruturado co
     progress,
     progressMessage,
     error,
+    isStreaming,
+    streamingText,
+    showStreamingModal,
+    closeStreamingModal,
   };
 }
 

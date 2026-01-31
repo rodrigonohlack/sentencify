@@ -1,6 +1,7 @@
 /**
  * @file InputForm.tsx
  * @description Formulário de entrada para análise de prova oral
+ * v1.39.08: Integração com StreamingModal para feedback em tempo real
  */
 
 import React, { useState, useCallback } from 'react';
@@ -15,8 +16,10 @@ import {
 } from 'lucide-react';
 import { Button, TextArea, Card, CardHeader, CardTitle, CardContent } from '../ui';
 import { AnalysisSelectorModal } from './AnalysisSelectorModal';
+import { StreamingModal } from '../StreamingModal';
 import { useProvaOralStore } from '../../stores';
 import { useProvaOralAnalysis, useProvaOralAPI } from '../../hooks';
+import { useAIStore } from '../../stores';
 
 interface InputFormProps {
   onAnalysisComplete?: () => void;
@@ -37,8 +40,24 @@ export const InputForm: React.FC<InputFormProps> = ({ onAnalysisComplete }) => {
     clearResult,
   } = useProvaOralStore();
 
-  const { analyze } = useProvaOralAnalysis();
+  const {
+    analyze,
+    isStreaming,
+    streamingText,
+    showStreamingModal,
+    closeStreamingModal
+  } = useProvaOralAnalysis();
   const { createAnalysis } = useProvaOralAPI();
+
+  // Pegar nome do provedor para exibir no modal
+  const aiSettings = useAIStore((s) => s.aiSettings);
+  const providerNames: Record<string, string> = {
+    claude: 'Claude',
+    gemini: 'Gemini',
+    openai: 'OpenAI',
+    grok: 'Grok'
+  };
+  const providerName = providerNames[aiSettings.provider] || 'IA';
 
   const [showImportModal, setShowImportModal] = useState(false);
 
@@ -195,6 +214,15 @@ Você pode:
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         onSelect={handleImportSintese}
+      />
+
+      {/* Modal de Streaming - exibe resposta em tempo real */}
+      <StreamingModal
+        isOpen={showStreamingModal}
+        text={streamingText}
+        isComplete={!isStreaming}
+        onClose={closeStreamingModal}
+        providerName={providerName}
       />
     </>
   );

@@ -18,6 +18,11 @@ interface ProvaOralStoreState {
   progressMessage: string;
   error: string | null;
 
+  // Streaming
+  isStreaming: boolean;
+  streamingText: string;
+  showStreamingModal: boolean;
+
   // UI
   activeTab: ResultTabId;
   isSettingsOpen: boolean;
@@ -37,6 +42,13 @@ interface ProvaOralStoreState {
   setProgress: (progress: number, message?: string) => void;
   setError: (error: string | null) => void;
   clearResult: () => void;
+
+  // Actions - Streaming
+  setIsStreaming: (streaming: boolean) => void;
+  setStreamingText: (text: string) => void;
+  setShowStreamingModal: (show: boolean) => void;
+  startStreaming: () => void;
+  stopStreaming: () => void;
 
   // Actions - UI
   setActiveTab: (tab: ResultTabId) => void;
@@ -61,6 +73,9 @@ const initialState = {
   progress: 0,
   progressMessage: '',
   error: null,
+  isStreaming: false,
+  streamingText: '',
+  showStreamingModal: false,
   activeTab: 'depoentes' as ResultTabId,
   isSettingsOpen: false,
   isHistoricoOpen: false,
@@ -113,6 +128,27 @@ export const useProvaOralStore = create<ProvaOralStoreState>((set) => ({
     progress: 0,
     progressMessage: '',
     loadedAnalysisId: null
+  }),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STREAMING
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  setIsStreaming: (streaming) => set({ isStreaming: streaming }),
+
+  setStreamingText: (text) => set({ streamingText: text }),
+
+  setShowStreamingModal: (show) => set({ showStreamingModal: show }),
+
+  startStreaming: () => set({
+    isStreaming: true,
+    streamingText: '',
+    showStreamingModal: true,
+    error: null
+  }),
+
+  stopStreaming: () => set({
+    isStreaming: false
   }),
 
   // ═══════════════════════════════════════════════════════════════════════════
