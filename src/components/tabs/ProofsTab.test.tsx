@@ -37,9 +37,10 @@ vi.mock('../../stores/useAIStore', () => ({
   useAIStore: (selector: (s: typeof mockAIStore) => unknown) => selector(mockAIStore),
 }));
 
-// Mock useThemeManagement hook
+// Mock useThemeManagement and useAuthMagicLink hooks
 vi.mock('../../hooks', () => ({
   useThemeManagement: () => ({ appTheme: 'dark' }),
+  useAuthMagicLink: () => ({ isAuthenticated: false }),
 }));
 
 // Mock do ProofCard para simplificar testes
