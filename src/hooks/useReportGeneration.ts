@@ -733,17 +733,23 @@ ${aiIntegration.aiSettings?.anonymization?.enabled ? AI_PROMPTS.preservarAnonimi
 Responda APENAS com o texto do relatório formatado em HTML, pronto para ser inserido na sentença. Não adicione explicações ou comentários.`
       });
 
-      const textContent = await aiIntegration.callAI([{
+      // v1.40.03: Usar streaming silencioso para evitar timeout
+      const messages: AIMessage[] = [{
         role: 'user',
         content: contentArray
-      }], {
+      }];
+      const options = {
         maxTokens: 8000,
         useInstructions: true,
         logMetrics: true,
         temperature: 0.4,
         topP: 0.9,
         topK: 60
-      });
+      };
+
+      const textContent = aiIntegration.callAIStream
+        ? await aiIntegration.callAIStream(messages, options)
+        : await aiIntegration.callAI(messages, options);
 
       return normalizeHTMLSpacing(textContent.trim());
     } catch {

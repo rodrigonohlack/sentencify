@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.03', feature: 'Streaming silencioso para geração de relatório processual: generateRelatorioProcessual agora usa SSE para evitar timeout em operações longas' },
   { version: '1.40.02', feature: 'Streaming silencioso para Double Check e ordenação de tópicos: performDoubleCheck e reorderTopicsViaLLM agora usam SSE para evitar timeout em operações longas' },
   { version: '1.40.01', feature: 'Ativar streaming silencioso por padrão: mini-relatórios (useReportGeneration), análise de documentos (useDocumentAnalysis) e revisão de sentença (useReviewSentence) agora usam SSE para evitar timeout de 30s no Render sem mostrar texto parcial' },
   { version: '1.40.00', feature: 'Streaming para operações de IA: evita timeout do Render (30s) mostrando resposta em tempo real. Inclui StreamingModal compartilhado, funções callAIStream para todos os providers (Claude, Gemini, OpenAI, Grok), e integração opcional nos hooks useReportGeneration, useProofAnalysis e useDispositivoGeneration' },
