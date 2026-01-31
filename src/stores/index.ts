@@ -80,3 +80,15 @@ export {
   selectIsRegenerating,
   selectProgressMessage
 } from './useRegenerationStore';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SEARCH STORE (v1.40.09)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export { useSearchStore } from './useSearchStore';
+export {
+  selectSearchEnabled,
+  selectSearchModelReady,
+  selectSearchInitializing,
+  selectSearchDownloadProgress
+} from './useSearchStore';

@@ -1,20 +1,18 @@
 /**
  * @file useSemanticSearchManagement.ts
- * @description Hook para gerenciamento de estados de Busca Semântica (E5-base)
+ * @description Hook wrapper para useSearchStore (compatibilidade com API existente)
+ * @version 1.40.09 - Agora usa Zustand store internamente (fix estado compartilhado)
  *
- * FASE 42: Extraído do App.tsx para consolidar estados relacionados ao
- * modelo de embeddings E5 usado para busca semântica de modelos.
+ * MUDANÇA:
+ * - Antes: useState local → cada componente tinha estado isolado
+ * - Agora: Zustand store → estado único compartilhado globalmente
  *
- * Estados gerenciados:
- * - searchFilesStored: Legado, lista de arquivos armazenados
- * - searchModelReady: Se o modelo E5 está carregado e pronto
- * - searchInitializing: Se está em processo de inicialização
- * - searchDownloadProgress: Progresso do download (0-100)
- * - searchEnabled: Toggle master para habilitar busca semântica (persistido)
+ * A API do hook permanece idêntica para compatibilidade com código existente.
+ * Componentes que usam este hook continuarão funcionando sem modificações.
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import AIModelService from '../services/AIModelService';
+import { useEffect } from 'react';
+import { useSearchStore } from '../stores/useSearchStore';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -29,106 +27,45 @@ export interface UseSemanticSearchManagementReturn {
   searchEnabled: boolean;
 
   // Setters
-  setSearchFilesStored: React.Dispatch<React.SetStateAction<string[]>>;
-  setSearchModelReady: React.Dispatch<React.SetStateAction<boolean>>;
-  setSearchInitializing: React.Dispatch<React.SetStateAction<boolean>>;
-  setSearchDownloadProgress: React.Dispatch<React.SetStateAction<number>>;
+  setSearchFilesStored: (files: string[]) => void;
+  setSearchModelReady: (ready: boolean) => void;
+  setSearchInitializing: (initializing: boolean) => void;
+  setSearchDownloadProgress: (progress: number) => void;
   setSearchEnabled: (value: boolean) => void;
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// CONSTANTES
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const STORAGE_KEYS = {
-  SEARCH_ENABLED: 'searchEnabled',
-  SEMANTIC_SEARCH_ENABLED: 'semanticSearchEnabled', // Legado para migração
-} as const;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // HOOK
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function useSemanticSearchManagement(): UseSemanticSearchManagementReturn {
-  // Estados do modelo E5 (busca semântica)
-  const [searchFilesStored, setSearchFilesStored] = useState<string[]>([]);
-  const [searchModelReady, setSearchModelReady] = useState(false);
-  const [searchInitializing, setSearchInitializing] = useState(false);
-  const [searchDownloadProgress, setSearchDownloadProgress] = useState(0);
+  const store = useSearchStore();
 
-  // Toggle master para busca semântica (persistido em localStorage)
-  // v1.28.00: Controla carregamento do modelo E5
-  const [searchEnabled, setSearchEnabledState] = useState(() => {
-    try {
-      // Migração: se searchEnabled não existe, usa semanticSearchEnabled como fallback
-      const stored = localStorage.getItem(STORAGE_KEYS.SEARCH_ENABLED);
-      if (stored !== null) return JSON.parse(stored);
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.SEMANTIC_SEARCH_ENABLED) || 'false');
-    } catch {
-      return false;
-    }
-  });
-
-  // Setter com persistência para searchEnabled
-  const setSearchEnabled = useCallback((value: boolean) => {
-    setSearchEnabledState(value);
-    try {
-      localStorage.setItem(STORAGE_KEYS.SEARCH_ENABLED, JSON.stringify(value));
-    } catch (err) {
-      console.warn('[SemanticSearch] Erro ao salvar searchEnabled:', err);
-    }
-  }, []);
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // AUTO-INICIALIZAÇÃO DO MODELO E5
-  // ═══════════════════════════════════════════════════════════════════════════════
-
-  // v1.40.08: Auto-inicializar modelo E5 se toggle está habilitado
-  // Isso foi removido acidentalmente na refatoração v1.40.06
+  // Auto-inicializar na montagem se habilitado
+  // Delay de 1s para não bloquear render inicial
   useEffect(() => {
-    if (searchEnabled && !searchModelReady && !searchInitializing) {
-      if (import.meta.env.DEV) console.log('[Search] Auto-inicializando modelo E5...');
-
-      const timer = setTimeout(async () => {
-        setSearchInitializing(true);
-        setSearchDownloadProgress(0);
-
-        const unsubscribe = AIModelService.subscribe((_status, progress) => {
-          if (progress.search !== undefined) {
-            setSearchDownloadProgress(Math.round(progress.search));
-          }
-        });
-
-        try {
-          await AIModelService.init('search');
-          setSearchModelReady(true);
-          if (import.meta.env.DEV) console.log('[Search] Modelo E5 pronto!');
-        } catch (err) {
-          console.error('[Search] Erro ao auto-inicializar:', err);
-        } finally {
-          setSearchInitializing(false);
-          unsubscribe();
-        }
-      }, 1000); // Delay para não bloquear render inicial
-
+    if (store.searchEnabled && !store.searchModelReady && !store.searchInitializing) {
+      const timer = setTimeout(() => {
+        store.initSearchModel();
+      }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [searchEnabled, searchModelReady, searchInitializing]);
+  }, []); // Apenas na montagem inicial
 
   return {
-    // Estados
-    searchFilesStored,
-    searchModelReady,
-    searchInitializing,
-    searchDownloadProgress,
-    searchEnabled,
+    // Estados (lidos do store Zustand)
+    searchFilesStored: store.searchFilesStored,
+    searchModelReady: store.searchModelReady,
+    searchInitializing: store.searchInitializing,
+    searchDownloadProgress: store.searchDownloadProgress,
+    searchEnabled: store.searchEnabled,
 
-    // Setters
-    setSearchFilesStored,
-    setSearchModelReady,
-    setSearchInitializing,
-    setSearchDownloadProgress,
-    setSearchEnabled,
+    // Setters (delegam para o store Zustand)
+    setSearchFilesStored: store.setSearchFilesStored,
+    setSearchModelReady: store.setSearchModelReady,
+    setSearchInitializing: store.setSearchInitializing,
+    setSearchDownloadProgress: store.setSearchDownloadProgress,
+    setSearchEnabled: store.setSearchEnabled,
   };
 }
 
