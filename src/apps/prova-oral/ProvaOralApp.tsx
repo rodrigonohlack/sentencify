@@ -25,6 +25,7 @@ import {
   HistoricoModal,
 } from './components';
 import { useProvaOralStore } from './stores';
+import { ThemeStyles } from '../../styles';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HOOK PARA TEMA
@@ -212,11 +213,14 @@ const AppContent: React.FC = () => {
 
 export const ProvaOralApp: React.FC = () => {
   return (
-    <ToastProvider>
-      <LoginGate>
-        <AppContent />
-      </LoginGate>
-    </ToastProvider>
+    <>
+      <ThemeStyles />
+      <ToastProvider>
+        <LoginGate>
+          <AppContent />
+        </LoginGate>
+      </ToastProvider>
+    </>
   );
 };
 
