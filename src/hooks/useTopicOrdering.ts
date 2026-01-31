@@ -11,10 +11,20 @@ import type { Topic, AIMessage, AICallOptions } from '../types';
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════════
 
+/** Opções para chamadas com streaming (v1.40.02) */
+interface AIStreamOptions extends AICallOptions {
+  onChunk?: (fullText: string) => void;
+}
+
 export interface AIIntegrationForOrdering {
   callAI: (
     messages: AIMessage[],
     options?: AICallOptions
+  ) => Promise<string>;
+  // v1.40.02: Adicionar suporte a streaming silencioso
+  callAIStream?: (
+    messages: AIMessage[],
+    options?: AIStreamOptions
   ) => Promise<string>;
   aiSettings?: {
     provider?: string;
@@ -88,16 +98,22 @@ Use os números originais da lista.`;
 
     try {
       const isGemini = aiIntegration.aiSettings?.provider === 'gemini';
-      const result = await aiIntegration.callAI([{
+      const messages: AIMessage[] = [{
         role: 'user',
         content: [{ type: 'text', text: prompt }]
-      }], {
+      }];
+      const options = {
         maxTokens: 4000, // v1.32.25: Aumentado para evitar truncamento (thinking tokens do Gemini 3)
         useInstructions: false,
         temperature: isGemini ? 0.5 : 0.0,
         topP: 0.9,
         topK: 40
-      });
+      };
+
+      // v1.40.02: Usar streaming silencioso para evitar timeout em operações longas
+      const result = aiIntegration.callAIStream
+        ? await aiIntegration.callAIStream(messages, options)
+        : await aiIntegration.callAI(messages, options);
 
       // v1.32.34: Regex mais robusto para extrair JSON (suporta newlines, markdown, etc.)
       let jsonMatch = result.match(/\{\s*"order"\s*:\s*\[[\d,\s\n\r]+\]\s*\}/);

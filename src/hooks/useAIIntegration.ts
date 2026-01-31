@@ -1199,208 +1199,9 @@ ${AI_INSTRUCTIONS_SAFETY}`;
     return models[modelId] || modelId;
   }, []);
 
-  // ═══════════════════════════════════════════════════════════════
-  // DOUBLE CHECK - Verificação secundária de respostas da IA
-  // v1.36.50
-  // ═══════════════════════════════════════════════════════════════
-
-  /**
-   * Chama a API com provider/modelo específico (para double check)
-   * v1.36.56: Atualizado para usar thinking config do Double Check
-   * v1.37.68: Suporte a AIMessageContent[] com PDF binário
-   */
-  const callDoubleCheckAPI = React.useCallback(async (
-    provider: AIProvider,
-    model: string,
-    content: AIMessageContent[],  // v1.37.68: array de conteúdo (não string)
-    maxTokens: number = 8000
-  ): Promise<string> => {
-    // v1.37.68: Verificar se há PDF binário e se provider suporta
-    const hasPdfBinary = content.some(c =>
-      typeof c === 'object' && c !== null && 'type' in c && c.type === 'document'
-    );
-    const providerSupportsPdf = provider !== 'grok';  // Grok não suporta PDF binário
-
-    let finalContent: AIMessageContent[];
-    if (hasPdfBinary && !providerSupportsPdf) {
-      // Grok: filtrar PDFs binários (não suportados) - usar apenas texto
-      console.warn('[DoubleCheck] Grok não suporta PDF binário, usando apenas texto');
-      finalContent = content.filter(c =>
-        !(typeof c === 'object' && c !== null && 'type' in c && c.type === 'document')
-      );
-    } else {
-      finalContent = content;
-    }
-
-    const messages: AIMessage[] = [
-      { role: 'user', content: finalContent }
-    ];
-
-    // v1.36.56: Construir opções com thinking config do Double Check
-    const dcSettings = aiSettings.doubleCheck;
-    const options: AICallOptions = {
-      maxTokens,
-      model,
-      geminiThinkingLevel: dcSettings?.geminiThinkingLevel
-    };
-
-    // Aplicar thinking config baseado no provider
-    if (provider === 'claude' && dcSettings?.claudeThinkingBudget && dcSettings.claudeThinkingBudget > 0) {
-      // Para Claude, o thinking é gerenciado internamente via aiSettings.thinkingBudget
-      // Precisamos criar uma versão temporária das settings para a chamada
-      // Por simplicidade, vamos passar como disableThinking = false quando tiver budget
-      options.disableThinking = false;
-    } else if (provider === 'claude') {
-      options.disableThinking = true;
-    }
-
-    // Nota: Para Gemini e OpenAI, o thinking é configurado nas funções callGeminiAPI e callOpenAIAPI
-    // que lêem de aiSettings. Por ora, o Double Check usará as configurações padrão do provider.
-    // Uma melhoria futura seria passar o thinking config diretamente.
-
-    // Chamar a API específica do provider
-    if (provider === 'openai') {
-      return await callOpenAIAPI(messages, options);
-    }
-    if (provider === 'grok') {
-      return await callGrokAPI(messages, options);
-    }
-    if (provider === 'gemini') {
-      return await callGeminiAPI(messages, options);
-    }
-    // Default: Claude
-    return await callLLM(messages, options);
-  }, [callLLM, callGeminiAPI, callOpenAIAPI, callGrokAPI, aiSettings.doubleCheck]);
-
-  /**
-   * Executa o double check em uma resposta da IA
-   * @param operation - Tipo de operação (topicExtraction, etc)
-   * @param originalResponse - Resposta original em JSON
-   * @param context - v1.37.68: AIMessageContent[] - contexto original (PDFs incluídos)
-   * @param onProgress - Callback de progresso opcional
-   * @param userPrompt - (v1.37.65) Solicitação original do usuário (para quickPrompt)
-   */
-  // v1.37.68: context agora é AIMessageContent[] (não string)
-  const performDoubleCheck = React.useCallback(async (
-    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison' | 'proofAnalysis' | 'quickPrompt',
-    originalResponse: string,
-    context: AIMessageContent[],  // v1.37.68: MUDOU de string para array
-    onProgress?: (msg: string) => void,
-    userPrompt?: string
-  ): Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string; confidence?: number; failed?: boolean }> => {
-    const { doubleCheck } = aiSettings;
-
-    // Se double check desabilitado ou operação não selecionada, retornar original
-    if (!doubleCheck?.enabled || !doubleCheck.operations[operation]) {
-      return { verified: originalResponse, corrections: [], summary: '' };
-    }
-
-    onProgress?.('🔄 Verificando resposta com Double Check...');
-
-    try {
-      // v1.37.68: Extrair texto do contexto para o template do prompt
-      const textContext = context
-        .filter((c): c is AITextContent =>
-          typeof c === 'object' && c !== null && 'type' in c && c.type === 'text'
-        )
-        .map(c => c.text)
-        .join('\n\n');
-
-      // Importar dinamicamente o prompt builder
-      const { buildDoubleCheckPrompt } = await import('../prompts/double-check-prompts');
-      // v1.37.65: Passar userPrompt para quickPrompt
-      const verificationPrompt = buildDoubleCheckPrompt(operation, originalResponse, textContext, userPrompt);
-
-      // v1.37.68: Criar conteúdo final - prompt de verificação + PDFs binários (se houver)
-      const pdfContent = context.filter(c =>
-        typeof c === 'object' && c !== null && 'type' in c && c.type === 'document'
-      );
-      const finalContent: AIMessageContent[] = [
-        { type: 'text', text: verificationPrompt },
-        ...pdfContent  // PDFs binários do contexto original
-      ];
-
-      // Chamar API com o modelo de double check
-      const response = await callDoubleCheckAPI(
-        doubleCheck.provider,
-        doubleCheck.model,
-        finalContent,  // v1.37.68: array (não string)
-        8000
-      );
-
-      // v1.36.56: Parsear resposta JSON baseado no tipo de operação
-      // v1.37.65: Adicionado proofAnalysis e quickPrompt (verifiedResult)
-      const verifiedFieldPattern = operation === 'topicExtraction'
-        ? '"verifiedTopics"'
-        : operation === 'dispositivo'
-          ? '"verifiedDispositivo"'
-          : operation === 'factsComparison' || operation === 'proofAnalysis' || operation === 'quickPrompt'
-            ? '"verifiedResult"'
-            : '"verifiedReview"';
-
-      const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
-                        response.match(new RegExp(`\\{[\\s\\S]*${verifiedFieldPattern}[\\s\\S]*\\}`));
-
-      const jsonStr = jsonMatch
-        ? (jsonMatch[1] || jsonMatch[0])
-        : extractJSON(response);
-
-      if (!jsonStr) {
-        console.warn('[DoubleCheck] Resposta não contém JSON válido:', response.substring(0, 200));
-        return { verified: originalResponse, corrections: [], summary: 'Falha ao parsear resposta', failed: true };
-      }
-      const dcValidated = parseAIResponse(jsonStr, DoubleCheckResponseSchema);
-      let result: DoubleCheckParsedResult;
-      if (dcValidated.success) {
-        result = dcValidated.data as unknown as DoubleCheckParsedResult;
-      } else {
-        console.warn('[DoubleCheck] Validação Zod falhou, usando fallback:', dcValidated.error);
-        result = JSON.parse(jsonStr);
-      }
-
-      // Debug: Log do verifiedResult retornado pela IA
-      // Nota: verifiedTopics e verifiedResult (factsComparison) são objetos, não strings
-      const rawVerified = result.verifiedTopics || result.verifiedResult || result.verifiedDispositivo || result.verifiedReview;
-      const verifiedPreview = typeof rawVerified === 'string'
-        ? rawVerified.substring(0, 200) + '...'
-        : rawVerified
-          ? JSON.stringify(rawVerified).substring(0, 200) + '...'
-          : '[vazio]';
-      console.log('[DoubleCheck] Resultado parseado:', {
-        operation,
-        hasCorrections: (result.corrections?.length ?? 0) > 0,
-        correctionsCount: result.corrections?.length || 0,
-        verifiedResultPreview: verifiedPreview,
-        originalResponsePreview: originalResponse.substring(0, 200) + '...',
-        verifiedEqualsOriginal: rawVerified === originalResponse
-      });
-
-      // Extrair campo verificado baseado na operação
-      // v1.37.65: Adicionado proofAnalysis e quickPrompt (verifiedResult como string)
-      const verified = operation === 'topicExtraction'
-        ? JSON.stringify(result.verifiedTopics)
-        : operation === 'dispositivo'
-          ? result.verifiedDispositivo || originalResponse
-          : operation === 'factsComparison'
-            ? JSON.stringify(result.verifiedResult) || originalResponse
-            : operation === 'proofAnalysis' || operation === 'quickPrompt'
-              ? (result.verifiedResult as string) || originalResponse
-              : result.verifiedReview || originalResponse;
-
-      return {
-        verified,
-        corrections: result.corrections || [],
-        summary: result.summary || '',
-        confidence: result.confidence ?? 0.85  // Fallback 85% se IA não retornar
-      };
-    } catch (error) {
-      console.error('[DoubleCheck] Erro:', error);
-      return { verified: originalResponse, corrections: [], summary: 'Erro na verificação', confidence: 0.85, failed: true };
-    }
-  }, [aiSettings, callDoubleCheckAPI]);
-
   // ═══════════════════════════════════════════════════════════════════════════
   // STREAMING APIs - v1.39.09: Evita timeout do Render com resposta em chunks
+  // v1.40.02: Double Check migrado para usar streaming
   // ═══════════════════════════════════════════════════════════════════════════
 
   /** Callback para receber chunks de texto durante streaming */
@@ -1850,6 +1651,196 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         return callClaudeAPIStream(messages, options);
     }
   }, [aiSettings.provider, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream]);
+
+  /**
+   * Chama a API com streaming para provider/modelo específico (para double check)
+   * v1.40.02: Streaming silencioso para evitar timeout em operações longas
+   */
+  const callDoubleCheckAPIStream = React.useCallback(async (
+    provider: AIProvider,
+    model: string,
+    content: AIMessageContent[],
+    maxTokens: number = 8000,
+    onChunk?: (fullText: string) => void
+  ): Promise<string> => {
+    // v1.37.68: Verificar se há PDF binário e se provider suporta
+    const hasPdfBinary = content.some(c =>
+      typeof c === 'object' && c !== null && 'type' in c && c.type === 'document'
+    );
+    const providerSupportsPdf = provider !== 'grok';  // Grok não suporta PDF binário
+
+    let finalContent: AIMessageContent[];
+    if (hasPdfBinary && !providerSupportsPdf) {
+      // Grok: filtrar PDFs binários (não suportados) - usar apenas texto
+      console.warn('[DoubleCheck] Grok não suporta PDF binário, usando apenas texto');
+      finalContent = content.filter(c =>
+        !(typeof c === 'object' && c !== null && 'type' in c && c.type === 'document')
+      );
+    } else {
+      finalContent = content;
+    }
+
+    const messages: AIMessage[] = [
+      { role: 'user', content: finalContent }
+    ];
+
+    // v1.36.56: Construir opções com thinking config do Double Check
+    const dcSettings = aiSettings.doubleCheck;
+    const options: AIStreamOptions = {
+      maxTokens,
+      model,
+      geminiThinkingLevel: dcSettings?.geminiThinkingLevel,
+      onChunk
+    };
+
+    // Aplicar thinking config baseado no provider
+    if (provider === 'claude' && dcSettings?.claudeThinkingBudget && dcSettings.claudeThinkingBudget > 0) {
+      options.disableThinking = false;
+    } else if (provider === 'claude') {
+      options.disableThinking = true;
+    }
+
+    // Chamar a API de streaming específica do provider
+    if (provider === 'openai') {
+      return await callOpenAIAPIStream(messages, options);
+    }
+    if (provider === 'grok') {
+      return await callGrokAPIStream(messages, options);
+    }
+    if (provider === 'gemini') {
+      return await callGeminiAPIStream(messages, options);
+    }
+    // Default: Claude
+    return await callClaudeAPIStream(messages, options);
+  }, [callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, aiSettings.doubleCheck]);
+
+  /**
+   * Executa o double check em uma resposta da IA
+   * @param operation - Tipo de operação (topicExtraction, etc)
+   * @param originalResponse - Resposta original em JSON
+   * @param context - v1.37.68: AIMessageContent[] - contexto original (PDFs incluídos)
+   * @param onProgress - Callback de progresso opcional
+   * @param userPrompt - (v1.37.65) Solicitação original do usuário (para quickPrompt)
+   */
+  // v1.37.68: context agora é AIMessageContent[] (não string)
+  const performDoubleCheck = React.useCallback(async (
+    operation: 'topicExtraction' | 'dispositivo' | 'sentenceReview' | 'factsComparison' | 'proofAnalysis' | 'quickPrompt',
+    originalResponse: string,
+    context: AIMessageContent[],  // v1.37.68: MUDOU de string para array
+    onProgress?: (msg: string) => void,
+    userPrompt?: string
+  ): Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string; confidence?: number; failed?: boolean }> => {
+    const { doubleCheck } = aiSettings;
+
+    // Se double check desabilitado ou operação não selecionada, retornar original
+    if (!doubleCheck?.enabled || !doubleCheck.operations[operation]) {
+      return { verified: originalResponse, corrections: [], summary: '' };
+    }
+
+    onProgress?.('🔄 Verificando resposta com Double Check...');
+
+    try {
+      // v1.37.68: Extrair texto do contexto para o template do prompt
+      const textContext = context
+        .filter((c): c is AITextContent =>
+          typeof c === 'object' && c !== null && 'type' in c && c.type === 'text'
+        )
+        .map(c => c.text)
+        .join('\n\n');
+
+      // Importar dinamicamente o prompt builder
+      const { buildDoubleCheckPrompt } = await import('../prompts/double-check-prompts');
+      // v1.37.65: Passar userPrompt para quickPrompt
+      const verificationPrompt = buildDoubleCheckPrompt(operation, originalResponse, textContext, userPrompt);
+
+      // v1.37.68: Criar conteúdo final - prompt de verificação + PDFs binários (se houver)
+      const pdfContent = context.filter(c =>
+        typeof c === 'object' && c !== null && 'type' in c && c.type === 'document'
+      );
+      const finalContent: AIMessageContent[] = [
+        { type: 'text', text: verificationPrompt },
+        ...pdfContent  // PDFs binários do contexto original
+      ];
+
+      // v1.40.02: Chamar API com streaming silencioso para evitar timeout
+      const response = await callDoubleCheckAPIStream(
+        doubleCheck.provider,
+        doubleCheck.model,
+        finalContent,  // v1.37.68: array (não string)
+        8000,
+        undefined  // streaming silencioso (sem callback onChunk)
+      );
+
+      // v1.36.56: Parsear resposta JSON baseado no tipo de operação
+      // v1.37.65: Adicionado proofAnalysis e quickPrompt (verifiedResult)
+      const verifiedFieldPattern = operation === 'topicExtraction'
+        ? '"verifiedTopics"'
+        : operation === 'dispositivo'
+          ? '"verifiedDispositivo"'
+          : operation === 'factsComparison' || operation === 'proofAnalysis' || operation === 'quickPrompt'
+            ? '"verifiedResult"'
+            : '"verifiedReview"';
+
+      const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
+                        response.match(new RegExp(`\\{[\\s\\S]*${verifiedFieldPattern}[\\s\\S]*\\}`));
+
+      const jsonStr = jsonMatch
+        ? (jsonMatch[1] || jsonMatch[0])
+        : extractJSON(response);
+
+      if (!jsonStr) {
+        console.warn('[DoubleCheck] Resposta não contém JSON válido:', response.substring(0, 200));
+        return { verified: originalResponse, corrections: [], summary: 'Falha ao parsear resposta', failed: true };
+      }
+      const dcValidated = parseAIResponse(jsonStr, DoubleCheckResponseSchema);
+      let result: DoubleCheckParsedResult;
+      if (dcValidated.success) {
+        result = dcValidated.data as unknown as DoubleCheckParsedResult;
+      } else {
+        console.warn('[DoubleCheck] Validação Zod falhou, usando fallback:', dcValidated.error);
+        result = JSON.parse(jsonStr);
+      }
+
+      // Debug: Log do verifiedResult retornado pela IA
+      // Nota: verifiedTopics e verifiedResult (factsComparison) são objetos, não strings
+      const rawVerified = result.verifiedTopics || result.verifiedResult || result.verifiedDispositivo || result.verifiedReview;
+      const verifiedPreview = typeof rawVerified === 'string'
+        ? rawVerified.substring(0, 200) + '...'
+        : rawVerified
+          ? JSON.stringify(rawVerified).substring(0, 200) + '...'
+          : '[vazio]';
+      console.log('[DoubleCheck] Resultado parseado:', {
+        operation,
+        hasCorrections: (result.corrections?.length ?? 0) > 0,
+        correctionsCount: result.corrections?.length || 0,
+        verifiedResultPreview: verifiedPreview,
+        originalResponsePreview: originalResponse.substring(0, 200) + '...',
+        verifiedEqualsOriginal: rawVerified === originalResponse
+      });
+
+      // Extrair campo verificado baseado na operação
+      // v1.37.65: Adicionado proofAnalysis e quickPrompt (verifiedResult como string)
+      const verified = operation === 'topicExtraction'
+        ? JSON.stringify(result.verifiedTopics)
+        : operation === 'dispositivo'
+          ? result.verifiedDispositivo || originalResponse
+          : operation === 'factsComparison'
+            ? JSON.stringify(result.verifiedResult) || originalResponse
+            : operation === 'proofAnalysis' || operation === 'quickPrompt'
+              ? (result.verifiedResult as string) || originalResponse
+              : result.verifiedReview || originalResponse;
+
+      return {
+        verified,
+        corrections: result.corrections || [],
+        summary: result.summary || '',
+        confidence: result.confidence ?? 0.85  // Fallback 85% se IA não retornar
+      };
+    } catch (error) {
+      console.error('[DoubleCheck] Erro:', error);
+      return { verified: originalResponse, corrections: [], summary: 'Erro na verificação', confidence: 0.85, failed: true };
+    }
+  }, [aiSettings, callDoubleCheckAPIStream]);
 
   return {
     // Estados
