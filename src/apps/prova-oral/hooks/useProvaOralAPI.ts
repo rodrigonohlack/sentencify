@@ -167,10 +167,23 @@ export function useProvaOralAPI(): UseProvaOralAPIReturn {
       setError(null);
 
       try {
+        // Garantir que numeroProcesso existe no objeto enviado para a API
+        // A IA retorna "numero" mas o backend espera "numeroProcesso"
+        const paramsToSend = {
+          ...params,
+          resultado: {
+            ...params.resultado,
+            processo: {
+              ...params.resultado.processo,
+              numeroProcesso: params.resultado.processo?.numero || params.resultado.processo?.numeroProcesso,
+            },
+          },
+        };
+
         const res = await authFetch(API_BASE, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(params),
+          body: JSON.stringify(paramsToSend),
         });
 
         if (!res.ok) {
