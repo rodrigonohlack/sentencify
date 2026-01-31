@@ -34,6 +34,7 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Carregar análises quando o modal abre
   useEffect(() => {
@@ -64,17 +65,18 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
     onClose();
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!selectedId) return;
+    setShowDeleteConfirm(true);
+  };
 
-    if (!window.confirm('Deseja realmente excluir esta análise?')) {
-      return;
-    }
-
+  const handleConfirmDelete = async () => {
+    if (!selectedId) return;
     setIsDeleting(true);
     await deleteAnalysis(selectedId);
     setIsDeleting(false);
     setSelectedId(null);
+    setShowDeleteConfirm(false);
   };
 
   const formatDate = (dateStr: string) => {
@@ -286,6 +288,41 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Modal de confirmação de exclusão */}
+      <Modal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Excluir Análise"
+        subtitle="Confirme a exclusão"
+        icon={<Trash2 className="w-5 h-5" />}
+        iconColor="text-red-600 dark:text-red-400"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleConfirmDelete}
+              loading={isDeleting}
+              icon={<Trash2 className="w-4 h-4" />}
+            >
+              Excluir
+            </Button>
+          </>
+        }
+      >
+        <div className="text-center py-4">
+          <p className="text-slate-700 dark:text-slate-300">
+            Deseja realmente excluir esta análise?
+          </p>
+          <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+            Esta ação não pode ser desfeita.
+          </p>
+        </div>
+      </Modal>
     </Modal>
   );
 };
