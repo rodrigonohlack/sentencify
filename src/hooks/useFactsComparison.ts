@@ -47,6 +47,17 @@ export interface AIIntegrationForFactsComparison {
       topK?: number;
     }
   ) => Promise<string>;
+  callAIStream?: (
+    messages: Array<{ role: string; content: AIMessageContent[] }>,
+    options?: {
+      maxTokens?: number;
+      useInstructions?: boolean;
+      temperature?: number;
+      topP?: number;
+      topK?: number;
+      onChunk?: (chunk: string) => void;
+    }
+  ) => Promise<string>;
   aiSettings: {
     doubleCheck?: {
       enabled: boolean;
@@ -246,16 +257,24 @@ export function useFactsComparison({
         }
       }
 
-      const response = await aiIntegration.callAI([{
-        role: 'user',
-        content: messageContent
-      }], {
+      // v1.40.10: Usar streaming para evitar timeout em operações longas
+      const aiOptions = {
         maxTokens: 8000,
         useInstructions: false,
         temperature: 0.3,
         topP: 0.9,
         topK: 40
-      });
+      };
+
+      const response = aiIntegration.callAIStream
+        ? await aiIntegration.callAIStream([{
+            role: 'user',
+            content: messageContent
+          }], aiOptions)
+        : await aiIntegration.callAI([{
+            role: 'user',
+            content: messageContent
+          }], aiOptions);
 
       // Validar resposta com schema Zod
       const validated = parseAIResponse(response, FactsComparisonSchema);
