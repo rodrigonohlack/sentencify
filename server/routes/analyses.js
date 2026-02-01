@@ -28,6 +28,13 @@ function isValidISODate(dateStr) {
   return !dateStr || /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
 }
 
+/** Extrai número do processo do nome do arquivo (padrão [1234567-89.1234.5.67.8901]) */
+function extractNumeroFromFilename(filename) {
+  if (!filename) return null;
+  const match = filename.match(/\[(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\]/);
+  return match ? match[1] : null;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // MIDDLEWARE
 // ═══════════════════════════════════════════════════════════════════════════
@@ -81,7 +88,7 @@ router.get('/', (req, res) => {
     // Converter campos JSON
     const result = analyses.map(a => ({
       id: a.id,
-      numeroProcesso: a.numero_processo,
+      numeroProcesso: a.numero_processo || extractNumeroFromFilename(a.nome_arquivo_peticao),
       reclamante: a.reclamante,
       reclamadas: safeJsonParse(a.reclamadas, []),
       nomeArquivoPeticao: a.nome_arquivo_peticao,
@@ -131,7 +138,7 @@ router.get('/:id', (req, res) => {
 
     res.json({
       id: analysis.id,
-      numeroProcesso: analysis.numero_processo,
+      numeroProcesso: analysis.numero_processo || extractNumeroFromFilename(analysis.nome_arquivo_peticao),
       reclamante: analysis.reclamante,
       reclamadas: safeJsonParse(analysis.reclamadas, []),
       nomeArquivoPeticao: analysis.nome_arquivo_peticao,

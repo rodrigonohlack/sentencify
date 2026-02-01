@@ -78,6 +78,9 @@ const TipoPedidoBadge: React.FC<{ tipo?: TipoPedido }> = ({ tipo }) => {
     },
   };
 
+  // Guard: validar se tipo existe no config antes de desestruturar
+  if (!(tipo in config)) return null;
+
   const { label, bgClass, textClass, icon } = config[tipo];
 
   return (

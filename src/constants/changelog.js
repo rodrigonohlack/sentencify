@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.13', feature: 'Fix bugs críticos: (1) Analisador tela branca quando tipoPedido inválido - adicionar guard em config[tipo] antes de desestruturar (PedidosSection.tsx, PedidoCard.tsx); (2) Prova-Oral "Processo não identificado" na importação - extrair número do nome do arquivo como fallback (server/routes/analyses.js)' },
   { version: '1.40.12', feature: 'Compartilhamento de análises de Prova Oral: seção nas configurações para selecionar usuários que podem ver suas análises, badge visual no histórico para análises compartilhadas, endpoints backend GET/PUT /api/prova-oral/sharing, migration 008 (prova_oral_access)' },
   { version: '1.40.11', feature: 'Edição inline de análises de prova: botão de editar aparece no hover, textarea editável com botões Cancelar/Salvar, persistência automática via Zustand store' },
   { version: '1.40.10', feature: 'Streaming para Confronto de Fatos: useFactsComparison agora usa callAIStream para evitar timeout de 30s no Render em operações longas' },
