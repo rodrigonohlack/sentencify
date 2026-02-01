@@ -56,6 +56,7 @@ const runMigrations = () => {
     { name: '005_analyses', fn: migration005Analyses },
     { name: '006_analyses_plural', fn: migration006AnalysesPlural },
     { name: '007_prova_oral', fn: migration007ProvaOral },
+    { name: '008_prova_oral_sharing', fn: migration008ProvaOralSharing },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -307,6 +308,29 @@ function migration007ProvaOral(db) {
     CREATE INDEX IF NOT EXISTS idx_prova_oral_user ON prova_oral_analyses(user_id);
     CREATE INDEX IF NOT EXISTS idx_prova_oral_processo ON prova_oral_analyses(numero_processo);
     CREATE INDEX IF NOT EXISTS idx_prova_oral_deleted ON prova_oral_analyses(deleted_at);
+  `);
+}
+
+// Migration 008: Compartilhamento de análises de prova oral
+function migration008ProvaOralSharing(db) {
+  db.exec(`
+    -- ═══════════════════════════════════════════════════════════════
+    -- TABELA: prova_oral_access
+    -- Compartilhamento global de análises de prova oral
+    -- owner_id compartilha TODAS as suas análises com recipient_id
+    -- ═══════════════════════════════════════════════════════════════
+    CREATE TABLE IF NOT EXISTS prova_oral_access (
+      id TEXT PRIMARY KEY,
+      owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      recipient_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(owner_id, recipient_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_prova_oral_access_owner
+      ON prova_oral_access(owner_id);
+    CREATE INDEX IF NOT EXISTS idx_prova_oral_access_recipient
+      ON prova_oral_access(recipient_id);
   `);
 }
 

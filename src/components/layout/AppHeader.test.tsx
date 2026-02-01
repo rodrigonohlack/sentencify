@@ -125,9 +125,9 @@ describe('AppHeader', () => {
     it('should render Analisador link', () => {
       render(<AppHeader {...createDefaultProps()} />);
 
-      const link = screen.getByText('[Analisador]');
+      const link = screen.getByText('Analisador');
       expect(link).toBeInTheDocument();
-      expect(link).toHaveAttribute('href', '/analise');
+      expect(link.closest('a')).toHaveAttribute('href', '/analise');
     });
   });
 

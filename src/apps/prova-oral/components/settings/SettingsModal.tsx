@@ -8,6 +8,7 @@ import { Modal, Button } from '../ui';
 import { AIProviderSelector } from './AIProviderSelector';
 import { ModelSelector } from './ModelSelector';
 import { APIKeyInput } from './APIKeyInput';
+import { SharingSection } from './SharingSection';
 import { useAIStore } from '../../stores';
 import type { GeminiThinkingLevel, OpenAIReasoningLevel, TokenMetrics } from '../../types';
 
@@ -219,6 +220,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             )}
           </div>
         </div>
+
+        {/* Compartilhamento */}
+        <SharingSection />
 
         {/* Métricas de Tokens */}
         {tokenMetrics.requestCount > 0 && (

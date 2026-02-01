@@ -236,6 +236,9 @@ export interface SavedProvaOralAnalysis {
   resultado: ProvaOralResult;
   createdAt: string;
   updatedAt: string;
+  // Campos opcionais de compartilhamento (presentes quando vem da API com sharing)
+  isOwn?: boolean;
+  ownerEmail?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -267,3 +270,22 @@ export type ResultTabId =
 
 /** Modo de visualização das sínteses */
 export type SinteseViewMode = 'detalhada' | 'condensada' | 'tema';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPARTILHAMENTO
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Usuário do sistema */
+export interface User {
+  id: string;
+  email: string;
+}
+
+/** Estado de compartilhamento */
+export interface SharingState {
+  recipients: User[];
+  availableUsers: User[];
+  isLoading: boolean;
+  isSaving: boolean;
+  error: string | null;
+}

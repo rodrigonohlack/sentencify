@@ -6,7 +6,7 @@
 import { useCallback } from 'react';
 import { useAuthMagicLink } from '../../../hooks';
 import { useAnalysesStore } from '../stores';
-import type { SavedProvaOralAnalysis, ProvaOralResult } from '../types';
+import type { SavedProvaOralAnalysis, ProvaOralResult, User } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -37,12 +37,25 @@ export interface CreateProvaOralParams {
   sinteseProcesso: string;
 }
 
+/** Resposta da API de usuários */
+interface ListUsersResponse {
+  users: User[];
+}
+
+/** Resposta da API de compartilhamentos */
+interface ListSharingResponse {
+  recipients: User[];
+}
+
 /** Retorno do hook useProvaOralAPI */
 export interface UseProvaOralAPIReturn {
   fetchAnalyses: () => Promise<SavedProvaOralAnalysis[]>;
   fetchAnalysis: (id: string) => Promise<SavedProvaOralAnalysis | null>;
   createAnalysis: (params: CreateProvaOralParams) => Promise<string | null>;
   deleteAnalysis: (id: string) => Promise<boolean>;
+  fetchUsers: () => Promise<User[]>;
+  fetchSharing: () => Promise<User[]>;
+  updateSharing: (recipientIds: string[]) => Promise<boolean>;
   isLoading: boolean;
   error: string | null;
 }
@@ -259,11 +272,83 @@ export function useProvaOralAPI(): UseProvaOralAPIReturn {
     [isAuthenticated, authFetch, removeAnalysis, setError]
   );
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LISTAR USUÁRIOS DISPONÍVEIS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Busca lista de usuários disponíveis para compartilhamento
+   * @returns Lista de usuários (exceto o próprio)
+   */
+  const fetchUsers = useCallback(async (): Promise<User[]> => {
+    if (!isAuthenticated) return [];
+    try {
+      const res = await authFetch('/api/users');
+      if (!res.ok) throw new Error('Erro ao buscar usuários');
+      const data: ListUsersResponse = await res.json();
+      return data.users;
+    } catch (err) {
+      console.error('[ProvaOralAPI] fetchUsers error:', err);
+      return [];
+    }
+  }, [isAuthenticated, authFetch]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LISTAR COMPARTILHAMENTOS ATUAIS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Busca usuários com quem compartilho minhas análises
+   * @returns Lista de usuários que têm acesso
+   */
+  const fetchSharing = useCallback(async (): Promise<User[]> => {
+    if (!isAuthenticated) return [];
+    try {
+      const res = await authFetch(`${API_BASE}/sharing`);
+      if (!res.ok) throw new Error('Erro ao buscar compartilhamentos');
+      const data: ListSharingResponse = await res.json();
+      return data.recipients;
+    } catch (err) {
+      console.error('[ProvaOralAPI] fetchSharing error:', err);
+      return [];
+    }
+  }, [isAuthenticated, authFetch]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ATUALIZAR COMPARTILHAMENTOS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Atualiza lista de usuários com acesso às minhas análises
+   * @param recipientIds - IDs dos usuários que terão acesso
+   * @returns true se atualizou com sucesso
+   */
+  const updateSharing = useCallback(
+    async (recipientIds: string[]): Promise<boolean> => {
+      if (!isAuthenticated) return false;
+      try {
+        const res = await authFetch(`${API_BASE}/sharing`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recipientIds }),
+        });
+        return res.ok;
+      } catch (err) {
+        console.error('[ProvaOralAPI] updateSharing error:', err);
+        return false;
+      }
+    },
+    [isAuthenticated, authFetch]
+  );
+
   return {
     fetchAnalyses,
     fetchAnalysis,
     createAnalysis,
     deleteAnalysis,
+    fetchUsers,
+    fetchSharing,
+    updateSharing,
     isLoading,
     error,
   };

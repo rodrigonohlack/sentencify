@@ -13,6 +13,7 @@ import {
   ExternalLink,
   AlertCircle,
   FileText,
+  Users,
 } from 'lucide-react';
 import { Modal, Button, Card, CardContent } from '../ui';
 import { useAnalysesStore, useProvaOralStore } from '../../stores';
@@ -108,14 +109,21 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
           </Button>
           {selectedId && (
             <>
-              <Button
-                variant="danger"
-                onClick={handleDelete}
-                loading={isDeleting}
-                icon={<Trash2 className="w-4 h-4" />}
-              >
-                Excluir
-              </Button>
+              {/* Só mostra botão excluir para análises próprias */}
+              {(() => {
+                const selectedAnalysis = analyses.find(a => a.id === selectedId);
+                const isOwn = !selectedAnalysis || selectedAnalysis.isOwn !== false;
+                return isOwn ? (
+                  <Button
+                    variant="danger"
+                    onClick={handleDelete}
+                    loading={isDeleting}
+                    icon={<Trash2 className="w-4 h-4" />}
+                  >
+                    Excluir
+                  </Button>
+                ) : null;
+              })()}
               <Button
                 onClick={handleLoad}
                 icon={<ExternalLink className="w-4 h-4" />}
@@ -187,6 +195,14 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
+                  {/* Badge de compartilhamento */}
+                  {analysis.isOwn === false && (
+                    <span className="inline-flex items-center gap-1 text-xs bg-purple-500/20 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-full mb-1">
+                      <Users className="w-3 h-3" />
+                      Compartilhada por {analysis.ownerEmail}
+                    </span>
+                  )}
+
                   {/* Número do processo */}
                   <p className={`font-medium truncate ${
                     selectedId === analysis.id

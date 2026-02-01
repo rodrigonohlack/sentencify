@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.12', feature: 'Compartilhamento de análises de Prova Oral: seção nas configurações para selecionar usuários que podem ver suas análises, badge visual no histórico para análises compartilhadas, endpoints backend GET/PUT /api/prova-oral/sharing, migration 008 (prova_oral_access)' },
   { version: '1.40.11', feature: 'Edição inline de análises de prova: botão de editar aparece no hover, textarea editável com botões Cancelar/Salvar, persistência automática via Zustand store' },
   { version: '1.40.10', feature: 'Streaming para Confronto de Fatos: useFactsComparison agora usa callAIStream para evitar timeout de 30s no Render em operações longas' },
   { version: '1.40.09', feature: 'Fix estado compartilhado do modelo E5: migrar useSemanticSearchManagement de useState local para Zustand store (useSearchStore). Quando ConfigModal inicializa o modelo, TODOS os componentes (App.tsx, tabs) agora veem searchModelReady=true instantaneamente, sem precisar F5. Restaurar toast "Modelo de busca pronto!" que foi perdido na refatoração v1.40.06' },
