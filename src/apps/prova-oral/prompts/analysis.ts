@@ -121,6 +121,8 @@ Para cada pedido da inicial ou tema controvertido:
 3. O que disse cada depoente sobre o tema (com timestamps)
 4. Conclusão probatória aplicando as regras de valoração
 
+⚠️ **REGRA CRÍTICA**: O array provaOral DEVE incluir TODOS os depoentes que têm declarações sobre o tema - os mesmos que aparecem em sintesesPorTema. Se um depoente está em sintesesPorTema para este tema, ele DEVE estar em provaOral. Não selecione apenas os "mais importantes".
+
 **Atenção**: A conclusão probatória deve indicar expressamente o fundamento técnico. Evitar conclusões vagas como "a prova favorece o autor" sem apontar por quê.
 
 ## Etapa 5: Identificação de Contradições
@@ -458,6 +460,7 @@ Sem markdown, sem backticks, sem explicações - apenas o JSON:
           "textoCorrente": "⚠️ TODAS as declarações deste depoente sobre ESTE tema, separadas por ponto-e-vírgula, com timestamps inline. Exemplo: 'afirmou ter começado em 17/07/2024 (1m 10s); declarou trabalho fixo desde julho (2m 29s); disse trabalhar de terça a domingo das 17h às 2h (1m 33s); negou abandono de emprego (16m 36s)'"
         }
       ],
+      "⚠️ REGRA provaOral": "DEVE incluir TODOS os depoentes que aparecem em sintesesPorTema para este tema. Se sintesesPorTema tem 6 depoentes, provaOral DEVE ter 6 entradas.",
       "conclusao": "string (análise probatória com FUNDAMENTO TÉCNICO EXPLÍCITO)",
       "status": "favoravel-autor|favoravel-re|parcial"
     }
@@ -511,6 +514,7 @@ Verifique antes de responder:
 ☐ sintesesPorTema inclui TODOS os depoentes que falaram sobre cada tema (quem confirma E quem nega)?
 ☐ sintesesPorTema inclui declarações que CARACTERIZAM o tema (período/função/dias = Vínculo; horários = Jornada)?
 ☐ Declarações relevantes para múltiplos temas aparecem em TODOS os temas aplicáveis?
+☐ provaOral[] inclui EXATAMENTE os mesmos depoentes que sintesesPorTema para cada tema (mesmo número, mesmos nomes)?
 ☐ Em provaOral[], cada deponente tem textoCorrente com TODAS as declarações sobre o tema (mesmo padrão de sintesesPorTema)?
 ☐ Em provaOral[], o campo "deponente" identifica QUEM disse (nunca vazio)?
 ☐ Todos os 7 arrays estão presentes no JSON?
