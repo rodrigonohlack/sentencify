@@ -134,15 +134,28 @@ export const AnalisesTab: React.FC<AnalisesTabProps> = ({ analises }) => {
                       Prova Oral
                     </p>
                     <div className="space-y-2">
-                      {analise.provaOral!.map((p, j) => (
-                        <div key={j} className="flex gap-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 text-sm">
-                          <span className="font-semibold text-slate-700 dark:text-slate-200 flex-shrink-0">
-                            {p.deponente}:
-                          </span>
-                          <p className="text-slate-600 dark:text-slate-300 flex-1">{p.conteudo}</p>
-                          {p.timestamp && <TimestampBadge timestamp={p.timestamp} />}
-                        </div>
-                      ))}
+                      {analise.provaOral!.map((p, j) => {
+                        // Suporta novo formato (textoCorrente) e antigo (conteudo + timestamp)
+                        const hasTextoCorrente = p.textoCorrente && p.textoCorrente.length > 0;
+                        const texto = hasTextoCorrente ? p.textoCorrente : p.conteudo;
+
+                        return (
+                          <div key={j} className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 text-sm">
+                            <span className="font-semibold text-slate-700 dark:text-slate-200">
+                              {p.deponente}:
+                            </span>
+                            <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                              {texto}
+                            </p>
+                            {/* Mostra timestamp separado apenas no formato antigo */}
+                            {!hasTextoCorrente && p.timestamp && (
+                              <div className="mt-2">
+                                <TimestampBadge timestamp={p.timestamp} />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

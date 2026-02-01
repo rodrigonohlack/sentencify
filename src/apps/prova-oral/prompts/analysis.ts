@@ -453,7 +453,10 @@ Sem markdown, sem backticks, sem explicações - apenas o JSON:
       "alegacaoAutor": "string (o que alega na inicial)",
       "defesaRe": "string (o que defende na contestação)",
       "provaOral": [
-        { "deponente": "OBRIGATÓRIO - identificar quem disse", "conteudo": "string (o que disse)", "timestamp": "string" }
+        {
+          "deponente": "OBRIGATÓRIO - nome completo igual ao usado em sintesesPorTema (ex: AUTOR FULANO, PREPOSTO SICRANO)",
+          "textoCorrente": "⚠️ TODAS as declarações deste depoente sobre ESTE tema, separadas por ponto-e-vírgula, com timestamps inline. Exemplo: 'afirmou ter começado em 17/07/2024 (1m 10s); declarou trabalho fixo desde julho (2m 29s); disse trabalhar de terça a domingo das 17h às 2h (1m 33s); negou abandono de emprego (16m 36s)'"
+        }
       ],
       "conclusao": "string (análise probatória com FUNDAMENTO TÉCNICO EXPLÍCITO)",
       "status": "favoravel-autor|favoravel-re|parcial"
@@ -508,6 +511,7 @@ Verifique antes de responder:
 ☐ sintesesPorTema inclui TODOS os depoentes que falaram sobre cada tema (quem confirma E quem nega)?
 ☐ sintesesPorTema inclui declarações que CARACTERIZAM o tema (período/função/dias = Vínculo; horários = Jornada)?
 ☐ Declarações relevantes para múltiplos temas aparecem em TODOS os temas aplicáveis?
+☐ Em provaOral[], cada deponente tem textoCorrente com TODAS as declarações sobre o tema (mesmo padrão de sintesesPorTema)?
 ☐ Em provaOral[], o campo "deponente" identifica QUEM disse (nunca vazio)?
 ☐ Todos os 7 arrays estão presentes no JSON?
 ☐ Análise de credibilidade usa apenas critérios LEGÍTIMOS (coerência, conhecimento direto, detalhes, compatibilidade)?

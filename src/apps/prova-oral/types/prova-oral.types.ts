@@ -107,10 +107,14 @@ export interface SintesePorTema {
 // ANÁLISES POR TEMA/PEDIDO (ATUALIZADO)
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** Prova oral de um depoente (novo formato com deponente obrigatório) */
+/** Prova oral de um depoente (formato texto corrido com timestamps inline) */
 export interface ProvaOralItem {
   deponente: string;
-  conteudo: string;
+  /** Todas as declarações do depoente sobre o tema, com timestamps inline.
+   * Formato: "afirmou X (1m 10s); declarou Y (2m 29s); negou Z (5m 00s)" */
+  textoCorrente: string;
+  // Retrocompatibilidade com formato antigo
+  conteudo?: string;
   timestamp?: string;
 }
 
