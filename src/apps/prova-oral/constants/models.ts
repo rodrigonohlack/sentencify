@@ -130,7 +130,7 @@ export const MODEL_MAX_OUTPUT_TOKENS: Record<string, number> = {
   'grok-4-1-fast-non-reasoning': 32000,
 };
 
-export const DEFAULT_MAX_OUTPUT_TOKENS = 16000;
+export const DEFAULT_MAX_OUTPUT_TOKENS = 32000;
 
 /**
  * Retorna o limite máximo de tokens de output para um modelo
