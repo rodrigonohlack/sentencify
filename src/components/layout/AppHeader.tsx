@@ -7,7 +7,7 @@
  * Contém: título, número do processo, botões de ação, aviso de responsabilidade.
  */
 
-import { LogOut } from 'lucide-react';
+import { LogOut, FileSearch, Mic } from 'lucide-react';
 import { GoogleDriveButton } from '../GoogleDriveButton';
 import { CSS } from '../../constants/styles';
 import { APP_VERSION } from '../../constants/app-version';
@@ -73,15 +73,17 @@ export function AppHeader({
             </h1>
             <a
               href="/analise"
-              className="text-xs theme-text-disabled hover:[color:var(--text-muted)] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 transition-all"
             >
-              [Analisador]
+              <FileSearch className="w-3.5 h-3.5" />
+              Analisador
             </a>
             <a
               href="/prova-oral"
-              className="text-xs theme-text-disabled hover:[color:var(--text-muted)] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/40 transition-all"
             >
-              [Prova Oral]
+              <Mic className="w-3.5 h-3.5" />
+              Prova Oral
             </a>
           </div>
 
