@@ -81,6 +81,10 @@ export const useAIIntegration = () => {
           throw new Error(data.error?.message || `HTTP ${response.status}`);
         }
 
+        if (data.stop_reason === 'max_tokens') {
+          throw new Error('A análise foi truncada por exceder o limite de tokens. Tente com uma transcrição menor.');
+        }
+
         if (data.usage) {
           addTokenUsage({
             input: data.usage.input_tokens || 0,
@@ -185,6 +189,10 @@ export const useAIIntegration = () => {
           throw new Error(data.error?.message || `HTTP ${response.status}`);
         }
 
+        if (data.candidates?.[0]?.finishReason === 'MAX_TOKENS') {
+          throw new Error('A análise foi truncada por exceder o limite de tokens. Tente com uma transcrição menor.');
+        }
+
         if (data.usageMetadata) {
           addTokenUsage({
             input: data.usageMetadata.promptTokenCount || 0,
@@ -280,6 +288,10 @@ export const useAIIntegration = () => {
           throw new Error(data.error?.message || `HTTP ${response.status}`);
         }
 
+        if (data.choices?.[0]?.finish_reason === 'length') {
+          throw new Error('A análise foi truncada por exceder o limite de tokens. Tente com uma transcrição menor.');
+        }
+
         if (data.usage) {
           addTokenUsage({
             input: data.usage.prompt_tokens || 0,
@@ -357,6 +369,10 @@ export const useAIIntegration = () => {
 
         if (!response.ok) {
           throw new Error(data.error?.message || `HTTP ${response.status}`);
+        }
+
+        if (data.choices?.[0]?.finish_reason === 'length') {
+          throw new Error('A análise foi truncada por exceder o limite de tokens. Tente com uma transcrição menor.');
         }
 
         if (data.usage) {
@@ -479,11 +495,16 @@ export const useAIIntegration = () => {
               throw new Error(parsed.error?.message || 'Erro no streaming');
             }
 
-            if (parsed.type === 'done' && parsed.usage) {
-              addTokenUsage({
-                input: parsed.usage.input_tokens || 0,
-                output: parsed.usage.output_tokens || 0
-              });
+            if (parsed.type === 'done') {
+              if (parsed.stop_reason === 'max_tokens') {
+                throw new Error('A análise foi truncada por exceder o limite de tokens. Tente com uma transcrição menor.');
+              }
+              if (parsed.usage) {
+                addTokenUsage({
+                  input: parsed.usage.input_tokens || 0,
+                  output: parsed.usage.output_tokens || 0
+                });
+              }
             }
           } catch (e) {
             if (e instanceof SyntaxError) continue;
@@ -582,11 +603,16 @@ export const useAIIntegration = () => {
               throw new Error(parsed.error?.message || 'Erro no streaming');
             }
 
-            if (parsed.type === 'done' && parsed.usage) {
-              addTokenUsage({
-                input: parsed.usage.prompt_tokens || 0,
-                output: parsed.usage.completion_tokens || 0
-              });
+            if (parsed.type === 'done') {
+              if (parsed.finish_reason === 'length') {
+                throw new Error('A análise foi truncada por exceder o limite de tokens. Tente com uma transcrição menor.');
+              }
+              if (parsed.usage) {
+                addTokenUsage({
+                  input: parsed.usage.prompt_tokens || 0,
+                  output: parsed.usage.completion_tokens || 0
+                });
+              }
             }
           } catch (e) {
             if (e instanceof SyntaxError) continue;
@@ -676,11 +702,16 @@ export const useAIIntegration = () => {
               throw new Error(parsed.error?.message || 'Erro no streaming');
             }
 
-            if (parsed.type === 'done' && parsed.usage) {
-              addTokenUsage({
-                input: parsed.usage.prompt_tokens || 0,
-                output: parsed.usage.completion_tokens || 0
-              });
+            if (parsed.type === 'done') {
+              if (parsed.finish_reason === 'length') {
+                throw new Error('A análise foi truncada por exceder o limite de tokens. Tente com uma transcrição menor.');
+              }
+              if (parsed.usage) {
+                addTokenUsage({
+                  input: parsed.usage.prompt_tokens || 0,
+                  output: parsed.usage.completion_tokens || 0
+                });
+              }
             }
           } catch (e) {
             if (e instanceof SyntaxError) continue;
@@ -789,11 +820,16 @@ export const useAIIntegration = () => {
               throw new Error(parsed.error?.message || 'Erro no streaming');
             }
 
-            if (parsed.type === 'done' && parsed.usage) {
-              addTokenUsage({
-                input: parsed.usage.promptTokenCount || 0,
-                output: parsed.usage.candidatesTokenCount || 0
-              });
+            if (parsed.type === 'done') {
+              if (parsed.finish_reason === 'MAX_TOKENS') {
+                throw new Error('A análise foi truncada por exceder o limite de tokens. Tente com uma transcrição menor.');
+              }
+              if (parsed.usage) {
+                addTokenUsage({
+                  input: parsed.usage.promptTokenCount || 0,
+                  output: parsed.usage.candidatesTokenCount || 0
+                });
+              }
             }
           } catch (e) {
             if (e instanceof SyntaxError) continue;
