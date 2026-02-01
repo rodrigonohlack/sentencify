@@ -126,7 +126,19 @@ ${sinteseProcesso || 'Não fornecida. Analise a transcrição identificando os t
 
 ${instrucoesSection}---
 
-Analise a transcrição e a síntese acima. Retorne APENAS o JSON estruturado conforme especificado.`;
+## INSTRUÇÕES FINAIS (CRÍTICO - LEIA COM ATENÇÃO)
+
+Analise a transcrição e a síntese acima. Retorne APENAS o JSON estruturado conforme especificado.
+
+⚠️ ATENÇÃO: Sua resposta será avaliada pela EXTENSÃO e COMPLETUDE. Uma resposta curta é considerada FALHA.
+
+CHECKLIST OBRIGATÓRIO antes de finalizar:
+□ sintesesCondensadas: cada textoCorrente tem 8+ declarações com timestamps?
+□ sintesesPorTema: cada declaração captura TODOS os detalhes fáticos, não apenas resumos?
+□ Cada timestamp da transcrição virou um item separado em sinteses[].conteudo?
+□ provaOral[] tem o mesmo número de depoentes que sintesesPorTema para cada tema?
+
+Se algum item acima não foi cumprido, REFAÇA a análise antes de responder.`;
 
         setProgress(30, 'Conectando ao provedor...');
 
