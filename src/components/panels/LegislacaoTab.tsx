@@ -265,7 +265,7 @@ export const LegislacaoTab = React.memo(({
                         <div>
                           {artigo.paragrafos.map((p, i: number) => (
                             <p key={i} className={`theme-text-secondary ml-2 mb-1 ${isMatchedParagrafo(p) ? 'font-semibold bg-yellow-500/10 px-1 rounded' : ''}`}>
-                              <span className="text-purple-400">§ {p.numero}º</span> {p.texto}
+                              <span className="theme-text-purple">§ {p.numero}º</span> {p.texto}
                             </p>
                           ))}
                         </div>
@@ -274,7 +274,7 @@ export const LegislacaoTab = React.memo(({
                         <div>
                           {artigo.incisos.map((inc, i: number) => (
                             <p key={i} className={`theme-text-secondary ml-2 mb-1 ${isMatchedInciso(inc) ? 'font-semibold bg-yellow-500/10 px-1 rounded' : ''}`}>
-                              <span className="text-amber-400">{inc.numero}</span> - {inc.texto}
+                              <span className="theme-text-amber">{inc.numero}</span> - {inc.texto}
                             </p>
                           ))}
                         </div>
@@ -283,7 +283,7 @@ export const LegislacaoTab = React.memo(({
                         <div>
                           {artigo.alineas.map((al: { letra: string; texto: string }, i: number) => (
                             <p key={i} className={`theme-text-secondary ml-2 mb-1 ${isMatchedAlinea(al) ? 'font-semibold bg-yellow-500/10 px-1 rounded' : ''}`}>
-                              <span className="text-teal-400">{al.letra})</span> {al.texto}
+                              <span className="theme-text-green">{al.letra})</span> {al.texto}
                             </p>
                           ))}
                         </div>

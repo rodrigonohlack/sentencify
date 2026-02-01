@@ -65,30 +65,30 @@ export const ArtigoCard = React.memo(({
         <div className="mt-3 pt-3 border-t theme-border-subtle text-sm space-y-2">
           {artigo.paragrafos && artigo.paragrafos.length > 0 && (
             <div>
-              <span className="text-xs font-medium text-purple-400 block mb-1">Parágrafos:</span>
+              <span className="text-xs font-medium theme-text-purple block mb-1">Parágrafos:</span>
               {artigo.paragrafos.map((p: { numero: string; texto: string }, i: number) => (
                 <p key={i} className="theme-text-secondary ml-2 mb-1">
-                  <span className="text-purple-300">§ {p.numero}º</span> {p.texto}
+                  <span className="theme-text-purple">§ {p.numero}º</span> {p.texto}
                 </p>
               ))}
             </div>
           )}
           {artigo.incisos && artigo.incisos.length > 0 && (
             <div>
-              <span className="text-xs font-medium text-amber-400 block mb-1">Incisos:</span>
+              <span className="text-xs font-medium theme-text-amber block mb-1">Incisos:</span>
               {artigo.incisos.map((inc: { numero: string; texto: string }, i: number) => (
                 <p key={i} className="theme-text-secondary ml-2 mb-1">
-                  <span className="text-amber-300">{inc.numero}</span> - {inc.texto}
+                  <span className="theme-text-amber">{inc.numero}</span> - {inc.texto}
                 </p>
               ))}
             </div>
           )}
           {artigo.alineas && artigo.alineas.length > 0 && (
             <div>
-              <span className="text-xs font-medium text-teal-400 block mb-1">Alíneas:</span>
+              <span className="text-xs font-medium theme-text-green block mb-1">Alíneas:</span>
               {artigo.alineas.map((al: { letra: string; texto: string }, i: number) => (
                 <p key={i} className="theme-text-secondary ml-2 mb-1">
-                  <span className="text-teal-300">{al.letra})</span> {al.texto}
+                  <span className="theme-text-green">{al.letra})</span> {al.texto}
                 </p>
               ))}
             </div>
