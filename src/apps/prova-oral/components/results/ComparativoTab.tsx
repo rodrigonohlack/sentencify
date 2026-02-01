@@ -250,7 +250,7 @@ const ComparativoRow: React.FC<{ analise: AnaliseTemaPedido }> = ({ analise }) =
         </Badge>
       </td>
       <td className="px-4 py-3">
-        <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2">
+        <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">
           {typeof analise.conclusao === 'string' && analise.conclusao.length > 50
             ? analise.conclusao
             : analise.fundamentacao || analise.conclusao}
