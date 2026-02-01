@@ -349,5 +349,212 @@ describe('useSyncManager', () => {
 
       expect(syncResult).toEqual({ success: false });
     });
+
+    it('should call push then pull when authenticated', async () => {
+      // First call for initial pull, then push, then pull again
+      mockAuthFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ models: [], serverTime: 'initial', count: 0 }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ results: { created: [], updated: [], deleted: [], conflicts: [] }, serverTime: 'push' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ models: [], serverTime: 'pull', count: 0 }),
+        });
+
+      // Set up pending changes
+      const pendingChanges = [{ operation: 'create', model: { id: 'model-1', title: 'Test' } }];
+      localStorage.setItem('sentencify-pending-changes', JSON.stringify(pendingChanges));
+
+      const { result } = renderHook(() =>
+        useSyncManager({ ...defaultProps, isAuthenticated: true })
+      );
+
+      await act(async () => {
+        await new Promise(r => setTimeout(r, 100));
+      });
+
+      await act(async () => {
+        await result.current.sync();
+      });
+
+      // Should have called pull initially, then push, then pull
+      expect(mockAuthFetch).toHaveBeenCalledWith('/api/sync/pull', expect.anything());
+      expect(mockAuthFetch).toHaveBeenCalledWith('/api/sync/push', expect.anything());
+    });
   });
+
+  describe('push with pending changes', () => {
+    it('should push pending changes and clear them on success', async () => {
+      const pendingChanges = [{ operation: 'create', model: { id: 'model-1', title: 'Test' } }];
+      localStorage.setItem('sentencify-pending-changes', JSON.stringify(pendingChanges));
+
+      mockAuthFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ models: [], serverTime: 'initial', count: 0 }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({
+            results: { created: ['model-1'], updated: [], deleted: [], conflicts: [] },
+            serverTime: 'push-time'
+          }),
+        });
+
+      const { result } = renderHook(() =>
+        useSyncManager({ ...defaultProps, isAuthenticated: true })
+      );
+
+      await act(async () => {
+        await new Promise(r => setTimeout(r, 50));
+      });
+
+      await act(async () => {
+        await result.current.push();
+      });
+
+      // Pending changes should be cleared
+      await act(async () => {
+        await new Promise(r => setTimeout(r, 50));
+      });
+      expect(result.current.pendingCount).toBe(0);
+    });
+
+    it('should handle push error', async () => {
+      const pendingChanges = [{ operation: 'create', model: { id: 'model-1', title: 'Test' } }];
+      localStorage.setItem('sentencify-pending-changes', JSON.stringify(pendingChanges));
+
+      mockAuthFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ models: [], serverTime: 'initial', count: 0 }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          json: () => Promise.resolve({ error: 'Push failed' }),
+        });
+
+      const { result } = renderHook(() =>
+        useSyncManager({ ...defaultProps, isAuthenticated: true })
+      );
+
+      await act(async () => {
+        await new Promise(r => setTimeout(r, 50));
+      });
+
+      let pushResult: unknown;
+      await act(async () => {
+        pushResult = await result.current.push();
+      });
+
+      expect((pushResult as { success: boolean; error?: string }).success).toBe(false);
+      expect((pushResult as { success: boolean; error?: string }).error).toBe('Push failed');
+      expect(result.current.syncError).toBe('Push failed');
+    });
+
+  });
+
+  describe('pull with model merge', () => {
+    it('should call setModels when server returns models', async () => {
+      mockAuthFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({
+          models: [{ id: 'model-1', title: 'Server', updatedAt: '2024-06-01T00:00:00Z' }],
+          serverTime: 'now',
+          count: 1
+        }),
+      });
+
+      renderHook(() =>
+        useSyncManager({ ...defaultProps, isAuthenticated: true })
+      );
+
+      await act(async () => {
+        await new Promise(r => setTimeout(r, 100));
+      });
+
+      expect(mockSetModels).toHaveBeenCalled();
+    });
+
+  });
+
+  describe('offline/online detection', () => {
+    it('should set status to offline when navigator.onLine is false initially', () => {
+      Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true });
+
+      const { result } = renderHook(() => useSyncManager(defaultProps));
+
+      expect(result.current.syncStatus).toBe('offline');
+    });
+
+    it('should set status to offline on offline event', async () => {
+      const { result } = renderHook(() => useSyncManager(defaultProps));
+
+      expect(result.current.syncStatus).toBe('idle');
+
+      await act(async () => {
+        window.dispatchEvent(new Event('offline'));
+      });
+
+      expect(result.current.syncStatus).toBe('offline');
+    });
+
+    it('should set status to idle on online event when was offline', async () => {
+      Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true });
+
+      const { result } = renderHook(() => useSyncManager(defaultProps));
+
+      expect(result.current.syncStatus).toBe('offline');
+
+      Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
+      await act(async () => {
+        window.dispatchEvent(new Event('online'));
+      });
+
+      expect(result.current.syncStatus).toBe('idle');
+    });
+
+    it('should return failure when offline', async () => {
+      Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true });
+
+      const { result } = renderHook(() =>
+        useSyncManager({ ...defaultProps, isAuthenticated: true })
+      );
+
+      let pullResult: unknown;
+      await act(async () => {
+        pullResult = await result.current.pull();
+      });
+
+      expect((pullResult as { success: boolean }).success).toBe(false);
+    });
+  });
+
+  describe('trackChange consolidation', () => {
+    it('should convert update to delete when deleting existing synced model', () => {
+      const { result } = renderHook(() => useSyncManager(defaultProps));
+      const model = { id: 'model-1', title: 'Test' };
+
+      // First update (simulating previously synced model)
+      act(() => {
+        result.current.trackChange('update', model);
+      });
+
+      expect(result.current.pendingCount).toBe(1);
+
+      // Then delete
+      act(() => {
+        result.current.trackChange('delete', model);
+      });
+
+      // Should still have 1 pending change (the delete)
+      expect(result.current.pendingCount).toBe(1);
+    });
+  });
+
 });
