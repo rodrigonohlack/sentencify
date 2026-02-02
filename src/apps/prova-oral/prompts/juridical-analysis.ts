@@ -287,7 +287,7 @@ Cada tema deve ser AUTOSSUFICIENTE - o juiz pode ler apenas um tema e ter todas 
 5. CHECKLIST DE AUTOCONTROLE (APLICAR ANTES DE FINALIZAR)
 ═══════════════════════════════════════════════════════════════════════════════
 
-Antes de gerar o JSON final, aplicar obrigatoriamente estes 8 testes:
+Antes de gerar o JSON final, aplicar obrigatoriamente estes 9 testes:
 
 ## Teste 1: Fundamento Técnico
 Alguma conclusão sobre credibilidade ou valoração se baseia em critério não previsto em lei ou não aceito pela técnica processual? Se sim, reformular ou excluir.
@@ -315,6 +315,12 @@ Quantos depoentes existem em sintesesCondensadas do JSON de entrada? [N]
 Para cada tema em sintesesPorTema, quantos depoentes você incluiu? [M]
 Se M < N, pergunte-se: os depoentes omitidos realmente não disseram NADA sobre este tema?
 Na dúvida, INCLUA. Omitir prova é pior que repetir informação.
+
+## Teste 9: Teste da Completude de Credibilidade
+Quantos depoentes existem em sintesesCondensadas do JSON de entrada? [N]
+Quantas avaliações de credibilidade você incluiu no array credibilidade[]? [M]
+Se M ≠ N, VOLTE e avalie os faltantes.
+⚠️ TODOS os depoentes DEVEM ter avaliação de credibilidade - não omita nenhum!
 
 ═══════════════════════════════════════════════════════════════════════════════
 6. OBSERVAÇÕES FINAIS
@@ -412,8 +418,10 @@ Sem markdown, sem backticks, sem explicações - apenas o JSON:
     }
   ],
   "credibilidade": [
+    // ⚠️ DEVE TER EXATAMENTE O MESMO NÚMERO DE ITENS QUE sintesesCondensadas
+    // Se há 6 depoentes, DEVE haver 6 avaliações de credibilidade - NUNCA omita nenhum!
     {
-      "deponenteId": "string",
+      "deponenteId": "string (usar mesmo nome de sintesesCondensadas, ex: 'AUTOR FULANO')",
       "pontuacao": 1-5,
       "avaliacaoGeral": "string (FUNDAMENTAÇÃO TÉCNICA OBRIGATÓRIA - indicar critérios legítimos utilizados: coerência interna, conhecimento direto, riqueza de detalhes, compatibilidade com documentos/outros depoimentos. NUNCA basear em nervosismo, vínculo com parte, ou impressões subjetivas)",
       "criterios": {
@@ -441,9 +449,10 @@ Verifique antes de responder:
 ☐ Em provaOral[], cada deponente tem textoCorrente com TODAS as declarações sobre o tema (mesmo padrão de sintesesPorTema)?
 ☐ Em provaOral[], o campo "deponente" identifica QUEM disse (nunca vazio)?
 ☐ Todos os 5 arrays estão presentes no JSON?
+☐ credibilidade[] tem EXATAMENTE o mesmo número de itens que sintesesCondensadas (todos os depoentes)?
 ☐ Análise de credibilidade usa apenas critérios LEGÍTIMOS (coerência, conhecimento direto, detalhes, compatibilidade)?
 ☐ Confissões identificadas atendem aos requisitos técnicos do art. 389/391 CPC?
-☐ Checklist de autocontrole foi aplicado (7 testes)?
+☐ Checklist de autocontrole foi aplicado (9 testes)?
 
 IMPORTANTE:
 - Use linguagem formal, objetiva, sem adjetivações
