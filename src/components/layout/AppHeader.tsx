@@ -7,7 +7,7 @@
  * Contém: título, número do processo, botões de ação, aviso de responsabilidade.
  */
 
-import { LogOut, FileSearch, Mic, Sun, Moon } from 'lucide-react';
+import { LogOut, FileSearch, Mic, Sun, Moon, BookOpen, Settings } from 'lucide-react';
 import { GoogleDriveButton } from '../GoogleDriveButton';
 import { CSS } from '../../constants/styles';
 import { APP_VERSION } from '../../constants/app-version';
@@ -128,10 +128,10 @@ export function AppHeader({
             {/* Manual Button */}
             <button
               onClick={() => window.open('/MANUAL_USUARIO_AVANCADO.html', '_blank')}
-              className="px-2 py-1 rounded text-base flex items-center justify-center theme-btn-secondary transition-colors duration-200"
+              className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-600 transition-all shadow-sm"
               title="Manual do Usuário Avançado"
             >
-              📖
+              <BookOpen className="w-4 h-4" />
             </button>
 
             {/* Theme Toggle */}
@@ -146,9 +146,10 @@ export function AppHeader({
             {/* Settings Button */}
             <button
               onClick={() => openModal('settings')}
-              className="px-3 py-1 rounded text-xs flex items-center gap-1 theme-btn-secondary transition-colors duration-200"
+              className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all shadow-sm"
+              title="Configurações de IA"
             >
-              ⚙️ Configurações IA
+              <Settings className="w-4 h-4" />
             </button>
 
             {/* Google Drive Button */}

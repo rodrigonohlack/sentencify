@@ -197,13 +197,13 @@ describe('AppHeader', () => {
     it('should render settings button', () => {
       render(<AppHeader {...createDefaultProps()} />);
 
-      expect(screen.getByText(/Configurações IA/)).toBeInTheDocument();
+      expect(screen.getByTitle('Configurações de IA')).toBeInTheDocument();
     });
 
     it('should open settings modal on click', () => {
       render(<AppHeader {...createDefaultProps()} />);
 
-      const settingsButton = screen.getByText(/Configurações IA/);
+      const settingsButton = screen.getByTitle('Configurações de IA');
       fireEvent.click(settingsButton);
 
       expect(mockOpenModal).toHaveBeenCalledWith('settings');
@@ -300,7 +300,8 @@ describe('AppHeader', () => {
 
       const manualButton = screen.getByTitle('Manual do Usuário Avançado');
       expect(manualButton).toBeInTheDocument();
-      expect(manualButton).toHaveTextContent('📖');
+      // Agora usa ícone BookOpen do Lucide (SVG) em vez de emoji
+      expect(manualButton.querySelector('svg')).toBeInTheDocument();
     });
 
     it('should open manual in new window on click', () => {
