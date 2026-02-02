@@ -115,7 +115,6 @@ export const useAIIntegration = () => {
     options: AICallOptions = {}
   ): Promise<string> => {
     const {
-      maxTokens = 8000,
       systemPrompt = null,
       model = aiSettings.geminiModel
     } = options;
@@ -140,17 +139,17 @@ export const useAIIntegration = () => {
     }
 
     const thinkingBuffer: Record<string, number> = {
-      'minimal': 1024,
-      'low': 4000,
-      'medium': 8000,
-      'high': 16000
+      'minimal': 4096,
+      'low': 16000,
+      'medium': 32000,
+      'high': 48000
     };
-    const effectiveBuffer = thinkingBuffer[thinkingLevel] || 8000;
+    const effectiveBuffer = thinkingBuffer[thinkingLevel] || 32000;
 
     const request: Record<string, unknown> = {
       contents,
       generationConfig: {
-        maxOutputTokens: maxTokens + effectiveBuffer,
+        maxOutputTokens: 128000,  // Fixo para evitar que o modelo "economize" texto
         temperature: 1.0,  // Gemini 3 requer temperature 1.0
         thinking_config: {
           thinking_budget: effectiveBuffer,
@@ -729,7 +728,6 @@ export const useAIIntegration = () => {
     options: AIStreamOptions = {}
   ): Promise<string> => {
     const {
-      maxTokens = 8000,
       systemPrompt = null,
       model = aiSettings.geminiModel,
       onChunk
@@ -753,17 +751,17 @@ export const useAIIntegration = () => {
     }
 
     const thinkingBuffer: Record<string, number> = {
-      'minimal': 1024,
-      'low': 4000,
-      'medium': 8000,
-      'high': 16000
+      'minimal': 4096,
+      'low': 16000,
+      'medium': 32000,
+      'high': 48000
     };
-    const effectiveBuffer = thinkingBuffer[thinkingLevel] || 8000;
+    const effectiveBuffer = thinkingBuffer[thinkingLevel] || 32000;
 
     const request: Record<string, unknown> = {
       contents,
       generationConfig: {
-        maxOutputTokens: maxTokens + effectiveBuffer,
+        maxOutputTokens: 128000,  // Fixo para evitar que o modelo "economize" texto
         temperature: 1.0,
         thinking_config: {
           thinking_budget: effectiveBuffer,
