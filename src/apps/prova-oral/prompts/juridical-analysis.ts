@@ -109,7 +109,7 @@ A suspeição deve ser aferida com base em elementos concretos, não em presunç
 2. FLUXO DE ANÁLISE
 ═══════════════════════════════════════════════════════════════════════════════
 
-## Etapa 1: Identificação de Contradições
+## Etapa 1: Identificação de Contradições (CRÍTICO - NÃO PERCA NENHUMA!)
 
 **Contradições internas**: dentro do mesmo depoimento, o depoente se contradiz.
 
@@ -122,6 +122,95 @@ A suspeição deve ser aferida com base em elementos concretos, não em presunç
 **Formato**: Indicar sempre os timestamps das passagens contraditórias e transcrever os trechos relevantes para permitir verificação.
 
 **Atenção**: Distinguir entre contradição genuína e mera imprecisão ou variação de detalhes irrelevantes. Nem toda divergência é contradição significativa.
+
+### ⚠️ ALGORITMO OBRIGATÓRIO PARA IDENTIFICAR CONTRADIÇÕES:
+
+**PASSO 1:** Para CADA TEMA do processo (Jornada, Vínculo, Dano Moral, etc.), compare:
+- O que o AUTOR disse vs. o que o PREPOSTO disse
+- O que as TESTEMUNHAS DO AUTOR disseram vs. o que as TESTEMUNHAS DA RÉ disseram
+- O que CADA depoente disse sobre o mesmo fato
+
+**PASSO 2:** Verifique OBRIGATORIAMENTE estas CATEGORIAS de contradição:
+
+### CATEGORIAS OBRIGATÓRIAS A VERIFICAR:
+
+1. **HORÁRIO DE TRABALHO** (entrada/saída)
+   - Compare: Autor vs Preposto vs Testemunhas sobre horário de saída
+   - Se autor diz "02h" e preposto diz "meia-noite" → CONTRADIÇÃO OBRIGATÓRIA
+
+2. **INTERVALO PARA ALIMENTAÇÃO**
+   - Compare: Quem diz que TINHA intervalo vs quem diz que NÃO TINHA
+   - Se autor diz "não tinha intervalo" e preposto diz "1 hora" → CONTRADIÇÃO OBRIGATÓRIA
+
+3. **DIAS DA SEMANA TRABALHADOS**
+   - Compare: "terça a domingo" vs "quarta a domingo" → CONTRADIÇÃO
+
+4. **FUNCIONAMENTO DO ESTABELECIMENTO**
+   - Compare: Quem diz que funcionava de manhã vs quem nega
+   - Horário de fechamento da cozinha/estabelecimento
+
+5. **XINGAMENTOS/ASSÉDIO/AMBIENTE**
+   - Compare: Quem CONFIRMA xingamentos vs quem NEGA
+   - Quem diz que patrão bebia vs quem nega
+
+6. **PERÍODO DE VÍNCULO/AFASTAMENTOS**
+   - Compare: Duração de afastamentos (dias vs semanas vs meses)
+   - Data de início efetivo do trabalho
+
+7. **TRABALHO EM OUTRO LOCAL**
+   - Compare: Quem afirma vs quem nega trabalho concomitante
+
+### 🔴 EXEMPLO REAL - CONTRADIÇÕES QUE VOCÊ ESTÁ PERDENDO:
+
+**Depoimentos sobre INTERVALO:**
+- Autor: "não chegava a ter nem meia hora de intervalo" (11m 37s)
+- Testemunha Alfre: "não tinham horário para se alimentar, trabalhavam direto" (34m 23s)
+- Testemunha Edileuzo: "não havia horário de almoço, comia andando" (56m 49s)
+- Preposto: "autor tinha 1 hora de intervalo" (23m 08s)
+- Testemunha Sebastiana: "tinha 1 hora de intervalo, vi autor tirando normalmente" (1h 10m)
+
+**❌ ERRADO - O que você está gerando:**
+Apenas 3 contradições genéricas, PERDENDO a contradição sobre intervalo!
+
+**✅ CORRETO - Contradição que DEVE aparecer:**
+{
+  "tipo": "externa",
+  "relevancia": "alta",
+  "depoente": "Autor + Testemunhas Autor x Preposto + Testemunha Ré",
+  "descricao": "Autor afirma não ter nem 30 min de intervalo (11m 37s). Testemunhas Alfre (34m 23s) e Edileuzo (56m 49s) confirmam ausência de intervalo ('trabalhavam direto', 'comia andando'). Preposto afirma 1 hora de intervalo (23m 08s). Testemunha Sebastiana afirma que viu autor tirando 1 hora normalmente (1h 10m).",
+  "timestamps": ["11m 37s", "34m 23s", "56m 49s", "23m 08s", "1h 10m"],
+  "analise": "Contradição central para o pedido de horas extras de intervalo. Prova dividida 3x2 (autor + 2 testemunhas vs preposto + 1 testemunha). As testemunhas do autor fornecem detalhes circunstanciais ('comia andando') que conferem verossimilhança."
+}
+
+**Depoimentos sobre XINGAMENTOS:**
+- Autor: "patrão chamava de 'caceteira', 'viado'" (9m 11s)
+- Testemunha Alfre: "presenciou xingamentos: 'caceteiro', 'fresco', 'viado'" (35m 55s)
+- Preposto: "nega xingamentos, alega ser sempre cordial" (23m 41s)
+- Testemunha Sebastiana: "nega discussões ou xingamentos" (1h 11m)
+
+**✅ CORRETO - Contradição que DEVE aparecer:**
+{
+  "tipo": "externa",
+  "relevancia": "alta",
+  "depoente": "Autor + Testemunha Alfre x Preposto + Testemunha Sebastiana",
+  "descricao": "Autor relata xingamentos homofóbicos ('caceteira', 'viado') pelo patrão (9m 11s). Testemunha Alfre confirma ter presenciado os mesmos xingamentos e que também era alvo (35m 55s, 36m 21s). Preposto nega qualquer xingamento, alegando cordialidade (23m 41s). Testemunha Sebastiana também nega presenciar discussões ou xingamentos (1h 11m).",
+  "timestamps": ["9m 11s", "35m 55s", "36m 21s", "23m 41s", "1h 11m"],
+  "analise": "Contradição central para o pedido de dano moral. A testemunha Alfre não apenas confirma os xingamentos ao autor, mas relata que também era vítima dos mesmos insultos, reforçando padrão de conduta do empregador."
+}
+
+### 🔴 REGRA INVIOLÁVEL PARA CONTRADIÇÕES:
+
+Para CADA tema controverso, deve haver pelo menos UMA contradição identificada se:
+- Autor/testemunhas do autor dizem X
+- Preposto/testemunhas da ré dizem Y (oposto de X)
+
+**Mínimo esperado de contradições em caso típico:**
+- Jornada/Horário: 1-2 contradições
+- Intervalo: 1 contradição (se houver disputa)
+- Dano Moral/Xingamentos: 1 contradição (se houver disputa)
+- Vínculo: 1 contradição (se houver disputa sobre período/natureza)
+
+Se você gerou apenas 3 contradições em um caso com 6 depoentes e múltiplos temas controversos, VOLTE E REVISE!
 
 ## Etapa 2: Extração de Confissões
 
@@ -399,6 +488,27 @@ Se M ≠ N, VOLTE e avalie os faltantes.
 🔴 Se sinteses[] tem 50 declarações, sintesesPorTema DEVE ter >= 50 declarações!
    (Pode ter mais se uma declaração for relevante para múltiplos temas)
 
+## Teste 11: Teste da Completude de Contradições (CRÍTICO!)
+
+Para CADA categoria abaixo, verifique se há divergência entre depoentes. Se houver, DEVE haver uma contradição no array contradicoes[]:
+
+☐ **Horário de saída**: Autor/testemunhas dizem X, Preposto/testemunhas ré dizem Y? → Contradição obrigatória
+☐ **Intervalo**: Alguém diz que tinha, alguém diz que não tinha? → Contradição obrigatória
+☐ **Dias da semana**: Divergência sobre quais dias trabalhava? → Contradição obrigatória
+☐ **Funcionamento matutino**: Alguém confirma, alguém nega trabalho de manhã? → Contradição obrigatória
+☐ **Xingamentos/Assédio**: Alguém confirma, alguém nega? → Contradição obrigatória
+☐ **Período de afastamento**: Versões divergentes (dias vs semanas vs meses)? → Contradição obrigatória
+☐ **Horário de fechamento**: Cozinha/estabelecimento fecha em horários diferentes? → Contradição obrigatória
+
+**REGRA**: Se você identificou apenas 3 contradições mas há divergências em 5+ categorias acima, VOLTE E ADICIONE as contradições faltantes!
+
+**Mínimo esperado**: Em caso com disputa sobre jornada + intervalo + dano moral, espera-se NO MÍNIMO 4-5 contradições:
+1. Horário de saída (jornada)
+2. Intervalo (se disputado)
+3. Xingamentos (dano moral)
+4. Funcionamento/fechamento
+5. Período/vínculo (se disputado)
+
 ═══════════════════════════════════════════════════════════════════════════════
 6. OBSERVAÇÕES FINAIS
 ═══════════════════════════════════════════════════════════════════════════════
@@ -511,9 +621,12 @@ Verifique antes de responder:
 ☐ credibilidade[] tem EXATAMENTE o mesmo número de itens que depoentes[] (todos os depoentes)?
 ☐ Análise de credibilidade usa apenas critérios LEGÍTIMOS (coerência, conhecimento direto, detalhes, compatibilidade)?
 ☐ Confissões identificadas atendem aos requisitos técnicos do art. 389/391 CPC?
-☐ Checklist de autocontrole foi aplicado (10 testes)?
+☐ Checklist de autocontrole foi aplicado (11 testes)?
 ☐ NENHUMA declaração de sinteses[] foi perdida ao gerar sintesesPorTema?
 ☐ Cada declaração foi copiada INTEGRALMENTE, sem cortar detalhes, comparações ou quantificadores?
+☐ contradicoes[] inclui TODAS as divergências sobre: horário, intervalo, xingamentos, funcionamento?
+☐ Para cada tema disputado (jornada, intervalo, dano moral), há pelo menos 1 contradição identificada?
+☐ Contradições incluem TODOS os timestamps e trechos relevantes de AMBOS os lados?
 
 IMPORTANTE:
 - Use linguagem formal, objetiva, sem adjetivações
