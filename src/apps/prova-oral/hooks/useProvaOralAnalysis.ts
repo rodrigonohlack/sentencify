@@ -1,13 +1,13 @@
 /**
  * @file useProvaOralAnalysis.ts
  * @description Hook para análise de prova oral usando IA
- * v1.39.08: Streaming para evitar timeout do Render
+ * v1.40.15: Arquitetura de duas fases (Transcrição + Análise Jurídica)
  */
 
 import { useCallback } from 'react';
 import { useAIIntegration } from './useAIIntegration';
 import { useProvaOralStore } from '../stores';
-import { PROVA_ORAL_SYSTEM_PROMPT } from '../prompts';
+import { PROVA_ORAL_TRANSCRIPTION_PROMPT, PROVA_ORAL_JURIDICAL_ANALYSIS_PROMPT } from '../prompts';
 import { getMaxOutputTokens } from '../constants';
 import type { ProvaOralResult } from '../types';
 
@@ -101,11 +101,11 @@ export function useProvaOralAnalysis(): UseProvaOralAnalysisReturn {
       }
 
       setIsAnalyzing(true);
-      setProgress(10, 'Preparando análise...');
+      setProgress(5, 'Preparando análise em duas fases...');
       startStreaming(); // Abre o modal de streaming
 
       try {
-        // Montar o prompt do usuário
+        // Montar seção de instruções extras (usado em ambas as fases)
         const instrucoesSection = instrucoesExtras?.trim()
           ? `## INSTRUÇÕES ESPECÍFICAS DO USUÁRIO
 
@@ -116,32 +116,6 @@ IMPORTANTE: Siga as instruções acima ao realizar a análise.
 `
           : '';
 
-        const userPrompt = `## TRANSCRIÇÃO DA AUDIÊNCIA
-
-${transcricao}
-
-## SÍNTESE DO PROCESSO
-
-${sinteseProcesso || 'Não fornecida. Analise a transcrição identificando os temas/pedidos mencionados.'}
-
-${instrucoesSection}---
-
-## INSTRUÇÕES FINAIS (CRÍTICO - LEIA COM ATENÇÃO)
-
-Analise a transcrição e a síntese acima. Retorne APENAS o JSON estruturado conforme especificado.
-
-⚠️ ATENÇÃO: Sua resposta será avaliada pela EXTENSÃO e COMPLETUDE. Uma resposta curta é considerada FALHA.
-
-CHECKLIST OBRIGATÓRIO antes de finalizar:
-□ sintesesCondensadas: cada textoCorrente tem 8+ declarações com timestamps?
-□ sintesesPorTema: cada declaração captura TODOS os detalhes fáticos, não apenas resumos?
-□ Cada timestamp da transcrição virou um item separado em sinteses[].conteudo?
-□ provaOral[] tem o mesmo número de depoentes que sintesesPorTema para cada tema?
-
-Se algum item acima não foi cumprido, REFAÇA a análise antes de responder.`;
-
-        setProgress(30, 'Conectando ao provedor...');
-
         // Determinar modelo atual baseado no provedor
         const currentModel =
           aiSettings.provider === 'claude' ? aiSettings.claudeModel :
@@ -149,44 +123,127 @@ Se algum item acima não foi cumprido, REFAÇA a análise antes de responder.`;
           aiSettings.provider === 'openai' ? aiSettings.openaiModel :
           aiSettings.grokModel;
 
-        // Chamar a IA com streaming e callback para atualizar UI
         const maxTokens = getMaxOutputTokens(currentModel);
-        console.log('[ProvaOralAnalysis] Iniciando streaming:', { provider: aiSettings.provider, model: currentModel, maxTokens });
+        console.log('[ProvaOralAnalysis] Iniciando análise em duas fases:', { provider: aiSettings.provider, model: currentModel, maxTokens });
 
-        const response = await callAIStream(
-          [{ role: 'user', content: userPrompt }],
+        // ═══════════════════════════════════════════════════════════════
+        // FASE 1: TRANSCRIÇÃO EXAUSTIVA
+        // ═══════════════════════════════════════════════════════════════
+        setProgress(10, 'Fase 1: Transcrevendo depoimentos...');
+        console.log('[ProvaOralAnalysis] Iniciando Fase 1 (Transcrição)');
+
+        const userPromptPhase1 = `## TRANSCRIÇÃO DA AUDIÊNCIA
+
+${transcricao}
+
+## SÍNTESE DO PROCESSO
+
+${sinteseProcesso || 'Não fornecida.'}
+
+${instrucoesSection}---
+
+## INSTRUÇÕES FINAIS (FASE 1 - TRANSCRIÇÃO)
+
+Sua ÚNICA tarefa nesta fase é TRANSCREVER os depoimentos. NÃO analise juridicamente ainda.
+
+⚠️ ATENÇÃO: Sua resposta será avaliada pela EXTENSÃO e COMPLETUDE. Uma resposta curta é considerada FALHA.
+
+CHECKLIST OBRIGATÓRIO:
+□ Cada timestamp da transcrição virou um item separado em sinteses[].conteudo?
+□ sintesesCondensadas tem exatamente um item para CADA depoente?
+□ sintesesCondensadas.textoCorrente tem TODAS as declarações (8+ por depoente)?
+
+Se algum item acima não foi cumprido, REFAÇA antes de responder.`;
+
+        const phase1Response = await callAIStream(
+          [{ role: 'user', content: userPromptPhase1 }],
           {
-            systemPrompt: PROVA_ORAL_SYSTEM_PROMPT,
+            systemPrompt: PROVA_ORAL_TRANSCRIPTION_PROMPT,
             maxTokens,
-            onChunk: (fullText) => {
-              // Atualiza o texto no modal em tempo real
-              setStreamingText(fullText);
-            }
+            onChunk: (fullText) => setStreamingText(fullText)
           }
         );
 
-        stopStreaming(); // Marca streaming como completo
-        console.log('[ProvaOralAnalysis] Streaming completo, tamanho:', response?.length || 0);
+        console.log('[ProvaOralAnalysis] Fase 1 completa, tamanho:', phase1Response?.length || 0);
+        setProgress(45, 'Fase 1 concluída. Processando transcrição...');
 
-        setProgress(70, 'Processando resultado...');
-
-        // Extrair e parsear o JSON
-        const jsonStr = extractJSON(response);
-        console.log('[ProvaOralAnalysis] JSON extraído, tamanho:', jsonStr?.length || 0);
-
-        let parsed: unknown;
-
+        const phase1Json = extractJSON(phase1Response);
+        let phase1Result: Record<string, unknown>;
         try {
-          parsed = JSON.parse(jsonStr);
+          phase1Result = JSON.parse(phase1Json);
         } catch (parseError) {
-          console.error('[ProvaOralAnalysis] Erro ao parsear JSON:', parseError);
-          console.error('[ProvaOralAnalysis] Resposta completa da IA:', response);
-          console.error('[ProvaOralAnalysis] JSON extraído:', jsonStr);
-          throw new Error('Erro ao processar resposta da IA. Tente novamente.');
+          console.error('[ProvaOralAnalysis] Erro ao parsear Fase 1:', parseError);
+          console.error('[ProvaOralAnalysis] Resposta Fase 1:', phase1Response);
+          console.error('[ProvaOralAnalysis] JSON extraído Fase 1:', phase1Json);
+          throw new Error('Erro ao processar transcrição. Tente novamente.');
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // FASE 2: ANÁLISE JURÍDICA
+        // ═══════════════════════════════════════════════════════════════
+        setProgress(50, 'Fase 2: Analisando juridicamente...');
+        console.log('[ProvaOralAnalysis] Iniciando Fase 2 (Análise Jurídica)');
+
+        // Limpar texto de streaming para mostrar resposta da Fase 2
+        setStreamingText('');
+
+        const userPromptPhase2 = `## TRANSCRIÇÃO ESTRUTURADA (Resultado da Fase 1)
+
+${JSON.stringify(phase1Result, null, 2)}
+
+## SÍNTESE DO PROCESSO
+
+${sinteseProcesso || 'Não fornecida.'}
+
+${instrucoesSection}---
+
+## INSTRUÇÕES FINAIS (FASE 2 - ANÁLISE JURÍDICA)
+
+Com base na transcrição estruturada acima, produza a ANÁLISE JURÍDICA completa.
+
+CHECKLIST OBRIGATÓRIO:
+□ sintesesPorTema agrupa declarações por cada tema/pedido?
+□ provaOral[] inclui TODOS os depoentes de sintesesPorTema?
+□ Análise de credibilidade usa apenas critérios LEGÍTIMOS?`;
+
+        const phase2Response = await callAIStream(
+          [{ role: 'user', content: userPromptPhase2 }],
+          {
+            systemPrompt: PROVA_ORAL_JURIDICAL_ANALYSIS_PROMPT,
+            maxTokens,
+            onChunk: (fullText) => setStreamingText(fullText)
+          }
+        );
+
+        console.log('[ProvaOralAnalysis] Fase 2 completa, tamanho:', phase2Response?.length || 0);
+
+        const phase2Json = extractJSON(phase2Response);
+        let phase2Result: Record<string, unknown>;
+        try {
+          phase2Result = JSON.parse(phase2Json);
+        } catch (parseError) {
+          console.error('[ProvaOralAnalysis] Erro ao parsear Fase 2:', parseError);
+          console.error('[ProvaOralAnalysis] Resposta Fase 2:', phase2Response);
+          console.error('[ProvaOralAnalysis] JSON extraído Fase 2:', phase2Json);
+          throw new Error('Erro ao processar análise jurídica. Tente novamente.');
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // MERGE: Combinar resultados das duas fases
+        // ═══════════════════════════════════════════════════════════════
+        setProgress(90, 'Combinando resultados...');
+
+        const mergedResult = {
+          ...phase1Result,
+          ...phase2Result
+        };
+
+        console.log('[ProvaOralAnalysis] Merge completo. Total keys:', Object.keys(mergedResult).length);
+
+        stopStreaming(); // Marca streaming como completo
+
         // Normalizar e validar
-        const result = normalizeResult(parsed);
+        const result = normalizeResult(mergedResult);
 
         setProgress(100, 'Concluído!');
         setResult(result);
