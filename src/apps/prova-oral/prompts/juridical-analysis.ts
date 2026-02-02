@@ -25,6 +25,15 @@ Você receberá o JSON da Fase 1 contendo:
 - Copie a declaração INTEGRALMENTE para o(s) tema(s) relevante(s)
 - Se não se encaixa em nenhum pedido → tema "Fatos Gerais/Contexto"
 
+**PASSO 3.1 (CRÍTICO):** Ao copiar cada declaração, copie-a INTEGRALMENTE, incluindo:
+- Todos os detalhes circunstanciais
+- Comparações ("apenas nesses dias", "nas outras semanas")
+- Quantificadores ("cerca de uma semana por mês", "75% do tempo")
+- Regras/políticas mencionadas ("a regra era que...")
+
+❌ NUNCA faça isso: "entrava às 08h e saía às 17h" (cortou "tendo 1 hora de almoço apenas nesses dias")
+✅ SEMPRE copie completo: "entrava às 08h e saía às 17h, tendo 1 hora de almoço apenas nesses dias"
+
 **PASSO 4:** Ao final, conte as declarações em sintesesPorTema → deve ser >= TOTAL
 
 ### ❌ ERRO GRAVE QUE VOCÊ ESTÁ COMETENDO:
@@ -247,17 +256,48 @@ Raciocínio: Prova supressão de intervalo → relevante para horas extras → I
 ❌ ERRADO: "afirmou início em julho; negou abandono" (muito curto!)
 ✅ CORRETO: "afirmou ter começado em 17/07/2024 (1m 10s); disse trabalhar sem carteira de julho a dezembro/2024 (2m 29s); declarou que carteira foi assinada em fevereiro/2025 (3m 57s); informou que trabalhava de terça a domingo (5m 37s); negou ter trabalhado em outro local entre 11/03 e 30/04/2025 (16m 36s); relatou afastamento de apenas 4-5 dias antes de retornar (35m 10s)"
 
-## Tema "Jornada/Horas Extras" deve incluir:
-- Horário de entrada/saída
-- Intervalos (ou falta deles)
-- Trabalho em feriados/domingos
+## Tema "Jornada de Trabalho, Horas Extras e Intervalos" - OBRIGATÓRIO incluir declarações sobre:
+- Horário de entrada/saída (TODOS os turnos mencionados!)
+- Intervalos concedidos ou suprimidos
+- Diferença de tratamento entre turnos (manhã vs noite)
+- Trabalho em feriados/domingos/virada de ano
+- Controle de ponto (ou ausência dele)
+- Regras da empresa sobre alimentação/intervalos
+- Escalas e rodízios de turno
 - Hora de fechamento do estabelecimento
-- Controle de ponto
 
-**EXEMPLO CORRETO para Jornada:**
-Declarações: "chegava às 8h" (12m 10s); "saía às 22h" (12m 45s); "não tinha intervalo" (13m 02s)
-❌ ERRADO: incluir apenas "não tinha intervalo"
-✅ CORRETO: incluir TODAS - horário de entrada e saída CARACTERIZAM jornada!
+### 🔴 EXEMPLO REAL - ERRO QUE VOCÊ ESTÁ COMETENDO:
+
+**Entrada (sinteses[] do Autor - 11 declarações sobre jornada/intervalo):**
+1. "trabalhava de terça a domingo, das 17h às 02h, às vezes até 02h30 (1m 33s)"
+2. "na virada do ano trabalhou das 07h do dia 31 até 06h do dia seguinte (1m 55s)"
+3. "trabalhou todos os dias, de terça a domingo, das 17h às 02h30, horário estendido devido à arrumação (5m 37s)"
+4. "não tinha horário fixo de alimentação, muitas vezes não jantando ou sendo apressado pelo patrão para comer rápido (11m 13s)"
+5. "não chegava a ter nem meia hora de intervalo (11m 37s)"
+6. "quando trabalhava no turno da manhã, almoçava por volta de meio-dia, mas à noite dificilmente jantava (11m 37s)"
+7. "apesar de ser do turno da noite, havia escalas pela manhã como 'castigo', cerca de uma semana por mês (12m 21s)"
+8. "no turno da manhã entrava às 08h e saía às 17h, tendo 1 hora de almoço APENAS nesses dias (12m 48s)"
+9. "nas outras 3 semanas do mês trabalhava à noite e tinha apenas 30 minutos ou menos de intervalo (13m 21s)"
+10. "a regra explícita da empresa era que garçom deve comer rápido (13m 49s)"
+11. "nunca bateu ponto ou assinou folha de frequência (7m 53s)"
+
+**❌ ERRADO - O que você está gerando (7 declarações, perdendo 4):**
+"trabalhava de terça a domingo das 17h às 02h (1m 33s); na virada do ano trabalhou 23h seguidas (1m 55s); trabalhou das 17h às 02h30 (5m 37s); não tinha horário fixo de alimentação (11m 13s); não chegava a ter meia hora de intervalo (11m 37s); havia escalas pela manhã como castigo (12m 21s); no turno da manhã entrava às 08h e saía às 17h (12m 48s)"
+
+**POR QUE ESTÁ ERRADO?**
+- PERDEU declaração 6 → diferença de intervalo entre turnos
+- PERDEU "tendo 1 hora de almoço APENAS nesses dias" da declaração 8 → prova que SÓ tinha 1h no turno da manhã
+- PERDEU declaração 9 → prova que 75% do mês tinha 30min ou menos de intervalo
+- PERDEU declaração 10 → prova política da empresa de supressão de intervalo
+- PERDEU declaração 11 → ausência de controle de ponto
+
+**✅ CORRETO - TODAS as 11 declarações devem aparecer INTEGRALMENTE:**
+"trabalhava de terça a domingo, das 17h às 02h, às vezes até 02h30 (1m 33s); na virada do ano trabalhou das 07h do dia 31 até 06h do dia seguinte (1m 55s); trabalhou todos os dias, de terça a domingo, das 17h às 02h30, horário estendido devido à arrumação (5m 37s); não tinha horário fixo de alimentação, muitas vezes não jantando ou sendo apressado pelo patrão para comer rápido (11m 13s); não chegava a ter nem meia hora de intervalo (11m 37s); quando trabalhava no turno da manhã, almoçava por volta de meio-dia, mas à noite dificilmente jantava (11m 37s); apesar de ser do turno da noite, havia escalas pela manhã como 'castigo', cerca de uma semana por mês (12m 21s); no turno da manhã entrava às 08h e saía às 17h, tendo 1 hora de almoço APENAS nesses dias (12m 48s); nas outras 3 semanas do mês trabalhava à noite e tinha apenas 30 minutos ou menos de intervalo (13m 21s); a regra explícita da empresa era que garçom deve comer rápido (13m 49s); nunca bateu ponto ou assinou folha de frequência (7m 53s)"
+
+**⚠️ IMPACTO JURÍDICO DAS DECLARAÇÕES PERDIDAS:**
+- Declaração 8 completa + 9 → provam que autor tinha 1h de intervalo em 25% do mês e 30min em 75% do mês = supressão parcial de intervalo intrajornada
+- Declaração 10 → prova política sistemática da empresa de reduzir intervalos
+- Sem essas declarações, o juiz não tem elementos para calcular corretamente as horas extras de intervalo
 
 ## Tema "Dano Moral/Assédio" deve incluir:
 - Xingamentos, ofensas, humilhações
@@ -473,6 +513,7 @@ Verifique antes de responder:
 ☐ Confissões identificadas atendem aos requisitos técnicos do art. 389/391 CPC?
 ☐ Checklist de autocontrole foi aplicado (10 testes)?
 ☐ NENHUMA declaração de sinteses[] foi perdida ao gerar sintesesPorTema?
+☐ Cada declaração foi copiada INTEGRALMENTE, sem cortar detalhes, comparações ou quantificadores?
 
 IMPORTANTE:
 - Use linguagem formal, objetiva, sem adjetivações
