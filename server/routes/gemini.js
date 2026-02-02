@@ -155,6 +155,20 @@ router.post('/stream', async (req, res) => {
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
+        // Processar buffer restante antes de terminar (pode conter usageMetadata)
+        if (buffer.trim()) {
+          const line = buffer.trim();
+          if (line.startsWith('data: ')) {
+            try {
+              const parsed = JSON.parse(line.slice(6));
+              if (parsed.usageMetadata) {
+                usage = parsed.usageMetadata;
+              }
+            } catch (e) {
+              // Ignorar erros de parse no buffer final
+            }
+          }
+        }
         res.write(`data: ${JSON.stringify({ type: 'done', usage })}\n\n`);
         break;
       }
