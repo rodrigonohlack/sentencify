@@ -11,6 +11,7 @@ import type {
   Contradicao,
   Confissao,
   AvaliacaoCredibilidade,
+  AnaliseTemaPedido,
   Qualificacao,
   Depoente
 } from '../apps/prova-oral/types';
@@ -26,6 +27,7 @@ export const PROVA_ORAL_SECTIONS = [
   { key: 'contradicoes', label: 'Contradições' },
   { key: 'confissoes', label: 'Confissões' },
   { key: 'credibilidade', label: 'Credibilidade' },
+  { key: 'analises', label: 'Análises Probatórias' },
 ] as const;
 
 export type ProvaOralSectionKey = typeof PROVA_ORAL_SECTIONS[number]['key'];
@@ -159,6 +161,67 @@ function formatCredibilidade(avaliacoes: AvaliacaoCredibilidade[], depoentes: De
   }).join('\n\n');
 }
 
+/**
+ * Formata status da análise para exibição
+ */
+function formatStatusAnalise(status: string): string {
+  const labels: Record<string, string> = {
+    'favoravel-autor': '✅ Favorável ao Autor',
+    'favoravel-re': '❌ Favorável à Ré',
+    'parcial': '⚖️ Prova Dividida',
+    'inconclusivo': '❓ Inconclusivo'
+  };
+  return labels[status] || status;
+}
+
+/**
+ * Formata análises probatórias (Fase 3)
+ */
+function formatAnalises(analises: AnaliseTemaPedido[]): string {
+  if (!analises.length) return '';
+
+  return analises.map((a, index) => {
+    const parts: string[] = [];
+
+    // Título e status
+    const titulo = a.titulo || a.tema || `Tema ${index + 1}`;
+    const status = a.status || (a.conclusao as string);
+    parts.push(`### ${titulo}`);
+    parts.push(`**Status**: ${formatStatusAnalise(status)}`);
+
+    // Alegação do autor
+    if (a.alegacaoAutor) {
+      parts.push(`\n**Alegação do Autor**\n${a.alegacaoAutor}`);
+    }
+
+    // Defesa da ré
+    if (a.defesaRe) {
+      parts.push(`\n**Defesa da Ré**\n${a.defesaRe}`);
+    }
+
+    // Prova oral
+    if (a.provaOral && a.provaOral.length > 0) {
+      const provas = a.provaOral.map(p => {
+        const texto = p.textoCorrente || p.conteudo || '';
+        return `- **${p.deponente}**: ${texto}`;
+      }).join('\n');
+      parts.push(`\n**Prova Oral**\n${provas}`);
+    }
+
+    // Fundamentação
+    if (a.fundamentacao) {
+      parts.push(`\n**Fundamentação**\n${a.fundamentacao}`);
+    }
+
+    // Conclusão (se for texto, não apenas o status)
+    if (a.conclusao && typeof a.conclusao === 'string' && a.conclusao.length > 20) {
+      parts.push(`\n**Conclusão**\n${a.conclusao}`);
+    }
+
+    return parts.join('\n');
+  }).join('\n\n---\n\n');
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // FUNÇÃO PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════
@@ -210,6 +273,13 @@ export function formatProvaOralSections(
     }
   }
 
+  if (sections.includes('analises') && resultado.analises?.length) {
+    const content = formatAnalises(resultado.analises);
+    if (content) {
+      parts.push(`## Análises Probatórias\n\n${content}`);
+    }
+  }
+
   return parts.join('\n\n---\n\n');
 }
 
@@ -226,6 +296,7 @@ export function getAvailableSections(resultado: ProvaOralResult): ProvaOralSecti
   if (resultado.contradicoes?.length) available.push('contradicoes');
   if (resultado.confissoes?.length) available.push('confissoes');
   if (resultado.credibilidade?.length) available.push('credibilidade');
+  if (resultado.analises?.length) available.push('analises');
 
   return available;
 }

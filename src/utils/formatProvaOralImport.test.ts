@@ -78,7 +78,7 @@ const createAvaliacaoCredibilidade = (overrides: Partial<AvaliacaoCredibilidade>
 
 describe('PROVA_ORAL_SECTIONS', () => {
   it('should export all expected sections', () => {
-    expect(PROVA_ORAL_SECTIONS).toHaveLength(5);
+    expect(PROVA_ORAL_SECTIONS).toHaveLength(6);
 
     const keys = PROVA_ORAL_SECTIONS.map(s => s.key);
     expect(keys).toContain('sintesesCondensadas');
@@ -86,6 +86,7 @@ describe('PROVA_ORAL_SECTIONS', () => {
     expect(keys).toContain('contradicoes');
     expect(keys).toContain('confissoes');
     expect(keys).toContain('credibilidade');
+    expect(keys).toContain('analises');
   });
 
   it('should have labels in Portuguese', () => {
@@ -95,6 +96,7 @@ describe('PROVA_ORAL_SECTIONS', () => {
     expect(labels).toContain('Contradições');
     expect(labels).toContain('Confissões');
     expect(labels).toContain('Credibilidade');
+    expect(labels).toContain('Análises Probatórias');
   });
 });
 
