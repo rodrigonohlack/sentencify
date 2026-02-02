@@ -47,6 +47,18 @@ Para cada tema, consulte:
 
 ⚠️ COPIE o conteúdo de sintesesPorTema para provaOral - não resuma!
 
+⚠️ REGRA CRÍTICA - ANÁLISE EXAUSTIVA DE TODAS AS DECLARAÇÕES:
+Na fundamentacao, você DEVE analisar CADA depoente que fez declaração sobre o tema:
+
+1. **Liste TODOS os depoentes** que declararam algo sobre o ponto controvertido
+2. **Analise CADA declaração individualmente** - o que disse? corrobora qual tese?
+3. **Compare as versões** - quem disse o quê? há convergência ou divergência?
+4. **Não omita nenhum depoente relevante** - mesmo que digam coisas semelhantes
+
+Exemplo: Se 4 testemunhas falaram sobre a data de início do trabalho:
+- NÃO FAÇA: "A testemunha Alfre confirmou que o autor já estava lá em maio/2024"
+- FAÇA: "Sobre a data de início: (1) Alfre afirmou que em maio/2024 o autor já trabalhava (33m23s); (2) Edileuzo disse que o autor começou em junho/julho (51m05s); (3) Sebastiana estimou início no segundo semestre de 2024 (1h05m54s). As três versões convergem para início anterior ao registro formal."
+
 ## PASSO 3: Aplicar Regras de Valoração
 
 ### Hierarquia de Provas (OBRIGATÓRIO considerar nesta ordem):
@@ -129,17 +141,19 @@ A prova oral favorece o autor.
 
 O preposto CONFESSOU irregularidade ao declarar que 'não havia horário fixo para alimentação' (23m 08s). Nos termos do art. 391 do CPC, a confissão tem eficácia de prova plena, prevalecendo sobre eventual prova testemunhal em contrário.
 
-### Prova testemunhal corroborante
+### Análise da prova testemunhal (TODOS os depoentes)
 
-A confissão é corroborada pelos depoimentos das testemunhas do autor:
-- Testemunha Alfre: 'não tinham horário para se alimentar, trabalhavam direto' (34m 23s)
-- Testemunha Edileuzo: 'não havia horário de almoço, comia andando' (56m 49s)
+**Testemunhas que corroboram a tese do autor:**
+- Testemunha Alfre: 'não tinham horário para se alimentar, trabalhavam direto' (34m 23s) - relato com detalhes circunstanciais, conhecimento direto
+- Testemunha Edileuzo: 'não havia horário de almoço, comia andando' (56m 49s) - contemporâneo aos fatos, detalhe específico ('comia andando')
+- Testemunha Rutilene: 'nunca vi ninguém parando para almoçar lá' (1h 25m 12s) - conhecimento como frequentadora do local
 
-Ambas as testemunhas apresentaram relatos com riqueza de detalhes circunstanciais ('comia andando', 'trabalhavam direto'), compatíveis com vivência real dos fatos.
+As três testemunhas apresentaram versões convergentes, com detalhes circunstanciais compatíveis com vivência real.
 
-### Prova da ré
+**Testemunhas que sustentam a tese da ré:**
+- Testemunha Sebastiana: 'havia 1 hora de intervalo' (1h 10m 30s) - relato genérico, sem especificar local ou circunstâncias. Credibilidade reduzida conforme Fase 2 (conhecimento parcial).
 
-A testemunha Sebastiana, embora tenha afirmado que 'havia 1 hora de intervalo' (1h 10m 30s), apresentou relato genérico, sem especificar circunstâncias ou detalhes. Ademais, conforme avaliação de credibilidade da Fase 2, esta testemunha tem conhecimento apenas parcial dos fatos.
+**Síntese:** Há 3 testemunhas favoráveis ao autor (com detalhes) x 1 testemunha favorável à ré (genérica). Prevalece a prova do autor pela qualidade e quantidade.
 
 ### Ônus da prova
 
@@ -159,6 +173,19 @@ A prova é FAVORÁVEL AO AUTOR quanto à supressão de intervalo intrajornada, h
 
 "A ré não conseguiu provar o contrário."
 → Falta: explicar o que a ré tentou provar e por que falhou
+
+"A testemunha Alfre corroborou que o autor já estava lá em maio/2024, confirmando a anterioridade ao registro."
+→ ERRO GRAVE: Se outras testemunhas (Edileuzo, Sebastiana) também falaram sobre a data de início, TODAS devem ser analisadas! Não cite apenas uma e ignore as demais.
+
+## ⚠️ REGRA DE OURO DA FUNDAMENTAÇÃO:
+
+Se N depoentes falaram sobre um ponto controvertido, a fundamentação DEVE mencionar e analisar os N depoentes. Exemplo:
+
+- 6 depoentes falaram sobre data de início → Analise os 6
+- 4 depoentes falaram sobre intervalo → Analise os 4
+- 2 depoentes falaram sobre justa causa → Analise os 2
+
+Organize por blocos: "Testemunhas favoráveis ao autor: [lista com análise individual]. Testemunhas favoráveis à ré: [lista com análise individual]. Síntese: [comparação e conclusão]."
 
 ═══════════════════════════════════════════════════════════════════════════════
 4. SITUAÇÕES ESPECIAIS DE VALORAÇÃO
@@ -219,6 +246,8 @@ Antes de gerar cada análise, verifique:
 ☐ Os TIMESTAMPS e TRECHOS foram citados na fundamentação?
 ☐ O STATUS está COERENTE com a fundamentação?
 ☐ A análise distingue claramente: FATOS x PROVA x CONCLUSÃO?
+☐ **TODOS os depoentes que declararam sobre o tema foram analisados na fundamentação?** (NÃO omita nenhum!)
+☐ **A fundamentação agrupa: "testemunhas favoráveis ao autor" vs "testemunhas favoráveis à ré"?**
 
 ═══════════════════════════════════════════════════════════════════════════════
 6. FORMATO JSON - RETORNE APENAS JSON VÁLIDO
