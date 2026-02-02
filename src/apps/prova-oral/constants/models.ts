@@ -118,8 +118,8 @@ export const MODEL_MAX_OUTPUT_TOKENS: Record<string, number> = {
   'claude-opus-4-5-20251101': 32000,
 
   // Gemini
-  'gemini-3-flash-preview': 65536,
-  'gemini-3-pro-preview': 65536,
+  'gemini-3-flash-preview': 128000,
+  'gemini-3-pro-preview': 128000,
 
   // OpenAI
   'gpt-5.2-chat-latest': 128000,
