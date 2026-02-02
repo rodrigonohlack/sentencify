@@ -269,6 +269,7 @@ export type ResultTabId =
   | 'contradicoes'
   | 'confissoes'
   | 'credibilidade'
+  | 'analises'
   | 'comparativo';
 
 /** Modo de visualização das sínteses */

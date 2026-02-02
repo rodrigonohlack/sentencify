@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   MessageSquareQuote,
   UserCheck,
+  ClipboardList,
   Table,
 } from 'lucide-react';
 import { Tabs, Card, CardContent } from '../ui';
@@ -19,6 +20,7 @@ import { SintesesTab } from './SintesesTab';
 import { ContradicoesTab } from './ContradicoesTab';
 import { ConfissoesTab } from './ConfissoesTab';
 import { CredibilidadeTab } from './CredibilidadeTab';
+import { AnalisesTab } from './AnalisesTab';
 import { ComparativoTab } from './ComparativoTab';
 import { useProvaOralStore } from '../../stores';
 import type { ResultTabId } from '../../types';
@@ -74,6 +76,12 @@ export const ResultsContainer: React.FC = () => {
       badge: result.credibilidade?.length || 0,
     },
     {
+      id: 'analises' as ResultTabId,
+      label: 'Análises',
+      icon: <ClipboardList className="w-4 h-4" />,
+      badge: result.analises?.length || 0,
+    },
+    {
       id: 'comparativo' as ResultTabId,
       label: 'Comparativo',
       icon: <Table className="w-4 h-4" />,
@@ -112,6 +120,9 @@ export const ResultsContainer: React.FC = () => {
             )}
             {currentTab === 'credibilidade' && (
               <CredibilidadeTab credibilidade={result.credibilidade} depoentes={result.depoentes} />
+            )}
+            {currentTab === 'analises' && (
+              <AnalisesTab resultado={result} />
             )}
             {currentTab === 'comparativo' && (
               <ComparativoTab resultado={result} />
