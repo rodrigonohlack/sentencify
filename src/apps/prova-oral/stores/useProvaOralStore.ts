@@ -6,6 +6,26 @@
 import { create } from 'zustand';
 import type { ProvaOralResult, ResultTabId } from '../types';
 
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES - Estado de cada fase da análise
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type PhaseStatus = 'pending' | 'connecting' | 'streaming' | 'completed' | 'error';
+
+export interface PhaseState {
+  status: PhaseStatus;
+  charCount: number;
+  errorMessage?: string;
+}
+
+export type PhaseId = 'phase1' | 'phase2' | 'phase3';
+
+const initialPhaseState: PhaseState = {
+  status: 'pending',
+  charCount: 0,
+  errorMessage: undefined,
+};
+
 interface ProvaOralStoreState {
   // Inputs
   transcricao: string;
@@ -23,6 +43,14 @@ interface ProvaOralStoreState {
   isStreaming: boolean;
   streamingText: string;
   showStreamingModal: boolean;
+
+  // Estado por fase (visual do modal)
+  phases: {
+    phase1: PhaseState;
+    phase2: PhaseState;
+    phase3: PhaseState;
+  };
+  analysisStartTime: number | null;
 
   // UI
   activeTab: ResultTabId;
@@ -52,6 +80,11 @@ interface ProvaOralStoreState {
   startStreaming: () => void;
   stopStreaming: () => void;
 
+  // Actions - Fases
+  setPhaseStatus: (phase: PhaseId, status: PhaseStatus, errorMessage?: string) => void;
+  setPhaseCharCount: (phase: PhaseId, count: number) => void;
+  resetPhases: () => void;
+
   // Actions - UI
   setActiveTab: (tab: ResultTabId) => void;
   openSettings: () => void;
@@ -79,6 +112,12 @@ const initialState = {
   isStreaming: false,
   streamingText: '',
   showStreamingModal: false,
+  phases: {
+    phase1: { ...initialPhaseState },
+    phase2: { ...initialPhaseState },
+    phase3: { ...initialPhaseState },
+  },
+  analysisStartTime: null,
   activeTab: 'depoentes' as ResultTabId,
   isSettingsOpen: false,
   isHistoricoOpen: false,
@@ -150,11 +189,51 @@ export const useProvaOralStore = create<ProvaOralStoreState>((set) => ({
     isStreaming: true,
     streamingText: '',
     showStreamingModal: true,
-    error: null
+    error: null,
+    analysisStartTime: Date.now(),
+    phases: {
+      phase1: { status: 'pending', charCount: 0 },
+      phase2: { status: 'pending', charCount: 0 },
+      phase3: { status: 'pending', charCount: 0 },
+    }
   }),
 
   stopStreaming: () => set({
     isStreaming: false
+  }),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FASES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  setPhaseStatus: (phase, status, errorMessage) => set((state) => ({
+    phases: {
+      ...state.phases,
+      [phase]: {
+        ...state.phases[phase],
+        status,
+        ...(errorMessage !== undefined ? { errorMessage } : {})
+      }
+    }
+  })),
+
+  setPhaseCharCount: (phase, count) => set((state) => ({
+    phases: {
+      ...state.phases,
+      [phase]: {
+        ...state.phases[phase],
+        charCount: count
+      }
+    }
+  })),
+
+  resetPhases: () => set({
+    phases: {
+      phase1: { ...initialPhaseState },
+      phase2: { ...initialPhaseState },
+      phase3: { ...initialPhaseState },
+    },
+    analysisStartTime: null
   }),
 
   // ═══════════════════════════════════════════════════════════════════════════

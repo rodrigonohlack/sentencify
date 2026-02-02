@@ -14,6 +14,7 @@ import {
 } from '../prompts';
 import { getMaxOutputTokens } from '../constants';
 import type { ProvaOralResult, SintesePorTema, Confissao, Contradicao, AvaliacaoCredibilidade } from '../types';
+import type { PhaseState } from '../stores/useProvaOralStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -129,6 +130,14 @@ export interface UseProvaOralAnalysisReturn {
   streamingText: string;
   showStreamingModal: boolean;
   closeStreamingModal: () => void;
+  /** Estado de cada fase para o visual do modal */
+  phases: {
+    phase1: PhaseState;
+    phase2: PhaseState;
+    phase3: PhaseState;
+  };
+  /** Timestamp de início da análise para calcular tempo decorrido */
+  analysisStartTime: number | null;
 }
 
 export function useProvaOralAnalysis(): UseProvaOralAnalysisReturn {
@@ -141,6 +150,8 @@ export function useProvaOralAnalysis(): UseProvaOralAnalysisReturn {
     isStreaming,
     streamingText,
     showStreamingModal,
+    phases,
+    analysisStartTime,
     setIsAnalyzing,
     setProgress,
     setError,
@@ -149,6 +160,8 @@ export function useProvaOralAnalysis(): UseProvaOralAnalysisReturn {
     stopStreaming,
     setStreamingText,
     setShowStreamingModal,
+    setPhaseStatus,
+    setPhaseCharCount,
   } = useProvaOralStore();
 
   const closeStreamingModal = useCallback(() => {
@@ -192,6 +205,7 @@ IMPORTANTE: Siga as instruções acima ao realizar a análise.
         // FASE 1: TRANSCRIÇÃO EXAUSTIVA
         // ═══════════════════════════════════════════════════════════════
         setProgress(10, 'Fase 1: Transcrevendo depoimentos...');
+        setPhaseStatus('phase1', 'connecting');
         console.log('[ProvaOralAnalysis] Iniciando Fase 1 (Transcrição)');
 
         const userPromptPhase1 = `## TRANSCRIÇÃO DA AUDIÊNCIA
@@ -218,15 +232,24 @@ CHECKLIST OBRIGATÓRIO:
 
 Se algum item acima não foi cumprido, REFAÇA antes de responder.`;
 
+        let phase1Started = false;
         const phase1Response = await callAIStream(
           [{ role: 'user', content: userPromptPhase1 }],
           {
             systemPrompt: PROVA_ORAL_TRANSCRIPTION_PROMPT,
             maxTokens,
-            onChunk: (fullText) => setStreamingText(fullText)
+            onChunk: (fullText) => {
+              if (!phase1Started) {
+                phase1Started = true;
+                setPhaseStatus('phase1', 'streaming');
+              }
+              setStreamingText(fullText);
+              setPhaseCharCount('phase1', fullText.length);
+            }
           }
         );
 
+        setPhaseStatus('phase1', 'completed');
         console.log('[ProvaOralAnalysis] Fase 1 completa, tamanho:', phase1Response?.length || 0);
         setProgress(35, 'Fase 1 concluída. Processando transcrição...');
 
@@ -245,6 +268,7 @@ Se algum item acima não foi cumprido, REFAÇA antes de responder.`;
         // FASE 2: CLASSIFICAÇÃO JURÍDICA
         // ═══════════════════════════════════════════════════════════════
         setProgress(40, 'Fase 2: Classificando juridicamente...');
+        setPhaseStatus('phase2', 'connecting');
         console.log('[ProvaOralAnalysis] Iniciando Fase 2 (Análise Jurídica)');
 
         // Limpar texto de streaming para mostrar resposta da Fase 2
@@ -291,15 +315,24 @@ CHECKLIST OBRIGATÓRIO:
 □ sintesesPorTema.declaracoes inclui TODOS os depoentes que falaram sobre o tema?
 □ Análise de credibilidade usa apenas critérios LEGÍTIMOS?`;
 
+        let phase2Started = false;
         const phase2Response = await callAIStream(
           [{ role: 'user', content: userPromptPhase2 }],
           {
             systemPrompt: PROVA_ORAL_JURIDICAL_ANALYSIS_PROMPT,
             maxTokens,
-            onChunk: (fullText) => setStreamingText(fullText)
+            onChunk: (fullText) => {
+              if (!phase2Started) {
+                phase2Started = true;
+                setPhaseStatus('phase2', 'streaming');
+              }
+              setStreamingText(fullText);
+              setPhaseCharCount('phase2', fullText.length);
+            }
           }
         );
 
+        setPhaseStatus('phase2', 'completed');
         console.log('[ProvaOralAnalysis] Fase 2 completa, tamanho:', phase2Response?.length || 0);
         setProgress(65, 'Fase 2 concluída. Processando classificação...');
 
@@ -318,6 +351,7 @@ CHECKLIST OBRIGATÓRIO:
         // FASE 3: ANÁLISE PROBATÓRIA
         // ═══════════════════════════════════════════════════════════════
         setProgress(70, 'Fase 3: Iniciando análise probatória...');
+        setPhaseStatus('phase3', 'connecting');
         console.log('[ProvaOralAnalysis] Iniciando Fase 3 (Análise Probatória)');
 
         // Limpar texto de streaming para mostrar resposta da Fase 3
@@ -383,15 +417,24 @@ CHECKLIST OBRIGATÓRIO:
 □ Se há confissão, foi citado "art. 391 do CPC" na fundamentacao?
 □ status é coerente com conclusao?`;
 
+        let phase3Started = false;
         const phase3Response = await callAIStream(
           [{ role: 'user', content: userPromptPhase3 }],
           {
             systemPrompt: PROVA_ORAL_PROBATORY_ANALYSIS_PROMPT,
             maxTokens,
-            onChunk: (fullText) => setStreamingText(fullText)
+            onChunk: (fullText) => {
+              if (!phase3Started) {
+                phase3Started = true;
+                setPhaseStatus('phase3', 'streaming');
+              }
+              setStreamingText(fullText);
+              setPhaseCharCount('phase3', fullText.length);
+            }
           }
         );
 
+        setPhaseStatus('phase3', 'completed');
         console.log('[ProvaOralAnalysis] Fase 3 completa, tamanho:', phase3Response?.length || 0);
         setProgress(95, 'Fase 3 concluída. Finalizando...');
 
@@ -441,13 +484,19 @@ CHECKLIST OBRIGATÓRIO:
 
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Erro desconhecido';
+
+        // Marcar fase atual como erro (determinar qual fase falhou)
+        const currentPhase = phases.phase3.status !== 'pending' ? 'phase3' :
+                            phases.phase2.status !== 'pending' ? 'phase2' : 'phase1';
+        setPhaseStatus(currentPhase, 'error', message);
+
         stopStreaming();
         setShowStreamingModal(false);
         setError(message);
         return null;
       }
     },
-    [callAIStream, aiSettings, setIsAnalyzing, setProgress, setError, setResult, startStreaming, stopStreaming, setStreamingText, setShowStreamingModal]
+    [callAIStream, aiSettings, setIsAnalyzing, setProgress, setError, setResult, startStreaming, stopStreaming, setStreamingText, setShowStreamingModal, setPhaseStatus, setPhaseCharCount, phases]
   );
 
   return {
@@ -460,6 +509,8 @@ CHECKLIST OBRIGATÓRIO:
     streamingText,
     showStreamingModal,
     closeStreamingModal,
+    phases,
+    analysisStartTime,
   };
 }
 

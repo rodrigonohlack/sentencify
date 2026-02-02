@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Button, TextArea, Card, CardHeader, CardTitle, CardContent } from '../ui';
 import { AnalysisSelectorModal } from './AnalysisSelectorModal';
-import { StreamingModal } from '../../../../components/modals/StreamingModal';
+import { StreamingModal } from '../StreamingModal';
 import { useProvaOralStore } from '../../stores';
 import { useProvaOralAnalysis, useProvaOralAPI } from '../../hooks';
 import { useAIStore } from '../../stores';
@@ -46,9 +46,10 @@ export const InputForm: React.FC<InputFormProps> = ({ onAnalysisComplete }) => {
   const {
     analyze,
     isStreaming,
-    streamingText,
     showStreamingModal,
-    closeStreamingModal
+    closeStreamingModal,
+    phases,
+    analysisStartTime,
   } = useProvaOralAnalysis();
   const { createAnalysis } = useProvaOralAPI();
 
@@ -243,14 +244,14 @@ Você pode:
         onSelect={handleImportSintese}
       />
 
-      {/* Modal de Streaming - exibe resposta em tempo real */}
+      {/* Modal de Streaming - exibe progresso das 3 fases */}
       <StreamingModal
         isOpen={showStreamingModal}
-        text={streamingText}
+        phases={phases}
         isComplete={!isStreaming}
         onClose={closeStreamingModal}
         providerName={providerName}
-        operationType="prova-oral"
+        startTime={analysisStartTime}
       />
     </>
   );
