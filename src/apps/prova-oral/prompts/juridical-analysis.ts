@@ -132,33 +132,78 @@ A suspeição deve ser aferida com base em elementos concretos, não em presunç
 
 **PASSO 2:** Verifique OBRIGATORIAMENTE estas CATEGORIAS de contradição:
 
-### CATEGORIAS OBRIGATÓRIAS A VERIFICAR:
+### CATEGORIAS OBRIGATÓRIAS A VERIFICAR (organizadas por tipo de pedido):
+
+═══ JORNADA / HORAS EXTRAS ═══
 
 1. **HORÁRIO DE TRABALHO** (entrada/saída)
-   - Compare: Autor vs Preposto vs Testemunhas sobre horário de saída
+   - Compare: Autor vs Preposto vs Testemunhas sobre horário de entrada e saída
    - Se autor diz "02h" e preposto diz "meia-noite" → CONTRADIÇÃO OBRIGATÓRIA
 
-2. **INTERVALO PARA ALIMENTAÇÃO**
+2. **INTERVALO PARA ALIMENTAÇÃO/DESCANSO**
    - Compare: Quem diz que TINHA intervalo vs quem diz que NÃO TINHA
+   - Duração do intervalo (30min vs 1h vs sem intervalo)
    - Se autor diz "não tinha intervalo" e preposto diz "1 hora" → CONTRADIÇÃO OBRIGATÓRIA
 
 3. **DIAS DA SEMANA TRABALHADOS**
    - Compare: "terça a domingo" vs "quarta a domingo" → CONTRADIÇÃO
+   - Trabalho em domingos/feriados: quem confirma vs quem nega
 
-4. **FUNCIONAMENTO DO ESTABELECIMENTO**
-   - Compare: Quem diz que funcionava de manhã vs quem nega
-   - Horário de fechamento da cozinha/estabelecimento
+4. **CONTROLE DE PONTO**
+   - Compare: Quem diz que havia controle vs quem diz que não havia
+   - Fidelidade dos registros de ponto
 
-5. **XINGAMENTOS/ASSÉDIO/AMBIENTE**
-   - Compare: Quem CONFIRMA xingamentos vs quem NEGA
-   - Quem diz que patrão bebia vs quem nega
+═══ VÍNCULO EMPREGATÍCIO ═══
 
-6. **PERÍODO DE VÍNCULO/AFASTAMENTOS**
+5. **PERÍODO DE VÍNCULO/AFASTAMENTOS**
    - Compare: Duração de afastamentos (dias vs semanas vs meses)
-   - Data de início efetivo do trabalho
+   - Data de início e término efetivo do trabalho
+   - Continuidade do vínculo
+
+6. **SUBORDINAÇÃO/AUTONOMIA**
+   - Compare: Quem diz que havia ordens/controle vs quem diz que era autônomo
+   - Exclusividade, habitualidade, pessoalidade
 
 7. **TRABALHO EM OUTRO LOCAL**
    - Compare: Quem afirma vs quem nega trabalho concomitante
+
+═══ REMUNERAÇÃO ═══
+
+8. **EQUIPARAÇÃO SALARIAL / DESVIO DE FUNÇÃO**
+   - Compare: Funções realmente exercidas vs função registrada
+   - Quem confirma que fazia mesmas atividades do paradigma vs quem nega
+   - Identidade de funções entre reclamante e paradigma
+
+9. **VERBAS RESCISÓRIAS / PAGAMENTO POR FORA**
+   - Compare: Quem confirma pagamentos "por fora" vs quem nega
+   - Gorjetas, comissões, bonificações: divergências sobre valores ou existência
+   - Forma de pagamento do salário
+
+═══ DANO MORAL / ASSÉDIO ═══
+
+10. **XINGAMENTOS/ASSÉDIO/AMBIENTE HOSTIL**
+    - Compare: Quem CONFIRMA xingamentos, humilhações, discriminação vs quem NEGA
+    - Quem presenciou tratamento hostil vs quem diz que ambiente era normal
+    - Assédio moral ou sexual: versões conflitantes
+
+═══ SAÚDE / SEGURANÇA DO TRABALHO ═══
+
+11. **ACIDENTE DE TRABALHO / USO DE EPIs**
+    - Compare: Dinâmica do acidente segundo diferentes versões
+    - Quem diz que EPIs eram fornecidos vs quem diz que não eram
+    - Condições de segurança: versões divergentes
+
+12. **INSALUBRIDADE / PERICULOSIDADE**
+    - Compare: Quem confirma exposição a agentes nocivos vs quem nega
+    - Condições do ambiente de trabalho: versões conflitantes
+    - Fornecimento e uso efetivo de equipamentos de proteção
+
+═══ FUNCIONAMENTO / CONTEXTO ═══
+
+13. **FUNCIONAMENTO DO ESTABELECIMENTO**
+    - Compare: Quem diz que funcionava de manhã vs quem nega
+    - Horário de abertura/fechamento do estabelecimento
+    - Escalas, turnos, rodízios
 
 ### 🔴 EXEMPLO REAL - CONTRADIÇÕES QUE VOCÊ ESTÁ PERDENDO:
 
@@ -490,24 +535,43 @@ Se M ≠ N, VOLTE e avalie os faltantes.
 
 ## Teste 11: Teste da Completude de Contradições (CRÍTICO!)
 
-Para CADA categoria abaixo, verifique se há divergência entre depoentes. Se houver, DEVE haver uma contradição no array contradicoes[]:
+Para CADA categoria abaixo que seja RELEVANTE AO CASO, verifique se há divergência entre depoentes. Se houver, DEVE haver uma contradição no array contradicoes[]:
 
-☐ **Horário de saída**: Autor/testemunhas dizem X, Preposto/testemunhas ré dizem Y? → Contradição obrigatória
-☐ **Intervalo**: Alguém diz que tinha, alguém diz que não tinha? → Contradição obrigatória
-☐ **Dias da semana**: Divergência sobre quais dias trabalhava? → Contradição obrigatória
-☐ **Funcionamento matutino**: Alguém confirma, alguém nega trabalho de manhã? → Contradição obrigatória
-☐ **Xingamentos/Assédio**: Alguém confirma, alguém nega? → Contradição obrigatória
-☐ **Período de afastamento**: Versões divergentes (dias vs semanas vs meses)? → Contradição obrigatória
-☐ **Horário de fechamento**: Cozinha/estabelecimento fecha em horários diferentes? → Contradição obrigatória
+═══ JORNADA / HORAS EXTRAS ═══
+☐ **Horário de entrada/saída**: Autor/testemunhas dizem X, Preposto/testemunhas ré dizem Y? → Contradição obrigatória
+☐ **Intervalo**: Alguém diz que tinha, alguém diz que não tinha? Duração divergente? → Contradição obrigatória
+☐ **Dias da semana**: Divergência sobre quais dias trabalhava? Domingos/feriados? → Contradição obrigatória
+☐ **Controle de ponto**: Alguém diz que havia, alguém diz que não? → Contradição obrigatória
 
-**REGRA**: Se você identificou apenas 3 contradições mas há divergências em 5+ categorias acima, VOLTE E ADICIONE as contradições faltantes!
+═══ VÍNCULO EMPREGATÍCIO ═══
+☐ **Período de vínculo/afastamento**: Versões divergentes sobre datas ou duração? → Contradição obrigatória
+☐ **Subordinação/Autonomia**: Havia ordens/controle ou era autônomo? → Contradição obrigatória
+☐ **Trabalho concomitante**: Quem afirma vs quem nega trabalho em outro local? → Contradição obrigatória
 
-**Mínimo esperado**: Em caso com disputa sobre jornada + intervalo + dano moral, espera-se NO MÍNIMO 4-5 contradições:
-1. Horário de saída (jornada)
-2. Intervalo (se disputado)
-3. Xingamentos (dano moral)
-4. Funcionamento/fechamento
-5. Período/vínculo (se disputado)
+═══ REMUNERAÇÃO ═══
+☐ **Equiparação/Desvio de função**: Funções exercidas divergem da registrada? → Contradição obrigatória
+☐ **Pagamento por fora**: Alguém confirma, alguém nega pagamentos extras? → Contradição obrigatória
+
+═══ DANO MORAL / ASSÉDIO ═══
+☐ **Xingamentos/Assédio/Discriminação**: Alguém confirma, alguém nega? → Contradição obrigatória
+
+═══ SAÚDE / SEGURANÇA ═══
+☐ **Acidente de trabalho**: Versões divergentes sobre dinâmica ou causa? → Contradição obrigatória
+☐ **EPIs/Condições de segurança**: Alguém diz que eram fornecidos, alguém nega? → Contradição obrigatória
+☐ **Insalubridade/Periculosidade**: Exposição a agentes nocivos é confirmada ou negada? → Contradição obrigatória
+
+═══ FUNCIONAMENTO / CONTEXTO ═══
+☐ **Funcionamento do estabelecimento**: Horários, turnos, escalas divergentes? → Contradição obrigatória
+
+**REGRA**: Analise APENAS as categorias relevantes aos pedidos do caso. Se você identificou apenas 3 contradições mas há divergências em 5+ categorias relevantes, VOLTE E ADICIONE as contradições faltantes!
+
+**Mínimo esperado por tipo de caso:**
+- Jornada + Intervalo: 2-3 contradições (horário, intervalo, dias)
+- Dano Moral: 1-2 contradições (xingamentos, ambiente)
+- Vínculo: 1-2 contradições (período, subordinação)
+- Equiparação Salarial: 1-2 contradições (funções, atividades)
+- Acidente de Trabalho: 1-2 contradições (dinâmica, EPIs)
+- Insalubridade/Periculosidade: 1-2 contradições (condições, exposição)
 
 ═══════════════════════════════════════════════════════════════════════════════
 6. OBSERVAÇÕES FINAIS
@@ -624,8 +688,8 @@ Verifique antes de responder:
 ☐ Checklist de autocontrole foi aplicado (11 testes)?
 ☐ NENHUMA declaração de sinteses[] foi perdida ao gerar sintesesPorTema?
 ☐ Cada declaração foi copiada INTEGRALMENTE, sem cortar detalhes, comparações ou quantificadores?
-☐ contradicoes[] inclui TODAS as divergências sobre: horário, intervalo, xingamentos, funcionamento?
-☐ Para cada tema disputado (jornada, intervalo, dano moral), há pelo menos 1 contradição identificada?
+☐ contradicoes[] inclui TODAS as divergências relevantes ao caso (jornada, vínculo, remuneração, dano moral, saúde/segurança)?
+☐ Para cada tema disputado, há pelo menos 1 contradição identificada conforme as 13 categorias do PASSO 2?
 ☐ Contradições incluem TODOS os timestamps e trechos relevantes de AMBOS os lados?
 
 IMPORTANTE:
