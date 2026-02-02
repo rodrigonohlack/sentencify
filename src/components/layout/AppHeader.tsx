@@ -172,11 +172,10 @@ export function AppHeader({
             {cloudSync?.isAuthenticated && (
               <button
                 onClick={() => openModal('logout')}
-                className="px-3 py-1 rounded text-xs flex items-center gap-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 transition-colors duration-200"
+                className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-red-200 dark:border-red-900/50 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:border-red-400 dark:hover:border-red-700 transition-all shadow-sm"
                 title="Sair do sistema"
               >
-                <LogOut className="w-3 h-3" />
-                Sair
+                <LogOut className="w-4 h-4" />
               </button>
             )}
           </div>

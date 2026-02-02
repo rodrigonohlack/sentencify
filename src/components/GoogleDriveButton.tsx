@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
-import { Cloud, CloudOff, Upload, Download, LogOut, Loader2, ChevronDown, Trash2, RefreshCw, Share2, X, Users, FileDown, FileUp, FolderOpen, AlertTriangle } from 'lucide-react';
+import { Cloud, CloudOff, Upload, Download, LogOut, Loader2, Trash2, RefreshCw, Share2, X, Users, FileDown, FileUp, FolderOpen, AlertTriangle } from 'lucide-react';
 import { GoogleDriveFile, GoogleDrivePermission } from '../hooks/useGoogleDrive';
 import { BaseModal, ModalFooter } from './modals/BaseModal';
 
@@ -79,11 +79,6 @@ export function GoogleDriveButton({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const buttonClass = `flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-    isDarkMode
-      ? 'bg-slate-700 hover:bg-slate-600 text-white'
-      : 'bg-slate-200 hover:bg-slate-300 text-slate-800'
-  } ${isLoading ? 'opacity-50 cursor-wait' : ''}`;
 
   const dropdownClass = `absolute right-0 mt-1 w-56 rounded-lg shadow-lg border z-50 ${
     isDarkMode
@@ -101,19 +96,17 @@ export function GoogleDriveButton({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={buttonClass}
+        className={`p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-green-500 dark:hover:text-green-400 hover:border-green-300 dark:hover:border-green-600 transition-all shadow-sm ${isLoading ? 'opacity-50 cursor-wait' : ''}`}
         disabled={isLoading}
-        title={isConnected ? `Conectado: ${userEmail}` : 'Google Drive'}
+        title={isConnected ? `Projeto: ${userEmail}` : 'Projeto'}
       >
         {isLoading ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : isConnected ? (
           <Cloud className="w-4 h-4 text-green-500" fill="currentColor" />
         ) : (
-          <CloudOff className="w-4 h-4 text-slate-400" />
+          <CloudOff className="w-4 h-4" />
         )}
-        <span className="hidden sm:inline">Projeto</span>
-        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (

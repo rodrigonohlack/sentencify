@@ -271,19 +271,19 @@ describe('AppHeader', () => {
     it('should not show logout button when not authenticated', () => {
       render(<AppHeader {...createDefaultProps({ cloudSync: { isAuthenticated: false } })} />);
 
-      expect(screen.queryByText('Sair')).not.toBeInTheDocument();
+      expect(screen.queryByTitle('Sair do sistema')).not.toBeInTheDocument();
     });
 
     it('should show logout button when authenticated', () => {
       render(<AppHeader {...createDefaultProps({ cloudSync: { isAuthenticated: true } })} />);
 
-      expect(screen.getByText('Sair')).toBeInTheDocument();
+      expect(screen.getByTitle('Sair do sistema')).toBeInTheDocument();
     });
 
     it('should open logout modal on click', () => {
       render(<AppHeader {...createDefaultProps({ cloudSync: { isAuthenticated: true } })} />);
 
-      const logoutButton = screen.getByText('Sair');
+      const logoutButton = screen.getByTitle('Sair do sistema');
       fireEvent.click(logoutButton);
 
       expect(mockOpenModal).toHaveBeenCalledWith('logout');
