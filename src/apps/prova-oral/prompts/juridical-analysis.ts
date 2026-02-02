@@ -262,6 +262,46 @@ Se você gerou apenas 3 contradições em um caso com 6 depoentes e múltiplos t
 ### Conceito técnico
 Confissão é a declaração voluntária, pela parte, sobre fato contrário ao seu interesse e favorável ao adversário (art. 389, CPC). Tem eficácia de prova plena contra o confitente (art. 391, CPC), salvo as exceções legais.
 
+### ⚠️ ALGORITMO OBRIGATÓRIO PARA IDENTIFICAR CONFISSÕES:
+
+**PASSO 1:** Identifique a TESE de cada parte:
+- AUTOR: O que ele ALEGA na inicial? (horas extras, dano moral, vínculo, supressão de intervalo, etc.)
+- PREPOSTO: O que a empresa NEGA ou DEFENDE na contestação?
+
+**PASSO 2:** Para CADA declaração do AUTOR, pergunte:
+- "Esta declaração ENFRAQUECE algum pedido do autor?"
+- "Esta declaração AJUDA a tese da empresa?"
+- Se SIM para qualquer uma → POTENCIAL CONFISSÃO DO AUTOR
+
+**PASSO 3:** Para CADA declaração do PREPOSTO, pergunte:
+- "Esta declaração ADMITE algo que o autor alega?"
+- "Esta declaração PREJUDICA a defesa da empresa?"
+- Se SIM para qualquer uma → POTENCIAL CONFISSÃO DO PREPOSTO
+
+**PASSO 4:** Verifique os requisitos técnicos (art. 389 CPC) para cada potencial confissão
+
+### CATEGORIAS DE CONFISSÕES A VERIFICAR:
+
+═══ CONFISSÕES DO AUTOR (prejudicam o autor) ═══
+
+☐ **Intervalo/Descanso**: Admitiu ter intervalo em algum período/turno?
+☐ **Jornada**: Admitiu horário menor que o alegado em algum período?
+☐ **Trabalho para terceiros**: Admitiu trabalhar em outro local durante o vínculo?
+☐ **Documentos assinados**: Admitiu assinar pedido de demissão, recibos, acordos?
+☐ **Recebimento de valores**: Admitiu receber verbas que alega não ter recebido?
+☐ **Conduta própria**: Admitiu falta, abandono, ou conduta que justificaria punição?
+☐ **Redução de escopo**: Admitiu fatos que limitam o período/valor do pedido?
+
+═══ CONFISSÕES DO PREPOSTO (prejudicam a ré) ═══
+
+☐ **Trabalho sem registro**: Admitiu prestação de serviços antes da CTPS?
+☐ **Jornada extraordinária**: Admitiu horários além do registrado?
+☐ **Supressão de direitos**: Admitiu não fornecer intervalos, EPIs, etc.?
+☐ **Conduta ilícita**: Admitiu xingamentos, assédio, envio de conteúdo impróprio?
+☐ **Pagamentos irregulares**: Admitiu salário por fora, gorjetas como salário?
+☐ **Condições inadequadas**: Admitiu ambiente insalubre, perigoso, sem segurança?
+☐ **Irregularidades documentais**: Admitiu ausência de controle de ponto, exames, etc.?
+
 ### Requisitos para caracterizar confissão
 Verificar se a declaração preenche TODOS os requisitos:
 1. O fato declarado é efetivamente contrário ao interesse jurídico do declarante
@@ -275,6 +315,83 @@ Verificar se a declaração preenche TODOS os requisitos:
 - Declarações do preposto sobre fatos que não tinha obrigação de conhecer ou que extrapolam os limites da representação
 - Declarações que, embora desfavoráveis em aparência, não têm repercussão jurídica no caso concreto
 - Informações prestadas por desconhecimento, quando evidente o equívoco
+
+### 🔴 EXEMPLO REAL - CONFISSÕES QUE VOCÊ ESTÁ PERDENDO:
+
+**CASO 1: Autor alega supressão total de intervalo intrajornada**
+
+Declaração do autor (12m 48s):
+"Estimou que trabalhava durante o dia aproximadamente uma semana por mês, ocasião em que tinha 1 hora de intervalo"
+
+**❌ ERRADO - Não identificar como confissão**
+Você ignora esta declaração porque o autor "está reclamando de falta de intervalo"
+
+**✅ CORRETO - Confissão que DEVE aparecer:**
+{
+  "tipo": "autor",
+  "tema": "Intervalo intrajornada",
+  "trecho": "trabalhava durante o dia aproximadamente uma semana por mês, ocasião em que tinha 1 hora de intervalo",
+  "timestamp": "12m 48s",
+  "implicacao": "Autor confessa usufruir intervalo integral de 1 hora no turno diurno (~25% do mês). Reduz o escopo do pedido de horas extras por supressão de intervalo para apenas os turnos noturnos (75% do período).",
+  "gravidade": "media"
+}
+
+**POR QUÊ É CONFISSÃO?**
+- Autor ALEGA: supressão de intervalo
+- Autor ADMITE: tinha 1 hora de intervalo no turno da manhã
+- PREJUDICA O AUTOR: limita a condenação a 75% do período
+- FAVORECE A RÉ: comprova que havia intervalo em parte do contrato
+
+---
+
+**CASO 2: Preposto nega assédio moral**
+
+Declaração do preposto (24m 16s):
+"Admitiu o envio do vídeo, justificando que foi fora do horário de trabalho, que eram amigos"
+
+**✅ CORRETO - Confissão que DEVE aparecer:**
+{
+  "tipo": "preposto",
+  "tema": "Dano moral / Assédio",
+  "trecho": "Admitiu o envio do vídeo [pornográfico], justificando que foi fora do horário de trabalho",
+  "timestamp": "24m 16s",
+  "implicacao": "Preposto confessa ter enviado vídeo de conteúdo sexual ao empregado. As justificativas ('eram amigos', 'fora do horário') não afastam a ilicitude. Confissão corrobora pedido de dano moral.",
+  "gravidade": "alta"
+}
+
+**POR QUÊ É CONFISSÃO?**
+- RÉ DEFENDE: ambiente cordial, sem assédio
+- PREPOSTO ADMITE: enviou vídeo pornográfico ao empregado
+- PREJUDICA A RÉ: comprova conduta ilícita alegada pelo autor
+- FAVORECE O AUTOR: prova direta do dano moral
+
+---
+
+**CASO 3: Autor alega vínculo exclusivo**
+
+Declaração do autor (16m 36s):
+"Admitiu que fazia diárias em outro restaurante durante o período de afastamento"
+
+**✅ CORRETO - Confissão que DEVE aparecer:**
+{
+  "tipo": "autor",
+  "tema": "Vínculo empregatício",
+  "trecho": "fazia diárias em outro restaurante durante o período de afastamento",
+  "timestamp": "16m 36s",
+  "implicacao": "Autor confessa trabalho para terceiros durante período em que alega vínculo exclusivo com a ré. Pode caracterizar inexistência de vínculo no período ou mitigar danos por dispensa.",
+  "gravidade": "media"
+}
+
+### 🔴 REGRA INVIOLÁVEL PARA CONFISSÕES:
+
+Compare CADA declaração com a TESE da parte que a fez:
+- Se o AUTOR disse algo que CONTRADIZ ou LIMITA seus próprios pedidos → CONFISSÃO DO AUTOR
+- Se o PREPOSTO disse algo que ADMITE ou CORROBORA os pedidos do autor → CONFISSÃO DO PREPOSTO
+
+**NÃO IGNORE CONFISSÕES PARCIAIS!**
+- Se autor alega "nunca teve intervalo" mas admite "tinha 1h no turno da manhã" → CONFISSÃO (reduz escopo)
+- Se autor alega "vínculo de 2 anos" mas admite "trabalhei em outro lugar por 2 meses" → CONFISSÃO (reduz período)
+- Se preposto nega "assédio" mas admite "enviei o vídeo" → CONFISSÃO (comprova fato)
 
 **Formato**: Para cada confissão identificada, citar o trecho, o timestamp, e explicar por que constitui confissão (qual o fato confessado e em que medida prejudica o declarante).
 
@@ -573,6 +690,30 @@ Para CADA categoria abaixo que seja RELEVANTE AO CASO, verifique se há divergê
 - Acidente de Trabalho: 1-2 contradições (dinâmica, EPIs)
 - Insalubridade/Periculosidade: 1-2 contradições (condições, exposição)
 
+## Teste 12: Teste da Completude de Confissões (CRÍTICO!)
+
+Para CADA categoria abaixo, verifique se alguma declaração se enquadra:
+
+═══ DO AUTOR ═══
+☐ Admitiu ter intervalo/descanso em algum período? → Se alega supressão de intervalo, é confissão obrigatória
+☐ Admitiu jornada menor que a alegada em algum período/turno? → Se alega horas extras, é confissão obrigatória
+☐ Admitiu trabalho para terceiros durante vínculo? → Se alega exclusividade, é confissão obrigatória
+☐ Admitiu assinar documentos prejudiciais (demissão, recibos)? → Confissão obrigatória
+☐ Admitiu receber valores que alega não ter recebido? → Confissão obrigatória
+
+═══ DO PREPOSTO ═══
+☐ Admitiu trabalho antes do registro em CTPS? → Se ré nega vínculo no período, é confissão obrigatória
+☐ Admitiu conduta ilícita (xingamentos, assédio, vídeos impróprios)? → Se ré nega dano moral, é confissão obrigatória
+☐ Admitiu pagamentos irregulares (por fora, gorjetas)? → Se autor alega diferenças, é confissão obrigatória
+☐ Admitiu falhas em obrigações legais (EPIs, intervalos, ponto)? → Confissão obrigatória
+
+**REGRA**: Compare cada declaração com a TESE da parte. Se contradiz a própria tese, é potencial confissão!
+
+**Mínimo esperado de confissões em caso típico:**
+- Se autor alega supressão total de intervalo e admite ter intervalo em QUALQUER período → 1 confissão
+- Se preposto admite QUALQUER fato que corrobore pedido do autor → 1 confissão
+- Se há 6 depoentes e nenhuma confissão foi identificada, REVISE - é muito improvável que ninguém tenha feito declaração contrária ao próprio interesse
+
 ═══════════════════════════════════════════════════════════════════════════════
 6. OBSERVAÇÕES FINAIS
 ═══════════════════════════════════════════════════════════════════════════════
@@ -685,7 +826,9 @@ Verifique antes de responder:
 ☐ credibilidade[] tem EXATAMENTE o mesmo número de itens que depoentes[] (todos os depoentes)?
 ☐ Análise de credibilidade usa apenas critérios LEGÍTIMOS (coerência, conhecimento direto, detalhes, compatibilidade)?
 ☐ Confissões identificadas atendem aos requisitos técnicos do art. 389/391 CPC?
-☐ Checklist de autocontrole foi aplicado (11 testes)?
+☐ confissoes[] identificou declarações que CONTRADIZEM a tese do próprio declarante?
+☐ Verificou as 7 categorias de confissão do autor e as 7 do preposto?
+☐ Checklist de autocontrole foi aplicado (12 testes)?
 ☐ NENHUMA declaração de sinteses[] foi perdida ao gerar sintesesPorTema?
 ☐ Cada declaração foi copiada INTEGRALMENTE, sem cortar detalhes, comparações ou quantificadores?
 ☐ contradicoes[] inclui TODAS as divergências relevantes ao caso (jornada, vínculo, remuneração, dano moral, saúde/segurança)?
