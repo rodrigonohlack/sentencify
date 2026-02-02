@@ -187,9 +187,25 @@ Se algum item acima não foi cumprido, REFAÇA antes de responder.`;
         // Limpar texto de streaming para mostrar resposta da Fase 2
         setStreamingText('');
 
+        // Extrair lista de depoentes do resultado da Fase 1
+        const deponentesList = (phase1Result.sintesesCondensadas as Array<{deponente: string; qualificacao: string}>)
+          ?.map(s => `- ${s.deponente} (${s.qualificacao})`)
+          ?.join('\n') || '';
+
+        const totalDepoentes = (phase1Result.sintesesCondensadas as Array<unknown>)?.length || 0;
+        console.log('[ProvaOralAnalysis] Fase 2 - Total de depoentes:', totalDepoentes);
+
         const userPromptPhase2 = `## TRANSCRIÇÃO ESTRUTURADA (Resultado da Fase 1)
 
 ${JSON.stringify(phase1Result, null, 2)}
+
+## ⚠️ LISTA COMPLETA DE DEPOENTES - TODOS DEVEM SER CONSIDERADOS
+
+Total: ${totalDepoentes} depoentes
+
+${deponentesList}
+
+ATENÇÃO: Para CADA tema, verifique se CADA depoente acima falou algo. Se falou, DEVE aparecer em sintesesPorTema E em analises[].provaOral.
 
 ## SÍNTESE DO PROCESSO
 
@@ -201,9 +217,15 @@ ${instrucoesSection}---
 
 Com base na transcrição estruturada acima, produza a ANÁLISE JURÍDICA completa.
 
+⚠️ REGRA CRÍTICA DE COMPLETUDE:
+1. Conte quantos depoentes existem na lista acima: ${totalDepoentes}
+2. Para cada tema, verifique se cada depoente disse algo relevante
+3. Se disse → INCLUA (mesmo negações ou "não sei")
+4. Só omita se literalmente não há declaração sobre o tema
+
 CHECKLIST OBRIGATÓRIO:
-□ sintesesPorTema agrupa declarações por cada tema/pedido?
-□ provaOral[] inclui TODOS os depoentes de sintesesPorTema?
+□ sintesesPorTema.declaracoes inclui TODOS os depoentes que falaram sobre o tema?
+□ analises[].provaOral tem EXATAMENTE os mesmos depoentes de sintesesPorTema.declaracoes?
 □ Análise de credibilidade usa apenas critérios LEGÍTIMOS?`;
 
         const phase2Response = await callAIStream(

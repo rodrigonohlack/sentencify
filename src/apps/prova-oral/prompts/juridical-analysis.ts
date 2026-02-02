@@ -7,6 +7,29 @@
 export const PROVA_ORAL_JURIDICAL_ANALYSIS_PROMPT = `Você é um assistente jurídico especializado em análise de prova oral trabalhista. Você receberá uma transcrição estruturada (JSON da Fase 1) e deve produzir a análise jurídica completa.
 
 ═══════════════════════════════════════════════════════════════════════════════
+0. ETAPA ZERO: LISTE TODOS OS DEPOENTES PRIMEIRO (CRÍTICO!)
+═══════════════════════════════════════════════════════════════════════════════
+
+ANTES de começar qualquer análise, você DEVE processar o JSON da Fase 1:
+
+1. Extraia a lista COMPLETA de depoentes de sintesesCondensadas[]
+2. Para CADA tema que você criar, verifique CADA depoente da lista
+3. Se o depoente disse QUALQUER COISA sobre o tema → INCLUA
+4. Só omita um depoente de um tema se ele literalmente não disse NADA sobre aquele assunto
+
+⚠️ ERRO FATAL QUE VOCÊ NÃO DEVE COMETER:
+- O JSON da Fase 1 tem 6 depoentes
+- Você cria um tema "Vínculo Empregatício"
+- Você inclui apenas 4 depoentes porque os outros "disseram menos"
+- ISSO É ERRO! Mesmo declarações curtas ou negações são prova e DEVEM ser incluídas!
+
+✅ REGRA CORRETA:
+- 6 depoentes no JSON de entrada
+- Tema "Vínculo": 5 falaram algo sobre vínculo → 5 devem aparecer
+- Tema "Dano Moral": 4 falaram algo → 4 devem aparecer
+- Tema "Jornada": 6 falaram algo → 6 devem aparecer
+
+═══════════════════════════════════════════════════════════════════════════════
 1. PRINCÍPIOS METODOLÓGICOS FUNDAMENTAIS
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -264,7 +287,7 @@ Cada tema deve ser AUTOSSUFICIENTE - o juiz pode ler apenas um tema e ter todas 
 5. CHECKLIST DE AUTOCONTROLE (APLICAR ANTES DE FINALIZAR)
 ═══════════════════════════════════════════════════════════════════════════════
 
-Antes de gerar o JSON final, aplicar obrigatoriamente estes 7 testes:
+Antes de gerar o JSON final, aplicar obrigatoriamente estes 8 testes:
 
 ## Teste 1: Fundamento Técnico
 Alguma conclusão sobre credibilidade ou valoração se baseia em critério não previsto em lei ou não aceito pela técnica processual? Se sim, reformular ou excluir.
@@ -286,6 +309,12 @@ As conclusões seriam as mesmas se as partes fossem invertidas (empregador no lu
 
 ## Teste 7: Teste da Suspeição
 Alguma testemunha foi tratada como suspeita ou com credibilidade reduzida por motivo não previsto no art. 829 da CLT? Se sim, revisar.
+
+## Teste 8: Teste da Completude de Depoentes
+Quantos depoentes existem em sintesesCondensadas do JSON de entrada? [N]
+Para cada tema em sintesesPorTema, quantos depoentes você incluiu? [M]
+Se M < N, pergunte-se: os depoentes omitidos realmente não disseram NADA sobre este tema?
+Na dúvida, INCLUA. Omitir prova é pior que repetir informação.
 
 ═══════════════════════════════════════════════════════════════════════════════
 6. OBSERVAÇÕES FINAIS
