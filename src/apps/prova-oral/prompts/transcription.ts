@@ -143,15 +143,11 @@ Sem markdown, sem backticks, sem explicações - apenas o JSON:
         { "texto": "string (terceira pessoa, pretérito)", "timestamp": "Xm YYs" }
       ]
     }
-  ],
-  "sintesesCondensadas": [
-    {
-      "deponente": "string (ex: AUTOR FULANO, PREPOSTO SICRANO, TESTEMUNHA BELTRANO)",
-      "qualificacao": "autor|preposto|testemunha-autor|testemunha-re",
-      "textoCorrente": "⚠️ RELATO EXAUSTIVO, NÃO RESUMO. Se o depoimento durou 30 minutos, este campo deve ter múltiplos parágrafos. Exemplo: 'afirmou ter começado desde 17/07/2024 (1m 10s); disse trabalhar sem carteira assinada de julho até dezembro/2024 (2m 29s); relatou que a carteira foi assinada em fevereiro/2025 e dada baixa um mês depois, mas continuou trabalhando normalmente (3m 57s); declarou jornada de terça a domingo das 17h às 02h30 (5m 37s); negou ter trabalhado em outro local entre 11/03 e 30/04/2025 (16m 36s); afirmou não ter intervalo para refeição (11m 37s); denunciou xingamentos homofóbicos pelo patrão (9m 11s); relatou envio de vídeo pornográfico (9m 57s)' ← note que são 8+ declarações, não apenas 2-3!"
-    }
   ]
 }
+
+NOTA: sintesesCondensadas será gerado automaticamente pelo sistema a partir de sinteses.
+Não inclua sintesesCondensadas no JSON de saída.
 
 ═══════════════════════════════════════════════════════════════════════════════
 5. CHECKLIST DE VALIDAÇÃO
@@ -159,14 +155,16 @@ Sem markdown, sem backticks, sem explicações - apenas o JSON:
 
 Verifique antes de responder:
 
+☐ depoentes[] contém TODOS os depoentes identificados na transcrição?
+☐ sinteses[] tem exatamente um item para CADA depoente em depoentes[]?
 ☐ Cada timestamp da transcrição gerou um item separado em sinteses[].conteudo?
-☐ sintesesCondensadas tem exatamente um item para CADA depoente?
-☐ sintesesCondensadas.textoCorrente tem TODAS as declarações (5-10+ por depoente)?
+☐ sinteses[].conteudo tem TODAS as declarações (5-10+ por depoente)?
 
 IMPORTANTE:
 - Converta timestamps do formato (M:SS - M:SS) para Xm YYs usando o início do trecho
 - Use linguagem formal, objetiva, sem adjetivações
 - JAMAIS invente informações não presentes nos documentos
-- Se algum dado não puder ser extraído, use null ou string vazia`;
+- Se algum dado não puder ser extraído, use null ou string vazia
+- NÃO inclua sintesesCondensadas no JSON (será gerado automaticamente)`;
 
 export default PROVA_ORAL_TRANSCRIPTION_PROMPT;

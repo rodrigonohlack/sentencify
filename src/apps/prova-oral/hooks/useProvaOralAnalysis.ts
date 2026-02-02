@@ -12,8 +12,66 @@ import { getMaxOutputTokens } from '../constants';
 import type { ProvaOralResult } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════════════════
+
+interface Depoente {
+  id: string;
+  nome: string;
+  qualificacao: string;
+}
+
+interface SinteseConteudo {
+  texto: string;
+  timestamp: string;
+}
+
+interface Sintese {
+  deponenteId: string;
+  conteudo: SinteseConteudo[];
+}
+
+interface SinteseCondensada {
+  deponente: string;
+  qualificacao: string;
+  textoCorrente: string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Gera sintesesCondensadas programaticamente a partir de sinteses
+ * Garante consistência entre as abas "Detalhada" e "Por Depoente"
+ */
+function generateSintesesCondensadas(
+  sinteses: Sintese[],
+  depoentes: Depoente[]
+): SinteseCondensada[] {
+  return sinteses.map(s => {
+    const dep = depoentes.find(d => d.id === s.deponenteId);
+    const qualificacao = dep?.qualificacao || 'desconhecido';
+
+    // Formatar nome no padrão esperado (ex: "AUTOR FULANO", "PREPOSTO SICRANO")
+    const qualLabel = qualificacao === 'autor' ? 'AUTOR' :
+                      qualificacao === 'preposto' ? 'PREPOSTO' :
+                      qualificacao === 'testemunha-autor' ? 'TESTEMUNHA DO AUTOR' :
+                      qualificacao === 'testemunha-re' ? 'TESTEMUNHA DA RÉ' : 'DEPOENTE';
+    const nomeFormatado = dep?.nome ? `${qualLabel} ${dep.nome.toUpperCase()}` : qualLabel;
+
+    // Concatenar todos os conteúdos em texto corrido
+    const textoCorrente = s.conteudo
+      .map(c => `${c.texto} (${c.timestamp})`)
+      .join('; ');
+
+    return {
+      deponente: nomeFormatado,
+      qualificacao,
+      textoCorrente
+    };
+  });
+}
 
 /**
  * Extrai JSON de uma string que pode conter markdown ou texto adicional
@@ -149,9 +207,10 @@ Sua ÚNICA tarefa nesta fase é TRANSCREVER os depoimentos. NÃO analise juridic
 ⚠️ ATENÇÃO: Sua resposta será avaliada pela EXTENSÃO e COMPLETUDE. Uma resposta curta é considerada FALHA.
 
 CHECKLIST OBRIGATÓRIO:
+□ depoentes[] contém TODOS os depoentes identificados na transcrição?
+□ sinteses[] tem exatamente um item para CADA depoente?
 □ Cada timestamp da transcrição virou um item separado em sinteses[].conteudo?
-□ sintesesCondensadas tem exatamente um item para CADA depoente?
-□ sintesesCondensadas.textoCorrente tem TODAS as declarações (8+ por depoente)?
+□ sinteses[].conteudo tem TODAS as declarações (8+ por depoente)?
 
 Se algum item acima não foi cumprido, REFAÇA antes de responder.`;
 
@@ -188,11 +247,12 @@ Se algum item acima não foi cumprido, REFAÇA antes de responder.`;
         setStreamingText('');
 
         // Extrair lista de depoentes do resultado da Fase 1
-        const deponentesList = (phase1Result.sintesesCondensadas as Array<{deponente: string; qualificacao: string}>)
-          ?.map(s => `- ${s.deponente} (${s.qualificacao})`)
-          ?.join('\n') || '';
+        const deponentesPhase1 = (phase1Result.depoentes as Depoente[]) || [];
+        const deponentesList = deponentesPhase1
+          .map(d => `- ${d.nome || d.id} (${d.qualificacao})`)
+          .join('\n');
 
-        const totalDepoentes = (phase1Result.sintesesCondensadas as Array<unknown>)?.length || 0;
+        const totalDepoentes = deponentesPhase1.length;
         console.log('[ProvaOralAnalysis] Fase 2 - Total de depoentes:', totalDepoentes);
 
         const userPromptPhase2 = `## TRANSCRIÇÃO ESTRUTURADA (Resultado da Fase 1)
@@ -255,9 +315,17 @@ CHECKLIST OBRIGATÓRIO:
         // ═══════════════════════════════════════════════════════════════
         setProgress(90, 'Combinando resultados...');
 
+        // Gerar sintesesCondensadas programaticamente a partir de sinteses
+        // Isso garante consistência entre as abas "Detalhada" e "Por Depoente"
+        const sintesesCondensadas = generateSintesesCondensadas(
+          (phase1Result.sinteses as Sintese[]) || [],
+          (phase1Result.depoentes as Depoente[]) || []
+        );
+
         const mergedResult = {
           ...phase1Result,
-          ...phase2Result
+          ...phase2Result,
+          sintesesCondensadas // Sobrescreve qualquer versão gerada pela IA
         };
 
         console.log('[ProvaOralAnalysis] Merge completo. Total keys:', Object.keys(mergedResult).length);
