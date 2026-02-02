@@ -7,7 +7,7 @@
  * Contém: título, número do processo, botões de ação, aviso de responsabilidade.
  */
 
-import { LogOut, FileSearch, Mic } from 'lucide-react';
+import { LogOut, FileSearch, Mic, Sun, Moon } from 'lucide-react';
 import { GoogleDriveButton } from '../GoogleDriveButton';
 import { CSS } from '../../constants/styles';
 import { APP_VERSION } from '../../constants/app-version';
@@ -137,10 +137,10 @@ export function AppHeader({
             {/* Theme Toggle */}
             <button
               onClick={toggleAppTheme}
-              className="px-2 py-1 rounded text-base flex items-center justify-center theme-btn-secondary transition-colors duration-200"
+              className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:border-amber-300 dark:hover:border-amber-600 transition-all shadow-sm"
               title={appTheme === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
             >
-              {appTheme === 'dark' ? '☀️' : '🌙'}
+              {appTheme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
             {/* Settings Button */}

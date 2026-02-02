@@ -165,18 +165,18 @@ describe('AppHeader', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Theme Toggle', () => {
-    it('should show moon icon in light mode', () => {
+    it('should show theme toggle button in light mode', () => {
       render(<AppHeader {...createDefaultProps({ appTheme: 'light' })} />);
 
       const themeButton = screen.getByTitle('Mudar para Tema Escuro');
-      expect(themeButton).toHaveTextContent('🌙');
+      expect(themeButton).toBeInTheDocument();
     });
 
-    it('should show sun icon in dark mode', () => {
+    it('should show theme toggle button in dark mode', () => {
       render(<AppHeader {...createDefaultProps({ appTheme: 'dark' })} />);
 
       const themeButton = screen.getByTitle('Mudar para Tema Claro');
-      expect(themeButton).toHaveTextContent('☀️');
+      expect(themeButton).toBeInTheDocument();
     });
 
     it('should call toggleAppTheme on click', () => {

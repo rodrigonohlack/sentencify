@@ -13,6 +13,7 @@ import type {
 } from '../types';
 import { EmbeddingsService, JurisEmbeddingsService, EmbeddingsCDNService } from '../services/EmbeddingsServices';
 import AIModelService from '../services/AIModelService';
+import { useUIStore } from '../stores/useUIStore';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -136,9 +137,10 @@ export function useEmbeddingsManagement({
   const [modelEmbeddingsProgress, setModelEmbeddingsProgress] = useState<ProgressState>({ current: 0, total: 0 });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ESTADO - Download modal (dados)
+  // ESTADO - Download modal (dados) - v1.40.16: Migrado para useUIStore
   // ═══════════════════════════════════════════════════════════════════════════
-  const [showDataDownloadModal, setShowDataDownloadModal] = useState(false);
+  const showDataDownloadModal = useUIStore((s) => s.showDataDownloadModal);
+  const setShowDataDownloadModal = useUIStore((s) => s.setShowDataDownloadModal);
   const [dataDownloadStatus, setDataDownloadStatus] = useState<DataDownloadStatusExtended>({
     legislacao: { needed: null, downloading: false, progress: 0, error: null },
     jurisprudencia: { needed: null, downloading: false, progress: 0, error: null }
@@ -148,9 +150,10 @@ export function useEmbeddingsManagement({
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ESTADO - Download modal (embeddings)
+  // ESTADO - Download modal (embeddings) - v1.40.16: Migrado para useUIStore
   // ═══════════════════════════════════════════════════════════════════════════
-  const [showEmbeddingsDownloadModal, setShowEmbeddingsDownloadModal] = useState(false);
+  const showEmbeddingsDownloadModal = useUIStore((s) => s.showEmbeddingsDownloadModal);
+  const setShowEmbeddingsDownloadModal = useUIStore((s) => s.setShowEmbeddingsDownloadModal);
   const [embeddingsDownloadStatus, setEmbeddingsDownloadStatus] = useState<EmbeddingsDownloadStatusExtended>({
     legislacao: { needed: null, downloading: false, progress: 0, error: null },
     jurisprudencia: { needed: null, downloading: false, progress: 0, error: null }
