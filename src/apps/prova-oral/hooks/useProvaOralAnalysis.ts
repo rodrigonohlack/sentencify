@@ -1,15 +1,19 @@
 /**
  * @file useProvaOralAnalysis.ts
  * @description Hook para análise de prova oral usando IA
- * v1.40.15: Arquitetura de duas fases (Transcrição + Análise Jurídica)
+ * v1.40.16: Arquitetura de três fases (Transcrição + Análise Jurídica + Análise Probatória)
  */
 
 import { useCallback } from 'react';
 import { useAIIntegration } from './useAIIntegration';
 import { useProvaOralStore } from '../stores';
-import { PROVA_ORAL_TRANSCRIPTION_PROMPT, PROVA_ORAL_JURIDICAL_ANALYSIS_PROMPT } from '../prompts';
+import {
+  PROVA_ORAL_TRANSCRIPTION_PROMPT,
+  PROVA_ORAL_JURIDICAL_ANALYSIS_PROMPT,
+  PROVA_ORAL_PROBATORY_ANALYSIS_PROMPT,
+} from '../prompts';
 import { getMaxOutputTokens } from '../constants';
-import type { ProvaOralResult } from '../types';
+import type { ProvaOralResult, SintesePorTema, Confissao, Contradicao, AvaliacaoCredibilidade } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -159,11 +163,11 @@ export function useProvaOralAnalysis(): UseProvaOralAnalysisReturn {
       }
 
       setIsAnalyzing(true);
-      setProgress(5, 'Preparando análise em duas fases...');
+      setProgress(5, 'Preparando análise em três fases...');
       startStreaming(); // Abre o modal de streaming
 
       try {
-        // Montar seção de instruções extras (usado em ambas as fases)
+        // Montar seção de instruções extras (usado em todas as fases)
         const instrucoesSection = instrucoesExtras?.trim()
           ? `## INSTRUÇÕES ESPECÍFICAS DO USUÁRIO
 
@@ -182,7 +186,7 @@ IMPORTANTE: Siga as instruções acima ao realizar a análise.
           aiSettings.grokModel;
 
         const maxTokens = getMaxOutputTokens(currentModel);
-        console.log('[ProvaOralAnalysis] Iniciando análise em duas fases:', { provider: aiSettings.provider, model: currentModel, maxTokens });
+        console.log('[ProvaOralAnalysis] Iniciando análise em três fases:', { provider: aiSettings.provider, model: currentModel, maxTokens });
 
         // ═══════════════════════════════════════════════════════════════
         // FASE 1: TRANSCRIÇÃO EXAUSTIVA
@@ -224,7 +228,7 @@ Se algum item acima não foi cumprido, REFAÇA antes de responder.`;
         );
 
         console.log('[ProvaOralAnalysis] Fase 1 completa, tamanho:', phase1Response?.length || 0);
-        setProgress(45, 'Fase 1 concluída. Processando transcrição...');
+        setProgress(35, 'Fase 1 concluída. Processando transcrição...');
 
         const phase1Json = extractJSON(phase1Response);
         let phase1Result: Record<string, unknown>;
@@ -238,9 +242,9 @@ Se algum item acima não foi cumprido, REFAÇA antes de responder.`;
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // FASE 2: ANÁLISE JURÍDICA
+        // FASE 2: CLASSIFICAÇÃO JURÍDICA
         // ═══════════════════════════════════════════════════════════════
-        setProgress(50, 'Fase 2: Analisando juridicamente...');
+        setProgress(40, 'Fase 2: Classificando juridicamente...');
         console.log('[ProvaOralAnalysis] Iniciando Fase 2 (Análise Jurídica)');
 
         // Limpar texto de streaming para mostrar resposta da Fase 2
@@ -297,6 +301,7 @@ CHECKLIST OBRIGATÓRIO:
         );
 
         console.log('[ProvaOralAnalysis] Fase 2 completa, tamanho:', phase2Response?.length || 0);
+        setProgress(65, 'Fase 2 concluída. Processando classificação...');
 
         const phase2Json = extractJSON(phase2Response);
         let phase2Result: Record<string, unknown>;
@@ -306,13 +311,105 @@ CHECKLIST OBRIGATÓRIO:
           console.error('[ProvaOralAnalysis] Erro ao parsear Fase 2:', parseError);
           console.error('[ProvaOralAnalysis] Resposta Fase 2:', phase2Response);
           console.error('[ProvaOralAnalysis] JSON extraído Fase 2:', phase2Json);
-          throw new Error('Erro ao processar análise jurídica. Tente novamente.');
+          throw new Error('Erro ao processar classificação jurídica. Tente novamente.');
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // MERGE: Combinar resultados das duas fases
+        // FASE 3: ANÁLISE PROBATÓRIA
         // ═══════════════════════════════════════════════════════════════
-        setProgress(90, 'Combinando resultados...');
+        setProgress(70, 'Fase 3: Iniciando análise probatória...');
+        console.log('[ProvaOralAnalysis] Iniciando Fase 3 (Análise Probatória)');
+
+        // Limpar texto de streaming para mostrar resposta da Fase 3
+        setStreamingText('');
+
+        // Combinar resultados das Fases 1 e 2 para enviar à Fase 3
+        const phase12Combined = {
+          ...phase1Result,
+          ...phase2Result,
+        };
+
+        // Extrair dados relevantes para formatação do prompt
+        const sintesesPorTemaPhase2 = (phase2Result.sintesesPorTema as SintesePorTema[]) || [];
+        const confissoesPhase2 = (phase2Result.confissoes as Confissao[]) || [];
+        const contradicoesPhase2 = (phase2Result.contradicoes as Contradicao[]) || [];
+        const credibilidadePhase2 = (phase2Result.credibilidade as AvaliacaoCredibilidade[]) || [];
+
+        // Listar temas para checklist
+        const temasIdentificados = sintesesPorTemaPhase2.map(s => s.tema).join(', ');
+        const totalTemas = sintesesPorTemaPhase2.length;
+        const totalConfissoes = confissoesPhase2.length;
+        const totalContradicoes = contradicoesPhase2.length;
+
+        console.log('[ProvaOralAnalysis] Fase 3 - Dados:', {
+          temas: totalTemas,
+          confissoes: totalConfissoes,
+          contradicoes: totalContradicoes,
+          credibilidade: credibilidadePhase2.length,
+        });
+
+        const userPromptPhase3 = `## RESULTADO COMPLETO DAS FASES 1 E 2
+
+${JSON.stringify(phase12Combined, null, 2)}
+
+## SÍNTESE DO PROCESSO (para extrair alegacaoAutor e defesaRe)
+
+${sinteseProcesso || 'Não fornecida.'}
+
+## RESUMO DOS DADOS DISPONÍVEIS
+
+- **Temas identificados (${totalTemas})**: ${temasIdentificados || 'Nenhum'}
+- **Confissões identificadas**: ${totalConfissoes}
+- **Contradições identificadas**: ${totalContradicoes}
+
+${instrucoesSection}---
+
+## INSTRUÇÕES FINAIS (FASE 3 - ANÁLISE PROBATÓRIA)
+
+Produza o array "analises[]" com análise probatória EXAUSTIVA para cada tema.
+
+⚠️ REGRAS CRÍTICAS:
+1. Gere EXATAMENTE ${totalTemas} análises (uma para cada tema em sintesesPorTema)
+2. COPIE as declarações de sintesesPorTema para provaOral[] - não resuma!
+3. Se há confissão sobre o tema, ela DEVE ser o elemento central da fundamentação
+4. Se há contradição sobre o tema, ela DEVE ser analisada
+5. fundamentacao deve ter no mínimo 500 caracteres para temas com provas relevantes
+
+CHECKLIST OBRIGATÓRIO:
+□ analises[] tem ${totalTemas} itens (mesmo número que sintesesPorTema)?
+□ Cada titulo corresponde a um tema de sintesesPorTema?
+□ provaOral[] tem os mesmos depoentes que aparecem em sintesesPorTema?
+□ fundamentacao cita timestamps no formato (Xm Ys)?
+□ Se há confissão, foi citado "art. 391 do CPC" na fundamentacao?
+□ status é coerente com conclusao?`;
+
+        const phase3Response = await callAIStream(
+          [{ role: 'user', content: userPromptPhase3 }],
+          {
+            systemPrompt: PROVA_ORAL_PROBATORY_ANALYSIS_PROMPT,
+            maxTokens,
+            onChunk: (fullText) => setStreamingText(fullText)
+          }
+        );
+
+        console.log('[ProvaOralAnalysis] Fase 3 completa, tamanho:', phase3Response?.length || 0);
+        setProgress(95, 'Fase 3 concluída. Finalizando...');
+
+        const phase3Json = extractJSON(phase3Response);
+        let phase3Result: Record<string, unknown>;
+        try {
+          phase3Result = JSON.parse(phase3Json);
+        } catch (parseError) {
+          console.error('[ProvaOralAnalysis] Erro ao parsear Fase 3:', parseError);
+          console.error('[ProvaOralAnalysis] Resposta Fase 3:', phase3Response);
+          console.error('[ProvaOralAnalysis] JSON extraído Fase 3:', phase3Json);
+          throw new Error('Erro ao processar análise probatória. Tente novamente.');
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // MERGE: Combinar resultados das três fases
+        // ═══════════════════════════════════════════════════════════════
+        setProgress(98, 'Combinando resultados...');
 
         // Gerar sintesesCondensadas programaticamente a partir de sinteses
         // Isso garante consistência entre as abas "Detalhada" e "Por Depoente"
@@ -322,19 +419,21 @@ CHECKLIST OBRIGATÓRIO:
         );
 
         const mergedResult = {
-          ...phase1Result,
-          ...phase2Result,
-          sintesesCondensadas // Sobrescreve qualquer versão gerada pela IA
+          ...phase1Result,    // depoentes, sinteses
+          ...phase2Result,    // sintesesPorTema, contradicoes, confissoes, credibilidade
+          ...phase3Result,    // analises (sobrescreve qualquer análise da Fase 2)
+          sintesesCondensadas // Gerado programaticamente
         };
 
         console.log('[ProvaOralAnalysis] Merge completo. Total keys:', Object.keys(mergedResult).length);
+        console.log('[ProvaOralAnalysis] Análises geradas:', ((phase3Result.analises || []) as unknown[]).length);
 
         stopStreaming(); // Marca streaming como completo
 
         // Normalizar e validar
         const result = normalizeResult(mergedResult);
 
-        setProgress(100, 'Concluído!');
+        setProgress(100, 'Análise concluída!');
         setResult(result);
         setIsAnalyzing(false);
 
