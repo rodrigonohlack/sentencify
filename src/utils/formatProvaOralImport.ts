@@ -11,7 +11,8 @@ import type {
   Contradicao,
   Confissao,
   AvaliacaoCredibilidade,
-  Qualificacao
+  Qualificacao,
+  Depoente
 } from '../apps/prova-oral/types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -122,15 +123,18 @@ function formatConfissoes(confissoes: Confissao[]): string {
 
 /**
  * Formata avaliações de credibilidade
+ * @param avaliacoes - Array de avaliações de credibilidade
+ * @param depoentes - Array de depoentes para lookup de nomes
  */
-function formatCredibilidade(avaliacoes: AvaliacaoCredibilidade[]): string {
+function formatCredibilidade(avaliacoes: AvaliacaoCredibilidade[], depoentes: Depoente[] = []): string {
   if (!avaliacoes.length) return '';
 
   return avaliacoes.map(a => {
     const parts: string[] = [];
 
-    // Nome do depoente (pode vir de deponenteNome retrocompat ou depoentes[deponenteId])
-    const nome = a.deponenteNome || a.deponenteId;
+    // Nome do depoente (lookup em depoentes[] ou fallback para deponenteNome/deponenteId)
+    const dep = depoentes.find(d => d.id === a.deponenteId);
+    const nome = a.deponenteNome || dep?.nome || a.deponenteId;
     parts.push(`**${nome}**`);
 
     if (a.pontuacao) {
@@ -200,7 +204,7 @@ export function formatProvaOralSections(
   }
 
   if (sections.includes('credibilidade') && resultado.credibilidade?.length) {
-    const content = formatCredibilidade(resultado.credibilidade);
+    const content = formatCredibilidade(resultado.credibilidade, resultado.depoentes || []);
     if (content) {
       parts.push(`## Avaliação de Credibilidade\n\n${content}`);
     }
