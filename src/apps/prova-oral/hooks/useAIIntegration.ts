@@ -49,7 +49,11 @@ export const useAIIntegration = () => {
         };
 
         if (systemPrompt) {
-          requestBody.system = systemPrompt;
+          requestBody.system = [{
+            type: 'text',
+            text: systemPrompt,
+            cache_control: { type: 'ephemeral' }
+          }];
         }
 
         // Extended Thinking para Claude
@@ -195,7 +199,8 @@ export const useAIIntegration = () => {
         if (data.usageMetadata) {
           addTokenUsage({
             input: data.usageMetadata.promptTokenCount || 0,
-            output: data.usageMetadata.candidatesTokenCount || 0
+            output: data.usageMetadata.candidatesTokenCount || 0,
+            cacheRead: data.usageMetadata.cachedContentTokenCount || 0
           });
         }
 
@@ -294,7 +299,8 @@ export const useAIIntegration = () => {
         if (data.usage) {
           addTokenUsage({
             input: data.usage.prompt_tokens || 0,
-            output: data.usage.completion_tokens || 0
+            output: data.usage.completion_tokens || 0,
+            cacheRead: data.usage.prompt_tokens_details?.cached_tokens || 0
           });
         }
 
@@ -377,7 +383,8 @@ export const useAIIntegration = () => {
         if (data.usage) {
           addTokenUsage({
             input: data.usage.prompt_tokens || 0,
-            output: data.usage.completion_tokens || 0
+            output: data.usage.completion_tokens || 0,
+            cacheRead: data.usage.prompt_tokens_details?.cached_tokens || 0
           });
         }
 
@@ -441,7 +448,11 @@ export const useAIIntegration = () => {
     };
 
     if (systemPrompt) {
-      requestBody.system = systemPrompt;
+      requestBody.system = [{
+        type: 'text',
+        text: systemPrompt,
+        cache_control: { type: 'ephemeral' }
+      }];
     }
 
     if (useThinking) {
@@ -501,7 +512,9 @@ export const useAIIntegration = () => {
               if (parsed.usage) {
                 addTokenUsage({
                   input: parsed.usage.input_tokens || 0,
-                  output: parsed.usage.output_tokens || 0
+                  output: parsed.usage.output_tokens || 0,
+                  cacheRead: parsed.usage.cache_read_input_tokens || 0,
+                  cacheCreation: parsed.usage.cache_creation_input_tokens || 0
                 });
               }
             }
@@ -609,7 +622,8 @@ export const useAIIntegration = () => {
               if (parsed.usage) {
                 addTokenUsage({
                   input: parsed.usage.prompt_tokens || 0,
-                  output: parsed.usage.completion_tokens || 0
+                  output: parsed.usage.completion_tokens || 0,
+                  cacheRead: parsed.usage.prompt_tokens_details?.cached_tokens || 0
                 });
               }
             }
@@ -708,7 +722,8 @@ export const useAIIntegration = () => {
               if (parsed.usage) {
                 addTokenUsage({
                   input: parsed.usage.prompt_tokens || 0,
-                  output: parsed.usage.completion_tokens || 0
+                  output: parsed.usage.completion_tokens || 0,
+                  cacheRead: parsed.usage.prompt_tokens_details?.cached_tokens || 0
                 });
               }
             }
@@ -825,7 +840,8 @@ export const useAIIntegration = () => {
               if (parsed.usage) {
                 addTokenUsage({
                   input: parsed.usage.promptTokenCount || 0,
-                  output: parsed.usage.candidatesTokenCount || 0
+                  output: parsed.usage.candidatesTokenCount || 0,
+                  cacheRead: parsed.usage.cachedContentTokenCount || 0
                 });
               }
             }
