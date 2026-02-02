@@ -203,35 +203,74 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
       {viewMode === 'tema' && (
         <div className="space-y-6">
           {sintesesPorTema && sintesesPorTema.length > 0 ? (
-            sintesesPorTema.map((tema, i) => (
-              <div key={i}>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center">
-                    <Target className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            sintesesPorTema.map((tema, i) => {
+              // Identificar depoentes que NÃO falaram sobre este tema
+              // Normaliza nomes para comparação (remove acentos, uppercase, extrai nome entre parênteses)
+              const normalizeName = (name: string): string[] => {
+                const upper = name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                const match = upper.match(/\(([^)]+)\)/);
+                const insideParens = match ? match[1].trim() : '';
+                return [upper, insideParens].filter(Boolean);
+              };
+
+              const declaracoesNormalizadas = tema.declaracoes?.flatMap(d => normalizeName(d.deponente)) || [];
+              const deponentesSemDeclaracao = depoentes.filter(dep => {
+                const nomeVariantes = normalizeName(dep.nome);
+                // Verifica se alguma variante do nome do depoente aparece nas declarações
+                return !nomeVariantes.some(v =>
+                  declaracoesNormalizadas.some(d => d.includes(v) || v.includes(d))
+                );
+              });
+
+              return (
+                <div key={i}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center">
+                      <Target className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-100">{tema.tema}</h3>
                   </div>
-                  <h3 className="font-semibold text-slate-800 dark:text-slate-100">{tema.tema}</h3>
+                  <div className="space-y-3 pl-10">
+                    {/* Depoentes que falaram sobre o tema */}
+                    {tema.declaracoes?.map((dec, j) => {
+                      const style = getQualificacaoStyle(dec.qualificacao);
+                      return (
+                        <Card key={j} className={`border-l-4 ${getQualBorderColor(dec.qualificacao)}`}>
+                          <CardContent>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className={`${style.bg} ${style.text} font-bold`}>
+                                {dec.deponente}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                              {dec.textoCorrente}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                    {/* Depoentes que NÃO falaram sobre o tema */}
+                    {deponentesSemDeclaracao.map((dep, j) => {
+                      const style = getQualificacaoStyle(dep.qualificacao);
+                      return (
+                        <Card key={`sem-${j}`} className={`border-l-4 ${getQualBorderColor(dep.qualificacao)} opacity-60`}>
+                          <CardContent>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className={`${style.bg} ${style.text} font-bold`}>
+                                {getQualificacaoLabel(dep.qualificacao).toUpperCase()} ({dep.nome})
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 italic">
+                              Não falou sobre o tema
+                            </p>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="space-y-3 pl-10">
-                  {tema.declaracoes?.map((dec, j) => {
-                    const style = getQualificacaoStyle(dec.qualificacao);
-                    return (
-                      <Card key={j} className={`border-l-4 ${getQualBorderColor(dec.qualificacao)}`}>
-                        <CardContent>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge className={`${style.bg} ${style.text} font-bold`}>
-                              {dec.deponente}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                            {dec.textoCorrente}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
               <CardContent>
