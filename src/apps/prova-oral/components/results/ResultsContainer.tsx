@@ -16,7 +16,6 @@ import {
 import { Tabs, Card, CardContent } from '../ui';
 import { DepoentesTab } from './DepoentesTab';
 import { SintesesTab } from './SintesesTab';
-import { AnalisesTab } from './AnalisesTab';
 import { ContradicoesTab } from './ContradicoesTab';
 import { ConfissoesTab } from './ConfissoesTab';
 import { CredibilidadeTab } from './CredibilidadeTab';
@@ -55,12 +54,6 @@ export const ResultsContainer: React.FC = () => {
       label: 'Sínteses',
       icon: <FileText className="w-4 h-4" />,
       badge: result.sinteses?.length || 0,
-    },
-    {
-      id: 'analises' as ResultTabId,
-      label: 'Análises',
-      icon: <Scale className="w-4 h-4" />,
-      badge: result.analises?.length || 0,
     },
     {
       id: 'contradicoes' as ResultTabId,
@@ -110,9 +103,6 @@ export const ResultsContainer: React.FC = () => {
                 sintesesPorTema={result.sintesesPorTema}
                 depoentes={result.depoentes}
               />
-            )}
-            {currentTab === 'analises' && (
-              <AnalisesTab analises={result.analises} />
             )}
             {currentTab === 'contradicoes' && (
               <ContradicoesTab contradicoes={result.contradicoes} />

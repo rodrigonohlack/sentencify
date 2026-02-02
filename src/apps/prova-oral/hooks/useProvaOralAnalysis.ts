@@ -265,7 +265,7 @@ Total: ${totalDepoentes} depoentes
 
 ${deponentesList}
 
-ATENÇÃO: Para CADA tema, verifique se CADA depoente acima falou algo. Se falou, DEVE aparecer em sintesesPorTema E em analises[].provaOral.
+ATENÇÃO: Para CADA tema, verifique se CADA depoente acima falou algo. Se falou, DEVE aparecer em sintesesPorTema.
 
 ## SÍNTESE DO PROCESSO
 
@@ -285,7 +285,6 @@ Com base na transcrição estruturada acima, produza a ANÁLISE JURÍDICA comple
 
 CHECKLIST OBRIGATÓRIO:
 □ sintesesPorTema.declaracoes inclui TODOS os depoentes que falaram sobre o tema?
-□ analises[].provaOral tem EXATAMENTE os mesmos depoentes de sintesesPorTema.declaracoes?
 □ Análise de credibilidade usa apenas critérios LEGÍTIMOS?`;
 
         const phase2Response = await callAIStream(

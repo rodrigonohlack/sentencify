@@ -100,19 +100,7 @@ A suspeição deve ser aferida com base em elementos concretos, não em presunç
 2. FLUXO DE ANÁLISE
 ═══════════════════════════════════════════════════════════════════════════════
 
-## Etapa 1: Análise por Pedido/Tema
-
-Para cada pedido da inicial ou tema controvertido:
-1. Alegação do autor (conforme inicial)
-2. Defesa da ré (conforme contestação)
-3. O que disse cada depoente sobre o tema (com timestamps)
-4. Conclusão probatória aplicando as regras de valoração
-
-⚠️ **REGRA CRÍTICA**: O array provaOral DEVE incluir TODOS os depoentes que têm declarações sobre o tema - os mesmos que aparecem em sintesesPorTema. Se um depoente está em sintesesPorTema para este tema, ele DEVE estar em provaOral. Não selecione apenas os "mais importantes".
-
-**Atenção**: A conclusão probatória deve indicar expressamente o fundamento técnico. Evitar conclusões vagas como "a prova favorece o autor" sem apontar por quê.
-
-## Etapa 2: Identificação de Contradições
+## Etapa 1: Identificação de Contradições
 
 **Contradições internas**: dentro do mesmo depoimento, o depoente se contradiz.
 
@@ -126,7 +114,7 @@ Para cada pedido da inicial ou tema controvertido:
 
 **Atenção**: Distinguir entre contradição genuína e mera imprecisão ou variação de detalhes irrelevantes. Nem toda divergência é contradição significativa.
 
-## Etapa 3: Extração de Confissões
+## Etapa 2: Extração de Confissões
 
 ### Conceito técnico
 Confissão é a declaração voluntária, pela parte, sobre fato contrário ao seu interesse e favorável ao adversário (art. 389, CPC). Tem eficácia de prova plena contra o confitente (art. 391, CPC), salvo as exceções legais.
@@ -147,7 +135,7 @@ Verificar se a declaração preenche TODOS os requisitos:
 
 **Formato**: Para cada confissão identificada, citar o trecho, o timestamp, e explicar por que constitui confissão (qual o fato confessado e em que medida prejudica o declarante).
 
-## Etapa 4: Análise de Credibilidade
+## Etapa 3: Análise de Credibilidade
 
 Avaliar a credibilidade de cada depoente considerando APENAS critérios tecnicamente válidos.
 
@@ -431,21 +419,6 @@ Sem markdown, sem backticks, sem explicações - apenas o JSON:
       ]
     }
   ],
-  "analises": [
-    {
-      "titulo": "string (tema/pedido)",
-      "alegacaoAutor": "string (o que alega na inicial)",
-      "defesaRe": "string (o que defende na contestação)",
-      "provaOral": [
-        {
-          "deponente": "OBRIGATÓRIO - nome completo igual ao usado em sintesesPorTema (ex: AUTOR FULANO, PREPOSTO SICRANO)",
-          "textoCorrente": "⚠️ TODAS as declarações deste depoente sobre ESTE tema, separadas por ponto-e-vírgula, com timestamps inline. Exemplo: 'afirmou ter começado em 17/07/2024 (1m 10s); declarou trabalho fixo desde julho (2m 29s); disse trabalhar de terça a domingo das 17h às 2h (1m 33s); negou abandono de emprego (16m 36s)'"
-        }
-      ],
-      "conclusao": "string (análise probatória com FUNDAMENTO TÉCNICO EXPLÍCITO)",
-      "status": "favoravel-autor|favoravel-re|parcial"
-    }
-  ],
   "contradicoes": [
     {
       "tipo": "interna|externa",
@@ -494,10 +467,7 @@ Verifique antes de responder:
 ☐ sintesesPorTema inclui TODOS os depoentes que falaram sobre cada tema (quem confirma E quem nega)?
 ☐ sintesesPorTema inclui declarações que CARACTERIZAM o tema (período/função/dias = Vínculo; horários = Jornada)?
 ☐ Declarações relevantes para múltiplos temas aparecem em TODOS os temas aplicáveis?
-☐ provaOral[] inclui EXATAMENTE os mesmos depoentes que sintesesPorTema para cada tema (mesmo número, mesmos nomes)?
-☐ Em provaOral[], cada deponente tem textoCorrente com TODAS as declarações sobre o tema (mesmo padrão de sintesesPorTema)?
-☐ Em provaOral[], o campo "deponente" identifica QUEM disse (nunca vazio)?
-☐ Todos os 5 arrays estão presentes no JSON?
+☐ Todos os 4 arrays estão presentes no JSON (sintesesPorTema, contradicoes, confissoes, credibilidade)?
 ☐ credibilidade[] tem EXATAMENTE o mesmo número de itens que depoentes[] (todos os depoentes)?
 ☐ Análise de credibilidade usa apenas critérios LEGÍTIMOS (coerência, conhecimento direto, detalhes, compatibilidade)?
 ☐ Confissões identificadas atendem aos requisitos técnicos do art. 389/391 CPC?

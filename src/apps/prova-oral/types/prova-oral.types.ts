@@ -266,7 +266,6 @@ export interface ProvaOralAnalysisState {
 export type ResultTabId =
   | 'depoentes'
   | 'sinteses'
-  | 'analises'
   | 'contradicoes'
   | 'confissoes'
   | 'credibilidade'
