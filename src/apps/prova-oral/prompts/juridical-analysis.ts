@@ -74,6 +74,23 @@ sintesesPorTema["Vínculo"] deve ter:
 ### 🔴 REGRA INVIOLÁVEL:
 Se sinteses[] tem 50 declarações, sintesesPorTema DEVE ter no mínimo 50 declarações (ou mais, se houver repetição entre temas). NUNCA MENOS!
 
+### 🔴 REGRA CRÍTICA DE IDENTIFICAÇÃO DE DEPOENTES:
+
+1. **USE EXATAMENTE o mesmo nome/identificador** que aparece em depoentes[] do JSON de entrada
+   - Se depoentes[] tem { id: "autor-1", nome: "SAMUEL" }, use "AUTOR SAMUEL" ou o deponenteId
+   - NÃO invente variações como "RECLAMANTE (Samuel de Souza Amanajas)"
+   - NÃO misture qualificação no nome: use "AUTOR SAMUEL", não "RECLAMANTE Samuel"
+
+2. **NÃO CRIE ENTRADAS VAZIAS:**
+   - Se um depoente não falou sobre o tema, simplesmente OMITA ele do tema
+   - NUNCA gere "Não falou sobre o tema" - isso polui o resultado
+   - Somente inclua depoentes que TÊM declarações relevantes sobre o tema
+
+3. **Cada depoente aparece NO MÁXIMO UMA VEZ por tema:**
+   - Verifique se já incluiu o depoente antes de adicionar
+   - Se "AUTOR SAMUEL" já está no tema, não adicione "RECLAMANTE Samuel" (mesma pessoa!)
+   - Use o campo "qualificacao" para indicar se é autor, preposto, testemunha-autor ou testemunha-re
+
 ═══════════════════════════════════════════════════════════════════════════════
 1. PRINCÍPIOS METODOLÓGICOS FUNDAMENTAIS
 ═══════════════════════════════════════════════════════════════════════════════
@@ -625,11 +642,21 @@ As conclusões seriam as mesmas se as partes fossem invertidas (empregador no lu
 ## Teste 7: Teste da Suspeição
 Alguma testemunha foi tratada como suspeita ou com credibilidade reduzida por motivo não previsto no art. 829 da CLT? Se sim, revisar.
 
-## Teste 8: Teste da Completude de Depoentes
+## Teste 8: Teste da Completude de Depoentes (SEM DUPLICAÇÕES!)
 Quantos depoentes existem em depoentes[] do JSON de entrada? [N]
-Para cada tema em sintesesPorTema, quantos depoentes você incluiu? [M]
-Se M < N, pergunte-se: os depoentes omitidos realmente não disseram NADA sobre este tema?
-Na dúvida, INCLUA. Omitir prova é pior que repetir informação.
+Para cada tema em sintesesPorTema:
+1. Liste APENAS os depoentes que TÊM declarações sobre o tema
+2. **NÃO inclua** depoentes que não falaram sobre o tema
+3. **NÃO gere** entradas tipo "Não falou sobre o tema"
+4. Use EXATAMENTE o mesmo identificador de depoentes[] para cada pessoa
+
+⚠️ ERROS GRAVES A EVITAR:
+- ❌ Criar entradas vazias/placeholder para depoentes sem declarações
+- ❌ Usar nomes diferentes para o mesmo depoente (causa duplicação)
+- ❌ Incluir "RECLAMANTE (Fulano)" quando já incluiu "AUTOR FULANO" (mesma pessoa!)
+- ❌ Gerar "Não falou sobre o tema" - simplesmente OMITA o depoente do tema
+
+✅ CORRETO: Se depoente não tem declaração sobre o tema → NÃO INCLUA no tema
 
 ## Teste 9: Teste da Completude de Credibilidade
 Quantos depoentes existem em depoentes[] do JSON de entrada? [N]
@@ -825,6 +852,9 @@ Verifique antes de responder:
 ☐ Todos os 4 arrays estão presentes no JSON (sintesesPorTema, contradicoes, confissoes, credibilidade)?
 ☐ credibilidade[] tem EXATAMENTE o mesmo número de itens que depoentes[] (todos os depoentes)?
 ☐ Análise de credibilidade usa apenas critérios LEGÍTIMOS (coerência, conhecimento direto, detalhes, compatibilidade)?
+☐ sintesesPorTema NÃO contém entradas "Não falou sobre o tema"? (depoentes sem declarações devem ser OMITIDOS)
+☐ Cada depoente aparece NO MÁXIMO uma vez por tema (sem duplicação de nomes como "AUTOR X" vs "RECLAMANTE X")?
+☐ Todos os identificadores de depoentes correspondem EXATAMENTE aos nomes em depoentes[] do JSON de entrada?
 ☐ Confissões identificadas atendem aos requisitos técnicos do art. 389/391 CPC?
 ☐ confissoes[] identificou declarações que CONTRADIZEM a tese do próprio declarante?
 ☐ Verificou as 7 categorias de confissão do autor e as 7 do preposto?
