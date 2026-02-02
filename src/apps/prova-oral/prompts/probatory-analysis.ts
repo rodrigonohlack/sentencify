@@ -76,6 +76,10 @@ Exemplo: Se 4 testemunhas falaram sobre a data de início do trabalho:
 3. **DEPOIMENTO DAS PARTES**
    - Parte NÃO faz prova em favor próprio ao confirmar suas alegações
    - Serve para extrair confissão ou contradição
+   - ⚠️ REGRA CRÍTICA: A declaração da parte LIMITA sua própria pretensão!
+     → Se o autor diz "eu tinha 30 min de intervalo", não pode alegar supressão TOTAL
+     → Se o autor diz "saía às 23h", não pode pedir horas extras até 02h
+     → Testemunhas não podem ampliar além do que a própria parte declarou
 
 ### Qualidade da Prova:
 
@@ -177,6 +181,9 @@ A prova é FAVORÁVEL AO AUTOR quanto à supressão de intervalo intrajornada, h
 "A testemunha Alfre corroborou que o autor já estava lá em maio/2024, confirmando a anterioridade ao registro."
 → ERRO GRAVE: Se outras testemunhas (Edileuzo, Sebastiana) também falaram sobre a data de início, TODAS devem ser analisadas! Não cite apenas uma e ignore as demais.
 
+"As testemunhas Alfre e Edileuzo confirmaram supressão total do intervalo ('trabalhava direto', 'comia andando')."
+→ ERRO GRAVE: Se o próprio AUTOR declarou ter 30 minutos de intervalo, a pretensão está LIMITADA a isso! Testemunhas não podem ampliar além do que a parte declarou. O correto seria: "Embora as testemunhas sugiram supressão total, o próprio autor declarou usufruir de 30 minutos (13m 21s), o que limita o reconhecimento à supressão PARCIAL."
+
 ## ⚠️ REGRA DE OURO DA FUNDAMENTAÇÃO:
 
 Se N depoentes falaram sobre um ponto controvertido, a fundamentação DEVE mencionar e analisar os N depoentes. Exemplo:
@@ -248,6 +255,7 @@ Antes de gerar cada análise, verifique:
 ☐ A análise distingue claramente: FATOS x PROVA x CONCLUSÃO?
 ☐ **TODOS os depoentes que declararam sobre o tema foram analisados na fundamentação?** (NÃO omita nenhum!)
 ☐ **A fundamentação agrupa: "testemunhas favoráveis ao autor" vs "testemunhas favoráveis à ré"?**
+☐ **A declaração da PARTE (autor/preposto) limita a pretensão?** Se o autor disse "30 min de intervalo", não reconheça supressão total!
 
 ═══════════════════════════════════════════════════════════════════════════════
 6. FORMATO JSON - RETORNE APENAS JSON VÁLIDO
