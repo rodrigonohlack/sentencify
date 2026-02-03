@@ -115,6 +115,15 @@ export {
   getAttachmentFromIndexedDB,
   removeAttachmentFromIndexedDB,
   removeAllAttachmentsFromIndexedDB,
+  // v1.40.18: Upload text functions
+  getUploadTextIndexedDBKey,
+  saveUploadTextToIndexedDB,
+  getUploadTextFromIndexedDB,
+  getAllUploadTextsByCategoryFromIndexedDB,
+  removeUploadTextFromIndexedDB,
+  clearUploadTextsByCategoryFromIndexedDB,
+  clearAllUploadTextsFromIndexedDB,
+  type UploadTextCategory,
 } from './usePdfStorage';
 
 // LocalStorage hook (TIER 0 - dependências: useFactsComparisonCache, useSentenceReviewCache, usePdfStorage)

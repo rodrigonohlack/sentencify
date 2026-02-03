@@ -49,6 +49,13 @@ import {
   getPdfFromIndexedDB,
   removePdfFromIndexedDB,
   clearAllPdfsFromIndexedDB,
+  saveProofTextToIndexedDB,
+  getProofTextFromIndexedDB,
+  clearAllProofTextsFromIndexedDB,
+  saveUploadTextToIndexedDB,
+  getUploadTextFromIndexedDB,
+  clearAllUploadTextsFromIndexedDB,
+  type UploadTextCategory,
 } from './usePdfStorage';
 
 // Re-export all PDF functions for backwards compatibility
@@ -65,6 +72,25 @@ export {
   getAttachmentFromIndexedDB,
   removeAttachmentFromIndexedDB,
   removeAllAttachmentsFromIndexedDB,
+} from './usePdfStorage';
+
+export {
+  getProofTextIndexedDBKey,
+  saveProofTextToIndexedDB,
+  getProofTextFromIndexedDB,
+  removeProofTextFromIndexedDB,
+  clearAllProofTextsFromIndexedDB,
+} from './usePdfStorage';
+
+export {
+  getUploadTextIndexedDBKey,
+  saveUploadTextToIndexedDB,
+  getUploadTextFromIndexedDB,
+  getAllUploadTextsByCategoryFromIndexedDB,
+  removeUploadTextFromIndexedDB,
+  clearUploadTextsByCategoryFromIndexedDB,
+  clearAllUploadTextsFromIndexedDB,
+  type UploadTextCategory,
 } from './usePdfStorage';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -235,28 +261,106 @@ export function useLocalStorage(): UseLocalStorageReturn {
         // Sem fileData - PDFs estão no IndexedDB
       }));
 
+      // v1.40.17: Salvar proofTexts no IndexedDB para evitar estouro do localStorage
+      const proofTextIds: string[] = [];
+      for (const pt of (proofTexts || [])) {
+        const idStr = String(pt.id);
+        await saveProofTextToIndexedDB(idStr, pt.text, pt.name, pt.uploadDate);
+        proofTextIds.push(idStr);
+      }
+
+      // v1.40.18: Salvar pastedTexts no IndexedDB para evitar estouro do localStorage
+      // Nota: todos os textos já TÊM id garantido por handlePastedText, restoreSession ou importProjectFromJson
+      const pastedPeticaoTextIds: string[] = [];
+      for (const pt of (pastedPeticaoTexts || [])) {
+        await saveUploadTextToIndexedDB('pasted-peticao' as UploadTextCategory, pt.id, pt.text, pt.name);
+        pastedPeticaoTextIds.push(pt.id);
+      }
+
+      const pastedContestacaoTextIds: string[] = [];
+      for (const pt of (pastedContestacaoTexts || [])) {
+        await saveUploadTextToIndexedDB('pasted-contestacao' as UploadTextCategory, pt.id, pt.text, pt.name);
+        pastedContestacaoTextIds.push(pt.id);
+      }
+
+      const pastedComplementaryTextIds: string[] = [];
+      for (const pt of (pastedComplementaryTexts || [])) {
+        await saveUploadTextToIndexedDB('pasted-complementar' as UploadTextCategory, pt.id, pt.text, pt.name);
+        pastedComplementaryTextIds.push(pt.id);
+      }
+
+      // v1.40.18: Salvar analyzedDocuments texts no IndexedDB
+      const analyzedPeticoesTextIds: string[] = [];
+      for (const pt of (analyzedDocuments?.peticoesText || [])) {
+        await saveUploadTextToIndexedDB('analyzed-peticao' as UploadTextCategory, pt.id, pt.text, pt.name);
+        analyzedPeticoesTextIds.push(pt.id);
+      }
+
+      const analyzedContestacoesTextIds: string[] = [];
+      for (const pt of (analyzedDocuments?.contestacoesText || [])) {
+        await saveUploadTextToIndexedDB('analyzed-contestacao' as UploadTextCategory, pt.id, pt.text, pt.name);
+        analyzedContestacoesTextIds.push(pt.id);
+      }
+
+      const analyzedComplementaresTextIds: string[] = [];
+      for (const pt of (analyzedDocuments?.complementaresText || [])) {
+        await saveUploadTextToIndexedDB('analyzed-complementar' as UploadTextCategory, pt.id, pt.text, pt.name);
+        analyzedComplementaresTextIds.push(pt.id);
+      }
+
+      // v1.40.18: Salvar extractedTexts no IndexedDB
+      const extractedPeticoesIds: string[] = [];
+      for (let i = 0; i < (extractedTexts?.peticoes || []).length; i++) {
+        const et = extractedTexts.peticoes[i];
+        const idStr = String(i);
+        await saveUploadTextToIndexedDB('extracted-peticao' as UploadTextCategory, idStr, et.text, et.name || `Petição ${i + 1}`);
+        extractedPeticoesIds.push(idStr);
+      }
+
+      const extractedContestacoesIds: string[] = [];
+      for (let i = 0; i < (extractedTexts?.contestacoes || []).length; i++) {
+        const et = extractedTexts.contestacoes[i];
+        const idStr = String(i);
+        await saveUploadTextToIndexedDB('extracted-contestacao' as UploadTextCategory, idStr, et.text, et.name || `Contestação ${i + 1}`);
+        extractedContestacoesIds.push(idStr);
+      }
+
+      const extractedComplementaresIds: string[] = [];
+      for (let i = 0; i < (extractedTexts?.complementares || []).length; i++) {
+        const et = extractedTexts.complementares[i];
+        const idStr = String(i);
+        await saveUploadTextToIndexedDB('extracted-complementar' as UploadTextCategory, idStr, et.text, et.name || `Complementar ${i + 1}`);
+        extractedComplementaresIds.push(idStr);
+      }
+
       const session = {
         version: APP_VERSION,
         savedAt: new Date().toISOString(),
         processoNumero,
-        pastedPeticaoTexts,
-        pastedContestacaoTexts,
-        pastedComplementaryTexts,
+        // v1.40.18: Textos no IndexedDB, apenas IDs no localStorage
+        pastedPeticaoTextIds,
+        pastedContestacaoTextIds,
+        pastedComplementaryTextIds,
         extractedTopics,
         selectedTopics,
         partesProcesso,
         activeTab,
         // v1.20.1: NÃO persistir base64 de PDFs (economia de memória ~200-500MB)
         // Base64 é regenerado quando necessário via fileToBase64()
+        // v1.40.18: Textos também no IndexedDB, apenas IDs aqui
         analyzedDocuments: {
           peticoes: [], // NÃO salvar base64 (pode ser 50MB+ por PDF)
-          peticoesText: analyzedDocuments?.peticoesText || [],
+          peticoesTextIds: analyzedPeticoesTextIds,
           contestacoes: [], // NÃO salvar base64
-          contestacoesText: analyzedDocuments?.contestacoesText || [],
+          contestacoesTextIds: analyzedContestacoesTextIds,
           complementares: [], // NÃO salvar base64
-          complementaresText: analyzedDocuments?.complementaresText || [],
+          complementaresTextIds: analyzedComplementaresTextIds,
         },
-        extractedTexts: extractedTexts || { peticoes: [], contestacoes: [], complementares: [] },
+        extractedTextIds: {
+          peticoes: extractedPeticoesIds,
+          contestacoes: extractedContestacoesIds,
+          complementares: extractedComplementaresIds,
+        },
         documentProcessingModes: documentProcessingModes || { peticoes: [], contestacoes: [], complementares: [] },
         // IDs dos arquivos para restauração do IndexedDB
         peticaoFileIds: (peticaoFiles || []).map((f: { id?: string }) => f.id).filter(Boolean),
@@ -264,7 +368,8 @@ export function useLocalStorage(): UseLocalStorageReturn {
         complementaryFileIds: (complementaryFiles || []).map((f: { id?: string }) => f.id).filter(Boolean),
         // Dados de provas (apenas metadados, PDFs no IndexedDB)
         proofFiles: proofFilesSerializable,
-        proofTexts: proofTexts,
+        // v1.40.17: proofTexts agora no IndexedDB, apenas IDs no localStorage
+        proofTextIds: proofTextIds,
         proofUsePdfMode: proofUsePdfMode,
         extractedProofTexts: extractedProofTexts,
         proofExtractionFailed: proofExtractionFailed,
@@ -353,7 +458,7 @@ export function useLocalStorage(): UseLocalStorageReturn {
       } = callbacks;
 
       // v1.21: Migração de sessões antigas (peticao singular → peticoes array)
-      if (session.pastedPeticaoText && !session.pastedPeticaoTexts) {
+      if (session.pastedPeticaoText && !session.pastedPeticaoTexts && !session.pastedPeticaoTextIds) {
         session.pastedPeticaoTexts = [{ text: session.pastedPeticaoText, name: 'Petição Inicial' }];
       }
       if (session.analyzedDocuments?.peticao && !session.analyzedDocuments?.peticoes) {
@@ -364,23 +469,195 @@ export function useLocalStorage(): UseLocalStorageReturn {
       }
 
       setProcessoNumero(session.processoNumero || '');
-      setPastedPeticaoTexts(session.pastedPeticaoTexts || []);
-      setPastedContestacaoTexts(session.pastedContestacaoTexts || []);
-      setPastedComplementaryTexts(session.pastedComplementaryTexts || []);
+
+      // v1.40.18: Carregar pastedTexts do IndexedDB (com migração de formato antigo)
+      // Petições
+      if (session.pastedPeticaoTextIds && Array.isArray(session.pastedPeticaoTextIds)) {
+        const restoredTexts: Array<{ id: string; text: string; name: string }> = [];
+        for (const id of session.pastedPeticaoTextIds) {
+          const pt = await getUploadTextFromIndexedDB('pasted-peticao' as UploadTextCategory, id);
+          if (pt) restoredTexts.push(pt);
+        }
+        setPastedPeticaoTexts(restoredTexts);
+      } else if (session.pastedPeticaoTexts && Array.isArray(session.pastedPeticaoTexts)) {
+        // Formato antigo: migrar textos para IndexedDB
+        const legacyTexts = session.pastedPeticaoTexts as Array<{ id?: string; text: string; name: string }>;
+        const migratedTexts: Array<{ id: string; text: string; name: string }> = [];
+        for (const pt of legacyTexts) {
+          const id = pt.id || crypto.randomUUID();
+          await saveUploadTextToIndexedDB('pasted-peticao' as UploadTextCategory, id, pt.text, pt.name);
+          migratedTexts.push({ id, text: pt.text, name: pt.name });
+        }
+        setPastedPeticaoTexts(migratedTexts);
+      } else {
+        setPastedPeticaoTexts([]);
+      }
+
+      // Contestações
+      if (session.pastedContestacaoTextIds && Array.isArray(session.pastedContestacaoTextIds)) {
+        const restoredTexts: Array<{ id: string; text: string; name: string }> = [];
+        for (const id of session.pastedContestacaoTextIds) {
+          const pt = await getUploadTextFromIndexedDB('pasted-contestacao' as UploadTextCategory, id);
+          if (pt) restoredTexts.push(pt);
+        }
+        setPastedContestacaoTexts(restoredTexts);
+      } else if (session.pastedContestacaoTexts && Array.isArray(session.pastedContestacaoTexts)) {
+        const legacyTexts = session.pastedContestacaoTexts as Array<{ id?: string; text: string; name: string }>;
+        const migratedTexts: Array<{ id: string; text: string; name: string }> = [];
+        for (const pt of legacyTexts) {
+          const id = pt.id || crypto.randomUUID();
+          await saveUploadTextToIndexedDB('pasted-contestacao' as UploadTextCategory, id, pt.text, pt.name);
+          migratedTexts.push({ id, text: pt.text, name: pt.name });
+        }
+        setPastedContestacaoTexts(migratedTexts);
+      } else {
+        setPastedContestacaoTexts([]);
+      }
+
+      // Complementares
+      if (session.pastedComplementaryTextIds && Array.isArray(session.pastedComplementaryTextIds)) {
+        const restoredTexts: Array<{ id: string; text: string; name: string }> = [];
+        for (const id of session.pastedComplementaryTextIds) {
+          const pt = await getUploadTextFromIndexedDB('pasted-complementar' as UploadTextCategory, id);
+          if (pt) restoredTexts.push(pt);
+        }
+        setPastedComplementaryTexts(restoredTexts);
+      } else if (session.pastedComplementaryTexts && Array.isArray(session.pastedComplementaryTexts)) {
+        const legacyTexts = session.pastedComplementaryTexts as Array<{ id?: string; text: string; name: string }>;
+        const migratedTexts: Array<{ id: string; text: string; name: string }> = [];
+        for (const pt of legacyTexts) {
+          const id = pt.id || crypto.randomUUID();
+          await saveUploadTextToIndexedDB('pasted-complementar' as UploadTextCategory, id, pt.text, pt.name);
+          migratedTexts.push({ id, text: pt.text, name: pt.name });
+        }
+        setPastedComplementaryTexts(migratedTexts);
+      } else {
+        setPastedComplementaryTexts([]);
+      }
+
       setExtractedTopics(session.extractedTopics || []);
       setSelectedTopics(session.selectedTopics || []);
       setPartesProcesso(session.partesProcesso || { reclamante: '', reclamadas: [] });
-      setAnalyzedDocuments(session.analyzedDocuments || {
-        peticoes: [],
-        peticoesText: [],
-        contestacoes: [],
-        contestacoesText: [],
-        complementares: [],
-        complementaresText: []
-      });
 
+      // v1.40.18: Carregar analyzedDocuments texts do IndexedDB
+      const restoredAnalyzedDocs: {
+        peticoes: string[];
+        peticoesText: Array<{ id: string; text: string; name: string }>;
+        contestacoes: string[];
+        contestacoesText: Array<{ id: string; text: string; name: string }>;
+        complementares: string[];
+        complementaresText: Array<{ id: string; text: string; name: string }>;
+      } = {
+        peticoes: session.analyzedDocuments?.peticoes || [],
+        peticoesText: [],
+        contestacoes: session.analyzedDocuments?.contestacoes || [],
+        contestacoesText: [],
+        complementares: session.analyzedDocuments?.complementares || [],
+        complementaresText: []
+      };
+
+      // Petições analyzedDocuments
+      if (session.analyzedDocuments?.peticoesTextIds && Array.isArray(session.analyzedDocuments.peticoesTextIds)) {
+        for (const id of session.analyzedDocuments.peticoesTextIds) {
+          const pt = await getUploadTextFromIndexedDB('analyzed-peticao' as UploadTextCategory, id);
+          if (pt) restoredAnalyzedDocs.peticoesText.push(pt);
+        }
+      } else if (session.analyzedDocuments?.peticoesText && Array.isArray(session.analyzedDocuments.peticoesText)) {
+        const legacyTexts = session.analyzedDocuments.peticoesText as Array<{ id?: string; text: string; name: string }>;
+        for (const pt of legacyTexts) {
+          const id = pt.id || crypto.randomUUID();
+          pt.id = id;
+          await saveUploadTextToIndexedDB('analyzed-peticao' as UploadTextCategory, id, pt.text, pt.name);
+          restoredAnalyzedDocs.peticoesText.push({ id, text: pt.text, name: pt.name });
+        }
+      }
+
+      // Contestações analyzedDocuments
+      if (session.analyzedDocuments?.contestacoesTextIds && Array.isArray(session.analyzedDocuments.contestacoesTextIds)) {
+        for (const id of session.analyzedDocuments.contestacoesTextIds) {
+          const pt = await getUploadTextFromIndexedDB('analyzed-contestacao' as UploadTextCategory, id);
+          if (pt) restoredAnalyzedDocs.contestacoesText.push(pt);
+        }
+      } else if (session.analyzedDocuments?.contestacoesText && Array.isArray(session.analyzedDocuments.contestacoesText)) {
+        const legacyTexts = session.analyzedDocuments.contestacoesText as Array<{ id?: string; text: string; name: string }>;
+        for (const pt of legacyTexts) {
+          const id = pt.id || crypto.randomUUID();
+          pt.id = id;
+          await saveUploadTextToIndexedDB('analyzed-contestacao' as UploadTextCategory, id, pt.text, pt.name);
+          restoredAnalyzedDocs.contestacoesText.push({ id, text: pt.text, name: pt.name });
+        }
+      }
+
+      // Complementares analyzedDocuments
+      if (session.analyzedDocuments?.complementaresTextIds && Array.isArray(session.analyzedDocuments.complementaresTextIds)) {
+        for (const id of session.analyzedDocuments.complementaresTextIds) {
+          const pt = await getUploadTextFromIndexedDB('analyzed-complementar' as UploadTextCategory, id);
+          if (pt) restoredAnalyzedDocs.complementaresText.push(pt);
+        }
+      } else if (session.analyzedDocuments?.complementaresText && Array.isArray(session.analyzedDocuments.complementaresText)) {
+        const legacyTexts = session.analyzedDocuments.complementaresText as Array<{ id?: string; text: string; name: string }>;
+        for (const pt of legacyTexts) {
+          const id = pt.id || crypto.randomUUID();
+          pt.id = id;
+          await saveUploadTextToIndexedDB('analyzed-complementar' as UploadTextCategory, id, pt.text, pt.name);
+          restoredAnalyzedDocs.complementaresText.push({ id, text: pt.text, name: pt.name });
+        }
+      }
+
+      setAnalyzedDocuments(restoredAnalyzedDocs);
+
+      // v1.40.18: Carregar extractedTexts do IndexedDB
       if (setExtractedTexts) {
-        setExtractedTexts(session.extractedTexts || { peticoes: [], contestacoes: [], complementares: [] });
+        const restoredExtractedTexts: {
+          peticoes: Array<{ text: string; name?: string }>;
+          contestacoes: Array<{ text: string; name?: string }>;
+          complementares: Array<{ text: string; name?: string }>;
+        } = { peticoes: [], contestacoes: [], complementares: [] };
+
+        // Petições extracted
+        if (session.extractedTextIds?.peticoes && Array.isArray(session.extractedTextIds.peticoes)) {
+          for (const id of session.extractedTextIds.peticoes) {
+            const et = await getUploadTextFromIndexedDB('extracted-peticao' as UploadTextCategory, id);
+            if (et) restoredExtractedTexts.peticoes.push({ text: et.text, name: et.name });
+          }
+        } else if (session.extractedTexts?.peticoes && Array.isArray(session.extractedTexts.peticoes)) {
+          // Migrar formato antigo
+          for (let i = 0; i < session.extractedTexts.peticoes.length; i++) {
+            const et = session.extractedTexts.peticoes[i];
+            await saveUploadTextToIndexedDB('extracted-peticao' as UploadTextCategory, String(i), et.text, et.name || `Petição ${i + 1}`);
+            restoredExtractedTexts.peticoes.push(et);
+          }
+        }
+
+        // Contestações extracted
+        if (session.extractedTextIds?.contestacoes && Array.isArray(session.extractedTextIds.contestacoes)) {
+          for (const id of session.extractedTextIds.contestacoes) {
+            const et = await getUploadTextFromIndexedDB('extracted-contestacao' as UploadTextCategory, id);
+            if (et) restoredExtractedTexts.contestacoes.push({ text: et.text, name: et.name });
+          }
+        } else if (session.extractedTexts?.contestacoes && Array.isArray(session.extractedTexts.contestacoes)) {
+          for (let i = 0; i < session.extractedTexts.contestacoes.length; i++) {
+            const et = session.extractedTexts.contestacoes[i];
+            await saveUploadTextToIndexedDB('extracted-contestacao' as UploadTextCategory, String(i), et.text, et.name || `Contestação ${i + 1}`);
+            restoredExtractedTexts.contestacoes.push(et);
+          }
+        }
+
+        // Complementares extracted
+        if (session.extractedTextIds?.complementares && Array.isArray(session.extractedTextIds.complementares)) {
+          for (const id of session.extractedTextIds.complementares) {
+            const et = await getUploadTextFromIndexedDB('extracted-complementar' as UploadTextCategory, id);
+            if (et) restoredExtractedTexts.complementares.push({ text: et.text, name: et.name });
+          }
+        } else if (session.extractedTexts?.complementares && Array.isArray(session.extractedTexts.complementares)) {
+          for (let i = 0; i < session.extractedTexts.complementares.length; i++) {
+            const et = session.extractedTexts.complementares[i];
+            await saveUploadTextToIndexedDB('extracted-complementar' as UploadTextCategory, String(i), et.text, et.name || `Complementar ${i + 1}`);
+            restoredExtractedTexts.complementares.push(et);
+          }
+        }
+
+        setExtractedTexts(restoredExtractedTexts);
       }
 
       if (setDocumentProcessingModes) {
@@ -489,7 +766,33 @@ export function useLocalStorage(): UseLocalStorageReturn {
         setProofFiles([]);
       }
 
-      setProofTexts(session.proofTexts || []);
+      // v1.40.17: Carregar proofTexts do IndexedDB (com migração de formato antigo)
+      if (session.proofTextIds && Array.isArray(session.proofTextIds)) {
+        // Novo formato: carregar do IndexedDB usando IDs
+        const restoredProofTexts: ProofText[] = [];
+        for (const id of session.proofTextIds) {
+          const pt = await getProofTextFromIndexedDB(id);
+          if (pt) {
+            restoredProofTexts.push({
+              id: pt.id,
+              text: pt.text,
+              name: pt.name,
+              type: 'text' as const,
+              uploadDate: pt.uploadDate
+            });
+          }
+        }
+        setProofTexts(restoredProofTexts);
+      } else if (session.proofTexts && Array.isArray(session.proofTexts)) {
+        // Formato antigo: migrar textos para IndexedDB
+        const legacyProofTexts = session.proofTexts as ProofText[];
+        for (const pt of legacyProofTexts) {
+          await saveProofTextToIndexedDB(String(pt.id), pt.text, pt.name, pt.uploadDate);
+        }
+        setProofTexts(legacyProofTexts);
+      } else {
+        setProofTexts([]);
+      }
       setProofUsePdfMode(session.proofUsePdfMode || {});
       setExtractedProofTexts(session.extractedProofTexts || {});
       setProofExtractionFailed(session.proofExtractionFailed || {});
@@ -805,6 +1108,13 @@ export function useLocalStorage(): UseLocalStorageReturn {
       // Ignore
     }
 
+    // v1.40.18: Limpar upload texts do projeto anterior
+    try {
+      await clearAllUploadTextsFromIndexedDB();
+    } catch (err) {
+      // Ignore
+    }
+
     // Limpar caches project-specific do projeto anterior
     const clearStore = async (openDb: () => Promise<IDBDatabase>, storeName: string) => {
       try {
@@ -838,9 +1148,35 @@ export function useLocalStorage(): UseLocalStorageReturn {
 
     // Restaurar dados
     setProcessoNumero(project.processoNumero || '');
-    setPastedPeticaoTexts(project.pastedPeticaoTexts || []);
-    setPastedContestacaoTexts(project.pastedContestacaoTexts || []);
-    setPastedComplementaryTexts(project.pastedComplementaryTexts || []);
+
+    // v1.40.18: Salvar pastedTexts importados no IndexedDB
+    const rawPastedPeticaoTexts = (project.pastedPeticaoTexts || []) as Array<{ id?: string; text: string; name: string }>;
+    const importedPastedPeticaoTexts: Array<{ id: string; text: string; name: string }> = [];
+    for (const pt of rawPastedPeticaoTexts) {
+      const id = pt.id || crypto.randomUUID();
+      await saveUploadTextToIndexedDB('pasted-peticao' as UploadTextCategory, id, pt.text, pt.name);
+      importedPastedPeticaoTexts.push({ id, text: pt.text, name: pt.name });
+    }
+    setPastedPeticaoTexts(importedPastedPeticaoTexts);
+
+    const rawPastedContestacaoTexts = (project.pastedContestacaoTexts || []) as Array<{ id?: string; text: string; name: string }>;
+    const importedPastedContestacaoTexts: Array<{ id: string; text: string; name: string }> = [];
+    for (const pt of rawPastedContestacaoTexts) {
+      const id = pt.id || crypto.randomUUID();
+      await saveUploadTextToIndexedDB('pasted-contestacao' as UploadTextCategory, id, pt.text, pt.name);
+      importedPastedContestacaoTexts.push({ id, text: pt.text, name: pt.name });
+    }
+    setPastedContestacaoTexts(importedPastedContestacaoTexts);
+
+    const rawPastedComplementaryTexts = (project.pastedComplementaryTexts || []) as Array<{ id?: string; text: string; name: string }>;
+    const importedPastedComplementaryTexts: Array<{ id: string; text: string; name: string }> = [];
+    for (const pt of rawPastedComplementaryTexts) {
+      const id = pt.id || crypto.randomUUID();
+      await saveUploadTextToIndexedDB('pasted-complementar' as UploadTextCategory, id, pt.text, pt.name);
+      importedPastedComplementaryTexts.push({ id, text: pt.text, name: pt.name });
+    }
+    setPastedComplementaryTexts(importedPastedComplementaryTexts);
+
     setExtractedTopics(project.extractedTopics || []);
     // v1.37.81: Sanitizar cores inline dos tópicos (sistema color-free)
     const sanitizedSelectedTopics = (project.selectedTopics || []).map(topic => ({
@@ -852,13 +1188,48 @@ export function useLocalStorage(): UseLocalStorageReturn {
     }));
     setSelectedTopics(sanitizedSelectedTopics);
     setPartesProcesso(project.partesProcesso || { reclamante: '', reclamadas: [] });
-    setAnalyzedDocuments(project.analyzedDocuments || {
+
+    // v1.40.18: Salvar analyzedDocuments texts no IndexedDB
+    const analyzedDocs = project.analyzedDocuments || {
       peticoes: [], peticoesText: [], contestacoes: [], contestacoesText: [],
       complementares: [], complementaresText: []
-    });
+    };
 
+    for (const pt of (analyzedDocs.peticoesText || []) as Array<{ id?: string; text: string; name: string }>) {
+      const id = pt.id || crypto.randomUUID();
+      pt.id = id;
+      await saveUploadTextToIndexedDB('analyzed-peticao' as UploadTextCategory, id, pt.text, pt.name);
+    }
+    for (const pt of (analyzedDocs.contestacoesText || []) as Array<{ id?: string; text: string; name: string }>) {
+      const id = pt.id || crypto.randomUUID();
+      pt.id = id;
+      await saveUploadTextToIndexedDB('analyzed-contestacao' as UploadTextCategory, id, pt.text, pt.name);
+    }
+    for (const pt of (analyzedDocs.complementaresText || []) as Array<{ id?: string; text: string; name: string }>) {
+      const id = pt.id || crypto.randomUUID();
+      pt.id = id;
+      await saveUploadTextToIndexedDB('analyzed-complementar' as UploadTextCategory, id, pt.text, pt.name);
+    }
+    setAnalyzedDocuments(analyzedDocs);
+
+    // v1.40.18: Salvar extractedTexts no IndexedDB
     if (setExtractedTexts) {
-      setExtractedTexts(project.extractedTexts || { peticoes: [], contestacoes: [], complementares: [] });
+      const extractedTextsData = project.extractedTexts || { peticoes: [], contestacoes: [], complementares: [] };
+
+      for (let i = 0; i < (extractedTextsData.peticoes || []).length; i++) {
+        const et = extractedTextsData.peticoes[i];
+        await saveUploadTextToIndexedDB('extracted-peticao' as UploadTextCategory, String(i), et.text, et.name || `Petição ${i + 1}`);
+      }
+      for (let i = 0; i < (extractedTextsData.contestacoes || []).length; i++) {
+        const et = extractedTextsData.contestacoes[i];
+        await saveUploadTextToIndexedDB('extracted-contestacao' as UploadTextCategory, String(i), et.text, et.name || `Contestação ${i + 1}`);
+      }
+      for (let i = 0; i < (extractedTextsData.complementares || []).length; i++) {
+        const et = extractedTextsData.complementares[i];
+        await saveUploadTextToIndexedDB('extracted-complementar' as UploadTextCategory, String(i), et.text, et.name || `Complementar ${i + 1}`);
+      }
+
+      setExtractedTexts(extractedTextsData);
     }
 
     if (setDocumentProcessingModes) {
@@ -957,7 +1328,12 @@ export function useLocalStorage(): UseLocalStorageReturn {
       setProofFiles([]);
     }
 
-    setProofTexts((project.proofTexts as unknown as ProofText[]) || []);
+    // v1.40.17: Salvar proofTexts importados no IndexedDB
+    const importedProofTexts = (project.proofTexts as unknown as ProofText[]) || [];
+    for (const pt of importedProofTexts) {
+      await saveProofTextToIndexedDB(String(pt.id), pt.text, pt.name, pt.uploadDate);
+    }
+    setProofTexts(importedProofTexts);
     setProofUsePdfMode(project.proofUsePdfMode || {});
     setExtractedProofTexts(project.extractedProofTexts || {});
     setProofExtractionFailed(project.proofExtractionFailed || {});
@@ -1267,6 +1643,16 @@ export function useLocalStorage(): UseLocalStorageReturn {
 
       // v1.12.14: Limpar todos os PDFs do IndexedDB
       clearAllPdfsFromIndexedDB().catch(() => {
+        // Ignore errors
+      });
+
+      // v1.40.17: Limpar todos os proofTexts do IndexedDB
+      clearAllProofTextsFromIndexedDB().catch(() => {
+        // Ignore errors
+      });
+
+      // v1.40.18: Limpar todos os upload texts do IndexedDB
+      clearAllUploadTextsFromIndexedDB().catch(() => {
         // Ignore errors
       });
 
