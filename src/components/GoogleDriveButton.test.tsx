@@ -61,9 +61,10 @@ describe('GoogleDriveButton', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Rendering - Disconnected', () => {
-    it('should render button with Projeto text', () => {
+    it('should render button with Projeto title', () => {
       render(<GoogleDriveButton {...defaultProps} />);
-      expect(screen.getByText('Projeto')).toBeInTheDocument();
+      const button = screen.getByRole('button');
+      expect(button).toHaveAttribute('title', 'Projeto');
     });
 
     it('should show CloudOff icon when not connected', () => {
@@ -73,10 +74,10 @@ describe('GoogleDriveButton', () => {
       expect(svgs.length).toBeGreaterThan(0);
     });
 
-    it('should have title "Google Drive" when not connected', () => {
+    it('should have title "Projeto" when not connected', () => {
       render(<GoogleDriveButton {...defaultProps} />);
       const button = screen.getByRole('button');
-      expect(button).toHaveAttribute('title', 'Google Drive');
+      expect(button).toHaveAttribute('title', 'Projeto');
     });
 
     it('should not show dropdown initially', () => {
@@ -93,7 +94,7 @@ describe('GoogleDriveButton', () => {
     it('should show connected title with email', () => {
       render(<GoogleDriveButton {...defaultProps} isConnected={true} userEmail="user@example.com" />);
       const button = screen.getByRole('button');
-      expect(button).toHaveAttribute('title', 'Conectado: user@example.com');
+      expect(button).toHaveAttribute('title', 'Projeto: user@example.com');
     });
 
     it('should show Cloud icon when connected', () => {
@@ -322,13 +323,15 @@ describe('GoogleDriveButton', () => {
     it('should apply dark mode classes to button', () => {
       render(<GoogleDriveButton {...defaultProps} isDarkMode={true} />);
       const button = screen.getByRole('button');
-      expect(button.className).toContain('bg-slate-700');
+      // Componente usa classes Tailwind com variantes dark:
+      expect(button.className).toContain('dark:bg-slate-800/80');
     });
 
     it('should apply light mode classes to button', () => {
       render(<GoogleDriveButton {...defaultProps} isDarkMode={false} />);
       const button = screen.getByRole('button');
-      expect(button.className).toContain('bg-slate-200');
+      // Componente usa classes Tailwind com variantes dark:
+      expect(button.className).toContain('bg-white/80');
     });
   });
 });

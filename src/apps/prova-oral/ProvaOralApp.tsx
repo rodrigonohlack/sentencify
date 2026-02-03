@@ -26,40 +26,7 @@ import {
 } from './components';
 import { useProvaOralStore } from './stores';
 import { ThemeStyles } from '../../styles';
-
-// ═══════════════════════════════════════════════════════════════════════════
-// HOOK PARA TEMA
-// ═══════════════════════════════════════════════════════════════════════════
-
-const useTheme = () => {
-  const [isDark, setIsDark] = React.useState(() => {
-    if (typeof window !== 'undefined') {
-      return document.documentElement.classList.contains('dark');
-    }
-    return false;
-  });
-
-  // Sincronizar data-theme attribute na inicialização
-  React.useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-  }, []);
-
-  const toggleTheme = React.useCallback(() => {
-    const newIsDark = !isDark;
-    setIsDark(newIsDark);
-    if (newIsDark) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.setAttribute('data-theme', 'dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.setAttribute('data-theme', 'light');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDark]);
-
-  return { isDark, toggleTheme };
-};
+import { useThemeManagement } from '../../hooks';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // APP CONTENT
@@ -67,7 +34,7 @@ const useTheme = () => {
 
 const AppContent: React.FC = () => {
   const { userEmail, logout } = useLoginGate();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDarkMode: isDark, toggleAppTheme } = useThemeManagement();
   const {
     result,
     isSettingsOpen,
@@ -116,7 +83,7 @@ const AppContent: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={toggleTheme}
+                onClick={toggleAppTheme}
                 icon={isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               >
                 <span className="sr-only">Alternar tema</span>
