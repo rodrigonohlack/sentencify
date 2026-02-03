@@ -22,6 +22,9 @@ const HIGHLIGHT_BG_CLASSES: Record<HighlightColor, string> = {
   red: 'bg-red-400/40 dark:bg-red-500/30',
 };
 
+/** Classe CSS para highlight temporário (preview enquanto popover está aberto) */
+const PENDING_HIGHLIGHT_CLASS = 'bg-indigo-300/50 dark:bg-indigo-400/40 ring-2 ring-indigo-400 ring-offset-1';
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════
@@ -166,10 +169,26 @@ export const HighlightedText: React.FC<HighlightedTextProps> = ({
   );
 
   // Computa segmentos de texto (memoizado para performance)
-  const segments = useMemo(
-    () => computeSegments(text, relevantHighlights),
-    [text, relevantHighlights]
-  );
+  // Inclui a seleção pendente como um highlight temporário para preview visual
+  const segments = useMemo(() => {
+    // Se há uma seleção pendente, adiciona como highlight temporário
+    if (selection) {
+      const pendingHighlight: TextHighlight = {
+        id: '__pending__',
+        deponenteId,
+        itemIndex,
+        startOffset: selection.startOffset,
+        endOffset: selection.endOffset,
+        selectedText: selection.text,
+        color: 'yellow', // Cor placeholder (não será usada, usamos classe especial)
+        createdAt: '',
+        viewMode,
+        temaIndex,
+      };
+      return computeSegments(text, [...relevantHighlights, pendingHighlight]);
+    }
+    return computeSegments(text, relevantHighlights);
+  }, [text, relevantHighlights, selection, deponenteId, itemIndex, viewMode, temaIndex]);
 
   /**
    * Calcula o offset relativo ao texto completo a partir de um node e offset dentro dele
@@ -316,7 +335,21 @@ export const HighlightedText: React.FC<HighlightedTextProps> = ({
       >
         {segments.map((segment, idx) => {
           if (segment.highlight) {
-            // Texto marcado
+            const isPending = segment.highlight.id === '__pending__';
+
+            if (isPending) {
+              // Highlight temporário (preview enquanto popover está aberto)
+              return (
+                <mark
+                  key={`${segment.startOffset}-${idx}`}
+                  className={`${PENDING_HIGHLIGHT_CLASS} rounded-sm px-0.5`}
+                >
+                  {segment.text}
+                </mark>
+              );
+            }
+
+            // Texto marcado (highlight salvo)
             const bgClass = HIGHLIGHT_BG_CLASSES[segment.highlight.color];
             const hasComment = segment.highlight.comment && segment.highlight.comment.trim().length > 0;
             return (
