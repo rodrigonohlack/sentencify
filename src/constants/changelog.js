@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.16', feature: 'Prova Oral: remover comentários do texto importado com marcações (importar apenas texto marcado, sem [💬 comentário])' },
   { version: '1.40.15', feature: 'Prova Oral: gerar sintesesCondensadas programaticamente (consistência garantida entre abas), atualizar prompts Fase 2 para classificar declarações por tema sem perder nenhuma, fix importação credibilidade exibindo dep-0X ao invés do nome (lookup em depoentes[])' },
   { version: '1.40.14', feature: 'Proteção contra truncamento de resposta da API: verificar stop_reason/finish_reason em todas as 8 funções de chamada (streaming e não-streaming) do useAIIntegration.ts - lançar erro informativo quando resposta exceder max_tokens' },
   { version: '1.40.13', feature: 'Fix bugs críticos: (1) Analisador tela branca quando tipoPedido inválido - adicionar guard em config[tipo] antes de desestruturar (PedidosSection.tsx, PedidoCard.tsx); (2) Prova-Oral "Processo não identificado" na importação - extrair número do nome do arquivo como fallback (server/routes/analyses.js)' },
