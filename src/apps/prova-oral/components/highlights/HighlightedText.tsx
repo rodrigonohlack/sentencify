@@ -244,8 +244,7 @@ export const HighlightedText: React.FC<HighlightedTextProps> = ({
       },
     });
 
-    // Limpa a seleção nativa
-    windowSelection.removeAllRanges();
+    // NÃO limpa a seleção nativa - mantém feedback visual enquanto popover está aberto
   }, [calculateTextOffset]);
 
   /**
