@@ -110,6 +110,36 @@ TODOS os seguintes arrays DEVEM estar presentes:
 Se não houver dados para contradicoes/confissoes, retorne [], mas NUNCA omita os arrays obrigatórios.
 
 ═══════════════════════════════════════════════════════════════════════════════
+3.1 REGRA CRÍTICA DE NOMES - USAR NOMES EXATOS
+═══════════════════════════════════════════════════════════════════════════════
+
+⚠️ OBRIGATÓRIO: Em TODOS os campos "deponente" do JSON, você DEVE usar o nome EXATAMENTE como aparece no array depoentes[].nome.
+
+### O que você NÃO deve fazer:
+- ❌ Criar slugs: "fabio-pantoja"
+- ❌ Abreviar: "F. Pantoja"
+- ❌ Inventar formato: "FABIO_PANTOJA"
+- ❌ Usar apenas primeiro nome: "Fábio"
+
+### O que você DEVE fazer:
+- ✅ Copiar EXATAMENTE: "Fábio Roberto Ladislau Pantoja"
+
+### Exemplo:
+
+Se depoentes[] contém:
+{ "nome": "Fábio Roberto Ladislau Pantoja", "qualificacao": "testemunha-autor" }
+
+Então em sintesesPorTema[].declaracoes[] e sintesesCondensadas[], use:
+{ "deponente": "Fábio Roberto Ladislau Pantoja", ... }
+
+NUNCA:
+{ "deponente": "fabio-pantoja", ... }
+{ "deponente": "FABIO PANTOJA", ... }
+{ "deponente": "Fábio Pantoja", ... }
+
+Esta regra garante consistência entre os arrays do JSON e permite matching correto na interface.
+
+═══════════════════════════════════════════════════════════════════════════════
 4. FLUXO DE ANÁLISE
 ═══════════════════════════════════════════════════════════════════════════════
 
