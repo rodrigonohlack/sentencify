@@ -49,6 +49,12 @@ interface AnalisadorAnalysis {
       defesaReclamada?: string;
       controversia?: boolean;
     }>;
+    preliminares?: Array<{
+      tipo: string;
+      descricao: string;
+      alegadaPor: 'reclamante' | 'reclamada';
+      fundamentacao?: string;
+    }>;
   };
   createdAt: string;
 }
@@ -92,7 +98,7 @@ function formatDate(date: string | undefined): string {
  */
 export function convertAnalysisToSintese(analysis: AnalisadorAnalysis): string {
   const { resultado } = analysis;
-  const { identificacao, contrato, pedidos } = resultado;
+  const { identificacao, contrato, pedidos, preliminares } = resultado;
 
   const lines: string[] = [];
 
@@ -122,6 +128,32 @@ export function convertAnalysisToSintese(analysis: AnalisadorAnalysis): string {
   }
 
   lines.push('');
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // PRELIMINARES
+  // ═══════════════════════════════════════════════════════════════════════
+
+  if (preliminares?.length) {
+    lines.push('## PRELIMINARES');
+    lines.push('');
+
+    for (const preliminar of preliminares) {
+      const alegadaPor = preliminar.alegadaPor === 'reclamante'
+        ? 'Alegada pelo Reclamante'
+        : 'Alegada pela Reclamada';
+
+      lines.push(`### ${preliminar.tipo}`);
+      lines.push(`**${alegadaPor}**`);
+      lines.push('');
+      lines.push(preliminar.descricao);
+
+      if (preliminar.fundamentacao) {
+        lines.push('');
+        lines.push(`**Fundamentação:** ${preliminar.fundamentacao}`);
+      }
+      lines.push('');
+    }
+  }
 
   // ═══════════════════════════════════════════════════════════════════════
   // CONTRATO
