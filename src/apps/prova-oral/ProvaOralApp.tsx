@@ -176,7 +176,11 @@ const AppContent: React.FC = () => {
 
       {/* Modals */}
       <SettingsModal isOpen={isSettingsOpen} onClose={closeSettings} />
-      <HistoricoModal isOpen={isHistoricoOpen} onClose={closeHistorico} />
+      <HistoricoModal
+        isOpen={isHistoricoOpen}
+        onClose={closeHistorico}
+        onLoad={() => setShowResults(true)}
+      />
     </div>
   );
 };

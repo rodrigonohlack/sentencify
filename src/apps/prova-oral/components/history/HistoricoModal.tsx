@@ -23,11 +23,14 @@ import type { SavedProvaOralAnalysis } from '../../types';
 interface HistoricoModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Callback chamado após carregar uma análise */
+  onLoad?: () => void;
 }
 
 export const HistoricoModal: React.FC<HistoricoModalProps> = ({
   isOpen,
   onClose,
+  onLoad,
 }) => {
   const { analyses, isLoading, error, filters, setFilters, getFilteredAnalyses } = useAnalysesStore();
   const { loadAnalysis, setLoadedAnalysisId } = useProvaOralStore();
@@ -64,6 +67,7 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
     );
     setLoadedAnalysisId(analysis.id);
     onClose();
+    onLoad?.(); // Navegar para resultados após carregar
   };
 
   const handleDelete = () => {
