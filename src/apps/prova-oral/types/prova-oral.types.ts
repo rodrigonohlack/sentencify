@@ -26,6 +26,36 @@ export type CoerenciaInterna = 'alta' | 'media' | 'comprometida';
 /** Nível de interesse no litígio */
 export type InteresseLitigio = 'baixo' | 'alerta' | 'alto';
 
+/** Cor de marcação de texto */
+export type HighlightColor = 'yellow' | 'green' | 'blue' | 'purple' | 'red';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MARCAÇÕES DE TEXTO (HIGHLIGHTS)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Marcação de texto nas sínteses (W3C Web Annotation Model) */
+export interface TextHighlight {
+  id: string;
+  // Identificação do texto marcado
+  deponenteId: string;
+  /** Índice do item no array conteudo[] (para síntese detalhada) */
+  itemIndex: number;
+  /** Posição inicial no texto */
+  startOffset: number;
+  /** Posição final no texto */
+  endOffset: number;
+  /** Texto exato selecionado (fallback W3C para re-encontrar se posição mudar) */
+  selectedText: string;
+  // Dados da marcação
+  color: HighlightColor;
+  comment?: string;
+  createdAt: string;
+  /** Modo de visualização em que a marcação foi criada */
+  viewMode: 'detalhada' | 'condensada' | 'tema';
+  /** Índice do tema (apenas para viewMode 'tema') */
+  temaIndex?: number;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // ESTRUTURA DO PROCESSO
 // ═══════════════════════════════════════════════════════════════════════════
@@ -222,6 +252,8 @@ export interface ProvaOralResult {
   contradicoes: Contradicao[];
   confissoes: Confissao[];
   credibilidade: AvaliacaoCredibilidade[];
+  /** Marcações coloridas com comentários nas sínteses */
+  highlights?: TextHighlight[];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -2,13 +2,17 @@
  * @file SintesesTab.tsx
  * @description Tab de sínteses dos depoimentos com 3 modos de visualização
  * Baseado no protótipo v2
+ * Inclui suporte a marcações coloridas com comentários
  */
 
-import React, { useState } from 'react';
-import { FileText, Clock, ChevronDown, Target } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { FileText, Clock, ChevronDown, Target, Highlighter, Check, Loader2 } from 'lucide-react';
 import { Card, CardContent, Badge } from '../ui';
+import { HighlightedText } from '../highlights';
 import { getQualificacaoStyle, getQualificacaoLabel } from '../../constants';
-import type { Sintese, SinteseCondensada, SintesePorTema, Depoente, SinteseViewMode, Qualificacao } from '../../types';
+import { useProvaOralStore } from '../../stores/useProvaOralStore';
+import { useProvaOralAPI } from '../../hooks/useProvaOralAPI';
+import type { Sintese, SinteseCondensada, SintesePorTema, Depoente, SinteseViewMode, Qualificacao, TextHighlight } from '../../types';
 
 interface SintesesTabProps {
   sinteses: Sintese[];
@@ -50,6 +54,9 @@ const getQualBorderColor = (qual: Qualificacao | undefined): string => ({
   'testemunha-re': 'border-l-amber-500'
 }[qual || 'autor'] || 'border-l-slate-300');
 
+/** Tempo de debounce para auto-save (ms) */
+const AUTO_SAVE_DEBOUNCE_MS = 2000;
+
 export const SintesesTab: React.FC<SintesesTabProps> = ({
   sinteses,
   sintesesCondensadas,
@@ -58,10 +65,65 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<SinteseViewMode>('detalhada');
   const [expandedId, setExpandedId] = useState<string | null>(sinteses?.[0]?.deponenteId || null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  // Store para highlights
+  const { highlights, addHighlight, removeHighlight, loadedAnalysisId, result } = useProvaOralStore();
+  const { updateAnalysis } = useProvaOralAPI();
+
+  // Ref para controle do debounce
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const previousHighlightsRef = useRef<string>('');
+
+  // Auto-save quando highlights mudam (apenas se análise carregada do histórico)
+  useEffect(() => {
+    if (!loadedAnalysisId || !result) return;
+
+    const currentHighlightsStr = JSON.stringify(highlights);
+
+    // Evita salvar se não houve mudança real
+    if (currentHighlightsStr === previousHighlightsRef.current) return;
+    previousHighlightsRef.current = currentHighlightsStr;
+
+    // Limpa timeout anterior
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Debounce para não fazer muitas requisições
+    saveTimeoutRef.current = setTimeout(async () => {
+      setSaveStatus('saving');
+      const success = await updateAnalysis({
+        id: loadedAnalysisId,
+        resultado: result,
+      });
+      setSaveStatus(success ? 'saved' : 'idle');
+
+      // Limpa status de "salvo" após 3 segundos
+      if (success) {
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      }
+    }, AUTO_SAVE_DEBOUNCE_MS);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [highlights, loadedAnalysisId, result, updateAnalysis]);
 
   // Função para buscar depoente pelo ID
   const getDepoente = (id: string): Depoente | undefined =>
     depoentes.find(d => d.id === id);
+
+  // Handlers de highlights
+  const handleAddHighlight = useCallback((highlight: Omit<TextHighlight, 'id' | 'createdAt'>) => {
+    addHighlight(highlight);
+  }, [addHighlight]);
+
+  const handleRemoveHighlight = useCallback((id: string) => {
+    removeHighlight(id);
+  }, [removeHighlight]);
 
   // Se não tem dados em nenhum formato
   if ((!sinteses || sinteses.length === 0) &&
@@ -79,27 +141,61 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Seletor de visualização */}
-      <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit">
-        <ViewModeButton
-          active={viewMode === 'detalhada'}
-          onClick={() => setViewMode('detalhada')}
-        >
-          Detalhada
-        </ViewModeButton>
-        <ViewModeButton
-          active={viewMode === 'condensada'}
-          onClick={() => setViewMode('condensada')}
-        >
-          Por Depoente
-        </ViewModeButton>
-        <ViewModeButton
-          active={viewMode === 'tema'}
-          onClick={() => setViewMode('tema')}
-        >
-          Por Tema
-        </ViewModeButton>
+      {/* Seletor de visualização e info de highlights */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit">
+          <ViewModeButton
+            active={viewMode === 'detalhada'}
+            onClick={() => setViewMode('detalhada')}
+          >
+            Detalhada
+          </ViewModeButton>
+          <ViewModeButton
+            active={viewMode === 'condensada'}
+            onClick={() => setViewMode('condensada')}
+          >
+            Por Depoente
+          </ViewModeButton>
+          <ViewModeButton
+            active={viewMode === 'tema'}
+            onClick={() => setViewMode('tema')}
+          >
+            Por Tema
+          </ViewModeButton>
+        </div>
+
+        {/* Indicador de marcações e status de salvamento */}
+        <div className="flex items-center gap-3">
+          {highlights.length > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <Highlighter className="w-3.5 h-3.5" />
+              <span>{highlights.length} marcaç{highlights.length === 1 ? 'ão' : 'ões'}</span>
+            </div>
+          )}
+
+          {/* Status de auto-save */}
+          {saveStatus === 'saving' && (
+            <div className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>Salvando...</span>
+            </div>
+          )}
+          {saveStatus === 'saved' && (
+            <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+              <Check className="w-3 h-3" />
+              <span>Salvo</span>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Dica de uso */}
+      {highlights.length === 0 && (
+        <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+          <Highlighter className="w-3 h-3" />
+          <span>Selecione texto para criar marcações coloridas com comentários</span>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* VISUALIZAÇÃO DETALHADA (cada declaração com timestamp) */}
@@ -142,7 +238,17 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
                       sintese.conteudo.map((item, j) => (
                         <div key={j} className="flex gap-2 text-sm">
                           {item.timestamp && <TimestampBadge timestamp={item.timestamp} />}
-                          <p className="text-slate-700 dark:text-slate-300">{item.texto}</p>
+                          <p className="text-slate-700 dark:text-slate-300">
+                            <HighlightedText
+                              text={item.texto}
+                              deponenteId={sintese.deponenteId}
+                              itemIndex={j}
+                              viewMode="detalhada"
+                              highlights={highlights}
+                              onAddHighlight={handleAddHighlight}
+                              onRemoveHighlight={handleRemoveHighlight}
+                            />
+                          </p>
                         </div>
                       ))
                     ) : (
@@ -150,7 +256,17 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
                       sintese.pontosPrincipais?.map((ponto, j) => (
                         <div key={j} className="flex gap-2 text-sm">
                           <span className="text-indigo-500 mt-0.5">•</span>
-                          <p className="text-slate-700 dark:text-slate-300">{ponto}</p>
+                          <p className="text-slate-700 dark:text-slate-300">
+                            <HighlightedText
+                              text={ponto}
+                              deponenteId={sintese.deponenteId}
+                              itemIndex={j}
+                              viewMode="detalhada"
+                              highlights={highlights}
+                              onAddHighlight={handleAddHighlight}
+                              onRemoveHighlight={handleRemoveHighlight}
+                            />
+                          </p>
                         </div>
                       ))
                     )}
@@ -170,6 +286,8 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
           {sintesesCondensadas && sintesesCondensadas.length > 0 ? (
             sintesesCondensadas.map((s, i) => {
               const style = getQualificacaoStyle(s.qualificacao);
+              // Gera um deponenteId consistente para a síntese condensada
+              const deponenteId = `condensada-${s.deponente.replace(/\s+/g, '-').toLowerCase()}`;
               return (
                 <Card key={i} className={`border-l-4 ${getQualBorderColor(s.qualificacao)}`}>
                   <CardContent>
@@ -179,7 +297,15 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
                       </Badge>
                     </div>
                     <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                      {s.textoCorrente}
+                      <HighlightedText
+                        text={s.textoCorrente}
+                        deponenteId={deponenteId}
+                        itemIndex={i}
+                        viewMode="condensada"
+                        highlights={highlights}
+                        onAddHighlight={handleAddHighlight}
+                        onRemoveHighlight={handleRemoveHighlight}
+                      />
                     </p>
                   </CardContent>
                 </Card>
@@ -205,21 +331,32 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
           {sintesesPorTema && sintesesPorTema.length > 0 ? (
             sintesesPorTema.map((tema, i) => {
               // Identificar depoentes que NÃO falaram sobre este tema
-              // Normaliza nomes para comparação (remove acentos, uppercase, extrai nome entre parênteses)
-              const normalizeName = (name: string): string[] => {
-                const upper = name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                const match = upper.match(/\(([^)]+)\)/);
-                const insideParens = match ? match[1].trim() : '';
-                return [upper, insideParens].filter(Boolean);
+              // Normaliza nome: remove acentos, hífens, converte para uppercase, tokeniza em palavras
+              const normalizeToTokens = (name: string): string[] => {
+                return name
+                  .toUpperCase()
+                  .normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '') // remove acentos
+                  .replace(/[-_]/g, ' ')           // converte hífens/underscores em espaços
+                  .replace(/[()]/g, ' ')           // remove parênteses
+                  .split(/\s+/)                    // tokeniza por espaços
+                  .filter(t => t.length > 1);      // remove tokens de 1 caractere
               };
 
-              const declaracoesNormalizadas = tema.declaracoes?.flatMap(d => normalizeName(d.deponente)) || [];
+              // Verifica se dois conjuntos de tokens têm pelo menos 2 palavras em comum
+              const hasNameMatch = (tokens1: string[], tokens2: string[]): boolean => {
+                const matches = tokens1.filter(t1 => tokens2.some(t2 => t1 === t2 || t1.includes(t2) || t2.includes(t1)));
+                return matches.length >= 2 || (matches.length === 1 && (tokens1.length === 1 || tokens2.length === 1));
+              };
+
               const deponentesSemDeclaracao = depoentes.filter(dep => {
-                const nomeVariantes = normalizeName(dep.nome);
-                // Verifica se alguma variante do nome do depoente aparece nas declarações
-                return !nomeVariantes.some(v =>
-                  declaracoesNormalizadas.some(d => d.includes(v) || v.includes(d))
-                );
+                const depTokens = normalizeToTokens(dep.nome);
+                // Verifica se alguma declaração do tema corresponde a este depoente
+                const encontrado = tema.declaracoes?.some(dec => {
+                  const decTokens = normalizeToTokens(dec.deponente);
+                  return hasNameMatch(depTokens, decTokens);
+                }) || false;
+                return !encontrado;
               });
 
               return (
@@ -234,6 +371,8 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
                     {/* Depoentes que falaram sobre o tema */}
                     {tema.declaracoes?.map((dec, j) => {
                       const style = getQualificacaoStyle(dec.qualificacao);
+                      // Gera um deponenteId consistente para a síntese por tema
+                      const deponenteId = `tema-${dec.deponente.replace(/\s+/g, '-').toLowerCase()}`;
                       return (
                         <Card key={j} className={`border-l-4 ${getQualBorderColor(dec.qualificacao)}`}>
                           <CardContent>
@@ -243,7 +382,16 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
                               </Badge>
                             </div>
                             <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                              {dec.textoCorrente}
+                              <HighlightedText
+                                text={dec.textoCorrente}
+                                deponenteId={deponenteId}
+                                itemIndex={j}
+                                viewMode="tema"
+                                temaIndex={i}
+                                highlights={highlights}
+                                onAddHighlight={handleAddHighlight}
+                                onRemoveHighlight={handleRemoveHighlight}
+                              />
                             </p>
                           </CardContent>
                         </Card>

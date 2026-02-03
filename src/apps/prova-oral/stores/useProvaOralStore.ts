@@ -4,7 +4,7 @@
  */
 
 import { create } from 'zustand';
-import type { ProvaOralResult, ResultTabId } from '../types';
+import type { ProvaOralResult, ResultTabId, TextHighlight } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES - Estado de cada fase da análise
@@ -60,6 +60,9 @@ interface ProvaOralStoreState {
   // Análise carregada do histórico
   loadedAnalysisId: string | null;
 
+  // Highlights (marcações coloridas nas sínteses)
+  highlights: TextHighlight[];
+
   // Actions - Inputs
   setTranscricao: (text: string) => void;
   setSinteseProcesso: (text: string) => void;
@@ -96,6 +99,12 @@ interface ProvaOralStoreState {
   setLoadedAnalysisId: (id: string | null) => void;
   loadAnalysis: (id: string, transcricao: string, sintese: string, result: ProvaOralResult) => void;
 
+  // Actions - Highlights
+  addHighlight: (highlight: Omit<TextHighlight, 'id' | 'createdAt'>) => void;
+  updateHighlight: (id: string, updates: Partial<TextHighlight>) => void;
+  removeHighlight: (id: string) => void;
+  clearHighlights: () => void;
+
   // Actions - Reset
   resetAll: () => void;
 }
@@ -122,6 +131,7 @@ const initialState = {
   isSettingsOpen: false,
   isHistoricoOpen: false,
   loadedAnalysisId: null,
+  highlights: [],
 };
 
 export const useProvaOralStore = create<ProvaOralStoreState>((set) => ({
@@ -148,7 +158,10 @@ export const useProvaOralStore = create<ProvaOralStoreState>((set) => ({
   // ANÁLISE
   // ═══════════════════════════════════════════════════════════════════════════
 
-  setResult: (result) => set({ result }),
+  setResult: (result) => set({
+    result,
+    highlights: result?.highlights || []
+  }),
 
   setIsAnalyzing: (analyzing) => set({
     isAnalyzing: analyzing,
@@ -172,7 +185,8 @@ export const useProvaOralStore = create<ProvaOralStoreState>((set) => ({
     error: null,
     progress: 0,
     progressMessage: '',
-    loadedAnalysisId: null
+    loadedAnalysisId: null,
+    highlights: []
   }),
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -261,9 +275,69 @@ export const useProvaOralStore = create<ProvaOralStoreState>((set) => ({
     transcricao,
     sinteseProcesso: sintese,
     result,
+    highlights: result.highlights || [],
     error: null,
     isHistoricoOpen: false,
     activeTab: 'depoentes'
+  }),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HIGHLIGHTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  addHighlight: (highlight) => set((state) => {
+    const newHighlight: TextHighlight = {
+      ...highlight,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    };
+    const newHighlights = [...state.highlights, newHighlight];
+    // Atualiza também o result se existir
+    const updatedResult = state.result ? {
+      ...state.result,
+      highlights: newHighlights
+    } : null;
+    return {
+      highlights: newHighlights,
+      result: updatedResult
+    };
+  }),
+
+  updateHighlight: (id, updates) => set((state) => {
+    const newHighlights = state.highlights.map(h =>
+      h.id === id ? { ...h, ...updates } : h
+    );
+    const updatedResult = state.result ? {
+      ...state.result,
+      highlights: newHighlights
+    } : null;
+    return {
+      highlights: newHighlights,
+      result: updatedResult
+    };
+  }),
+
+  removeHighlight: (id) => set((state) => {
+    const newHighlights = state.highlights.filter(h => h.id !== id);
+    const updatedResult = state.result ? {
+      ...state.result,
+      highlights: newHighlights
+    } : null;
+    return {
+      highlights: newHighlights,
+      result: updatedResult
+    };
+  }),
+
+  clearHighlights: () => set((state) => {
+    const updatedResult = state.result ? {
+      ...state.result,
+      highlights: []
+    } : null;
+    return {
+      highlights: [],
+      result: updatedResult
+    };
   }),
 
   // ═══════════════════════════════════════════════════════════════════════════

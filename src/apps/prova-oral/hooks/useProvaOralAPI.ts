@@ -47,11 +47,18 @@ interface ListSharingResponse {
   recipients: User[];
 }
 
+/** Parâmetros para atualização de análise */
+export interface UpdateProvaOralParams {
+  id: string;
+  resultado: ProvaOralResult;
+}
+
 /** Retorno do hook useProvaOralAPI */
 export interface UseProvaOralAPIReturn {
   fetchAnalyses: () => Promise<SavedProvaOralAnalysis[]>;
   fetchAnalysis: (id: string) => Promise<SavedProvaOralAnalysis | null>;
   createAnalysis: (params: CreateProvaOralParams) => Promise<string | null>;
+  updateAnalysis: (params: UpdateProvaOralParams) => Promise<boolean>;
   deleteAnalysis: (id: string) => Promise<boolean>;
   fetchUsers: () => Promise<User[]>;
   fetchSharing: () => Promise<User[]>;
@@ -71,6 +78,7 @@ export interface UseProvaOralAPIReturn {
 export function useProvaOralAPI(): UseProvaOralAPIReturn {
   const { authFetch, isAuthenticated } = useAuthMagicLink();
   const {
+    analyses,
     setAnalyses,
     addAnalysis,
     removeAnalysis,
@@ -234,6 +242,59 @@ export function useProvaOralAPI(): UseProvaOralAPIReturn {
   );
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // ATUALIZAR ANÁLISE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Atualiza uma análise existente (ex: para salvar highlights)
+   * @param params - ID da análise e novo resultado
+   * @returns true se atualizou, false se falhou
+   */
+  const updateAnalysis = useCallback(
+    async (params: UpdateProvaOralParams): Promise<boolean> => {
+      if (!isAuthenticated) {
+        setError('Usuário não autenticado');
+        return false;
+      }
+
+      setError(null);
+
+      try {
+        const res = await authFetch(`${API_BASE}/${params.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resultado: params.resultado }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Erro ao atualizar análise');
+        }
+
+        // Atualiza no store local
+        const existingAnalysis = analyses.find(a => a.id === params.id);
+        if (existingAnalysis) {
+          const updatedAnalysis: SavedProvaOralAnalysis = {
+            ...existingAnalysis,
+            resultado: params.resultado,
+            updatedAt: new Date().toISOString(),
+          };
+          // Remove e readiciona para atualizar
+          removeAnalysis(params.id);
+          addAnalysis(updatedAnalysis);
+        }
+
+        return true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Erro desconhecido';
+        setError(message);
+        return false;
+      }
+    },
+    [isAuthenticated, authFetch, analyses, addAnalysis, removeAnalysis, setError]
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // EXCLUIR ANÁLISE
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -345,6 +406,7 @@ export function useProvaOralAPI(): UseProvaOralAPIReturn {
     fetchAnalyses,
     fetchAnalysis,
     createAnalysis,
+    updateAnalysis,
     deleteAnalysis,
     fetchUsers,
     fetchSharing,
