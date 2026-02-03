@@ -148,6 +148,7 @@ export function AppHeader({
               onClick={() => openModal('settings')}
               className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all shadow-sm"
               title="Configurações de IA"
+              data-testid="settings-button"
             >
               <Settings className="w-4 h-4" />
             </button>

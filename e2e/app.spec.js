@@ -291,13 +291,11 @@ test.describe('SentencifyAI - Aba Configurações', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Procura pela aba de configurações
-    const configTab = page.locator('button').filter({
-      hasText: /config|ajustes|preferências|ia/i
-    }).first();
+    // Procura pelo botão de configurações via data-testid
+    const settingsButton = page.locator('[data-testid="settings-button"]');
 
-    if (await configTab.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await configTab.click();
+    if (await settingsButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await settingsButton.click();
       await page.waitForTimeout(500);
 
       // Deve mostrar opções de configuração
