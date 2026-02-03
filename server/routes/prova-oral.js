@@ -268,6 +268,41 @@ router.post('/', (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
+// PUT /api/prova-oral/:id - Atualizar análise (apenas próprias)
+// ═══════════════════════════════════════════════════════════════════════════
+
+router.put('/:id', (req, res) => {
+  try {
+    const db = getDb();
+    const userId = req.user.id;
+    const { id } = req.params;
+    const { resultado } = req.body;
+
+    if (!resultado) {
+      return res.status(400).json({ error: 'Resultado é obrigatório' });
+    }
+
+    const now = new Date().toISOString();
+
+    // Apenas o dono pode atualizar a análise
+    const result = db.prepare(`
+      UPDATE prova_oral_analyses
+      SET resultado = ?, updated_at = ?
+      WHERE id = ? AND user_id = ? AND deleted_at IS NULL
+    `).run(JSON.stringify(resultado), now, id, userId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Análise não encontrada' });
+    }
+
+    res.json({ id, message: 'Análise atualizada com sucesso' });
+  } catch (error) {
+    console.error('[ProvaOral] Update error:', error);
+    res.status(500).json({ error: 'Erro ao atualizar análise' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
 // DELETE /api/prova-oral/:id - Soft delete de análise (apenas próprias)
 // ═══════════════════════════════════════════════════════════════════════════
 

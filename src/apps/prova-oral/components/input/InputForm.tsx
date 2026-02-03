@@ -41,6 +41,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onAnalysisComplete }) => {
     setInstrucoesExtras,
     clearInputs,
     clearResult,
+    setLoadedAnalysisId,
   } = useProvaOralStore();
 
   const {
@@ -70,15 +71,19 @@ export const InputForm: React.FC<InputFormProps> = ({ onAnalysisComplete }) => {
 
     // Salvar automaticamente no backend se análise foi bem-sucedida
     if (analysisResult) {
-      await createAnalysis({
+      const analysisId = await createAnalysis({
         resultado: analysisResult,
         transcricao,
         sinteseProcesso,
       });
+      // Salvar o ID para permitir auto-save de highlights
+      if (analysisId) {
+        setLoadedAnalysisId(analysisId);
+      }
       // Notificar que análise completou
       onAnalysisComplete?.();
     }
-  }, [analyze, createAnalysis, transcricao, sinteseProcesso, instrucoesExtras, onAnalysisComplete]);
+  }, [analyze, createAnalysis, transcricao, sinteseProcesso, instrucoesExtras, onAnalysisComplete, setLoadedAnalysisId]);
 
   const handleClear = useCallback(() => {
     clearInputs();
