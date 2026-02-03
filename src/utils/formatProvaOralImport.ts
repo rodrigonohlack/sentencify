@@ -77,12 +77,7 @@ function extractHighlightedParts(text: string, highlights: TextHighlight[]): str
   const parts = sortedHighlights.map(h => {
     const start = Math.max(0, Math.min(h.startOffset, text.length));
     const end = Math.max(start, Math.min(h.endOffset, text.length));
-    const excerpt = text.slice(start, end);
-    // Adiciona comentário se houver
-    if (h.comment) {
-      return `${excerpt} [💬 ${h.comment}]`;
-    }
-    return excerpt;
+    return text.slice(start, end);
   });
 
   return parts.join(' [...] ');
