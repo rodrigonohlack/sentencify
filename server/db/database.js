@@ -57,6 +57,7 @@ const runMigrations = () => {
     { name: '006_analyses_plural', fn: migration006AnalysesPlural },
     { name: '007_prova_oral', fn: migration007ProvaOral },
     { name: '008_prova_oral_sharing', fn: migration008ProvaOralSharing },
+    { name: '009_analyses_observacoes', fn: migration009AnalysesObservacoes },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -332,6 +333,14 @@ function migration008ProvaOralSharing(db) {
     CREATE INDEX IF NOT EXISTS idx_prova_oral_access_recipient
       ON prova_oral_access(recipient_id);
   `);
+}
+
+// Migration 009: Campo de observações nas análises
+function migration009AnalysesObservacoes(db) {
+  db.exec(`
+    ALTER TABLE analyses ADD COLUMN observacoes TEXT;
+  `);
+  console.log('[Database] Migration 009: Added observacoes column to analyses');
 }
 
 // Exportar

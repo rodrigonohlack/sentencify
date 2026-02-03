@@ -21,6 +21,7 @@ import {
   Loader2,
   X,
   AlertCircle,
+  Copy,
 } from 'lucide-react';
 import { Modal } from '../ui';
 import { useAnalysesStore } from '../../stores';
@@ -148,16 +149,35 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
 
   // Local state para o horário (evita API call a cada keystroke)
   const [localHorario, setLocalHorario] = useState(analysis.horarioAudiencia || '');
+  const [localObservacoes, setLocalObservacoes] = useState(analysis.observacoes || '');
 
   useEffect(() => {
     setLocalHorario(analysis.horarioAudiencia || '');
   }, [analysis.horarioAudiencia]);
+
+  useEffect(() => {
+    setLocalObservacoes(analysis.observacoes || '');
+  }, [analysis.observacoes]);
 
   const handleHorarioBlur = useCallback(() => {
     if (localHorario !== (analysis.horarioAudiencia || '')) {
       onUpdate(analysis.id, { horarioAudiencia: localHorario || null });
     }
   }, [analysis.id, analysis.horarioAudiencia, localHorario, onUpdate]);
+
+  const handleObservacoesBlur = useCallback(() => {
+    if (localObservacoes !== (analysis.observacoes || '')) {
+      onUpdate(analysis.id, { observacoes: localObservacoes || null });
+    }
+  }, [analysis.id, analysis.observacoes, localObservacoes, onUpdate]);
+
+  const handleCopy = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error('Falha ao copiar:', err);
+    }
+  }, []);
 
   const handleResultadoChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -208,25 +228,57 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
           {/* Header row: processo + reclamante */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex-1 min-w-0">
-              <h4
-                className="font-semibold text-slate-800 dark:text-slate-100 truncate cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
-                onClick={() => onView(analysis)}
-                title="Clique para abrir análise"
-              >
-                {numeroProcesso || 'Processo não identificado'}
-              </h4>
+              <div className="flex items-center gap-1">
+                <h4
+                  className="font-semibold text-slate-800 dark:text-slate-100 truncate cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
+                  onClick={() => onView(analysis)}
+                  title="Clique para abrir análise"
+                >
+                  {numeroProcesso || 'Processo não identificado'}
+                </h4>
+                {numeroProcesso && (
+                  <button
+                    onClick={() => handleCopy(numeroProcesso)}
+                    className="p-0.5 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                    title="Copiar número"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
               <div className="flex items-center gap-2 mt-1">
                 <User className="w-3 h-3 text-slate-400" />
                 <span className="text-sm text-slate-600 dark:text-slate-300 truncate">
                   {safeRender(analysis.reclamante) || '—'}
                 </span>
+                {analysis.reclamante && (
+                  <button
+                    onClick={() => handleCopy(analysis.reclamante!)}
+                    className="p-0.5 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                    title="Copiar reclamante"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </button>
+                )}
               </div>
               {analysis.reclamadas.length > 0 && (
                 <div className="flex items-center gap-2 mt-1">
                   <Building2 className="w-3 h-3 text-slate-400" />
-                  <span className="text-sm text-slate-500 dark:text-slate-400 truncate">
-                    {analysis.reclamadas.map(r => safeRender(r)).join(', ')}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-x-1">
+                    {analysis.reclamadas.map((r, idx) => (
+                      <span key={idx} className="inline-flex items-center text-sm text-slate-500 dark:text-slate-400">
+                        {safeRender(r)}
+                        <button
+                          onClick={() => handleCopy(r)}
+                          className="p-0.5 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                          title="Copiar"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </button>
+                        {idx < analysis.reclamadas.length - 1 && <span className="mr-1">,</span>}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -263,6 +315,16 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
                 </option>
               ))}
             </select>
+
+            {/* Observações input */}
+            <input
+              type="text"
+              placeholder="Observações..."
+              value={localObservacoes}
+              onChange={(e) => setLocalObservacoes(e.target.value)}
+              onBlur={handleObservacoesBlur}
+              className="flex-1 min-w-[150px] px-2 py-1 text-sm border border-slate-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+            />
           </div>
 
           {/* Pendências pills */}
@@ -505,6 +567,7 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
         resultadoAudiencia: updates.resultadoAudiencia ?? undefined,
         pendencias: updates.pendencias ?? undefined,
         dataPauta: updates.dataPauta ?? undefined,
+        observacoes: updates.observacoes ?? undefined,
       });
     },
     [updateAnalysis]

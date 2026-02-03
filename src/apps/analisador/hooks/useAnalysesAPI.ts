@@ -65,6 +65,7 @@ export interface UpdateAnalysisParams {
   horarioAudiencia?: string;
   resultadoAudiencia?: ResultadoAudiencia;
   pendencias?: string[];
+  observacoes?: string;
 }
 
 /** Filtros para listagem */
@@ -276,6 +277,7 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
           horarioAudiencia: params.horarioAudiencia || null,
           resultadoAudiencia: null,
           pendencias: [],
+          observacoes: null,
           resultado: params.resultado,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -319,6 +321,7 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
         ...(params.horarioAudiencia !== undefined && { horarioAudiencia: params.horarioAudiencia }),
         ...(params.resultadoAudiencia !== undefined && { resultadoAudiencia: params.resultadoAudiencia }),
         ...(params.pendencias !== undefined && { pendencias: params.pendencias }),
+        ...(params.observacoes !== undefined && { observacoes: params.observacoes }),
       };
       updateStoreAnalysis(id, optimisticUpdate);
 

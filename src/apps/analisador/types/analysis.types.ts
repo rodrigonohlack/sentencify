@@ -216,6 +216,7 @@ export interface SavedAnalysis {
   horarioAudiencia: string | null;
   resultadoAudiencia: ResultadoAudiencia | null;
   pendencias: string[];
+  observacoes: string | null;
   resultado: AnalysisResult;
   createdAt: string;
   updatedAt: string;
