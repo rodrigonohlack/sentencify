@@ -13,7 +13,9 @@ import type { SavedProvaOralAnalysis } from '../../apps/prova-oral/types';
 import {
   PROVA_ORAL_SECTIONS,
   getAvailableSections,
-  type ProvaOralSectionKey
+  countSinteseHighlights,
+  type ProvaOralSectionKey,
+  type FormatProvaOralOptions
 } from '../../utils/formatProvaOralImport';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -36,7 +38,7 @@ export interface ImportProvaOralSectionsModalProps {
   isOpen: boolean;
   onClose: () => void;
   analysis: SavedProvaOralAnalysis | null;
-  onImport: (analysis: SavedProvaOralAnalysis, sections: ProvaOralSectionKey[]) => void;
+  onImport: (analysis: SavedProvaOralAnalysis, sections: ProvaOralSectionKey[], options?: FormatProvaOralOptions) => void;
   isImporting?: boolean;
 }
 
@@ -253,6 +255,13 @@ export const ImportProvaOralSectionsModal: React.FC<ImportProvaOralSectionsModal
   isImporting = false
 }) => {
   const [selectedSections, setSelectedSections] = useState<ProvaOralSectionKey[]>([]);
+  const [onlyHighlighted, setOnlyHighlighted] = useState(false);
+
+  // Conta marcações em sínteses
+  const highlightCount = useMemo(() => {
+    if (!analysis?.resultado) return 0;
+    return countSinteseHighlights(analysis.resultado);
+  }, [analysis]);
 
   // Seções disponíveis na análise
   const availableSections = useMemo(() => {
@@ -265,6 +274,7 @@ export const ImportProvaOralSectionsModal: React.FC<ImportProvaOralSectionsModal
     if (isOpen && analysis) {
       // Selecionar todas as seções disponíveis por padrão
       setSelectedSections(getAvailableSections(analysis.resultado));
+      setOnlyHighlighted(false);
     }
   }, [isOpen, analysis]);
 
@@ -289,8 +299,8 @@ export const ImportProvaOralSectionsModal: React.FC<ImportProvaOralSectionsModal
   // Handler de importação
   const handleImport = useCallback(() => {
     if (!analysis || selectedSections.length === 0) return;
-    onImport(analysis, selectedSections);
-  }, [analysis, selectedSections, onImport]);
+    onImport(analysis, selectedSections, { onlyHighlighted });
+  }, [analysis, selectedSections, onImport, onlyHighlighted]);
 
   if (!analysis) return null;
 
@@ -320,6 +330,37 @@ export const ImportProvaOralSectionsModal: React.FC<ImportProvaOralSectionsModal
           Selecione as seções que deseja importar. A transcrição completa será incluída automaticamente como conteúdo da prova.
         </p>
       </div>
+
+      {/* Opção de importar apenas texto marcado */}
+      {highlightCount > 0 && (
+        availableSections.includes('sintesesCondensadas') || availableSections.includes('sintesesPorTema')
+      ) && (
+        <div className="mb-4 p-3 rounded-lg theme-bg-secondary border theme-border-input">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <div className={`w-5 h-5 mt-0.5 rounded flex items-center justify-center border transition-all flex-shrink-0 ${
+              onlyHighlighted
+                ? 'bg-purple-600 border-purple-600'
+                : 'theme-border-input'
+            }`}>
+              {onlyHighlighted && <Check className="w-3 h-3 text-white" />}
+            </div>
+            <input
+              type="checkbox"
+              checked={onlyHighlighted}
+              onChange={(e) => setOnlyHighlighted(e.target.checked)}
+              className="sr-only"
+            />
+            <div className="flex-1">
+              <span className="theme-text-secondary font-medium">
+                Importar apenas texto com marcações
+              </span>
+              <p className="text-xs theme-text-muted mt-1">
+                Nas sínteses condensadas e por tema, importa apenas os trechos que você marcou ({highlightCount} {highlightCount === 1 ? 'marcação' : 'marcações'}).
+              </p>
+            </div>
+          </label>
+        </div>
+      )}
 
       {/* Botão selecionar todas */}
       <div className="mb-3">

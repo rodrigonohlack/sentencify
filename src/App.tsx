@@ -60,7 +60,7 @@ import { AnalisadorApp } from './apps/analisador';
 // v1.39.08: Análise de Prova Oral - Rota /prova-oral
 import { ProvaOralApp } from './apps/prova-oral';
 import type { SavedProvaOralAnalysis } from './apps/prova-oral/types';
-import { formatProvaOralSections, type ProvaOralSectionKey } from './utils/formatProvaOralImport';
+import { formatProvaOralSections, type ProvaOralSectionKey, type FormatProvaOralOptions } from './utils/formatProvaOralImport';
 
 // v1.35.30: Modal de curadoria de tópicos pré-geração
 import TopicCurationModal from './components/TopicCurationModal';
@@ -2094,12 +2094,13 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
 
   const handleImportProvaOral = React.useCallback(async (
     analysis: SavedProvaOralAnalysis,
-    sections: ProvaOralSectionKey[]
+    sections: ProvaOralSectionKey[],
+    options?: FormatProvaOralOptions
   ) => {
     setIsImportingProvaOral(true);
     try {
       // Formatar seções selecionadas como texto
-      const analysisText = formatProvaOralSections(analysis.resultado, sections);
+      const analysisText = formatProvaOralSections(analysis.resultado, sections, options);
 
       // Nome da prova
       const proofName = analysis.numeroProcesso

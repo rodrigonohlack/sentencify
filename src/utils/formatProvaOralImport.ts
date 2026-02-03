@@ -13,7 +13,8 @@ import type {
   AvaliacaoCredibilidade,
   AnaliseTemaPedido,
   Qualificacao,
-  Depoente
+  Depoente,
+  TextHighlight
 } from '../apps/prova-oral/types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -61,33 +62,134 @@ function formatRelevancia(relevancia: 'alta' | 'media' | 'baixa'): string {
   return labels[relevancia] || relevancia;
 }
 
+/**
+ * Extrai apenas os trechos marcados de um texto
+ * @param text - Texto completo
+ * @param highlights - Marcações que se aplicam a este texto
+ * @returns Trechos marcados concatenados ou string vazia se não houver
+ */
+function extractHighlightedParts(text: string, highlights: TextHighlight[]): string {
+  if (!highlights.length) return '';
+
+  // Ordena por posição e extrai os trechos
+  const sortedHighlights = [...highlights].sort((a, b) => a.startOffset - b.startOffset);
+
+  const parts = sortedHighlights.map(h => {
+    const start = Math.max(0, Math.min(h.startOffset, text.length));
+    const end = Math.max(start, Math.min(h.endOffset, text.length));
+    const excerpt = text.slice(start, end);
+    // Adiciona comentário se houver
+    if (h.comment) {
+      return `${excerpt} [💬 ${h.comment}]`;
+    }
+    return excerpt;
+  });
+
+  return parts.join(' [...] ');
+}
+
+/**
+ * Filtra highlights relevantes para síntese condensada
+ */
+function getCondensadaHighlights(
+  highlights: TextHighlight[],
+  deponenteId: string,
+  itemIndex: number
+): TextHighlight[] {
+  return highlights.filter(h =>
+    h.viewMode === 'condensada' &&
+    h.deponenteId === deponenteId &&
+    h.itemIndex === itemIndex
+  );
+}
+
+/**
+ * Filtra highlights relevantes para síntese por tema
+ */
+function getTemaHighlights(
+  highlights: TextHighlight[],
+  deponenteId: string,
+  itemIndex: number,
+  temaIndex: number
+): TextHighlight[] {
+  return highlights.filter(h =>
+    h.viewMode === 'tema' &&
+    h.deponenteId === deponenteId &&
+    h.itemIndex === itemIndex &&
+    h.temaIndex === temaIndex
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // FORMATADORES DE SEÇÃO
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
  * Formata sínteses condensadas
+ * @param sinteses - Array de sínteses condensadas
+ * @param highlights - Marcações (opcional)
+ * @param onlyHighlighted - Se true, inclui apenas texto com marcações
  */
-function formatSintesesCondensadas(sinteses: SinteseCondensada[]): string {
+function formatSintesesCondensadas(
+  sinteses: SinteseCondensada[],
+  highlights: TextHighlight[] = [],
+  onlyHighlighted: boolean = false
+): string {
   if (!sinteses.length) return '';
 
-  return sinteses.map(s =>
-    `**${s.deponente} (${formatQualificacao(s.qualificacao)})**\n${s.textoCorrente}`
-  ).join('\n\n');
+  const formatted = sinteses.map((s, index) => {
+    const deponenteId = `condensada-${s.deponente.replace(/\s+/g, '-').toLowerCase()}`;
+    const relevantHighlights = getCondensadaHighlights(highlights, deponenteId, index);
+
+    let texto: string;
+    if (onlyHighlighted) {
+      texto = extractHighlightedParts(s.textoCorrente, relevantHighlights);
+      if (!texto) return null; // Pula se não houver marcações
+    } else {
+      texto = s.textoCorrente;
+    }
+
+    return `**${s.deponente} (${formatQualificacao(s.qualificacao)})**\n${texto}`;
+  }).filter(Boolean);
+
+  return formatted.join('\n\n');
 }
 
 /**
  * Formata sínteses por tema
+ * @param sinteses - Array de sínteses por tema
+ * @param highlights - Marcações (opcional)
+ * @param onlyHighlighted - Se true, inclui apenas texto com marcações
  */
-function formatSintesesPorTema(sinteses: SintesePorTema[]): string {
+function formatSintesesPorTema(
+  sinteses: SintesePorTema[],
+  highlights: TextHighlight[] = [],
+  onlyHighlighted: boolean = false
+): string {
   if (!sinteses.length) return '';
 
-  return sinteses.map(tema => {
-    const declaracoes = tema.declaracoes.map(d =>
-      `- **${d.deponente} (${formatQualificacao(d.qualificacao)})**: ${d.textoCorrente}`
-    ).join('\n');
-    return `### ${tema.tema}\n\n${declaracoes}`;
-  }).join('\n\n');
+  const formatted = sinteses.map((tema, temaIndex) => {
+    const declaracoes = tema.declaracoes.map((d, declIndex) => {
+      const deponenteId = `tema-${d.deponente.replace(/\s+/g, '-').toLowerCase()}`;
+      const relevantHighlights = getTemaHighlights(highlights, deponenteId, declIndex, temaIndex);
+
+      let texto: string;
+      if (onlyHighlighted) {
+        texto = extractHighlightedParts(d.textoCorrente, relevantHighlights);
+        if (!texto) return null; // Pula se não houver marcações
+      } else {
+        texto = d.textoCorrente;
+      }
+
+      return `- **${d.deponente} (${formatQualificacao(d.qualificacao)})**: ${texto}`;
+    }).filter(Boolean);
+
+    if (declaracoes.length === 0) return null; // Pula tema se não houver declarações
+
+    return `### ${tema.tema}\n\n${declaracoes.join('\n')}`;
+  }).filter(Boolean);
+
+  return formatted.join('\n\n');
 }
 
 /**
@@ -226,27 +328,45 @@ function formatAnalises(analises: AnaliseTemaPedido[]): string {
 // FUNÇÃO PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════
 
+/** Opções para formatação de seções */
+export interface FormatProvaOralOptions {
+  /** Se true, inclui apenas texto com marcações nas sínteses */
+  onlyHighlighted?: boolean;
+}
+
 /**
  * Formata seções selecionadas do ProvaOralResult para texto legível
  * @param resultado - Resultado completo da análise de prova oral
  * @param sections - Array de chaves de seções a incluir
+ * @param options - Opções de formatação
  * @returns Texto formatado em Markdown
  */
 export function formatProvaOralSections(
   resultado: ProvaOralResult,
-  sections: ProvaOralSectionKey[]
+  sections: ProvaOralSectionKey[],
+  options: FormatProvaOralOptions = {}
 ): string {
+  const { onlyHighlighted = false } = options;
+  const highlights = resultado.highlights || [];
   const parts: string[] = [];
 
   if (sections.includes('sintesesCondensadas') && resultado.sintesesCondensadas?.length) {
-    const content = formatSintesesCondensadas(resultado.sintesesCondensadas);
+    const content = formatSintesesCondensadas(
+      resultado.sintesesCondensadas,
+      highlights,
+      onlyHighlighted
+    );
     if (content) {
       parts.push(`## Sínteses Condensadas\n\n${content}`);
     }
   }
 
   if (sections.includes('sintesesPorTema') && resultado.sintesesPorTema?.length) {
-    const content = formatSintesesPorTema(resultado.sintesesPorTema);
+    const content = formatSintesesPorTema(
+      resultado.sintesesPorTema,
+      highlights,
+      onlyHighlighted
+    );
     if (content) {
       parts.push(`## Sínteses por Tema\n\n${content}`);
     }
@@ -299,4 +419,26 @@ export function getAvailableSections(resultado: ProvaOralResult): ProvaOralSecti
   if (resultado.analises?.length) available.push('analises');
 
   return available;
+}
+
+/**
+ * Verifica se a análise possui marcações (highlights)
+ * @param resultado - Resultado da análise de prova oral
+ * @returns true se há marcações
+ */
+export function hasHighlights(resultado: ProvaOralResult): boolean {
+  return (resultado.highlights?.length || 0) > 0;
+}
+
+/**
+ * Conta quantas marcações existem para sínteses (condensadas + por tema)
+ * @param resultado - Resultado da análise de prova oral
+ * @returns Número de marcações em sínteses
+ */
+export function countSinteseHighlights(resultado: ProvaOralResult): number {
+  if (!resultado.highlights?.length) return 0;
+
+  return resultado.highlights.filter(h =>
+    h.viewMode === 'condensada' || h.viewMode === 'tema'
+  ).length;
 }
