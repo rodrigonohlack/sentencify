@@ -37,14 +37,14 @@ SÍNTESE:`;
 
 /**
  * Constrói o prompt de síntese com os pedidos do processo
- * @param pedidos - Array de pedidos com tema e descrição
+ * @param pedidos - Array de pedidos com tema
  * @returns Prompt formatado para o modelo
  */
 export const buildSynthesisPrompt = (
-  pedidos: Array<{ tema: string; descricao: string }>
+  pedidos: Array<{ tema: string }>
 ): string => {
   const pedidosText = pedidos
-    .map((p, i) => `${i + 1}. ${p.tema}: ${p.descricao}`)
+    .map((p, i) => `${i + 1}. ${p.tema}`)
     .join('\n');
   return SYNTHESIS_USER_PROMPT.replace('{PEDIDOS}', pedidosText);
 };

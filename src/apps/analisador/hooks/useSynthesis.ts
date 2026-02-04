@@ -45,7 +45,7 @@ export const useSynthesis = () => {
 
       try {
         const userPrompt = buildSynthesisPrompt(
-          pedidos.map((p) => ({ tema: p.tema, descricao: p.descricao }))
+          pedidos.map((p) => ({ tema: p.tema }))
         );
 
         const response = await callAI(
