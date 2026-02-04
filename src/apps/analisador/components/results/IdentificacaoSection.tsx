@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { User, Building2, FileText, Calendar, Scale, DollarSign, Sparkles, Copy, Check, Loader2 } from 'lucide-react';
+import { User, Building2, FileText, Calendar, Scale, DollarSign, Sparkles, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
 import { Badge } from '../ui';
 import { safeRender } from '../../utils/safe-render';
 import { useSynthesis } from '../../hooks';
@@ -53,7 +53,7 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
 
   // Estado para síntese
   const [copiedSintese, setCopiedSintese] = useState(false);
-  const { sintese, isGenerating, generateSynthesis } = useSynthesis();
+  const { sintese, isGenerating, error, generateSynthesis } = useSynthesis();
 
   const handleGenerateSynthesis = () => {
     if (pedidos && pedidos.length > 0) {
@@ -241,6 +241,16 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
           </div>
         </div>
       </div>
+
+      {/* Erro na geração */}
+      {error && !isGenerating && (
+        <div className="mt-4 pt-4 border-t border-red-100 dark:border-red-800/40">
+          <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+            <AlertCircle className="w-4 h-4" />
+            <span className="text-sm">{error}</span>
+          </div>
+        </div>
+      )}
 
       {/* Síntese gerada */}
       {sintese && (

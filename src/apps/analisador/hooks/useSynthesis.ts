@@ -45,6 +45,8 @@ export const useSynthesis = () => {
           pedidos.map((p) => ({ tema: p.tema, descricao: p.descricao }))
         );
 
+        console.log('[Síntese] Chamando API com', pedidos.length, 'pedidos');
+
         const response = await callAI(
           [{ role: 'user', content: userPrompt }],
           {
@@ -54,11 +56,20 @@ export const useSynthesis = () => {
           }
         );
 
-        // Limpa aspas que o modelo pode adicionar
-        const cleanedSynthesis = response.trim().replace(/^["']|["']$/g, '');
+        console.log('[Síntese] Resposta da API:', response);
+
+        // Limpa aspas que o modelo pode adicionar e valida resposta vazia
+        const cleanedSynthesis = response?.trim().replace(/^["']|["']$/g, '') || '';
+
+        if (!cleanedSynthesis) {
+          setError('A IA não retornou uma síntese. Tente novamente.');
+          return null;
+        }
+
         setSintese(cleanedSynthesis);
         return cleanedSynthesis;
       } catch (err) {
+        console.error('[Síntese] Erro:', err);
         const message = err instanceof Error ? err.message : 'Erro ao gerar síntese';
         setError(message);
         return null;
