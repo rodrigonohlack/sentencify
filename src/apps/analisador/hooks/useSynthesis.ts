@@ -51,8 +51,8 @@ export const useSynthesis = () => {
           [{ role: 'user', content: userPrompt }],
           {
             systemPrompt: SYNTHESIS_SYSTEM_PROMPT,
-            maxTokens: 200,
-            disableThinking: true
+            maxTokens: 2000,  // Precisa ser maior para acomodar thinking do Gemini
+            disableThinking: true  // Só funciona para Claude
           }
         );
 
