@@ -198,13 +198,14 @@ export function useLocalStorage(): UseLocalStorageReturn {
   }, []);
 
   // Converte base64 para File
+  // v1.40.20: Otimizado para evitar array intermediário (reduz ~50% memória por PDF)
   const base64ToFile = React.useCallback((base64: string, fileName: string, mimeType = 'application/pdf') => {
     const byteCharacters = atob(base64);
-    const byteNumbers = new Array(byteCharacters.length);
+    // Criar Uint8Array diretamente sem array intermediário
+    const byteArray = new Uint8Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+      byteArray[i] = byteCharacters.charCodeAt(i);
     }
-    const byteArray = new Uint8Array(byteNumbers);
     const blob = new Blob([byteArray], { type: mimeType });
     const file = new File([blob], fileName, { type: mimeType });
     return file;
@@ -1277,16 +1278,22 @@ export function useLocalStorage(): UseLocalStorageReturn {
     let restoredContestacaoFiles: UploadedFile[] = [];
     let restoredComplementaryFiles: UploadedFile[] = [];
 
+    // v1.40.20: Utilitário para dar oportunidade ao GC entre operações pesadas
+    const yieldToMain = () => new Promise<void>(resolve => setTimeout(resolve, 0));
+
     // Restaurar PDFs
+    // v1.40.20: Processamento sequencial para reduzir pico de memória
     if (project.uploadPdfs) {
       // Petições (novo formato com UUID)
       if (project.uploadPdfs.peticoes && setPeticaoFiles) {
-        const petFiles = [];
+        const petFiles: UploadedFile[] = [];
         for (const pData of project.uploadPdfs.peticoes) {
           const pFile = base64ToFile(pData.fileData, pData.name, 'application/pdf');
           const id = pData.id || crypto.randomUUID();
           petFiles.push({ file: pFile, id });
           await savePdfToIndexedDB(`upload-peticao-${id}`, pFile, 'upload');
+          // Yield para permitir GC do base64 processado
+          await yieldToMain();
         }
         setPeticaoFiles(petFiles);
         restoredPeticaoFiles = petFiles;
@@ -1302,23 +1309,25 @@ export function useLocalStorage(): UseLocalStorageReturn {
         await savePdfToIndexedDB(`upload-peticao-${id}`, pFile, 'upload');
       }
       if (project.uploadPdfs.contestacoes && setContestacaoFiles) {
-        const contestFiles = [];
+        const contestFiles: UploadedFile[] = [];
         for (const cData of project.uploadPdfs.contestacoes) {
           const cFile = base64ToFile(cData.fileData, cData.name, 'application/pdf');
           const id = cData.id || crypto.randomUUID();
           contestFiles.push({ file: cFile, id });
           await savePdfToIndexedDB(`upload-contestacao-${id}`, cFile, 'upload');
+          await yieldToMain();
         }
         setContestacaoFiles(contestFiles);
         restoredContestacaoFiles = contestFiles;
       }
       if (project.uploadPdfs.complementares && setComplementaryFiles) {
-        const compFiles = [];
+        const compFiles: UploadedFile[] = [];
         for (const cpData of project.uploadPdfs.complementares) {
           const cpFile = base64ToFile(cpData.fileData, cpData.name, 'application/pdf');
           const id = cpData.id || crypto.randomUUID();
           compFiles.push({ file: cpFile, id });
           await savePdfToIndexedDB(`upload-complementar-${id}`, cpFile, 'upload');
+          await yieldToMain();
         }
         setComplementaryFiles(compFiles);
         restoredComplementaryFiles = compFiles;
@@ -1326,30 +1335,33 @@ export function useLocalStorage(): UseLocalStorageReturn {
     }
 
     // Restaurar provas
+    // v1.40.20: Processamento sequencial para reduzir pico de memória
     let restoredProofFiles: Proof[] = [];
     if (project.proofFiles && Array.isArray(project.proofFiles)) {
-      restoredProofFiles = await Promise.all(
-        project.proofFiles.map(async (proof: Proof): Promise<Proof> => {
-          if (proof.type === 'text') {
-            // ProofText - return as-is
-            return proof;
-          }
-          if (!proof.fileData) {
-            // ProofFile without data - mark as placeholder
-            return { id: proof.id, name: proof.name, type: 'pdf' as const, size: proof.size, uploadDate: proof.uploadDate, isPlaceholder: true };
-          }
-          const byteCharacters = atob(proof.fileData);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: 'application/pdf' });
-          const restoredFile = new File([blob], proof.name, { type: 'application/pdf' });
-          await savePdfToIndexedDB(`proof-${proof.id}`, restoredFile, 'proof');
-          return { id: proof.id, file: restoredFile, name: proof.name, type: 'pdf' as const, size: proof.size, uploadDate: proof.uploadDate };
-        })
-      );
+      for (const proof of project.proofFiles as Proof[]) {
+        if (proof.type === 'text') {
+          // ProofText - add as-is
+          restoredProofFiles.push(proof);
+          continue;
+        }
+        if (!proof.fileData) {
+          // ProofFile without data - mark as placeholder
+          restoredProofFiles.push({ id: proof.id, name: proof.name, type: 'pdf' as const, size: proof.size, uploadDate: proof.uploadDate, isPlaceholder: true });
+          continue;
+        }
+        // Converter base64 para File (otimizado sem array intermediário)
+        const byteCharacters = atob(proof.fileData);
+        const byteArray = new Uint8Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteArray[i] = byteCharacters.charCodeAt(i);
+        }
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const restoredFile = new File([blob], proof.name, { type: 'application/pdf' });
+        await savePdfToIndexedDB(`proof-${proof.id}`, restoredFile, 'proof');
+        restoredProofFiles.push({ id: proof.id, file: restoredFile, name: proof.name, type: 'pdf' as const, size: proof.size, uploadDate: proof.uploadDate });
+        // Yield para permitir GC do base64 processado
+        await yieldToMain();
+      }
       // Filtrar apenas PDFs para setProofFiles (textos vão em setProofTexts)
       setProofFiles(restoredProofFiles.filter((p): p is ProofFile => p.type === 'pdf'));
     } else {
