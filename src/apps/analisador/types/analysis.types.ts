@@ -217,6 +217,8 @@ export interface SavedAnalysis {
   resultadoAudiencia: ResultadoAudiencia | null;
   pendencias: string[];
   observacoes: string | null;
+  /** Síntese resumida dos pedidos do processo */
+  sintese: string | null;
   resultado: AnalysisResult;
   createdAt: string;
   updatedAt: string;

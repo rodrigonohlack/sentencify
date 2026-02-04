@@ -4,3 +4,4 @@
  */
 
 export * from './analysis';
+export * from './synthesis';

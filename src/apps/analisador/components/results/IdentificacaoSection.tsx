@@ -3,11 +3,12 @@
  * @description Seção de identificação do processo
  */
 
-import React, { useMemo } from 'react';
-import { User, Building2, FileText, Calendar, Scale, DollarSign } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { User, Building2, FileText, Calendar, Scale, DollarSign, Sparkles, Copy, Check, Loader2 } from 'lucide-react';
 import { Badge } from '../ui';
 import { safeRender } from '../../utils/safe-render';
-import type { Identificacao, ValorCausa, RitoType } from '../../types';
+import { useSynthesis } from '../../hooks';
+import type { Identificacao, ValorCausa, RitoType, PedidoAnalise } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTES - Salário Mínimo 2026
@@ -21,6 +22,7 @@ interface IdentificacaoSectionProps {
   data: Identificacao;
   valorCausa?: ValorCausa;
   nomeArquivoPeticao?: string | null;
+  pedidos?: PedidoAnalise[];
 }
 
 /**
@@ -45,9 +47,27 @@ const extractNumeroProcesso = (
   return null;
 };
 
-export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data, valorCausa, nomeArquivoPeticao }) => {
+export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data, valorCausa, nomeArquivoPeticao, pedidos }) => {
   // Extrai número do processo: do nome do arquivo (prioridade) ou da IA (fallback)
   const numeroProcesso = extractNumeroProcesso(data.numeroProcesso, nomeArquivoPeticao);
+
+  // Estado para síntese
+  const [copiedSintese, setCopiedSintese] = useState(false);
+  const { sintese, isGenerating, generateSynthesis } = useSynthesis();
+
+  const handleGenerateSynthesis = () => {
+    if (pedidos && pedidos.length > 0) {
+      generateSynthesis(pedidos);
+    }
+  };
+
+  const handleCopySintese = async () => {
+    if (sintese) {
+      await navigator.clipboard.writeText(sintese);
+      setCopiedSintese(true);
+      setTimeout(() => setCopiedSintese(false), 2000);
+    }
+  };
   const formatCurrency = (value?: number) => {
     if (value == null) return '';
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -111,10 +131,29 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
 
   return (
     <div className="bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-900/20 dark:to-violet-900/20 rounded-xl p-5 border border-indigo-100 dark:border-indigo-800/40">
-      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-        <Scale className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-        Identificação do Processo
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+          <Scale className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          Identificação do Processo
+        </h3>
+        {pedidos && pedidos.length > 0 && (
+          <button
+            onClick={handleGenerateSynthesis}
+            disabled={isGenerating}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg
+              bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300
+              hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors
+              disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isGenerating ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            {sintese ? 'Regenerar Síntese' : 'Gerar Síntese'}
+          </button>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Número do Processo */}
@@ -202,6 +241,32 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
           </div>
         </div>
       </div>
+
+      {/* Síntese gerada */}
+      {sintese && (
+        <div className="mt-4 pt-4 border-t border-indigo-100 dark:border-indigo-800/40">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Síntese</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <p className="flex-1 text-slate-700 dark:text-slate-300 font-medium">
+              {sintese}
+            </p>
+            <button
+              onClick={handleCopySintese}
+              title="Copiar síntese"
+              className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            >
+              {copiedSintese ? (
+                <Check className="w-4 h-4 text-green-500" />
+              ) : (
+                <Copy className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

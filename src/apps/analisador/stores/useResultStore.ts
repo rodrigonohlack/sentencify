@@ -17,6 +17,9 @@ interface ResultStoreState extends AnalysisState {
   nomesArquivosEmendas: string[];
   nomesArquivosContestacoes: string[];
 
+  // Síntese do processo
+  sintese: string | null;
+
   // Actions
   setResult: (result: AnalysisResult | null) => void;
   setIsAnalyzing: (analyzing: boolean) => void;
@@ -29,6 +32,7 @@ interface ResultStoreState extends AnalysisState {
     nomesArquivosEmendas: string[],
     nomesArquivosContestacoes: string[]
   ) => void;
+  setSintese: (sintese: string | null) => void;
   clearAnalysisContext: () => void;
   reset: () => void;
 }
@@ -40,6 +44,7 @@ const initialState: AnalysisState & {
   nomeArquivoPeticao: string | null;
   nomesArquivosEmendas: string[];
   nomesArquivosContestacoes: string[];
+  sintese: string | null;
 } = {
   result: null,
   isAnalyzing: false,
@@ -51,7 +56,8 @@ const initialState: AnalysisState & {
   savedAnalysisId: null,
   nomeArquivoPeticao: null,
   nomesArquivosEmendas: [],
-  nomesArquivosContestacoes: []
+  nomesArquivosContestacoes: [],
+  sintese: null
 };
 
 export const useResultStore = create<ResultStoreState>((set) => ({
@@ -79,13 +85,16 @@ export const useResultStore = create<ResultStoreState>((set) => ({
   setFileNames: (nomeArquivoPeticao, nomesArquivosEmendas, nomesArquivosContestacoes) =>
     set({ nomeArquivoPeticao, nomesArquivosEmendas, nomesArquivosContestacoes }),
 
+  setSintese: (sintese) => set({ sintese }),
+
   clearAnalysisContext: () => set({
     dataPauta: null,
     horarioAudiencia: null,
     savedAnalysisId: null,
     nomeArquivoPeticao: null,
     nomesArquivosEmendas: [],
-    nomesArquivosContestacoes: []
+    nomesArquivosContestacoes: [],
+    sintese: null
   }),
 
   reset: () => set(initialState)

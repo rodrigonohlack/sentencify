@@ -278,6 +278,7 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
           resultadoAudiencia: null,
           pendencias: [],
           observacoes: null,
+          sintese: null,
           resultado: params.resultado,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),

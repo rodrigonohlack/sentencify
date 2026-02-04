@@ -106,6 +106,7 @@ export const ResultsContainer: React.FC = () => {
                   data={result.identificacao}
                   valorCausa={result.valorCausa}
                   nomeArquivoPeticao={nomeArquivoPeticao}
+                  pedidos={result.pedidos}
                 />
 
                 {/* Contrato */}

@@ -7,6 +7,7 @@ export { useAIIntegration } from './useAIIntegration';
 export { useFileProcessing } from './useFileProcessing';
 export { useAnalysis } from './useAnalysis';
 export { useAnalysesAPI } from './useAnalysesAPI';
+export { useSynthesis } from './useSynthesis';
 export type {
   CreateAnalysisParams,
   UpdateAnalysisParams,
