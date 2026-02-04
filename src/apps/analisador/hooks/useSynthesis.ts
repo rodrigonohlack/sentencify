@@ -5,6 +5,7 @@
 
 import { useState, useCallback } from 'react';
 import { useAIIntegration } from './useAIIntegration';
+import { useAnalysesAPI } from './useAnalysesAPI';
 import { useResultStore } from '../stores';
 import { SYNTHESIS_SYSTEM_PROMPT, buildSynthesisPrompt } from '../prompts/synthesis';
 import type { PedidoAnalise } from '../types';
@@ -22,8 +23,10 @@ export const useSynthesis = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { callAI } = useAIIntegration();
+  const { updateAnalysis } = useAnalysesAPI();
   const setSintese = useResultStore((s) => s.setSintese);
   const sintese = useResultStore((s) => s.sintese);
+  const savedAnalysisId = useResultStore((s) => s.savedAnalysisId);
 
   /**
    * Gera uma síntese resumida dos pedidos do processo
@@ -63,6 +66,12 @@ export const useSynthesis = () => {
         }
 
         setSintese(cleanedSynthesis);
+
+        // Salva na API se tiver análise salva
+        if (savedAnalysisId) {
+          updateAnalysis(savedAnalysisId, { sintese: cleanedSynthesis });
+        }
+
         return cleanedSynthesis;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Erro ao gerar síntese';
@@ -72,7 +81,7 @@ export const useSynthesis = () => {
         setIsGenerating(false);
       }
     },
-    [callAI, setSintese]
+    [callAI, setSintese, savedAnalysisId, updateAnalysis]
   );
 
   return {

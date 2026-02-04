@@ -66,6 +66,7 @@ export interface UpdateAnalysisParams {
   resultadoAudiencia?: ResultadoAudiencia;
   pendencias?: string[];
   observacoes?: string;
+  sintese?: string;
 }
 
 /** Filtros para listagem */
@@ -323,6 +324,7 @@ export function useAnalysesAPI(): UseAnalysesAPIReturn {
         ...(params.resultadoAudiencia !== undefined && { resultadoAudiencia: params.resultadoAudiencia }),
         ...(params.pendencias !== undefined && { pendencias: params.pendencias }),
         ...(params.observacoes !== undefined && { observacoes: params.observacoes }),
+        ...(params.sintese !== undefined && { sintese: params.sintese }),
       };
       updateStoreAnalysis(id, optimisticUpdate);
 

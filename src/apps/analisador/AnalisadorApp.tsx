@@ -52,6 +52,7 @@ const AnalisadorContent: React.FC = () => {
     setAnalysisContext,
     setSavedAnalysisId,
     setFileNames,
+    setSintese,
     clearAnalysisContext,
     reset: resetResult
   } = useResultStore();
@@ -90,9 +91,10 @@ const AnalisadorContent: React.FC = () => {
         analysis.nomesArquivosEmendas || [],
         analysis.nomesArquivosContestacoes || []
       );
+      setSintese(analysis.sintese);
       setCameFromHistorico(true);
     },
-    [setResult, setAnalysisContext, setSavedAnalysisId, setFileNames]
+    [setResult, setAnalysisContext, setSavedAnalysisId, setFileNames, setSintese]
   );
 
   const handleVoltar = useCallback(() => {
