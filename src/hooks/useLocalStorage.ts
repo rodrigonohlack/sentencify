@@ -333,6 +333,13 @@ export function useLocalStorage(): UseLocalStorageReturn {
         extractedComplementaresIds.push(idStr);
       }
 
+      // v1.40.19: Salvar extractedProofTexts no IndexedDB para evitar estouro do localStorage
+      const extractedProofTextIds: string[] = [];
+      for (const [proofId, text] of Object.entries(extractedProofTexts || {})) {
+        await saveUploadTextToIndexedDB('extracted-proof' as UploadTextCategory, proofId, text, `Prova ${proofId}`);
+        extractedProofTextIds.push(proofId);
+      }
+
       const session = {
         version: APP_VERSION,
         savedAt: new Date().toISOString(),
@@ -371,7 +378,8 @@ export function useLocalStorage(): UseLocalStorageReturn {
         // v1.40.17: proofTexts agora no IndexedDB, apenas IDs no localStorage
         proofTextIds: proofTextIds,
         proofUsePdfMode: proofUsePdfMode,
-        extractedProofTexts: extractedProofTexts,
+        // v1.40.19: extractedProofTexts agora no IndexedDB, apenas IDs no localStorage
+        extractedProofTextIds: extractedProofTextIds,
         proofExtractionFailed: proofExtractionFailed,
         proofTopicLinks: proofTopicLinks,
         proofAnalysisResults: proofAnalysisResults,
@@ -794,7 +802,27 @@ export function useLocalStorage(): UseLocalStorageReturn {
         setProofTexts([]);
       }
       setProofUsePdfMode(session.proofUsePdfMode || {});
-      setExtractedProofTexts(session.extractedProofTexts || {});
+
+      // v1.40.19: Carregar extractedProofTexts do IndexedDB (com migração de formato antigo)
+      if (session.extractedProofTextIds && Array.isArray(session.extractedProofTextIds)) {
+        // Novo formato: carregar do IndexedDB usando IDs
+        const restoredExtractedProofTexts: Record<string, string> = {};
+        for (const proofId of session.extractedProofTextIds) {
+          const pt = await getUploadTextFromIndexedDB('extracted-proof' as UploadTextCategory, proofId);
+          if (pt) restoredExtractedProofTexts[proofId] = pt.text;
+        }
+        setExtractedProofTexts(restoredExtractedProofTexts);
+      } else if (session.extractedProofTexts && typeof session.extractedProofTexts === 'object') {
+        // Formato antigo: migrar textos para IndexedDB
+        const legacyTexts = session.extractedProofTexts as Record<string, string>;
+        for (const [proofId, text] of Object.entries(legacyTexts)) {
+          await saveUploadTextToIndexedDB('extracted-proof' as UploadTextCategory, proofId, text, `Prova ${proofId}`);
+        }
+        setExtractedProofTexts(legacyTexts);
+      } else {
+        setExtractedProofTexts({});
+      }
+
       setProofExtractionFailed(session.proofExtractionFailed || {});
       setProofTopicLinks(session.proofTopicLinks || {});
 
@@ -1335,7 +1363,14 @@ export function useLocalStorage(): UseLocalStorageReturn {
     }
     setProofTexts(importedProofTexts);
     setProofUsePdfMode(project.proofUsePdfMode || {});
-    setExtractedProofTexts(project.extractedProofTexts || {});
+
+    // v1.40.19: Salvar extractedProofTexts importados no IndexedDB
+    const importedExtractedProofTexts = (project.extractedProofTexts || {}) as Record<string, string>;
+    for (const [proofId, text] of Object.entries(importedExtractedProofTexts)) {
+      await saveUploadTextToIndexedDB('extracted-proof' as UploadTextCategory, proofId, text, `Prova ${proofId}`);
+    }
+    setExtractedProofTexts(importedExtractedProofTexts);
+
     setProofExtractionFailed(project.proofExtractionFailed || {});
     setProofTopicLinks(project.proofTopicLinks || {});
 

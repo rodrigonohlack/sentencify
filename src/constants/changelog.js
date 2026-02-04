@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.19', feature: 'Migrar extractedProofTexts para IndexedDB: textos de OCR de provas agora salvos no IndexedDB (evita estouro do localStorage). Migração automática de sessões antigas' },
   { version: '1.40.17', feature: 'Migrar textos de uploads para IndexedDB: pastedTexts, analyzedDocuments texts e extractedTexts agora salvos no IndexedDB (evita estouro do localStorage ~5-10MB). Migração automática de sessões antigas' },
   { version: '1.40.16', feature: 'Prova Oral: remover comentários do texto importado com marcações (importar apenas texto marcado, sem [💬 comentário])' },
   { version: '1.40.15', feature: 'Prova Oral: gerar sintesesCondensadas programaticamente (consistência garantida entre abas), atualizar prompts Fase 2 para classificar declarações por tema sem perder nenhuma, fix importação credibilidade exibindo dep-0X ao invés do nome (lookup em depoentes[])' },

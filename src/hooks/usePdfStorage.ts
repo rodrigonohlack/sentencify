@@ -67,7 +67,8 @@ export type UploadTextCategory =
   | 'analyzed-complementar'
   | 'extracted-peticao'
   | 'extracted-contestacao'
-  | 'extracted-complementar';
+  | 'extracted-complementar'
+  | 'extracted-proof';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DATABASE HELPERS
