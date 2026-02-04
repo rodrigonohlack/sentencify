@@ -58,6 +58,7 @@ const runMigrations = () => {
     { name: '007_prova_oral', fn: migration007ProvaOral },
     { name: '008_prova_oral_sharing', fn: migration008ProvaOralSharing },
     { name: '009_analyses_observacoes', fn: migration009AnalysesObservacoes },
+    { name: '010_analyses_sintese', fn: migration010AnalysesSintese },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -341,6 +342,14 @@ function migration009AnalysesObservacoes(db) {
     ALTER TABLE analyses ADD COLUMN observacoes TEXT;
   `);
   console.log('[Database] Migration 009: Added observacoes column to analyses');
+}
+
+// Migration 010: Campo de síntese nas análises
+function migration010AnalysesSintese(db) {
+  db.exec(`
+    ALTER TABLE analyses ADD COLUMN sintese TEXT;
+  `);
+  console.log('[Database] Migration 010: Added sintese column to analyses');
 }
 
 // Exportar

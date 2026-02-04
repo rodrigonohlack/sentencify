@@ -57,7 +57,7 @@ router.get('/', (req, res) => {
              nome_arquivo_peticao, nome_arquivo_contestacao,
              nomes_arquivos_emendas, nomes_arquivos_contestacoes,
              data_pauta, horario_audiencia, resultado_audiencia,
-             pendencias, observacoes, resultado, created_at, updated_at
+             pendencias, observacoes, sintese, resultado, created_at, updated_at
       FROM analyses
       WHERE user_id = ? AND deleted_at IS NULL
     `;
@@ -101,6 +101,7 @@ router.get('/', (req, res) => {
       resultadoAudiencia: a.resultado_audiencia,
       pendencias: safeJsonParse(a.pendencias, []),
       observacoes: a.observacoes,
+      sintese: a.sintese,
       resultado: safeJsonParse(a.resultado, {}),
       createdAt: a.created_at,
       updatedAt: a.updated_at,
@@ -128,7 +129,7 @@ router.get('/:id', (req, res) => {
              nome_arquivo_peticao, nome_arquivo_contestacao,
              nomes_arquivos_emendas, nomes_arquivos_contestacoes,
              data_pauta, horario_audiencia, resultado_audiencia,
-             pendencias, observacoes, resultado, created_at, updated_at
+             pendencias, observacoes, sintese, resultado, created_at, updated_at
       FROM analyses
       WHERE id = ? AND user_id = ? AND deleted_at IS NULL
     `).get(id, userId);
@@ -152,6 +153,7 @@ router.get('/:id', (req, res) => {
       resultadoAudiencia: analysis.resultado_audiencia,
       pendencias: safeJsonParse(analysis.pendencias, []),
       observacoes: analysis.observacoes,
+      sintese: analysis.sintese,
       resultado: safeJsonParse(analysis.resultado, {}),
       createdAt: analysis.created_at,
       updatedAt: analysis.updated_at,
@@ -320,6 +322,7 @@ router.put('/:id', (req, res) => {
       resultadoAudiencia,
       pendencias,
       observacoes,
+      sintese,
     } = req.body;
 
     if (dataPauta && !isValidISODate(dataPauta)) {
@@ -346,6 +349,7 @@ router.put('/:id', (req, res) => {
           resultado_audiencia = COALESCE(?, resultado_audiencia),
           pendencias = COALESCE(?, pendencias),
           observacoes = COALESCE(?, observacoes),
+          sintese = COALESCE(?, sintese),
           updated_at = ?
       WHERE id = ? AND user_id = ?
     `).run(
@@ -354,6 +358,7 @@ router.put('/:id', (req, res) => {
       resultadoAudiencia,
       pendenciasJson,
       observacoes,
+      sintese,
       now,
       id,
       userId
