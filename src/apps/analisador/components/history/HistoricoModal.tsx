@@ -22,6 +22,7 @@ import {
   X,
   AlertCircle,
   Copy,
+  Check,
 } from 'lucide-react';
 import { Modal } from '../ui';
 import { useAnalysesStore } from '../../stores';
@@ -150,6 +151,7 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
   // Local state para o horário (evita API call a cada keystroke)
   const [localHorario, setLocalHorario] = useState(analysis.horarioAudiencia || '');
   const [localObservacoes, setLocalObservacoes] = useState(analysis.observacoes || '');
+  const [copiedText, setCopiedText] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalHorario(analysis.horarioAudiencia || '');
@@ -174,6 +176,8 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
   const handleCopy = useCallback(async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      setCopiedText(text);
+      setTimeout(() => setCopiedText(null), 2000);
     } catch (err) {
       console.error('Falha ao copiar:', err);
     }
@@ -242,7 +246,11 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
                     className="p-0.5 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
                     title="Copiar número"
                   >
-                    <Copy className="w-3.5 h-3.5" />
+                    {copiedText === numeroProcesso ? (
+                      <Check className="w-3.5 h-3.5 text-green-500" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
                   </button>
                 )}
               </div>
@@ -257,7 +265,11 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
                     className="p-0.5 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
                     title="Copiar reclamante"
                   >
-                    <Copy className="w-3 h-3" />
+                    {copiedText === analysis.reclamante ? (
+                      <Check className="w-3 h-3 text-green-500" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
                   </button>
                 )}
               </div>
@@ -273,7 +285,11 @@ const AnalysisItem: React.FC<AnalysisItemProps> = ({
                           className="p-0.5 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
                           title="Copiar"
                         >
-                          <Copy className="w-3 h-3" />
+                          {copiedText === r ? (
+                            <Check className="w-3 h-3 text-green-500" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
                         </button>
                         {idx < analysis.reclamadas.length - 1 && <span className="mr-1">,</span>}
                       </span>
