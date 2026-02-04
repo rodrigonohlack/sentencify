@@ -45,18 +45,14 @@ export const useSynthesis = () => {
           pedidos.map((p) => ({ tema: p.tema, descricao: p.descricao }))
         );
 
-        console.log('[Síntese] Chamando API com', pedidos.length, 'pedidos');
-
         const response = await callAI(
           [{ role: 'user', content: userPrompt }],
           {
             systemPrompt: SYNTHESIS_SYSTEM_PROMPT,
-            maxTokens: 2000,  // Precisa ser maior para acomodar thinking do Gemini
-            disableThinking: true  // Só funciona para Claude
+            maxTokens: 2000,
+            disableThinking: true
           }
         );
-
-        console.log('[Síntese] Resposta da API:', response);
 
         // Limpa aspas que o modelo pode adicionar e valida resposta vazia
         const cleanedSynthesis = response?.trim().replace(/^["']|["']$/g, '') || '';
@@ -69,7 +65,6 @@ export const useSynthesis = () => {
         setSintese(cleanedSynthesis);
         return cleanedSynthesis;
       } catch (err) {
-        console.error('[Síntese] Erro:', err);
         const message = err instanceof Error ? err.message : 'Erro ao gerar síntese';
         setError(message);
         return null;

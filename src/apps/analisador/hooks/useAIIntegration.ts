@@ -159,8 +159,6 @@ export const useAIIntegration = () => {
           throw new Error(data.error?.message || `HTTP ${response.status}`);
         }
 
-        console.log('[callGeminiAPI] Resposta completa:', JSON.stringify(data, null, 2));
-
         if (data.usageMetadata) {
           addTokenUsage({
             input: data.usageMetadata.promptTokenCount || 0,
@@ -172,7 +170,6 @@ export const useAIIntegration = () => {
         const parts = data.candidates?.[0]?.content?.parts || [];
         const textPart = parts.find((p: { text?: string }) => p.text !== undefined);
         const textContent = textPart?.text || '';
-        console.log('[callGeminiAPI] textContent extraído:', textContent);
         return textContent.trim();
 
       } catch (err) {
