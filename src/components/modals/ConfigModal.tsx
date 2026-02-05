@@ -2380,7 +2380,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     placeholder="Nome"
                   />
                   {qp.specialHandler ? (
-                    <div className="flex-1 theme-bg-app border theme-border-input rounded p-2 text-xs theme-text-muted italic flex items-center opacity-60">
+                    <div className="flex-1 theme-bg-app border theme-border-input rounded p-2 text-xs theme-text-muted italic flex items-center">
                       ⚙️ Prompt com lógica especial (sub-opções)
                     </div>
                   ) : (
