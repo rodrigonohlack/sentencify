@@ -95,7 +95,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       onClose={onClose}
       title="Configurações"
       subtitle={activeTab === 'sources'
-        ? `${enabledCount} de ${sources.length} fontes habilitadas`
+        ? `${enabledCount} de ${sources.filter(s => s.feedUrl).length} fontes habilitadas`
         : `Provedor: ${AI_PROVIDERS[provider].name}`
       }
       icon={<Settings className="w-5 h-5 text-white" />}
@@ -143,7 +143,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <Globe className="w-5 h-5 text-blue-400" />
                 <h3 className="font-medium theme-text-primary">Portais Jurídicos</h3>
                 <span className="text-xs theme-text-muted">
-                  ({portais.filter(s => s.enabled).length}/{portais.length})
+                  ({portais.filter(s => s.enabled).length}/{portais.filter(s => s.feedUrl).length})
                 </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -163,7 +163,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <Building2 className="w-5 h-5 text-purple-400" />
                 <h3 className="font-medium theme-text-primary">Tribunais</h3>
                 <span className="text-xs theme-text-muted">
-                  ({tribunais.filter(s => s.enabled).length}/{tribunais.length})
+                  ({tribunais.filter(s => s.enabled).length}/{tribunais.filter(s => s.feedUrl).length})
                 </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[40vh] overflow-y-auto pr-2">
@@ -247,39 +247,50 @@ interface SourceToggleProps {
   onToggle: (id: string) => void;
 }
 
-const SourceToggle: React.FC<SourceToggleProps> = ({ source, onToggle }) => (
-  <button
-    onClick={() => onToggle(source.id)}
-    className={`flex items-center gap-3 p-3 rounded-lg transition-all text-left ${
-      source.enabled
-        ? 'theme-bg-secondary border border-green-500/30'
-        : 'theme-bg-tertiary border border-transparent opacity-60 hover:opacity-100'
-    }`}
-  >
-    <div
-      className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
-        source.enabled
-          ? 'bg-green-500 text-white'
-          : 'theme-bg-secondary border theme-border-modal'
+const SourceToggle: React.FC<SourceToggleProps> = ({ source, onToggle }) => {
+  const hasRss = !!source.feedUrl;
+
+  return (
+    <button
+      onClick={hasRss ? () => onToggle(source.id) : undefined}
+      className={`flex items-center gap-3 p-3 rounded-lg transition-all text-left ${
+        !hasRss
+          ? 'theme-bg-tertiary border border-transparent cursor-not-allowed opacity-40'
+          : source.enabled
+            ? 'theme-bg-secondary border border-green-500/30'
+            : 'theme-bg-tertiary border border-transparent opacity-60 hover:opacity-100'
       }`}
     >
-      {source.enabled ? (
-        <Check className="w-3 h-3" />
-      ) : (
-        <X className="w-3 h-3 theme-text-muted" />
-      )}
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-sm theme-text-primary truncate">
-        {source.name}
-      </p>
-      {source.websiteUrl && (
-        <p className="text-xs theme-text-muted truncate">
-          {new URL(source.websiteUrl).hostname}
+      <div
+        className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
+          !hasRss
+            ? 'theme-bg-secondary border theme-border-modal'
+            : source.enabled
+              ? 'bg-green-500 text-white'
+              : 'theme-bg-secondary border theme-border-modal'
+        }`}
+      >
+        {!hasRss ? (
+          <X className="w-3 h-3 theme-text-muted" />
+        ) : source.enabled ? (
+          <Check className="w-3 h-3" />
+        ) : (
+          <X className="w-3 h-3 theme-text-muted" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm theme-text-primary truncate">
+          {source.name}
         </p>
-      )}
-    </div>
-  </button>
-);
+        <p className="text-xs theme-text-muted truncate">
+          {hasRss
+            ? source.websiteUrl ? new URL(source.websiteUrl).hostname : ''
+            : 'RSS indisponível'
+          }
+        </p>
+      </div>
+    </button>
+  );
+};
 
 export default SettingsModal;

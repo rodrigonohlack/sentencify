@@ -119,12 +119,12 @@ export const useNoticiasStore = create<NoticiasStoreState>()(
 
       toggleSource: (sourceId) => set((state) => ({
         sources: state.sources.map(s =>
-          s.id === sourceId ? { ...s, enabled: !s.enabled } : s
+          s.id === sourceId && s.feedUrl ? { ...s, enabled: !s.enabled } : s
         )
       })),
 
       enableAllSources: () => set((state) => ({
-        sources: state.sources.map(s => ({ ...s, enabled: true }))
+        sources: state.sources.map(s => s.feedUrl ? { ...s, enabled: true } : s)
       })),
 
       disableAllSources: () => set((state) => ({
@@ -173,7 +173,11 @@ export const useNoticiasStore = create<NoticiasStoreState>()(
         const persisted = persistedState as Partial<NoticiasStoreState>;
         // Sincronizar fontes: usar DEFAULT_SOURCES como base,
         // preservar apenas enabled/disabled do usuário
+        // Fontes sem feedUrl ficam sempre disabled
         const mergedSources = currentState.sources.map(defaultSource => {
+          if (!defaultSource.feedUrl) {
+            return { ...defaultSource, enabled: false };
+          }
           const userSource = persisted?.sources?.find(s => s.id === defaultSource.id);
           if (userSource) {
             return { ...defaultSource, enabled: userSource.enabled };
