@@ -339,7 +339,7 @@ app.listen(PORT, () => {
   ║   • Grok:     /api/grok/chat                         ║
   ║   • Health:   /api/health                            ║
   ║                                                       ║
-  ║   Scheduler: RSS a cada 8h (19 fontes)               ║
+  ║   Scheduler: RSS a cada 8h (6 fontes)                ║
   ║                                                       ║
   ╚═══════════════════════════════════════════════════════╝
   `);
