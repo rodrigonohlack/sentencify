@@ -279,13 +279,19 @@ app.get('/api/rss-proxy', async (req, res) => {
   try {
     const response = await fetch(url, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'SentencifyAI/1.0 RSS Reader' }
+      redirect: 'follow',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; SentencifyAI/1.0; +https://sentencify.ia.br)',
+        'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+        'Accept-Language': 'pt-BR,pt;q=0.9',
+      }
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const text = await response.text();
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
     res.send(text);
   } catch (error) {
+    console.warn(`[RSS Proxy] Erro ao buscar ${url}:`, error.message);
     res.status(502).json({ error: error.name === 'AbortError' ? 'Timeout' : error.message });
   } finally {
     clearTimeout(timeoutId);

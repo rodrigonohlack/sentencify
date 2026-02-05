@@ -13,8 +13,12 @@ import type { NewsSource, NewsItemCreate, RSSItem, RSSParseResult } from '../typ
  */
 export const parseRSSXml = (xmlText: string): RSSParseResult => {
   try {
+    // Sanitizar XML: remover BOM e caracteres de controle inválidos
+    let cleaned = xmlText.replace(/^\uFEFF/, '');
+    cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+
     const parser = new DOMParser();
-    const doc = parser.parseFromString(xmlText, 'text/xml');
+    const doc = parser.parseFromString(cleaned, 'text/xml');
 
     // Verificar erro de parsing
     const parseError = doc.querySelector('parsererror');
