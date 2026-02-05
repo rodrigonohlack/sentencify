@@ -168,7 +168,24 @@ export const useNoticiasStore = create<NoticiasStoreState>()(
         filters: state.filters,
         sources: state.sources,
         lastRefresh: state.lastRefresh
-      })
+      }),
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<NoticiasStoreState>;
+        // Sincronizar fontes: usar DEFAULT_SOURCES como base,
+        // preservar apenas enabled/disabled do usuário
+        const mergedSources = currentState.sources.map(defaultSource => {
+          const userSource = persisted?.sources?.find(s => s.id === defaultSource.id);
+          if (userSource) {
+            return { ...defaultSource, enabled: userSource.enabled };
+          }
+          return defaultSource;
+        });
+        return {
+          ...currentState,
+          ...persisted,
+          sources: mergedSources
+        };
+      }
     }
   )
 );
