@@ -69,13 +69,13 @@ const DEFAULT_QUICK_PROMPTS: QuickPrompt[] = [
     subOptions: [
       {
         id: 'proof-all',
-        label: 'Analises e conclusoes',
+        label: 'Análises e conclusões',
         icon: '🔍',
         proofDataMode: 'all'
       },
       {
         id: 'proof-conclusions',
-        label: 'Apenas conclusoes',
+        label: 'Apenas conclusões',
         icon: '📝',
         proofDataMode: 'conclusions_only'
       }
