@@ -37,7 +37,7 @@ import type {
   ChatMessage,
   ChatHistoryCacheEntry,
 } from '../types';
-import { useAIStore } from '../stores/useAIStore';
+import { useAIStore, migrateQuickPrompts } from '../stores/useAIStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PDF INDEXEDDB HELPERS (v1.38.52: Extracted to usePdfStorage.ts)
@@ -1434,10 +1434,14 @@ export function useLocalStorage(): UseLocalStorageReturn {
       // pois lá estão criptografadas e setAiSettings() criptografaria novamente
       const currentApiKeys = useAIStore.getState().aiSettings.apiKeys || { claude: '', gemini: '', openai: '', grok: '' };
 
+      // v1.40.21: Migrar quickPrompts do projeto para garantir campos atualizados
+      const migratedQuickPrompts = migrateQuickPrompts(project.aiSettings.quickPrompts);
+
       // Merge: defaults → projeto → apiKeys atuais (nunca sobrescreve chaves)
       const mergedAiSettings = {
         ...iaLocalDefaults,
         ...project.aiSettings,
+        quickPrompts: migratedQuickPrompts,  // v1.40.21: Usar quickPrompts migrados
         apiKeys: currentApiKeys  // Sempre preserva as chaves do usuário
       };
       setAiSettings(mergedAiSettings);
