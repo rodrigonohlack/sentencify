@@ -59,6 +59,7 @@ const runMigrations = () => {
     { name: '008_prova_oral_sharing', fn: migration008ProvaOralSharing },
     { name: '009_analyses_observacoes', fn: migration009AnalysesObservacoes },
     { name: '010_analyses_sintese', fn: migration010AnalysesSintese },
+    { name: '011_noticias', fn: migration011Noticias },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -350,6 +351,65 @@ function migration010AnalysesSintese(db) {
     ALTER TABLE analyses ADD COLUMN sintese TEXT;
   `);
   console.log('[Database] Migration 010: Added sintese column to analyses');
+}
+
+// Migration 011: Tabelas de notícias jurídicas
+function migration011Noticias(db) {
+  db.exec(`
+    -- ═══════════════════════════════════════════════════════════════
+    -- TABELA: noticias
+    -- Notícias jurídicas coletadas de fontes RSS
+    -- Resumos IA são COMPARTILHADOS entre todos os usuários
+    -- ═══════════════════════════════════════════════════════════════
+    CREATE TABLE IF NOT EXISTS noticias (
+      id TEXT PRIMARY KEY,
+      source_id TEXT NOT NULL,
+      source_name TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      content TEXT,
+      link TEXT NOT NULL UNIQUE,
+      published_at TEXT NOT NULL,
+      fetched_at TEXT NOT NULL,
+      themes TEXT,
+      ai_summary TEXT,
+      ai_summary_generated_at TEXT,
+      ai_summary_generated_by TEXT REFERENCES users(id),
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_noticias_published ON noticias(published_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_noticias_source ON noticias(source_id);
+    CREATE INDEX IF NOT EXISTS idx_noticias_link ON noticias(link);
+
+    -- ═══════════════════════════════════════════════════════════════
+    -- TABELA: noticias_favoritos
+    -- Favoritos POR USUÁRIO
+    -- ═══════════════════════════════════════════════════════════════
+    CREATE TABLE IF NOT EXISTS noticias_favoritos (
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      noticia_id TEXT NOT NULL REFERENCES noticias(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY(user_id, noticia_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_noticias_fav_user ON noticias_favoritos(user_id);
+
+    -- ═══════════════════════════════════════════════════════════════
+    -- TABELA: noticias_lidas
+    -- Histórico de leitura POR USUÁRIO
+    -- ═══════════════════════════════════════════════════════════════
+    CREATE TABLE IF NOT EXISTS noticias_lidas (
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      noticia_id TEXT NOT NULL REFERENCES noticias(id) ON DELETE CASCADE,
+      read_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY(user_id, noticia_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_noticias_lidas_user ON noticias_lidas(user_id);
+  `);
+  console.log('[Database] Migration 011: Created noticias tables');
 }
 
 // Exportar

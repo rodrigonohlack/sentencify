@@ -62,6 +62,9 @@ import { ProvaOralApp } from './apps/prova-oral';
 import type { SavedProvaOralAnalysis } from './apps/prova-oral/types';
 import { formatProvaOralSections, type ProvaOralSectionKey, type FormatProvaOralOptions } from './utils/formatProvaOralImport';
 
+// v1.41.0: Notícias Jurídicas - Rota /noticias
+import { NoticiasApp } from './apps/noticias';
+
 // v1.35.30: Modal de curadoria de tópicos pré-geração
 import TopicCurationModal from './components/TopicCurationModal';
 
@@ -3439,6 +3442,11 @@ const SentencifyAI = () => {
   // v1.39.08: Rota /prova-oral abre Análise de Prova Oral
   if (window.location.pathname.startsWith('/prova-oral')) {
     return <ProvaOralApp />;
+  }
+
+  // v1.41.0: Rota /noticias abre Notícias Jurídicas
+  if (window.location.pathname.startsWith('/noticias')) {
+    return <NoticiasApp />;
   }
 
   // v1.35.0: Rota /share/:token abre página de aceite de compartilhamento

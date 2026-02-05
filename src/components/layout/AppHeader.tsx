@@ -7,7 +7,7 @@
  * Contém: título, número do processo, botões de ação, aviso de responsabilidade.
  */
 
-import { LogOut, FileSearch, Mic, Sun, Moon, BookOpen, Settings } from 'lucide-react';
+import { LogOut, FileSearch, Mic, Newspaper, Sun, Moon, BookOpen, Settings } from 'lucide-react';
 import { GoogleDriveButton } from '../GoogleDriveButton';
 import { CSS } from '../../constants/styles';
 import { APP_VERSION } from '../../constants/app-version';
@@ -84,6 +84,13 @@ export function AppHeader({
             >
               <Mic className="w-3.5 h-3.5" />
               Prova Oral
+            </a>
+            <a
+              href="/noticias"
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 hover:border-cyan-500/40 transition-all"
+            >
+              <Newspaper className="w-3.5 h-3.5" />
+              Notícias
             </a>
           </div>
 

@@ -33,6 +33,7 @@ import shareRoutes from './routes/share.js';
 import analysesRoutes from './routes/analyses.js';
 import provaOralRoutes from './routes/prova-oral.js';
 import usersRoutes from './routes/users.js';
+import noticiasRoutes from './routes/noticias.js';
 import { initDatabase } from './db/database.js';
 
 // Inicializar banco de dados SQLite
@@ -191,6 +192,9 @@ app.use('/api/prova-oral', provaOralRoutes);
 // Rotas de usuários (v1.40.12 - para compartilhamento)
 app.use('/api/users', usersRoutes);
 
+// Rotas de notícias jurídicas (v1.41.0)
+app.use('/api/noticias', noticiasRoutes);
+
 // Rotas de proxy para APIs de IA
 app.use('/api/claude', claudeRoutes);
 app.use('/api/gemini', geminiRoutes);
@@ -272,7 +276,7 @@ app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════════╗
   ║                                                       ║
-  ║   SentencifyAI Server v1.39.0                        ║
+  ║   SentencifyAI Server v1.41.0                        ║
   ║   ────────────────────────────────────────────────   ║
   ║   Backend:  http://localhost:${PORT}                   ║
   ║   Frontend: http://localhost:3000                    ║
@@ -285,6 +289,7 @@ app.listen(PORT, () => {
   ║   • Models:   /api/models (CRUD)                     ║
   ║   • Sync:     /api/sync (push/pull)                  ║
   ║   • Analyses: /api/analyses (prepauta)               ║
+  ║   • Noticias: /api/noticias (feed jurídico)          ║
   ║   • Claude:   /api/claude/messages                   ║
   ║   • Gemini:   /api/gemini/generate                   ║
   ║   • OpenAI:   /api/openai/chat                       ║
