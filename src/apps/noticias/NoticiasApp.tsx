@@ -25,6 +25,10 @@ import { useNoticiasAPI } from './hooks';
 import { useNoticiasStore } from './stores';
 import { useAIIntegration } from './hooks/useAIIntegration';
 
+// Tema global (necessário para CSS variables dos modais)
+import { ThemeStyles } from '../../styles';
+import { useThemeManagement } from '../../hooks';
+
 // Serviços
 import { fetchRSSWithStats } from './services/rss-service';
 
@@ -78,23 +82,16 @@ const NoticiasAppContent: React.FC = () => {
     setLastRefresh
   } = useNoticiasStore();
 
+  // Tema global (sincronizado com Sentencify principal)
+  const { isDarkMode, toggleAppTheme } = useThemeManagement();
+
   // Estado local
   const [isManualInputOpen, setIsManualInputOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    return saved !== 'light';
-  });
   const [offset, setOffset] = useState(0);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // EFEITOS
   // ═══════════════════════════════════════════════════════════════════════════
-
-  // Aplicar tema
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDarkMode);
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
 
   // Carregar notícias ao montar e quando filtros mudam
   useEffect(() => {
@@ -360,7 +357,7 @@ const NoticiasAppContent: React.FC = () => {
 
               {/* Toggle tema */}
               <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
+                onClick={toggleAppTheme}
                 className="p-2 rounded-lg theme-bg-tertiary hover:theme-bg-secondary transition-colors"
                 title={isDarkMode ? 'Modo claro' : 'Modo escuro'}
               >
@@ -497,11 +494,15 @@ const NoticiasAppContent: React.FC = () => {
 
 /**
  * App de Notícias Jurídicas com autenticação
+ * Inclui ThemeStyles para CSS variables dos modais
  */
 export const NoticiasApp: React.FC = () => (
-  <LoginGate>
-    <NoticiasAppContent />
-  </LoginGate>
+  <>
+    <ThemeStyles />
+    <LoginGate>
+      <NoticiasAppContent />
+    </LoginGate>
+  </>
 );
 
 export default NoticiasApp;
