@@ -820,6 +820,43 @@ export const useAIStore = create<AIStoreState>()(
                 }, 150);
               }
             }
+
+            // Migração v1.40.21: Sincronizar ícones e subOptions dos quickprompts padrão
+            if (state.aiSettings?.quickPrompts) {
+              let needsIconSync = false;
+              const defaultIds = ['qp-1', 'qp-2', 'qp-3', 'qp-4', 'qp-5'];
+
+              state.aiSettings.quickPrompts = state.aiSettings.quickPrompts.map((qp: QuickPrompt) => {
+                if (defaultIds.includes(qp.id)) {
+                  const defaultQp = DEFAULT_QUICK_PROMPTS.find(d => d.id === qp.id);
+                  if (defaultQp) {
+                    // Verificar se precisa atualizar icon ou subOptions
+                    const needsIcon = defaultQp.icon && qp.icon !== defaultQp.icon;
+                    const needsSubOptions = defaultQp.subOptions && JSON.stringify(qp.subOptions) !== JSON.stringify(defaultQp.subOptions);
+
+                    if (needsIcon || needsSubOptions) {
+                      needsIconSync = true;
+                      return {
+                        ...qp,
+                        icon: defaultQp.icon,
+                        subOptions: defaultQp.subOptions
+                      };
+                    }
+                  }
+                }
+                return qp;
+              });
+
+              // Forçar persistência se houve sincronização
+              if (needsIconSync) {
+                setTimeout(() => {
+                  useAIStore.setState((s) => ({
+                    ...s,
+                    aiSettings: { ...s.aiSettings }
+                  }));
+                }, 200);
+              }
+            }
           }
         }
       }
