@@ -1,35 +1,93 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual do Usuário Avançado - SentencifyAI v1.38.21</title>
+    <title>Manual do Usuário Avançado - SentencifyAI v1.40.20</title>
+
+    <!-- Google Fonts: Playfair Display + Plus Jakarta Sans + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
     <style>
-        :root {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --accent-green: #22c55e;
-            --accent-amber: #f59e0b;
-            --accent-red: #ef4444;
-            --accent-cyan: #06b6d4;
-            --border-color: #475569;
+        /* ══════════════════════════════════════════════════════════════════════════════
+           THEME VARIABLES - Synchronized with SentencifyAI via sentencify-app-theme
+           ══════════════════════════════════════════════════════════════════════════════ */
+
+        :root[data-theme="dark"] {
+            /* Backgrounds */
+            --bg-app: #0f172a;
+            --bg-primary: #1e293b;
+            --bg-secondary: #334155;
+            --bg-tertiary: #475569;
+            --bg-card: rgba(51, 65, 85, 0.5);
+            --bg-primary-rgb: 30, 41, 59;
+
+            /* Text */
+            --text-primary: #ffffff;
+            --text-secondary: #e2e8f0;
+            --text-muted: #94a3b8;
+
+            /* Accents */
+            --accent-purple: #c084fc;
+            --accent-blue: #60a5fa;
+            --accent-green: #4ade80;
+            --accent-amber: #fbbf24;
+            --accent-red: #f87171;
+            --accent-cyan: #22d3ee;
+            --accent-purple-rgb: 192, 132, 252;
+            --accent-blue-rgb: 96, 165, 250;
+
+            /* Borders & Effects */
+            --border-primary: #475569;
+            --border-subtle: rgba(255, 255, 255, 0.1);
+            --glow-purple: rgba(139, 92, 246, 0.15);
+            --glow-blue: rgba(59, 130, 246, 0.1);
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+
+            /* Header specific */
+            --header-bg: rgba(30, 41, 59, 0.85);
         }
 
-        .light-theme {
-            --bg-primary: #f8fafc;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #e2e8f0;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border-color: #cbd5e1;
+        :root[data-theme="light"] {
+            /* Backgrounds - Warm stone palette */
+            --bg-app: #f5f3ef;
+            --bg-primary: #fefcf3;
+            --bg-secondary: #e8e6e1;
+            --bg-tertiary: #d4d2cd;
+            --bg-card: rgba(254, 252, 243, 0.9);
+            --bg-primary-rgb: 254, 252, 243;
+
+            /* Text */
+            --text-primary: #1c1917;
+            --text-secondary: #292524;
+            --text-muted: #78716c;
+
+            /* Accents - Darker for contrast */
+            --accent-purple: #7c3aed;
+            --accent-blue: #1d4ed8;
+            --accent-green: #15803d;
+            --accent-amber: #b45309;
+            --accent-red: #b91c1c;
+            --accent-cyan: #0891b2;
+            --accent-purple-rgb: 124, 58, 237;
+            --accent-blue-rgb: 29, 78, 216;
+
+            /* Borders & Effects */
+            --border-primary: #a8a29e;
+            --border-subtle: rgba(0, 0, 0, 0.1);
+            --glow-purple: rgba(124, 58, 237, 0.08);
+            --glow-blue: rgba(29, 78, 216, 0.05);
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+            /* Header specific */
+            --header-bg: rgba(254, 252, 243, 0.85);
         }
+
+        /* ══════════════════════════════════════════════════════════════════════════════
+           BASE STYLES & TYPOGRAPHY
+           ══════════════════════════════════════════════════════════════════════════════ */
 
         * {
             margin: 0;
@@ -37,39 +95,89 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-            min-height: 100vh;
+        /* Custom Scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-purple) transparent;
         }
 
-        /* Header */
+        *::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent-purple), var(--accent-blue));
+            border-radius: 3px;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            background: var(--bg-app);
+            color: var(--text-primary);
+            line-height: 1.7;
+            min-height: 100vh;
+            font-size: 1rem;
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════════════
+           HEADER - Glassmorphism with gradient accent line
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .header {
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-            padding: 2rem;
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 1.5rem 2rem;
             text-align: center;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: var(--shadow);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue), var(--accent-purple));
+            background-size: 200% 100%;
+            animation: gradientShift 8s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         .header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 2.25rem;
+            font-weight: 600;
+            margin-bottom: 0.375rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
         }
 
         .header .subtitle {
-            opacity: 0.9;
-            font-size: 1rem;
+            color: var(--text-muted);
+            font-size: 0.9375rem;
+            font-weight: 500;
         }
 
         .header-controls {
             position: absolute;
-            right: 1rem;
+            right: 1.5rem;
             top: 50%;
             transform: translateY(-50%);
             display: flex;
@@ -77,155 +185,221 @@
         }
 
         .theme-toggle {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            color: white;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            padding: 0.5rem 0.875rem;
+            border-radius: 0.625rem;
+            color: var(--text-primary);
             cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s;
+            font-size: 1.125rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .theme-toggle:hover {
-            background: rgba(255,255,255,0.3);
+            background: var(--bg-tertiary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--glow-purple);
         }
 
-        /* Main Layout */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           MAIN LAYOUT
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .main-container {
             display: flex;
             max-width: 1600px;
             margin: 0 auto;
-            min-height: calc(100vh - 120px);
+            min-height: calc(100vh - 100px);
         }
 
-        /* Sidebar Navigation */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           SIDEBAR NAVIGATION - Gradient indicator + slide animation
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .sidebar {
             width: 280px;
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border-color);
-            padding: 1.5rem 0;
+            background: var(--bg-primary);
+            border-right: 1px solid var(--border-subtle);
+            padding: 1.25rem 0;
             position: sticky;
-            top: 120px;
-            height: calc(100vh - 120px);
+            top: 100px;
+            height: calc(100vh - 100px);
             overflow-y: auto;
         }
 
         .nav-section {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
 
         .nav-section-title {
-            padding: 0.5rem 1.5rem;
-            font-size: 0.75rem;
-            font-weight: 600;
+            padding: 0.625rem 1.5rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.6875rem;
+            font-weight: 700;
             text-transform: uppercase;
-            color: var(--text-secondary);
-            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
         }
 
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1.5rem;
-            color: var(--text-primary);
+            gap: 0.875rem;
+            padding: 0.6875rem 1.5rem;
+            color: var(--text-secondary);
             text-decoration: none;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             border-left: 3px solid transparent;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            position: relative;
         }
 
         .nav-item:hover {
-            background: var(--bg-tertiary);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transform: translateX(4px);
         }
 
         .nav-item.active {
-            background: var(--bg-tertiary);
-            border-left-color: var(--accent-blue);
-            color: var(--accent-blue);
+            background: linear-gradient(90deg,
+                rgba(var(--accent-purple-rgb), 0.15),
+                transparent
+            );
+            border-left: 3px solid var(--accent-purple);
+            color: var(--accent-purple);
         }
 
         .nav-icon {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
             width: 1.5rem;
             text-align: center;
+            flex-shrink: 0;
         }
 
-        /* Content Area */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           CONTENT AREA
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .content {
             flex: 1;
-            padding: 2rem;
+            padding: 2.5rem;
             overflow-y: auto;
+            background: var(--bg-app);
         }
 
         .tab-content {
             display: none;
-            animation: fadeIn 0.3s ease;
+            animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .tab-content.active {
             display: block;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        /* Section Styles */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           SECTION HEADERS
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .section-header {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--border-color);
+            gap: 1.25rem;
+            margin-bottom: 2.25rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-subtle);
+            position: relative;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+            border-radius: 1px;
         }
 
         .section-icon {
-            font-size: 2.5rem;
+            font-size: 2.25rem;
         }
 
         .section-title {
+            font-family: 'Playfair Display', Georgia, serif;
             font-size: 1.75rem;
-            font-weight: 700;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
         }
 
         .section-subtitle {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-size: 0.9375rem;
+            font-weight: 500;
+            margin-top: 0.125rem;
         }
 
-        /* Cards */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           CARDS - Subtle glow on hover
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .card {
-            background: var(--bg-secondary);
+            background: var(--bg-card);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border-radius: 1rem;
-            padding: 1.5rem;
+            padding: 1.75rem;
             margin-bottom: 1.5rem;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow);
+            border: 1px solid var(--border-subtle);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 0 40px var(--glow-purple),
+                0 0 80px var(--glow-blue);
+            border-color: rgba(var(--accent-purple-rgb), 0.2);
         }
 
         .card-header {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--border-color);
+            gap: 0.875rem;
+            margin-bottom: 1.125rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-subtle);
         }
 
         .card-icon {
-            font-size: 1.5rem;
+            font-size: 1.375rem;
         }
 
         .card-title {
+            font-family: 'Playfair Display', Georgia, serif;
             font-size: 1.25rem;
             font-weight: 600;
+            color: var(--text-primary);
         }
 
-        /* Feature Grid */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           FEATURE GRID
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .feature-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -234,12 +408,19 @@
         }
 
         .feature-item {
-            background: var(--bg-tertiary);
-            padding: 1rem;
-            border-radius: 0.75rem;
+            background: var(--bg-secondary);
+            padding: 1.125rem;
+            border-radius: 0.875rem;
             display: flex;
             align-items: flex-start;
-            gap: 0.75rem;
+            gap: 0.875rem;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-item:hover {
+            background: var(--bg-tertiary);
+            transform: translateX(4px);
         }
 
         .feature-icon {
@@ -248,20 +429,27 @@
         }
 
         .feature-text h4 {
-            font-size: 0.95rem;
+            font-size: 0.9375rem;
             font-weight: 600;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.3125rem;
+            color: var(--text-primary);
         }
 
         .feature-text p {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            line-height: 1.5;
         }
 
-        /* Tables */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           TABLES
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .table-container {
             overflow-x: auto;
-            margin: 1rem 0;
+            margin: 1.25rem 0;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-subtle);
         }
 
         table {
@@ -271,125 +459,218 @@
         }
 
         th, td {
-            padding: 0.75rem 1rem;
+            padding: 0.875rem 1.125rem;
             text-align: left;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-subtle);
         }
 
         th {
             background: var(--bg-tertiary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: 600;
-            color: var(--text-primary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        tr {
+            transition: background 0.2s ease;
         }
 
         tr:hover {
-            background: var(--bg-tertiary);
+            background: rgba(var(--accent-purple-rgb), 0.05);
         }
 
-        /* Badges */
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════════════
+           BADGES
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .badge {
             display: inline-flex;
             align-items: center;
             gap: 0.25rem;
-            padding: 0.25rem 0.75rem;
+            padding: 0.3125rem 0.75rem;
             border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 600;
+            transition: all 0.2s ease;
         }
 
-        .badge-blue { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); }
-        .badge-purple { background: rgba(139, 92, 246, 0.2); color: var(--accent-purple); }
-        .badge-green { background: rgba(34, 197, 94, 0.2); color: var(--accent-green); }
-        .badge-amber { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); }
-        .badge-red { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
-        .badge-cyan { background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); }
+        .badge-blue {
+            background: linear-gradient(135deg, rgba(var(--accent-blue-rgb), 0.15), rgba(var(--accent-blue-rgb), 0.25));
+            color: var(--accent-blue);
+        }
+        .badge-purple {
+            background: linear-gradient(135deg, rgba(var(--accent-purple-rgb), 0.15), rgba(var(--accent-blue-rgb), 0.15));
+            color: var(--accent-purple);
+        }
+        .badge-green {
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--accent-green);
+        }
+        .badge-amber {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--accent-amber);
+        }
+        .badge-red {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--accent-red);
+        }
+        .badge-cyan {
+            background: rgba(34, 211, 238, 0.15);
+            color: var(--accent-cyan);
+        }
 
-        /* Tips and Alerts */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           TIP BOXES / ALERTS - Gradient border effect
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .tip-box {
-            padding: 1rem 1.25rem;
-            border-radius: 0.75rem;
-            margin: 1rem 0;
+            padding: 1.125rem 1.375rem;
+            border-radius: 0.875rem;
+            margin: 1.25rem 0;
             display: flex;
-            gap: 0.75rem;
+            gap: 0.875rem;
             align-items: flex-start;
+            position: relative;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            transition: all 0.25s ease;
+        }
+
+        .tip-box::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 0.875rem 0 0 0.875rem;
+        }
+
+        .tip-box:hover {
+            transform: translateX(2px);
         }
 
         .tip-box.info {
-            background: rgba(59, 130, 246, 0.1);
-            border-left: 4px solid var(--accent-blue);
+            background: rgba(var(--accent-blue-rgb), 0.05);
+        }
+        .tip-box.info::before {
+            background: linear-gradient(180deg, #60a5fa, #3b82f6);
         }
 
         .tip-box.success {
-            background: rgba(34, 197, 94, 0.1);
-            border-left: 4px solid var(--accent-green);
+            background: rgba(74, 222, 128, 0.05);
+        }
+        .tip-box.success::before {
+            background: linear-gradient(180deg, #4ade80, #22c55e);
         }
 
         .tip-box.warning {
-            background: rgba(245, 158, 11, 0.1);
-            border-left: 4px solid var(--accent-amber);
+            background: rgba(251, 191, 36, 0.05);
+        }
+        .tip-box.warning::before {
+            background: linear-gradient(180deg, #fbbf24, #f59e0b);
         }
 
         .tip-box.danger {
-            background: rgba(239, 68, 68, 0.1);
-            border-left: 4px solid var(--accent-red);
+            background: rgba(248, 113, 113, 0.05);
+        }
+        .tip-box.danger::before {
+            background: linear-gradient(180deg, #f87171, #ef4444);
         }
 
         .tip-icon {
             font-size: 1.25rem;
             flex-shrink: 0;
+            margin-top: 0.125rem;
         }
 
-        /* Steps */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           STEPS - Gradient circle + ring + connecting line
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .steps {
-            margin: 1.5rem 0;
+            margin: 1.75rem 0;
         }
 
         .step {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px dashed var(--border-color);
+            gap: 1.125rem;
+            margin-bottom: 0;
+            padding: 1rem 0;
+            position: relative;
         }
 
-        .step:last-child {
-            border-bottom: none;
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 1.1875rem;
+            top: 3.25rem;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent-purple), rgba(var(--accent-purple-rgb), 0.2));
         }
 
         .step-number {
-            width: 2rem;
-            height: 2rem;
-            background: var(--accent-blue);
+            width: 2.375rem;
+            height: 2.375rem;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
+            font-size: 0.9375rem;
             flex-shrink: 0;
+            box-shadow: 0 0 0 4px rgba(var(--accent-purple-rgb), 0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-content {
+            padding-top: 0.25rem;
         }
 
         .step-content h4 {
             font-weight: 600;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.375rem;
+            color: var(--text-primary);
+            font-size: 1rem;
         }
 
         .step-content p {
-            color: var(--text-secondary);
+            color: var(--text-muted);
             font-size: 0.9rem;
+            line-height: 1.6;
         }
 
-        /* Keyboard shortcuts */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           KEYBOARD SHORTCUTS
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         kbd {
             background: var(--bg-tertiary);
-            padding: 0.2rem 0.5rem;
-            border-radius: 0.25rem;
-            font-family: monospace;
-            font-size: 0.85rem;
-            border: 1px solid var(--border-color);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            border: 1px solid var(--border-primary);
+            box-shadow: 0 2px 0 var(--border-primary);
+            color: var(--text-secondary);
         }
 
-        /* Collapsible sections */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           COLLAPSIBLE SECTIONS
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .collapsible {
             margin: 1rem 0;
         }
@@ -398,36 +679,47 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 1rem;
-            background: var(--bg-tertiary);
-            border-radius: 0.5rem;
+            padding: 1rem 1.125rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 0.625rem;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .collapsible-header:hover {
-            background: var(--border-color);
+            background: var(--bg-tertiary);
+            transform: translateX(4px);
         }
 
         .collapsible-header h3 {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 1rem;
+            gap: 0.625rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
         .collapsible-arrow {
-            transition: transform 0.3s;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-muted);
+            font-size: 0.875rem;
         }
 
         .collapsible.open .collapsible-arrow {
             transform: rotate(180deg);
         }
 
+        .collapsible.open .collapsible-header {
+            border-radius: 0.625rem 0.625rem 0 0;
+            border-bottom-color: transparent;
+        }
+
         .collapsible-content {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .collapsible.open .collapsible-content {
@@ -435,74 +727,119 @@
         }
 
         .collapsible-inner {
-            padding: 1rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+            padding: 1.125rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-subtle);
             border-top: none;
-            border-radius: 0 0 0.5rem 0.5rem;
+            border-radius: 0 0 0.625rem 0.625rem;
         }
 
-        /* Flow Diagram */
+        .collapsible-inner p {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .collapsible-inner p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════════════
+           FLOW DIAGRAM
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .flow-diagram {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: 0.625rem;
             align-items: center;
             justify-content: center;
-            margin: 1.5rem 0;
-            padding: 1.5rem;
-            background: var(--bg-tertiary);
+            margin: 1.75rem 0;
+            padding: 1.75rem;
+            background: var(--bg-secondary);
             border-radius: 1rem;
+            border: 1px solid var(--border-subtle);
         }
 
         .flow-step {
-            background: var(--bg-secondary);
-            padding: 0.75rem 1.25rem;
-            border-radius: 0.5rem;
-            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            padding: 0.875rem 1.375rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-subtle);
             text-align: center;
-            min-width: 120px;
+            min-width: 110px;
+            transition: all 0.25s ease;
+        }
+
+        .flow-step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--glow-purple);
+            border-color: var(--accent-purple);
         }
 
         .flow-step-icon {
             font-size: 1.5rem;
             display: block;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.375rem;
+        }
+
+        .flow-step div {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-secondary);
         }
 
         .flow-arrow {
-            color: var(--accent-blue);
-            font-size: 1.5rem;
+            color: var(--accent-purple);
+            font-size: 1.375rem;
+            opacity: 0.7;
         }
 
-        /* Search highlight */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           SEARCH HIGHLIGHT
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .highlight {
-            background: rgba(245, 158, 11, 0.3);
-            padding: 0.1rem 0.25rem;
+            background: rgba(251, 191, 36, 0.25);
+            padding: 0.125rem 0.3125rem;
             border-radius: 0.25rem;
+            color: inherit;
         }
 
-        /* Code blocks */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           CODE BLOCKS
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         code {
             background: var(--bg-tertiary);
-            padding: 0.2rem 0.4rem;
-            border-radius: 0.25rem;
-            font-family: 'Consolas', monospace;
-            font-size: 0.85rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.8125rem;
+            color: var(--accent-purple);
         }
 
         pre {
             background: var(--bg-tertiary);
-            padding: 1rem;
-            border-radius: 0.5rem;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
             overflow-x: auto;
-            font-family: 'Consolas', monospace;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            margin: 1rem 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.8125rem;
+            line-height: 1.6;
+            margin: 1.25rem 0;
+            border: 1px solid var(--border-subtle);
         }
 
-        /* Responsive */
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--text-secondary);
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════════════
+           RESPONSIVE
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         @media (max-width: 1024px) {
             .sidebar {
                 display: none;
@@ -511,97 +848,202 @@
                 flex-direction: column;
             }
             .header h1 {
+                font-size: 1.625rem;
+            }
+            .header .subtitle {
+                font-size: 0.8125rem;
+            }
+            .header-controls {
+                position: static;
+                transform: none;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+            .content {
+                padding: 1.5rem;
+            }
+            .section-title {
                 font-size: 1.5rem;
             }
         }
 
-        /* Mobile navigation */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           MOBILE NAVIGATION
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .mobile-nav {
             display: none;
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border-color);
-            padding: 0.5rem;
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border-subtle);
+            padding: 0.625rem;
             z-index: 100;
             overflow-x: auto;
+        }
+
+        .mobile-nav::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue), var(--accent-purple));
+            background-size: 200% 100%;
+            animation: gradientShift 8s ease infinite;
         }
 
         @media (max-width: 1024px) {
             .mobile-nav {
                 display: flex;
-                gap: 0.25rem;
+                gap: 0.375rem;
             }
             .content {
-                padding-bottom: 5rem;
+                padding-bottom: 5.5rem;
             }
         }
 
         .mobile-nav-item {
             flex: 0 0 auto;
             padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.75rem;
+            border-radius: 0.625rem;
+            font-size: 0.6875rem;
             text-align: center;
             cursor: pointer;
             background: transparent;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             border: none;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+        }
+
+        .mobile-nav-item:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
         }
 
         .mobile-nav-item.active {
-            background: var(--accent-blue);
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
             color: white;
         }
 
         .mobile-nav-item span {
             display: block;
-            font-size: 1.25rem;
+            font-size: 1.125rem;
+            margin-bottom: 0.125rem;
         }
 
-        /* Quick reference */
+        /* ══════════════════════════════════════════════════════════════════════════════
+           QUICK REFERENCE
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .quick-ref {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 0.5rem;
-            margin: 1rem 0;
+            gap: 0.625rem;
+            margin: 1.25rem 0;
         }
 
         .quick-ref-item {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem;
-            background: var(--bg-tertiary);
-            border-radius: 0.5rem;
-            font-size: 0.85rem;
+            gap: 0.625rem;
+            padding: 0.625rem 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 0.625rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
         }
 
-        /* Progress indicator */
+        .quick-ref-item:hover {
+            background: var(--bg-tertiary);
+            transform: translateX(2px);
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════════════
+           PROGRESS INDICATOR
+           ══════════════════════════════════════════════════════════════════════════════ */
+
         .progress-bar {
             height: 4px;
             background: var(--bg-tertiary);
             border-radius: 2px;
             overflow: hidden;
-            margin: 0.5rem 0;
+            margin: 0.625rem 0;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
             border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════════════
+           STAGGERED ANIMATIONS
+           ══════════════════════════════════════════════════════════════════════════════ */
+
+        .card {
+            animation: fadeInUp 0.5s ease-out backwards;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.05s; }
+        .card:nth-child(2) { animation-delay: 0.1s; }
+        .card:nth-child(3) { animation-delay: 0.15s; }
+        .card:nth-child(4) { animation-delay: 0.2s; }
+        .card:nth-child(5) { animation-delay: 0.25s; }
+        .card:nth-child(6) { animation-delay: 0.3s; }
+        .card:nth-child(7) { animation-delay: 0.35s; }
+        .card:nth-child(8) { animation-delay: 0.4s; }
+
+        /* ══════════════════════════════════════════════════════════════════════════════
+           MISC UTILITIES
+           ══════════════════════════════════════════════════════════════════════════════ */
+
+        ul {
+            color: var(--text-secondary);
+        }
+
+        ul li {
+            margin-bottom: 0.375rem;
+        }
+
+        ul li strong {
+            color: var(--text-primary);
+        }
+
+        p {
+            color: var(--text-secondary);
+        }
+
+        p strong {
+            color: var(--text-primary);
+        }
+
+        /* Ensure emoji visibility in both themes */
+        .section-icon,
+        .card-icon,
+        .feature-icon,
+        .tip-icon,
+        .nav-icon,
+        .flow-step-icon {
+            filter: none;
         }
     </style>
 </head>
 <body>
     <header class="header">
-        <h1>📚 Manual do Usuário Avançado</h1>
-        <p class="subtitle">SentencifyAI v1.38.21 — Guia Completo de Funcionalidades</p>
+        <h1>Manual do Usuário Avançado</h1>
+        <p class="subtitle">SentencifyAI v1.40.20 — Guia Completo de Funcionalidades</p>
         <div class="header-controls">
-            <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌓</button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">☀️</button>
         </div>
     </header>
 
@@ -649,6 +1091,10 @@
                 <div class="nav-item" onclick="showTab('modelos')">
                     <span class="nav-icon">📦</span>
                     <span>Modelos</span>
+                </div>
+                <div class="nav-item" onclick="showTab('prova-oral')">
+                    <span class="nav-icon">🎤</span>
+                    <span>Prova Oral</span>
                 </div>
             </div>
 
@@ -1541,6 +1987,65 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- NOVO: Importar Análise de Prova Oral -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🎤</span>
+                        <h3 class="card-title">Importar Análise de Prova Oral</h3>
+                    </div>
+                    <p>Se você usou o app <strong>Analisador de Prova Oral</strong> para processar depoimentos, pode importar os resultados diretamente:</p>
+
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Clique em "Importar Prova Oral"</h4>
+                                <p>Botão visível na aba Provas quando você está autenticado</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Selecione a análise</h4>
+                                <p>Modal exibe lista de análises salvas com busca por número do processo</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Escolha as seções</h4>
+                                <p>Selecione quais partes importar: Sínteses, Contradições, Confissões, Credibilidade</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p style="margin-top: 1rem;"><strong>O que é importado:</strong></p>
+                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                        <li>Transcrição vira uma nova <strong>Prova</strong> (tipo texto)</li>
+                        <li>Seções selecionadas viram <strong>Análises</strong> vinculadas à prova</li>
+                    </ul>
+
+                    <div class="tip-box info">
+                        <span class="tip-icon">💡</span>
+                        <div><strong>Requisito:</strong> Você precisa estar logado e ter análises salvas no Analisador de Prova Oral.</div>
+                    </div>
+                </div>
+
+                <!-- NOVO: Edição Inline de Análises -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">✏️</span>
+                        <h3 class="card-title">Editar Análises de Prova</h3>
+                    </div>
+                    <p>Após analisar uma prova, você pode editar o resultado:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Passe o mouse sobre a análise para ver o botão <strong>✏️ Editar</strong></li>
+                        <li>Clique para abrir textarea editável</li>
+                        <li>Faça ajustes e clique em <strong>Salvar</strong> (ou Cancelar para descartar)</li>
+                        <li>Alterações são salvas automaticamente e persistem</li>
+                    </ul>
+                </div>
             </div>
 
             <!-- Editor Tab -->
@@ -1892,6 +2397,11 @@
                     <div class="tip-box info">
                         <span class="tip-icon">📄</span>
                         <div><strong>Toggle "Incluir documentos principais":</strong> Se desativado, a IA não recebe petição/contestação — útil para economizar tokens quando você só quer discutir o texto já escrito.</div>
+                    </div>
+
+                    <div class="tip-box info">
+                        <span class="tip-icon">📎</span>
+                        <div><strong>Toggle "Incluir documentos complementares":</strong> Controla se PDFs/textos complementares são enviados ao chat. Desativado por padrão. Configuração é <strong>persistida por tópico</strong> e sobrevive F5 e export/import.</div>
                     </div>
 
                     <div class="tip-box success">
@@ -2340,6 +2850,292 @@
                 </div>
             </div>
 
+            <!-- Prova Oral Tab -->
+            <div id="prova-oral" class="tab-content">
+                <div class="section-header">
+                    <span class="section-icon">🎤</span>
+                    <div>
+                        <h2 class="section-title">Analisador de Prova Oral</h2>
+                        <p class="section-subtitle">Análise inteligente de depoimentos de audiência</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🎯</span>
+                        <h3 class="card-title">O que é o Analisador?</h3>
+                    </div>
+                    <p>O <strong>Analisador de Prova Oral</strong> é um app especializado que transforma transcrições de audiências em análises jurídicas estruturadas usando IA.</p>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="feature-icon">📝</span>
+                            <div class="feature-text">
+                                <h4>Extração de Depoimentos</h4>
+                                <p>Identifica cada depoente e organiza suas declarações com timestamps</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">⚔️</span>
+                            <div class="feature-text">
+                                <h4>Contradições</h4>
+                                <p>Detecta contradições internas e entre testemunhas</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">✋</span>
+                            <div class="feature-text">
+                                <h4>Confissões</h4>
+                                <p>Identifica admissões do autor e do preposto (art. 391 CPC)</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">⚖️</span>
+                            <div class="feature-text">
+                                <h4>Credibilidade</h4>
+                                <p>Avalia confiabilidade de cada testemunha com critérios objetivos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tip-box info">
+                        <span class="tip-icon">🔗</span>
+                        <div><strong>Acesso:</strong> Clique em "Prova Oral" no menu superior do SentencifyAI (requer login).</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🔄</span>
+                        <h3 class="card-title">Fluxo de Trabalho</h3>
+                    </div>
+                    <div class="flow-diagram">
+                        <div class="flow-step">
+                            <span class="flow-step-icon">📋</span>
+                            <div>1. Transcrição</div>
+                        </div>
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-step">
+                            <span class="flow-step-icon">🤖</span>
+                            <div>2. Análise IA</div>
+                        </div>
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-step">
+                            <span class="flow-step-icon">📊</span>
+                            <div>3. Resultados</div>
+                        </div>
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-step">
+                            <span class="flow-step-icon">✏️</span>
+                            <div>4. Marcações</div>
+                        </div>
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-step">
+                            <span class="flow-step-icon">📤</span>
+                            <div>5. Importar</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📥</span>
+                        <h3 class="card-title">Entrada de Dados</h3>
+                    </div>
+                    <p>Preencha os campos antes de iniciar a análise:</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Campo</th>
+                                    <th>Obrigatório</th>
+                                    <th>Descrição</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Transcrição da Audiência</strong></td>
+                                    <td><span class="badge badge-red">Sim</span></td>
+                                    <td>Cole a transcrição completa da audiência (todas as oitivas)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Síntese do Processo</strong></td>
+                                    <td><span class="badge badge-amber">Recomendado</span></td>
+                                    <td>Partes, pedidos, alegações e defesas. Pode importar do Analisador de Prepauta</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Instruções Extras</strong></td>
+                                    <td><span class="badge badge-green">Opcional</span></td>
+                                    <td>Ex: "Foque em horas extras e intervalos", "Verifique contradições sobre acidente"</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">⚙️</span>
+                        <h3 class="card-title">Processamento em 3 Fases</h3>
+                    </div>
+                    <p>Ao clicar em <strong>"Analisar Prova Oral"</strong>, a IA executa:</p>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Fase 1: Transcrição Exaustiva</h4>
+                                <p>Extrai cada depoente, qualificação e todas as declarações com timestamps</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Fase 2: Classificação Jurídica</h4>
+                                <p>Agrupa por tema, identifica contradições, confissões e avalia credibilidade</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Fase 3: Análise Probatória</h4>
+                                <p>Produz análise jurídica detalhada para cada pedido/tema</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tip-box info">
+                        <span class="tip-icon">⏱️</span>
+                        <div>O modal de progresso mostra status em tempo real de cada fase, com contagem de caracteres e tempo decorrido.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📊</span>
+                        <h3 class="card-title">Abas de Resultados (7 Visualizações)</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Aba</th>
+                                    <th>Conteúdo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Depoentes</strong></td>
+                                    <td>Lista de testemunhas com qualificação (Autor, Preposto, Testemunha-autor, Testemunha-ré)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sínteses</strong></td>
+                                    <td>Declarações organizadas em 3 modos: <em>Detalhada</em> (cards), <em>Por Depoente</em> (texto corrido), <em>Por Tema</em> (agrupado por pedido)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Contradições</strong></td>
+                                    <td>Contradições internas e externas, com nível de relevância e análise de impacto</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Confissões</strong></td>
+                                    <td>Admissões identificadas (autor ou preposto), com trecho, tema e severidade</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Credibilidade</strong></td>
+                                    <td>Avaliação de cada testemunha: conhecimento direto, contemporaneidade, coerência, interesse na lide</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Análises</strong></td>
+                                    <td>Análise jurídica completa por tema: alegações, defesas, depoimentos, fundamentação, conclusão</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Comparativo</strong></td>
+                                    <td>Tabela resumo de todos os temas com conclusão (Favorável-autor/ré, Parcial, Inconclusivo)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">🖍️</span>
+                        <h3 class="card-title">Marcações e Destaques</h3>
+                    </div>
+                    <p>Na aba <strong>Sínteses</strong>, você pode marcar trechos importantes:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Selecione qualquer texto → escolha uma cor (amarelo, verde, azul, roxo, vermelho)</li>
+                        <li>Adicione comentário opcional ao destaque</li>
+                        <li>Marcações são <strong>salvas automaticamente</strong> no servidor</li>
+                        <li>Indicador visual mostra "Salvando..." → "Salvo"</li>
+                    </ul>
+                    <div class="tip-box success">
+                        <span class="tip-icon">💾</span>
+                        <div>Suas marcações persistem e são recuperadas ao reabrir a análise do histórico.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📜</span>
+                        <h3 class="card-title">Histórico de Análises</h3>
+                    </div>
+                    <p>Todas as análises são salvas automaticamente. Acesse pelo botão <strong>📜 Histórico</strong>:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Busque por número do processo, autor ou réu</li>
+                        <li>Veja estatísticas de cada análise (depoentes, temas, contradições, confissões)</li>
+                        <li>Carregue análises anteriores para continuar trabalhando</li>
+                        <li>Exclua análises próprias (análises compartilhadas por outros não podem ser excluídas)</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">👥</span>
+                        <h3 class="card-title">Compartilhamento</h3>
+                    </div>
+                    <p>Compartilhe análises com colegas via <strong>Configurações > Compartilhamento</strong>:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Adicione e-mails de usuários que podem ver suas análises</li>
+                        <li>Análises compartilhadas exibem badge roxo "Compartilhada por [email]"</li>
+                        <li>Destinatários podem visualizar, mas não editar ou excluir</li>
+                        <li>Revogue acesso a qualquer momento</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">📤</span>
+                        <h3 class="card-title">Importar no SentencifyAI</h3>
+                    </div>
+                    <p>Após analisar, importe os resultados na aba <strong>Provas</strong> do SentencifyAI:</p>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Na aba Provas, clique "Importar Prova Oral"</h4>
+                                <p>Botão visível quando você está autenticado</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Selecione a análise e as seções</h4>
+                                <p>Escolha quais partes importar: Sínteses, Contradições, Confissões, Credibilidade</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>A transcrição vira Prova, seções viram Análises</h4>
+                                <p>Pronto para vincular a tópicos e usar no Assistente IA</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tip-box warning">
+                    <span class="tip-icon">⚙️</span>
+                    <div><strong>Configurações:</strong> O Analisador usa as mesmas configurações de provedor de IA do SentencifyAI (Claude, Gemini, OpenAI ou Grok). Acesse via botão ⚙️ no header.</div>
+                </div>
+            </div>
+
             <!-- Config Tab -->
             <div id="config" class="tab-content">
                 <div class="section-header">
@@ -2729,10 +3525,14 @@
                                 <tr><td><strong>Frequência</strong></td><td>Salva automaticamente a cada <strong>10 segundos</strong> de inatividade</td></tr>
                                 <tr><td><strong>Indicador Visual</strong></td><td>"Auto-salvando..." aparece brevemente na interface</td></tr>
                                 <tr><td><strong>Salvamento Manual</strong></td><td><kbd>Ctrl+S</kbd> salva imediatamente</td></tr>
-                                <tr><td><strong>Armazenamento</strong></td><td>localStorage (metadados) + IndexedDB (modelos e PDFs)</td></tr>
+                                <tr><td><strong>Armazenamento</strong></td><td>localStorage (metadados) + IndexedDB (modelos, PDFs, textos de provas, análises)</td></tr>
                                 <tr><td><strong>Persistência</strong></td><td>Dados persistem mesmo após fechar o navegador</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="tip-box success">
+                        <span class="tip-icon">💾</span>
+                        <div><strong>Textos grandes agora no IndexedDB:</strong> Textos de OCR, uploads colados e análises de provas são salvos no IndexedDB (em vez de localStorage), evitando problemas de estouro de quota (~5-10MB).</div>
                     </div>
                     <div class="tip-box warning">
                         <span class="tip-icon">⚠️</span>
@@ -2777,6 +3577,30 @@
                         </div>
                     </div>
                     <p style="margin-top: 1rem;">Você pode editar, adicionar ou remover prompts nas configurações.</p>
+
+                    <div class="tip-box warning">
+                        <span class="tip-icon">🔒</span>
+                        <div><strong>Prompts padrão protegidos:</strong> Os 5 prompts originais (Avaliar, Melhorar, Verificar Omissões, etc.) são <strong>readonly</strong> e exibem ícone de cadeado. Você pode criar novos prompts personalizados, que podem ser editados e excluídos livremente.</div>
+                    </div>
+                </div>
+
+                <!-- NOVO: Compartilhamento de Análises de Prova Oral -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-icon">👥</span>
+                        <h3 class="card-title">Compartilhamento de Análises (Prova Oral)</h3>
+                    </div>
+                    <p>Compartilhe suas análises de prova oral com colegas:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li>Acesse <strong>Configurações > Compartilhamento</strong></li>
+                        <li>Selecione usuários que podem ver suas análises</li>
+                        <li>Análises compartilhadas exibem <strong>badge visual</strong> no histórico</li>
+                        <li>Seus colegas podem ver (não editar) as análises compartilhadas</li>
+                    </ul>
+                    <div class="tip-box info">
+                        <span class="tip-icon">🔐</span>
+                        <div><strong>Privacidade:</strong> Apenas usuários explicitamente autorizados têm acesso. Você pode revogar o compartilhamento a qualquer momento.</div>
+                    </div>
                 </div>
 
                 <!-- NOVO: Importar/Exportar Configurações -->
@@ -3285,6 +4109,10 @@
                         <li>Ative <strong>IA Local</strong> para buscas e sugestões instantâneas</li>
                         <li>Descarregue modelos NER/E5 quando não estiver usando (libera RAM)</li>
                     </ul>
+                    <div class="tip-box success">
+                        <span class="tip-icon">⚡</span>
+                        <div><strong>Operações longas:</strong> Análises, geração de dispositivo, confronto de fatos e revisão de sentença usam <strong>streaming</strong> para evitar timeout. Você pode ver o progresso em tempo real em algumas operações.</div>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -3421,6 +4249,10 @@
             <span>📦</span>
             Modelos
         </button>
+        <button class="mobile-nav-item" onclick="showTab('prova-oral')">
+            <span>🎤</span>
+            Oral
+        </button>
         <button class="mobile-nav-item" onclick="showTab('config')">
             <span>⚙️</span>
             Config
@@ -3428,7 +4260,57 @@
     </nav>
 
     <script>
-        // Tab Navigation
+        // ══════════════════════════════════════════════════════════════════════════════
+        // THEME SYNCHRONIZATION WITH SentencifyAI
+        // Uses 'sentencify-app-theme' localStorage key
+        // ══════════════════════════════════════════════════════════════════════════════
+
+        function initializeTheme() {
+            // Check SentencifyAI theme first, then fallback to manual's own theme
+            const appTheme = localStorage.getItem('sentencify-app-theme');
+            const manualTheme = localStorage.getItem('manual-theme');
+
+            // Priority: sentencify-app-theme > manual-theme > default 'dark'
+            const theme = appTheme || manualTheme || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeIcon(theme);
+        }
+
+        function updateThemeIcon(theme) {
+            const btn = document.querySelector('.theme-toggle');
+            if (btn) {
+                btn.textContent = theme === 'light' ? '🌙' : '☀️';
+                btn.title = theme === 'light' ? 'Alternar para tema escuro' : 'Alternar para tema claro';
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            updateThemeIcon(newTheme);
+
+            // Save to both keys for compatibility
+            localStorage.setItem('manual-theme', newTheme);
+            localStorage.setItem('sentencify-app-theme', newTheme);
+        }
+
+        // Listen for theme changes from other tabs (SentencifyAI app)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'sentencify-app-theme' && e.newValue) {
+                document.documentElement.setAttribute('data-theme', e.newValue);
+                updateThemeIcon(e.newValue);
+            }
+        });
+
+        // Initialize theme on load
+        initializeTheme();
+
+        // ══════════════════════════════════════════════════════════════════════════════
+        // TAB NAVIGATION
+        // ══════════════════════════════════════════════════════════════════════════════
+
         function showTab(tabId) {
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
@@ -3444,7 +4326,10 @@
             });
 
             // Show selected tab
-            document.getElementById(tabId).classList.add('active');
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
 
             // Activate nav item
             document.querySelectorAll('.nav-item').forEach(item => {
@@ -3460,32 +4345,41 @@
 
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Save last viewed tab
+            localStorage.setItem('manual-last-tab', tabId);
         }
 
-        // Theme Toggle
-        function toggleTheme() {
-            document.body.classList.toggle('light-theme');
-            localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
-        }
+        // ══════════════════════════════════════════════════════════════════════════════
+        // COLLAPSIBLE SECTIONS
+        // ══════════════════════════════════════════════════════════════════════════════
 
-        // Load saved theme
-        if (localStorage.getItem('theme') === 'light') {
-            document.body.classList.add('light-theme');
-        }
-
-        // Collapsible sections
         function toggleCollapsible(header) {
             const collapsible = header.parentElement;
             collapsible.classList.toggle('open');
         }
 
-        // Keyboard navigation
+        // ══════════════════════════════════════════════════════════════════════════════
+        // KEYBOARD NAVIGATION
+        // ══════════════════════════════════════════════════════════════════════════════
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 // Close any open collapsibles
                 document.querySelectorAll('.collapsible.open').forEach(c => {
                     c.classList.remove('open');
                 });
+            }
+        });
+
+        // ══════════════════════════════════════════════════════════════════════════════
+        // RESTORE LAST TAB ON LOAD
+        // ══════════════════════════════════════════════════════════════════════════════
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const lastTab = localStorage.getItem('manual-last-tab');
+            if (lastTab && document.getElementById(lastTab)) {
+                showTab(lastTab);
             }
         });
     </script>
