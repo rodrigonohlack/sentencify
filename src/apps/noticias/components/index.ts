@@ -17,6 +17,9 @@ export { NewsDetail } from './detail/NewsDetail';
 // Sources
 export { ManualInput } from './sources/ManualInput';
 
+// UI
+export { Button } from './ui/Button';
+
 // Settings
 export { SettingsModal } from './settings/SettingsModal';
 export { AIProviderSelector } from './settings/AIProviderSelector';

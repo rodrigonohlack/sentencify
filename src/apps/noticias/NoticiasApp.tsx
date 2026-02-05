@@ -5,7 +5,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Newspaper, Settings, Plus, RefreshCw, Loader2, Scale,
+  Newspaper, Settings, Plus, RefreshCw, Scale,
   Sun, Moon, LogOut, Rss
 } from 'lucide-react';
 
@@ -17,7 +17,8 @@ import {
   NewsFilters,
   NewsDetail,
   SettingsModal,
-  ManualInput
+  ManualInput,
+  Button
 } from './components';
 
 // Hooks e Stores
@@ -294,20 +295,20 @@ const NoticiasAppContent: React.FC = () => {
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* HEADER */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-50 theme-bg-secondary border-b theme-border-secondary backdrop-blur-lg bg-opacity-90">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg">
-                <Newspaper className="w-5 h-5 text-white" />
+              <div className="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-600/20">
+                <Newspaper className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="font-bold theme-text-primary text-lg">
+                <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
                   Notícias Jurídicas
                 </h1>
-                <p className="text-xs theme-text-muted">
-                  Feed trabalhista inteligente
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Sentencify AI
                 </p>
               </div>
             </div>
@@ -315,67 +316,69 @@ const NoticiasAppContent: React.FC = () => {
             {/* Ações */}
             <div className="flex items-center gap-2">
               {/* Buscar RSS */}
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={refreshFromRSS}
-                disabled={loading.refresh}
-                className="p-2 rounded-lg theme-bg-tertiary hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
-                title="Buscar novas notícias"
+                loading={loading.refresh}
+                icon={<Rss className="w-4 h-4" />}
               >
-                {loading.refresh ? (
-                  <Loader2 className="w-5 h-5 animate-spin theme-text-secondary" />
-                ) : (
-                  <Rss className="w-5 h-5 theme-text-secondary" />
-                )}
-              </button>
+                <span className="hidden sm:inline">Atualizar</span>
+              </Button>
 
               {/* Adicionar manual */}
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsManualInputOpen(true)}
-                className="p-2 rounded-lg theme-bg-tertiary hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
-                title="Adicionar notícia manualmente"
+                icon={<Plus className="w-4 h-4" />}
               >
-                <Plus className="w-5 h-5 theme-text-secondary" />
-              </button>
-
-              {/* Configurações */}
-              <button
-                onClick={() => setSettingsOpen(true)}
-                className="p-2 rounded-lg theme-bg-tertiary hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
-                title="Configurações"
-              >
-                <Settings className="w-5 h-5 theme-text-secondary" />
-              </button>
+                <span className="hidden sm:inline">Adicionar</span>
+              </Button>
 
               {/* Voltar ao Sentencify */}
               <a
                 href="/"
-                className="p-2 rounded-lg theme-bg-tertiary hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
-                title="Voltar ao Sentencify"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
-                <Scale className="w-5 h-5 theme-text-secondary" />
+                <Scale className="w-4 h-4" />
+                <span className="hidden sm:inline">Sentencify</span>
               </a>
 
               {/* Toggle tema */}
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={toggleAppTheme}
-                className="p-2 rounded-lg theme-bg-tertiary hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
-                title={isDarkMode ? 'Modo claro' : 'Modo escuro'}
+                icon={isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               >
-                {isDarkMode ? (
-                  <Sun className="w-5 h-5 text-yellow-400" />
-                ) : (
-                  <Moon className="w-5 h-5 theme-text-secondary" />
-                )}
-              </button>
+                <span className="sr-only">Alternar tema</span>
+              </Button>
 
-              {/* Logout */}
-              <button
-                onClick={logout}
-                className="p-2 rounded-lg theme-bg-tertiary hover:bg-red-500/20 transition-colors"
-                title={`Sair (${userEmail})`}
+              {/* Configurações */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSettingsOpen(true)}
+                icon={<Settings className="w-4 h-4" />}
               >
-                <LogOut className="w-5 h-5 text-red-400" />
-              </button>
+                <span className="hidden sm:inline">Configurações</span>
+              </Button>
+
+              {/* User info & Logout */}
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
+                <span className="text-sm text-slate-600 dark:text-slate-400 hidden md:inline truncate max-w-[150px]">
+                  {userEmail}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={logout}
+                  icon={<LogOut className="w-4 h-4" />}
+                >
+                  <span className="sr-only">Sair</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
