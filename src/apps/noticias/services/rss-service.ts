@@ -4,23 +4,21 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { RSS_CONFIG, LABOR_KEYWORDS } from '../constants/sources';
+import { stripHtml } from '../utils/html-utils';
 import type { NewsSource, NewsItemCreate, RSSItem, RSSParseResult } from '../types';
 
 /** Tribunais superiores isentos do filtro de relevância trabalhista */
 const SUPERIOR_COURT_IDS = ['stf', 'stj', 'tst'] as const;
 
-/** Remove tags HTML e decodifica entidades básicas */
-const stripHtml = (html: string): string => {
-  let text = html.replace(/<!\[CDATA\[|\]\]>/g, '');
-  text = text.replace(/<[^>]+>/g, ' ');
-  text = text.replace(/&nbsp;/g, ' ');
-  text = text.replace(/&amp;/g, '&');
-  text = text.replace(/&lt;/g, '<');
-  text = text.replace(/&gt;/g, '>');
-  text = text.replace(/&quot;/g, '"');
-  text = text.replace(/&#39;/g, "'");
-  text = text.replace(/\s+/g, ' ');
-  return text.trim();
+/** Converte string de data para ISO, com fallback para data atual */
+const safeDateToISO = (dateStr: string): string => {
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return new Date().toISOString();
+    return d.toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
 };
 
 /**
@@ -152,7 +150,7 @@ export const fetchRSSFeed = async (source: NewsSource): Promise<NewsItemCreate[]
         description: item.description,
         content: item.content,
         link: item.link,
-        publishedAt: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
+        publishedAt: item.pubDate ? safeDateToISO(item.pubDate) : new Date().toISOString(),
         themes: item.categories
       }));
     } catch (error) {

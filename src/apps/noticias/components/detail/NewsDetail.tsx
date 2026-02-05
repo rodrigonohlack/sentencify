@@ -8,6 +8,7 @@ import {
   X, Star, BookOpen, ExternalLink, Loader2, Calendar, Building2, ArrowLeft
 } from 'lucide-react';
 import { formatFullDate, formatRelativeTime } from '../../utils/date-utils';
+import { stripHtml } from '../../utils/html-utils';
 import type { NewsItem } from '../../types';
 
 interface NewsDetailProps {
@@ -146,7 +147,7 @@ export const NewsDetail: React.FC<NewsDetailProps> = ({
         <div>
           <h2 className="font-semibold theme-text-primary mb-3">Descrição</h2>
           <p className="theme-text-secondary text-sm leading-relaxed">
-            {news.description}
+            {stripHtml(news.description)}
           </p>
         </div>
 
@@ -155,7 +156,7 @@ export const NewsDetail: React.FC<NewsDetailProps> = ({
           <div>
             <h2 className="font-semibold theme-text-primary mb-3">Conteúdo</h2>
             <div className="theme-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
-              {news.content}
+              {stripHtml(news.content)}
             </div>
           </div>
         )}
