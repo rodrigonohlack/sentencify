@@ -765,77 +765,76 @@ export const useAIStore = create<AIStoreState>()(
               console.warn('[AIStore] Erro ao restaurar apiKeys:', err);
             }
 
+            // ═══════════════════════════════════════════════════════════════
+            // MIGRAÇÕES DE QUICKPROMPTS
+            // Todas as migrações são feitas primeiro, depois persistência única
+            // ═══════════════════════════════════════════════════════════════
+            let needsMigration = false;
+
             // Garantir que quickPrompts sempre tenha os defaults se vazio/undefined
             if (!state.aiSettings?.quickPrompts || state.aiSettings.quickPrompts.length === 0) {
               state.aiSettings.quickPrompts = DEFAULT_QUICK_PROMPTS;
+              needsMigration = true;
             }
 
-            // Migração v1.38.14: Adicionar proofFilter aos quickPrompts existentes
-            // Usuários com sessões pré-v1.38.12 têm quickPrompts sem proofFilter
+            // Migração v1.38.14: Adicionar proofFilter ao qp-4
             if (state.aiSettings?.quickPrompts) {
-              state.aiSettings.quickPrompts = state.aiSettings.quickPrompts.map((qp: QuickPrompt) => {
-                if (qp.id === 'qp-4' && !qp.proofFilter) {
-                  return { ...qp, proofFilter: 'oral' as const };
-                }
-                return qp;
-              });
+              const qp4 = state.aiSettings.quickPrompts.find((qp: QuickPrompt) => qp.id === 'qp-4');
+              if (qp4 && !qp4.proofFilter) {
+                state.aiSettings.quickPrompts = state.aiSettings.quickPrompts.map((qp: QuickPrompt) => {
+                  if (qp.id === 'qp-4') {
+                    return { ...qp, proofFilter: 'oral' as const };
+                  }
+                  return qp;
+                });
+                needsMigration = true;
+              }
             }
 
-            // Migração v1.40.XX: Adicionar quickprompt "Decidir com Provas" para usuários existentes
+            // Migração v1.40.XX: Adicionar qp-5 "Decidir com Provas"
             if (state.aiSettings?.quickPrompts) {
-              const hasProofDecision = state.aiSettings.quickPrompts.some((qp: QuickPrompt) => qp.id === 'qp-5');
-              if (!hasProofDecision) {
+              const hasQp5 = state.aiSettings.quickPrompts.some((qp: QuickPrompt) => qp.id === 'qp-5');
+              if (!hasQp5) {
                 const proofDecisionQP = DEFAULT_QUICK_PROMPTS.find(qp => qp.id === 'qp-5');
                 if (proofDecisionQP) {
                   state.aiSettings.quickPrompts = [...state.aiSettings.quickPrompts, proofDecisionQP];
-                  // Forçar persistência após adicionar qp-5
-                  setTimeout(() => {
-                    useAIStore.setState((s) => ({
-                      ...s,
-                      aiSettings: { ...s.aiSettings }
-                    }));
-                  }, 100);
+                  needsMigration = true;
                 }
               }
             }
 
-            // Migração v1.40.XX: Marcar quickprompts padrão com isDefault para proteção
+            // Migração v1.40.XX: Marcar quickprompts padrão com isDefault
             if (state.aiSettings?.quickPrompts) {
-              let needsPersist = false;
               const defaultIds = ['qp-1', 'qp-2', 'qp-3', 'qp-4', 'qp-5'];
-              state.aiSettings.quickPrompts = state.aiSettings.quickPrompts.map((qp: QuickPrompt) => {
-                if (defaultIds.includes(qp.id) && qp.isDefault === undefined) {
-                  needsPersist = true;
-                  return { ...qp, isDefault: true };
-                }
-                return qp;
-              });
-              // Forçar persistência se houve migração de isDefault
-              if (needsPersist) {
-                setTimeout(() => {
-                  useAIStore.setState((s) => ({
-                    ...s,
-                    aiSettings: { ...s.aiSettings }
-                  }));
-                }, 150);
+              const needsIsDefault = state.aiSettings.quickPrompts.some(
+                (qp: QuickPrompt) => defaultIds.includes(qp.id) && qp.isDefault === undefined
+              );
+              if (needsIsDefault) {
+                state.aiSettings.quickPrompts = state.aiSettings.quickPrompts.map((qp: QuickPrompt) => {
+                  if (defaultIds.includes(qp.id) && qp.isDefault === undefined) {
+                    return { ...qp, isDefault: true };
+                  }
+                  return qp;
+                });
+                needsMigration = true;
               }
             }
 
             // Migração v1.40.21: Sincronizar ícones e subOptions dos quickprompts padrão
             if (state.aiSettings?.quickPrompts) {
-              let needsIconSync = false;
               const defaultIds = ['qp-1', 'qp-2', 'qp-3', 'qp-4', 'qp-5'];
+              let needsSync = false;
 
-              state.aiSettings.quickPrompts = state.aiSettings.quickPrompts.map((qp: QuickPrompt) => {
+              const syncedPrompts = state.aiSettings.quickPrompts.map((qp: QuickPrompt) => {
                 if (defaultIds.includes(qp.id)) {
                   const defaultQp = DEFAULT_QUICK_PROMPTS.find(d => d.id === qp.id);
                   if (defaultQp) {
-                    // Verificar se precisa atualizar icon ou subOptions
-                    const needsIcon = defaultQp.icon && qp.icon !== defaultQp.icon;
-                    const needsSubOptions = defaultQp.subOptions && JSON.stringify(qp.subOptions) !== JSON.stringify(defaultQp.subOptions);
+                    const iconMismatch = defaultQp.icon && qp.icon !== defaultQp.icon;
+                    const subOptionsMismatch = defaultQp.subOptions &&
+                      JSON.stringify(qp.subOptions) !== JSON.stringify(defaultQp.subOptions);
 
-                    if (needsIcon || needsSubOptions) {
-                      needsIconSync = true;
+                    if (iconMismatch || subOptionsMismatch) {
+                      needsSync = true;
                       return {
                         ...qp,
                         icon: defaultQp.icon,
@@ -847,15 +846,24 @@ export const useAIStore = create<AIStoreState>()(
                 return qp;
               });
 
-              // Forçar persistência se houve sincronização
-              if (needsIconSync) {
-                setTimeout(() => {
-                  useAIStore.setState((s) => ({
-                    ...s,
-                    aiSettings: { ...s.aiSettings }
-                  }));
-                }, 200);
+              if (needsSync) {
+                state.aiSettings.quickPrompts = syncedPrompts;
+                needsMigration = true;
               }
+            }
+
+            // Persistência única após todas as migrações
+            if (needsMigration) {
+              const migratedQuickPrompts = [...state.aiSettings.quickPrompts];
+              setTimeout(() => {
+                useAIStore.setState((s) => ({
+                  ...s,
+                  aiSettings: {
+                    ...s.aiSettings,
+                    quickPrompts: migratedQuickPrompts
+                  }
+                }));
+              }, 100);
             }
           }
         }
