@@ -69,7 +69,7 @@ export const DEFAULT_SOURCES: NewsSource[] = [
     id: 'stj',
     name: 'STJ - Superior Tribunal de Justiça',
     type: 'tribunal',
-    feedUrl: 'https://scon.stj.jus.br/SCON/feed.jsp',
+    feedUrl: 'https://res.stj.jus.br/hrestp-c-portalp/RSS.xml',
     websiteUrl: 'https://www.stj.jus.br',
     enabled: true
   },
