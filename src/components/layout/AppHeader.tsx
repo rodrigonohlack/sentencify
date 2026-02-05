@@ -191,12 +191,9 @@ export function AppHeader({
             <span className="font-semibold">Aviso Importante:</span> Esta ferramenta utiliza
             Inteligência Artificial para auxiliar na redação de sentenças. A IA pode cometer erros,
             omitir informações relevantes ou gerar conteúdo impreciso.
-            <span className="block mt-1 font-semibold theme-text-amber">
-              É responsabilidade do usuário revisar, verificar e validar todas as informações
-              geradas antes de utilizá-las.
-            </span>
-            <span className="block mt-1 theme-text-amber-muted">
-              Sua revisão é fundamental, na forma estabelecida pela{' '}
+            <span className="block mt-1 theme-text-amber">
+              <span className="font-semibold">É responsabilidade do usuário revisar, verificar e validar todas as informações geradas antes de utilizá-las.</span>
+              {' '}Sua revisão é fundamental, na forma estabelecida pela{' '}
               <span className="font-semibold">Resolução 615/2025 do CNJ</span>.
             </span>
           </div>
