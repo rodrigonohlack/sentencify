@@ -11,7 +11,7 @@ import type { NewsSource, NewsPeriod } from '../types/noticias.types';
  */
 export const RSS_CONFIG = {
   /** URL do proxy CORS para contornar restrições */
-  CORS_PROXY_URL: 'https://api.allorigins.win/raw?url=',
+  CORS_PROXY_URL: '/api/rss-proxy?url=',
   /** Timeout para fetch de RSS (ms) */
   FETCH_TIMEOUT_MS: 10000,
   /** Máximo de tentativas de retry */

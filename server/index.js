@@ -86,8 +86,8 @@ app.use((req, res, next) => {
     // Fontes: apenas locais (Lucide React icons são npm)
     "font-src 'self'",
 
-    // Conexões: APIs de IA, Google, HuggingFace, GitHub, Sentry, CDNs, CORS proxy (RSS)
-    "connect-src 'self' https://api.anthropic.com https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://github.com https://raw.githubusercontent.com https://cdn-lfs.huggingface.co https://huggingface.co https://cas-bridge.xethub.hf.co https://o4510650008076288.ingest.us.sentry.io https://cdn.quilljs.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://api.allorigins.win",
+    // Conexões: APIs de IA, Google, HuggingFace, GitHub, Sentry, CDNs
+    "connect-src 'self' https://api.anthropic.com https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://github.com https://raw.githubusercontent.com https://cdn-lfs.huggingface.co https://huggingface.co https://cas-bridge.xethub.hf.co https://o4510650008076288.ingest.us.sentry.io https://cdn.quilljs.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
 
     // Frames: popup do Google OAuth
     "frame-src 'self' https://accounts.google.com",
@@ -256,6 +256,39 @@ app.get('/api/embeddings', async (req, res) => {
   } catch (error) {
     console.error(`[Embeddings] Error:`, error.message);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// v1.41.0: Proxy para RSS feeds (evita CORS e dependência de proxy externo)
+app.get('/api/rss-proxy', async (req, res) => {
+  const { url } = req.query;
+
+  if (!url) return res.status(400).json({ error: 'URL é obrigatória' });
+
+  // Whitelist de domínios permitidos (anti-SSRF)
+  const ALLOWED_DOMAINS = ['.jus.br', 'conjur.com.br', 'migalhas.com.br', 'jota.info'];
+  try {
+    const parsed = new URL(url);
+    const isAllowed = ALLOWED_DOMAINS.some(d => parsed.hostname.endsWith(d));
+    if (!isAllowed) return res.status(403).json({ error: 'Domínio não permitido' });
+  } catch { return res.status(400).json({ error: 'URL inválida' }); }
+
+  // Fetch com timeout de 15s
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'SentencifyAI/1.0 RSS Reader' }
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const text = await response.text();
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.send(text);
+  } catch (error) {
+    res.status(502).json({ error: error.name === 'AbortError' ? 'Timeout' : error.message });
+  } finally {
+    clearTimeout(timeoutId);
   }
 });
 
