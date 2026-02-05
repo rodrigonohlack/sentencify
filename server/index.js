@@ -80,8 +80,11 @@ app.use((req, res, next) => {
     // Estilos: Quill injeta estilos inline dinamicamente
     "style-src 'self' 'unsafe-inline' https://cdn.quilljs.com https://cdn.jsdelivr.net",
 
-    // Imagens: avatares Google, data URIs (favicon), blobs (PDFs renderizados)
-    "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.googleusercontent.com",
+    // Imagens: avatares Google, data URIs (favicon), blobs (PDFs renderizados), fontes RSS
+    "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.googleusercontent.com https://*.jus.br https://*.conjur.com.br https://*.jota.info",
+
+    // Mídia: áudio/vídeo de tribunais (RSS)
+    "media-src 'self' https://*.jus.br",
 
     // Fontes: apenas locais (Lucide React icons são npm)
     "font-src 'self'",

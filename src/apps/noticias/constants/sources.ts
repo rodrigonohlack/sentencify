@@ -92,7 +92,7 @@ export const DEFAULT_SOURCES: NewsSource[] = [
   { id: 'trt5',  name: 'TRT-5 (BA)',         type: 'tribunal', /* feedUrl: 'https://www.trt5.jus.br/rss/noticias' */   websiteUrl: 'https://www.trt5.jus.br',  enabled: false },  // Sem RSS público
   { id: 'trt6',  name: 'TRT-6 (PE)',         type: 'tribunal', /* feedUrl: 'https://www.trt6.jus.br/portal/rss' */     websiteUrl: 'https://www.trt6.jus.br',  enabled: false },  // Sem RSS público
   { id: 'trt7',  name: 'TRT-7 (CE)',         type: 'tribunal', feedUrl: 'https://www.trt7.jus.br/index.php?option=com_content&view=category&id=152&Itemid=887&format=feed&type=rss', websiteUrl: 'https://www.trt7.jus.br', enabled: true },
-  { id: 'trt8',  name: 'TRT-8 (PA/AP)',      type: 'tribunal', feedUrl: 'https://www.trt8.jus.br/rss.xml',        websiteUrl: 'https://www.trt8.jus.br',  enabled: true },
+  { id: 'trt8',  name: 'TRT-8 (PA/AP)',      type: 'tribunal', /* feedUrl: 'https://www.trt8.jus.br/rss.xml' */   websiteUrl: 'https://www.trt8.jus.br',  enabled: false },  // Bloqueado pelo IP do Render (502)
   { id: 'trt9',  name: 'TRT-9 (PR)',         type: 'tribunal', feedUrl: 'https://www.trt9.jus.br/portal/NoticiaRSS', websiteUrl: 'https://www.trt9.jus.br', enabled: true },
   { id: 'trt10', name: 'TRT-10 (DF/TO)',     type: 'tribunal', feedUrl: 'https://www.trt10.jus.br/ascom/noticiasrss.php', websiteUrl: 'https://www.trt10.jus.br', enabled: true },
   { id: 'trt11', name: 'TRT-11 (AM/RR)',     type: 'tribunal', feedUrl: 'https://portal.trt11.jus.br/index.php/comunicacao/noticias-lista?format=feed&type=rss', websiteUrl: 'https://portal.trt11.jus.br', enabled: true },
@@ -140,7 +140,7 @@ export const DEFAULT_SOURCES: NewsSource[] = [
 ];
 
 // Total: 31 fontes (3 superiores + 24 TRTs + 4 portais)
-// Com RSS: 20 | Sem RSS (feedUrl removido): 11 (Migalhas, TRT-1/4/5/6/12/13/17/19/21/22)
+// Com RSS: 19 | Sem RSS (feedUrl removido): 12 (Migalhas, TRT-1/4/5/6/8/12/13/17/19/21/22)
 
 /**
  * Filtros padrão iniciais

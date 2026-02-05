@@ -56,11 +56,17 @@ export const parseRSSXml = (xmlText: string): RSSParseResult => {
         pubDate = item.querySelector('published, updated')?.textContent || undefined;
       }
 
-      // Limpar HTML de description
+      // Limpar HTML de description via regex (sem createElement que aciona loads de imagens)
       if (description) {
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = description;
-        description = tempDiv.textContent || tempDiv.innerText || '';
+        description = description.replace(/<!\[CDATA\[|\]\]>/g, '');
+        description = description.replace(/<[^>]+>/g, ' ');
+        description = description.replace(/&nbsp;/g, ' ');
+        description = description.replace(/&amp;/g, '&');
+        description = description.replace(/&lt;/g, '<');
+        description = description.replace(/&gt;/g, '>');
+        description = description.replace(/&quot;/g, '"');
+        description = description.replace(/&#39;/g, "'");
+        description = description.replace(/\s+/g, ' ');
         description = description.trim().slice(0, 500);
       }
 
@@ -96,47 +102,58 @@ export const fetchRSSFeed = async (source: NewsSource): Promise<NewsItemCreate[]
     return [];
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), RSS_CONFIG.FETCH_TIMEOUT_MS);
+  for (let attempt = 0; attempt < RSS_CONFIG.RETRY_MAX_ATTEMPTS; attempt++) {
+    // Delay com backoff exponencial (0ms na 1ª tentativa)
+    if (attempt > 0) {
+      await new Promise(r => setTimeout(r, RSS_CONFIG.RETRY_INITIAL_DELAY_MS * Math.pow(2, attempt - 1)));
+    }
 
-  try {
-    const proxyUrl = RSS_CONFIG.CORS_PROXY_URL + encodeURIComponent(source.feedUrl);
-    const response = await fetch(proxyUrl, { signal: controller.signal });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), RSS_CONFIG.FETCH_TIMEOUT_MS);
 
-    if (!response.ok) {
-      console.warn(`[RSS] ${source.name}: HTTP ${response.status}`);
+    try {
+      const proxyUrl = RSS_CONFIG.CORS_PROXY_URL + encodeURIComponent(source.feedUrl);
+      const response = await fetch(proxyUrl, { signal: controller.signal });
+
+      if (!response.ok) {
+        clearTimeout(timeoutId);
+        console.warn(`[RSS] ${source.name}: HTTP ${response.status} (tentativa ${attempt + 1}/${RSS_CONFIG.RETRY_MAX_ATTEMPTS})`);
+        continue; // retry
+      }
+
+      const xmlText = await response.text();
+      clearTimeout(timeoutId);
+      const { items, error } = parseRSSXml(xmlText);
+
+      if (error) {
+        console.warn(`[RSS] ${source.name}: ${error}`);
+        return [];
+      }
+
+      // Converter para NewsItemCreate
+      return items.map((item) => ({
+        sourceId: source.id,
+        sourceName: source.name,
+        title: item.title,
+        description: item.description,
+        content: item.content,
+        link: item.link,
+        publishedAt: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
+        themes: item.categories
+      }));
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (attempt < RSS_CONFIG.RETRY_MAX_ATTEMPTS - 1) {
+        console.warn(`[RSS] ${source.name}: ${(error as Error).name === 'AbortError' ? 'Timeout' : error} (tentativa ${attempt + 1}/${RSS_CONFIG.RETRY_MAX_ATTEMPTS})`);
+        continue; // retry
+      }
+      // Última tentativa falhou
+      console.warn(`[RSS] ${source.name}: falhou após ${RSS_CONFIG.RETRY_MAX_ATTEMPTS} tentativas`);
       return [];
     }
-
-    const xmlText = await response.text();
-    const { items, error } = parseRSSXml(xmlText);
-
-    if (error) {
-      console.warn(`[RSS] ${source.name}: ${error}`);
-      return [];
-    }
-
-    // Converter para NewsItemCreate
-    return items.map((item) => ({
-      sourceId: source.id,
-      sourceName: source.name,
-      title: item.title,
-      description: item.description,
-      content: item.content,
-      link: item.link,
-      publishedAt: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
-      themes: item.categories
-    }));
-  } catch (error) {
-    if ((error as Error).name === 'AbortError') {
-      console.warn(`[RSS] ${source.name}: Timeout`);
-    } else {
-      console.warn(`[RSS] ${source.name}: ${error}`);
-    }
-    return [];
-  } finally {
-    clearTimeout(timeoutId);
   }
+
+  return [];
 };
 
 /**
