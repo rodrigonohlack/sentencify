@@ -185,20 +185,61 @@
         }
 
         .theme-toggle {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-subtle);
-            padding: 0.5rem 0.875rem;
-            border-radius: 0.625rem;
-            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border-radius: 0.75rem;
             cursor: pointer;
-            font-size: 1.125rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        .theme-toggle:hover {
-            background: var(--bg-tertiary);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px var(--glow-purple);
+        /* Dark theme button styles (matches SentencifyAI AppHeader) */
+        :root[data-theme="dark"] .theme-toggle {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            color: #94a3b8;
+        }
+
+        :root[data-theme="dark"] .theme-toggle:hover {
+            color: #fbbf24;
+            border-color: #d97706;
+        }
+
+        /* Light theme button styles (matches SentencifyAI AppHeader) */
+        :root[data-theme="light"] .theme-toggle {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+        }
+
+        :root[data-theme="light"] .theme-toggle:hover {
+            color: #f59e0b;
+            border-color: #fcd34d;
+        }
+
+        .theme-toggle svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Show Sun in dark mode (clicking will switch to light) */
+        :root[data-theme="dark"] .theme-toggle .icon-sun {
+            display: block;
+        }
+        :root[data-theme="dark"] .theme-toggle .icon-moon {
+            display: none;
+        }
+
+        /* Show Moon in light mode (clicking will switch to dark) */
+        :root[data-theme="light"] .theme-toggle .icon-sun {
+            display: none;
+        }
+        :root[data-theme="light"] .theme-toggle .icon-moon {
+            display: block;
         }
 
         /* ══════════════════════════════════════════════════════════════════════════════
@@ -1043,7 +1084,24 @@
         <h1>Manual do Usuário Avançado</h1>
         <p class="subtitle">SentencifyAI v1.40.20 — Guia Completo de Funcionalidades</p>
         <div class="header-controls">
-            <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">☀️</button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Mudar para Tema Claro">
+                <!-- Sun icon (shown in dark mode) -->
+                <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2"></path>
+                    <path d="M12 20v2"></path>
+                    <path d="m4.93 4.93 1.41 1.41"></path>
+                    <path d="m17.66 17.66 1.41 1.41"></path>
+                    <path d="M2 12h2"></path>
+                    <path d="M20 12h2"></path>
+                    <path d="m6.34 17.66-1.41 1.41"></path>
+                    <path d="m19.07 4.93-1.41 1.41"></path>
+                </svg>
+                <!-- Moon icon (shown in light mode) -->
+                <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                </svg>
+            </button>
         </div>
     </header>
 
@@ -4279,8 +4337,10 @@
         function updateThemeIcon(theme) {
             const btn = document.querySelector('.theme-toggle');
             if (btn) {
-                btn.textContent = theme === 'light' ? '🌙' : '☀️';
-                btn.title = theme === 'light' ? 'Alternar para tema escuro' : 'Alternar para tema claro';
+                // Title matches SentencifyAI AppHeader behavior:
+                // In dark mode: "Mudar para Tema Claro" (Sun icon shown)
+                // In light mode: "Mudar para Tema Escuro" (Moon icon shown)
+                btn.title = theme === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro';
             }
         }
 
