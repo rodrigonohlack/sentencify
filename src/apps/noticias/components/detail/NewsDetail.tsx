@@ -48,7 +48,7 @@ export const NewsDetail: React.FC<NewsDetailProps> = ({
             <button
               onClick={() => onToggleFavorite(news.id)}
               disabled={isFavoriteLoading}
-              className="p-2 rounded-lg theme-bg-secondary hover:theme-bg-tertiary transition-colors disabled:opacity-50"
+              className="p-2 rounded-lg theme-bg-secondary hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors disabled:opacity-50"
               title={news.isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
             >
               {isFavoriteLoading ? (
@@ -65,7 +65,7 @@ export const NewsDetail: React.FC<NewsDetailProps> = ({
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg theme-bg-secondary hover:theme-bg-tertiary transition-colors"
+              className="p-2 rounded-lg theme-bg-secondary hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
             >
               <X className="w-5 h-5 theme-text-secondary" />
             </button>

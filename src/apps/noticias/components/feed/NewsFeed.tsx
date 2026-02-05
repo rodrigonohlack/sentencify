@@ -154,7 +154,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
         <button
           onClick={onRefresh}
           disabled={loading.refresh}
-          className="p-2 rounded-lg theme-bg-secondary hover:theme-bg-tertiary transition-colors disabled:opacity-50"
+          className="p-2 rounded-lg theme-bg-secondary hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors disabled:opacity-50"
           title="Atualizar feed"
         >
           {loading.refresh ? (

@@ -115,7 +115,7 @@ export const NewsFilters: React.FC<NewsFiltersProps> = ({
               className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                 filters.period === option.value
                   ? 'bg-blue-600 text-white'
-                  : 'theme-bg-secondary theme-text-secondary hover:theme-bg-tertiary'
+                  : 'theme-bg-secondary theme-text-secondary hover:bg-slate-300 dark:hover:bg-slate-600'
               }`}
             >
               {option.label}
@@ -133,7 +133,7 @@ export const NewsFilters: React.FC<NewsFiltersProps> = ({
           className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
             filters.onlyFavorites
               ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-              : 'theme-bg-secondary theme-text-secondary hover:theme-bg-tertiary'
+              : 'theme-bg-secondary theme-text-secondary hover:bg-slate-300 dark:hover:bg-slate-600'
           }`}
         >
           <Star className={`w-4 h-4 ${filters.onlyFavorites ? 'fill-yellow-400' : ''}`} />
@@ -144,7 +144,7 @@ export const NewsFilters: React.FC<NewsFiltersProps> = ({
           className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
             filters.onlyUnread
               ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-              : 'theme-bg-secondary theme-text-secondary hover:theme-bg-tertiary'
+              : 'theme-bg-secondary theme-text-secondary hover:bg-slate-300 dark:hover:bg-slate-600'
           }`}
         >
           {filters.onlyUnread ? (
@@ -162,7 +162,7 @@ export const NewsFilters: React.FC<NewsFiltersProps> = ({
       <div>
         <button
           onClick={() => setIsSourcesExpanded(!isSourcesExpanded)}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-lg theme-bg-secondary hover:theme-bg-tertiary transition-colors"
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg theme-bg-secondary hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
         >
           <span className="flex items-center gap-2 text-sm theme-text-secondary">
             <Filter className="w-4 h-4" />
@@ -201,7 +201,7 @@ export const NewsFilters: React.FC<NewsFiltersProps> = ({
                 {portais.map(source => (
                   <label
                     key={source.id}
-                    className="flex items-center gap-2 p-1.5 rounded hover:theme-bg-secondary cursor-pointer"
+                    className="flex items-center gap-2 p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
                   >
                     <input
                       type="checkbox"
@@ -236,7 +236,7 @@ export const NewsFilters: React.FC<NewsFiltersProps> = ({
                 {tribunais.map(source => (
                   <label
                     key={source.id}
-                    className="flex items-center gap-2 p-1.5 rounded hover:theme-bg-secondary cursor-pointer"
+                    className="flex items-center gap-2 p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
                   >
                     <input
                       type="checkbox"

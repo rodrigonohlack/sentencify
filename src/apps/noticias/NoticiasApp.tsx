@@ -318,7 +318,7 @@ const NoticiasAppContent: React.FC = () => {
               <button
                 onClick={refreshFromRSS}
                 disabled={loading.refresh}
-                className="p-2 rounded-lg theme-bg-tertiary hover:theme-bg-secondary transition-colors"
+                className="p-2 rounded-lg theme-bg-tertiary hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                 title="Buscar novas notícias"
               >
                 {loading.refresh ? (
@@ -331,7 +331,7 @@ const NoticiasAppContent: React.FC = () => {
               {/* Adicionar manual */}
               <button
                 onClick={() => setIsManualInputOpen(true)}
-                className="p-2 rounded-lg theme-bg-tertiary hover:theme-bg-secondary transition-colors"
+                className="p-2 rounded-lg theme-bg-tertiary hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                 title="Adicionar notícia manualmente"
               >
                 <Plus className="w-5 h-5 theme-text-secondary" />
@@ -340,7 +340,7 @@ const NoticiasAppContent: React.FC = () => {
               {/* Configurações */}
               <button
                 onClick={() => setSettingsOpen(true)}
-                className="p-2 rounded-lg theme-bg-tertiary hover:theme-bg-secondary transition-colors"
+                className="p-2 rounded-lg theme-bg-tertiary hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                 title="Configurações"
               >
                 <Settings className="w-5 h-5 theme-text-secondary" />
@@ -349,7 +349,7 @@ const NoticiasAppContent: React.FC = () => {
               {/* Voltar ao Sentencify */}
               <a
                 href="/"
-                className="p-2 rounded-lg theme-bg-tertiary hover:theme-bg-secondary transition-colors"
+                className="p-2 rounded-lg theme-bg-tertiary hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                 title="Voltar ao Sentencify"
               >
                 <Scale className="w-5 h-5 theme-text-secondary" />
@@ -358,7 +358,7 @@ const NoticiasAppContent: React.FC = () => {
               {/* Toggle tema */}
               <button
                 onClick={toggleAppTheme}
-                className="p-2 rounded-lg theme-bg-tertiary hover:theme-bg-secondary transition-colors"
+                className="p-2 rounded-lg theme-bg-tertiary hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                 title={isDarkMode ? 'Modo claro' : 'Modo escuro'}
               >
                 {isDarkMode ? (
