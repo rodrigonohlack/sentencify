@@ -6,6 +6,23 @@
 import { RSS_CONFIG, LABOR_KEYWORDS } from '../constants/sources';
 import type { NewsSource, NewsItemCreate, RSSItem, RSSParseResult } from '../types';
 
+/** Tribunais superiores isentos do filtro de relevância trabalhista */
+const SUPERIOR_COURT_IDS = ['stf', 'stj', 'tst'] as const;
+
+/** Remove tags HTML e decodifica entidades básicas */
+const stripHtml = (html: string): string => {
+  let text = html.replace(/<!\[CDATA\[|\]\]>/g, '');
+  text = text.replace(/<[^>]+>/g, ' ');
+  text = text.replace(/&nbsp;/g, ' ');
+  text = text.replace(/&amp;/g, '&');
+  text = text.replace(/&lt;/g, '<');
+  text = text.replace(/&gt;/g, '>');
+  text = text.replace(/&quot;/g, '"');
+  text = text.replace(/&#39;/g, "'");
+  text = text.replace(/\s+/g, ' ');
+  return text.trim();
+};
+
 /**
  * Faz parse de XML RSS para array de items
  * @param xmlText - Texto XML do feed RSS
@@ -56,18 +73,15 @@ export const parseRSSXml = (xmlText: string): RSSParseResult => {
         pubDate = item.querySelector('published, updated')?.textContent || undefined;
       }
 
-      // Limpar HTML de description via regex (sem createElement que aciona loads de imagens)
+      // Limpar HTML via regex (sem createElement que aciona loads de imagens)
       if (description) {
-        description = description.replace(/<!\[CDATA\[|\]\]>/g, '');
-        description = description.replace(/<[^>]+>/g, ' ');
-        description = description.replace(/&nbsp;/g, ' ');
-        description = description.replace(/&amp;/g, '&');
-        description = description.replace(/&lt;/g, '<');
-        description = description.replace(/&gt;/g, '>');
-        description = description.replace(/&quot;/g, '"');
-        description = description.replace(/&#39;/g, "'");
-        description = description.replace(/\s+/g, ' ');
-        description = description.trim().slice(0, 500);
+        description = stripHtml(description).slice(0, 500);
+      }
+
+      // Limpar HTML do content:encoded
+      let cleanContent = content;
+      if (cleanContent) {
+        cleanContent = stripHtml(cleanContent);
       }
 
       // Categorias/Tags
@@ -80,7 +94,7 @@ export const parseRSSXml = (xmlText: string): RSSParseResult => {
           description: description.trim(),
           link: link.trim(),
           pubDate,
-          content,
+          content: cleanContent,
           categories
         });
       }
@@ -162,6 +176,8 @@ export const fetchRSSFeed = async (source: NewsSource): Promise<NewsItemCreate[]
  * @returns true se contém keywords trabalhistas
  */
 export const isRelevantToLabor = (news: NewsItemCreate): boolean => {
+  // Tribunais superiores sempre relevantes para juízes trabalhistas
+  if (SUPERIOR_COURT_IDS.includes(news.sourceId as typeof SUPERIOR_COURT_IDS[number])) return true;
   const text = (news.title + ' ' + news.description).toLowerCase();
   return LABOR_KEYWORDS.some(kw => text.includes(kw.toLowerCase()));
 };
