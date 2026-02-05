@@ -784,19 +784,37 @@ export const useAIStore = create<AIStoreState>()(
                 const proofDecisionQP = DEFAULT_QUICK_PROMPTS.find(qp => qp.id === 'qp-5');
                 if (proofDecisionQP) {
                   state.aiSettings.quickPrompts = [...state.aiSettings.quickPrompts, proofDecisionQP];
+                  // Forçar persistência após adicionar qp-5
+                  setTimeout(() => {
+                    useAIStore.setState((s) => ({
+                      ...s,
+                      aiSettings: { ...s.aiSettings }
+                    }));
+                  }, 100);
                 }
               }
             }
 
             // Migração v1.40.XX: Marcar quickprompts padrão com isDefault para proteção
             if (state.aiSettings?.quickPrompts) {
+              let needsPersist = false;
               const defaultIds = ['qp-1', 'qp-2', 'qp-3', 'qp-4', 'qp-5'];
               state.aiSettings.quickPrompts = state.aiSettings.quickPrompts.map((qp: QuickPrompt) => {
                 if (defaultIds.includes(qp.id) && qp.isDefault === undefined) {
+                  needsPersist = true;
                   return { ...qp, isDefault: true };
                 }
                 return qp;
               });
+              // Forçar persistência se houve migração de isDefault
+              if (needsPersist) {
+                setTimeout(() => {
+                  useAIStore.setState((s) => ({
+                    ...s,
+                    aiSettings: { ...s.aiSettings }
+                  }));
+                }, 150);
+              }
             }
           }
         }

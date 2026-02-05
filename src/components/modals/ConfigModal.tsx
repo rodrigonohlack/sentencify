@@ -2379,18 +2379,24 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     className={`w-28 theme-bg-app border theme-border-input rounded p-1 text-sm ${qp.isDefault ? 'opacity-60 cursor-not-allowed' : ''}`}
                     placeholder="Nome"
                   />
-                  <textarea
-                    value={qp.prompt}
-                    onChange={(e) => {
-                      const updated = [...aiSettings.quickPrompts];
-                      updated[idx] = { ...updated[idx], prompt: e.target.value };
-                      setAiSettings({ ...aiSettings, quickPrompts: updated });
-                    }}
-                    disabled={qp.isDefault}
-                    className={`flex-1 theme-bg-app border theme-border-input rounded p-1 text-xs resize-none ${qp.isDefault ? 'opacity-60 cursor-not-allowed' : ''}`}
-                    rows={2}
-                    placeholder="Texto do prompt..."
-                  />
+                  {qp.specialHandler ? (
+                    <div className="flex-1 theme-bg-app border theme-border-input rounded p-2 text-xs theme-text-muted italic flex items-center opacity-60">
+                      ⚙️ Prompt com lógica especial (sub-opções)
+                    </div>
+                  ) : (
+                    <textarea
+                      value={qp.prompt}
+                      onChange={(e) => {
+                        const updated = [...aiSettings.quickPrompts];
+                        updated[idx] = { ...updated[idx], prompt: e.target.value };
+                        setAiSettings({ ...aiSettings, quickPrompts: updated });
+                      }}
+                      disabled={qp.isDefault}
+                      className={`flex-1 theme-bg-app border theme-border-input rounded p-1 text-xs resize-none ${qp.isDefault ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      rows={2}
+                      placeholder="Texto do prompt..."
+                    />
+                  )}
                   {qp.isDefault ? (
                     <span className="p-1 text-xs theme-text-muted" title="Prompt padrão do sistema (protegido)">
                       🔒
