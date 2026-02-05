@@ -61,9 +61,9 @@ export const DEFAULT_SOURCES: NewsSource[] = [
     id: 'stf',
     name: 'STF - Supremo Tribunal Federal',
     type: 'tribunal',
-    feedUrl: 'http://www.stf.jus.br/portal/RSS/rss.asp',
+    feedUrl: 'https://noticias.stf.jus.br/feed/',
     websiteUrl: 'https://portal.stf.jus.br',
-    enabled: false  // RSS descontinuado (404 desde ~2025)
+    enabled: true
   },
   {
     id: 'stj',
@@ -140,7 +140,7 @@ export const DEFAULT_SOURCES: NewsSource[] = [
 ];
 
 // Total: 31 fontes (3 superiores + 24 TRTs + 4 portais)
-// Habilitadas: 17 | Desabilitadas: 14 (sem RSS público: STF, Migalhas, TRT-1/4/5/6/12/13/17/19/21/22)
+// Habilitadas: 18 | Desabilitadas: 13 (sem RSS público: Migalhas, TRT-1/4/5/6/12/13/17/19/21/22)
 
 /**
  * Filtros padrão iniciais
