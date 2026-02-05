@@ -5,6 +5,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { getDb } from '../db/database.js';
 import authMiddleware from '../middleware/auth.js';
+import rssScheduler from '../services/RSSSchedulerService.js';
 
 const router = express.Router();
 
@@ -459,17 +460,23 @@ router.post('/:id/read', (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// POST /api/noticias/fetch - Trigger para buscar novas notícias
-// NOTA: A busca RSS é feita no frontend por questões de CORS
-// Este endpoint serve como placeholder para futura implementação server-side
+// POST /api/noticias/fetch - Trigger manual para buscar novas notícias
+// Dispara coleta RSS server-side (mesmo processo do cron de 8h)
 // ═══════════════════════════════════════════════════════════════════════════
 
-router.post('/fetch', (req, res) => {
-  res.json({
-    fetched: 0,
-    errors: [],
-    message: 'RSS fetch is handled client-side due to CORS restrictions'
-  });
+router.post('/fetch', async (req, res) => {
+  try {
+    const result = await rssScheduler.fetchAll();
+    if (!result) {
+      return res.status(409).json({
+        error: 'Coleta já em execução. Tente novamente em alguns minutos.'
+      });
+    }
+    res.json(result);
+  } catch (error) {
+    console.error('[Noticias] Fetch error:', error);
+    res.status(500).json({ error: 'Erro ao buscar notícias' });
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════════════════

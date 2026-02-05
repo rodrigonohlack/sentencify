@@ -35,6 +35,7 @@ import provaOralRoutes from './routes/prova-oral.js';
 import usersRoutes from './routes/users.js';
 import noticiasRoutes from './routes/noticias.js';
 import { initDatabase } from './db/database.js';
+import rssScheduler from './services/RSSSchedulerService.js';
 
 // Inicializar banco de dados SQLite
 initDatabase();
@@ -338,6 +339,11 @@ app.listen(PORT, () => {
   ║   • Grok:     /api/grok/chat                         ║
   ║   • Health:   /api/health                            ║
   ║                                                       ║
+  ║   Scheduler: RSS a cada 8h (19 fontes)               ║
+  ║                                                       ║
   ╚═══════════════════════════════════════════════════════╝
   `);
+
+  // Iniciar coleta automática de RSS (a cada 8 horas + fetch inicial 30s após startup)
+  rssScheduler.start();
 });
