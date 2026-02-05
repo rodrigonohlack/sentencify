@@ -27,9 +27,13 @@ import type {
   AIAssistantGlobalModalProps,
   AIAssistantModelModalProps,
   QuickPrompt,
+  QuickPromptSubOption,
   ProofFile,
   ProofText
 } from '../../types';
+import { QuickPromptWithOptions } from './QuickPromptWithOptions';
+import { collectProofDecisionData, buildProofDecisionPrompt } from '../../utils/proof-decision-helpers';
+import { useProofsStore } from '../../stores/useProofsStore';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
@@ -359,6 +363,7 @@ export const AIAssistantBase = React.memo(({
   quickPrompts = [],  // v1.20.0: Prompts rápidos
   topicTitle = '',    // v1.21.1: Título do tópico para substituição em quick prompts
   onQuickPromptClick = null, // v1.21.1: Handler opcional para quick prompts (permite validação)
+  onSubOptionSelect = null,  // v1.40.XX: Handler para quickprompts com sub-opções
   qpError = null,     // v1.21.2: Estado de erro para mostrar no botão do quick prompt
 }: AIAssistantBaseProps) => {
   // Bloquear scroll do body quando modal está aberto
@@ -450,6 +455,22 @@ export const AIAssistantBase = React.memo(({
               {quickPrompts.map((qp: QuickPrompt) => {
                 const resolvedPrompt = qp.prompt.replace(/\{TOPICO\}/g, topicTitle || 'tópico atual');
                 const isError = qpError?.id === qp.id;
+
+                // v1.40.XX: QuickPrompts com sub-opções usam dropdown
+                if (qp.subOptions && qp.subOptions.length > 0 && onSubOptionSelect) {
+                  return (
+                    <QuickPromptWithOptions
+                      key={qp.id}
+                      quickPrompt={qp}
+                      onSelect={onSubOptionSelect}
+                      disabled={generating}
+                      isError={isError}
+                      errorMessage={qpError?.message}
+                    />
+                  );
+                }
+
+                // QuickPrompts normais
                 return (
                   <button
                     key={qp.id}
@@ -595,6 +616,54 @@ export const AIAssistantModal = React.memo(({
     onSendMessage(message, options);
   }, [onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics]);
 
+  // v1.40.XX: Handler para quickprompts com sub-opções (ex: Decidir com Provas)
+  const proofAnalysisResults = useProofsStore((s) => s.proofAnalysisResults);
+  const proofConclusions = useProofsStore((s) => s.proofConclusions);
+
+  const handleSubOptionSelect = React.useCallback((qp: QuickPrompt, subOption: QuickPromptSubOption) => {
+    if (qp.specialHandler === 'proof-decision') {
+      // Preparar dados de provas para coleta
+      const proofData = proofManager ? {
+        proofTopicLinks: proofManager.proofTopicLinks,
+        proofFiles: proofManager.proofFiles,
+        proofTexts: proofManager.proofTexts,
+        proofAnalysisResults,
+        proofConclusions
+      } : null;
+
+      const { data, proofCount, hasData } = collectProofDecisionData(
+        proofData,
+        topicTitle || '',
+        subOption.proofDataMode
+      );
+
+      // Validações
+      if (proofCount === 0) {
+        setQpError({ id: qp.id, message: 'Nenhuma prova vinculada' });
+        setTimeout(() => setQpError(null), 3000);
+        return;
+      }
+
+      if (!hasData) {
+        const errorMsg = subOption.proofDataMode === 'conclusions_only'
+          ? 'Nenhuma conclusao registrada'
+          : 'Sem dados de provas';
+        setQpError({ id: qp.id, message: errorMsg });
+        setTimeout(() => setQpError(null), 3000);
+        return;
+      }
+
+      // Construir e enviar prompt
+      const prompt = buildProofDecisionPrompt(topicTitle || '', data, subOption.proofDataMode);
+      const options = {
+        includeMainDocs,
+        includeComplementaryDocs,
+        selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
+      };
+      onSendMessage(prompt, options);
+    }
+  }, [proofManager, topicTitle, proofAnalysisResults, proofConclusions, onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics]);
+
   // v1.38.12: Usa ContextScopeSelector unificado
   // v1.38.16: Passa chatHistoryLength para bloquear toggle quando chat tem histórico
   // v1.39.06: Passa includeComplementaryDocs
@@ -631,6 +700,7 @@ export const AIAssistantModal = React.memo(({
       quickPrompts={quickPrompts}
       topicTitle={topicTitle}
       onQuickPromptClick={handleQuickPromptClick}
+      onSubOptionSelect={handleSubOptionSelect}
       qpError={qpError}
     />
   );
@@ -728,6 +798,54 @@ export const AIAssistantGlobalModal = React.memo(({
     onSendMessage(message, options);
   }, [onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics]);
 
+  // v1.40.XX: Handler para quickprompts com sub-opções (ex: Decidir com Provas)
+  const proofAnalysisResultsGlobal = useProofsStore((s) => s.proofAnalysisResults);
+  const proofConclusionsGlobal = useProofsStore((s) => s.proofConclusions);
+
+  const handleSubOptionSelectGlobal = React.useCallback((qp: QuickPrompt, subOption: QuickPromptSubOption) => {
+    if (qp.specialHandler === 'proof-decision') {
+      // Preparar dados de provas para coleta
+      const proofData = proofManager ? {
+        proofTopicLinks: proofManager.proofTopicLinks,
+        proofFiles: proofManager.proofFiles,
+        proofTexts: proofManager.proofTexts,
+        proofAnalysisResults: proofAnalysisResultsGlobal,
+        proofConclusions: proofConclusionsGlobal
+      } : null;
+
+      const { data, proofCount, hasData } = collectProofDecisionData(
+        proofData,
+        topicTitle || '',
+        subOption.proofDataMode
+      );
+
+      // Validações
+      if (proofCount === 0) {
+        setQpError({ id: qp.id, message: 'Nenhuma prova vinculada' });
+        setTimeout(() => setQpError(null), 3000);
+        return;
+      }
+
+      if (!hasData) {
+        const errorMsg = subOption.proofDataMode === 'conclusions_only'
+          ? 'Nenhuma conclusao registrada'
+          : 'Sem dados de provas';
+        setQpError({ id: qp.id, message: errorMsg });
+        setTimeout(() => setQpError(null), 3000);
+        return;
+      }
+
+      // Construir e enviar prompt
+      const prompt = buildProofDecisionPrompt(topicTitle || '', data, subOption.proofDataMode);
+      const options = {
+        includeMainDocs,
+        includeComplementaryDocs,
+        selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
+      };
+      onSendMessage(prompt, options);
+    }
+  }, [proofManager, topicTitle, proofAnalysisResultsGlobal, proofConclusionsGlobal, onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics]);
+
   // v1.38.12: Usa ContextScopeSelector unificado
   // v1.38.16: Passa chatHistoryLength para bloquear toggle quando chat tem histórico
   // v1.39.06: Passa includeComplementaryDocs
@@ -764,6 +882,7 @@ export const AIAssistantGlobalModal = React.memo(({
       quickPrompts={quickPrompts}
       topicTitle={topicTitle}
       onQuickPromptClick={handleQuickPromptClick}
+      onSubOptionSelect={handleSubOptionSelectGlobal}
       qpError={qpError}
     />
   );

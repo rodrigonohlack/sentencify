@@ -14,3 +14,6 @@ export {
   isOralProof,
   hasOralProofsForTopic
 } from './AIAssistantComponents';
+
+export { QuickPromptWithOptions } from './QuickPromptWithOptions';
+export type { QuickPromptWithOptionsProps } from './QuickPromptWithOptions';

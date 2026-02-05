@@ -206,6 +206,15 @@ export interface AnonymizationSettings {
   nomesUsuario: string[];
 }
 
+/** v1.40.XX: Sub-opção para quickprompts com múltiplos modos */
+export interface QuickPromptSubOption {
+  id: string;
+  label: string;
+  icon?: string;
+  /** Modo de coleta de dados de prova */
+  proofDataMode: 'all' | 'conclusions_only';
+}
+
 export interface QuickPrompt {
   id: string;
   label: string;
@@ -214,6 +223,12 @@ export interface QuickPrompt {
   icon?: string;
   name?: string;
   proofFilter?: string;
+  /** v1.40.XX: Sub-opções para quickprompts com dropdown */
+  subOptions?: QuickPromptSubOption[];
+  /** v1.40.XX: Handler especial para lógica customizada */
+  specialHandler?: 'proof-decision';
+  /** v1.40.XX: Indica se é um quickprompt padrão (não editável/excluível) */
+  isDefault?: boolean;
 }
 
 /** Tópico complementar para geração automática */
@@ -2233,6 +2248,8 @@ export interface AIAssistantBaseProps {
   quickPrompts?: QuickPrompt[];
   topicTitle?: string;
   onQuickPromptClick?: ((qp: QuickPrompt, resolvedPrompt: string) => void) | null;
+  /** v1.40.XX: Handler para quickprompts com sub-opções */
+  onSubOptionSelect?: ((qp: QuickPrompt, subOption: QuickPromptSubOption) => void) | null;
   qpError?: { id: string; message: string } | null;
 }
 

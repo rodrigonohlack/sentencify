@@ -2363,7 +2363,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       updated[idx] = { ...updated[idx], icon: e.target.value };
                       setAiSettings({ ...aiSettings, quickPrompts: updated });
                     }}
-                    className="w-10 text-center theme-bg-app border theme-border-input rounded p-1 text-sm"
+                    disabled={qp.isDefault}
+                    className={`w-10 text-center theme-bg-app border theme-border-input rounded p-1 text-sm ${qp.isDefault ? 'opacity-60 cursor-not-allowed' : ''}`}
                     maxLength={2}
                     placeholder="📝"
                   />
@@ -2374,7 +2375,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       updated[idx] = { ...updated[idx], label: e.target.value };
                       setAiSettings({ ...aiSettings, quickPrompts: updated });
                     }}
-                    className="w-28 theme-bg-app border theme-border-input rounded p-1 text-sm"
+                    disabled={qp.isDefault}
+                    className={`w-28 theme-bg-app border theme-border-input rounded p-1 text-sm ${qp.isDefault ? 'opacity-60 cursor-not-allowed' : ''}`}
                     placeholder="Nome"
                   />
                   <textarea
@@ -2384,20 +2386,27 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       updated[idx] = { ...updated[idx], prompt: e.target.value };
                       setAiSettings({ ...aiSettings, quickPrompts: updated });
                     }}
-                    className="flex-1 theme-bg-app border theme-border-input rounded p-1 text-xs resize-none"
+                    disabled={qp.isDefault}
+                    className={`flex-1 theme-bg-app border theme-border-input rounded p-1 text-xs resize-none ${qp.isDefault ? 'opacity-60 cursor-not-allowed' : ''}`}
                     rows={2}
                     placeholder="Texto do prompt..."
                   />
-                  <button
-                    onClick={() => {
-                      const updated = aiSettings.quickPrompts.filter((_: QuickPrompt, i: number) => i !== idx);
-                      setAiSettings({ ...aiSettings, quickPrompts: updated });
-                    }}
-                    className="p-1 text-red-500 hover:text-red-400"
-                    title="Remover"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  {qp.isDefault ? (
+                    <span className="p-1 text-xs theme-text-muted" title="Prompt padrão do sistema (protegido)">
+                      🔒
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        const updated = aiSettings.quickPrompts.filter((_: QuickPrompt, i: number) => i !== idx);
+                        setAiSettings({ ...aiSettings, quickPrompts: updated });
+                      }}
+                      className="p-1 text-red-500 hover:text-red-400"
+                      title="Remover"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

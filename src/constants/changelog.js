@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.20', feature: 'Proteger QuickPrompts padrão de edição/exclusão: prompts default (qp-1 a qp-5) agora são readonly com indicador visual de cadeado, novos prompts personalizados continuam editáveis/excluíveis' },
   { version: '1.40.19', feature: 'Migrar extractedProofTexts para IndexedDB: textos de OCR de provas agora salvos no IndexedDB (evita estouro do localStorage). Migração automática de sessões antigas' },
   { version: '1.40.17', feature: 'Migrar textos de uploads para IndexedDB: pastedTexts, analyzedDocuments texts e extractedTexts agora salvos no IndexedDB (evita estouro do localStorage ~5-10MB). Migração automática de sessões antigas' },
   { version: '1.40.16', feature: 'Prova Oral: remover comentários do texto importado com marcações (importar apenas texto marcado, sem [💬 comentário])' },

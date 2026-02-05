@@ -37,23 +37,50 @@ const DEFAULT_QUICK_PROMPTS: QuickPrompt[] = [
   {
     id: 'qp-1',
     label: 'Avaliar Decisão',
-    prompt: 'Avalie criticamente a qualidade da decisão/fundamentação que redigi. IMPORTANTE: Não me bajule nem seja condescendente - quero uma avaliação genuinamente crítica que me ajude a melhorar efetivamente. Seja direto ao apontar problemas. Considere: (1) coerência com os fatos narrados nos documentos, (2) adequação jurídica aos pedidos, (3) clareza e objetividade da redação, (4) possíveis lacunas ou inconsistências. Priorize apontar o que precisa melhorar, não o que está bom.'
+    prompt: 'Avalie criticamente a qualidade da decisão/fundamentação que redigi. IMPORTANTE: Não me bajule nem seja condescendente - quero uma avaliação genuinamente crítica que me ajude a melhorar efetivamente. Seja direto ao apontar problemas. Considere: (1) coerência com os fatos narrados nos documentos, (2) adequação jurídica aos pedidos, (3) clareza e objetividade da redação, (4) possíveis lacunas ou inconsistências. Priorize apontar o que precisa melhorar, não o que está bom.',
+    isDefault: true
   },
   {
     id: 'qp-2',
     label: 'Sugerir Melhorias',
-    prompt: 'Sugira melhorias específicas para o texto da decisão que redigi, mantendo o mesmo entendimento jurídico mas aprimorando a redação, clareza e fundamentação.'
+    prompt: 'Sugira melhorias específicas para o texto da decisão que redigi, mantendo o mesmo entendimento jurídico mas aprimorando a redação, clareza e fundamentação.',
+    isDefault: true
   },
   {
     id: 'qp-3',
     label: 'Verificar Omissões',
-    prompt: 'Verifique se há pedidos, argumentos ou provas relevantes nos documentos que não foram adequadamente abordados na minha decisão. Liste qualquer omissão encontrada.'
+    prompt: 'Verifique se há pedidos, argumentos ou provas relevantes nos documentos que não foram adequadamente abordados na minha decisão. Liste qualquer omissão encontrada.',
+    isDefault: true
   },
   {
     id: 'qp-4',
     label: 'Análise de Prova Oral',
     prompt: '**INSTRUÇÃO CRÍTICA**: Analise a prova oral EXCLUSIVAMENTE sobre "{TOPICO}".\n\nREGRAS OBRIGATÓRIAS:\n1. IGNORE 100% de qualquer trecho que NÃO trate de "{TOPICO}"\n2. NÃO mencione outros assuntos discutidos nos depoimentos\n3. Se um depoente falou sobre múltiplos temas, extraia APENAS o que se refere a "{TOPICO}"\n4. Se não houver NENHUMA menção a "{TOPICO}", responda: "Não há menção a {TOPICO} nesta prova oral."\n\nProduza um resumo estruturado APENAS com trechos relevantes a "{TOPICO}", com minutagem quando disponível:\n\nAUTOR: [afirmação sobre {TOPICO}] (mm:ss);\nPREPOSTO: [afirmação sobre {TOPICO}] (mm:ss);\nTestemunha [nome]: [afirmação sobre {TOPICO}] (mm:ss);\n\n⚠️ LEMBRE-SE: Analise SOMENTE "{TOPICO}". Outros assuntos devem ser COMPLETAMENTE ignorados.',
-    proofFilter: 'oral'  // v1.38.12: Filtrar apenas provas orais vinculadas
+    proofFilter: 'oral',  // v1.38.12: Filtrar apenas provas orais vinculadas
+    isDefault: true
+  },
+  // v1.40.XX: Quickprompt com sub-opções para decisão baseada em provas
+  {
+    id: 'qp-5',
+    label: 'Decidir com Provas',
+    icon: '⚖️',
+    prompt: '',
+    specialHandler: 'proof-decision',
+    subOptions: [
+      {
+        id: 'proof-all',
+        label: 'Analises e conclusoes',
+        icon: '🔍',
+        proofDataMode: 'all'
+      },
+      {
+        id: 'proof-conclusions',
+        label: 'Apenas conclusoes',
+        icon: '📝',
+        proofDataMode: 'conclusions_only'
+      }
+    ],
+    isDefault: true
   }
 ];
 
@@ -745,6 +772,28 @@ export const useAIStore = create<AIStoreState>()(
               state.aiSettings.quickPrompts = state.aiSettings.quickPrompts.map((qp: QuickPrompt) => {
                 if (qp.id === 'qp-4' && !qp.proofFilter) {
                   return { ...qp, proofFilter: 'oral' as const };
+                }
+                return qp;
+              });
+            }
+
+            // Migração v1.40.XX: Adicionar quickprompt "Decidir com Provas" para usuários existentes
+            if (state.aiSettings?.quickPrompts) {
+              const hasProofDecision = state.aiSettings.quickPrompts.some((qp: QuickPrompt) => qp.id === 'qp-5');
+              if (!hasProofDecision) {
+                const proofDecisionQP = DEFAULT_QUICK_PROMPTS.find(qp => qp.id === 'qp-5');
+                if (proofDecisionQP) {
+                  state.aiSettings.quickPrompts = [...state.aiSettings.quickPrompts, proofDecisionQP];
+                }
+              }
+            }
+
+            // Migração v1.40.XX: Marcar quickprompts padrão com isDefault para proteção
+            if (state.aiSettings?.quickPrompts) {
+              const defaultIds = ['qp-1', 'qp-2', 'qp-3', 'qp-4', 'qp-5'];
+              state.aiSettings.quickPrompts = state.aiSettings.quickPrompts.map((qp: QuickPrompt) => {
+                if (defaultIds.includes(qp.id) && qp.isDefault === undefined) {
+                  return { ...qp, isDefault: true };
                 }
                 return qp;
               });

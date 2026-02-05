@@ -67,3 +67,10 @@ export {
   STORAGE_RETRY_DEFAULTS
 } from './retry';
 export type { RetryOptions } from './retry';
+
+// Proof decision helpers (v1.40.XX)
+export {
+  collectProofDecisionData,
+  buildProofDecisionPrompt
+} from './proof-decision-helpers';
+export type { ProofDataSource, ProofDecisionDataResult } from './proof-decision-helpers';
