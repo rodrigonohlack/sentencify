@@ -270,7 +270,7 @@ app.get('/api/rss-proxy', async (req, res) => {
   if (!url) return res.status(400).json({ error: 'URL é obrigatória' });
 
   // Whitelist de domínios permitidos (anti-SSRF)
-  const ALLOWED_DOMAINS = ['.jus.br', 'conjur.com.br', 'migalhas.com.br', 'jota.info'];
+  const ALLOWED_DOMAINS = ['.jus.br', 'conjur.com.br', 'migalhas.com.br', 'jota.info', 'news.google.com'];
   try {
     const parsed = new URL(url);
     const isAllowed = ALLOWED_DOMAINS.some(d => parsed.hostname.endsWith(d));

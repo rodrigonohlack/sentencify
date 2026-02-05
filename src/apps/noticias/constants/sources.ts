@@ -125,9 +125,9 @@ export const DEFAULT_SOURCES: NewsSource[] = [
     id: 'migalhas',
     name: 'Migalhas',
     type: 'portal',
-    // feedUrl: 'https://www.migalhas.com.br/rss/quentes' — RSS removido, site migrado para Angular SPA
+    feedUrl: 'https://news.google.com/rss/search?q=site:migalhas.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419',
     websiteUrl: 'https://www.migalhas.com.br',
-    enabled: false
+    enabled: true
   },
   {
     id: 'jota',
@@ -140,7 +140,7 @@ export const DEFAULT_SOURCES: NewsSource[] = [
 ];
 
 // Total: 31 fontes (3 superiores + 24 TRTs + 4 portais)
-// Com RSS: 19 | Sem RSS (feedUrl removido): 12 (Migalhas, TRT-1/4/5/6/8/12/13/17/19/21/22)
+// Com RSS: 20 | Sem RSS (feedUrl removido): 11 (TRT-1/4/5/6/8/12/13/17/19/21/22)
 
 /**
  * Filtros padrão iniciais

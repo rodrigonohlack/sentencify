@@ -60,8 +60,9 @@ const RSS_SOURCES = [
   { id: 'trt23', name: 'TRT-23 (MT)',        feedUrl: 'https://portal.trt23.jus.br/portal/noticias/feed' },
   { id: 'trt24', name: 'TRT-24 (MS)',        feedUrl: 'https://www.trt24.jus.br/web/guest/noticias/-/asset_publisher/ND6zpys7a3hM/rss' },
   // Portais
-  { id: 'conjur', name: 'Consultor Jurídico', feedUrl: 'https://www.conjur.com.br/rss.xml' },
-  { id: 'jota',   name: 'JOTA',               feedUrl: 'https://www.jota.info/feed' },
+  { id: 'conjur',   name: 'Consultor Jurídico', feedUrl: 'https://www.conjur.com.br/rss.xml' },
+  { id: 'migalhas', name: 'Migalhas',           feedUrl: 'https://news.google.com/rss/search?q=site:migalhas.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419' },
+  { id: 'jota',     name: 'JOTA',               feedUrl: 'https://www.jota.info/feed' },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
