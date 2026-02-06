@@ -391,7 +391,7 @@ const NoticiasAppContent: React.FC = () => {
         <div className="flex gap-6">
           {/* Sidebar com filtros (desktop) */}
           <aside className="hidden lg:block w-72 flex-shrink-0">
-            <div className="sticky top-24 theme-card rounded-xl p-4 border theme-border-secondary">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto theme-card rounded-xl p-4 border theme-border-secondary">
               <h2 className="font-semibold theme-text-primary mb-4 flex items-center gap-2">
                 <RefreshCw className="w-4 h-4" />
                 Filtros
