@@ -6,7 +6,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Newspaper, Settings, Plus, RefreshCw, Scale,
-  Sun, Moon, LogOut, Rss
+  Sun, Moon, LogOut, Rss, Star, ExternalLink, Loader2
 } from 'lucide-react';
 
 // Componentes
@@ -25,6 +25,12 @@ import {
 import { useNoticiasAPI } from './hooks';
 import { useNoticiasStore } from './stores';
 import { useAIIntegration } from './hooks/useAIIntegration';
+
+// Modal base
+import { BaseModal } from '../../components/modals/BaseModal';
+
+// Utilitários de data
+import { formatFullDate } from './utils/date-utils';
 
 // Tema global (necessário para CSS variables dos modais)
 import { ThemeStyles } from '../../styles';
@@ -406,7 +412,7 @@ const NoticiasAppContent: React.FC = () => {
           </aside>
 
           {/* Feed principal */}
-          <div className="flex-1 min-w-0 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto">
+          <div className="flex-1 min-w-0">
             {/* Filtros mobile */}
             <div className="lg:hidden mb-4 theme-card rounded-xl p-4 border theme-border-secondary">
               <NewsFilters
@@ -435,21 +441,6 @@ const NoticiasAppContent: React.FC = () => {
             />
           </div>
 
-          {/* Detail panel (desktop) */}
-          {selectedNews && (
-            <aside className="hidden xl:block w-96 flex-shrink-0">
-              <div className="sticky top-24 theme-card rounded-xl border theme-border-secondary overflow-hidden h-[calc(100vh-8rem)]">
-                <NewsDetail
-                  news={selectedNews}
-                  onClose={handleCloseDetail}
-                  onToggleFavorite={handleToggleFavorite}
-                  onGenerateSummary={handleGenerateSummary}
-                  isGeneratingSummary={loading.summary === selectedNews.id}
-                  isFavoriteLoading={loading.favorite === selectedNews.id}
-                />
-              </div>
-            </aside>
-          )}
         </div>
       </main>
 
@@ -457,19 +448,59 @@ const NoticiasAppContent: React.FC = () => {
       {/* MODAIS */}
       {/* ═══════════════════════════════════════════════════════════════ */}
 
-      {/* Modal de detalhe (mobile/tablet) */}
-      {selectedNews && (
-        <div className="xl:hidden fixed inset-0 z-50 theme-bg-primary overflow-y-auto">
+      {/* Modal de detalhe de notícia */}
+      <BaseModal
+        isOpen={!!selectedNews}
+        onClose={handleCloseDetail}
+        title={selectedNews?.title || ''}
+        subtitle={`${selectedNews?.sourceName || ''} · ${formatFullDate(selectedNews?.publishedAt || '')}`}
+        icon={<Newspaper />}
+        iconColor="blue"
+        size="xl"
+        footer={
+          <div className="flex items-center justify-between w-full">
+            <button
+              onClick={() => selectedNews && handleToggleFavorite(selectedNews.id)}
+              disabled={loading.favorite === selectedNews?.id}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium theme-bg-secondary theme-hover-bg border theme-border-modal theme-text-primary transition-all disabled:opacity-50"
+            >
+              {loading.favorite === selectedNews?.id ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Star
+                  className={`w-4 h-4 ${
+                    selectedNews?.isFavorite
+                      ? 'fill-yellow-400 text-yellow-400'
+                      : ''
+                  }`}
+                />
+              )}
+              {selectedNews?.isFavorite ? 'Favorito' : 'Favoritar'}
+            </button>
+            <a
+              href={selectedNews?.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-lg shadow-blue-500/25 transition-all"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Ler no site original
+            </a>
+          </div>
+        }
+      >
+        {selectedNews && (
           <NewsDetail
             news={selectedNews}
+            hideHeader
             onClose={handleCloseDetail}
             onToggleFavorite={handleToggleFavorite}
             onGenerateSummary={handleGenerateSummary}
             isGeneratingSummary={loading.summary === selectedNews.id}
             isFavoriteLoading={loading.favorite === selectedNews.id}
           />
-        </div>
-      )}
+        )}
+      </BaseModal>
 
       {/* Modal de configurações */}
       <SettingsModal

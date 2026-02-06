@@ -18,6 +18,8 @@ interface NewsDetailProps {
   onGenerateSummary: (id: string) => void;
   isGeneratingSummary: boolean;
   isFavoriteLoading: boolean;
+  /** Quando true, renderiza apenas as seções de conteúdo (para uso dentro de BaseModal) */
+  hideHeader?: boolean;
 }
 
 /**
@@ -29,8 +31,111 @@ export const NewsDetail: React.FC<NewsDetailProps> = ({
   onToggleFavorite,
   onGenerateSummary,
   isGeneratingSummary,
-  isFavoriteLoading
+  isFavoriteLoading,
+  hideHeader = false
 }) => {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SEÇÕES DE CONTEÚDO (compartilhadas entre modo standalone e modal)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const contentSections = (
+    <>
+      {/* Resumo IA */}
+      <div className="theme-info-box rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-blue-400 flex items-center gap-2">
+            <BookOpen className="w-5 h-5" />
+            Resumo IA
+          </h2>
+          {!news.aiSummary && (
+            <button
+              onClick={() => onGenerateSummary(news.id)}
+              disabled={isGeneratingSummary}
+              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-sm font-medium hover:from-blue-500 hover:to-cyan-500 transition-all disabled:opacity-50 flex items-center gap-2"
+            >
+              {isGeneratingSummary ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Gerando...
+                </>
+              ) : (
+                <>
+                  <BookOpen className="w-4 h-4" />
+                  Gerar resumo
+                </>
+              )}
+            </button>
+          )}
+        </div>
+
+        {news.aiSummary ? (
+          <div className="theme-text-primary whitespace-pre-wrap text-sm leading-relaxed">
+            {news.aiSummary}
+          </div>
+        ) : (
+          <p className="theme-text-muted text-sm italic">
+            {isGeneratingSummary
+              ? 'Gerando resumo com IA...'
+              : 'Clique em "Gerar resumo" para criar um resumo desta notícia com IA.'}
+          </p>
+        )}
+
+        {news.aiSummaryGeneratedAt && (
+          <p className="text-xs theme-text-muted mt-3">
+            Resumo gerado em {formatFullDate(news.aiSummaryGeneratedAt)}
+          </p>
+        )}
+      </div>
+
+      {/* Descrição original */}
+      <div>
+        <h2 className="font-semibold theme-text-primary mb-3">Descrição</h2>
+        <p className="theme-text-secondary text-sm leading-relaxed">
+          {stripHtml(news.description)}
+        </p>
+      </div>
+
+      {/* Conteúdo completo (se disponível) */}
+      {news.content && news.content !== news.description && (
+        <div>
+          <h2 className="font-semibold theme-text-primary mb-3">Conteúdo</h2>
+          <div className="theme-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
+            {stripHtml(news.content)}
+          </div>
+        </div>
+      )}
+
+      {/* Temas/Tags */}
+      {news.themes && news.themes.length > 0 && (
+        <div>
+          <h2 className="font-semibold theme-text-primary mb-3">Temas</h2>
+          <div className="flex flex-wrap gap-2">
+            {news.themes.map((theme, idx) => (
+              <span
+                key={idx}
+                className="px-2 py-1 text-xs rounded-lg theme-bg-secondary theme-text-secondary"
+              >
+                {theme}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MODO MODAL (hideHeader=true): apenas conteúdo, sem header/footer/wrapper
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  if (hideHeader) {
+    return <div className="space-y-6">{contentSections}</div>;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MODO STANDALONE (padrão): layout completo com header + footer
+  // ═══════════════════════════════════════════════════════════════════════════
+
   return (
     <div className="h-full flex flex-col theme-bg-primary">
       {/* ═══════════════════════════════════════════════════════════════ */}
@@ -96,87 +201,7 @@ export const NewsDetail: React.FC<NewsDetailProps> = ({
       {/* CONTEÚDO */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {/* Resumo IA */}
-        <div className="theme-info-box rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-blue-400 flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
-              Resumo IA
-            </h2>
-            {!news.aiSummary && (
-              <button
-                onClick={() => onGenerateSummary(news.id)}
-                disabled={isGeneratingSummary}
-                className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-sm font-medium hover:from-blue-500 hover:to-cyan-500 transition-all disabled:opacity-50 flex items-center gap-2"
-              >
-                {isGeneratingSummary ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Gerando...
-                  </>
-                ) : (
-                  <>
-                    <BookOpen className="w-4 h-4" />
-                    Gerar resumo
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-
-          {news.aiSummary ? (
-            <div className="theme-text-primary whitespace-pre-wrap text-sm leading-relaxed">
-              {news.aiSummary}
-            </div>
-          ) : (
-            <p className="theme-text-muted text-sm italic">
-              {isGeneratingSummary
-                ? 'Gerando resumo com IA...'
-                : 'Clique em "Gerar resumo" para criar um resumo desta notícia com IA.'}
-            </p>
-          )}
-
-          {news.aiSummaryGeneratedAt && (
-            <p className="text-xs theme-text-muted mt-3">
-              Resumo gerado em {formatFullDate(news.aiSummaryGeneratedAt)}
-            </p>
-          )}
-        </div>
-
-        {/* Descrição original */}
-        <div>
-          <h2 className="font-semibold theme-text-primary mb-3">Descrição</h2>
-          <p className="theme-text-secondary text-sm leading-relaxed">
-            {stripHtml(news.description)}
-          </p>
-        </div>
-
-        {/* Conteúdo completo (se disponível) */}
-        {news.content && news.content !== news.description && (
-          <div>
-            <h2 className="font-semibold theme-text-primary mb-3">Conteúdo</h2>
-            <div className="theme-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
-              {stripHtml(news.content)}
-            </div>
-          </div>
-        )}
-
-        {/* Temas/Tags */}
-        {news.themes && news.themes.length > 0 && (
-          <div>
-            <h2 className="font-semibold theme-text-primary mb-3">Temas</h2>
-            <div className="flex flex-wrap gap-2">
-              {news.themes.map((theme, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-1 text-xs rounded-lg theme-bg-secondary theme-text-secondary"
-                >
-                  {theme}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+        {contentSections}
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
