@@ -406,7 +406,7 @@ const NoticiasAppContent: React.FC = () => {
           </aside>
 
           {/* Feed principal */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto">
             {/* Filtros mobile */}
             <div className="lg:hidden mb-4 theme-card rounded-xl p-4 border theme-border-secondary">
               <NewsFilters
@@ -438,7 +438,7 @@ const NoticiasAppContent: React.FC = () => {
           {/* Detail panel (desktop) */}
           {selectedNews && (
             <aside className="hidden xl:block w-96 flex-shrink-0">
-              <div className="sticky top-24 theme-card rounded-xl border theme-border-secondary overflow-hidden max-h-[calc(100vh-8rem)]">
+              <div className="sticky top-24 theme-card rounded-xl border theme-border-secondary overflow-hidden h-[calc(100vh-8rem)]">
                 <NewsDetail
                   news={selectedNews}
                   onClose={handleCloseDetail}
