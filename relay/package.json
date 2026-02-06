@@ -1,0 +1,13 @@
+{
+  "name": "sentencify-trt-relay",
+  "version": "1.0.0",
+  "description": "Relay de RSS dos TRTs (Oracle Cloud São Paulo → Render)",
+  "type": "module",
+  "scripts": {
+    "start": "node trt-relay.js"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.5.0",
+    "node-cron": "^3.0.3"
+  }
+}

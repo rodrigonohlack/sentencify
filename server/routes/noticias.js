@@ -31,10 +31,86 @@ function periodToDays(period) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// POST /api/noticias/relay-ingest - Ingestão de notícias via relay externo
+// Autenticado por RELAY_API_KEY (não usa JWT). Deve ficar ANTES do authMiddleware.
+// Usado pelo relay Oracle Cloud (São Paulo) para TRTs bloqueados fora do BR.
+// ═══════════════════════════════════════════════════════════════════════════
+
+router.post('/relay-ingest', (req, res) => {
+  try {
+    // Autenticar via API key
+    const authHeader = req.headers.authorization;
+    const expectedKey = process.env.RELAY_API_KEY;
+
+    if (!expectedKey) {
+      return res.status(503).json({ error: 'Relay não configurado (RELAY_API_KEY ausente)' });
+    }
+
+    if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
+      return res.status(401).json({ error: 'API key inválida' });
+    }
+
+    const { news } = req.body;
+
+    if (!news || !Array.isArray(news) || news.length === 0) {
+      return res.status(400).json({ error: 'Array de notícias é obrigatório' });
+    }
+
+    if (news.length > 1000) {
+      return res.status(400).json({ error: 'Máximo 1000 notícias por ingestão' });
+    }
+
+    const db = getDb();
+    const now = new Date().toISOString();
+    let inserted = 0;
+    let skipped = 0;
+
+    const insertStmt = db.prepare(`
+      INSERT OR IGNORE INTO noticias (
+        id, source_id, source_name, title, description, content,
+        link, published_at, fetched_at, themes, created_at, updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const transaction = db.transaction((items) => {
+      for (const item of items) {
+        if (!item.title || !item.link || !item.sourceId) continue;
+        const result = insertStmt.run(
+          uuidv4(),
+          item.sourceId,
+          item.sourceName || item.sourceId,
+          item.title,
+          item.description || '',
+          item.content || null,
+          item.link,
+          item.publishedAt || now,
+          now,
+          item.themes ? JSON.stringify(item.themes) : null,
+          now,
+          now
+        );
+        if (result.changes > 0) inserted++;
+        else skipped++;
+      }
+    });
+
+    transaction(news);
+
+    console.log(`[Relay Ingest] ${inserted} novas, ${skipped} duplicadas (${news.length} recebidas)`);
+
+    res.json({ inserted, skipped, total: news.length });
+  } catch (error) {
+    console.error('[Relay Ingest] Error:', error);
+    res.status(500).json({ error: 'Erro ao ingerir notícias do relay' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MIDDLEWARE
 // ═══════════════════════════════════════════════════════════════════════════
 
-// Aplicar auth em todas as rotas
+// Aplicar auth em todas as rotas abaixo
 router.use(authMiddleware);
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -340,6 +340,7 @@ app.listen(PORT, () => {
   ║   • Health:   /api/health                            ║
   ║                                                       ║
   ║   Scheduler: RSS a cada 8h (6 fontes)                ║
+  ║   Relay:     TRTs via Oracle Cloud (13 fontes)      ║
   ║                                                       ║
   ╚═══════════════════════════════════════════════════════╝
   `);
