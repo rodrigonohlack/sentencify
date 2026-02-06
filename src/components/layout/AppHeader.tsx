@@ -7,8 +7,9 @@
  * Contém: título, número do processo, botões de ação, aviso de responsabilidade.
  */
 
-import { LogOut, FileSearch, Mic, Newspaper, Sun, Moon, BookOpen, Settings } from 'lucide-react';
+import { LogOut, Sun, Moon, BookOpen, Settings, LayoutGrid } from 'lucide-react';
 import { GoogleDriveButton } from '../GoogleDriveButton';
+import { AppSwitcher } from '../shared/AppSwitcher';
 import { CSS } from '../../constants/styles';
 import { APP_VERSION } from '../../constants/app-version';
 import type { ModalKey } from '../../types';
@@ -71,27 +72,13 @@ export function AppHeader({
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
               SENTENCIFY.AI
             </h1>
-            <a
-              href="/analise"
-              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 transition-all"
+            <AppSwitcher
+              currentApp="sentencify"
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20 hover:bg-slate-500/20 hover:border-slate-500/40 transition-all"
             >
-              <FileSearch className="w-3.5 h-3.5" />
-              Analisador
-            </a>
-            <a
-              href="/prova-oral"
-              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/40 transition-all"
-            >
-              <Mic className="w-3.5 h-3.5" />
-              Prova Oral
-            </a>
-            <a
-              href="/noticias"
-              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 hover:border-cyan-500/40 transition-all"
-            >
-              <Newspaper className="w-3.5 h-3.5" />
-              Notícias
-            </a>
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Apps</span>
+            </AppSwitcher>
           </div>
 
           {/* Process Number Input */}
