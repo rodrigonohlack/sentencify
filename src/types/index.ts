@@ -2724,6 +2724,9 @@ export interface TopicsTabProps {
   isTopicDecidido: (topic: Topic) => boolean;
   isSpecialTopic: (topic: Topic) => boolean;
   CSS: Record<string, string>;
+
+  // Cache indicator
+  hasReviewCache: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

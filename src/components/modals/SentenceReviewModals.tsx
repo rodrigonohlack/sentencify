@@ -29,6 +29,7 @@ interface SentenceReviewOptionsModalProps {
   analyzedDocuments: AnalyzedDocuments | null;
   generatingReview: boolean;
   reviewSentence: () => Promise<void>;
+  cachedScopes?: Set<ReviewScope>;
 }
 
 interface SentenceReviewResultModalProps {
@@ -55,7 +56,8 @@ export const SentenceReviewOptionsModal: React.FC<SentenceReviewOptionsModalProp
   setReviewScope,
   analyzedDocuments,
   generatingReview,
-  reviewSentence
+  reviewSentence,
+  cachedScopes
 }) => {
   const { modals, closeModal } = useModalManager();
 
@@ -111,7 +113,12 @@ export const SentenceReviewOptionsModal: React.FC<SentenceReviewOptionsModalProp
             className="w-4 h-4 text-amber-600 mt-1"
           />
           <div>
-            <span className="text-sm font-medium theme-text-primary">Apenas a decisão completa</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium theme-text-primary">Apenas a decisão completa</span>
+              {cachedScopes?.has('decisionOnly') && (
+                <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-medium">Cache</span>
+              )}
+            </div>
             <p className="text-xs theme-text-muted mt-1">RELATÓRIO + todos os tópicos (mini-relatórios + decisões) + DISPOSITIVO</p>
           </div>
         </label>
@@ -128,7 +135,12 @@ export const SentenceReviewOptionsModal: React.FC<SentenceReviewOptionsModalProp
             className="w-4 h-4 text-amber-600 mt-1"
           />
           <div>
-            <span className="text-sm font-medium theme-text-primary">Decisão + peças processuais</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium theme-text-primary">Decisão + peças processuais</span>
+              {cachedScopes?.has('decisionWithDocs') && (
+                <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-medium">Cache</span>
+              )}
+            </div>
             <p className="text-xs theme-text-muted mt-1">Inclui petição inicial, contestações e documentos complementares</p>
             {!hasDocuments && (
               <p className="text-xs text-red-400 mt-1">Nenhum documento extraído disponível</p>

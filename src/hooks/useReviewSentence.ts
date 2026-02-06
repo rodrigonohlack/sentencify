@@ -89,6 +89,7 @@ export interface UseReviewSentenceReturn {
   setReviewResult: (result: string) => void;
   generatingReview: boolean;
   reviewFromCache: boolean;
+  cachedScopes: Set<ReviewScope>;
 
   // Funções
   reviewSentence: () => Promise<void>;
@@ -123,6 +124,7 @@ export function useReviewSentence({
   const [reviewResult, setReviewResult] = useState('');
   const [generatingReview, setGeneratingReview] = useState(false);
   const [reviewFromCache, setReviewFromCache] = useState(false);
+  const [cachedScopes, setCachedScopes] = useState<Set<ReviewScope>>(new Set());
 
   // Double Check Review - Zustand actions (v1.37.59)
   const openDoubleCheckReview = useUIStore(state => state.openDoubleCheckReview);
@@ -143,6 +145,18 @@ export function useReviewSentence({
 
   // Cache de revisão de sentença
   const sentenceReviewCache = useSentenceReviewCache();
+
+  // Verificar quais scopes têm cache
+  const checkCachedScopes = useCallback(async () => {
+    const entries = await sentenceReviewCache.getAllReviews();
+    const scopes = new Set<ReviewScope>(entries.map(e => e.scope));
+    setCachedScopes(scopes);
+  }, [sentenceReviewCache]);
+
+  // Verificar cache no mount
+  useEffect(() => {
+    checkCachedScopes();
+  }, [checkCachedScopes]);
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // FUNÇÃO DE REVISÃO
@@ -293,6 +307,7 @@ export function useReviewSentence({
 
       // Salvar no cache após gerar
       await sentenceReviewCache.saveReview(reviewScope, reviewFinal);
+      await checkCachedScopes();
 
       setReviewResult(reviewFinal);
       closeModal('sentenceReview');
@@ -307,6 +322,7 @@ export function useReviewSentence({
     setError,
     reviewScope,
     sentenceReviewCache,
+    checkCachedScopes,
     buildDecisionText,
     buildDocumentContentArray,
     analyzedDocuments,
@@ -324,7 +340,8 @@ export function useReviewSentence({
   const clearReviewCache = useCallback(async () => {
     await sentenceReviewCache.deleteReview(reviewScope);
     setReviewFromCache(false);
-  }, [sentenceReviewCache, reviewScope]);
+    await checkCachedScopes();
+  }, [sentenceReviewCache, reviewScope, checkCachedScopes]);
 
   return {
     reviewScope,
@@ -333,6 +350,7 @@ export function useReviewSentence({
     setReviewResult,
     generatingReview,
     reviewFromCache,
+    cachedScopes,
     reviewSentence,
     clearReviewCache,
   };

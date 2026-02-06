@@ -2440,7 +2440,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // ✅ v1.37.43: useReviewSentence - Revisão crítica de sentença extraída (FASE 44)
   const {
     reviewScope, setReviewScope, reviewResult,
-    generatingReview, reviewFromCache, reviewSentence, clearReviewCache
+    generatingReview, reviewFromCache, cachedScopes, reviewSentence, clearReviewCache
   } = useReviewSentence({
     canGenerateDispositivo,
     setError,
@@ -2660,6 +2660,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
                 isTopicDecidido={isTopicDecidido}
                 isSpecialTopic={isSpecialTopic}
                 CSS={CSS}
+                hasReviewCache={cachedScopes.size > 0}
               />
             )}
 
@@ -2826,6 +2827,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         analyzedDocuments={analyzedDocuments}
         generatingReview={generatingReview}
         reviewSentence={reviewSentence}
+        cachedScopes={cachedScopes}
       />
 
       <SentenceReviewResultModal

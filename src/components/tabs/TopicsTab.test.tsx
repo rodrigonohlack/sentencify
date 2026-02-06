@@ -86,6 +86,7 @@ describe('TopicsTab', () => {
       t.title.toUpperCase() === 'RELATÓRIO' || t.title.toUpperCase() === 'DISPOSITIVO'
     ),
     CSS: { spinner: 'spinner', flexGap2: 'flex gap-2' },
+    hasReviewCache: false,
     ...overrides,
   });
 

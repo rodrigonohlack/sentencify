@@ -49,7 +49,8 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
   exportDecision,
   isTopicDecidido,
   isSpecialTopic,
-  CSS
+  CSS,
+  hasReviewCache
 }) => {
   // ═══════════════════════════════════════════════════════════════════════════
   // STORE ACCESS (substituindo props)
@@ -155,6 +156,11 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                             <>
                               <Scale className="w-4 h-4" />
                               Revisar Sentença
+                              {hasReviewCache && (
+                                <span className="text-[10px] bg-green-500/20 text-green-300 px-1.5 py-0.5 rounded font-medium">
+                                  Cache
+                                </span>
+                              )}
                             </>
                           )}
                         </button>
