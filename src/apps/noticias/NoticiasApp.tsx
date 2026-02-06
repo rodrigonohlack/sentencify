@@ -459,7 +459,7 @@ const NoticiasAppContent: React.FC = () => {
 
       {/* Modal de detalhe (mobile/tablet) */}
       {selectedNews && (
-        <div className="xl:hidden fixed inset-0 z-50 theme-bg-primary">
+        <div className="xl:hidden fixed inset-0 z-50 theme-bg-primary overflow-y-auto">
           <NewsDetail
             news={selectedNews}
             onClose={handleCloseDetail}
