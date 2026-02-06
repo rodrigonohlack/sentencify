@@ -54,7 +54,7 @@ const APPS: AppDefinition[] = [
   {
     id: 'analisador',
     label: 'Analisador',
-    href: '/analisador',
+    href: '/analise',
     icon: <FileSearch className="w-4 h-4" />,
     colors: {
       bg: 'bg-blue-500/10 dark:bg-blue-500/15',

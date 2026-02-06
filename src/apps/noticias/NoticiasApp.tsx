@@ -5,7 +5,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Newspaper, Settings, Plus, RefreshCw, Scale,
+  Newspaper, Settings, Plus, RefreshCw, LayoutGrid,
   Sun, Moon, LogOut, Rss, Star, ExternalLink, Loader2
 } from 'lucide-react';
 import { AppSwitcher } from '../../components/shared/AppSwitcher';
@@ -348,8 +348,8 @@ const NoticiasAppContent: React.FC = () => {
                 currentApp="noticias"
                 className="flex items-center gap-2 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
-                <Scale className="w-4 h-4" />
-                <span className="hidden sm:inline">Sentencify</span>
+                <LayoutGrid className="w-4 h-4" />
+                <span className="hidden sm:inline">Apps</span>
               </AppSwitcher>
 
               {/* Toggle tema */}
