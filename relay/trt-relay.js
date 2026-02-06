@@ -21,18 +21,16 @@ const STARTUP_DELAY_MS = 10_000;
 // FONTES — TRTs com RSS funcional (bloqueados fora do BR)
 // ═══════════════════════════════════════════════════════════════════════════
 
+// TRT-3, TRT-10, TRT-11, TRT-20 removidos: usam CloudFront com geobloqueio
+// que bloqueia até IP brasileiro da Oracle Cloud (403)
 const TRT_SOURCES = [
   { id: 'trt2',  name: 'TRT-2 (SP Capital)', feedUrl: 'https://ww2.trt2.jus.br/noticias/noticias/?type=9818' },
-  { id: 'trt3',  name: 'TRT-3 (MG)',         feedUrl: 'https://portal.trt3.jus.br/rss.xml' },
   { id: 'trt7',  name: 'TRT-7 (CE)',         feedUrl: 'https://www.trt7.jus.br/index.php?option=com_content&view=category&id=152&Itemid=887&format=feed&type=rss' },
   { id: 'trt9',  name: 'TRT-9 (PR)',         feedUrl: 'https://www.trt9.jus.br/portal/NoticiaRSS' },
-  { id: 'trt10', name: 'TRT-10 (DF/TO)',     feedUrl: 'https://www.trt10.jus.br/ascom/noticiasrss.php' },
-  { id: 'trt11', name: 'TRT-11 (AM/RR)',     feedUrl: 'https://portal.trt11.jus.br/index.php/comunicacao/noticias-lista?format=feed&type=rss' },
   { id: 'trt14', name: 'TRT-14 (RO/AC)',     feedUrl: 'https://portal.trt14.jus.br/portal/noticias/rss.xml' },
   { id: 'trt15', name: 'TRT-15 (Campinas)',  feedUrl: 'https://trt15.jus.br/noticias/rss.xml' },
   { id: 'trt16', name: 'TRT-16 (MA)',        feedUrl: 'https://www.trt16.jus.br/noticias/rss' },
   { id: 'trt18', name: 'TRT-18 (GO)',        feedUrl: 'https://www.trt18.jus.br/portal/rss' },
-  { id: 'trt20', name: 'TRT-20 (SE)',        feedUrl: 'https://www.trt20.jus.br/?format=feed&type=rss' },
   { id: 'trt23', name: 'TRT-23 (MT)',        feedUrl: 'https://portal.trt23.jus.br/portal/noticias/feed' },
   { id: 'trt24', name: 'TRT-24 (MS)',        feedUrl: 'https://www.trt24.jus.br/web/guest/noticias/-/asset_publisher/ND6zpys7a3hM/rss' },
 ];
