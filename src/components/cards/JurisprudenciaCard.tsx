@@ -28,6 +28,9 @@ export const JurisprudenciaCard = React.memo(({
     if (precedente.tipoProcesso === 'Súmula' || precedente.tipoProcesso === 'OJ') {
       return <span className="text-xs theme-text-muted ml-2">nº {precedente.numero}</span>;
     }
+    if (precedente.numeroProcesso) {
+      return <span className="text-xs theme-text-muted ml-2">nº {precedente.numeroProcesso}</span>;
+    }
     return null;
   };
 
@@ -72,9 +75,7 @@ export const JurisprudenciaCard = React.memo(({
       {precedente.titulo && (
         <h4 className="font-semibold theme-text-primary text-sm mb-1 uppercase">{precedente.titulo}</h4>
       )}
-      {precedente.numeroProcesso && (
-        <h4 className="font-medium theme-text-primary text-sm mb-1">{precedente.numeroProcesso}</h4>
-      )}
+
       {(precedente.relator || precedente.dataJulgamento || precedente.dataAprovacao) && (
         <p className="text-xs theme-text-muted mb-2">
           {precedente.relator && `Rel: ${precedente.relator}`}
