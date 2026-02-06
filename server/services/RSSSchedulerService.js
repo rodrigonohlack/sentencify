@@ -20,8 +20,8 @@ const CRON_EXPRESSION = '0 */8 * * *'; // 00:00, 08:00, 16:00 UTC
 
 const USER_AGENT = 'Mozilla/5.0 (compatible; SentencifyAI/1.0; +https://sentencify.ia.br)';
 
-/** Tribunais superiores isentos do filtro trabalhista */
-const SUPERIOR_COURT_IDS = ['stf', 'stj', 'tst'];
+/** Tribunais superiores + TRTs isentos do filtro trabalhista (são tribunais trabalhistas, tudo é relevante) */
+const SUPERIOR_COURT_IDS = ['stf', 'stj', 'tst', 'trt8'];
 
 /** Palavras-chave para filtro de relevância trabalhista */
 const LABOR_KEYWORDS = [
@@ -46,6 +46,8 @@ const RSS_SOURCES = [
   { id: 'stf', name: 'STF - Supremo Tribunal Federal', feedUrl: 'https://news.google.com/rss/search?q=site:noticias.stf.jus.br&hl=pt-BR&gl=BR&ceid=BR:pt-419' },  // RSS direto bloqueado fora do BR — via Google News
   { id: 'stj', name: 'STJ - Superior Tribunal de Justiça', feedUrl: 'https://res.stj.jus.br/hrestp-c-portalp/RSS.xml' },
   { id: 'tst', name: 'TST - Tribunal Superior do Trabalho', feedUrl: 'https://www.tst.jus.br/rss' },
+  // TRTs (via Google News — RSS direto bloqueado por CloudFront/geobloqueio)
+  { id: 'trt8', name: 'TRT-8 (PA/AP)', feedUrl: 'https://news.google.com/rss/search?q=%22TRT-8%22+OR+%22TRT+8%22+OR+%22TRT+da+8%C2%AA+Regi%C3%A3o%22&hl=pt-BR&gl=BR&ceid=BR:pt-419' },
   // Portais
   { id: 'conjur',   name: 'Consultor Jurídico', feedUrl: 'https://www.conjur.com.br/feed' },  // /rss.xml redireciona 302 → /feed
   { id: 'migalhas', name: 'Migalhas',           feedUrl: 'https://news.google.com/rss/search?q=site:migalhas.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419' },

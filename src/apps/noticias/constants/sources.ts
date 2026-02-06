@@ -96,7 +96,7 @@ export const DEFAULT_SOURCES: NewsSource[] = [
   { id: 'trt5',  name: 'TRT-5 (BA)',         type: 'tribunal', websiteUrl: 'https://www.trt5.jus.br',    enabled: false },  // Sem RSS público
   { id: 'trt6',  name: 'TRT-6 (PE)',         type: 'tribunal', websiteUrl: 'https://www.trt6.jus.br',    enabled: false },  // Sem RSS público
   { id: 'trt7',  name: 'TRT-7 (CE)',         type: 'tribunal', feedUrl: 'https://www.trt7.jus.br/index.php?option=com_content&view=category&id=152&Itemid=887&format=feed&type=rss', websiteUrl: 'https://www.trt7.jus.br', enabled: false },  // Bloqueado fora do BR (403)
-  { id: 'trt8',  name: 'TRT-8 (PA/AP)',      type: 'tribunal', websiteUrl: 'https://www.trt8.jus.br',    enabled: false },  // Bloqueado fora do BR (502)
+  { id: 'trt8',  name: 'TRT-8 (PA/AP)',      type: 'tribunal', feedUrl: 'https://news.google.com/rss/search?q=%22TRT-8%22+OR+%22TRT+8%22+OR+%22TRT+da+8%C2%AA+Regi%C3%A3o%22&hl=pt-BR&gl=BR&ceid=BR:pt-419', websiteUrl: 'https://www.trt8.jus.br', enabled: true },  // RSS direto bloqueado (CloudFront) — via Google News
   { id: 'trt9',  name: 'TRT-9 (PR)',         type: 'tribunal', feedUrl: 'https://www.trt9.jus.br/portal/NoticiaRSS', websiteUrl: 'https://www.trt9.jus.br', enabled: false },  // Bloqueado fora do BR (403)
   { id: 'trt10', name: 'TRT-10 (DF/TO)',     type: 'tribunal', feedUrl: 'https://www.trt10.jus.br/ascom/noticiasrss.php', websiteUrl: 'https://www.trt10.jus.br', enabled: false },  // Bloqueado fora do BR (403)
   { id: 'trt11', name: 'TRT-11 (AM/RR)',     type: 'tribunal', feedUrl: 'https://portal.trt11.jus.br/index.php/comunicacao/noticias-lista?format=feed&type=rss', websiteUrl: 'https://portal.trt11.jus.br', enabled: false },  // Bloqueado fora do BR (403)
@@ -145,8 +145,8 @@ export const DEFAULT_SOURCES: NewsSource[] = [
 ];
 
 // Total: 31 fontes (3 superiores + 24 TRTs + 4 portais)
-// Com RSS funcional: 6 (STF*, STJ, TST, Conjur, Migalhas*, JOTA) *via Google News
-// TRTs: todos desabilitados (bloqueio de IP fora do Brasil)
+// Com RSS funcional: 7 (STF*, STJ, TST, TRT-8*, Conjur, Migalhas*, JOTA) *via Google News
+// TRTs: todos desabilitados exceto TRT-8 (bloqueio de IP fora do Brasil)
 
 /**
  * Filtros padrão iniciais
