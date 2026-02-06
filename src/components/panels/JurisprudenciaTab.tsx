@@ -16,7 +16,7 @@ import { DeleteAllPrecedentesModal } from '../modals';
 import { useUIStore } from '../../stores/useUIStore';
 import AIModelService from '../../services/AIModelService';
 import { JurisEmbeddingsService } from '../../services/EmbeddingsServices';
-import type { JurisprudenciaTabProps, JurisEmbeddingWithSimilarity } from '../../types';
+import type { JurisprudenciaTabProps, JurisEmbeddingWithSimilarity, Precedente } from '../../types';
 
 export const JurisprudenciaTab = React.memo(({
   isReadOnly = false,
@@ -31,6 +31,16 @@ export const JurisprudenciaTab = React.memo(({
   const closeModal = useUIStore((s) => s.closeModal);
   const modals = useUIStore((s) => s.modals);
   const jurisprudencia = useJurisprudencia();
+
+  // Mapa de precedentes para enriquecer resultados semânticos
+  const precedenteMap = React.useMemo(() => {
+    const map = new Map<string, Precedente>();
+    for (const p of jurisprudencia.precedentes) {
+      map.set(p.id, p);
+    }
+    return map;
+  }, [jurisprudencia.precedentes]);
+
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
   const [importStatus, setImportStatus] = React.useState<{ success: boolean; message?: string; count?: number; error?: string } | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -65,14 +75,26 @@ export const JurisprudenciaTab = React.memo(({
       // v1.32.21: Passar filtros para aplicar ANTES do limit (retorna até 30 do tipo desejado)
       const results = await JurisEmbeddingsService.searchBySimilarity(queryEmbedding, threshold, 30, jurisprudencia.filtros);
 
-      setSemanticResults(results);
+      // Enriquecer resultados com dados do Precedente (numeroProcesso, tema, numero, titulo)
+      const enriched = results.map(r => {
+        const p = precedenteMap.get(r.precedenteId || r.id);
+        if (!p) return r;
+        return {
+          ...r,
+          numeroProcesso: r.numeroProcesso || p.numeroProcesso,
+          tema: r.tema || p.tema,
+          numero: r.numero || p.numero,
+          titulo: r.titulo || p.titulo,
+        };
+      });
+      setSemanticResults(enriched);
     } catch (err) {
       console.error('[Juris Semantic] Erro na busca:', err);
       setSemanticResults(null);
     } finally {
       setSearchingSemantics(false);
     }
-  }, [semanticAvailable, jurisSemanticThreshold, jurisprudencia.filtros]);
+  }, [semanticAvailable, jurisSemanticThreshold, jurisprudencia.filtros, precedenteMap]);
 
   // v1.27.00: Debounce para busca semântica
   const semanticSearchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
