@@ -122,12 +122,11 @@ describe('AppHeader', () => {
       expect(screen.getByText(/Aviso Importante/)).toBeInTheDocument();
     });
 
-    it('should render Analisador link', () => {
+    it('should render AppSwitcher with Apps button', () => {
       render(<AppHeader {...createDefaultProps()} />);
 
-      const link = screen.getByText('Analisador');
-      expect(link).toBeInTheDocument();
-      expect(link.closest('a')).toHaveAttribute('href', '/analise');
+      const appsButton = screen.getByText('Apps');
+      expect(appsButton).toBeInTheDocument();
     });
   });
 

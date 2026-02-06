@@ -8,17 +8,28 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useReviewSentence } from './useReviewSentence';
 
-// Mock useSentenceReviewCache
+// Mock useSentenceReviewCache — objeto estável para evitar loop infinito
+// (checkCachedScopes depende de sentenceReviewCache via useCallback)
 const mockGetReview = vi.fn();
 const mockSaveReview = vi.fn();
 const mockDeleteReview = vi.fn();
+const mockGetAllReviews = vi.fn();
+const mockClearAllReviews = vi.fn();
+const mockExportAll = vi.fn();
+const mockImportAll = vi.fn();
+
+const stableCacheReturn = {
+  getReview: mockGetReview,
+  saveReview: mockSaveReview,
+  deleteReview: mockDeleteReview,
+  getAllReviews: mockGetAllReviews,
+  clearAllReviews: mockClearAllReviews,
+  exportAll: mockExportAll,
+  importAll: mockImportAll,
+};
 
 vi.mock('./useSentenceReviewCache', () => ({
-  default: () => ({
-    getReview: mockGetReview,
-    saveReview: mockSaveReview,
-    deleteReview: mockDeleteReview
-  })
+  default: () => stableCacheReturn
 }));
 
 // Mock text utils
@@ -81,6 +92,7 @@ describe('useReviewSentence', () => {
     mockCallAI.mockResolvedValue('Review result');
     mockGetReview.mockResolvedValue(null);
     mockSaveReview.mockResolvedValue(undefined);
+    mockGetAllReviews.mockResolvedValue([]);
     // Reset UIStore mock state
     mockUIStoreState.doubleCheckResult = null;
     mockUIStoreState.openDoubleCheckReview.mockClear();

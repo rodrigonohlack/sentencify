@@ -620,7 +620,7 @@ describe('JurisprudenciaTab', () => {
       mockJurisprudenciaData.searchTerm = 'busca';
       mockGetEmbedding.mockResolvedValue([0.1]);
       mockSearchBySimilarity.mockResolvedValue([
-        { id: 'r1', tipoProcesso: 'IRR', numero: '50', text: 'texto', similarity: 0.6 },
+        { id: 'r1', tipoProcesso: 'IRR', numero: '50', tema: '50', text: 'texto', similarity: 0.6 },
       ]);
 
       render(<JurisprudenciaTab {...createMockProps(semanticProps)} />);

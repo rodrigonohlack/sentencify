@@ -86,9 +86,9 @@ describe('JurisprudenciaCard', () => {
     });
 
     it('should render numeroProcesso when available', () => {
-      const precedente = createMockPrecedente({ numeroProcesso: 'TST-RR-1234-56.2020.5.01.0001' });
+      const precedente = createMockPrecedente({ tipoProcesso: 'RR', numeroProcesso: 'TST-RR-1234-56.2020.5.01.0001' });
       render(<JurisprudenciaCard {...defaultProps} precedente={precedente} />);
-      expect(screen.getByText('TST-RR-1234-56.2020.5.01.0001')).toBeInTheDocument();
+      expect(screen.getByText(/TST-RR-1234-56\.2020\.5\.01\.0001/)).toBeInTheDocument();
     });
 
     it('should render relator when available', () => {
