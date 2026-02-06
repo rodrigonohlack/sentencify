@@ -1223,6 +1223,8 @@ export interface JurisEmbeddingWithSimilarity extends JurisEmbeddingItem {
   precedenteId?: string;
   tipoProcesso?: string;
   numero?: string;
+  numeroProcesso?: string;
+  tema?: string;
   titulo?: string;
   totalChunks?: number;
   chunkIndex?: number;

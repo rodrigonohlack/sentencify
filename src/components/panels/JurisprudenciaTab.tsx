@@ -252,11 +252,13 @@ export const JurisprudenciaTab = React.memo(({
                   <span className="text-xs px-2 py-0.5 rounded theme-bg-tertiary theme-text-tertiary font-medium">
                     {result.tipoProcesso}
                   </span>
-                  {result.numero && (
-                    <span className="text-xs theme-text-muted">
-                      {result.tipoProcesso === 'Súmula' || result.tipoProcesso === 'OJ' ? `nº ${result.numero}` : `Tema ${result.numero}`}
-                    </span>
-                  )}
+                  {result.tema ? (
+                    <span className="text-xs theme-text-muted">Tema {result.tema}</span>
+                  ) : (result.tipoProcesso === 'Súmula' || result.tipoProcesso === 'OJ') && result.numero ? (
+                    <span className="text-xs theme-text-muted">nº {result.numero}</span>
+                  ) : result.numeroProcesso ? (
+                    <span className="text-xs theme-text-muted">nº {result.numeroProcesso}</span>
+                  ) : null}
                   <span className={`text-xs px-2 py-0.5 rounded font-medium ${
                     result.similarity >= 0.7 ? 'bg-green-500/20 text-green-400' :
                     result.similarity >= 0.5 ? 'bg-yellow-500/20 text-yellow-400' :
