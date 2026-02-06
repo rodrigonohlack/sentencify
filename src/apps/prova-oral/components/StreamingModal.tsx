@@ -234,9 +234,9 @@ export const StreamingModal: React.FC<StreamingModalProps> = ({
 }) => {
   const [elapsedTime, setElapsedTime] = useState('0s');
 
-  // Atualizar tempo decorrido a cada segundo
+  // Atualizar tempo decorrido a cada segundo (para quando isComplete)
   useEffect(() => {
-    if (!isOpen || !startTime) return;
+    if (!isOpen || !startTime || isComplete) return;
 
     const updateTime = () => {
       setElapsedTime(formatElapsedTime(startTime));
@@ -246,7 +246,7 @@ export const StreamingModal: React.FC<StreamingModalProps> = ({
     const interval = setInterval(updateTime, 1000);
 
     return () => clearInterval(interval);
-  }, [isOpen, startTime]);
+  }, [isOpen, startTime, isComplete]);
 
   const totalProgress = calculateTotalProgress(phases);
   const totalCharCount =

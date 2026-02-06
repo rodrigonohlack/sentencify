@@ -8,6 +8,7 @@ import {
   Newspaper, Settings, Plus, RefreshCw, Scale,
   Sun, Moon, LogOut, Rss, Star, ExternalLink, Loader2
 } from 'lucide-react';
+import { AppSwitcher } from '../../components/shared/AppSwitcher';
 
 // Componentes
 import {
@@ -342,14 +343,14 @@ const NoticiasAppContent: React.FC = () => {
                 <span className="hidden sm:inline">Adicionar</span>
               </Button>
 
-              {/* Voltar ao Sentencify */}
-              <a
-                href="/"
+              {/* Navegação entre apps */}
+              <AppSwitcher
+                currentApp="noticias"
                 className="flex items-center gap-2 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 <Scale className="w-4 h-4" />
                 <span className="hidden sm:inline">Sentencify</span>
-              </a>
+              </AppSwitcher>
 
               {/* Toggle tema */}
               <Button

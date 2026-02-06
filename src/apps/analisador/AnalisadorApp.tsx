@@ -6,6 +6,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { History, Settings, LogOut, FileSearch, ArrowLeft, Sun, Moon, Scale } from 'lucide-react';
+import { AppSwitcher } from '../../components/shared/AppSwitcher';
 
 // Auth
 import { LoginGate, useLoginGate } from './components/auth/LoginGate';
@@ -119,14 +120,13 @@ const AnalisadorContent: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-slate-900 dark:to-slate-800 relative">
       {/* Top-right: Sentencify Link + Theme Toggle + Settings + Logout icons */}
       <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-        <a
-          href="/"
+        <AppSwitcher
+          currentApp="analisador"
           className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all shadow-sm"
-          title="Voltar ao Sentencify"
         >
           <Scale className="w-4 h-4" />
           <span className="hidden sm:inline text-sm">Sentencify</span>
-        </a>
+        </AppSwitcher>
         <button
           onClick={toggleAppTheme}
           className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:border-amber-300 dark:hover:border-amber-600 transition-all shadow-sm"
