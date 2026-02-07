@@ -6,6 +6,7 @@
 import React from 'react';
 import { Star, BookOpen, ExternalLink, Loader2 } from 'lucide-react';
 import { formatRelativeTime } from '../../utils/date-utils';
+import { stripHtml } from '../../utils/html-utils';
 import type { NewsItem } from '../../types';
 
 interface NewsCardProps {
@@ -77,7 +78,7 @@ export const NewsCard = React.memo<NewsCardProps>(({
             </h3>
           </div>
           <p className="text-sm theme-text-secondary mt-1 line-clamp-2">
-            {news.description}
+            {stripHtml(news.description)}
           </p>
           <div className="flex items-center gap-2 mt-2 text-xs theme-text-muted flex-wrap">
             <span className="px-2 py-0.5 rounded theme-bg-secondary">

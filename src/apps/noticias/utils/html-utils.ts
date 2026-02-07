@@ -2,16 +2,18 @@
 // UTILS - HTML sanitization helpers
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** Remove tags HTML e decodifica entidades básicas */
+/** Decodifica todas as entidades HTML usando o parser nativo do browser */
+const decodeHtmlEntities = (text: string): string => {
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+};
+
+/** Remove tags HTML e decodifica todas as entidades */
 export const stripHtml = (html: string): string => {
   let text = html.replace(/<!\[CDATA\[|\]\]>/g, '');
   text = text.replace(/<[^>]+>/g, ' ');
-  text = text.replace(/&nbsp;/g, ' ');
-  text = text.replace(/&amp;/g, '&');
-  text = text.replace(/&lt;/g, '<');
-  text = text.replace(/&gt;/g, '>');
-  text = text.replace(/&quot;/g, '"');
-  text = text.replace(/&#39;/g, "'");
+  text = decodeHtmlEntities(text);
   text = text.replace(/\s+/g, ' ');
   return text.trim();
 };
