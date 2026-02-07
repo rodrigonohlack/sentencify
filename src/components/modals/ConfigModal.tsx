@@ -554,10 +554,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       try {
                         const resp = await fetch(`${API_BASE}/api/gemini/generate`, {
                           method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
+                          headers: { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys?.gemini || '' },
                           body: JSON.stringify({
                             model: 'gemini-3-flash-preview',
-                            apiKey: aiSettings.apiKeys?.gemini || '',
                             request: { contents: [{ role: 'user', parts: [{ text: 'Olá' }] }], generationConfig: { maxOutputTokens: 100, thinking_config: { thinking_level: 'minimal' } } }
                           })
                         });
