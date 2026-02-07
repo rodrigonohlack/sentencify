@@ -53,3 +53,8 @@ data/
 server/db/*.db
 server/db/*.db-shm
 server/db/*.db-wal
+
+# SSH keys
+ssh/
+*.pem
+*.key
