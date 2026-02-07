@@ -1277,12 +1277,12 @@ describe('useAIIntegration', () => {
         'http://localhost:3001/api/gemini/generate',
         expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json', 'x-api-key': 'test-gemini-key' }
         })
       );
     });
 
-    it('should include API key in request body for Gemini', async () => {
+    it('should include API key in x-api-key header for Gemini', async () => {
       const mockResponse = createMockResponse({
         candidates: [{
           content: { parts: [{ text: 'test' }] },
@@ -1301,8 +1301,8 @@ describe('useAIIntegration', () => {
       });
 
       const fetchCall = vi.mocked(global.fetch).mock.calls[0];
-      const body = JSON.parse((fetchCall[1] as any).body);
-      expect(body.apiKey).toBe('test-gemini-key');
+      const headers = (fetchCall[1] as any).headers;
+      expect(headers['x-api-key']).toBe('test-gemini-key');
     });
 
     it('should include model in request body for Gemini', async () => {

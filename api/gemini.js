@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key');
 
   // Handle preflight
   if (req.method === 'OPTIONS') {
@@ -17,7 +17,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { model, apiKey, request } = req.body;
+    const { model, request } = req.body;
+    const apiKey = req.headers['x-api-key'];
 
     if (!apiKey) {
       return res.status(401).json({
@@ -29,13 +30,14 @@ export default async function handler(req, res) {
       });
     }
 
-    // URL da API Gemini
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    // URL da API Gemini (key via header, não na URL)
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
       },
       body: JSON.stringify(request)
     });

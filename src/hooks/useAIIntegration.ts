@@ -811,10 +811,9 @@ ${AI_INSTRUCTIONS_SAFETY}`;
         // Fazer requisicao via proxy local
         const response = await fetch(`${API_BASE}/api/gemini/generate`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys?.gemini || '' },
           body: JSON.stringify({
             model,
-            apiKey: aiSettings.apiKeys?.gemini || '',
             request: geminiRequest
           }),
           signal
@@ -1567,10 +1566,9 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
     const response = await fetch(`${API_BASE}/api/gemini/stream`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys?.gemini || '' },
       body: JSON.stringify({
         model,
-        apiKey: aiSettings.apiKeys?.gemini || '',
         request: geminiRequest
       })
     });

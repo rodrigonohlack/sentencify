@@ -137,10 +137,9 @@ export const useAIIntegration = () => {
       try {
         const response = await fetch(`${API_BASE}/api/gemini/generate`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys.gemini },
           body: JSON.stringify({
             model,
-            apiKey: aiSettings.apiKeys.gemini,
             request
           })
         });

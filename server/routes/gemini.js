@@ -13,8 +13,8 @@ const router = Router();
  */
 router.post('/generate', async (req, res) => {
   try {
-    const { model, apiKey, request } = req.body;
-    const key = apiKey || process.env.GOOGLE_API_KEY;
+    const { model, request } = req.body;
+    const key = req.headers['x-api-key'] || process.env.GOOGLE_API_KEY;
 
     if (!key) {
       return res.status(401).json({
@@ -26,13 +26,14 @@ router.post('/generate', async (req, res) => {
       });
     }
 
-    // URL da API Gemini
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    // URL da API Gemini (key via header, não na URL)
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-goog-api-key': key
       },
       body: JSON.stringify(request)
     });
@@ -90,7 +91,7 @@ router.post('/generate', async (req, res) => {
  */
 router.get('/models', async (req, res) => {
   try {
-    const apiKey = req.query.apiKey || process.env.GOOGLE_API_KEY;
+    const apiKey = req.headers['x-api-key'] || process.env.GOOGLE_API_KEY;
 
     if (!apiKey) {
       return res.status(401).json({
@@ -98,8 +99,10 @@ router.get('/models', async (req, res) => {
       });
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-    const response = await fetch(url);
+    const url = `https://generativelanguage.googleapis.com/v1beta/models`;
+    const response = await fetch(url, {
+      headers: { 'x-goog-api-key': apiKey }
+    });
     const data = await response.json();
 
     res.status(response.status).json(data);
@@ -117,8 +120,8 @@ router.get('/models', async (req, res) => {
  */
 router.post('/stream', async (req, res) => {
   try {
-    const { model, apiKey, request } = req.body;
-    const key = apiKey || process.env.GOOGLE_API_KEY;
+    const { model, request } = req.body;
+    const key = req.headers['x-api-key'] || process.env.GOOGLE_API_KEY;
 
     if (!key) {
       return res.status(401).json({
@@ -132,12 +135,12 @@ router.post('/stream', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
 
-    // URL com streamGenerateContent e alt=sse
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${key}`;
+    // URL com streamGenerateContent e alt=sse (key via header, não na URL)
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`;
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify(request)
     });
 
