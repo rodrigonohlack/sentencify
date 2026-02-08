@@ -13,6 +13,7 @@ export const ENDPOINTS = {
   // Categorize
   CATEGORIZE_BATCH: `${API_BASE}/categorize/batch`,
   CATEGORIZE_SINGLE: `${API_BASE}/categorize/single`,
+  CATEGORIZE_ALL: `${API_BASE}/categorize/uncategorized`,
 
   // Recurring
   RECURRING: `${API_BASE}/recurring`,

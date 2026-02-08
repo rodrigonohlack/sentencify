@@ -43,5 +43,37 @@ export function useCategorization() {
     }
   }, [apiKeys, settings, addToast]);
 
-  return { categorizeBatch, isCategorizing };
+  const categorizeAll = useCallback(async (provider?: string) => {
+    setIsCategorizing(true);
+    try {
+      const selectedProvider = provider || settings?.preferred_provider || 'gemini';
+      const encryptedKey = apiKeys[selectedProvider] || '';
+      const apiKey = encryptedKey ? await decryptString(encryptedKey) : '';
+
+      const headers: Record<string, string> = {};
+      if (apiKey) headers['x-api-key'] = apiKey;
+
+      const data = await apiFetch<{
+        success: boolean;
+        categorized: number;
+        total: number;
+        results: Array<{ id: string; category_id: string }>;
+      }>(ENDPOINTS.CATEGORIZE_ALL, {
+        method: 'POST',
+        body: JSON.stringify({ provider: selectedProvider }),
+        headers,
+      });
+
+      addToast(`${data.categorized} despesas categorizadas com IA!`, 'success');
+      return data;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao categorizar';
+      addToast(message, 'error');
+      throw error;
+    } finally {
+      setIsCategorizing(false);
+    }
+  }, [apiKeys, settings, addToast]);
+
+  return { categorizeBatch, categorizeAll, isCategorizing };
 }

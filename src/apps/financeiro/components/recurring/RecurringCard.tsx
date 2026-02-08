@@ -25,7 +25,7 @@ export default function RecurringCard({ item, onToggle, onDelete, onEdit }: Recu
               categoryName={item.category_name}
               categoryColor={item.category_color}
             />
-            <span className="text-[11px] text-[#7c7caa]">Dia {item.due_day} de cada mes</span>
+            <span className="text-[11px] text-[#7c7caa]">Dia {item.due_day} de cada mês</span>
           </div>
         </div>
       </div>

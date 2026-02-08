@@ -10,7 +10,7 @@ const navItems: Array<{ page: FinPage; icon: typeof LayoutDashboard; label: stri
   { page: 'expenses', icon: List, label: 'Despesas' },
   { page: 'import', icon: FilePlus2, label: 'Importar CSV' },
   { page: 'recurring', icon: Repeat, label: 'Recorrentes' },
-  { page: 'settings', icon: Settings, label: 'Configuracoes' },
+  { page: 'settings', icon: Settings, label: 'Configurações' },
 ];
 
 export default function Sidebar() {
@@ -29,7 +29,7 @@ export default function Sidebar() {
       <div className="px-6 pt-7 pb-5 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-extrabold gradient-text">Financeiro</h1>
-          <span className="text-xs text-[#7c7caa] font-normal block mt-0.5">Gestao de Despesas</span>
+          <span className="text-xs text-[#7c7caa] font-normal block mt-0.5">Gestão de Despesas</span>
         </div>
         <AppSwitcher
           currentApp="financeiro"

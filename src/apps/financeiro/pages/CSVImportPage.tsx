@@ -24,7 +24,7 @@ export default function CSVImportPage() {
 
   return (
     <div>
-      <Header title="Importar CSV" subtitle="Importe faturas do cartao de credito" />
+      <Header title="Importar CSV" subtitle="Importe faturas do cartão de crédito" />
 
       {/* Upload area or Preview */}
       {!preview ? (
@@ -40,9 +40,9 @@ export default function CSVImportPage() {
           {/* Action buttons */}
           <div className="flex items-center justify-between">
             <div className="text-sm text-[#7c7caa]">
-              <span className="font-bold text-[#1e1b4b]">{preview.newCount}</span> novas despesas serao importadas
+              <span className="font-bold text-[#1e1b4b]">{preview.newCount}</span> novas despesas serão importadas
               {preview.duplicateCount > 0 && (
-                <span className="ml-1">({preview.duplicateCount} duplicatas serao ignoradas)</span>
+                <span className="ml-1">({preview.duplicateCount} duplicatas serão ignoradas)</span>
               )}
             </div>
             <div className="flex gap-3">
@@ -50,7 +50,7 @@ export default function CSVImportPage() {
                 <X className="w-4 h-4" /> Cancelar
               </Button>
               <Button onClick={handleConfirm} isLoading={isConfirming}>
-                <Check className="w-4 h-4" /> Confirmar importacao
+                <Check className="w-4 h-4" /> Confirmar importação
               </Button>
             </div>
           </div>
@@ -60,7 +60,7 @@ export default function CSVImportPage() {
       {/* Import history */}
       {imports.length > 0 && !preview && (
         <div className="mt-8">
-          <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-4">Historico de importacoes</h3>
+          <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-4">Histórico de importações</h3>
           <div className="flex flex-col gap-3">
             {imports.map((imp) => (
               <div key={imp.id} className="glass-card flex items-center justify-between p-4">
@@ -78,7 +78,7 @@ export default function CSVImportPage() {
                 <button
                   onClick={() => deleteImport(imp.id)}
                   className="p-2.5 rounded-xl hover:bg-red-50 transition-colors"
-                  title="Remover importacao e despesas associadas"
+                  title="Remover importação e despesas associadas"
                 >
                   <Trash2 className="w-4 h-4 text-red-400" />
                 </button>

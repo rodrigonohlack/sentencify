@@ -36,7 +36,7 @@ export default function DashboardPage() {
     <div>
       <Header
         title="Dashboard"
-        subtitle="Visao geral das suas despesas"
+        subtitle="Visão geral das suas despesas"
         month={selectedMonth}
         onPrevMonth={handlePrev}
         onNextMonth={handleNext}
@@ -49,7 +49,7 @@ export default function DashboardPage() {
             <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-indigo-500/15 to-violet-500/15 flex items-center justify-center">
               <DollarSign className="w-5 h-5 text-indigo-500" />
             </div>
-            <span className="text-xs font-semibold text-[#7c7caa] uppercase tracking-wider">Total do mes</span>
+            <span className="text-xs font-semibold text-[#7c7caa] uppercase tracking-wider">Total do mês</span>
           </div>
           <div className="text-2xl font-extrabold text-[#1e1b4b] tracking-tight">
             {formatBRL(summary?.net_total || 0)}
@@ -68,7 +68,7 @@ export default function DashboardPage() {
                 : <TrendingUp className="w-5 h-5 text-red-500" />
               }
             </div>
-            <span className="text-xs font-semibold text-[#7c7caa] uppercase tracking-wider">vs mes anterior</span>
+            <span className="text-xs font-semibold text-[#7c7caa] uppercase tracking-wider">vs mês anterior</span>
           </div>
           <div className={`text-2xl font-extrabold tracking-tight ${
             (summary?.change_percent || 0) <= 0 ? 'text-emerald-600' : 'text-red-500'
@@ -82,7 +82,7 @@ export default function DashboardPage() {
             <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-violet-500/15 to-pink-500/15 flex items-center justify-center">
               <Receipt className="w-5 h-5 text-violet-500" />
             </div>
-            <span className="text-xs font-semibold text-[#7c7caa] uppercase tracking-wider">Transacoes</span>
+            <span className="text-xs font-semibold text-[#7c7caa] uppercase tracking-wider">Transações</span>
           </div>
           <div className="text-2xl font-extrabold text-[#1e1b4b] tracking-tight">
             {summary?.transaction_count || 0}

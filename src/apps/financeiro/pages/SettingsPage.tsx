@@ -22,7 +22,7 @@ export default function SettingsPage() {
       const data = await apiFetch<{ settings: Settings }>(ENDPOINTS.SETTINGS);
       setSettings(data.settings);
     } catch {
-      addToast('Erro ao carregar configuracoes', 'error');
+      addToast('Erro ao carregar configurações', 'error');
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ export default function SettingsPage() {
       const updated = { ...apiKeys, [provider]: encrypted };
       localStorage.setItem(API_KEY_STORAGE, JSON.stringify(updated));
       setApiKeys(updated);
-      addToast(`API key ${provider} salva com seguranca`, 'success');
+      addToast(`API key ${provider} salva com segurança`, 'success');
     } catch {
       addToast('Erro ao salvar API key', 'error');
     }
@@ -73,7 +73,7 @@ export default function SettingsPage() {
   if (isLoading && !settings) {
     return (
       <div>
-        <Header title="Configuracoes" />
+        <Header title="Configurações" />
         <Spinner size="lg" className="mt-20" />
       </div>
     );
@@ -81,7 +81,7 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <Header title="Configuracoes" subtitle="Preferencias e chaves de API" />
+      <Header title="Configurações" subtitle="Preferências e chaves de API" />
 
       <div className="flex flex-col gap-6 max-w-2xl">
         {/* Provider selection */}
@@ -96,7 +96,7 @@ export default function SettingsPage() {
         <div className="glass-card flex flex-col gap-6">
           <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight">Chaves de API</h3>
           <p className="text-xs text-[#7c7caa] -mt-4">
-            As chaves sao criptografadas (AES-256-GCM) e armazenadas localmente no seu navegador.
+            As chaves são criptografadas (AES-256-GCM) e armazenadas localmente no seu navegador.
           </p>
           <APIKeyInput
             provider="gemini"
@@ -117,7 +117,7 @@ export default function SettingsPage() {
         <div className="glass-card">
           <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-4">Lembretes</h3>
           <div className="flex items-center gap-3">
-            <label className="text-sm text-[#7c7caa] font-medium">Alertar com antecedencia de</label>
+            <label className="text-sm text-[#7c7caa] font-medium">Alertar com antecedência de</label>
             <select
               value={settings?.reminder_days || 3}
               onChange={async (e) => {

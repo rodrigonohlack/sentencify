@@ -51,6 +51,10 @@ router.get('/', authMiddleware, (req, res) => {
       LIMIT ? OFFSET ?
     `).all(...params, Number(limit), offset);
 
+    const uncategorizedCount = db.prepare(
+      'SELECT COUNT(*) as total FROM expenses WHERE user_id = ? AND category_id IS NULL AND deleted_at IS NULL'
+    ).get(req.user.id);
+
     res.json({
       expenses,
       pagination: {
@@ -59,6 +63,7 @@ router.get('/', authMiddleware, (req, res) => {
         total: countRow.total,
         pages: Math.ceil(countRow.total / Number(limit)),
       },
+      uncategorized_total: uncategorizedCount.total,
     });
   } catch (error) {
     console.error('[Financeiro:Expenses] List error:', error);
@@ -73,7 +78,7 @@ router.post('/', authMiddleware, (req, res) => {
     const { purchase_date, description, value_brl, category_id, card_holder, card_last_four, installment, notes } = req.body;
 
     if (!purchase_date || !description || value_brl === undefined) {
-      return res.status(400).json({ error: 'Campos obrigatorios: purchase_date, description, value_brl' });
+      return res.status(400).json({ error: 'Campos obrigatórios: purchase_date, description, value_brl' });
     }
 
     const id = uuidv4();
@@ -104,7 +109,7 @@ router.put('/:id', authMiddleware, (req, res) => {
     const existing = db.prepare('SELECT * FROM expenses WHERE id = ? AND user_id = ? AND deleted_at IS NULL').get(req.params.id, req.user.id);
 
     if (!existing) {
-      return res.status(404).json({ error: 'Despesa nao encontrada' });
+      return res.status(404).json({ error: 'Despesa não encontrada' });
     }
 
     const { purchase_date, description, value_brl, category_id, category_source, card_holder, card_last_four, installment, notes } = req.body;
@@ -151,7 +156,7 @@ router.delete('/:id', authMiddleware, (req, res) => {
     const result = db.prepare("UPDATE expenses SET deleted_at = datetime('now') WHERE id = ? AND user_id = ? AND deleted_at IS NULL").run(req.params.id, req.user.id);
 
     if (result.changes === 0) {
-      return res.status(404).json({ error: 'Despesa nao encontrada' });
+      return res.status(404).json({ error: 'Despesa não encontrada' });
     }
     res.json({ success: true });
   } catch (error) {
@@ -167,7 +172,7 @@ router.post('/bulk-category', authMiddleware, (req, res) => {
     const { updates } = req.body;
 
     if (!Array.isArray(updates) || updates.length === 0) {
-      return res.status(400).json({ error: 'Lista de atualizacoes vazia' });
+      return res.status(400).json({ error: 'Lista de atualizações vazia' });
     }
 
     const stmt = db.prepare(`

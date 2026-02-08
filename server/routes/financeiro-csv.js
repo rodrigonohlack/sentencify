@@ -65,7 +65,7 @@ router.post('/confirm', authMiddleware, (req, res) => {
   try {
     const preview = previews.get(req.user.id);
     if (!preview) {
-      return res.status(400).json({ error: 'Nenhum preview disponivel. Faca upload novamente.' });
+      return res.status(400).json({ error: 'Nenhum preview disponível. Faça upload novamente.' });
     }
 
     const { skipDuplicates = true } = req.body;
@@ -113,7 +113,7 @@ router.post('/confirm', authMiddleware, (req, res) => {
     });
   } catch (error) {
     console.error('[Financeiro:CSV] Confirm error:', error);
-    res.status(500).json({ error: 'Erro ao confirmar importacao' });
+    res.status(500).json({ error: 'Erro ao confirmar importação' });
   }
 });
 
@@ -125,7 +125,7 @@ router.get('/imports', authMiddleware, (req, res) => {
     res.json({ imports });
   } catch (error) {
     console.error('[Financeiro:CSV] List imports error:', error);
-    res.status(500).json({ error: 'Erro ao listar importacoes' });
+    res.status(500).json({ error: 'Erro ao listar importações' });
   }
 });
 
@@ -136,7 +136,7 @@ router.delete('/imports/:id', authMiddleware, (req, res) => {
     const importRecord = db.prepare('SELECT * FROM csv_imports WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id);
 
     if (!importRecord) {
-      return res.status(404).json({ error: 'Importacao nao encontrada' });
+      return res.status(404).json({ error: 'Importação não encontrada' });
     }
 
     const doDelete = db.transaction(() => {
@@ -148,7 +148,7 @@ router.delete('/imports/:id', authMiddleware, (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('[Financeiro:CSV] Delete import error:', error);
-    res.status(500).json({ error: 'Erro ao deletar importacao' });
+    res.status(500).json({ error: 'Erro ao deletar importação' });
   }
 });
 

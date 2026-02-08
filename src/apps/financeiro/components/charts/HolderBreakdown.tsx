@@ -13,7 +13,7 @@ export default function HolderBreakdown({ data }: HolderBreakdownProps) {
 
   return (
     <div className="glass-card">
-      <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Por Titular / Cartao</h3>
+      <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Por Titular / Cartão</h3>
 
       {data.length === 0 ? (
         <p className="text-sm text-[#7c7caa] text-center py-8">Sem dados disponíveis</p>

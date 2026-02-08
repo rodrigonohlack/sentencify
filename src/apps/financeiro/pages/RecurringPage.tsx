@@ -58,10 +58,10 @@ export default function RecurringPage() {
         actions={
           <div className="flex items-center gap-2">
             <Button variant="secondary" size="sm" onClick={handleGenerate} isLoading={isGenerating}>
-              <CalendarPlus className="w-4 h-4" /> Gerar mes atual
+              <CalendarPlus className="w-4 h-4" /> Gerar mês atual
             </Button>
             <Button size="sm" onClick={() => setShowForm(!showForm)}>
-              {showForm ? 'Cancelar' : 'Nova recorrencia'}
+              {showForm ? 'Cancelar' : 'Nova recorrência'}
             </Button>
           </div>
         }
@@ -79,11 +79,11 @@ export default function RecurringPage() {
       {recurring.length === 0 ? (
         <EmptyState
           icon={Repeat}
-          title="Nenhuma recorrencia"
+          title="Nenhuma recorrência"
           description="Cadastre despesas fixas como aluguel, assinaturas ou contas mensais."
           action={
             <Button size="sm" onClick={() => setShowForm(true)}>
-              Criar primeira recorrencia
+              Criar primeira recorrência
             </Button>
           }
         />

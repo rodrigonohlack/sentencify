@@ -4,6 +4,7 @@ import type { Expense, Pagination } from '../types';
 interface ExpenseState {
   expenses: Expense[];
   pagination: Pagination | null;
+  uncategorizedTotal: number;
   isLoading: boolean;
   filters: {
     month?: string;
@@ -13,7 +14,7 @@ interface ExpenseState {
     source?: string;
     search?: string;
   };
-  setExpenses: (expenses: Expense[], pagination: Pagination) => void;
+  setExpenses: (expenses: Expense[], pagination: Pagination, uncategorizedTotal?: number) => void;
   setFilters: (filters: Partial<ExpenseState['filters']>) => void;
   setLoading: (loading: boolean) => void;
   updateExpense: (id: string, data: Partial<Expense>) => void;
@@ -23,10 +24,15 @@ interface ExpenseState {
 export const useExpenseStore = create<ExpenseState>((set) => ({
   expenses: [],
   pagination: null,
+  uncategorizedTotal: 0,
   isLoading: false,
   filters: {},
 
-  setExpenses: (expenses, pagination) => set({ expenses, pagination }),
+  setExpenses: (expenses, pagination, uncategorizedTotal) => set({
+    expenses,
+    pagination,
+    ...(uncategorizedTotal !== undefined ? { uncategorizedTotal } : {}),
+  }),
   setFilters: (filters) => set((s) => ({ filters: { ...s.filters, ...filters } })),
   setLoading: (isLoading) => set({ isLoading }),
 

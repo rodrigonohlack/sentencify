@@ -9,36 +9,37 @@ import Header from '../components/layout/Header';
 import { Receipt } from 'lucide-react';
 
 export default function ExpensesPage() {
-  const { expenses, pagination, isLoading } = useExpenseStore();
+  const { expenses, pagination, uncategorizedTotal, isLoading, filters } = useExpenseStore();
   const { fetchExpenses, deleteExpense } = useExpenses();
-  const { categorizeBatch, isCategorizing } = useCategorization();
+  const { categorizeBatch, categorizeAll, isCategorizing } = useCategorization();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
-    fetchExpenses();
-  }, []);
+    fetchExpenses(1);
+  }, [filters]);
 
   const handlePageChange = (page: number) => {
     fetchExpenses(page);
   };
 
   const handleCategorize = async () => {
-    const uncategorized = expenses.filter((e) => !e.category_id).map((e) => e.id);
-    const ids = selectedIds.length > 0 ? selectedIds : uncategorized;
-    if (ids.length === 0) return;
-
-    const result = await categorizeBatch(ids);
-    if (result) {
-      setSelectedIds([]);
-      fetchExpenses(pagination?.page);
+    if (selectedIds.length > 0) {
+      const result = await categorizeBatch(selectedIds);
+      if (result) {
+        setSelectedIds([]);
+        fetchExpenses(pagination?.page);
+      }
+    } else {
+      const result = await categorizeAll();
+      if (result) {
+        fetchExpenses(pagination?.page);
+      }
     }
   };
 
   const handleDelete = async (id: string) => {
     await deleteExpense(id);
   };
-
-  const uncategorizedCount = expenses.filter((e) => !e.category_id).length;
 
   return (
     <div>
@@ -47,7 +48,7 @@ export default function ExpensesPage() {
         subtitle="Gerencie todas as suas despesas"
         actions={
           <div className="flex items-center gap-2">
-            {uncategorizedCount > 0 && (
+            {uncategorizedTotal > 0 && (
               <Button
                 variant="secondary"
                 size="sm"
@@ -55,7 +56,7 @@ export default function ExpensesPage() {
                 isLoading={isCategorizing}
               >
                 <Sparkles className="w-4 h-4" />
-                Categorizar {uncategorizedCount} com IA
+                Categorizar {uncategorizedTotal} com IA
               </Button>
             )}
           </div>

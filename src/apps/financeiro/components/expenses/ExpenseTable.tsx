@@ -17,7 +17,7 @@ export default function ExpenseTable({ onEdit, onDelete }: ExpenseTableProps) {
         <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight">Despesas</h3>
         {pagination && (
           <span className="bg-gradient-to-r from-indigo-500/10 to-violet-500/10 text-indigo-500 text-xs font-bold px-3.5 py-1.5 rounded-[10px]">
-            {pagination.total} transacoes
+            {pagination.total} transações
           </span>
         )}
       </div>
@@ -27,9 +27,9 @@ export default function ExpenseTable({ onEdit, onDelete }: ExpenseTableProps) {
           <thead>
             <tr>
               <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Data</th>
-              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Descricao</th>
+              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Descrição</th>
               <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Categoria</th>
-              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Cartao</th>
+              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Cartão</th>
               <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Parcela</th>
               <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Valor</th>
               <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8"></th>
@@ -55,7 +55,7 @@ export default function ExpenseTable({ onEdit, onDelete }: ExpenseTableProps) {
                   {expense.card_last_four ? `**** ${expense.card_last_four}` : '-'}
                 </td>
                 <td className="px-6 py-3 text-[11px] text-[#7c7caa] border-b border-indigo-500/5">
-                  {expense.installment || 'Unica'}
+                  {expense.installment || 'Única'}
                 </td>
                 <td className={`px-6 py-3 text-right font-bold tabular-nums border-b border-indigo-500/5 ${expense.is_refund ? 'text-emerald-600' : 'text-[#1e1b4b]'}`}>
                   {expense.is_refund ? '- ' : ''}{formatBRL(Math.abs(expense.value_brl))}

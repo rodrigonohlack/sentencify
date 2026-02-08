@@ -21,10 +21,10 @@ export function useExpenses() {
       if (filters.source) params.set('source', filters.source);
       if (filters.search) params.set('search', filters.search);
 
-      const data = await apiFetch<{ expenses: Expense[]; pagination: Pagination }>(
+      const data = await apiFetch<{ expenses: Expense[]; pagination: Pagination; uncategorized_total: number }>(
         `${ENDPOINTS.EXPENSES}?${params}`
       );
-      setExpenses(data.expenses, data.pagination);
+      setExpenses(data.expenses, data.pagination, data.uncategorized_total);
     } catch {
       addToast('Erro ao carregar despesas', 'error');
     } finally {

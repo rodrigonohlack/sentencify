@@ -61,6 +61,7 @@ const runMigrations = () => {
     { name: '010_analyses_sintese', fn: migration010AnalysesSintese },
     { name: '011_noticias', fn: migration011Noticias },
     { name: '012_financeiro', fn: migration012Financeiro },
+    { name: '013_financeiro_accents', fn: migration013FinanceiroAccents },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -427,19 +428,19 @@ function migration012Financeiro(db) {
   `);
 
   const categories = [
-    { id: 'alimentacao', name: 'Alimentacao', icon: 'UtensilsCrossed', color: '#f97316', sort_order: 1 },
-    { id: 'saude', name: 'Saude', icon: 'Heart', color: '#ef4444', sort_order: 2 },
+    { id: 'alimentacao', name: 'Alimentação', icon: 'UtensilsCrossed', color: '#f97316', sort_order: 1 },
+    { id: 'saude', name: 'Saúde', icon: 'Heart', color: '#ef4444', sort_order: 2 },
     { id: 'transporte', name: 'Transporte', icon: 'Car', color: '#3b82f6', sort_order: 3 },
-    { id: 'combustivel', name: 'Combustivel', icon: 'Fuel', color: '#f59e0b', sort_order: 4 },
+    { id: 'combustivel', name: 'Combustível', icon: 'Fuel', color: '#f59e0b', sort_order: 4 },
     { id: 'moradia', name: 'Moradia', icon: 'Home', color: '#8b5cf6', sort_order: 5 },
     { id: 'assinaturas_tech', name: 'Assinaturas / Tech', icon: 'Monitor', color: '#6366f1', sort_order: 6 },
-    { id: 'vestuario', name: 'Vestuario', icon: 'Shirt', color: '#ec4899', sort_order: 7 },
+    { id: 'vestuario', name: 'Vestuário', icon: 'Shirt', color: '#ec4899', sort_order: 7 },
     { id: 'lazer', name: 'Lazer', icon: 'Gamepad2', color: '#a855f7', sort_order: 8 },
-    { id: 'educacao', name: 'Educacao', icon: 'GraduationCap', color: '#14b8a6', sort_order: 9 },
+    { id: 'educacao', name: 'Educação', icon: 'GraduationCap', color: '#14b8a6', sort_order: 9 },
     { id: 'viagem', name: 'Viagem', icon: 'Plane', color: '#06b6d4', sort_order: 10 },
     { id: 'compras_gerais', name: 'Compras Gerais', icon: 'ShoppingBag', color: '#f43f5e', sort_order: 11 },
-    { id: 'servicos', name: 'Servicos', icon: 'Wrench', color: '#64748b', sort_order: 12 },
-    { id: 'automovel', name: 'Automovel', icon: 'CarFront', color: '#d97706', sort_order: 13 },
+    { id: 'servicos', name: 'Serviços', icon: 'Wrench', color: '#64748b', sort_order: 12 },
+    { id: 'automovel', name: 'Automóvel', icon: 'CarFront', color: '#d97706', sort_order: 13 },
     { id: 'outros', name: 'Outros', icon: 'CircleDot', color: '#94a3b8', sort_order: 14 },
   ];
 
@@ -532,6 +533,25 @@ function migration012Financeiro(db) {
   `);
 
   console.log('[Database] Migration 012: Created financeiro tables (categories, csv_imports, expenses, recurring_expenses, financeiro_settings)');
+}
+
+// Migration 013: Fix accents in category names
+function migration013FinanceiroAccents(db) {
+  const updates = [
+    { id: 'alimentacao', name: 'Alimentação' },
+    { id: 'saude', name: 'Saúde' },
+    { id: 'combustivel', name: 'Combustível' },
+    { id: 'vestuario', name: 'Vestuário' },
+    { id: 'educacao', name: 'Educação' },
+    { id: 'servicos', name: 'Serviços' },
+    { id: 'automovel', name: 'Automóvel' },
+  ];
+
+  const stmt = db.prepare('UPDATE categories SET name = ? WHERE id = ?');
+  for (const { id, name } of updates) {
+    stmt.run(name, id);
+  }
+  console.log('[Database] Migration 013: Fixed category name accents');
 }
 
 // Exportar

@@ -16,7 +16,7 @@ export default function MonthlyBarChart({ data, selectedMonth }: MonthlyBarChart
 
   return (
     <div className="glass-card">
-      <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Evolucao Mensal</h3>
+      <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Evolução Mensal</h3>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={chartData} barCategoryGap="20%">
           <XAxis

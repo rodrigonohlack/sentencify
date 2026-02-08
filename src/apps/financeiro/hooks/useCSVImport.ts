@@ -59,7 +59,7 @@ export function useCSVImport() {
       addToast(`${data.importedCount} despesas importadas!`, 'success');
       return data;
     } catch {
-      addToast('Erro ao confirmar importacao', 'error');
+      addToast('Erro ao confirmar importação', 'error');
     } finally {
       setIsConfirming(false);
     }
@@ -70,7 +70,7 @@ export function useCSVImport() {
       const data = await apiFetch<{ imports: CSVImport[] }>(ENDPOINTS.CSV_IMPORTS);
       setImports(data.imports);
     } catch {
-      addToast('Erro ao carregar importacoes', 'error');
+      addToast('Erro ao carregar importações', 'error');
     }
   }, [addToast]);
 
@@ -78,9 +78,9 @@ export function useCSVImport() {
     try {
       await apiFetch(`${ENDPOINTS.CSV_IMPORTS}/${id}`, { method: 'DELETE' });
       setImports((prev) => prev.filter((i) => i.id !== id));
-      addToast('Importacao removida', 'success');
+      addToast('Importação removida', 'success');
     } catch {
-      addToast('Erro ao remover importacao', 'error');
+      addToast('Erro ao remover importação', 'error');
     }
   }, [addToast]);
 

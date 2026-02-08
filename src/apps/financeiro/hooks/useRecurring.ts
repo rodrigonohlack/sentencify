@@ -15,7 +15,7 @@ export function useRecurring() {
       const data = await apiFetch<{ recurring: RecurringExpense[] }>(ENDPOINTS.RECURRING);
       setRecurring(data.recurring);
     } catch {
-      addToast('Erro ao carregar recorrencias', 'error');
+      addToast('Erro ao carregar recorrências', 'error');
     } finally {
       setLoading(false);
     }
@@ -27,10 +27,10 @@ export function useRecurring() {
         method: 'POST',
         body: JSON.stringify(data),
       });
-      addToast('Recorrencia criada', 'success');
+      addToast('Recorrência criada', 'success');
       return result.recurring;
     } catch {
-      addToast('Erro ao criar recorrencia', 'error');
+      addToast('Erro ao criar recorrência', 'error');
     }
   }, [addToast]);
 
@@ -40,18 +40,18 @@ export function useRecurring() {
         method: 'PUT',
         body: JSON.stringify(data),
       });
-      addToast('Recorrencia atualizada', 'success');
+      addToast('Recorrência atualizada', 'success');
     } catch {
-      addToast('Erro ao atualizar recorrencia', 'error');
+      addToast('Erro ao atualizar recorrência', 'error');
     }
   }, [addToast]);
 
   const deleteRecurring = useCallback(async (id: string) => {
     try {
       await apiFetch(`${ENDPOINTS.RECURRING}/${id}`, { method: 'DELETE' });
-      addToast('Recorrencia removida', 'success');
+      addToast('Recorrência removida', 'success');
     } catch {
-      addToast('Erro ao remover recorrencia', 'error');
+      addToast('Erro ao remover recorrência', 'error');
     }
   }, [addToast]);
 
@@ -60,9 +60,9 @@ export function useRecurring() {
       const result = await apiFetch<{ is_active: number }>(`${ENDPOINTS.RECURRING}/${id}/toggle`, {
         method: 'POST',
       });
-      addToast(result.is_active ? 'Recorrencia ativada' : 'Recorrencia pausada', 'info');
+      addToast(result.is_active ? 'Recorrência ativada' : 'Recorrência pausada', 'info');
     } catch {
-      addToast('Erro ao alterar recorrencia', 'error');
+      addToast('Erro ao alterar recorrência', 'error');
     }
   }, [addToast]);
 
@@ -72,7 +72,7 @@ export function useRecurring() {
         method: 'POST',
         body: JSON.stringify({ month }),
       });
-      addToast(`${result.generated} despesas geradas (${result.skipped} ja existentes)`, 'success');
+      addToast(`${result.generated} despesas geradas (${result.skipped} já existentes)`, 'success');
       return result;
     } catch {
       addToast('Erro ao gerar despesas recorrentes', 'error');

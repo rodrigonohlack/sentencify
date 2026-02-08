@@ -21,7 +21,7 @@ router.get('/', authMiddleware, (req, res) => {
     res.json({ recurring });
   } catch (error) {
     console.error('[Financeiro:Recurring] List error:', error);
-    res.status(500).json({ error: 'Erro ao listar recorrencias' });
+    res.status(500).json({ error: 'Erro ao listar recorrências' });
   }
 });
 
@@ -32,7 +32,7 @@ router.post('/', authMiddleware, (req, res) => {
     const { description, value_brl, category_id, due_day, notes } = req.body;
 
     if (!description || value_brl === undefined || !due_day) {
-      return res.status(400).json({ error: 'Campos obrigatorios: description, value_brl, due_day' });
+      return res.status(400).json({ error: 'Campos obrigatórios: description, value_brl, due_day' });
     }
 
     if (due_day < 1 || due_day > 31) {
@@ -55,7 +55,7 @@ router.post('/', authMiddleware, (req, res) => {
     res.status(201).json({ recurring });
   } catch (error) {
     console.error('[Financeiro:Recurring] Create error:', error);
-    res.status(500).json({ error: 'Erro ao criar recorrencia' });
+    res.status(500).json({ error: 'Erro ao criar recorrência' });
   }
 });
 
@@ -66,7 +66,7 @@ router.put('/:id', authMiddleware, (req, res) => {
     const existing = db.prepare('SELECT * FROM recurring_expenses WHERE id = ? AND user_id = ? AND deleted_at IS NULL').get(req.params.id, req.user.id);
 
     if (!existing) {
-      return res.status(404).json({ error: 'Recorrencia nao encontrada' });
+      return res.status(404).json({ error: 'Recorrência não encontrada' });
     }
 
     const { description, value_brl, category_id, due_day, notes } = req.body;
@@ -92,7 +92,7 @@ router.put('/:id', authMiddleware, (req, res) => {
     res.json({ recurring });
   } catch (error) {
     console.error('[Financeiro:Recurring] Update error:', error);
-    res.status(500).json({ error: 'Erro ao atualizar recorrencia' });
+    res.status(500).json({ error: 'Erro ao atualizar recorrência' });
   }
 });
 
@@ -103,12 +103,12 @@ router.delete('/:id', authMiddleware, (req, res) => {
     const result = db.prepare("UPDATE recurring_expenses SET deleted_at = datetime('now') WHERE id = ? AND user_id = ? AND deleted_at IS NULL").run(req.params.id, req.user.id);
 
     if (result.changes === 0) {
-      return res.status(404).json({ error: 'Recorrencia nao encontrada' });
+      return res.status(404).json({ error: 'Recorrência não encontrada' });
     }
     res.json({ success: true });
   } catch (error) {
     console.error('[Financeiro:Recurring] Delete error:', error);
-    res.status(500).json({ error: 'Erro ao deletar recorrencia' });
+    res.status(500).json({ error: 'Erro ao deletar recorrência' });
   }
 });
 
@@ -119,7 +119,7 @@ router.post('/:id/toggle', authMiddleware, (req, res) => {
     const existing = db.prepare('SELECT * FROM recurring_expenses WHERE id = ? AND user_id = ? AND deleted_at IS NULL').get(req.params.id, req.user.id);
 
     if (!existing) {
-      return res.status(404).json({ error: 'Recorrencia nao encontrada' });
+      return res.status(404).json({ error: 'Recorrência não encontrada' });
     }
 
     const newState = existing.is_active ? 0 : 1;
@@ -128,7 +128,7 @@ router.post('/:id/toggle', authMiddleware, (req, res) => {
     res.json({ success: true, is_active: newState });
   } catch (error) {
     console.error('[Financeiro:Recurring] Toggle error:', error);
-    res.status(500).json({ error: 'Erro ao alterar recorrencia' });
+    res.status(500).json({ error: 'Erro ao alterar recorrência' });
   }
 });
 

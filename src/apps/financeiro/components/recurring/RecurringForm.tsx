@@ -26,14 +26,14 @@ export default function RecurringForm({ onSubmit, isLoading }: RecurringFormProp
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Input name="description" label="Descricao" placeholder="Ex: Aluguel" required />
+      <Input name="description" label="Descrição" placeholder="Ex: Aluguel" required />
       <div className="grid grid-cols-2 gap-4">
         <Input name="value_brl" type="number" step="0.01" label="Valor (R$)" placeholder="0.00" required />
         <Input name="due_day" type="number" min="1" max="31" label="Dia do vencimento" placeholder="1-31" required />
       </div>
       <Select name="category_id" label="Categoria" options={categoryOptions} />
       <Button type="submit" className="mt-2" isLoading={isLoading}>
-        Criar recorrencia
+        Criar recorrência
       </Button>
     </form>
   );

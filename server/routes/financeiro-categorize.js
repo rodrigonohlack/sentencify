@@ -13,7 +13,7 @@ router.post('/batch', authMiddleware, async (req, res) => {
     const db = getDb();
 
     if (!expense_ids || !Array.isArray(expense_ids) || expense_ids.length === 0) {
-      return res.status(400).json({ error: 'Lista de expense_ids obrigatoria' });
+      return res.status(400).json({ error: 'Lista de expense_ids obrigatória' });
     }
 
     const settings = db.prepare('SELECT * FROM financeiro_settings WHERE user_id = ?').get(req.user.id);
@@ -80,6 +80,73 @@ router.post('/batch', authMiddleware, async (req, res) => {
   }
 });
 
+// POST /uncategorized - Categorize ALL uncategorized expenses
+router.post('/uncategorized', authMiddleware, async (req, res) => {
+  try {
+    const { provider } = req.body;
+    const apiKey = req.headers['x-api-key'];
+    const db = getDb();
+
+    const settings = db.prepare('SELECT * FROM financeiro_settings WHERE user_id = ?').get(req.user.id);
+    const selectedProvider = provider || settings?.preferred_provider || 'gemini';
+
+    const expenses = db.prepare(`
+      SELECT * FROM expenses
+      WHERE user_id = ? AND category_id IS NULL AND deleted_at IS NULL
+    `).all(req.user.id);
+
+    if (expenses.length === 0) {
+      return res.json({ success: true, categorized: 0, total: 0, results: [] });
+    }
+
+    const batches = CategorizationService.buildBatches(expenses);
+    const allResults = [];
+
+    for (const batch of batches) {
+      try {
+        const prompt = CategorizationService.buildPrompt(batch);
+        const responseText = await callLLM(selectedProvider, prompt, apiKey);
+        const results = CategorizationService.parseResponse(responseText, batch.length);
+
+        for (const result of results) {
+          allResults.push({
+            id: batch[result.index].id,
+            category_id: result.category_id,
+            category_source: 'llm',
+            category_confidence: 0.85,
+          });
+        }
+      } catch (batchError) {
+        console.error('[Financeiro:Categorize] Batch error (skipping):', batchError.message);
+        continue;
+      }
+    }
+
+    const stmt = db.prepare(`
+      UPDATE expenses SET category_id = ?, category_source = ?, category_confidence = ?, updated_at = datetime('now')
+      WHERE id = ? AND user_id = ?
+    `);
+
+    const updateAll = db.transaction((results) => {
+      for (const r of results) {
+        stmt.run(r.category_id, r.category_source, r.category_confidence, r.id, req.user.id);
+      }
+    });
+
+    updateAll(allResults);
+
+    res.json({
+      success: true,
+      categorized: allResults.length,
+      total: expenses.length,
+      results: allResults,
+    });
+  } catch (error) {
+    console.error('[Financeiro:Categorize] Uncategorized error:', error);
+    res.status(500).json({ error: 'Erro ao categorizar despesas' });
+  }
+});
+
 // POST /single - Re-categorize a single expense
 router.post('/single', authMiddleware, async (req, res) => {
   try {
@@ -90,7 +157,7 @@ router.post('/single', authMiddleware, async (req, res) => {
     const expense = db.prepare('SELECT * FROM expenses WHERE id = ? AND user_id = ? AND deleted_at IS NULL').get(expense_id, req.user.id);
 
     if (!expense) {
-      return res.status(404).json({ error: 'Despesa nao encontrada' });
+      return res.status(404).json({ error: 'Despesa não encontrada' });
     }
 
     const settings = db.prepare('SELECT * FROM financeiro_settings WHERE user_id = ?').get(req.user.id);
@@ -120,7 +187,7 @@ router.post('/single', authMiddleware, async (req, res) => {
 async function callLLM(provider, prompt, apiKey) {
   if (provider === 'gemini') {
     const key = apiKey || process.env.GEMINI_API_KEY;
-    if (!key) throw new Error('API key Gemini nao configurada');
+    if (!key) throw new Error('API key Gemini não configurada');
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`,
@@ -145,7 +212,7 @@ async function callLLM(provider, prompt, apiKey) {
 
   if (provider === 'grok') {
     const key = apiKey || process.env.GROK_API_KEY;
-    if (!key) throw new Error('API key Grok nao configurada');
+    if (!key) throw new Error('API key Grok não configurada');
 
     const response = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
