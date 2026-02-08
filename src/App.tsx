@@ -64,6 +64,7 @@ import { formatProvaOralSections, type ProvaOralSectionKey, type FormatProvaOral
 
 // v1.41.0: Notícias Jurídicas - Rota /noticias
 import { NoticiasApp } from './apps/noticias';
+import { FinanceiroApp } from './apps/financeiro';
 
 // v1.35.30: Modal de curadoria de tópicos pré-geração
 import TopicCurationModal from './components/TopicCurationModal';
@@ -3449,6 +3450,11 @@ const SentencifyAI = () => {
   // v1.41.0: Rota /noticias abre Notícias Jurídicas
   if (window.location.pathname.startsWith('/noticias')) {
     return <NoticiasApp />;
+  }
+
+  // v1.42.0: Rota /financeiro abre Gestão de Despesas
+  if (window.location.pathname.startsWith('/financeiro')) {
+    return <FinanceiroApp />;
   }
 
   // v1.35.0: Rota /share/:token abre página de aceite de compartilhamento

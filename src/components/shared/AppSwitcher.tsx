@@ -4,13 +4,13 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Scale, FileSearch, Mic, Newspaper, Calculator, ChevronDown } from 'lucide-react';
+import { Scale, FileSearch, Mic, Newspaper, Calculator, Wallet, ChevronDown } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════
 
-type AppId = 'sentencify' | 'analisador' | 'prova-oral' | 'noticias' | 'seguro-desemprego';
+type AppId = 'sentencify' | 'analisador' | 'prova-oral' | 'noticias' | 'seguro-desemprego' | 'financeiro';
 
 interface AppDefinition {
   id: AppId;
@@ -97,6 +97,18 @@ const APPS: AppDefinition[] = [
       text: 'text-emerald-600 dark:text-emerald-400',
       border: 'border-emerald-500/20 dark:border-emerald-400/20',
       hoverBg: 'hover:bg-emerald-500/20 dark:hover:bg-emerald-500/25',
+    },
+  },
+  {
+    id: 'financeiro',
+    label: 'Financeiro',
+    href: '/financeiro',
+    icon: <Wallet className="w-4 h-4" />,
+    colors: {
+      bg: 'bg-violet-500/10 dark:bg-violet-500/15',
+      text: 'text-violet-600 dark:text-violet-400',
+      border: 'border-violet-500/20 dark:border-violet-400/20',
+      hoverBg: 'hover:bg-violet-500/20 dark:hover:bg-violet-500/25',
     },
   },
 ];

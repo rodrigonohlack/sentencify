@@ -34,6 +34,13 @@ import analysesRoutes from './routes/analyses.js';
 import provaOralRoutes from './routes/prova-oral.js';
 import usersRoutes from './routes/users.js';
 import noticiasRoutes from './routes/noticias.js';
+import finExpensesRoutes from './routes/financeiro-expenses.js';
+import finCSVRoutes from './routes/financeiro-csv.js';
+import finCategorizeRoutes from './routes/financeiro-categorize.js';
+import finRecurringRoutes from './routes/financeiro-recurring.js';
+import finDashboardRoutes from './routes/financeiro-dashboard.js';
+import finSettingsRoutes from './routes/financeiro-settings.js';
+import financeiroAccess from './middleware/financeiro-access.js';
 import { initDatabase } from './db/database.js';
 import rssScheduler from './services/RSSSchedulerService.js';
 
@@ -78,8 +85,8 @@ app.use((req, res, next) => {
     // Scripts: CDNs necessários + unsafe-inline/eval para Quill e Transformers.js WASM
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.quilljs.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://accounts.google.com",
 
-    // Estilos: Quill injeta estilos inline dinamicamente
-    "style-src 'self' 'unsafe-inline' https://cdn.quilljs.com https://cdn.jsdelivr.net",
+    // Estilos: Quill injeta estilos inline dinamicamente + Google Fonts (Outfit)
+    "style-src 'self' 'unsafe-inline' https://cdn.quilljs.com https://cdn.jsdelivr.net https://fonts.googleapis.com",
 
     // Imagens: avatares Google, data URIs (favicon), blobs (PDFs renderizados), fontes RSS
     "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.googleusercontent.com https://*.jus.br https://*.conjur.com.br https://*.jota.info",
@@ -87,8 +94,8 @@ app.use((req, res, next) => {
     // Mídia: áudio/vídeo de tribunais (RSS)
     "media-src 'self' https://*.jus.br",
 
-    // Fontes: apenas locais (Lucide React icons são npm)
-    "font-src 'self'",
+    // Fontes: locais + Google Fonts (Outfit para módulo Financeiro)
+    "font-src 'self' https://fonts.gstatic.com",
 
     // Conexões: APIs de IA, Google, HuggingFace, GitHub, Sentry, CDNs
     "connect-src 'self' https://api.anthropic.com https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://github.com https://raw.githubusercontent.com https://cdn-lfs.huggingface.co https://huggingface.co https://cas-bridge.xethub.hf.co https://o4510650008076288.ingest.us.sentry.io https://cdn.quilljs.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
@@ -169,6 +176,7 @@ app.use('/api/claude', aiLimiter);
 app.use('/api/gemini', aiLimiter);
 app.use('/api/openai', aiLimiter);
 app.use('/api/grok', aiLimiter);
+app.use('/api/financeiro/categorize', aiLimiter);
 app.use('/api', generalLimiter);
 
 // Rota de autenticação simples (v1.33.41)
@@ -198,6 +206,14 @@ app.use('/api/users', usersRoutes);
 
 // Rotas de notícias jurídicas (v1.41.0)
 app.use('/api/noticias', noticiasRoutes);
+
+// Rotas do módulo Financeiro (GER_DESPESAS) - acesso restrito
+app.use('/api/financeiro/expenses', financeiroAccess, finExpensesRoutes);
+app.use('/api/financeiro/csv', financeiroAccess, finCSVRoutes);
+app.use('/api/financeiro/categorize', financeiroAccess, finCategorizeRoutes);
+app.use('/api/financeiro/recurring', financeiroAccess, finRecurringRoutes);
+app.use('/api/financeiro/dashboard', financeiroAccess, finDashboardRoutes);
+app.use('/api/financeiro/settings', financeiroAccess, finSettingsRoutes);
 
 // Rotas de proxy para APIs de IA
 app.use('/api/claude', claudeRoutes);
@@ -319,7 +335,7 @@ app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════════╗
   ║                                                       ║
-  ║   SentencifyAI Server v1.41.0                        ║
+  ║   SentencifyAI Server v1.42.0                        ║
   ║   ────────────────────────────────────────────────   ║
   ║   Backend:  http://localhost:${PORT}                   ║
   ║   Frontend: http://localhost:3000                    ║
@@ -333,6 +349,7 @@ app.listen(PORT, () => {
   ║   • Sync:     /api/sync (push/pull)                  ║
   ║   • Analyses: /api/analyses (prepauta)               ║
   ║   • Noticias: /api/noticias (feed jurídico)          ║
+  ║   • Financ.: /api/financeiro/* (despesas)            ║
   ║   • Claude:   /api/claude/messages                   ║
   ║   • Gemini:   /api/gemini/generate                   ║
   ║   • OpenAI:   /api/openai/chat                       ║

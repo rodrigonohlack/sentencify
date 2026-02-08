@@ -60,6 +60,7 @@ const runMigrations = () => {
     { name: '009_analyses_observacoes', fn: migration009AnalysesObservacoes },
     { name: '010_analyses_sintese', fn: migration010AnalysesSintese },
     { name: '011_noticias', fn: migration011Noticias },
+    { name: '012_financeiro', fn: migration012Financeiro },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -410,6 +411,127 @@ function migration011Noticias(db) {
     CREATE INDEX IF NOT EXISTS idx_noticias_lidas_user ON noticias_lidas(user_id);
   `);
   console.log('[Database] Migration 011: Created noticias tables');
+}
+
+// Migration 012: Tabelas do módulo Financeiro (GER_DESPESAS)
+function migration012Financeiro(db) {
+  // Categorias fixas (14)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS categories (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      icon TEXT NOT NULL,
+      color TEXT NOT NULL,
+      sort_order INTEGER NOT NULL
+    );
+  `);
+
+  const categories = [
+    { id: 'alimentacao', name: 'Alimentacao', icon: 'UtensilsCrossed', color: '#f97316', sort_order: 1 },
+    { id: 'saude', name: 'Saude', icon: 'Heart', color: '#ef4444', sort_order: 2 },
+    { id: 'transporte', name: 'Transporte', icon: 'Car', color: '#3b82f6', sort_order: 3 },
+    { id: 'combustivel', name: 'Combustivel', icon: 'Fuel', color: '#f59e0b', sort_order: 4 },
+    { id: 'moradia', name: 'Moradia', icon: 'Home', color: '#8b5cf6', sort_order: 5 },
+    { id: 'assinaturas_tech', name: 'Assinaturas / Tech', icon: 'Monitor', color: '#6366f1', sort_order: 6 },
+    { id: 'vestuario', name: 'Vestuario', icon: 'Shirt', color: '#ec4899', sort_order: 7 },
+    { id: 'lazer', name: 'Lazer', icon: 'Gamepad2', color: '#a855f7', sort_order: 8 },
+    { id: 'educacao', name: 'Educacao', icon: 'GraduationCap', color: '#14b8a6', sort_order: 9 },
+    { id: 'viagem', name: 'Viagem', icon: 'Plane', color: '#06b6d4', sort_order: 10 },
+    { id: 'compras_gerais', name: 'Compras Gerais', icon: 'ShoppingBag', color: '#f43f5e', sort_order: 11 },
+    { id: 'servicos', name: 'Servicos', icon: 'Wrench', color: '#64748b', sort_order: 12 },
+    { id: 'automovel', name: 'Automovel', icon: 'CarFront', color: '#d97706', sort_order: 13 },
+    { id: 'outros', name: 'Outros', icon: 'CircleDot', color: '#94a3b8', sort_order: 14 },
+  ];
+
+  const insertCat = db.prepare('INSERT OR IGNORE INTO categories (id, name, icon, color, sort_order) VALUES (?, ?, ?, ?, ?)');
+  for (const cat of categories) {
+    insertCat.run(cat.id, cat.name, cat.icon, cat.color, cat.sort_order);
+  }
+
+  // Importações CSV
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS csv_imports (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      filename TEXT NOT NULL,
+      file_hash TEXT NOT NULL,
+      row_count INTEGER NOT NULL DEFAULT 0,
+      imported_count INTEGER NOT NULL DEFAULT 0,
+      skipped_count INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(user_id, file_hash)
+    );
+    CREATE INDEX IF NOT EXISTS idx_csv_imports_user ON csv_imports(user_id);
+    CREATE INDEX IF NOT EXISTS idx_csv_imports_hash ON csv_imports(file_hash);
+  `);
+
+  // Despesas (tabela principal)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS expenses (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      csv_import_id TEXT REFERENCES csv_imports(id) ON DELETE SET NULL,
+      purchase_date TEXT NOT NULL,
+      card_holder TEXT,
+      card_last_four TEXT,
+      bank_category TEXT,
+      description TEXT NOT NULL,
+      installment TEXT,
+      value_usd REAL DEFAULT 0,
+      exchange_rate REAL DEFAULT 0,
+      value_brl REAL NOT NULL,
+      category_id TEXT REFERENCES categories(id),
+      category_source TEXT DEFAULT 'bank',
+      category_confidence REAL,
+      source TEXT NOT NULL DEFAULT 'csv',
+      recurring_expense_id TEXT,
+      is_refund INTEGER NOT NULL DEFAULT 0,
+      notes TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      deleted_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_expenses_user ON expenses(user_id);
+    CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(purchase_date);
+    CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(category_id);
+    CREATE INDEX IF NOT EXISTS idx_expenses_holder ON expenses(card_holder);
+    CREATE INDEX IF NOT EXISTS idx_expenses_card ON expenses(card_last_four);
+    CREATE INDEX IF NOT EXISTS idx_expenses_source ON expenses(source);
+    CREATE INDEX IF NOT EXISTS idx_expenses_deleted ON expenses(deleted_at);
+    CREATE INDEX IF NOT EXISTS idx_expenses_duplicate ON expenses(user_id, purchase_date, description, value_brl, card_last_four);
+  `);
+
+  // Despesas recorrentes
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS recurring_expenses (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      description TEXT NOT NULL,
+      value_brl REAL NOT NULL,
+      category_id TEXT REFERENCES categories(id),
+      due_day INTEGER NOT NULL DEFAULT 1,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      notes TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      deleted_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_recurring_user ON recurring_expenses(user_id);
+    CREATE INDEX IF NOT EXISTS idx_recurring_active ON recurring_expenses(is_active);
+  `);
+
+  // Configurações do financeiro
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS financeiro_settings (
+      user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      preferred_provider TEXT DEFAULT 'gemini',
+      default_view TEXT DEFAULT 'dashboard',
+      reminder_days INTEGER DEFAULT 3,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+
+  console.log('[Database] Migration 012: Created financeiro tables (categories, csv_imports, expenses, recurring_expenses, financeiro_settings)');
 }
 
 // Exportar
