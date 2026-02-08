@@ -7,6 +7,17 @@ interface TrendLineChartProps {
 }
 
 export default function TrendLineChart({ data }: TrendLineChartProps) {
+  if (data.length === 0) {
+    return (
+      <div className="glass-card">
+        <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Tendencia</h3>
+        <div className="h-[200px] flex items-center justify-center text-sm text-[#7c7caa]">
+          Sem dados
+        </div>
+      </div>
+    );
+  }
+
   const chartData = data.map((d) => ({
     ...d,
     label: formatMonthShort(d.month),
@@ -15,7 +26,6 @@ export default function TrendLineChart({ data }: TrendLineChartProps) {
   return (
     <div className="glass-card">
       <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Tendencia</h3>
-      <div className="min-h-[200px]">
       <ResponsiveContainer width="100%" height={200}>
         <AreaChart data={chartData}>
           <defs>
@@ -53,7 +63,6 @@ export default function TrendLineChart({ data }: TrendLineChartProps) {
           />
         </AreaChart>
       </ResponsiveContainer>
-      </div>
     </div>
   );
 }

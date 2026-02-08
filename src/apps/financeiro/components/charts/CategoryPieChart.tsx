@@ -10,6 +10,17 @@ export default function CategoryPieChart({ data }: CategoryPieChartProps) {
   const total = data.reduce((sum, d) => sum + d.total, 0);
   const chartData = data.filter((d) => d.total > 0).slice(0, 8);
 
+  if (chartData.length === 0) {
+    return (
+      <div className="glass-card">
+        <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Por Categoria</h3>
+        <div className="h-[170px] flex items-center justify-center text-sm text-[#7c7caa]">
+          Sem dados
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card">
       <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Por Categoria</h3>

@@ -8,6 +8,17 @@ interface MonthlyBarChartProps {
 }
 
 export default function MonthlyBarChart({ data, selectedMonth }: MonthlyBarChartProps) {
+  if (data.length === 0) {
+    return (
+      <div className="glass-card">
+        <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Evolução Mensal</h3>
+        <div className="h-[200px] flex items-center justify-center text-sm text-[#7c7caa]">
+          Sem dados
+        </div>
+      </div>
+    );
+  }
+
   const chartData = data.map((d) => ({
     ...d,
     label: formatMonthShort(d.month),
@@ -17,7 +28,6 @@ export default function MonthlyBarChart({ data, selectedMonth }: MonthlyBarChart
   return (
     <div className="glass-card">
       <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Evolução Mensal</h3>
-      <div className="min-h-[200px]">
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={chartData} barCategoryGap="20%">
           <XAxis
@@ -59,7 +69,6 @@ export default function MonthlyBarChart({ data, selectedMonth }: MonthlyBarChart
           </defs>
         </BarChart>
       </ResponsiveContainer>
-      </div>
     </div>
   );
 }
