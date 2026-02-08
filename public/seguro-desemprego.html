@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Seguro-Desemprego 2026</title>
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           CSS RESET & BASE
+           ═══════════════════════════════════════════════════════ */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --blue-900: #0c1b3a;
+            --blue-800: #122651;
+            --blue-700: #1a3570;
+            --blue-600: #1e4d8c;
+            --blue-500: #2563a8;
+            --blue-400: #3b82c4;
+            --blue-300: #6ba3d9;
+            --blue-200: #a3c7eb;
+            --blue-100: #dbe9f7;
+            --blue-50: #eef4fb;
+
+            --green-700: #166534;
+            --green-600: #1a8a47;
+            --green-500: #22a95a;
+            --green-400: #4ade80;
+            --green-100: #dcfce7;
+            --green-50: #f0fdf4;
+
+            --gold-600: #b8860b;
+            --gold-500: #d4a017;
+            --gold-400: #f0c040;
+            --gold-300: #f5d76e;
+            --gold-200: #faeab8;
+            --gold-100: #fdf6e3;
+
+            --red-600: #dc2626;
+            --red-500: #ef4444;
+            --red-100: #fee2e2;
+            --red-50: #fef2f2;
+
+            --gray-900: #111827;
+            --gray-800: #1f2937;
+            --gray-700: #374151;
+            --gray-600: #4b5563;
+            --gray-500: #6b7280;
+            --gray-400: #9ca3af;
+            --gray-300: #d1d5db;
+            --gray-200: #e5e7eb;
+            --gray-100: #f3f4f6;
+            --gray-50: #f9fafb;
+
+            /* Theme tokens (light default) */
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --bg-modal-overlay: rgba(0, 0, 0, 0.5);
+
+            --text-primary: var(--gray-900);
+            --text-secondary: var(--gray-600);
+            --text-muted: var(--gray-500);
+            --text-on-accent: #ffffff;
+
+            --border-color: var(--gray-200);
+            --border-input: var(--gray-300);
+            --border-focus: var(--blue-500);
+
+            --accent-primary: var(--blue-600);
+            --accent-primary-hover: var(--blue-700);
+            --accent-secondary: var(--green-600);
+            --accent-gold: var(--gold-500);
+
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.06);
+
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           DARK THEME
+           ═══════════════════════════════════════════════════════ */
+        [data-theme="dark"] {
+            --bg-primary: #0a0f1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a2236;
+            --bg-input: #1e2a42;
+            --bg-modal-overlay: rgba(0, 0, 0, 0.7);
+
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            --border-color: #2a3550;
+            --border-input: #374766;
+            --border-focus: var(--blue-400);
+
+            --accent-primary: var(--blue-400);
+            --accent-primary-hover: var(--blue-300);
+
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4), 0 2px 4px -2px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5), 0 4px 6px -4px rgba(0,0,0,0.3);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.6), 0 8px 10px -6px rgba(0,0,0,0.4);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           TYPOGRAPHY
+           ═══════════════════════════════════════════════════════ */
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            transition: background var(--transition), color var(--transition);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           HEADER
+           ═══════════════════════════════════════════════════════ */
+        .header {
+            background: linear-gradient(135deg, var(--blue-900) 0%, var(--blue-700) 50%, var(--blue-800) 100%);
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(212, 160, 23, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 196, 0.15) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px 24px 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gold-300);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .header-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--gold-400);
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .header h1 {
+            font-size: clamp(24px, 5vw, 34px);
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.2;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .header p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 500px;
+        }
+
+        .header-actions {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           DARK MODE TOGGLE
+           ═══════════════════════════════════════════════════════ */
+        .theme-toggle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+            color: #ffffff;
+            font-size: 18px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.08);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           MAIN CONTENT
+           ═══════════════════════════════════════════════════════ */
+        .main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px 24px 48px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           CARD
+           ═══════════════════════════════════════════════════════ */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+        }
+
+        .card + .card {
+            margin-top: 20px;
+        }
+
+        .card-header {
+            padding: 20px 24px 0;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .card-title-icon.blue {
+            background: var(--blue-100);
+            color: var(--blue-600);
+        }
+
+        [data-theme="dark"] .card-title-icon.blue {
+            background: rgba(37, 99, 168, 0.2);
+            color: var(--blue-300);
+        }
+
+        .card-title-icon.green {
+            background: var(--green-100);
+            color: var(--green-600);
+        }
+
+        [data-theme="dark"] .card-title-icon.green {
+            background: rgba(26, 138, 71, 0.2);
+            color: var(--green-400);
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            margin-left: 42px;
+        }
+
+        .card-body {
+            padding: 20px 24px 24px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           FORM INPUTS
+           ═══════════════════════════════════════════════════════ */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.01em;
+        }
+
+        .form-label .label-hint {
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: inherit;
+            color: var(--text-primary);
+            background: var(--bg-input);
+            border: 1.5px solid var(--border-input);
+            border-radius: var(--radius-sm);
+            transition: all var(--transition);
+            outline: none;
+        }
+
+        .form-input.has-prefix {
+            padding-left: 38px;
+        }
+
+        .form-input:hover {
+            border-color: var(--blue-400);
+        }
+
+        .form-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(37, 99, 168, 0.12);
+        }
+
+        [data-theme="dark"] .form-input:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 196, 0.2);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           BUTTONS
+           ═══════════════════════════════════════════════════════ */
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition);
+            letter-spacing: 0.01em;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-700) 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(30, 77, 140, 0.3);
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 16px rgba(30, 77, 140, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .btn-secondary {
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-100);
+            border-color: var(--gray-400);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .btn-secondary:hover {
+            background: var(--bg-card);
+            border-color: var(--border-input);
+        }
+
+        .btn-rules {
+            background: transparent;
+            color: var(--accent-primary);
+            border: 1.5px solid var(--accent-primary);
+        }
+
+        .btn-rules:hover {
+            background: var(--blue-50);
+        }
+
+        [data-theme="dark"] .btn-rules:hover {
+            background: rgba(59, 130, 196, 0.1);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           RESULTS
+           ═══════════════════════════════════════════════════════ */
+        .results-card {
+            overflow: hidden;
+        }
+
+        .results-card .card-header {
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .result-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        @media (max-width: 600px) {
+            .result-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .result-item {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            transition: background var(--transition);
+        }
+
+        @media (max-width: 600px) {
+            .result-item {
+                border-right: none;
+            }
+        }
+
+        .result-item:nth-child(2n) {
+            border-right: none;
+        }
+
+        .result-item:nth-last-child(-n+2) {
+            border-bottom: none;
+        }
+
+        @media (max-width: 600px) {
+            .result-item:nth-last-child(-n+2) {
+                border-bottom: 1px solid var(--border-color);
+            }
+            .result-item:last-child {
+                border-bottom: none;
+            }
+        }
+
+        .result-item-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .result-item-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .result-item-value.small {
+            font-size: 16px;
+        }
+
+        .result-item-note {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Faixa badge */
+        .faixa-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .faixa-badge.faixa-1 {
+            background: var(--green-100);
+            color: var(--green-700);
+        }
+
+        [data-theme="dark"] .faixa-badge.faixa-1 {
+            background: rgba(26, 138, 71, 0.2);
+            color: var(--green-400);
+        }
+
+        .faixa-badge.faixa-2 {
+            background: var(--gold-100);
+            color: var(--gold-600);
+        }
+
+        [data-theme="dark"] .faixa-badge.faixa-2 {
+            background: rgba(212, 160, 23, 0.2);
+            color: var(--gold-300);
+        }
+
+        .faixa-badge.faixa-3 {
+            background: var(--blue-100);
+            color: var(--blue-600);
+        }
+
+        [data-theme="dark"] .faixa-badge.faixa-3 {
+            background: rgba(37, 99, 168, 0.2);
+            color: var(--blue-300);
+        }
+
+        /* Total highlight */
+        .result-total {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, var(--blue-900) 0%, var(--blue-700) 100%);
+            padding: 20px 24px;
+            border-bottom: none !important;
+            border-right: none !important;
+        }
+
+        .result-total .result-item-label {
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .result-total .result-item-value {
+            color: #ffffff;
+            font-size: 28px;
+        }
+
+        .result-total .result-item-note {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* No-right message */
+        .no-right-card {
+            text-align: center;
+            padding: 32px 24px;
+        }
+
+        .no-right-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--red-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+        }
+
+        [data-theme="dark"] .no-right-icon {
+            background: rgba(220, 38, 38, 0.15);
+        }
+
+        .no-right-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--red-600);
+            margin-bottom: 8px;
+        }
+
+        [data-theme="dark"] .no-right-title {
+            color: var(--red-500);
+        }
+
+        .no-right-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* Error message */
+        .error-msg {
+            background: var(--red-50);
+            border: 1px solid var(--red-100);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            color: var(--red-600);
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        [data-theme="dark"] .error-msg {
+            background: rgba(220, 38, 38, 0.1);
+            border-color: rgba(220, 38, 38, 0.2);
+            color: var(--red-500);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           RESULTS ANIMATION
+           ═══════════════════════════════════════════════════════ */
+        .results-enter {
+            animation: resultsSlideIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes resultsSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-item-anim {
+            animation: itemFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            opacity: 0;
+        }
+
+        @keyframes itemFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           MODAL
+           ═══════════════════════════════════════════════════════ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg-modal-overlay);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 24px;
+            backdrop-filter: blur(4px);
+            animation: overlayIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        @keyframes overlayIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-container {
+            width: 100%;
+            max-width: 680px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            margin: auto;
+            animation: modalSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            overflow: hidden;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 18px;
+            transition: all var(--transition);
+        }
+
+        .modal-close:hover {
+            background: var(--gray-200);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .modal-close:hover {
+            background: var(--border-color);
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .modal-body h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin: 20px 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-body h3:first-child {
+            margin-top: 0;
+        }
+
+        .modal-body p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            line-height: 1.7;
+        }
+
+        .modal-body ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 16px;
+        }
+
+        .modal-body li {
+            font-size: 14px;
+            color: var(--text-secondary);
+            padding: 6px 0 6px 20px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .modal-body li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 13px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            opacity: 0.5;
+        }
+
+        .rule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0 20px;
+            font-size: 13px;
+        }
+
+        .rule-table th {
+            background: var(--blue-50);
+            color: var(--blue-700);
+            font-weight: 600;
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 2px solid var(--blue-200);
+        }
+
+        [data-theme="dark"] .rule-table th {
+            background: rgba(37, 99, 168, 0.15);
+            color: var(--blue-300);
+            border-bottom-color: var(--border-color);
+        }
+
+        .rule-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .rule-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rule-highlight {
+            background: var(--gold-100);
+            border: 1px solid var(--gold-200);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-size: 13px;
+            color: var(--gold-600);
+            line-height: 1.6;
+        }
+
+        [data-theme="dark"] .rule-highlight {
+            background: rgba(212, 160, 23, 0.1);
+            border-color: rgba(212, 160, 23, 0.2);
+            color: var(--gold-300);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           FOOTER
+           ═══════════════════════════════════════════════════════ */
+        .footer {
+            text-align: center;
+            padding: 16px 24px 32px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .footer a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           UTILITIES & RESPONSIVE
+           ═══════════════════════════════════════════════════════ */
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 480px) {
+            .header-content {
+                padding: 24px 16px 22px;
+            }
+            .main {
+                padding: 16px 16px 40px;
+            }
+            .card-body {
+                padding: 16px;
+            }
+            .btn-row {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+            }
+            .result-item-value {
+                font-size: 18px;
+            }
+            .result-total .result-item-value {
+                font-size: 24px;
+            }
+            .header-actions {
+                top: 16px;
+                right: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ═══════════════════════════════════════════════════════
+         HEADER
+         ═══════════════════════════════════════════════════════ -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-badge">Atualizado 2026</div>
+            <h1>Calculadora de Seguro-Desemprego</h1>
+            <p>Valores atualizados conforme Resolução MTE de janeiro de 2026.</p>
+        </div>
+        <div class="header-actions">
+            <button class="theme-toggle" id="themeToggle" title="Alternar tema claro/escuro" aria-label="Alternar tema">
+                <span id="themeIcon">&#9790;</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════════
+         MAIN CONTENT
+         ═══════════════════════════════════════════════════════ -->
+    <main class="main">
+
+        <!-- Formulário -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="card-title-icon blue">&#128176;</span>
+                    Dados Salariais
+                </div>
+                <p class="card-subtitle">Informe os 3 últimos salários brutos recebidos</p>
+            </div>
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">1º Salário</label>
+                        <div class="input-wrapper">
+                            <span class="input-prefix">R$</span>
+                            <input type="text" class="form-input has-prefix" id="salario1" placeholder="0,00" inputmode="decimal" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">2º Salário</label>
+                        <div class="input-wrapper">
+                            <span class="input-prefix">R$</span>
+                            <input type="text" class="form-input has-prefix" id="salario2" placeholder="0,00" inputmode="decimal" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">3º Salário</label>
+                        <div class="input-wrapper">
+                            <span class="input-prefix">R$</span>
+                            <input type="text" class="form-input has-prefix" id="salario3" placeholder="0,00" inputmode="decimal" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Meses trabalhados <span class="label-hint">(últimos 36 meses)</span></label>
+                        <input type="text" class="form-input" id="mesesTrabalhados" placeholder="Ex: 18" inputmode="numeric" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nº de solicitações <span class="label-hint">(1 = 1ª vez)</span></label>
+                        <input type="text" class="form-input" id="numSolicitacoes" value="1" inputmode="numeric" autocomplete="off">
+                    </div>
+                </div>
+
+                <div id="errorMsg" class="error-msg hidden">
+                    <span>&#9888;</span>
+                    <span id="errorText"></span>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary" id="btnCalcular" onclick="calcular()">
+                        <span>&#9889;</span> Calcular
+                    </button>
+                    <button class="btn btn-secondary" onclick="limpar()">
+                        Limpar
+                    </button>
+                    <button class="btn btn-rules" onclick="abrirRegras()">
+                        <span>&#128220;</span> Regras
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultado -->
+        <div id="resultadoContainer"></div>
+
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════════
+         MODAL DE REGRAS
+         ═══════════════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="regrasModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>&#128220;</span> Regras do Seguro-Desemprego
+                </div>
+                <button class="modal-close" onclick="fecharRegras()" aria-label="Fechar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3>&#128197; Número de Parcelas (Lei 13.134/2015)</h3>
+                <p>O benefício é concedido conforme o tempo de serviço nos últimos 36 meses e o número de solicitações anteriores:</p>
+
+                <table class="rule-table">
+                    <thead>
+                        <tr>
+                            <th>Solicitação</th>
+                            <th>Meses Trabalhados</th>
+                            <th>Parcelas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td rowspan="3"><strong>1ª vez</strong></td><td>menos de 12</td><td>Sem direito</td></tr>
+                        <tr><td>12 a 23</td><td>4 parcelas</td></tr>
+                        <tr><td>24 ou mais</td><td>5 parcelas</td></tr>
+
+                        <tr><td rowspan="4"><strong>2ª vez</strong></td><td>menos de 9</td><td>Sem direito</td></tr>
+                        <tr><td>9 a 11</td><td>3 parcelas</td></tr>
+                        <tr><td>12 a 23</td><td>4 parcelas</td></tr>
+                        <tr><td>24 ou mais</td><td>5 parcelas</td></tr>
+
+                        <tr><td rowspan="4"><strong>3ª+ vez</strong></td><td>menos de 6</td><td>Sem direito</td></tr>
+                        <tr><td>6 a 11</td><td>3 parcelas</td></tr>
+                        <tr><td>12 a 23</td><td>4 parcelas</td></tr>
+                        <tr><td>24 ou mais</td><td>5 parcelas</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>&#128178; Cálculo do Valor da Parcela (2026)</h3>
+                <p>O valor de cada parcela é calculado com base na média dos 3 últimos salários:</p>
+
+                <table class="rule-table">
+                    <thead>
+                        <tr>
+                            <th>Faixa</th>
+                            <th>Média Salarial</th>
+                            <th>Cálculo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Faixa 1</strong></td>
+                            <td>Até R$ 2.222,17</td>
+                            <td>Média × 0,8</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Faixa 2</strong></td>
+                            <td>R$ 2.222,18 a R$ 3.703,99</td>
+                            <td>(Média − R$ 2.222,17) × 0,5 + R$ 1.777,74</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Faixa 3</strong></td>
+                            <td>Acima de R$ 3.703,99</td>
+                            <td>Valor fixo: R$ 2.518,65</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="rule-highlight">
+                    <strong>Piso:</strong> O valor do benefício não pode ser inferior ao salário mínimo vigente de <strong>R$ 1.621,00</strong> (2026).
+                </div>
+
+                <h3>&#9888;&#65039; Requisitos Gerais</h3>
+                <ul>
+                    <li>Ter sido dispensado sem justa causa</li>
+                    <li>Estar desempregado quando do requerimento</li>
+                    <li>Não possuir renda própria suficiente à manutenção da família</li>
+                    <li>Não estar recebendo benefício de prestação continuada da Previdência Social (exceto pensão por morte ou auxílio-acidente)</li>
+                </ul>
+
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 16px;">
+                    Base legal: Lei nº 7.998/1990, alterada pela Lei nº 13.134/2015. Valores atualizados conforme Resolução do MTE de janeiro de 2026.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         FOOTER
+         ═══════════════════════════════════════════════════════ -->
+    <footer class="footer">
+        Calculadora de Seguro-Desemprego 2026 &mdash; Valores conforme Resolução MTE jan/2026.<br>
+        Esta calculadora tem caráter informativo. Consulte o <a href="https://www.gov.br/trabalho-e-emprego" target="_blank" rel="noopener">MTE</a> para informações oficiais.
+    </footer>
+
+    <!-- ═══════════════════════════════════════════════════════
+         JAVASCRIPT
+         ═══════════════════════════════════════════════════════ -->
+    <script>
+    (function() {
+        'use strict';
+
+        /* ═══════════════════════════════════════════════════════
+           CONSTANTES 2026
+           ═══════════════════════════════════════════════════════ */
+        const SALARIO_MINIMO = 1621.00;
+        const FAIXA1_LIMITE = 2222.17;
+        const FAIXA2_LIMITE = 3703.99;
+        const FAIXA1_MULTIPLICADOR = 0.8;
+        const FAIXA2_MULTIPLICADOR = 0.5;
+        const FAIXA2_ADICIONAL = 1777.74;
+        const FAIXA3_VALOR_FIXO = 2518.65;
+
+        /* ═══════════════════════════════════════════════════════
+           DARK MODE
+           ═══════════════════════════════════════════════════════ */
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        function getPreferredTheme() {
+            const stored = localStorage.getItem('sd-theme');
+            if (stored) return stored;
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            themeIcon.innerHTML = theme === 'dark' ? '&#9788;' : '&#9790;';
+            localStorage.setItem('sd-theme', theme);
+        }
+
+        applyTheme(getPreferredTheme());
+
+        themeToggle.addEventListener('click', function() {
+            const current = document.documentElement.getAttribute('data-theme');
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        });
+
+        /* ═══════════════════════════════════════════════════════
+           MÁSCARA DE MOEDA
+           ═══════════════════════════════════════════════════════ */
+        function formatCurrency(value) {
+            // Remove tudo exceto dígitos
+            let digits = value.replace(/\D/g, '');
+
+            // Remove zeros à esquerda (exceto quando é só zero)
+            if (digits.length > 1) {
+                digits = digits.replace(/^0+/, '') || '0';
+            }
+
+            // Garante mínimo de 3 dígitos para ter centavos
+            while (digits.length < 3) {
+                digits = '0' + digits;
+            }
+
+            // Separa centavos
+            const cents = digits.slice(-2);
+            let intPart = digits.slice(0, -2);
+
+            // Adiciona pontos de milhar
+            intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+            return intPart + ',' + cents;
+        }
+
+        function parseCurrencyToFloat(str) {
+            if (!str) return NaN;
+            // Remove pontos de milhar, troca vírgula por ponto
+            const cleaned = str.replace(/\./g, '').replace(',', '.');
+            return parseFloat(cleaned);
+        }
+
+        function setupCurrencyInput(input) {
+            input.addEventListener('input', function(e) {
+                const cursorWasAtEnd = this.selectionStart === this.value.length;
+                this.value = formatCurrency(this.value);
+                if (cursorWasAtEnd) {
+                    this.selectionStart = this.selectionEnd = this.value.length;
+                }
+            });
+
+            input.addEventListener('focus', function() {
+                if (!this.value || this.value === '0,00') {
+                    this.value = '';
+                }
+            });
+
+            input.addEventListener('blur', function() {
+                if (!this.value) {
+                    return;
+                }
+                this.value = formatCurrency(this.value);
+            });
+        }
+
+        // Aplica máscara nos 3 campos de salário
+        setupCurrencyInput(document.getElementById('salario1'));
+        setupCurrencyInput(document.getElementById('salario2'));
+        setupCurrencyInput(document.getElementById('salario3'));
+
+        /* ═══════════════════════════════════════════════════════
+           CÁLCULO DE PARCELAS
+           ═══════════════════════════════════════════════════════ */
+        function obterNumeroParcelas(meses, solicitacao) {
+            meses = parseInt(meses);
+            solicitacao = parseInt(solicitacao);
+
+            if (solicitacao === 1) {
+                if (meses < 12) return 0;
+                if (meses < 24) return 4;
+                return 5;
+            } else if (solicitacao === 2) {
+                if (meses < 9) return 0;
+                if (meses < 12) return 3;
+                if (meses < 24) return 4;
+                return 5;
+            } else {
+                if (meses < 6) return 0;
+                if (meses < 12) return 3;
+                if (meses < 24) return 4;
+                return 5;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           CÁLCULO DO VALOR DA PARCELA
+           ═══════════════════════════════════════════════════════ */
+        function calcularValorParcela(media) {
+            let valor;
+
+            if (media <= FAIXA1_LIMITE) {
+                valor = media * FAIXA1_MULTIPLICADOR;
+            } else if (media <= FAIXA2_LIMITE) {
+                valor = (media - FAIXA1_LIMITE) * FAIXA2_MULTIPLICADOR + FAIXA2_ADICIONAL;
+            } else {
+                valor = FAIXA3_VALOR_FIXO;
+            }
+
+            // Piso = salário mínimo
+            if (valor < SALARIO_MINIMO) {
+                valor = SALARIO_MINIMO;
+            }
+
+            return valor;
+        }
+
+        function obterFaixa(media) {
+            if (media <= FAIXA1_LIMITE) return 1;
+            if (media <= FAIXA2_LIMITE) return 2;
+            return 3;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           FORMATAÇÃO
+           ═══════════════════════════════════════════════════════ */
+        function formatarMoeda(valor) {
+            return 'R$ ' + valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           EXIBIR ERRO
+           ═══════════════════════════════════════════════════════ */
+        function mostrarErro(msg) {
+            const errorEl = document.getElementById('errorMsg');
+            document.getElementById('errorText').textContent = msg;
+            errorEl.classList.remove('hidden');
+            // Remove resultado anterior
+            document.getElementById('resultadoContainer').innerHTML = '';
+        }
+
+        function esconderErro() {
+            document.getElementById('errorMsg').classList.add('hidden');
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           CALCULAR
+           ═══════════════════════════════════════════════════════ */
+        window.calcular = function() {
+            esconderErro();
+
+            const sal1Raw = document.getElementById('salario1').value;
+            const sal2Raw = document.getElementById('salario2').value;
+            const sal3Raw = document.getElementById('salario3').value;
+            const mesesRaw = document.getElementById('mesesTrabalhados').value.trim();
+            const solRaw = document.getElementById('numSolicitacoes').value.trim();
+
+            // Validação de campos vazios
+            if (!sal1Raw || !sal2Raw || !sal3Raw || !mesesRaw || !solRaw) {
+                mostrarErro('Preencha todos os campos para calcular.');
+                return;
+            }
+
+            const sal1 = parseCurrencyToFloat(sal1Raw);
+            const sal2 = parseCurrencyToFloat(sal2Raw);
+            const sal3 = parseCurrencyToFloat(sal3Raw);
+            const meses = parseInt(mesesRaw);
+            const solicitacao = parseInt(solRaw);
+
+            // Validação numérica
+            if (isNaN(sal1) || isNaN(sal2) || isNaN(sal3) || isNaN(meses) || isNaN(solicitacao)) {
+                mostrarErro('Insira valores numéricos válidos em todos os campos.');
+                return;
+            }
+
+            if (sal1 <= 0 || sal2 <= 0 || sal3 <= 0) {
+                mostrarErro('Os salários devem ser maiores que zero.');
+                return;
+            }
+
+            if (meses < 0 || meses > 36) {
+                mostrarErro('Os meses trabalhados devem estar entre 0 e 36.');
+                return;
+            }
+
+            if (solicitacao < 1) {
+                mostrarErro('O número de solicitações deve ser pelo menos 1.');
+                return;
+            }
+
+            // Cálculo
+            const media = (sal1 + sal2 + sal3) / 3;
+            const parcelas = obterNumeroParcelas(meses, solicitacao);
+            const faixa = obterFaixa(media);
+            const valorParcela = calcularValorParcela(media);
+            const total = valorParcela * parcelas;
+
+            // Render resultado
+            const container = document.getElementById('resultadoContainer');
+
+            if (parcelas === 0) {
+                container.innerHTML = renderSemDireito(solicitacao, meses);
+            } else {
+                container.innerHTML = renderResultado(media, faixa, parcelas, valorParcela, total);
+            }
+
+            // Scroll suave para resultado
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        };
+
+        function renderSemDireito(solicitacao, meses) {
+            let requisito;
+            if (solicitacao === 1) requisito = '12 meses';
+            else if (solicitacao === 2) requisito = '9 meses';
+            else requisito = '6 meses';
+
+            return '<div class="card results-card results-enter" style="margin-top: 20px;">' +
+                '<div class="no-right-card">' +
+                    '<div class="no-right-icon">&#10060;</div>' +
+                    '<div class="no-right-title">Sem Direito ao Benefício</div>' +
+                    '<p class="no-right-text">Para a ' + formatarSolicitacao(solicitacao) + ' solicitação, é necessário ter trabalhado pelo menos <strong>' + requisito + '</strong> nos últimos 36 meses. Você informou <strong>' + meses + ' meses</strong>.</p>' +
+                '</div>' +
+            '</div>';
+        }
+
+        function formatarSolicitacao(n) {
+            if (n === 1) return '1ª';
+            if (n === 2) return '2ª';
+            return n + 'ª';
+        }
+
+        function faixaLabel(faixa) {
+            if (faixa === 1) return 'Faixa 1 — até R$ 2.222,17';
+            if (faixa === 2) return 'Faixa 2 — R$ 2.222,18 a R$ 3.703,99';
+            return 'Faixa 3 — acima de R$ 3.703,99';
+        }
+
+        function renderResultado(media, faixa, parcelas, valorParcela, total) {
+            return '<div class="card results-card results-enter" style="margin-top: 20px;">' +
+                '<div class="card-header">' +
+                    '<div class="card-title">' +
+                        '<span class="card-title-icon green">&#10004;</span>' +
+                        'Resultado do Cálculo' +
+                    '</div>' +
+                '</div>' +
+                '<div class="result-summary">' +
+                    '<div class="result-item result-item-anim" style="animation-delay: 0.05s">' +
+                        '<div class="result-item-label">Média Salarial</div>' +
+                        '<div class="result-item-value">' + formatarMoeda(media) + '</div>' +
+                    '</div>' +
+                    '<div class="result-item result-item-anim" style="animation-delay: 0.1s">' +
+                        '<div class="result-item-label">Faixa Salarial</div>' +
+                        '<div><span class="faixa-badge faixa-' + faixa + '">' + faixaLabel(faixa) + '</span></div>' +
+                    '</div>' +
+                    '<div class="result-item result-item-anim" style="animation-delay: 0.15s">' +
+                        '<div class="result-item-label">Nº de Parcelas</div>' +
+                        '<div class="result-item-value">' + parcelas + '</div>' +
+                    '</div>' +
+                    '<div class="result-item result-item-anim" style="animation-delay: 0.2s">' +
+                        '<div class="result-item-label">Valor de Cada Parcela</div>' +
+                        '<div class="result-item-value">' + formatarMoeda(valorParcela) + '</div>' +
+                        (valorParcela === SALARIO_MINIMO ? '<div class="result-item-note">Valor mínimo (salário mínimo 2026)</div>' : '') +
+                    '</div>' +
+                    '<div class="result-item result-total result-item-anim" style="animation-delay: 0.25s">' +
+                        '<div class="result-item-label">Valor Total do Benefício</div>' +
+                        '<div class="result-item-value">' + formatarMoeda(total) + '</div>' +
+                        '<div class="result-item-note">' + parcelas + ' parcelas de ' + formatarMoeda(valorParcela) + '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           LIMPAR
+           ═══════════════════════════════════════════════════════ */
+        window.limpar = function() {
+            document.getElementById('salario1').value = '';
+            document.getElementById('salario2').value = '';
+            document.getElementById('salario3').value = '';
+            document.getElementById('mesesTrabalhados').value = '';
+            document.getElementById('numSolicitacoes').value = '1';
+            document.getElementById('resultadoContainer').innerHTML = '';
+            esconderErro();
+            document.getElementById('salario1').focus();
+        };
+
+        /* ═══════════════════════════════════════════════════════
+           MODAL
+           ═══════════════════════════════════════════════════════ */
+        window.abrirRegras = function() {
+            document.getElementById('regrasModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.fecharRegras = function() {
+            document.getElementById('regrasModal').classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        document.getElementById('regrasModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharRegras();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                fecharRegras();
+            }
+        });
+
+        /* ═══════════════════════════════════════════════════════
+           ATALHO ENTER PARA CALCULAR
+           ═══════════════════════════════════════════════════════ */
+        document.querySelectorAll('.form-input').forEach(function(input) {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    calcular();
+                }
+            });
+        });
+
+    })();
+    </script>
+</body>
+</html>
