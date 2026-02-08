@@ -12,6 +12,8 @@ const CATEGORIES = [
   { id: 'compras_gerais', keywords: 'lojas, varejo, departamento' },
   { id: 'servicos', keywords: 'servicos profissionais, pessoais, salao' },
   { id: 'automovel', keywords: 'oficina, pecas, manutencao, veiculos' },
+  { id: 'investimento', keywords: 'investimento, aplicacao, renda fixa, renda variavel, acoes, FII, CDB, tesouro direto, previdencia' },
+  { id: 'emprestimo', keywords: 'emprestimo, financiamento, parcela, prestacao, juros, credito pessoal, consignado' },
   { id: 'outros', keywords: 'nao se encaixa nas anteriores' },
 ];
 
