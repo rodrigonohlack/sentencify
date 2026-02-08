@@ -14,7 +14,9 @@ export const CATEGORIES: Category[] = [
   { id: 'compras_gerais', name: 'Compras Gerais', icon: 'ShoppingBag', color: '#f43f5e', sort_order: 11 },
   { id: 'servicos', name: 'Serviços', icon: 'Wrench', color: '#64748b', sort_order: 12 },
   { id: 'automovel', name: 'Automóvel', icon: 'CarFront', color: '#d97706', sort_order: 13 },
-  { id: 'outros', name: 'Outros', icon: 'CircleDot', color: '#94a3b8', sort_order: 14 },
+  { id: 'investimento', name: 'Investimento', icon: 'TrendingUp', color: '#22c55e', sort_order: 14 },
+  { id: 'emprestimo', name: 'Empréstimo', icon: 'Landmark', color: '#0ea5e9', sort_order: 15 },
+  { id: 'outros', name: 'Outros', icon: 'CircleDot', color: '#94a3b8', sort_order: 16 },
 ];
 
 export const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
