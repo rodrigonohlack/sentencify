@@ -32,27 +32,32 @@ router.post('/batch', authMiddleware, async (req, res) => {
     const batches = CategorizationService.buildBatches(expenses);
     const allResults = [];
 
-    for (const batch of batches) {
-      const prompt = CategorizationService.buildPrompt(batch);
-
-      let responseText;
+    const batchErrors = [];
+    for (let i = 0; i < batches.length; i++) {
+      if (i > 0) await new Promise(r => setTimeout(r, 1000));
+      const batch = batches[i];
       try {
-        responseText = await callLLM(selectedProvider, prompt, apiKey);
-      } catch (llmError) {
-        console.error('[Financeiro:Categorize] LLM error:', llmError.message);
-        return res.status(502).json({ error: `Erro ao chamar ${selectedProvider}: ${llmError.message}` });
-      }
+        const prompt = CategorizationService.buildPrompt(batch);
+        const responseText = await callLLMWithRetry(selectedProvider, prompt, apiKey);
+        const results = CategorizationService.parseResponse(responseText, batch.length);
 
-      const results = CategorizationService.parseResponse(responseText, batch.length);
-
-      for (const result of results) {
-        allResults.push({
-          id: batch[result.index].id,
-          category_id: result.category_id,
-          category_source: 'llm',
-          category_confidence: 0.85,
-        });
+        for (const result of results) {
+          allResults.push({
+            id: batch[result.index].id,
+            category_id: result.category_id,
+            category_source: 'llm',
+            category_confidence: 0.85,
+          });
+        }
+      } catch (batchError) {
+        console.error('[Financeiro:Categorize] Batch error:', batchError.message);
+        batchErrors.push(batchError.message);
       }
+    }
+
+    // If ALL batches failed, return error
+    if (batchErrors.length === batches.length) {
+      return res.status(502).json({ error: `Erro ao chamar ${selectedProvider}: ${batchErrors[0]}` });
     }
 
     const stmt = db.prepare(`
@@ -68,12 +73,18 @@ router.post('/batch', authMiddleware, async (req, res) => {
 
     updateAll(allResults);
 
-    res.json({
+    const response = {
       success: true,
       categorized: allResults.length,
       total: expenses.length,
       results: allResults,
-    });
+    };
+
+    if (batchErrors.length > 0) {
+      response.warnings = [`${batchErrors.length} de ${batches.length} lotes falharam: ${batchErrors[0]}`];
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('[Financeiro:Categorize] Batch error:', error);
     res.status(500).json({ error: 'Erro ao categorizar despesas' });
@@ -103,10 +114,12 @@ router.post('/uncategorized', authMiddleware, async (req, res) => {
     const allResults = [];
     const batchErrors = [];
 
-    for (const batch of batches) {
+    for (let i = 0; i < batches.length; i++) {
+      if (i > 0) await new Promise(r => setTimeout(r, 1000));
+      const batch = batches[i];
       try {
         const prompt = CategorizationService.buildPrompt(batch);
-        const responseText = await callLLM(selectedProvider, prompt, apiKey);
+        const responseText = await callLLMWithRetry(selectedProvider, prompt, apiKey);
         console.log('[Financeiro:Categorize] Raw LLM response:', responseText.substring(0, 200));
         const results = CategorizationService.parseResponse(responseText, batch.length);
 
@@ -180,7 +193,7 @@ router.post('/single', authMiddleware, async (req, res) => {
     const selectedProvider = provider || settings?.preferred_provider || 'gemini';
 
     const prompt = CategorizationService.buildPrompt([expense]);
-    const responseText = await callLLM(selectedProvider, prompt, apiKey);
+    const responseText = await callLLMWithRetry(selectedProvider, prompt, apiKey);
     const results = CategorizationService.parseResponse(responseText, 1);
 
     if (results.length > 0) {
@@ -219,7 +232,10 @@ async function callLLM(provider, prompt, apiKey) {
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(`Gemini ${response.status}: ${err}`);
+      const error = new Error(`Gemini ${response.status}: ${err}`);
+      error.status = response.status;
+      error.retryAfter = parseInt(response.headers.get('retry-after') || '0', 10);
+      throw error;
     }
 
     const data = await response.json();
@@ -246,7 +262,10 @@ async function callLLM(provider, prompt, apiKey) {
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(`Grok ${response.status}: ${err}`);
+      const error = new Error(`Grok ${response.status}: ${err}`);
+      error.status = response.status;
+      error.retryAfter = parseInt(response.headers.get('retry-after') || '0', 10);
+      throw error;
     }
 
     const data = await response.json();
@@ -254,6 +273,22 @@ async function callLLM(provider, prompt, apiKey) {
   }
 
   throw new Error(`Provider desconhecido: ${provider}`);
+}
+
+async function callLLMWithRetry(provider, prompt, apiKey, maxRetries = 2) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await callLLM(provider, prompt, apiKey);
+    } catch (err) {
+      if (err.status === 429 && attempt < maxRetries) {
+        const delay = err.retryAfter > 0 ? err.retryAfter * 1000 : 2000 * (2 ** attempt);
+        console.log(`[Financeiro:Categorize] 429 rate limit, retry ${attempt + 1}/${maxRetries} após ${delay}ms...`);
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+      throw err;
+    }
+  }
 }
 
 export default router;
