@@ -43,7 +43,7 @@ export default function DashboardPage() {
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-5 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
         <div className="glass-card animate-slide-up" style={{ animationDelay: '0s' }}>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-indigo-500/15 to-violet-500/15 flex items-center justify-center">
@@ -106,12 +106,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-2 gap-5 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
         <MonthlyBarChart data={trends} selectedMonth={selectedMonth} />
         <CategoryPieChart data={categoryData} />
       </div>
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <TrendLineChart data={trends} />
         <HolderBreakdown data={holderData} />
       </div>

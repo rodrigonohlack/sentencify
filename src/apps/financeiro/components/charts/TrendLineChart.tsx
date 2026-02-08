@@ -15,6 +15,7 @@ export default function TrendLineChart({ data }: TrendLineChartProps) {
   return (
     <div className="glass-card">
       <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Tendencia</h3>
+      <div className="min-h-[200px]">
       <ResponsiveContainer width="100%" height={200}>
         <AreaChart data={chartData}>
           <defs>
@@ -52,6 +53,7 @@ export default function TrendLineChart({ data }: TrendLineChartProps) {
           />
         </AreaChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }

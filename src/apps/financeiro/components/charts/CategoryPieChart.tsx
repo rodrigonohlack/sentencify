@@ -13,7 +13,7 @@ export default function CategoryPieChart({ data }: CategoryPieChartProps) {
   return (
     <div className="glass-card">
       <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Por Categoria</h3>
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-6 min-w-0">
         <div className="w-[170px] h-[170px] flex-shrink-0">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
