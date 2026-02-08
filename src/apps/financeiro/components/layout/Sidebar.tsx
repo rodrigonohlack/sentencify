@@ -1,8 +1,9 @@
-import { LayoutDashboard, List, FilePlus2, Repeat, Settings, LogOut, LayoutGrid } from 'lucide-react';
+import { LayoutDashboard, List, FilePlus2, Repeat, Settings, LogOut, LayoutGrid, Sun, Moon } from 'lucide-react';
 import { useRecurringStore } from '../../stores/useRecurringStore';
 import { useUIStore } from '../../stores/useUIStore';
 import { useLoginGate } from '../auth/LoginGate';
 import { AppSwitcher } from '../../../../components/shared/AppSwitcher';
+import { useThemeManagement } from '../../../../hooks/useThemeManagement';
 import type { FinPage } from '../../types';
 
 const navItems: Array<{ page: FinPage; icon: typeof LayoutDashboard; label: string }> = [
@@ -18,6 +19,7 @@ export default function Sidebar() {
   const reminders = useRecurringStore((s) => s.reminders);
   const currentPage = useUIStore((s) => s.currentPage);
   const setCurrentPage = useUIStore((s) => s.setCurrentPage);
+  const { appTheme, toggleAppTheme } = useThemeManagement();
 
   const initials = userEmail
     ? userEmail.split('@')[0].slice(0, 2).toUpperCase()
@@ -31,12 +33,21 @@ export default function Sidebar() {
           <h1 className="text-xl font-extrabold gradient-text">Financeiro</h1>
           <span className="text-xs text-[#7c7caa] dark:text-gray-400 font-normal block mt-0.5">Gestão de Despesas</span>
         </div>
-        <AppSwitcher
-          currentApp="financeiro"
-          className="flex items-center gap-1 px-2 py-1.5 text-sm text-[#7c7caa] dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors rounded-lg hover:bg-white/40 dark:hover:bg-white/10"
-        >
-          <LayoutGrid className="w-4 h-4" />
-        </AppSwitcher>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={toggleAppTheme}
+            className="p-2 rounded-lg text-[#7c7caa] dark:text-gray-400 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-white/40 dark:hover:bg-white/10 transition-colors"
+            title={appTheme === 'dark' ? 'Tema claro' : 'Tema escuro'}
+          >
+            {appTheme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+          <AppSwitcher
+            currentApp="financeiro"
+            className="flex items-center gap-1 px-2 py-1.5 text-sm text-[#7c7caa] dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors rounded-lg hover:bg-white/40 dark:hover:bg-white/10"
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </AppSwitcher>
+        </div>
       </div>
 
       {/* Navigation */}
