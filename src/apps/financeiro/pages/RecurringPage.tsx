@@ -6,12 +6,14 @@ import { Button, Spinner, EmptyState } from '../components/ui';
 import RecurringForm from '../components/recurring/RecurringForm';
 import RecurringCard from '../components/recurring/RecurringCard';
 import Header from '../components/layout/Header';
+import type { RecurringExpense } from '../types';
 
 export default function RecurringPage() {
   const { recurring, isLoading } = useRecurringStore();
-  const { fetchRecurring, createRecurring, deleteRecurring, toggleRecurring, generateMonth } = useRecurring();
+  const { fetchRecurring, createRecurring, updateRecurring, deleteRecurring, toggleRecurring, generateMonth } = useRecurring();
   const [showForm, setShowForm] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [editingItem, setEditingItem] = useState<RecurringExpense | null>(null);
 
   useEffect(() => {
     fetchRecurring();
@@ -32,6 +34,21 @@ export default function RecurringPage() {
 
   const handleDelete = async (id: string) => {
     await deleteRecurring(id);
+    fetchRecurring();
+  };
+
+  const handleEdit = (id: string) => {
+    const item = recurring.find((r) => r.id === id);
+    if (item) {
+      setEditingItem(item);
+      setShowForm(false);
+    }
+  };
+
+  const handleUpdate = async (data: { description: string; value_brl: number; category_id: string; due_day: number }) => {
+    if (!editingItem) return;
+    await updateRecurring(editingItem.id, data);
+    setEditingItem(null);
     fetchRecurring();
   };
 
@@ -60,7 +77,7 @@ export default function RecurringPage() {
             <Button variant="secondary" size="sm" onClick={handleGenerate} isLoading={isGenerating}>
               <CalendarPlus className="w-4 h-4" /> Gerar mês atual
             </Button>
-            <Button size="sm" onClick={() => setShowForm(!showForm)}>
+            <Button size="sm" onClick={() => { setShowForm(!showForm); setEditingItem(null); }}>
               {showForm ? 'Cancelar' : 'Nova recorrência'}
             </Button>
           </div>
@@ -68,10 +85,28 @@ export default function RecurringPage() {
       />
 
       {/* Creation form */}
-      {showForm && (
+      {showForm && !editingItem && (
         <div className="glass-card mb-6">
           <h3 className="text-base font-bold text-[#1e1b4b] dark:text-gray-100 mb-4">Nova despesa recorrente</h3>
           <RecurringForm onSubmit={handleCreate} />
+        </div>
+      )}
+
+      {/* Edit form */}
+      {editingItem && (
+        <div className="glass-card mb-6">
+          <h3 className="text-base font-bold text-[#1e1b4b] dark:text-gray-100 mb-4">Editar recorrência</h3>
+          <RecurringForm
+            key={editingItem.id}
+            onSubmit={handleUpdate}
+            onCancel={() => setEditingItem(null)}
+            initialData={{
+              description: editingItem.description,
+              value_brl: editingItem.value_brl,
+              category_id: editingItem.category_id ?? '',
+              due_day: editingItem.due_day,
+            }}
+          />
         </div>
       )}
 
@@ -95,7 +130,7 @@ export default function RecurringPage() {
               item={item}
               onToggle={handleToggle}
               onDelete={handleDelete}
-              onEdit={() => {}}
+              onEdit={handleEdit}
             />
           ))}
         </div>
