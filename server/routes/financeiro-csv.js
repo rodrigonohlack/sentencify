@@ -6,19 +6,23 @@ import authMiddleware from '../middleware/auth.js';
 import CSVParserService from '../services/FinCSVParserService.js';
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = multer({ limits: { fileSize: 5 * 1024 * 1024 } });
 
 // Store previews in memory (keyed by user_id)
 const previews = new Map();
 
 // POST /upload - Upload, parse, return preview
-router.post('/upload', authMiddleware, upload.single('file'), (req, res) => {
+router.post('/upload', authMiddleware, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Nenhum arquivo enviado' });
     }
 
-    const content = req.file.buffer.toString('utf-8');
+    const chunks = [];
+    for await (const chunk of req.file.stream) {
+      chunks.push(chunk);
+    }
+    const content = Buffer.concat(chunks).toString('utf-8');
     const fileHash = CSVParserService.computeHash(content);
     const db = getDb();
 
