@@ -62,6 +62,7 @@ const runMigrations = () => {
     { name: '011_noticias', fn: migration011Noticias },
     { name: '012_financeiro', fn: migration012Financeiro },
     { name: '013_financeiro_accents', fn: migration013FinanceiroAccents },
+    { name: '014_financeiro_new_categories', fn: migration014FinanceiroNewCategories },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -552,6 +553,15 @@ function migration013FinanceiroAccents(db) {
     stmt.run(name, id);
   }
   console.log('[Database] Migration 013: Fixed category name accents');
+}
+
+// Migration 014: Add Investimento and Empréstimo categories
+function migration014FinanceiroNewCategories(db) {
+  const insert = db.prepare('INSERT OR IGNORE INTO categories (id, name, icon, color, sort_order) VALUES (?, ?, ?, ?, ?)');
+  insert.run('investimento', 'Investimento', 'TrendingUp', '#22c55e', 14);
+  insert.run('emprestimo', 'Empréstimo', 'Landmark', '#0ea5e9', 15);
+  db.prepare('UPDATE categories SET sort_order = 16 WHERE id = ?').run('outros');
+  console.log('[Database] Migration 014: Added Investimento and Empréstimo categories');
 }
 
 // Exportar
