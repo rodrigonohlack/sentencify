@@ -16,9 +16,14 @@ export default function ExpenseTable({ onEdit, onDelete }: ExpenseTableProps) {
       <div className="flex items-center justify-between px-6 py-4 border-b border-indigo-500/10 dark:border-indigo-400/15">
         <h3 className="text-base font-bold text-[#1e1b4b] dark:text-gray-100 tracking-tight">Despesas</h3>
         {pagination && (
-          <span className="bg-gradient-to-r from-indigo-500/10 to-violet-500/10 text-indigo-500 text-xs font-bold px-3.5 py-1.5 rounded-[10px]">
-            {pagination.total} transações
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="bg-gradient-to-r from-indigo-500/10 to-violet-500/10 text-indigo-500 text-xs font-bold px-3.5 py-1.5 rounded-[10px]">
+              {pagination.total} transações
+            </span>
+            <span className="text-xs font-bold text-[#1e1b4b] dark:text-gray-100 px-3.5 py-1.5">
+              {formatBRL(pagination.total_amount)}
+            </span>
+          </div>
         )}
       </div>
 

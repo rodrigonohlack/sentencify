@@ -48,7 +48,7 @@ router.get('/', authMiddleware, (req, res) => {
       params.push(date_to);
     }
 
-    const countRow = db.prepare(`SELECT COUNT(*) as total FROM expenses e ${where}`).get(...params);
+    const countRow = db.prepare(`SELECT COUNT(*) as total, COALESCE(SUM(value_brl), 0) as total_amount FROM expenses e ${where}`).get(...params);
 
     const expenses = db.prepare(`
       SELECT e.*, c.name as category_name, c.icon as category_icon, c.color as category_color
@@ -69,6 +69,7 @@ router.get('/', authMiddleware, (req, res) => {
         page: Number(page),
         limit: Number(limit),
         total: countRow.total,
+        total_amount: countRow.total_amount,
         pages: Math.ceil(countRow.total / Number(limit)),
       },
       uncategorized_total: uncategorizedCount.total,
