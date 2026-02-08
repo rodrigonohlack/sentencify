@@ -71,7 +71,7 @@ export default function RecurringPage() {
     <div>
       <Header
         title="Recorrentes"
-        subtitle="Despesas fixas mensais"
+        subtitle={`Despesas fixas mensais (${recurring.length})`}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="secondary" size="sm" onClick={handleGenerate} isLoading={isGenerating}>
