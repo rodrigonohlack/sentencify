@@ -4,13 +4,13 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Scale, FileSearch, Mic, Newspaper, ChevronDown } from 'lucide-react';
+import { Scale, FileSearch, Mic, Newspaper, Calculator, ChevronDown } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════
 
-type AppId = 'sentencify' | 'analisador' | 'prova-oral' | 'noticias';
+type AppId = 'sentencify' | 'analisador' | 'prova-oral' | 'noticias' | 'seguro-desemprego';
 
 interface AppDefinition {
   id: AppId;
@@ -85,6 +85,18 @@ const APPS: AppDefinition[] = [
       text: 'text-cyan-600 dark:text-cyan-400',
       border: 'border-cyan-500/20 dark:border-cyan-400/20',
       hoverBg: 'hover:bg-cyan-500/20 dark:hover:bg-cyan-500/25',
+    },
+  },
+  {
+    id: 'seguro-desemprego',
+    label: 'Seguro-Desemprego',
+    href: '/seguro-desemprego.html',
+    icon: <Calculator className="w-4 h-4" />,
+    colors: {
+      bg: 'bg-emerald-500/10 dark:bg-emerald-500/15',
+      text: 'text-emerald-600 dark:text-emerald-400',
+      border: 'border-emerald-500/20 dark:border-emerald-400/20',
+      hoverBg: 'hover:bg-emerald-500/20 dark:hover:bg-emerald-500/25',
     },
   },
 ];
