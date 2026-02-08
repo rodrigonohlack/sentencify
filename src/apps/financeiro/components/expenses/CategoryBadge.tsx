@@ -4,7 +4,7 @@ interface CategoryBadgeProps {
   categoryColor?: string;
 }
 
-export default function CategoryBadge({ categoryId, categoryName }: CategoryBadgeProps) {
+export default function CategoryBadge({ categoryId, categoryName, categoryColor }: CategoryBadgeProps) {
   if (!categoryId || !categoryName) {
     return (
       <span className="inline-flex px-3 py-1 rounded-[10px] text-[11px] font-semibold bg-gray-100/50 dark:bg-gray-700/50 text-gray-400 backdrop-blur-sm">
@@ -13,9 +13,12 @@ export default function CategoryBadge({ categoryId, categoryName }: CategoryBadg
     );
   }
 
+  const color = categoryColor || '#94a3b8';
+
   return (
     <span
-      className={`inline-flex px-3 py-1 rounded-[10px] text-[11px] font-semibold backdrop-blur-sm cat-${categoryId}`}
+      className="inline-flex px-3 py-1 rounded-[10px] text-[11px] font-semibold backdrop-blur-sm"
+      style={{ backgroundColor: color + '18', color }}
     >
       {categoryName}
     </span>
