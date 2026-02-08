@@ -13,6 +13,8 @@ interface ExpenseState {
     card?: string;
     source?: string;
     search?: string;
+    dateFrom?: string;
+    dateTo?: string;
   };
   setExpenses: (expenses: Expense[], pagination: Pagination, uncategorizedTotal?: number) => void;
   setFilters: (filters: Partial<ExpenseState['filters']>) => void;

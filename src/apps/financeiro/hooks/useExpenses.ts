@@ -20,6 +20,8 @@ export function useExpenses() {
       if (filters.card) params.set('card', filters.card);
       if (filters.source) params.set('source', filters.source);
       if (filters.search) params.set('search', filters.search);
+      if (filters.dateFrom) params.set('date_from', filters.dateFrom);
+      if (filters.dateTo) params.set('date_to', filters.dateTo);
 
       const data = await apiFetch<{ expenses: Expense[]; pagination: Pagination; uncategorized_total: number }>(
         `${ENDPOINTS.EXPENSES}?${params}`

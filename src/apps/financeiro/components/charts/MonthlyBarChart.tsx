@@ -5,9 +5,10 @@ import { formatBRLCompact, formatMonthShort } from '../../utils/formatters';
 interface MonthlyBarChartProps {
   data: TrendPoint[];
   selectedMonth: string;
+  onMonthClick?: (month: string) => void;
 }
 
-export default function MonthlyBarChart({ data, selectedMonth }: MonthlyBarChartProps) {
+export default function MonthlyBarChart({ data, selectedMonth, onMonthClick }: MonthlyBarChartProps) {
   if (data.length === 0) {
     return (
       <div className="glass-card">
@@ -49,11 +50,18 @@ export default function MonthlyBarChart({ data, selectedMonth }: MonthlyBarChart
               fontWeight: 600,
             }}
           />
-          <Bar dataKey="total" radius={[12, 12, 6, 6]} animationDuration={700}>
+          <Bar
+            dataKey="total"
+            radius={[12, 12, 6, 6]}
+            animationDuration={700}
+            onClick={(_data, index) => onMonthClick?.(chartData[index].month)}
+            style={onMonthClick ? { cursor: 'pointer' } : undefined}
+          >
             {chartData.map((entry, index) => (
               <Cell
                 key={index}
                 fill={entry.isSelected ? 'url(#barGradientActive)' : 'url(#barGradient)'}
+                style={onMonthClick ? { cursor: 'pointer' } : undefined}
               />
             ))}
           </Bar>

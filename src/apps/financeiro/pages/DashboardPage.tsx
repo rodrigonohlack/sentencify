@@ -1,15 +1,23 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { TrendingDown, TrendingUp, DollarSign, Receipt, ArrowUpRight } from 'lucide-react';
 import { useDashboardStore } from '../stores/useDashboardStore';
 import { useDashboard } from '../hooks/useDashboard';
 import { useRecurring } from '../hooks/useRecurring';
-import { formatBRL, formatPercent, offsetMonth } from '../utils/formatters';
+import { formatBRL, formatPercent, formatMonthLabel, offsetMonth } from '../utils/formatters';
 import { Spinner } from '../components/ui';
 import Header from '../components/layout/Header';
 import MonthlyBarChart from '../components/charts/MonthlyBarChart';
 import CategoryPieChart from '../components/charts/CategoryPieChart';
 import TrendLineChart from '../components/charts/TrendLineChart';
 import HolderBreakdown from '../components/charts/HolderBreakdown';
+import DrillDownModal from '../components/charts/DrillDownModal';
+
+interface DrillDownState {
+  isOpen: boolean;
+  title: string;
+  subtitle?: string;
+  filterParams: Record<string, string>;
+}
 
 export default function DashboardPage() {
   const { selectedMonth, summary, categoryData, holderData, trends, isLoading } = useDashboardStore();
@@ -23,6 +31,37 @@ export default function DashboardPage() {
 
   const handlePrev = () => changeMonth(offsetMonth(selectedMonth, -1));
   const handleNext = () => changeMonth(offsetMonth(selectedMonth, 1));
+
+  const [drillDown, setDrillDown] = useState<DrillDownState | null>(null);
+
+  const closeDrillDown = useCallback(() => setDrillDown(null), []);
+
+  const handleCategoryClick = useCallback((categoryId: string, categoryName: string) => {
+    setDrillDown({
+      isOpen: true,
+      title: `Despesas — ${categoryName}`,
+      filterParams: { category: categoryId, month: selectedMonth },
+    });
+  }, [selectedMonth]);
+
+  const handleMonthClick = useCallback((month: string) => {
+    setDrillDown({
+      isOpen: true,
+      title: `Despesas — ${formatMonthLabel(month)}`,
+      filterParams: { month },
+    });
+  }, []);
+
+  const handleHolderClick = useCallback((holder: string) => {
+    const displayName = holder?.split(' ').slice(0, 2).join(' ') || 'Desconhecido';
+    setDrillDown({
+      isOpen: true,
+      title: `Despesas — ${displayName}`,
+      filterParams: { holder, month: selectedMonth },
+    });
+  }, [selectedMonth]);
+
+  const drillDownFilterParams = useMemo(() => drillDown?.filterParams ?? {}, [drillDown?.filterParams]);
 
   if (isLoading && !summary) {
     return (
@@ -107,14 +146,22 @@ export default function DashboardPage() {
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-        <MonthlyBarChart data={trends} selectedMonth={selectedMonth} />
-        <CategoryPieChart data={categoryData} />
+        <MonthlyBarChart data={trends} selectedMonth={selectedMonth} onMonthClick={handleMonthClick} />
+        <CategoryPieChart data={categoryData} onCategoryClick={handleCategoryClick} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <TrendLineChart data={trends} />
-        <HolderBreakdown data={holderData} />
+        <HolderBreakdown data={holderData} onHolderClick={handleHolderClick} />
       </div>
+
+      <DrillDownModal
+        isOpen={drillDown?.isOpen ?? false}
+        onClose={closeDrillDown}
+        title={drillDown?.title ?? ''}
+        subtitle={drillDown?.subtitle}
+        filterParams={drillDownFilterParams}
+      />
     </div>
   );
 }

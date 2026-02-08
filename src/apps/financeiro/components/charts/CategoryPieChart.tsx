@@ -4,9 +4,10 @@ import { formatBRL, formatBRLCompact } from '../../utils/formatters';
 
 interface CategoryPieChartProps {
   data: CategoryBreakdown[];
+  onCategoryClick?: (categoryId: string, categoryName: string) => void;
 }
 
-export default function CategoryPieChart({ data }: CategoryPieChartProps) {
+export default function CategoryPieChart({ data, onCategoryClick }: CategoryPieChartProps) {
   const total = data.reduce((sum, d) => sum + d.total, 0);
   const chartData = data.filter((d) => d.total > 0).slice(0, 8);
 
@@ -31,19 +32,21 @@ export default function CategoryPieChart({ data }: CategoryPieChartProps) {
               <Pie
                 data={chartData}
                 dataKey="total"
+                nameKey="category_name"
                 cx="50%"
                 cy="50%"
                 innerRadius={42}
                 outerRadius={80}
                 paddingAngle={2}
                 animationDuration={600}
+                onClick={(_, index) => onCategoryClick?.(chartData[index].category_id, chartData[index].category_name)}
               >
                 {chartData.map((entry, index) => (
-                  <Cell key={index} fill={entry.category_color || '#94a3b8'} />
+                  <Cell key={index} fill={entry.category_color || '#94a3b8'} style={onCategoryClick ? { cursor: 'pointer' } : undefined} />
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value) => [formatBRL(Number(value ?? 0)), '']}
+                formatter={(value, name) => [formatBRL(Number(value ?? 0)), name]}
                 contentStyle={{
                   background: 'rgba(255,255,255,0.9)',
                   backdropFilter: 'blur(16px)',

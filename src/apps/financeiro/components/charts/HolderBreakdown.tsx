@@ -4,11 +4,12 @@ import { CreditCard } from 'lucide-react';
 
 interface HolderBreakdownProps {
   data: HolderData[];
+  onHolderClick?: (holder: string) => void;
 }
 
 const HOLDER_COLORS = ['#6366f1', '#a855f7', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'];
 
-export default function HolderBreakdown({ data }: HolderBreakdownProps) {
+export default function HolderBreakdown({ data, onHolderClick }: HolderBreakdownProps) {
   const total = data.reduce((sum, d) => sum + d.total, 0);
 
   return (
@@ -24,7 +25,11 @@ export default function HolderBreakdown({ data }: HolderBreakdownProps) {
             const color = HOLDER_COLORS[i % HOLDER_COLORS.length];
 
             return (
-              <div key={`${holder.card_holder}-${holder.card_last_four}`}>
+              <div
+                key={`${holder.card_holder}-${holder.card_last_four}`}
+                onClick={() => onHolderClick?.(holder.card_holder)}
+                className={onHolderClick ? 'cursor-pointer hover:bg-white/30 dark:hover:bg-white/5 rounded-lg p-1 -m-1 transition-colors' : ''}
+              >
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <CreditCard className="w-4 h-4" style={{ color }} />

@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/', authMiddleware, (req, res) => {
   try {
     const db = getDb();
-    const { month, category, holder, card, source, search, page = 1, limit = 50 } = req.query;
+    const { month, category, holder, card, source, search, date_from, date_to, page = 1, limit = 50 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     let where = 'WHERE e.user_id = ? AND e.deleted_at IS NULL';
@@ -38,6 +38,14 @@ router.get('/', authMiddleware, (req, res) => {
     if (search) {
       where += ' AND e.description LIKE ?';
       params.push(`%${search}%`);
+    }
+    if (date_from) {
+      where += ' AND e.purchase_date >= ?';
+      params.push(date_from);
+    }
+    if (date_to) {
+      where += ' AND e.purchase_date <= ?';
+      params.push(date_to);
     }
 
     const countRow = db.prepare(`SELECT COUNT(*) as total FROM expenses e ${where}`).get(...params);
