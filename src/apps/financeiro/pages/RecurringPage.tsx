@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Repeat, CalendarPlus } from 'lucide-react';
 import { useRecurringStore } from '../stores/useRecurringStore';
 import { useRecurring } from '../hooks/useRecurring';
+import { formatBRL } from '../utils/formatters';
 import { Button, Spinner, EmptyState } from '../components/ui';
 import RecurringForm from '../components/recurring/RecurringForm';
 import RecurringCard from '../components/recurring/RecurringCard';
@@ -71,7 +72,7 @@ export default function RecurringPage() {
     <div>
       <Header
         title="Recorrentes"
-        subtitle={`Despesas fixas mensais (${recurring.length})`}
+        subtitle={`Despesas fixas mensais (${formatBRL(recurring.reduce((sum, r) => sum + r.value_brl, 0))})`}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="secondary" size="sm" onClick={handleGenerate} isLoading={isGenerating}>
