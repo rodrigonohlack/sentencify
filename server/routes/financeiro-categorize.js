@@ -101,11 +101,13 @@ router.post('/uncategorized', authMiddleware, async (req, res) => {
 
     const batches = CategorizationService.buildBatches(expenses);
     const allResults = [];
+    const batchErrors = [];
 
     for (const batch of batches) {
       try {
         const prompt = CategorizationService.buildPrompt(batch);
         const responseText = await callLLM(selectedProvider, prompt, apiKey);
+        console.log('[Financeiro:Categorize] Raw LLM response:', responseText.substring(0, 200));
         const results = CategorizationService.parseResponse(responseText, batch.length);
 
         for (const result of results) {
@@ -117,9 +119,16 @@ router.post('/uncategorized', authMiddleware, async (req, res) => {
           });
         }
       } catch (batchError) {
-        console.error('[Financeiro:Categorize] Batch error (skipping):', batchError.message);
-        continue;
+        console.error('[Financeiro:Categorize] Batch error:', batchError.message);
+        batchErrors.push(batchError.message);
       }
+    }
+
+    // If ALL batches failed, return error
+    if (batchErrors.length === batches.length) {
+      return res.status(502).json({
+        error: `Erro ao categorizar: ${batchErrors[0]}`,
+      });
     }
 
     const stmt = db.prepare(`
@@ -135,12 +144,19 @@ router.post('/uncategorized', authMiddleware, async (req, res) => {
 
     updateAll(allResults);
 
-    res.json({
+    const response = {
       success: true,
       categorized: allResults.length,
       total: expenses.length,
       results: allResults,
-    });
+    };
+
+    // Include warnings if some (but not all) batches failed
+    if (batchErrors.length > 0) {
+      response.warnings = [`${batchErrors.length} de ${batches.length} lotes falharam: ${batchErrors[0]}`];
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('[Financeiro:Categorize] Uncategorized error:', error);
     res.status(500).json({ error: 'Erro ao categorizar despesas' });

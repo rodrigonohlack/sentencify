@@ -26,13 +26,20 @@ export function useCategorization() {
         categorized: number;
         total: number;
         results: Array<{ id: string; category_id: string }>;
+        warnings?: string[];
       }>(ENDPOINTS.CATEGORIZE_BATCH, {
         method: 'POST',
         body: JSON.stringify({ expense_ids: expenseIds, provider: selectedProvider }),
         headers,
       });
 
-      addToast(`${data.categorized} despesas categorizadas com IA!`, 'success');
+      if (data.categorized === 0 && data.total > 0) {
+        addToast('Nenhuma despesa foi categorizada. Verifique a API key nas configurações.', 'error');
+      } else if (data.warnings?.length) {
+        addToast(`${data.categorized} categorizadas, mas ${data.warnings[0]}`, 'error');
+      } else {
+        addToast(`${data.categorized} despesas categorizadas com IA!`, 'success');
+      }
       return data;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao categorizar';
@@ -58,13 +65,20 @@ export function useCategorization() {
         categorized: number;
         total: number;
         results: Array<{ id: string; category_id: string }>;
+        warnings?: string[];
       }>(ENDPOINTS.CATEGORIZE_ALL, {
         method: 'POST',
         body: JSON.stringify({ provider: selectedProvider }),
         headers,
       });
 
-      addToast(`${data.categorized} despesas categorizadas com IA!`, 'success');
+      if (data.categorized === 0 && data.total > 0) {
+        addToast('Nenhuma despesa foi categorizada. Verifique a API key nas configurações.', 'error');
+      } else if (data.warnings?.length) {
+        addToast(`${data.categorized} categorizadas, mas ${data.warnings[0]}`, 'error');
+      } else {
+        addToast(`${data.categorized} despesas categorizadas com IA!`, 'success');
+      }
       return data;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao categorizar';

@@ -33,7 +33,12 @@ ${expenseList}`;
 
   parseResponse(responseText, expenseCount) {
     const results = [];
-    const lines = responseText.trim().split('\n');
+    // Strip markdown code blocks (```...```) that LLMs often wrap responses in
+    const cleaned = responseText.replace(/```[\s\S]*?```/g, (match) => {
+      // Extract content inside the code block (remove opening/closing ```)
+      return match.replace(/^```[^\n]*\n?/, '').replace(/\n?```$/, '');
+    });
+    const lines = cleaned.trim().split('\n');
 
     for (const line of lines) {
       const trimmed = line.trim();
