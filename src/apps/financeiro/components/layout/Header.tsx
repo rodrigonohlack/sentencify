@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, ChevronDown, Bell } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, ChevronDown, Bell, icons } from 'lucide-react';
 import { useRecurringStore } from '../../stores/useRecurringStore';
 import { formatMonthLabel, formatBRL } from '../../utils/formatters';
 
@@ -59,7 +59,10 @@ export default function Header({ title, subtitle, month, onPrevMonth, onNextMont
                     <div key={r.id} className="px-4 py-3 border-b border-white/20 dark:border-white/[0.06] last:border-b-0 hover:bg-white/30 dark:hover:bg-white/[0.04] transition-colors">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
-                          {r.category_icon && <span className="text-base flex-shrink-0">{r.category_icon}</span>}
+                          {(() => {
+                            const Icon = r.category_icon ? icons[r.category_icon as keyof typeof icons] : null;
+                            return Icon ? <Icon className="w-4 h-4 flex-shrink-0" style={{ color: r.category_color || '#7c7caa' }} /> : null;
+                          })()}
                           <span className="text-sm font-medium text-[#1e1b4b] dark:text-gray-100 truncate">{r.description}</span>
                         </div>
                         <span className="text-sm font-semibold text-[#1e1b4b] dark:text-gray-100 flex-shrink-0">{formatBRL(r.value_brl)}</span>
