@@ -13,8 +13,8 @@ export default function EmptyState({ icon: Icon, title, description, action }: E
       <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 flex items-center justify-center mb-5">
         <Icon className="w-8 h-8 text-indigo-500" />
       </div>
-      <h3 className="text-lg font-bold text-[#1e1b4b] mb-2">{title}</h3>
-      <p className="text-sm text-[#7c7caa] max-w-sm mb-6">{description}</p>
+      <h3 className="text-lg font-bold text-[#1e1b4b] dark:text-gray-100 mb-2">{title}</h3>
+      <p className="text-sm text-[#7c7caa] dark:text-gray-400 max-w-sm mb-6">{description}</p>
       {action}
     </div>
   );

@@ -13,8 +13,8 @@ export default function ExpenseTable({ onEdit, onDelete }: ExpenseTableProps) {
 
   return (
     <div className="glass-card overflow-hidden p-0">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-indigo-500/10">
-        <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight">Despesas</h3>
+      <div className="flex items-center justify-between px-6 py-4 border-b border-indigo-500/10 dark:border-indigo-400/15">
+        <h3 className="text-base font-bold text-[#1e1b4b] dark:text-gray-100 tracking-tight">Despesas</h3>
         {pagination && (
           <span className="bg-gradient-to-r from-indigo-500/10 to-violet-500/10 text-indigo-500 text-xs font-bold px-3.5 py-1.5 rounded-[10px]">
             {pagination.total} transações
@@ -26,49 +26,49 @@ export default function ExpenseTable({ onEdit, onDelete }: ExpenseTableProps) {
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Data</th>
-              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Descrição</th>
-              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Categoria</th>
-              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Cartão</th>
-              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Parcela</th>
-              <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8">Valor</th>
-              <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-[#7c7caa] uppercase tracking-wider border-b border-indigo-500/8"></th>
+              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] dark:text-gray-400 uppercase tracking-wider border-b border-indigo-500/8 dark:border-indigo-400/10">Data</th>
+              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] dark:text-gray-400 uppercase tracking-wider border-b border-indigo-500/8 dark:border-indigo-400/10">Descrição</th>
+              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] dark:text-gray-400 uppercase tracking-wider border-b border-indigo-500/8 dark:border-indigo-400/10">Categoria</th>
+              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] dark:text-gray-400 uppercase tracking-wider border-b border-indigo-500/8 dark:border-indigo-400/10">Cartão</th>
+              <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-[#7c7caa] dark:text-gray-400 uppercase tracking-wider border-b border-indigo-500/8 dark:border-indigo-400/10">Parcela</th>
+              <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-[#7c7caa] dark:text-gray-400 uppercase tracking-wider border-b border-indigo-500/8 dark:border-indigo-400/10">Valor</th>
+              <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-[#7c7caa] dark:text-gray-400 uppercase tracking-wider border-b border-indigo-500/8 dark:border-indigo-400/10"></th>
             </tr>
           </thead>
           <tbody>
             {expenses.map((expense) => (
               <tr key={expense.id} className="hover:bg-indigo-500/3 transition-colors">
-                <td className="px-6 py-3 text-[13px] border-b border-indigo-500/5">
+                <td className="px-6 py-3 text-[13px] dark:text-gray-200 border-b border-indigo-500/5 dark:border-white/5">
                   {formatDate(expense.purchase_date)}
                 </td>
-                <td className="px-6 py-3 text-[13px] font-semibold border-b border-indigo-500/5">
+                <td className="px-6 py-3 text-[13px] font-semibold dark:text-gray-200 border-b border-indigo-500/5 dark:border-white/5">
                   {expense.description}
                 </td>
-                <td className="px-6 py-3 border-b border-indigo-500/5">
+                <td className="px-6 py-3 border-b border-indigo-500/5 dark:border-white/5">
                   <CategoryBadge
                     categoryId={expense.category_id}
                     categoryName={expense.category_name}
                     categoryColor={expense.category_color}
                   />
                 </td>
-                <td className="px-6 py-3 text-xs text-[#7c7caa] font-medium border-b border-indigo-500/5">
+                <td className="px-6 py-3 text-xs text-[#7c7caa] dark:text-gray-400 font-medium border-b border-indigo-500/5 dark:border-white/5">
                   {expense.card_last_four ? `**** ${expense.card_last_four}` : '-'}
                 </td>
-                <td className="px-6 py-3 text-[11px] text-[#7c7caa] border-b border-indigo-500/5">
+                <td className="px-6 py-3 text-[11px] text-[#7c7caa] dark:text-gray-400 border-b border-indigo-500/5 dark:border-white/5">
                   {expense.installment || 'Única'}
                 </td>
-                <td className={`px-6 py-3 text-right font-bold tabular-nums border-b border-indigo-500/5 ${expense.is_refund ? 'text-emerald-600' : 'text-[#1e1b4b]'}`}>
+                <td className={`px-6 py-3 text-right font-bold tabular-nums border-b border-indigo-500/5 dark:border-white/5 ${expense.is_refund ? 'text-emerald-600' : 'text-[#1e1b4b] dark:text-gray-200'}`}>
                   {expense.is_refund ? '- ' : ''}{formatBRL(Math.abs(expense.value_brl))}
                 </td>
-                <td className="px-6 py-3 text-right border-b border-indigo-500/5">
+                <td className="px-6 py-3 text-right border-b border-indigo-500/5 dark:border-white/5">
                   <div className="flex items-center justify-end gap-1">
                     {onEdit && (
-                      <button onClick={() => onEdit(expense.id)} className="p-1.5 rounded-lg hover:bg-white/50 transition-colors">
-                        <Pencil className="w-3.5 h-3.5 text-[#7c7caa]" />
+                      <button onClick={() => onEdit(expense.id)} className="p-1.5 rounded-lg hover:bg-white/50 dark:hover:bg-white/10 transition-colors">
+                        <Pencil className="w-3.5 h-3.5 text-[#7c7caa] dark:text-gray-400" />
                       </button>
                     )}
                     {onDelete && (
-                      <button onClick={() => onDelete(expense.id)} className="p-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                      <button onClick={() => onDelete(expense.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
                         <Trash2 className="w-3.5 h-3.5 text-red-400" />
                       </button>
                     )}

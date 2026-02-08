@@ -35,8 +35,20 @@ const FinanceiroStyles: React.FC = () => (
       font-family: 'Outfit', system-ui, sans-serif;
     }
 
+    .dark .fin-app {
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+    }
+
     .fin-app .gradient-text {
       background: linear-gradient(135deg, #4f46e5, #7c3aed, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .dark .fin-app .gradient-text {
+      background: linear-gradient(135deg, #818cf8, #a78bfa, #c084fc);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -57,10 +69,24 @@ const FinanceiroStyles: React.FC = () => (
       box-shadow: 0 8px 32px rgba(99,102,241,0.08);
     }
 
+    .dark .fin-app .glass-card {
+      background: rgba(30,41,59,0.5);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .dark .fin-app .glass-card:hover {
+      background: rgba(30,41,59,0.65);
+      box-shadow: 0 8px 32px rgba(99,102,241,0.12);
+    }
+
     .fin-bg {
       background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 25%, #fce7f3 50%, #e0f2fe 75%, #ecfdf5 100%);
       background-attachment: fixed;
       min-height: 100vh;
+    }
+
+    .dark .fin-bg {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
     }
 
     .fin-bg::before {
@@ -75,6 +101,10 @@ const FinanceiroStyles: React.FC = () => (
       pointer-events: none;
     }
 
+    .dark .fin-bg::before {
+      background: radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 70%);
+    }
+
     .fin-bg::after {
       content: '';
       position: fixed;
@@ -85,6 +115,10 @@ const FinanceiroStyles: React.FC = () => (
       border-radius: 50%;
       background: radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 70%);
       pointer-events: none;
+    }
+
+    .dark .fin-bg::after {
+      background: radial-gradient(circle, rgba(168,85,247,0.03) 0%, transparent 70%);
     }
 
     @keyframes slideUp {

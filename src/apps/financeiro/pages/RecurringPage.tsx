@@ -70,7 +70,7 @@ export default function RecurringPage() {
       {/* Creation form */}
       {showForm && (
         <div className="glass-card mb-6">
-          <h3 className="text-base font-bold text-[#1e1b4b] mb-4">Nova despesa recorrente</h3>
+          <h3 className="text-base font-bold text-[#1e1b4b] dark:text-gray-100 mb-4">Nova despesa recorrente</h3>
           <RecurringForm onSubmit={handleCreate} />
         </div>
       )}

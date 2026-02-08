@@ -44,10 +44,10 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
       onClick={(e) => e.target === overlayRef.current && onClose()}
     >
       <div className={`glass-card ${sizes[size]} w-full animate-slide-up p-0 overflow-hidden`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-indigo-500/10">
-          <h3 className="text-lg font-bold text-[#1e1b4b]">{title}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-white/40 transition-colors">
-            <X className="w-5 h-5 text-[#7c7caa]" />
+        <div className="flex items-center justify-between px-6 py-4 border-b border-indigo-500/10 dark:border-indigo-400/15">
+          <h3 className="text-lg font-bold text-[#1e1b4b] dark:text-gray-100">{title}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-white/40 dark:hover:bg-white/10 transition-colors">
+            <X className="w-5 h-5 text-[#7c7caa] dark:text-gray-400" />
           </button>
         </div>
         <div className="p-6">{children}</div>

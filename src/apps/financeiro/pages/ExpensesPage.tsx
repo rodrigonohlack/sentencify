@@ -83,17 +83,17 @@ export default function ExpensesPage() {
               <button
                 onClick={() => handlePageChange(pagination.page - 1)}
                 disabled={pagination.page <= 1}
-                className="p-2 bg-white/55 backdrop-blur-lg border border-white/70 rounded-xl hover:bg-white/65 transition-all disabled:opacity-40"
+                className="p-2 bg-white/55 dark:bg-white/[0.06] backdrop-blur-lg border border-white/70 dark:border-white/[0.12] rounded-xl hover:bg-white/65 dark:hover:bg-white/10 transition-all disabled:opacity-40"
               >
                 <ChevronLeft className="w-4 h-4 text-indigo-500" />
               </button>
-              <span className="text-sm font-semibold text-[#1e1b4b]">
+              <span className="text-sm font-semibold text-[#1e1b4b] dark:text-gray-100">
                 {pagination.page} / {pagination.pages}
               </span>
               <button
                 onClick={() => handlePageChange(pagination.page + 1)}
                 disabled={pagination.page >= pagination.pages}
-                className="p-2 bg-white/55 backdrop-blur-lg border border-white/70 rounded-xl hover:bg-white/65 transition-all disabled:opacity-40"
+                className="p-2 bg-white/55 dark:bg-white/[0.06] backdrop-blur-lg border border-white/70 dark:border-white/[0.12] rounded-xl hover:bg-white/65 dark:hover:bg-white/10 transition-all disabled:opacity-40"
               >
                 <ChevronRight className="w-4 h-4 text-indigo-500" />
               </button>

@@ -14,8 +14,8 @@ export default function CategoryPieChart({ data, onCategoryClick }: CategoryPieC
   if (chartData.length === 0) {
     return (
       <div className="glass-card">
-        <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Por Categoria</h3>
-        <div className="h-[170px] flex items-center justify-center text-sm text-[#7c7caa]">
+        <h3 className="text-base font-bold text-[#1e1b4b] dark:text-gray-100 tracking-tight mb-5">Por Categoria</h3>
+        <div className="h-[170px] flex items-center justify-center text-sm text-[#7c7caa] dark:text-gray-400">
           Sem dados
         </div>
       </div>
@@ -24,7 +24,7 @@ export default function CategoryPieChart({ data, onCategoryClick }: CategoryPieC
 
   return (
     <div className="glass-card">
-      <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Por Categoria</h3>
+      <h3 className="text-base font-bold text-[#1e1b4b] dark:text-gray-100 tracking-tight mb-5">Por Categoria</h3>
       <div className="flex items-center gap-6 min-w-0">
         <div className="w-[170px] h-[170px] flex-shrink-0">
           <ResponsiveContainer width="100%" height="100%">
@@ -62,14 +62,14 @@ export default function CategoryPieChart({ data, onCategoryClick }: CategoryPieC
 
         <div className="flex flex-col gap-1.5 flex-1">
           {chartData.map((cat) => (
-            <div key={cat.category_id} className="flex items-center gap-2 text-xs text-[#7c7caa] font-medium">
+            <div key={cat.category_id} className="flex items-center gap-2 text-xs text-[#7c7caa] dark:text-gray-400 font-medium">
               <span className="w-2.5 h-2.5 rounded flex-shrink-0" style={{ background: cat.category_color }} />
               <span className="truncate">{cat.category_name || 'Sem categoria'}</span>
-              <span className="ml-auto font-bold text-[#1e1b4b] tabular-nums">{formatBRLCompact(cat.total)}</span>
+              <span className="ml-auto font-bold text-[#1e1b4b] dark:text-gray-100 tabular-nums">{formatBRLCompact(cat.total)}</span>
             </div>
           ))}
           {total > 0 && (
-            <div className="mt-2 pt-2 border-t border-indigo-500/10 text-xs font-bold text-[#1e1b4b]">
+            <div className="mt-2 pt-2 border-t border-indigo-500/10 dark:border-indigo-400/15 text-xs font-bold text-[#1e1b4b] dark:text-gray-100">
               Total: {formatBRLCompact(total)}
             </div>
           )}

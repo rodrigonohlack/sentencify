@@ -39,8 +39,8 @@ export default function CSVImportPage() {
 
           {/* Action buttons */}
           <div className="flex items-center justify-between">
-            <div className="text-sm text-[#7c7caa]">
-              <span className="font-bold text-[#1e1b4b]">{preview.newCount}</span> novas despesas serão importadas
+            <div className="text-sm text-[#7c7caa] dark:text-gray-400">
+              <span className="font-bold text-[#1e1b4b] dark:text-gray-100">{preview.newCount}</span> novas despesas serão importadas
               {preview.duplicateCount > 0 && (
                 <span className="ml-1">({preview.duplicateCount} duplicatas serão ignoradas)</span>
               )}
@@ -60,7 +60,7 @@ export default function CSVImportPage() {
       {/* Import history */}
       {imports.length > 0 && !preview && (
         <div className="mt-8">
-          <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-4">Histórico de importações</h3>
+          <h3 className="text-base font-bold text-[#1e1b4b] dark:text-gray-100 tracking-tight mb-4">Histórico de importações</h3>
           <div className="flex flex-col gap-3">
             {imports.map((imp) => (
               <div key={imp.id} className="glass-card flex items-center justify-between p-4">
@@ -69,15 +69,15 @@ export default function CSVImportPage() {
                     <FileSpreadsheet className="w-5 h-5 text-indigo-500" />
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-[#1e1b4b]">{imp.filename}</div>
-                    <div className="text-xs text-[#7c7caa] mt-0.5">
+                    <div className="text-sm font-semibold text-[#1e1b4b] dark:text-gray-100">{imp.filename}</div>
+                    <div className="text-xs text-[#7c7caa] dark:text-gray-400 mt-0.5">
                       {formatDate(imp.created_at.split('T')[0])} · {imp.imported_count} importadas · {imp.skipped_count} ignoradas
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => deleteImport(imp.id)}
-                  className="p-2.5 rounded-xl hover:bg-red-50 transition-colors"
+                  className="p-2.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                   title="Remover importação e despesas associadas"
                 >
                   <Trash2 className="w-4 h-4 text-red-400" />

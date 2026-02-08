@@ -20,9 +20,9 @@ export default function ToastContainer() {
           className="glass-card p-4 flex items-center gap-3 min-w-[320px] animate-slide-up shadow-lg"
         >
           {icons[toast.type]}
-          <span className="text-sm font-medium text-[#1e1b4b] flex-1">{toast.message}</span>
-          <button onClick={() => removeToast(toast.id)} className="p-1 rounded-lg hover:bg-white/40">
-            <X className="w-4 h-4 text-[#7c7caa]" />
+          <span className="text-sm font-medium text-[#1e1b4b] dark:text-gray-100 flex-1">{toast.message}</span>
+          <button onClick={() => removeToast(toast.id)} className="p-1 rounded-lg hover:bg-white/40 dark:hover:bg-white/10">
+            <X className="w-4 h-4 text-[#7c7caa] dark:text-gray-400" />
           </button>
         </div>
       ))}

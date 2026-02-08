@@ -12,8 +12,8 @@ export default function MonthlyBarChart({ data, selectedMonth, onMonthClick }: M
   if (data.length === 0) {
     return (
       <div className="glass-card">
-        <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Evolução Mensal</h3>
-        <div className="h-[200px] flex items-center justify-center text-sm text-[#7c7caa]">
+        <h3 className="text-base font-bold text-[#1e1b4b] dark:text-gray-100 tracking-tight mb-5">Evolução Mensal</h3>
+        <div className="h-[200px] flex items-center justify-center text-sm text-[#7c7caa] dark:text-gray-400">
           Sem dados
         </div>
       </div>
@@ -28,7 +28,7 @@ export default function MonthlyBarChart({ data, selectedMonth, onMonthClick }: M
 
   return (
     <div className="glass-card">
-      <h3 className="text-base font-bold text-[#1e1b4b] tracking-tight mb-5">Evolução Mensal</h3>
+      <h3 className="text-base font-bold text-[#1e1b4b] dark:text-gray-100 tracking-tight mb-5">Evolução Mensal</h3>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={chartData} barCategoryGap="20%">
           <XAxis
