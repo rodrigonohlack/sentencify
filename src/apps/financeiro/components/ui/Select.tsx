@@ -17,7 +17,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         <select
           ref={ref}
           id={id}
-          className={`w-full bg-white/55 dark:bg-white/[0.06] backdrop-blur-lg border border-white/70 dark:border-white/[0.12] rounded-[14px] px-4 py-2.5 text-sm text-[#1e1b4b] dark:text-gray-100 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-all ${className}`}
+          className={`w-full bg-white/55 dark:bg-white/[0.06] backdrop-blur-lg border border-white/70 dark:border-white/[0.12] rounded-[14px] px-4 py-2.5 text-sm text-[#1e1b4b] dark:text-gray-100 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-all dark:[color-scheme:dark] ${className}`}
           {...props}
         >
           {options.map((opt) => (
