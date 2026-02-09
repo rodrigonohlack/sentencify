@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useExpenseStore } from '../stores/useExpenseStore';
 import { useExpenses } from '../hooks/useExpenses';
@@ -10,7 +10,7 @@ import { Receipt } from 'lucide-react';
 
 export default function ExpensesPage() {
   const { expenses, pagination, uncategorizedTotal, isLoading, filters } = useExpenseStore();
-  const { fetchExpenses, deleteExpense } = useExpenses();
+  const { fetchExpenses, deleteExpense, editExpense } = useExpenses();
   const { categorizeBatch, categorizeAll, isCategorizing } = useCategorization();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -36,6 +36,10 @@ export default function ExpensesPage() {
       }
     }
   };
+
+  const handleCategoryChange = useCallback(async (expenseId: string, categoryId: string | null) => {
+    await editExpense(expenseId, { category_id: categoryId, category_source: 'manual' } as any);
+  }, [editExpense]);
 
   const handleDelete = async (id: string) => {
     await deleteExpense(id);
@@ -75,7 +79,7 @@ export default function ExpensesPage() {
         />
       ) : (
         <>
-          <ExpenseTable onDelete={handleDelete} />
+          <ExpenseTable onDelete={handleDelete} onCategoryChange={handleCategoryChange} />
 
           {/* Pagination */}
           {pagination && pagination.pages > 1 && (

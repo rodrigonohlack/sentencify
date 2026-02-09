@@ -6,9 +6,10 @@ import CategoryBadge from './CategoryBadge';
 interface ExpenseTableProps {
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onCategoryChange?: (expenseId: string, categoryId: string | null) => void;
 }
 
-export default function ExpenseTable({ onEdit, onDelete }: ExpenseTableProps) {
+export default function ExpenseTable({ onEdit, onDelete, onCategoryChange }: ExpenseTableProps) {
   const { expenses, pagination } = useExpenseStore();
 
   return (
@@ -54,6 +55,7 @@ export default function ExpenseTable({ onEdit, onDelete }: ExpenseTableProps) {
                     categoryId={expense.category_id}
                     categoryName={expense.category_name}
                     categoryColor={expense.category_color}
+                    onCategoryChange={onCategoryChange ? (catId) => onCategoryChange(expense.id, catId) : undefined}
                   />
                 </td>
                 <td className="px-6 py-3 text-xs text-[#7c7caa] dark:text-gray-400 font-medium border-b border-indigo-500/5 dark:border-white/5">

@@ -130,7 +130,7 @@ router.put('/:id', authMiddleware, (req, res) => {
         purchase_date = COALESCE(?, purchase_date),
         description = COALESCE(?, description),
         value_brl = COALESCE(?, value_brl),
-        category_id = COALESCE(?, category_id),
+        category_id = ?,
         category_source = COALESCE(?, category_source),
         card_holder = COALESCE(?, card_holder),
         card_last_four = COALESCE(?, card_last_four),
@@ -141,7 +141,8 @@ router.put('/:id', authMiddleware, (req, res) => {
       WHERE id = ?
     `).run(
       purchase_date || null, description || null, value_brl ?? null,
-      category_id || null, category_source || null,
+      'category_id' in req.body ? (req.body.category_id || null) : existing.category_id,
+      category_source || null,
       card_holder || null, card_last_four || null, installment || null, notes || null,
       value_brl ?? null, value_brl ?? null,
       req.params.id
