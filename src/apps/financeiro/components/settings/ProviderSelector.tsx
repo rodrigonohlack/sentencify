@@ -6,7 +6,7 @@ interface ProviderSelectorProps {
 }
 
 const providers = [
-  { id: 'gemini' as const, name: 'Gemini 2.0 Flash', description: 'Google AI - Rapido e preciso' },
+  { id: 'gemini' as const, name: 'Gemini 3.0 Flash', description: 'Google AI - Rapido e preciso' },
   { id: 'grok' as const, name: 'Grok 3 Fast', description: 'xAI - Rapido e economico' },
 ];
 
