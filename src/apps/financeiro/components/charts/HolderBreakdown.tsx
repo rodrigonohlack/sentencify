@@ -1,6 +1,6 @@
 import type { HolderBreakdown as HolderData } from '../../types';
 import { formatBRL } from '../../utils/formatters';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, Repeat } from 'lucide-react';
 
 interface HolderBreakdownProps {
   data: HolderData[];
@@ -27,16 +27,22 @@ export default function HolderBreakdown({ data, onHolderClick }: HolderBreakdown
             return (
               <div
                 key={`${holder.card_holder}-${holder.card_last_four}`}
-                onClick={() => onHolderClick?.(holder.card_holder)}
+                onClick={() => onHolderClick?.(holder.card_holder ?? '__null__')}
                 className={onHolderClick ? 'cursor-pointer hover:bg-white/30 dark:hover:bg-white/5 rounded-lg p-1 -m-1 transition-colors' : ''}
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4" style={{ color }} />
+                    {holder.card_holder ? (
+                      <CreditCard className="w-4 h-4" style={{ color }} />
+                    ) : (
+                      <Repeat className="w-4 h-4" style={{ color }} />
+                    )}
                     <span className="text-sm font-semibold text-[#1e1b4b] dark:text-gray-100">
-                      {holder.card_holder?.split(' ').slice(0, 2).join(' ') || 'Desconhecido'}
+                      {holder.card_holder?.split(' ').slice(0, 2).join(' ') || 'Despesas Fixas'}
                     </span>
-                    <span className="text-[11px] text-[#7c7caa] dark:text-gray-400">**** {holder.card_last_four}</span>
+                    {holder.card_last_four && (
+                      <span className="text-[11px] text-[#7c7caa] dark:text-gray-400">**** {holder.card_last_four}</span>
+                    )}
                   </div>
                   <span className="text-sm font-bold text-[#1e1b4b] dark:text-gray-100 tabular-nums">{formatBRL(holder.total)}</span>
                 </div>

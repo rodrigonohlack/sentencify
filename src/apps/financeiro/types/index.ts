@@ -124,8 +124,8 @@ export interface CategoryBreakdown {
 }
 
 export interface HolderBreakdown {
-  card_holder: string;
-  card_last_four: string;
+  card_holder: string | null;
+  card_last_four: string | null;
   total: number;
   count: number;
 }

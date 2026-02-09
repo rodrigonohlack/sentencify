@@ -24,8 +24,12 @@ router.get('/', authMiddleware, (req, res) => {
       params.push(category);
     }
     if (holder) {
-      where += ' AND e.card_holder = ?';
-      params.push(holder);
+      if (holder === '__null__') {
+        where += ' AND e.card_holder IS NULL';
+      } else {
+        where += ' AND e.card_holder = ?';
+        params.push(holder);
+      }
     }
     if (card) {
       where += ' AND e.card_last_four = ?';

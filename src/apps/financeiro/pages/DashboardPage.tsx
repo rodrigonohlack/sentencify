@@ -53,7 +53,8 @@ export default function DashboardPage() {
   }, []);
 
   const handleHolderClick = useCallback((holder: string) => {
-    const displayName = holder?.split(' ').slice(0, 2).join(' ') || 'Desconhecido';
+    const isNull = holder === '__null__';
+    const displayName = isNull ? 'Despesas Fixas' : (holder?.split(' ').slice(0, 2).join(' ') || 'Desconhecido');
     setDrillDown({
       isOpen: true,
       title: `Despesas — ${displayName}`,
