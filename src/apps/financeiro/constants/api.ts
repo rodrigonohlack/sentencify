@@ -6,6 +6,7 @@ export const ENDPOINTS = {
   EXPENSES_BULK_CATEGORY: `${API_BASE}/expenses/bulk-category`,
 
   // CSV
+  CSV_BANKS: `${API_BASE}/csv/banks`,
   CSV_UPLOAD: `${API_BASE}/csv/upload`,
   CSV_CONFIRM: `${API_BASE}/csv/confirm`,
   CSV_IMPORTS: `${API_BASE}/csv/imports`,

@@ -2,12 +2,13 @@ import { useState, useCallback } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import { apiFetch } from '../utils/api';
 import { ENDPOINTS } from '../constants/api';
-import type { CSVPreviewRow, CSVImport } from '../types';
+import type { CSVPreviewRow, CSVImport, BankId } from '../types';
 
 interface UploadResult {
   filename: string;
   fileHash: string;
   billingMonth: string | null;
+  bankId: BankId;
   totalRows: number;
   duplicateCount: number;
   reconciliationCount: number;
@@ -22,11 +23,12 @@ export function useCSVImport() {
   const [imports, setImports] = useState<CSVImport[]>([]);
   const addToast = useUIStore((s) => s.addToast);
 
-  const uploadCSV = useCallback(async (file: File) => {
+  const uploadCSV = useCallback(async (file: File, bankId: BankId) => {
     setIsUploading(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('bankId', bankId);
 
       const data = await apiFetch<UploadResult>(ENDPOINTS.CSV_UPLOAD, {
         method: 'POST',

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import multer from 'multer';
 import { getDb } from '../db/database.js';
 import authMiddleware from '../middleware/auth.js';
-import CSVParserService from '../services/FinCSVParserService.js';
+import { getParser, AVAILABLE_BANKS } from '../services/csv-parsers/index.js';
 
 const router = express.Router();
 const upload = multer({ limits: { fileSize: 5 * 1024 * 1024 } });
@@ -21,6 +21,11 @@ function offsetMonth(yearMonth, offset) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
+// GET /banks - List available bank parsers
+router.get('/banks', authMiddleware, (req, res) => {
+  res.json({ banks: AVAILABLE_BANKS });
+});
+
 // POST /upload - Upload, parse, return preview
 router.post('/upload', authMiddleware, upload.single('file'), async (req, res) => {
   try {
@@ -28,12 +33,19 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
       return res.status(400).json({ error: 'Nenhum arquivo enviado' });
     }
 
+    const bankId = req.body.bankId;
+    if (!bankId) {
+      return res.status(400).json({ error: 'Banco não selecionado' });
+    }
+
+    const parser = getParser(bankId);
+
     const chunks = [];
     for await (const chunk of req.file.stream) {
       chunks.push(chunk);
     }
     const content = Buffer.concat(chunks).toString('utf-8');
-    const fileHash = CSVParserService.computeHash(content);
+    const fileHash = parser.computeHash(content);
     const db = getDb();
 
     const existingImport = db.prepare('SELECT id, filename FROM csv_imports WHERE user_id = ? AND file_hash = ?').get(req.user.id, fileHash);
@@ -44,9 +56,9 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
       });
     }
 
-    const billingMonth = CSVParserService.parseBillingMonth(req.file.originalname);
-    const rows = CSVParserService.parse(content);
-    const rowsWithDuplicates = CSVParserService.findDuplicates(db, req.user.id, rows);
+    const billingMonth = parser.parseBillingMonth(req.file.originalname);
+    const rows = parser.parse(content);
+    const rowsWithDuplicates = parser.findDuplicates(db, req.user.id, rows);
 
     const duplicateCount = rowsWithDuplicates.filter(r => r.isDuplicate).length;
     const reconciliationCount = rowsWithDuplicates.filter(r => r.isReconciliation).length;
@@ -56,6 +68,7 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
       filename: req.file.originalname,
       fileHash,
       billingMonth,
+      bankId,
       timestamp: Date.now(),
     });
 
@@ -63,6 +76,7 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
       filename: req.file.originalname,
       fileHash,
       billingMonth,
+      bankId,
       totalRows: rows.length,
       duplicateCount,
       reconciliationCount,
@@ -104,7 +118,7 @@ router.post('/confirm', authMiddleware, (req, res) => {
     `);
 
     const doImport = db.transaction(() => {
-      db.prepare('INSERT INTO csv_imports (id, user_id, filename, file_hash, row_count) VALUES (?, ?, ?, ?, ?)').run(importId, req.user.id, preview.filename, preview.fileHash, preview.rows.length);
+      db.prepare('INSERT INTO csv_imports (id, user_id, filename, file_hash, row_count, bank_id) VALUES (?, ?, ?, ?, ?, ?)').run(importId, req.user.id, preview.filename, preview.fileHash, preview.rows.length, preview.bankId);
 
       for (const row of preview.rows) {
         // Skip duplicates

@@ -64,6 +64,7 @@ const runMigrations = () => {
     { name: '013_financeiro_accents', fn: migration013FinanceiroAccents },
     { name: '014_financeiro_new_categories', fn: migration014FinanceiroNewCategories },
     { name: '015_financeiro_installments', fn: migration015FinanceiroInstallments },
+    { name: '016_csv_imports_bank_id', fn: migration016CSVImportsBankId },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -584,6 +585,14 @@ function migration015FinanceiroInstallments(db) {
   db.exec(`UPDATE expenses SET billing_month = substr(purchase_date, 1, 7) WHERE billing_month IS NULL`);
 
   console.log('[Database] Migration 015: Added installment tracking columns + billing_month (backfilled)');
+}
+
+// Migration 016: Add bank_id to csv_imports
+function migration016CSVImportsBankId(db) {
+  db.exec(`
+    ALTER TABLE csv_imports ADD COLUMN bank_id TEXT DEFAULT 'c6';
+  `);
+  console.log('[Database] Migration 016: Added bank_id column to csv_imports (default: c6)');
 }
 
 // Exportar

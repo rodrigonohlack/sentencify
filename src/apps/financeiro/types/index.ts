@@ -1,3 +1,10 @@
+export type BankId = 'c6';
+
+export interface BankInfo {
+  id: BankId;
+  name: string;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -46,6 +53,7 @@ export interface CSVImport {
   row_count: number;
   imported_count: number;
   skipped_count: number;
+  bank_id: BankId;
   created_at: string;
 }
 
