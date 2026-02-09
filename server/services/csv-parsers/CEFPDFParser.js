@@ -64,7 +64,9 @@ export default class CEFPDFParser extends BaseCSVParser {
     }
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.find(p => p.text)?.text;
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    console.log('[CEFPDFParser] Gemini response parts:', parts.map(p => ({ thought: !!p.thought, hasText: !!p.text, textLen: p.text?.length })));
+    const text = parts.find(p => p.text && !p.thought)?.text;
 
     if (!text) {
       throw new Error('Gemini não retornou dados da fatura');
