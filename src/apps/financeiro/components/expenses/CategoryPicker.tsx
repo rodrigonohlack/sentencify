@@ -64,7 +64,7 @@ export default function CategoryPicker({ anchorRect, currentCategoryId, onSelect
     <div
       ref={popoverRef}
       role="listbox"
-      className="fixed z-[60] w-[320px] max-h-[360px] overflow-y-auto rounded-2xl border border-white/60 dark:border-white/[0.12] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl shadow-xl shadow-black/10 dark:shadow-black/30 p-2"
+      className="fixed z-[100] w-[320px] max-h-[360px] overflow-y-auto rounded-2xl border border-white/60 dark:border-white/[0.12] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl shadow-xl shadow-black/10 dark:shadow-black/30 p-2"
       style={{ top: pos.top, left: pos.left }}
     >
       {/* "Sem categoria" option */}

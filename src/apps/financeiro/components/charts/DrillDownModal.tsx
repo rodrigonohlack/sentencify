@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { List } from 'lucide-react';
 import { BaseModal } from '../../../../components/modals/BaseModal';
 import { apiFetch } from '../../utils/api';
@@ -6,6 +6,8 @@ import { ENDPOINTS } from '../../constants/api';
 import { formatBRL, formatDate } from '../../utils/formatters';
 import CategoryBadge from '../expenses/CategoryBadge';
 import { Spinner } from '../ui';
+import { useExpenses } from '../../hooks/useExpenses';
+import { CATEGORIES } from '../../constants/categories';
 import type { Expense } from '../../types';
 
 interface DrillDownModalProps {
@@ -19,6 +21,22 @@ interface DrillDownModalProps {
 export default function DrillDownModal({ isOpen, onClose, title, subtitle, filterParams }: DrillDownModalProps) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { editExpense } = useExpenses();
+
+  const handleCategoryChange = useCallback(async (expenseId: string, categoryId: string | null) => {
+    const cat = categoryId ? CATEGORIES.find(c => c.id === categoryId) : null;
+    const updated = await editExpense(expenseId, {
+      category_id: categoryId,
+      category_source: 'manual',
+    });
+    if (updated) {
+      setExpenses(prev => prev.map(e =>
+        e.id === expenseId
+          ? { ...e, category_id: categoryId, category_source: 'manual' as const, category_name: cat?.name, category_color: cat?.color }
+          : e
+      ));
+    }
+  }, [editExpense]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -79,6 +97,7 @@ export default function DrillDownModal({ isOpen, onClose, title, subtitle, filte
                       categoryId={expense.category_id}
                       categoryName={expense.category_name}
                       categoryColor={expense.category_color}
+                      onCategoryChange={(catId) => handleCategoryChange(expense.id, catId)}
                     />
                   </td>
                   <td className={`py-2.5 px-3 text-right font-bold tabular-nums whitespace-nowrap ${
