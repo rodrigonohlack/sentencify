@@ -40,11 +40,7 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
 
     const parser = getParser(bankId);
 
-    const chunks = [];
-    for await (const chunk of req.file.stream) {
-      chunks.push(chunk);
-    }
-    const content = Buffer.concat(chunks).toString('utf-8');
+    const content = req.file.buffer.toString('utf-8');
     const fileHash = parser.computeHash(content);
     const db = getDb();
 
