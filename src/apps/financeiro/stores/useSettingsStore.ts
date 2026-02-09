@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import type { Settings } from '../types';
 
+function loadApiKeysFromStorage(): Record<string, string> {
+  try {
+    const stored = localStorage.getItem('ger-despesas-api-keys');
+    return stored ? JSON.parse(stored) : { gemini: '', grok: '' };
+  } catch {
+    return { gemini: '', grok: '' };
+  }
+}
+
 interface SettingsState {
   settings: Settings | null;
   apiKeys: Record<string, string>;
@@ -12,7 +21,7 @@ interface SettingsState {
 
 export const useSettingsStore = create<SettingsState>((set) => ({
   settings: null,
-  apiKeys: { gemini: '', grok: '' },
+  apiKeys: loadApiKeysFromStorage(),
   isLoading: false,
 
   setSettings: (settings) => set({ settings }),
