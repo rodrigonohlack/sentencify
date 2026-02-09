@@ -10,7 +10,7 @@ import type { BankId, BankInfo } from '../types';
 
 /** Available banks — hardcoded for now, could fetch from /banks endpoint */
 const BANKS: BankInfo[] = [
-  { id: 'c6', name: 'Banco C6' },
+  { id: 'c6', name: 'Banco C6', logo: '/banks/c6.svg' },
 ];
 
 export default function CSVImportPage() {
@@ -40,10 +40,10 @@ export default function CSVImportPage() {
   const reconciliationCount = preview ? preview.reconciliationCount : 0;
   const duplicateCount = preview ? preview.duplicateCount : 0;
 
-  /** Map bank_id to display name for import history */
-  const getBankName = (bankId?: string) => {
+  /** Map bank_id to bank info for import history */
+  const getBankInfo = (bankId?: string) => {
     const bank = BANKS.find(b => b.id === bankId);
-    return bank ? bank.name : bankId || 'Banco C6';
+    return bank || { id: bankId, name: bankId || 'Banco C6' } as BankInfo;
   };
 
   return (
@@ -63,9 +63,13 @@ export default function CSVImportPage() {
                 onClick={() => setSelectedBank(bank.id)}
                 className="glass-card flex flex-col items-center gap-3 p-6 hover:border-indigo-500/40 dark:hover:border-indigo-400/40 border-2 border-transparent transition-all cursor-pointer group"
               >
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 flex items-center justify-center group-hover:from-indigo-500/25 group-hover:to-violet-500/25 transition-all">
-                  <CreditCard className="w-6 h-6 text-indigo-500" />
-                </div>
+                {bank.logo ? (
+                  <img src={bank.logo} alt={bank.name} className="w-12 h-12 rounded-2xl" />
+                ) : (
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 flex items-center justify-center group-hover:from-indigo-500/25 group-hover:to-violet-500/25 transition-all">
+                    <CreditCard className="w-6 h-6 text-indigo-500" />
+                  </div>
+                )}
                 <span className="text-sm font-semibold text-[#1e1b4b] dark:text-gray-100">{bank.name}</span>
               </button>
             ))}
@@ -142,16 +146,22 @@ export default function CSVImportPage() {
         <div className="mt-8">
           <h3 className="text-base font-bold text-[#1e1b4b] dark:text-gray-100 tracking-tight mb-4">Histórico de importações</h3>
           <div className="flex flex-col gap-3">
-            {imports.map((imp) => (
+            {imports.map((imp) => {
+              const bankInfo = getBankInfo(imp.bank_id);
+              return (
               <div key={imp.id} className="glass-card flex items-center justify-between p-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-indigo-500/15 to-violet-500/15 flex items-center justify-center">
-                    <FileSpreadsheet className="w-5 h-5 text-indigo-500" />
-                  </div>
+                  {bankInfo.logo ? (
+                    <img src={bankInfo.logo} alt={bankInfo.name} className="w-10 h-10 rounded-[12px]" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-indigo-500/15 to-violet-500/15 flex items-center justify-center">
+                      <FileSpreadsheet className="w-5 h-5 text-indigo-500" />
+                    </div>
+                  )}
                   <div>
                     <div className="text-sm font-semibold text-[#1e1b4b] dark:text-gray-100">{imp.filename}</div>
                     <div className="text-xs text-[#7c7caa] dark:text-gray-400 mt-0.5">
-                      {getBankName(imp.bank_id)} · {formatDate(imp.created_at.split('T')[0])} · {imp.imported_count} importadas · {imp.skipped_count} ignoradas
+                      {bankInfo.name} · {formatDate(imp.created_at.split('T')[0])} · {imp.imported_count} importadas · {imp.skipped_count} ignoradas
                     </div>
                   </div>
                 </div>
@@ -163,7 +173,8 @@ export default function CSVImportPage() {
                   <Trash2 className="w-4 h-4 text-red-400" />
                 </button>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

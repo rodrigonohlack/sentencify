@@ -3,6 +3,7 @@ export type BankId = 'c6';
 export interface BankInfo {
   id: BankId;
   name: string;
+  logo?: string;
 }
 
 export interface Category {
