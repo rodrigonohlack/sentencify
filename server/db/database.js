@@ -65,6 +65,7 @@ const runMigrations = () => {
     { name: '014_financeiro_new_categories', fn: migration014FinanceiroNewCategories },
     { name: '015_financeiro_installments', fn: migration015FinanceiroInstallments },
     { name: '016_csv_imports_bank_id', fn: migration016CSVImportsBankId },
+    { name: '017_financeiro_projected_card_info', fn: migration017FinanceiroProjectedCardInfo },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -593,6 +594,34 @@ function migration016CSVImportsBankId(db) {
     ALTER TABLE csv_imports ADD COLUMN bank_id TEXT DEFAULT 'c6';
   `);
   console.log('[Database] Migration 016: Added bank_id column to csv_imports (default: c6)');
+}
+
+// Migration 017: Backfill card_holder/card_last_four em transações projetadas
+function migration017FinanceiroProjectedCardInfo(db) {
+  const result = db.prepare(`
+    UPDATE expenses
+    SET
+      card_holder = (
+        SELECT e2.card_holder FROM expenses e2
+        WHERE e2.installment_group_id = expenses.installment_group_id
+          AND e2.source = 'csv'
+          AND e2.card_holder IS NOT NULL
+          AND e2.deleted_at IS NULL
+        LIMIT 1
+      ),
+      card_last_four = (
+        SELECT e2.card_last_four FROM expenses e2
+        WHERE e2.installment_group_id = expenses.installment_group_id
+          AND e2.source = 'csv'
+          AND e2.card_last_four IS NOT NULL
+          AND e2.deleted_at IS NULL
+        LIMIT 1
+      )
+    WHERE source = 'csv_projected'
+      AND card_holder IS NULL
+      AND installment_group_id IS NOT NULL
+  `).run();
+  console.log(`[Database] Migration 017: Backfilled card info on ${result.changes} projected transactions`);
 }
 
 // Exportar
