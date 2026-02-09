@@ -1,18 +1,19 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, ChevronLeft, ChevronRight, Plus, Receipt } from 'lucide-react';
 import { useExpenseStore } from '../stores/useExpenseStore';
 import { useExpenses } from '../hooks/useExpenses';
 import { useCategorization } from '../hooks/useCategorization';
-import { Spinner, Button, EmptyState } from '../components/ui';
-import { ExpenseTable, ExpenseFilters } from '../components/expenses';
+import { Spinner, Button, EmptyState, Modal } from '../components/ui';
+import { ExpenseTable, ExpenseFilters, ExpenseForm } from '../components/expenses';
 import Header from '../components/layout/Header';
-import { Receipt } from 'lucide-react';
 
 export default function ExpensesPage() {
   const { expenses, pagination, uncategorizedTotal, isLoading, filters } = useExpenseStore();
-  const { fetchExpenses, deleteExpense, editExpense } = useExpenses();
+  const { fetchExpenses, createExpense, deleteExpense, editExpense } = useExpenses();
   const { categorizeBatch, categorizeAll, isCategorizing } = useCategorization();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     fetchExpenses(1);
@@ -45,6 +46,22 @@ export default function ExpensesPage() {
     await deleteExpense(id);
   };
 
+  const handleCreateExpense = async (data: { purchase_date: string; description: string; value_brl: number; category_id: string; notes: string }) => {
+    setIsCreating(true);
+    const result = await createExpense({
+      purchase_date: data.purchase_date,
+      description: data.description,
+      value_brl: data.value_brl,
+      category_id: data.category_id || null,
+      notes: data.notes || null,
+    } as any);
+    setIsCreating(false);
+    if (result) {
+      setShowAddModal(false);
+      fetchExpenses(pagination?.page);
+    }
+  };
+
   return (
     <div>
       <Header
@@ -63,6 +80,10 @@ export default function ExpensesPage() {
                 Categorizar {uncategorizedTotal} com IA
               </Button>
             )}
+            <Button size="sm" onClick={() => setShowAddModal(true)}>
+              <Plus className="w-4 h-4" />
+              Nova Despesa
+            </Button>
           </div>
         }
       />
@@ -105,6 +126,9 @@ export default function ExpensesPage() {
           )}
         </>
       )}
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Nova Despesa" size="sm">
+        <ExpenseForm onSubmit={handleCreateExpense} isLoading={isCreating} />
+      </Modal>
     </div>
   );
 }
