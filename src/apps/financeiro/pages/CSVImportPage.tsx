@@ -11,6 +11,7 @@ import type { BankId, BankInfo } from '../types';
 /** Available banks — hardcoded for now, could fetch from /banks endpoint */
 const BANKS: BankInfo[] = [
   { id: 'c6', name: 'Banco C6', logo: '/banks/c6.svg' },
+  { id: 'cef', name: 'Caixa (CEF)', logo: '/banks/cef.svg', fileAccept: '.pdf' },
 ];
 
 export default function CSVImportPage() {
@@ -48,7 +49,7 @@ export default function CSVImportPage() {
 
   return (
     <div>
-      <Header title="Importar CSV" subtitle="Selecione o banco e importe a fatura" />
+      <Header title="Importar Fatura" subtitle="Selecione o banco e importe a fatura" />
 
       {/* ═══ Step 1: Bank Selection ═══ */}
       {!selectedBank && !preview && (
@@ -97,6 +98,7 @@ export default function CSVImportPage() {
           <CSVUploader
             bankId={selectedBank}
             bankName={selectedBankInfo?.name || ''}
+            fileAccept={selectedBankInfo?.fileAccept}
             onUpload={uploadCSV}
             isUploading={isUploading}
           />

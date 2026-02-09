@@ -1,4 +1,5 @@
 import C6BankParser from './C6BankParser.js';
+import CEFPDFParser from './CEFPDFParser.js';
 
 // ═══════════════════════════════════════════════════════════════
 // Registry: bankId → parser instance
@@ -7,6 +8,7 @@ import C6BankParser from './C6BankParser.js';
 
 const parsers = {
   c6: new C6BankParser(),
+  cef: new CEFPDFParser(),
 };
 
 /** List of available banks (for frontend selector) */

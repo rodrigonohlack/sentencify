@@ -6,7 +6,7 @@ import authMiddleware from '../middleware/auth.js';
 import { getParser, AVAILABLE_BANKS } from '../services/csv-parsers/index.js';
 
 const router = express.Router();
-const upload = multer({ limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } });
 
 // Store previews in memory (keyed by user_id)
 const previews = new Map();
@@ -40,8 +40,10 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
 
     const parser = getParser(bankId);
 
-    const content = req.file.buffer.toString('utf-8');
-    const fileHash = parser.computeHash(content);
+    // PDF parsers work with raw buffer; CSV parsers with UTF-8 string
+    const isPDF = parser.fileType === 'pdf';
+    const content = isPDF ? req.file.buffer : req.file.buffer.toString('utf-8');
+    const fileHash = parser.computeHash(isPDF ? req.file.buffer : content);
     const db = getDb();
 
     const existingImport = db.prepare('SELECT id, filename FROM csv_imports WHERE user_id = ? AND file_hash = ?').get(req.user.id, fileHash);
@@ -52,8 +54,10 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req, res) =
       });
     }
 
+    // PDF parsers need apiKey for LLM extraction; CSV parsers ignore extra args
+    const apiKey = req.headers['x-api-key'] || process.env.GEMINI_API_KEY;
+    const rows = await parser.parse(content, apiKey);
     const billingMonth = parser.parseBillingMonth(req.file.originalname);
-    const rows = parser.parse(content);
     const rowsWithDuplicates = parser.findDuplicates(db, req.user.id, rows);
 
     const duplicateCount = rowsWithDuplicates.filter(r => r.isDuplicate).length;

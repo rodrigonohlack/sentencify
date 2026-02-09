@@ -1,9 +1,10 @@
-export type BankId = 'c6';
+export type BankId = 'c6' | 'cef';
 
 export interface BankInfo {
   id: BankId;
   name: string;
   logo?: string;
+  fileAccept?: string;
 }
 
 export interface Category {

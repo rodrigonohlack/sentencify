@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
 import { useUIStore } from '../stores/useUIStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import { apiFetch } from '../utils/api';
 import { ENDPOINTS } from '../constants/api';
+import { decryptString } from '../utils/crypto';
 import type { CSVPreviewRow, CSVImport, BankId } from '../types';
 
 interface UploadResult {
@@ -22,6 +24,7 @@ export function useCSVImport() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [imports, setImports] = useState<CSVImport[]>([]);
   const addToast = useUIStore((s) => s.addToast);
+  const apiKeys = useSettingsStore((s) => s.apiKeys);
 
   const uploadCSV = useCallback(async (file: File, bankId: BankId) => {
     setIsUploading(true);
@@ -30,9 +33,18 @@ export function useCSVImport() {
       formData.append('file', file);
       formData.append('bankId', bankId);
 
+      // Pass Gemini API key for PDF parsers that need LLM extraction
+      const headers: Record<string, string> = {};
+      const encryptedKey = apiKeys?.gemini || '';
+      if (encryptedKey) {
+        const apiKey = await decryptString(encryptedKey);
+        if (apiKey) headers['x-api-key'] = apiKey;
+      }
+
       const data = await apiFetch<UploadResult>(ENDPOINTS.CSV_UPLOAD, {
         method: 'POST',
         body: formData,
+        headers,
       });
       setPreview(data);
       const parts: string[] = [];
@@ -48,7 +60,7 @@ export function useCSVImport() {
     } finally {
       setIsUploading(false);
     }
-  }, [addToast]);
+  }, [addToast, apiKeys]);
 
   const confirmImport = useCallback(async (skipDuplicates = true) => {
     setIsConfirming(true);

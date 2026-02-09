@@ -9,7 +9,7 @@ import type { FinPage } from '../../types';
 const navItems: Array<{ page: FinPage; icon: typeof LayoutDashboard; label: string }> = [
   { page: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { page: 'expenses', icon: List, label: 'Despesas' },
-  { page: 'import', icon: FilePlus2, label: 'Importar CSV' },
+  { page: 'import', icon: FilePlus2, label: 'Importar Fatura' },
   { page: 'recurring', icon: Repeat, label: 'Recorrentes' },
   { page: 'settings', icon: Settings, label: 'Configurações' },
 ];
