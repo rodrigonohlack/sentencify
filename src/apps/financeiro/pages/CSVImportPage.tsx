@@ -22,6 +22,10 @@ export default function CSVImportPage() {
     if (result) fetchImports();
   };
 
+  const newCount = preview ? preview.newCount : 0;
+  const reconciliationCount = preview ? preview.reconciliationCount : 0;
+  const duplicateCount = preview ? preview.duplicateCount : 0;
+
   return (
     <div>
       <Header title="Importar CSV" subtitle="Importe faturas do cartão de crédito" />
@@ -34,15 +38,25 @@ export default function CSVImportPage() {
           <CSVPreviewTable
             rows={preview.preview}
             totalRows={preview.totalRows}
-            duplicateCount={preview.duplicateCount}
+            duplicateCount={duplicateCount}
+            reconciliationCount={reconciliationCount}
           />
 
           {/* Action buttons */}
           <div className="flex items-center justify-between">
-            <div className="text-sm text-[#7c7caa] dark:text-gray-400">
-              <span className="font-bold text-[#1e1b4b] dark:text-gray-100">{preview.newCount}</span> novas despesas serão importadas
-              {preview.duplicateCount > 0 && (
-                <span className="ml-1">({preview.duplicateCount} duplicatas serão ignoradas)</span>
+            <div className="text-sm text-[#7c7caa] dark:text-gray-400 flex flex-wrap gap-x-2">
+              <span>
+                <span className="font-bold text-[#1e1b4b] dark:text-gray-100">{newCount}</span> novas
+              </span>
+              {reconciliationCount > 0 && (
+                <span>
+                  · <span className="font-bold text-sky-600">{reconciliationCount}</span> reconciliadas
+                </span>
+              )}
+              {duplicateCount > 0 && (
+                <span>
+                  · <span className="font-bold text-amber-600">{duplicateCount}</span> duplicatas ignoradas
+                </span>
               )}
             </div>
             <div className="flex gap-3">

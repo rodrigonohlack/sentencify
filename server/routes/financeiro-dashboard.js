@@ -21,8 +21,8 @@ router.get('/summary', authMiddleware, (req, res) => {
         COALESCE(MAX(CASE WHEN is_refund = 0 THEN value_brl END), 0) as max_expense,
         COALESCE(AVG(CASE WHEN is_refund = 0 THEN value_brl END), 0) as avg_expense
       FROM expenses
-      WHERE user_id = ? AND purchase_date LIKE ? AND deleted_at IS NULL
-    `).get(req.user.id, `${month}%`);
+      WHERE user_id = ? AND billing_month = ? AND deleted_at IS NULL
+    `).get(req.user.id, month);
 
     const [year, mon] = month.split('-').map(Number);
     const prevDate = new Date(year, mon - 2, 1);
@@ -31,14 +31,14 @@ router.get('/summary', authMiddleware, (req, res) => {
     const previous = db.prepare(`
       SELECT COALESCE(SUM(CASE WHEN is_refund = 0 THEN value_brl ELSE 0 END), 0) as total_expenses
       FROM expenses
-      WHERE user_id = ? AND purchase_date LIKE ? AND deleted_at IS NULL
-    `).get(req.user.id, `${prevMonth}%`);
+      WHERE user_id = ? AND billing_month = ? AND deleted_at IS NULL
+    `).get(req.user.id, prevMonth);
 
     const biggest = db.prepare(`
       SELECT description, value_brl FROM expenses
-      WHERE user_id = ? AND purchase_date LIKE ? AND deleted_at IS NULL AND is_refund = 0
+      WHERE user_id = ? AND billing_month = ? AND deleted_at IS NULL AND is_refund = 0
       ORDER BY value_brl DESC LIMIT 1
-    `).get(req.user.id, `${month}%`);
+    `).get(req.user.id, month);
 
     const daysInMonth = new Date(year, mon, 0).getDate();
 
@@ -77,10 +77,10 @@ router.get('/by-category', authMiddleware, (req, res) => {
         COUNT(*) as count
       FROM expenses e
       LEFT JOIN categories c ON e.category_id = c.id
-      WHERE e.user_id = ? AND e.purchase_date LIKE ? AND e.deleted_at IS NULL
+      WHERE e.user_id = ? AND e.billing_month = ? AND e.deleted_at IS NULL
       GROUP BY c.id
       ORDER BY total DESC
-    `).all(req.user.id, `${month}%`);
+    `).all(req.user.id, month);
 
     res.json({ categories: data });
   } catch (error) {
@@ -102,10 +102,10 @@ router.get('/by-holder', authMiddleware, (req, res) => {
         SUM(CASE WHEN is_refund = 0 THEN value_brl ELSE 0 END) as total,
         COUNT(*) as count
       FROM expenses
-      WHERE user_id = ? AND purchase_date LIKE ? AND deleted_at IS NULL
+      WHERE user_id = ? AND billing_month = ? AND deleted_at IS NULL
       GROUP BY card_holder, card_last_four
       ORDER BY total DESC
-    `).all(req.user.id, `${month}%`);
+    `).all(req.user.id, month);
 
     res.json({ holders: data });
   } catch (error) {
@@ -123,13 +123,13 @@ router.get('/trends', authMiddleware, (req, res) => {
 
     const data = db.prepare(`
       SELECT
-        substr(purchase_date, 1, 7) as month,
+        billing_month as month,
         SUM(CASE WHEN is_refund = 0 THEN value_brl ELSE 0 END) as total,
         COUNT(*) as count
       FROM expenses
-      WHERE user_id = ? AND substr(purchase_date, 1, 7) >= ? AND substr(purchase_date, 1, 7) <= ? AND deleted_at IS NULL
-      GROUP BY month
-      ORDER BY month ASC
+      WHERE user_id = ? AND billing_month >= ? AND billing_month <= ? AND deleted_at IS NULL
+      GROUP BY billing_month
+      ORDER BY billing_month ASC
     `).all(req.user.id, from, to);
 
     res.json({ trends: data });
@@ -150,17 +150,17 @@ router.get('/alerts', authMiddleware, (req, res) => {
       WITH current_month AS (
         SELECT category_id, SUM(CASE WHEN is_refund = 0 THEN value_brl ELSE 0 END) as current_total
         FROM expenses
-        WHERE user_id = ? AND purchase_date LIKE ? AND deleted_at IS NULL
+        WHERE user_id = ? AND billing_month = ? AND deleted_at IS NULL
         GROUP BY category_id
       ),
       avg_months AS (
         SELECT category_id, AVG(monthly_total) as avg_total
         FROM (
-          SELECT category_id, substr(purchase_date, 1, 7) as month,
+          SELECT category_id, billing_month as month,
             SUM(CASE WHEN is_refund = 0 THEN value_brl ELSE 0 END) as monthly_total
           FROM expenses
-          WHERE user_id = ? AND deleted_at IS NULL AND purchase_date NOT LIKE ?
-          GROUP BY category_id, month
+          WHERE user_id = ? AND deleted_at IS NULL AND billing_month != ?
+          GROUP BY category_id, billing_month
         )
         GROUP BY category_id
       )
@@ -173,7 +173,7 @@ router.get('/alerts', authMiddleware, (req, res) => {
       LEFT JOIN categories c ON cm.category_id = c.id
       WHERE cm.current_total > COALESCE(am.avg_total, 0) * 1.2
       ORDER BY percent_above DESC
-    `).all(req.user.id, `${month}%`, req.user.id, `${month}%`);
+    `).all(req.user.id, month, req.user.id, month);
 
     res.json({ alerts });
   } catch (error) {

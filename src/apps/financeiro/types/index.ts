@@ -22,10 +22,14 @@ export interface Expense {
   category_id: string | null;
   category_source: 'bank' | 'llm' | 'manual';
   category_confidence: number | null;
-  source: 'csv' | 'manual' | 'recurring';
+  source: 'csv' | 'manual' | 'recurring' | 'csv_projected';
   recurring_expense_id: string | null;
   is_refund: number;
   notes: string | null;
+  installment_group_id: string | null;
+  installment_number: number | null;
+  installment_total: number | null;
+  billing_month: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -48,12 +52,17 @@ export interface CSVImport {
 export interface CSVPreviewRow {
   index: number;
   isDuplicate: boolean;
+  isReconciliation: boolean;
+  projectedExpenseId: string | null;
+  installment_group_id: string | null;
   purchase_date: string;
   card_holder: string | null;
   card_last_four: string | null;
   bank_category: string | null;
   description: string;
   installment: string | null;
+  installment_number: number | null;
+  installment_total: number | null;
   value_usd: number;
   exchange_rate: number;
   value_brl: number;

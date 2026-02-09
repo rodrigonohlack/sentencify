@@ -15,8 +15,8 @@ class FinRecurringService {
     let skipped = 0;
 
     const insertStmt = db.prepare(`
-      INSERT INTO expenses (id, user_id, purchase_date, description, value_brl, category_id, category_source, source, recurring_expense_id, is_refund)
-      VALUES (?, ?, ?, ?, ?, ?, 'manual', 'recurring', ?, 0)
+      INSERT INTO expenses (id, user_id, purchase_date, description, value_brl, category_id, category_source, source, recurring_expense_id, is_refund, billing_month)
+      VALUES (?, ?, ?, ?, ?, ?, 'manual', 'recurring', ?, 0, ?)
     `);
 
     const checkStmt = db.prepare(`
@@ -37,7 +37,7 @@ class FinRecurringService {
           continue;
         }
 
-        insertStmt.run(uuidv4(), userId, purchaseDate, rec.description, rec.value_brl, rec.category_id, rec.id);
+        insertStmt.run(uuidv4(), userId, purchaseDate, rec.description, rec.value_brl, rec.category_id, rec.id, yearMonth);
         generated++;
       }
     });

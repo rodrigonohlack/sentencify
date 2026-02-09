@@ -5,9 +5,10 @@ interface CSVPreviewTableProps {
   rows: CSVPreviewRow[];
   totalRows: number;
   duplicateCount: number;
+  reconciliationCount: number;
 }
 
-export default function CSVPreviewTable({ rows, totalRows, duplicateCount }: CSVPreviewTableProps) {
+export default function CSVPreviewTable({ rows, totalRows, duplicateCount, reconciliationCount }: CSVPreviewTableProps) {
   return (
     <div className="glass-card overflow-hidden p-0">
       <div className="flex items-center justify-between px-6 py-4 border-b border-indigo-500/10 dark:border-indigo-400/15">
@@ -16,6 +17,11 @@ export default function CSVPreviewTable({ rows, totalRows, duplicateCount }: CSV
           <span className="bg-indigo-500/10 text-indigo-500 text-xs font-bold px-3 py-1.5 rounded-[10px]">
             {totalRows} linhas
           </span>
+          {reconciliationCount > 0 && (
+            <span className="bg-sky-500/10 text-sky-600 text-xs font-bold px-3 py-1.5 rounded-[10px]">
+              {reconciliationCount} reconciliações
+            </span>
+          )}
           {duplicateCount > 0 && (
             <span className="bg-amber-500/10 text-amber-600 text-xs font-bold px-3 py-1.5 rounded-[10px]">
               {duplicateCount} duplicatas
@@ -41,7 +47,13 @@ export default function CSVPreviewTable({ rows, totalRows, duplicateCount }: CSV
             {rows.map((row, i) => (
               <tr
                 key={i}
-                className={`${row.isDuplicate ? 'opacity-50 bg-amber-50/50 dark:bg-amber-500/10' : ''} hover:bg-indigo-500/3 transition-colors`}
+                className={`${
+                  row.isDuplicate
+                    ? 'opacity-50 bg-amber-50/50 dark:bg-amber-500/10'
+                    : row.isReconciliation
+                    ? 'bg-sky-50/50 dark:bg-sky-500/10'
+                    : ''
+                } hover:bg-indigo-500/3 transition-colors`}
               >
                 <td className="px-4 py-2.5 text-xs text-[#7c7caa] dark:text-gray-400">{row.index + 1}</td>
                 <td className="px-4 py-2.5 text-[13px] dark:text-gray-200">{formatDate(row.purchase_date)}</td>
@@ -54,6 +66,8 @@ export default function CSVPreviewTable({ rows, totalRows, duplicateCount }: CSV
                 <td className="px-4 py-2.5 text-center">
                   {row.isDuplicate ? (
                     <span className="text-[10px] font-bold text-amber-600 bg-amber-100/50 dark:bg-amber-500/20 px-2 py-0.5 rounded-full">DUPLICATA</span>
+                  ) : row.isReconciliation ? (
+                    <span className="text-[10px] font-bold text-sky-600 bg-sky-100/50 dark:bg-sky-500/20 px-2 py-0.5 rounded-full">RECONCILIAR</span>
                   ) : (
                     <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100/50 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full">NOVO</span>
                   )}

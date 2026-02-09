@@ -7,8 +7,10 @@ import type { CSVPreviewRow, CSVImport } from '../types';
 interface UploadResult {
   filename: string;
   fileHash: string;
+  billingMonth: string | null;
   totalRows: number;
   duplicateCount: number;
+  reconciliationCount: number;
   newCount: number;
   preview: CSVPreviewRow[];
 }
@@ -31,7 +33,11 @@ export function useCSVImport() {
         body: formData,
       });
       setPreview(data);
-      addToast(`${data.totalRows} linhas encontradas (${data.duplicateCount} duplicatas)`, 'info');
+      const parts: string[] = [];
+      parts.push(`${data.totalRows} linhas encontradas`);
+      if (data.duplicateCount > 0) parts.push(`${data.duplicateCount} duplicatas`);
+      if (data.reconciliationCount > 0) parts.push(`${data.reconciliationCount} reconciliações`);
+      addToast(parts.join(' · '), 'info');
       return data;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao processar CSV';
@@ -50,13 +56,19 @@ export function useCSVImport() {
         importId: string;
         importedCount: number;
         skippedCount: number;
+        projectedCount: number;
+        reconciledCount: number;
       }>(ENDPOINTS.CSV_CONFIRM, {
         method: 'POST',
         body: JSON.stringify({ skipDuplicates }),
       });
 
       setPreview(null);
-      addToast(`${data.importedCount} despesas importadas!`, 'success');
+      const parts: string[] = [];
+      if (data.importedCount > 0) parts.push(`${data.importedCount} importadas`);
+      if (data.projectedCount > 0) parts.push(`${data.projectedCount} projetadas`);
+      if (data.reconciledCount > 0) parts.push(`${data.reconciledCount} reconciliadas`);
+      addToast(parts.join(' · ') || 'Importação concluída', 'success');
       return data;
     } catch {
       addToast('Erro ao confirmar importação', 'error');

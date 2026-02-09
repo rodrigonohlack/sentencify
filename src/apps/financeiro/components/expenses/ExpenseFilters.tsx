@@ -78,6 +78,7 @@ export default function ExpenseFilters() {
         <option value="csv">CSV</option>
         <option value="manual">Manual</option>
         <option value="recurring">Recorrente</option>
+        <option value="csv_projected">Projetada</option>
       </select>
 
       {/* Date filter mode */}

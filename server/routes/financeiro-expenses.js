@@ -16,8 +16,8 @@ router.get('/', authMiddleware, (req, res) => {
     const params = [req.user.id];
 
     if (month) {
-      where += ' AND e.purchase_date LIKE ?';
-      params.push(`${month}%`);
+      where += ' AND e.billing_month = ?';
+      params.push(month);
     }
     if (category) {
       where += ' AND e.category_id = ?';
@@ -93,10 +93,12 @@ router.post('/', authMiddleware, (req, res) => {
     const id = uuidv4();
     const isRefund = Number(value_brl) < 0 ? 1 : 0;
 
+    const billingMonth = purchase_date.substring(0, 7);
+
     db.prepare(`
-      INSERT INTO expenses (id, user_id, purchase_date, description, value_brl, category_id, category_source, card_holder, card_last_four, installment, source, is_refund, notes)
-      VALUES (?, ?, ?, ?, ?, ?, 'manual', ?, ?, ?, 'manual', ?, ?)
-    `).run(id, req.user.id, purchase_date, description, value_brl, category_id || null, card_holder || null, card_last_four || null, installment || null, isRefund, notes || null);
+      INSERT INTO expenses (id, user_id, purchase_date, description, value_brl, category_id, category_source, card_holder, card_last_four, installment, source, is_refund, notes, billing_month)
+      VALUES (?, ?, ?, ?, ?, ?, 'manual', ?, ?, ?, 'manual', ?, ?, ?)
+    `).run(id, req.user.id, purchase_date, description, value_brl, category_id || null, card_holder || null, card_last_four || null, installment || null, isRefund, notes || null, billingMonth);
 
     const expense = db.prepare(`
       SELECT e.*, c.name as category_name, c.icon as category_icon, c.color as category_color

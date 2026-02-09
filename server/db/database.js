@@ -63,6 +63,7 @@ const runMigrations = () => {
     { name: '012_financeiro', fn: migration012Financeiro },
     { name: '013_financeiro_accents', fn: migration013FinanceiroAccents },
     { name: '014_financeiro_new_categories', fn: migration014FinanceiroNewCategories },
+    { name: '015_financeiro_installments', fn: migration015FinanceiroInstallments },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -562,6 +563,27 @@ function migration014FinanceiroNewCategories(db) {
   insert.run('emprestimo', 'Empréstimo', 'Landmark', '#0ea5e9', 15);
   db.prepare('UPDATE categories SET sort_order = 16 WHERE id = ?').run('outros');
   console.log('[Database] Migration 014: Added Investimento and Empréstimo categories');
+}
+
+// Migration 015: Installment tracking + billing_month for projected expenses
+function migration015FinanceiroInstallments(db) {
+  db.exec(`
+    -- ═══════════════════════════════════════════════════════════════
+    -- v1.41: Parcelas futuras + reconciliação automática
+    -- ═══════════════════════════════════════════════════════════════
+    ALTER TABLE expenses ADD COLUMN installment_group_id TEXT;
+    ALTER TABLE expenses ADD COLUMN installment_number INTEGER;
+    ALTER TABLE expenses ADD COLUMN installment_total INTEGER;
+    ALTER TABLE expenses ADD COLUMN billing_month TEXT;
+
+    CREATE INDEX IF NOT EXISTS idx_expenses_installment_group ON expenses(installment_group_id);
+    CREATE INDEX IF NOT EXISTS idx_expenses_billing_month ON expenses(billing_month);
+  `);
+
+  // Backfill: billing_month = YYYY-MM from purchase_date for existing expenses
+  db.exec(`UPDATE expenses SET billing_month = substr(purchase_date, 1, 7) WHERE billing_month IS NULL`);
+
+  console.log('[Database] Migration 015: Added installment tracking columns + billing_month (backfilled)');
 }
 
 // Exportar

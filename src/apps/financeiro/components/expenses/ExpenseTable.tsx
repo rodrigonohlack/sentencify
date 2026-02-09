@@ -42,7 +42,7 @@ export default function ExpenseTable({ onEdit, onDelete }: ExpenseTableProps) {
           </thead>
           <tbody>
             {expenses.map((expense) => (
-              <tr key={expense.id} className="hover:bg-indigo-500/3 transition-colors">
+              <tr key={expense.id} className={`hover:bg-indigo-500/3 transition-colors ${expense.source === 'csv_projected' ? 'border-l-2 border-l-sky-400/50' : ''}`}>
                 <td className="px-6 py-3 text-[13px] dark:text-gray-200 border-b border-indigo-500/5 dark:border-white/5">
                   {formatDate(expense.purchase_date)}
                 </td>
@@ -60,7 +60,12 @@ export default function ExpenseTable({ onEdit, onDelete }: ExpenseTableProps) {
                   {expense.card_last_four ? `**** ${expense.card_last_four}` : '-'}
                 </td>
                 <td className="px-6 py-3 text-[11px] text-[#7c7caa] dark:text-gray-400 border-b border-indigo-500/5 dark:border-white/5">
-                  {expense.installment || 'Única'}
+                  <span className="inline-flex items-center gap-1.5">
+                    {expense.installment || 'Única'}
+                    {expense.source === 'csv_projected' && (
+                      <span className="text-[9px] font-bold text-sky-600 bg-sky-100/50 dark:bg-sky-500/20 px-1.5 py-0.5 rounded-full">PROJETADA</span>
+                    )}
+                  </span>
                 </td>
                 <td className={`px-6 py-3 text-right font-bold tabular-nums border-b border-indigo-500/5 dark:border-white/5 ${expense.is_refund ? 'text-emerald-600' : 'text-[#1e1b4b] dark:text-gray-200'}`}>
                   {expense.is_refund ? '- ' : ''}{formatBRL(Math.abs(expense.value_brl))}

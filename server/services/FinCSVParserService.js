@@ -29,6 +29,7 @@ class FinCSVParserService {
       const valueBrl = this.parseNumber(valueBrlStr);
 
       const isRefund = valueBrl < 0 ? 1 : 0;
+      const parsed = this.parseInstallment(installment?.trim() || null);
 
       rows.push({
         purchase_date: purchaseDate,
@@ -41,10 +42,36 @@ class FinCSVParserService {
         exchange_rate: exchangeRate,
         value_brl: valueBrl,
         is_refund: isRefund,
+        installment_number: parsed?.number ?? null,
+        installment_total: parsed?.total ?? null,
       });
     }
 
     return rows;
+  }
+
+  /**
+   * Parse installment string "03/10" -> { number: 3, total: 10 }
+   * Returns null for "Única", null, empty, or invalid formats
+   */
+  parseInstallment(str) {
+    if (!str || str.toLowerCase() === 'única') return null;
+    const match = str.match(/^(\d+)\/(\d+)$/);
+    if (!match) return null;
+    const number = parseInt(match[1], 10);
+    const total = parseInt(match[2], 10);
+    if (number < 1 || total < 1 || number > total) return null;
+    return { number, total };
+  }
+
+  /**
+   * Extract billing month (YYYY-MM) from filename
+   * e.g. "Fatura_2026-01-25.csv" -> "2026-01"
+   */
+  parseBillingMonth(filename) {
+    if (!filename) return null;
+    const match = filename.match(/Fatura_(\d{4}-\d{2})-\d{2}\.csv/);
+    return match ? match[1] : null;
   }
 
   parseDate(dateStr) {
@@ -67,15 +94,47 @@ class FinCSVParserService {
   }
 
   findDuplicates(db, userId, rows) {
-    const stmt = db.prepare(`
+    // Check for real duplicates (exclude csv_projected from duplicate detection)
+    const duplicateStmt = db.prepare(`
       SELECT 1 FROM expenses
-      WHERE user_id = ? AND purchase_date = ? AND description = ? AND value_brl = ? AND card_last_four = ? AND deleted_at IS NULL
+      WHERE user_id = ? AND purchase_date = ? AND description = ? AND value_brl = ? AND card_last_four = ?
+        AND source != 'csv_projected' AND deleted_at IS NULL
+      LIMIT 1
+    `);
+
+    // Check for reconciliation match (projected expense)
+    const reconcileStmt = db.prepare(`
+      SELECT id, installment_group_id FROM expenses
+      WHERE user_id = ? AND source = 'csv_projected' AND description = ? AND purchase_date = ?
+        AND value_brl = ? AND card_last_four = ? AND installment_number = ? AND installment_total = ?
+        AND deleted_at IS NULL
       LIMIT 1
     `);
 
     return rows.map((row, index) => {
-      const isDuplicate = !!stmt.get(userId, row.purchase_date, row.description, row.value_brl, row.card_last_four);
-      return { ...row, index, isDuplicate };
+      // Check reconciliation first (installment rows only)
+      if (row.installment_number && row.installment_total) {
+        const projected = reconcileStmt.get(
+          userId, row.description, row.purchase_date,
+          row.value_brl, row.card_last_four, row.installment_number, row.installment_total
+        );
+        if (projected) {
+          return {
+            ...row, index, isDuplicate: false,
+            isReconciliation: true,
+            projectedExpenseId: projected.id,
+            installment_group_id: projected.installment_group_id,
+          };
+        }
+      }
+
+      const isDuplicate = !!duplicateStmt.get(userId, row.purchase_date, row.description, row.value_brl, row.card_last_four);
+      return {
+        ...row, index, isDuplicate,
+        isReconciliation: false,
+        projectedExpenseId: null,
+        installment_group_id: null,
+      };
     });
   }
 }
