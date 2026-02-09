@@ -52,6 +52,29 @@ export default class CEFPDFParser extends BaseCSVParser {
             temperature: 1.0,
             maxOutputTokens: 8192,
             responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'object',
+              properties: {
+                card_holder: { type: 'string' },
+                card_last_four: { type: 'string' },
+                billing_month: { type: 'string' },
+                transactions: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      purchase_date: { type: 'string' },
+                      description: { type: 'string' },
+                      value_brl: { type: 'number' },
+                      installment: { type: 'string', nullable: true },
+                      is_refund: { type: 'boolean' },
+                    },
+                    required: ['purchase_date', 'description', 'value_brl'],
+                  },
+                },
+              },
+              required: ['transactions'],
+            },
             thinkingConfig: { thinkingLevel: 'minimal' },
           },
         }),
@@ -75,6 +98,8 @@ export default class CEFPDFParser extends BaseCSVParser {
     const parsed = JSON.parse(text);
 
     if (!parsed.transactions || !Array.isArray(parsed.transactions)) {
+      console.error('[CEFPDFParser] JSON sem transactions. Keys:', Object.keys(parsed));
+      console.error('[CEFPDFParser] Response text (500 chars):', text.substring(0, 500));
       throw new Error('Formato de resposta inválido: transactions não encontrado');
     }
 
