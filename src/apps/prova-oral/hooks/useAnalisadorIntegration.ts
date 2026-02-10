@@ -109,8 +109,8 @@ export function convertAnalysisToSintese(analysis: AnalisadorAnalysis): string {
   lines.push('## IDENTIFICAÇÃO DO PROCESSO');
   lines.push('');
 
-  if (identificacao?.numeroProcesso || analysis.numeroProcesso) {
-    lines.push(`**Processo:** ${identificacao?.numeroProcesso || analysis.numeroProcesso}`);
+  if (analysis.numeroProcesso || identificacao?.numeroProcesso) {
+    lines.push(`**Processo:** ${analysis.numeroProcesso || identificacao?.numeroProcesso}`);
   }
 
   const reclamante = identificacao?.reclamantes?.[0] || analysis.reclamante;
