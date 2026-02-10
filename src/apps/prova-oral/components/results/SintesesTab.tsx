@@ -12,6 +12,7 @@ import { HighlightedText } from '../highlights';
 import { getQualificacaoStyle, getQualificacaoLabel } from '../../constants';
 import { useProvaOralStore } from '../../stores/useProvaOralStore';
 import { useProvaOralAPI } from '../../hooks/useProvaOralAPI';
+import { useAuthMagicLink } from '../../../../hooks';
 import type { Sintese, SinteseCondensada, SintesePorTema, Depoente, SinteseViewMode, Qualificacao, TextHighlight } from '../../types';
 
 interface SintesesTabProps {
@@ -70,6 +71,7 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
   // Store para highlights
   const { highlights, addHighlight, removeHighlight, loadedAnalysisId, result } = useProvaOralStore();
   const { updateAnalysis } = useProvaOralAPI();
+  const { user } = useAuthMagicLink();
 
   // Ref para controle do debounce
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -118,8 +120,8 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
 
   // Handlers de highlights
   const handleAddHighlight = useCallback((highlight: Omit<TextHighlight, 'id' | 'createdAt'>) => {
-    addHighlight(highlight);
-  }, [addHighlight]);
+    addHighlight({ ...highlight, authorEmail: user?.email });
+  }, [addHighlight, user]);
 
   const handleRemoveHighlight = useCallback((id: string) => {
     removeHighlight(id);

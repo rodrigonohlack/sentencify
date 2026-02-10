@@ -268,7 +268,7 @@ router.post('/', (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// PUT /api/prova-oral/:id - Atualizar análise (apenas próprias)
+// PUT /api/prova-oral/:id - Atualizar análise (dono ou usuários com acesso compartilhado)
 // ═══════════════════════════════════════════════════════════════════════════
 
 router.put('/:id', (req, res) => {
@@ -284,16 +284,23 @@ router.put('/:id', (req, res) => {
 
     const now = new Date().toISOString();
 
-    // Apenas o dono pode atualizar a análise
-    const result = db.prepare(`
-      UPDATE prova_oral_analyses
-      SET resultado = ?, updated_at = ?
-      WHERE id = ? AND user_id = ? AND deleted_at IS NULL
-    `).run(JSON.stringify(resultado), now, id, userId);
+    // Verificar acesso (dono ou destinatário compartilhado) — mesmo padrão do GET /:id
+    const accessCheck = db.prepare(`
+      SELECT id FROM prova_oral_analyses
+      WHERE id = ? AND deleted_at IS NULL
+        AND (user_id = ? OR user_id IN (
+          SELECT owner_id FROM prova_oral_access WHERE recipient_id = ?
+        ))
+    `).get(id, userId, userId);
 
-    if (result.changes === 0) {
+    if (!accessCheck) {
       return res.status(404).json({ error: 'Análise não encontrada' });
     }
+
+    const result = db.prepare(`
+      UPDATE prova_oral_analyses SET resultado = ?, updated_at = ?
+      WHERE id = ? AND deleted_at IS NULL
+    `).run(JSON.stringify(resultado), now, id);
 
     res.json({ id, message: 'Análise atualizada com sucesso' });
   } catch (error) {

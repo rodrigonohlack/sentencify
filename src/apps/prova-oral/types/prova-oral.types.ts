@@ -54,6 +54,8 @@ export interface TextHighlight {
   viewMode: 'detalhada' | 'condensada' | 'tema';
   /** Índice do tema (apenas para viewMode 'tema') */
   temaIndex?: number;
+  /** Email do autor da marcação (para highlights colaborativos) */
+  authorEmail?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

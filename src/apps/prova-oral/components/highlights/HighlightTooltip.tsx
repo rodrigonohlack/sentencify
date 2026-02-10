@@ -110,6 +110,7 @@ export const HighlightTooltip: React.FC<HighlightTooltipProps> = ({
           <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-700">
             <span className="text-xs text-slate-400">
               {new Date(highlight.createdAt).toLocaleDateString('pt-BR')}
+              {highlight.authorEmail && ` · ${highlight.authorEmail}`}
             </span>
             <button
               onClick={(e) => {
@@ -129,6 +130,7 @@ export const HighlightTooltip: React.FC<HighlightTooltipProps> = ({
         <div className="flex items-center gap-2 px-3 py-2">
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {new Date(highlight.createdAt).toLocaleDateString('pt-BR')}
+            {highlight.authorEmail && ` · ${highlight.authorEmail}`}
           </span>
           <div className="w-px h-4 bg-slate-200 dark:bg-slate-600" />
           <button
