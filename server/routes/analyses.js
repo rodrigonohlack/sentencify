@@ -194,7 +194,7 @@ router.post('/', (req, res) => {
     const now = new Date().toISOString();
 
     // Extrair dados do resultado para facilitar buscas
-    const numeroProcesso = resultado.identificacao?.numeroProcesso || null;
+    const numeroProcesso = extractNumeroFromFilename(nomeArquivoPeticao) || resultado.identificacao?.numeroProcesso || null;
     const reclamante = resultado.identificacao?.reclamantes?.[0] || null;
     const reclamadas = resultado.identificacao?.reclamadas
       ? JSON.stringify(resultado.identificacao.reclamadas)
@@ -270,7 +270,7 @@ router.put('/:id/replace', (req, res) => {
     const now = new Date().toISOString();
 
     // Extrair dados do resultado para facilitar buscas
-    const numeroProcesso = resultado.identificacao?.numeroProcesso || null;
+    const numeroProcesso = extractNumeroFromFilename(nomeArquivoPeticao) || resultado.identificacao?.numeroProcesso || null;
     const reclamante = resultado.identificacao?.reclamantes?.[0] || null;
     const reclamadas = resultado.identificacao?.reclamadas
       ? JSON.stringify(resultado.identificacao.reclamadas)
