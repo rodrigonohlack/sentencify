@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { HolderBreakdown as HolderData } from '../../types';
 import { formatBRL } from '../../utils/formatters';
 import { CreditCard, Repeat } from 'lucide-react';
@@ -8,6 +9,19 @@ interface HolderBreakdownProps {
 }
 
 const HOLDER_COLORS = ['#6366f1', '#a855f7', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'];
+
+function BankLogo({ bankId, fallbackColor }: { bankId: string; fallbackColor: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <CreditCard className="w-5 h-5 shrink-0" style={{ color: fallbackColor }} />;
+  return (
+    <img
+      src={`/banks/${bankId}.svg`}
+      alt={bankId}
+      className="w-5 h-5 shrink-0 rounded"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 export default function HolderBreakdown({ data, onHolderClick }: HolderBreakdownProps) {
   const total = data.reduce((sum, d) => sum + d.total, 0);
@@ -33,9 +47,11 @@ export default function HolderBreakdown({ data, onHolderClick }: HolderBreakdown
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     {holder.card_holder ? (
-                      <CreditCard className="w-4 h-4" style={{ color }} />
+                      holder.bank_id
+                        ? <BankLogo bankId={holder.bank_id} fallbackColor={color} />
+                        : <CreditCard className="w-5 h-5 shrink-0" style={{ color }} />
                     ) : (
-                      <Repeat className="w-4 h-4" style={{ color }} />
+                      <Repeat className="w-5 h-5 shrink-0" style={{ color }} />
                     )}
                     <span className="text-sm font-semibold text-[#1e1b4b] dark:text-gray-100">
                       {holder.card_holder?.split(' ').slice(0, 2).join(' ') || 'Despesas Fixas'}

@@ -130,6 +130,7 @@ export interface HolderBreakdown {
   card_last_four: string | null;
   total: number;
   count: number;
+  bank_id: BankId | null;
 }
 
 export interface TrendPoint {

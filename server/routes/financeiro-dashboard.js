@@ -98,12 +98,18 @@ router.get('/by-holder', authMiddleware, (req, res) => {
 
     const data = db.prepare(`
       SELECT
-        card_holder, card_last_four,
-        SUM(CASE WHEN is_refund = 0 THEN value_brl ELSE 0 END) as total,
-        COUNT(*) as count
-      FROM expenses
-      WHERE user_id = ? AND billing_month = ? AND deleted_at IS NULL
-      GROUP BY card_holder, card_last_four
+        e.card_holder, e.card_last_four,
+        SUM(CASE WHEN e.is_refund = 0 THEN e.value_brl ELSE 0 END) as total,
+        COUNT(*) as count,
+        (SELECT ci.bank_id FROM csv_imports ci
+         JOIN expenses e2 ON e2.csv_import_id = ci.id
+         WHERE e2.card_holder IS e.card_holder
+         AND e2.card_last_four IS e.card_last_four
+         AND e2.user_id = e.user_id
+         LIMIT 1) as bank_id
+      FROM expenses e
+      WHERE e.user_id = ? AND e.billing_month = ? AND e.deleted_at IS NULL
+      GROUP BY e.card_holder, e.card_last_four
       ORDER BY total DESC
     `).all(req.user.id, month);
 
