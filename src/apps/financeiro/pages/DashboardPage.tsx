@@ -92,8 +92,13 @@ export default function DashboardPage() {
             <span className="text-xs font-semibold text-[#7c7caa] dark:text-gray-400 uppercase tracking-wider">Total do mês</span>
           </div>
           <div className="text-2xl font-extrabold text-[#1e1b4b] dark:text-gray-100 tracking-tight">
-            {formatBRL(summary?.net_total || 0)}
+            {formatBRL(summary?.total_expenses || 0)}
           </div>
+          {(summary?.total_refunds || 0) > 0 && (
+            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+              -{formatBRL(summary!.total_refunds)} em estornos
+            </p>
+          )}
         </div>
 
         <div className="glass-card animate-slide-up" style={{ animationDelay: '0.08s' }}>
