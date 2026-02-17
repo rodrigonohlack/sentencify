@@ -51,6 +51,10 @@ router.get('/', authMiddleware, (req, res) => {
       where += ' AND e.purchase_date <= ?';
       params.push(date_to);
     }
+    if (req.query.is_refund !== undefined) {
+      where += ' AND e.is_refund = ?';
+      params.push(Number(req.query.is_refund));
+    }
 
     const countRow = db.prepare(`SELECT COUNT(*) as total, COALESCE(SUM(value_brl), 0) as total_amount FROM expenses e ${where}`).get(...params);
 

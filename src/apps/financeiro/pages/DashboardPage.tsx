@@ -52,6 +52,15 @@ export default function DashboardPage() {
     });
   }, []);
 
+  const handleRefundsClick = useCallback(() => {
+    setDrillDown({
+      isOpen: true,
+      title: 'Estornos',
+      subtitle: formatMonthLabel(selectedMonth),
+      filterParams: { month: selectedMonth, is_refund: '1' },
+    });
+  }, [selectedMonth]);
+
   const handleHolderClick = useCallback((holder: string) => {
     const isNull = holder === '__null__';
     const displayName = isNull ? 'Despesas Fixas' : (holder?.split(' ').slice(0, 2).join(' ') || 'Desconhecido');
@@ -95,9 +104,12 @@ export default function DashboardPage() {
             {formatBRL(summary?.total_expenses || 0)}
           </div>
           {(summary?.total_refunds || 0) > 0 && (
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+            <button
+              onClick={handleRefundsClick}
+              className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium hover:underline cursor-pointer"
+            >
               -{formatBRL(summary!.total_refunds)} em estornos
-            </p>
+            </button>
           )}
         </div>
 
