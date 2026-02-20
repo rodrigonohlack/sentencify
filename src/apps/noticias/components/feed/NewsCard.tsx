@@ -74,7 +74,7 @@ export const NewsCard = React.memo<NewsCardProps>(({
               />
             )}
             <h3 className="font-semibold theme-text-primary line-clamp-2 group-hover:text-blue-400 transition-colors">
-              {news.title}
+              {stripHtml(news.title)}
             </h3>
           </div>
           <p className="text-sm theme-text-secondary mt-1 line-clamp-2">

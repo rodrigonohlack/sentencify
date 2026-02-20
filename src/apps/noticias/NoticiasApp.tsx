@@ -32,6 +32,7 @@ import { BaseModal } from '../../components/modals/BaseModal';
 
 // Utilitários de data
 import { formatFullDate } from './utils/date-utils';
+import { stripHtml } from './utils/html-utils';
 
 // Tema global (necessário para CSS variables dos modais)
 import { ThemeStyles } from '../../styles';
@@ -453,7 +454,7 @@ const NoticiasAppContent: React.FC = () => {
       <BaseModal
         isOpen={!!selectedNews}
         onClose={handleCloseDetail}
-        title={selectedNews?.title || ''}
+        title={selectedNews?.title ? stripHtml(selectedNews.title) : ''}
         subtitle={`${selectedNews?.sourceName || ''} · ${formatFullDate(selectedNews?.publishedAt || '')}`}
         icon={<Newspaper />}
         iconColor="blue"

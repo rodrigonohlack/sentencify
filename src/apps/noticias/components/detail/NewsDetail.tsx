@@ -179,7 +179,7 @@ export const NewsDetail: React.FC<NewsDetailProps> = ({
         </div>
 
         <h1 className="text-xl font-bold theme-text-primary mb-2">
-          {news.title}
+          {stripHtml(news.title)}
         </h1>
 
         <div className="flex flex-wrap items-center gap-3 text-sm theme-text-muted">
