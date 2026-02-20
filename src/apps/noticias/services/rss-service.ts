@@ -88,7 +88,7 @@ export const parseRSSXml = (xmlText: string): RSSParseResult => {
 
       if (title && link) {
         parsedItems.push({
-          title: title.trim(),
+          title: stripHtml(title).slice(0, 300),
           description: description.trim(),
           link: link.trim(),
           pubDate,
