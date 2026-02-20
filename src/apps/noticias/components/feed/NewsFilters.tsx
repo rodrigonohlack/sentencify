@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import React, { useCallback, useMemo } from 'react';
-import { Search, Filter, Star, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Filter, Star, Eye, EyeOff, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { PERIOD_OPTIONS } from '../../constants/sources';
 import type { NewsSource, NewsFilters as NewsFiltersType, NewsPeriod } from '../../types';
 
@@ -39,6 +39,11 @@ export const NewsFilters: React.FC<NewsFiltersProps> = ({
   // Handler para busca com debounce
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     onFiltersChange({ searchQuery: e.target.value });
+  }, [onFiltersChange]);
+
+  // Handler para limpar busca
+  const handleClearSearch = useCallback(() => {
+    onFiltersChange({ searchQuery: '' });
   }, [onFiltersChange]);
 
   // Handler para período
@@ -96,8 +101,17 @@ export const NewsFilters: React.FC<NewsFiltersProps> = ({
           placeholder="Buscar notícias..."
           value={filters.searchQuery}
           onChange={handleSearchChange}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl theme-bg-secondary border theme-border-modal theme-text-primary placeholder:theme-text-disabled focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          className="w-full pl-10 pr-8 py-2.5 rounded-xl theme-bg-secondary border theme-border-modal theme-text-primary placeholder:theme-text-disabled focus:outline-none focus:ring-2 focus:ring-blue-500/50"
         />
+        {filters.searchQuery && (
+          <button
+            onClick={handleClearSearch}
+            className="absolute right-3 top-1/2 -translate-y-1/2 theme-text-muted hover:theme-text-primary transition-colors"
+            aria-label="Limpar busca"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
