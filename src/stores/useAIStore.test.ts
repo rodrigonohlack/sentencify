@@ -89,9 +89,9 @@ describe('useAIStore', () => {
     it('should set gemini model correctly', () => {
       const store = useAIStore.getState();
 
-      store.setGeminiModel('gemini-3-pro-preview');
+      store.setGeminiModel('gemini-3.1-pro-preview');
 
-      expect(useAIStore.getState().aiSettings.geminiModel).toBe('gemini-3-pro-preview');
+      expect(useAIStore.getState().aiSettings.geminiModel).toBe('gemini-3.1-pro-preview');
     });
 
     it('should set openai model correctly', () => {
@@ -587,8 +587,8 @@ describe('useAIStore', () => {
       expect(selectCurrentModel(useAIStore.getState())).toBe('claude-opus-4-20250514');
 
       store.setProvider('gemini');
-      store.setGeminiModel('gemini-3-pro-preview');
-      expect(selectCurrentModel(useAIStore.getState())).toBe('gemini-3-pro-preview');
+      store.setGeminiModel('gemini-3.1-pro-preview');
+      expect(selectCurrentModel(useAIStore.getState())).toBe('gemini-3.1-pro-preview');
 
       store.setProvider('openai');
       expect(selectCurrentModel(useAIStore.getState())).toBe('gpt-5.2-chat-latest');

@@ -47,8 +47,8 @@ export const AI_PROVIDERS: Record<AIProvider, ProviderInfo> = {
         description: '$0.50/$3.00 por 1M tokens'
       },
       {
-        id: 'gemini-3-pro-preview',
-        name: 'Gemini 3 Pro',
+        id: 'gemini-3.1-pro-preview',
+        name: 'Gemini 3.1 Pro',
         description: '$2.00/$12 por 1M tokens'
       }
     ]
@@ -119,7 +119,7 @@ export const MODEL_MAX_OUTPUT_TOKENS: Record<string, number> = {
 
   // Gemini
   'gemini-3-flash-preview': 128000,
-  'gemini-3-pro-preview': 128000,
+  'gemini-3.1-pro-preview': 128000,
 
   // OpenAI
   'gpt-5.2-chat-latest': 128000,

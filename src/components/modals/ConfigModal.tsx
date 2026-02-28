@@ -76,7 +76,7 @@ const getModelDisplayName = (modelId: string): string => {
     'claude-opus-4-5-20251101': 'Claude Opus 4.5',
     // Gemini 3
     'gemini-3-flash-preview': 'Gemini 3 Flash',
-    'gemini-3-pro-preview': 'Gemini 3 Pro',
+    'gemini-3.1-pro-preview': 'Gemini 3.1 Pro',
     // OpenAI GPT-5.2
     'gpt-5.2': 'GPT-5.2 Thinking',
     'gpt-5.2-chat-latest': 'GPT-5.2 Instant',
@@ -460,7 +460,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
                 >
                   <option value="gemini-3-flash-preview">Gemini 3 Flash ($0.50/$3.00 por 1M)</option>
-                  <option value="gemini-3-pro-preview">Gemini 3 Pro ($2.00/$12 por 1M)</option>
+                  <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro ($2.00/$12 por 1M)</option>
                 </select>
               )}
               {aiSettings.provider === 'openai' && (
@@ -1002,7 +1002,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     {aiSettings.doubleCheck?.provider === 'gemini' && (
                       <>
                         <option value="gemini-3-flash-preview">Gemini 3 Flash</option>
-                        <option value="gemini-3-pro-preview">Gemini 3 Pro</option>
+                        <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
                       </>
                     )}
                     {aiSettings.doubleCheck?.provider === 'openai' && (

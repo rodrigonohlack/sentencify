@@ -1319,13 +1319,13 @@ describe('useAIIntegration', () => {
       await act(async () => {
         await result.current.callGeminiAPI(
           [{ role: 'user', content: 'Hi' }] as any,
-          { model: 'gemini-3-pro-preview' }
+          { model: 'gemini-3.1-pro-preview' }
         );
       });
 
       const fetchCall = vi.mocked(global.fetch).mock.calls[0];
       const body = JSON.parse((fetchCall[1] as any).body);
-      expect(body.model).toBe('gemini-3-pro-preview');
+      expect(body.model).toBe('gemini-3.1-pro-preview');
     });
 
     it('should retry on Gemini 429 and succeed', async () => {
@@ -2053,9 +2053,9 @@ describe('useAIIntegration', () => {
       expect(result.current.getModelDisplayName('gemini-3-flash-preview')).toBe('Gemini 3 Flash');
     });
 
-    it('should return display name for Gemini 3 Pro', () => {
+    it('should return display name for Gemini 3.1 Pro', () => {
       const { result } = renderHook(() => useAIIntegration());
-      expect(result.current.getModelDisplayName('gemini-3-pro-preview')).toBe('Gemini 3 Pro');
+      expect(result.current.getModelDisplayName('gemini-3.1-pro-preview')).toBe('Gemini 3.1 Pro');
     });
 
     it('should return display name for GPT-5.2 Thinking', () => {

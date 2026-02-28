@@ -1187,7 +1187,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       'claude-opus-4-5-20251101': 'Claude Opus 4.5',
       // Gemini 3 (v1.32.36: removido 2.5)
       'gemini-3-flash-preview': 'Gemini 3 Flash',
-      'gemini-3-pro-preview': 'Gemini 3 Pro',
+      'gemini-3.1-pro-preview': 'Gemini 3.1 Pro',
       // v1.35.97: OpenAI GPT-5.2
       'gpt-5.2': 'GPT-5.2 Thinking',
       'gpt-5.2-chat-latest': 'GPT-5.2 Instant',

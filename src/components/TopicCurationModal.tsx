@@ -143,7 +143,7 @@ const MODEL_PRICES: Record<string, { input: number; output: number }> = {
   'claude-opus-4-5-20251101': { input: 15, output: 75 },
   // Gemini
   'gemini-3-flash-preview': { input: 0.50, output: 3.00 },
-  'gemini-3-pro-preview': { input: 2.00, output: 12.00 },
+  'gemini-3.1-pro-preview': { input: 2.00, output: 12.00 },
   // OpenAI
   'gpt-5.2': { input: 2.50, output: 10.00 },
   'gpt-5.2-chat-latest': { input: 2.50, output: 10.00 },
@@ -160,7 +160,7 @@ const MODEL_NAMES: Record<string, string> = {
   'claude-opus-4-5-20251101': 'Claude Opus 4.5',
   // Gemini
   'gemini-3-flash-preview': 'Gemini 3 Flash',
-  'gemini-3-pro-preview': 'Gemini 3 Pro',
+  'gemini-3.1-pro-preview': 'Gemini 3.1 Pro',
   // OpenAI
   'gpt-5.2': 'GPT-5.2',
   'gpt-5.2-chat-latest': 'GPT-5.2 Instant',
