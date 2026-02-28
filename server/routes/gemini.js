@@ -6,10 +6,10 @@ const router = Router();
  * Proxy para Gemini API (Google)
  * POST /api/gemini/generate
  *
- * Suporta Gemini 2.5 e 3.0 com suas diferenças:
- * - Gemini 2.5: thinking_budget (numérico)
+ * Suporta Gemini 3 / 3.1 com suas diferenças:
  * - Gemini 3: thinking_level (enum: minimal/low/medium/high)
  * - Gemini 3: thought signatures para multi-turn
+ * - Gemini 3.1: mesmo protocolo que Gemini 3
  */
 router.post('/generate', async (req, res) => {
   try {

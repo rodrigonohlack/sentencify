@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.24', feature: 'Fix: corrigir nome de exibição "Gemini 3.0 Flash" → "Gemini 3 Flash" no seletor de provedor do app financeiro; atualizar comentário do proxy Gemini (server/routes/gemini.js) para refletir suporte a Gemini 3 / 3.1' },
   { version: '1.40.23', feature: 'Atualização: Gemini 3 Pro migrado para gemini-3.1-pro-preview em todos os apps (SentencifyAI, Notícias, Analisador, Prova Oral), substituindo modelo descontinuado em 9/mar/2026' },
   { version: '1.40.22', feature: 'Segurança: mover API key do Gemini da URL (?key=) para header (x-goog-api-key), evitando exposição em logs de proxy/CDN. Alinhado com padrão já usado por Claude/OpenAI/Grok' },
   { version: '1.40.21', feature: 'Exibir número do julgado ADI/ADC/ADPF na aba Jurisprudência: renderIdentificador() agora mostra "nº X" para precedentes com numeroProcesso, removida exibição redundante abaixo do título' },
