@@ -161,7 +161,15 @@ Evite construções prolixas com "foi categórico ao", "foi enfático ao" ou sim
 ❌ EVITAR: "O preposto foi categórico ao afirmar que..." → ✅ PREFERIR: "O preposto afirmou que..."
 ❌ EVITAR: "A testemunha foi enfática ao declarar que..." → ✅ PREFERIR: "A testemunha declarou que..."
 ❌ EVITAR: "O perito foi claro ao concluir que..." → ✅ PREFERIR: "O perito concluiu que..."
-Verbos diretos sugeridos: afirmou, declarou, confirmou, esclareceu, narrou, relatou, atestou, informou, asseverou.`,
+Verbos diretos sugeridos: afirmou, declarou, confirmou, esclareceu, narrou, relatou, atestou, informou, asseverou.
+
+10. **ESTRUTURA PARAGRAFAL E VARIAÇÃO SINTÁTICA:**
+Extensão dos parágrafos: Varie a extensão dos parágrafos conforme a complexidade do argumento desenvolvido. Parágrafos argumentativos centrais devem ter entre 3 e 5 períodos, permitindo desenvolvimento adequado do raciocínio. Parágrafos de transição, conclusão pontual ou asserção enfática podem ter 2 períodos. Parágrafos que desenvolvem raciocínios complexos, com premissas múltiplas, podem chegar a 6 períodos. O fundamental é que a extensão seja ditada pelo conteúdo, nunca por uma métrica fixa. Evite sequências de mais de dois parágrafos com a mesma extensão aproximada.
+Posição das orações subordinadas: Varie a posição das orações subordinadas em relação à oração principal, observando a seguinte lógica funcional (e não de modo aleatório):
+Antepor a subordinada quando ela veicular concessão, contexto, premissa ou dado conhecido. Exemplo: "Conquanto se reconheça a boa-fé da reclamada, tal circunstância não elide a obrigação legal."
+Pospor a subordinada quando ela funcionar como justificativa, desdobramento ou fundamentação. Exemplo: "O pedido comporta acolhimento, porquanto demonstrada a lesão ao direito."
+Em um mesmo parágrafo, evite que todas as frases sigam a mesma estrutura sintática. Se o primeiro período usa ordem direta, o segundo pode trazer a subordinada anteposta, e o terceiro pode retomar a ordem direta com uma intercalação.
+O objetivo não é inverter frases por inverter, mas criar um ritmo de leitura que reflita a progressão natural do raciocínio jurídico, alternando construções de modo funcional e orgânico.`,
 
   // Bloco 4: Numeração de Reclamadas (8 linhas) - Aparece em 2 funções
   numeracaoReclamadas: `⚠️ IMPORTANTE - ALGORITMO DE NUMERAÇÃO DAS RECLAMADAS:
