@@ -11,6 +11,7 @@ import { useCallback, useRef, useEffect } from 'react';
 import { anonymizeText } from '../utils/text';
 import { getCorrectionDescription } from '../utils/double-check-utils';
 import { useUIStore } from '../stores/useUIStore';
+import { useAIStore } from '../stores/useAIStore';
 import { isOralProof } from '../components/ai/AIAssistantComponents';
 import { ORAL_PROOF_ANALYSIS_INSTRUCTIONS, buildOralProofSynthesisSection } from '../prompts/oral-proof-analysis';
 import { buildProofAnalysisPrompt } from '../prompts/proof-analysis-prompts';
@@ -147,6 +148,7 @@ export const useProofAnalysis = ({
   const openDoubleCheckReview = useUIStore(state => state.openDoubleCheckReview);
   const doubleCheckResult = useUIStore(state => state.doubleCheckResult);
   const setDoubleCheckResult = useUIStore(state => state.setDoubleCheckResult);
+  const setShowStreamingModal = useAIStore(state => state.setShowStreamingModal);
 
   // Ref para armazenar o resolver da Promise que aguarda decisao do usuario
   const pendingDoubleCheckResolve = useRef<((result: DoubleCheckReviewResult) => void) | null>(null);
@@ -603,6 +605,9 @@ ${customInstructions ? `INSTRUÇÕES DO MAGISTRADO:\n${customInstructions}\n` : 
               pendingDoubleCheckResolve.current = resolve;
             });
 
+            // Fechar StreamingModal antes de abrir DoubleCheckReviewModal (evita sobreposição) v1.40.27
+            setShowStreamingModal(false);
+
             // Abrir modal de revisao
             openDoubleCheckReview({
               operation: 'proofAnalysis',
@@ -657,6 +662,7 @@ ${customInstructions ? `INSTRUÇÕES DO MAGISTRADO:\n${customInstructions}\n` : 
     buildDocumentContentArray,
     setError,
     showToast,
+    setShowStreamingModal,  // v1.40.27
     openDoubleCheckReview  // v1.37.65: Double Check
   ]);
 

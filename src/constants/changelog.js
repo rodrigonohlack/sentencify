@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.27', feature: 'Fix: fechar StreamingModal antes de abrir DoubleCheckReviewModal na análise de provas — evita sobreposição de modais quando double-check está ativo (setShowStreamingModal(false) antes de openDoubleCheckReview)' },
   { version: '1.40.26', feature: 'Streaming: ativar streaming na análise de provas (contextual e livre) via StreamingModal — elimina timeouts em análises longas, exibe texto em tempo real com título "Analisando Prova"' },
   { version: '1.40.25', feature: 'Fix: remover carregamento estático do Quill 1.3.6 via cdn.quilljs.com do index.html (causava erros de CORS); carregamento dinâmico do Quill 2.0.2 via jsdelivr pelo hook useQuillInitialization permanece como única fonte' },
   { version: '1.40.24', feature: 'Fix: corrigir nome de exibição "Gemini 3.0 Flash" → "Gemini 3 Flash" no seletor de provedor do app financeiro; atualizar comentário do proxy Gemini (server/routes/gemini.js) para refletir suporte a Gemini 3 / 3.1' },
