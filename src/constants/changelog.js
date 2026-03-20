@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.28', feature: 'Refactor: migrar análise de provas para streaming silencioso — remove StreamingModal (startStreaming/updateStreamingText/stopStreaming) dos handlers de análise; streaming acontece sem modal visível, exatamente como mini-reports. Remove workaround setShowStreamingModal(false) do useProofAnalysis.' },
   { version: '1.40.27', feature: 'Fix: fechar StreamingModal antes de abrir DoubleCheckReviewModal na análise de provas — evita sobreposição de modais quando double-check está ativo (setShowStreamingModal(false) antes de openDoubleCheckReview)' },
   { version: '1.40.26', feature: 'Streaming: ativar streaming na análise de provas (contextual e livre) via StreamingModal — elimina timeouts em análises longas, exibe texto em tempo real com título "Analisando Prova"' },
   { version: '1.40.25', feature: 'Fix: remover carregamento estático do Quill 1.3.6 via cdn.quilljs.com do index.html (causava erros de CORS); carregamento dinâmico do Quill 2.0.2 via jsdelivr pelo hook useQuillInitialization permanece como única fonte' },

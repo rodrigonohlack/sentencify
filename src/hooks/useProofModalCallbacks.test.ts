@@ -36,20 +36,6 @@ vi.mock('./usePdfStorage', () => ({
   removePdfFromIndexedDB: vi.fn().mockResolvedValue(undefined),
 }));
 
-// Mock useAIStore
-const mockStartStreaming = vi.fn();
-const mockUpdateStreamingText = vi.fn();
-const mockStopStreaming = vi.fn();
-
-vi.mock('../stores/useAIStore', () => ({
-  useAIStore: (selector: (s: Record<string, unknown>) => unknown) =>
-    selector({
-      startStreaming: mockStartStreaming,
-      updateStreamingText: mockUpdateStreamingText,
-      stopStreaming: mockStopStreaming,
-    }),
-}));
-
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -374,7 +360,7 @@ describe('useProofModalCallbacks', () => {
         'Custom instructions',
         true,
         false,
-        { useStreaming: true, onChunk: mockUpdateStreamingText }
+        { useStreaming: true }
       );
       expect(mockSetProofToAnalyze).toHaveBeenCalledWith(null);
     });
@@ -402,7 +388,7 @@ describe('useProofModalCallbacks', () => {
         '',
         false,
         true,
-        { useStreaming: true, onChunk: mockUpdateStreamingText }
+        { useStreaming: true }
       );
     });
   });

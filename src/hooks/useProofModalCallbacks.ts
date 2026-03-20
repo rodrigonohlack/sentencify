@@ -17,7 +17,6 @@ import type {
 } from '../types';
 import { anonymizeText } from '../utils/text';
 import { removePdfFromIndexedDB } from './usePdfStorage';
-import { useAIStore } from '../stores/useAIStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -134,10 +133,6 @@ export function useProofModalCallbacks(props: UseProofModalCallbacksProps): UseP
     detectarNomesAutomaticamente,
     analyzeProof,
   } = props;
-
-  const startStreaming = useAIStore((s) => s.startStreaming);
-  const updateStreamingText = useAIStore((s) => s.updateStreamingText);
-  const stopStreaming = useAIStore((s) => s.stopStreaming);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // AddProofTextModal Callbacks
@@ -331,25 +326,20 @@ export function useProofModalCallbacks(props: UseProofModalCallbacksProps): UseP
   const handleAnalyzeContextual = useCallback(async () => {
     closeModal('proofAnalysis');
     if (proofManager.proofToAnalyze) {
-      startStreaming('proof');
-      try {
-        await analyzeProof(
-          proofManager.proofToAnalyze,
-          'contextual',
-          proofManager.proofAnalysisCustomInstructions,
-          proofManager.useOnlyMiniRelatorios,
-          false,
-          { useStreaming: true, onChunk: updateStreamingText }
-        );
-      } finally {
-        stopStreaming();
-      }
+      await analyzeProof(
+        proofManager.proofToAnalyze,
+        'contextual',
+        proofManager.proofAnalysisCustomInstructions,
+        proofManager.useOnlyMiniRelatorios,
+        false,
+        { useStreaming: true }  // streaming silencioso — sem onChunk
+      );
     }
     proofManager.setProofToAnalyze(null);
     proofManager.setProofAnalysisCustomInstructions('');
     proofManager.setUseOnlyMiniRelatorios(false);
     proofManager.setIncludeLinkedTopicsInFree(false);
-  }, [closeModal, proofManager, analyzeProof, startStreaming, updateStreamingText, stopStreaming]);
+  }, [closeModal, proofManager, analyzeProof]);
 
   /**
    * Analyze proof with free analysis
@@ -357,25 +347,20 @@ export function useProofModalCallbacks(props: UseProofModalCallbacksProps): UseP
   const handleAnalyzeFree = useCallback(async () => {
     closeModal('proofAnalysis');
     if (proofManager.proofToAnalyze) {
-      startStreaming('proof');
-      try {
-        await analyzeProof(
-          proofManager.proofToAnalyze,
-          'livre',
-          proofManager.proofAnalysisCustomInstructions,
-          false,
-          proofManager.includeLinkedTopicsInFree,
-          { useStreaming: true, onChunk: updateStreamingText }
-        );
-      } finally {
-        stopStreaming();
-      }
+      await analyzeProof(
+        proofManager.proofToAnalyze,
+        'livre',
+        proofManager.proofAnalysisCustomInstructions,
+        false,
+        proofManager.includeLinkedTopicsInFree,
+        { useStreaming: true }  // streaming silencioso — sem onChunk
+      );
     }
     proofManager.setProofToAnalyze(null);
     proofManager.setProofAnalysisCustomInstructions('');
     proofManager.setUseOnlyMiniRelatorios(false);
     proofManager.setIncludeLinkedTopicsInFree(false);
-  }, [closeModal, proofManager, analyzeProof, startStreaming, updateStreamingText, stopStreaming]);
+  }, [closeModal, proofManager, analyzeProof]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // DeleteProofModal Callbacks
