@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.25', feature: 'Fix: remover carregamento estático do Quill 1.3.6 via cdn.quilljs.com do index.html (causava erros de CORS); carregamento dinâmico do Quill 2.0.2 via jsdelivr pelo hook useQuillInitialization permanece como única fonte' },
   { version: '1.40.24', feature: 'Fix: corrigir nome de exibição "Gemini 3.0 Flash" → "Gemini 3 Flash" no seletor de provedor do app financeiro; atualizar comentário do proxy Gemini (server/routes/gemini.js) para refletir suporte a Gemini 3 / 3.1' },
   { version: '1.40.23', feature: 'Atualização: Gemini 3 Pro migrado para gemini-3.1-pro-preview em todos os apps (SentencifyAI, Notícias, Analisador, Prova Oral), substituindo modelo descontinuado em 9/mar/2026' },
   { version: '1.40.22', feature: 'Segurança: mover API key do Gemini da URL (?key=) para header (x-goog-api-key), evitando exposição em logs de proxy/CDN. Alinhado com padrão já usado por Claude/OpenAI/Grok' },
