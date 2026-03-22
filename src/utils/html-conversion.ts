@@ -62,7 +62,7 @@ export function htmlToFormattedText(html: string): string {
   text = text.replace(/<div>/gi, '');
 
   // Processar listas
-  text = text.replace(/<li>/gi, '• ');
+  text = text.replace(/<li[^>]*>/gi, '• ');
   text = text.replace(/<\/li>/gi, '\n');
   text = text.replace(/<ul>|<\/ul>|<ol>|<\/ol>/gi, '\n');
 
@@ -261,4 +261,39 @@ export function cleanHtmlForExport(html: string): string {
   );
 
   return cleaned.trim();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONVERSÃO PARA FORMATO INTERNO DO QUILL
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Converte listas HTML padrão (<ul>/<ol>) para o formato interno do Quill v1.
+ * Quill usa <ol> para ambos os tipos, diferenciando via data-list="bullet"|"ordered".
+ * Necessário antes de armazenar HTML como editedContent do tópico DISPOSITIVO,
+ * pois o Quill não reconhece <ul> como container de lista válido.
+ */
+export function convertHtmlListsToQuillFormat(html: string): string {
+  if (!html) return html;
+  let result = html;
+
+  // <ul>...<li>...</ul> → <ol>...<li data-list="bullet">...</ol>
+  result = result.replace(/<ul([^>]*)>([\s\S]*?)<\/ul>/gi, (_match, _attrs, content) => {
+    const quillContent = content.replace(/<li([^>]*)>/gi, (_m: string, attrs: string) => {
+      if (attrs.includes('data-list=')) return `<li${attrs}>`;
+      return `<li${attrs} data-list="bullet">`;
+    });
+    return `<ol>${quillContent}</ol>`;
+  });
+
+  // <ol>...<li>...</ol> sem data-list → adicionar data-list="ordered"
+  result = result.replace(/<ol([^>]*)>([\s\S]*?)<\/ol>/gi, (_match, _attrs, content) => {
+    if (content.includes('data-list=')) return `<ol>${content}</ol>`;
+    const quillContent = content.replace(/<li([^>]*)>/gi, (_m: string, attrs: string) => {
+      return `<li${attrs} data-list="ordered">`;
+    });
+    return `<ol>${quillContent}</ol>`;
+  });
+
+  return result;
 }

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { BaseModal, ModalInfoBox, CSS } from './BaseModal';
 import { API_BASE } from '../../constants/api';
+import { convertHtmlListsToQuillFormat } from '../../utils/html-conversion';
 import type {
   ShareLibraryModalProps,
   AcceptSharePageProps,
@@ -576,7 +577,7 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
       title: 'DISPOSITIVO',
       category: 'DISPOSITIVO' as TopicCategory,
       relatorio: 'Dispositivo final da sentença com todos os pedidos julgados.',
-      editedContent: dispositivoText.replace(/\n/g, '<br>')
+      editedContent: convertHtmlListsToQuillFormat(dispositivoText.replace(/\n/g, '<br>'))
     };
 
     // Verificar se já existe em extractedTopics
