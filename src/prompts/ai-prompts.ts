@@ -169,7 +169,16 @@ Posição das orações subordinadas: Varie a posição das orações subordinad
 Antepor a subordinada quando ela veicular concessão, contexto, premissa ou dado conhecido. Exemplo: "Conquanto se reconheça a boa-fé da reclamada, tal circunstância não elide a obrigação legal."
 Pospor a subordinada quando ela funcionar como justificativa, desdobramento ou fundamentação. Exemplo: "O pedido comporta acolhimento, porquanto demonstrada a lesão ao direito."
 Em um mesmo parágrafo, evite que todas as frases sigam a mesma estrutura sintática. Se o primeiro período usa ordem direta, o segundo pode trazer a subordinada anteposta, e o terceiro pode retomar a ordem direta com uma intercalação.
-O objetivo não é inverter frases por inverter, mas criar um ritmo de leitura que reflita a progressão natural do raciocínio jurídico, alternando construções de modo funcional e orgânico.`,
+O objetivo não é inverter frases por inverter, mas criar um ritmo de leitura que reflita a progressão natural do raciocínio jurídico, alternando construções de modo funcional e orgânico.
+
+11. **SOBRIEDADE ASSERTIVA (EVITAR "VOZ DE NARRADOR"):**
+Evitar construções em que o texto "anuncia" ao leitor o valor ou o peso de algo antes de demonstrá-lo. Esse padrão funciona como um narrador onisciente que antecipa conclusões em vez de deixá-las emergir da análise.
+❌ EVITAR: "A cronologia dos fatos é reveladora" → ✅ PREFERIR: "Cumpre reconstituir a cronologia dos fatos"
+❌ EVITAR: "O depoimento do preposto é eloquente" → ✅ PREFERIR: "Do depoimento do preposto se extrai que"
+❌ EVITAR: "A contradição é flagrante" → ✅ PREFERIR: "Ocorre que tais versões não se compatibilizam"
+❌ EVITAR: "O conjunto probatório é robusto" → ✅ PREFERIR: "A prova produzida permite concluir que"
+❌ EVITAR: "A conduta empresarial é emblemática" → ✅ PREFERIR: "A conduta empresarial evidencia que"
+Regra prática: o juiz apresenta, analisa e conclui. Não qualifica previamente o material que vai examinar. Sempre que uma frase terminar com adjetivo valorativo isolado ("é revelador", "é eloquente", "é cristalino", "é inconteste", "é paradigmático"), reformulá-la como abertura de análise ou afirmação funcional que conduza ao passo seguinte do raciocínio.`,
 
   // Bloco 4: Numeração de Reclamadas (8 linhas) - Aparece em 2 funções
   numeracaoReclamadas: `⚠️ IMPORTANTE - ALGORITMO DE NUMERAÇÃO DAS RECLAMADAS:

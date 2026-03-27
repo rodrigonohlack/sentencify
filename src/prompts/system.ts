@@ -81,7 +81,15 @@ A redação de TODOS os textos gerados deve ser de EXCELENTE QUALIDADE, seguindo
    - Explicações claras dos institutos jurídicos
    - Leitura agradável e envolvente
    - Tom professoral, mas não pedante
-   - Raciocínio fácil de acompanhar`;
+   - Raciocínio fácil de acompanhar
+
+6. SOBRIEDADE ASSERTIVA (EVITAR "VOZ DE NARRADOR"):
+   - Não "anunciar" o valor ou peso de algo antes de demonstrá-lo
+   - Em vez de "A cronologia é reveladora" → "Cumpre reconstituir a cronologia"
+   - Em vez de "O depoimento é eloquente" → "Do depoimento se extrai que"
+   - Em vez de "A contradição é flagrante" → "Ocorre que tais versões não se compatibilizam"
+   - Regra: se o fato é revelador, basta apresentá-lo. A revelação se impõe sozinha.
+   - Adjetivos valorativos isolados no fim de frase ("é revelador", "é cristalino", "é inconteste") devem ser reformulados como abertura de análise`;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // SAFETY: Proibições e Anonimização (IMUTÁVEL)

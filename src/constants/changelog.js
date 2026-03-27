@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.30', feature: 'Estilo: adicionar regra SOBRIEDADE ASSERTIVA (evitar "voz de narrador") ao prompt de estilo — combate construções em que o texto anuncia o valor ou peso de algo antes de demonstrá-lo, padrão típico de LLM; regra 11 em estiloRedacao (ai-prompts.ts) e regra 6 em AI_INSTRUCTIONS_STYLE (system.ts)' },
   { version: '1.40.29', feature: 'Fix: corrigir itens de lista sumindo no tópico DISPOSITIVO — converter HTML padrão (<ul>/<li>) gerado pela IA para formato interno do Quill (<ol><li data-list="bullet">) antes de salvar editedContent; corrigir htmlToFormattedText para reconhecer <li> com atributos' },
   { version: '1.40.28', feature: 'Refactor: migrar análise de provas para streaming silencioso — remove StreamingModal (startStreaming/updateStreamingText/stopStreaming) dos handlers de análise; streaming acontece sem modal visível, exatamente como mini-reports. Remove workaround setShowStreamingModal(false) do useProofAnalysis.' },
   { version: '1.40.27', feature: 'Fix: fechar StreamingModal antes de abrir DoubleCheckReviewModal na análise de provas — evita sobreposição de modais quando double-check está ativo (setShowStreamingModal(false) antes de openDoubleCheckReview)' },
