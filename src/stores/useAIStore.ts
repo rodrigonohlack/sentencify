@@ -22,6 +22,7 @@ import type {
   AnonymizationSettings,
   DoubleCheckSettings,
   VoiceImprovementSettings,
+  AutoCompleteSettings,
   TopicoComplementar,
   OCREngine,
   GeminiThinkingLevel,
@@ -263,7 +264,8 @@ const initialAISettings: AISettings = {
   quickPrompts: DEFAULT_QUICK_PROMPTS,
   logThinking: false,
   doubleCheck: DEFAULT_DOUBLE_CHECK,
-  voiceImprovement: DEFAULT_VOICE_IMPROVEMENT
+  voiceImprovement: DEFAULT_VOICE_IMPROVEMENT,
+  autoComplete: { enabled: false, delayMs: 3000 }
 };
 
 /** Estado inicial do TokenMetrics */
@@ -335,6 +337,7 @@ interface AIStoreState {
   setAnonymization: (settings: AnonymizationSettings) => void;
   setDoubleCheck: (settings: DoubleCheckSettings) => void;
   setVoiceImprovement: (settings: VoiceImprovementSettings) => void;
+  setAutoComplete: (settings: AutoCompleteSettings) => void;
   setQuickPrompts: (prompts: QuickPrompt[]) => void;
 
   // Actions - Token Metrics
@@ -646,6 +649,15 @@ export const useAIStore = create<AIStoreState>()(
             'setVoiceImprovement'
           ),
 
+        setAutoComplete: (settings) =>
+          set(
+            (state) => {
+              state.aiSettings.autoComplete = settings;
+            },
+            false,
+            'setAutoComplete'
+          ),
+
         // ─────────────────────────────────────────────────────────────────────
         // Actions - Token Metrics
         // ─────────────────────────────────────────────────────────────────────
@@ -913,5 +925,9 @@ export const selectApiTestStatus = (provider: AIProvider) => (state: AIStoreStat
 /** Selector: Retorna estado de streaming (v1.39.09) */
 export const selectStreamingState = (state: AIStoreState): StreamingState =>
   state.streamingState;
+
+/** Selector: Retorna configurações de Auto Complete (v1.40.31) */
+export const selectAutoComplete = (state: AIStoreState): AutoCompleteSettings =>
+  state.aiSettings.autoComplete ?? { enabled: false, delayMs: 3000 };
 
 export default useAIStore;

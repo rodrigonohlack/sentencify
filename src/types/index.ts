@@ -280,6 +280,8 @@ export interface AISettings {
   doubleCheck?: DoubleCheckSettings;
   // v1.37.88: Melhoria de texto ditado por voz com IA
   voiceImprovement?: VoiceImprovementSettings;
+  // v1.40.31: Auto Complete com IA no editor
+  autoComplete?: AutoCompleteSettings;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -293,6 +295,17 @@ export type VoiceImprovementModel = 'haiku' | 'flash' | 'gpt-4o-mini' | 'grok-in
 export interface VoiceImprovementSettings {
   enabled: boolean;
   model: VoiceImprovementModel;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTO COMPLETE TYPES (v1.40.31)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Configurações de Auto Complete com IA no editor */
+export interface AutoCompleteSettings {
+  enabled: boolean;
+  /** Tempo de pausa em ms antes de sugerir (default: 3000) */
+  delayMs: number;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1687,6 +1700,8 @@ export interface FieldEditorProps {
   minHeight?: string;
   editorTheme?: 'dark' | 'light' | string;
   hideVoiceButton?: boolean;
+  /** v1.40.31: Contexto para Auto Complete com IA (somente campo decisão) */
+  autoCompleteContext?: Pick<AutoCompleteSettings, 'enabled' | 'delayMs'> & { relatorio: string };
 }
 
 /** Ref exposta pelo FieldEditor - v1.35.93 */

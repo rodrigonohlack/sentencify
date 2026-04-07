@@ -11,6 +11,7 @@ import { VoiceButton } from '../VoiceButton';
 import { useAIStore } from '../../stores/useAIStore';
 import { useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
+import { useAutoComplete } from '../../hooks/useAutoComplete';
 import type {
   QuillInstance,
   QuillDelta,
@@ -42,7 +43,8 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
   quillError,
   minHeight = '120px',
   editorTheme = 'dark',
-  hideVoiceButton = false
+  hideVoiceButton = false,
+  autoCompleteContext
 }, ref) => {
   const editorRef = React.useRef<HTMLDivElement | null>(null);
   const quillInstanceRef = React.useRef<QuillInstance | null>(null);
@@ -52,6 +54,15 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
   const { improveText } = useVoiceImprovement({ callAI });
+
+  // v1.40.31: Auto Complete com IA (apenas campo fundamentacao)
+  useAutoComplete(quillInstanceRef, {
+    relatorio: autoCompleteContext?.relatorio ?? '',
+    enabled: autoCompleteContext?.enabled ?? false,
+    delayMs: autoCompleteContext?.delayMs ?? 3000,
+    editorTheme,
+    quillReady: quillReady ?? false
+  });
 
   // v1.20.4: Expor métodos de formatação para componente pai
   React.useImperativeHandle(ref, () => ({

@@ -15,7 +15,8 @@ import { SpacingDropdown, FontSizeDropdown } from '../ui';
 import { useQuillEditor, sanitizeQuillHTML } from '../../hooks/useQuillEditor';
 import { useSpacingControl, useFontSizeControl, useFullscreen, useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
-import { useAIStore } from '../../stores/useAIStore';
+import { useAutoComplete } from '../../hooks/useAutoComplete';
+import { useAIStore, selectAutoComplete } from '../../stores/useAIStore';
 import { useEditorStore } from '../../stores/useEditorStore';
 import { useRegenerationStore } from '../../stores/useRegenerationStore';
 import { stripInlineColors } from '../../utils/color-stripper';
@@ -740,6 +741,16 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
   const { improveText } = useVoiceImprovement({ callAI });
+
+  // v1.40.31: Auto Complete com IA
+  const autoCompleteSettings = useAIStore(selectAutoComplete);
+  useAutoComplete(quillInstanceRef, {
+    relatorio: topicRelatorio || '',
+    enabled: autoCompleteSettings.enabled,
+    delayMs: autoCompleteSettings.delayMs,
+    editorTheme,
+    quillReady
+  });
 
   const [isDragging, setIsDragging] = React.useState(false);
 

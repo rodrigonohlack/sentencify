@@ -139,6 +139,7 @@ export { useCloudSync } from './useCloudSync';
 // Voice/Cache hooks
 export { useVoiceToText } from './useVoiceToText';
 export { useVoiceImprovement, VOICE_MODEL_CONFIG } from './useVoiceImprovement';
+export { useAutoComplete } from './useAutoComplete';
 export { default as useFactsComparisonCache } from './useFactsComparisonCache';
 export { default as useSentenceReviewCache } from './useSentenceReviewCache';
 export { default as useChatHistoryCache, openChatDB, CHAT_DB_NAME, CHAT_STORE_NAME } from './useChatHistoryCache';

@@ -14,7 +14,7 @@ import { ChevronDown, Scale, Sparkles } from 'lucide-react';
 import { FieldEditor, InlineFormattingToolbar } from './FieldEditor';
 import { VoiceButton } from '../VoiceButton';
 import { VersionSelect } from '../version';
-import { useAIStore } from '../../stores/useAIStore';
+import { useAIStore, selectAutoComplete } from '../../stores/useAIStore';
 import { useEditorStore } from '../../stores/useEditorStore';
 import { useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
@@ -70,6 +70,9 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
   const { improveText } = useVoiceImprovement({ callAI });
+
+  // v1.40.31: Auto Complete com IA
+  const autoComplete = useAIStore(selectAutoComplete);
 
   // v1.40.05: Usar stores com fallback para props
   const {
@@ -240,6 +243,11 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
                   minHeight="150px"
                   editorTheme={editorTheme}
                   hideVoiceButton={true}
+                  autoCompleteContext={{
+                    relatorio: topic.editedRelatorio || topic.relatorio || '',
+                    enabled: autoComplete.enabled,
+                    delayMs: autoComplete.delayMs
+                  }}
                 />
               </div>
             </>

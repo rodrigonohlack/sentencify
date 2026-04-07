@@ -1447,6 +1447,100 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           </div>
 
           {/* ═══════════════════════════════════════════════════════════════════════════════
+              SEÇÃO 4.6: Auto Complete com IA (v1.40.31)
+              ═══════════════════════════════════════════════════════════════════════════════ */}
+          <div>
+            <label className="block text-sm font-medium theme-text-tertiary mb-3">
+              ✨ Auto Complete (IA)
+            </label>
+
+            {/* Toggle habilitar/desabilitar */}
+            <button
+              onClick={() => setAiSettings({
+                ...aiSettings,
+                autoComplete: {
+                  enabled: !aiSettings.autoComplete?.enabled,
+                  delayMs: aiSettings.autoComplete?.delayMs ?? 3000
+                }
+              })}
+              className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                aiSettings.autoComplete?.enabled
+                  ? 'bg-emerald-600/20 border-emerald-500'
+                  : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className={CSS.flexGap2}>
+                    <span className="font-semibold theme-text-primary">
+                      {aiSettings.autoComplete?.enabled ? '✓ Ativado' : 'Desativado'}
+                    </span>
+                    {aiSettings.autoComplete?.enabled && (
+                      <span className="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded">Auto Complete</span>
+                    )}
+                  </div>
+                  <p className="text-xs theme-text-muted mt-1">
+                    {aiSettings.autoComplete?.enabled
+                      ? 'Sugestões de texto aparecem em cinza no editor. Pressione TAB para aceitar.'
+                      : 'Sugestão automática de texto enquanto você redige a decisão.'
+                    }
+                  </p>
+                </div>
+                <div className={`w-12 h-6 rounded-full transition-colors relative ${
+                  aiSettings.autoComplete?.enabled ? 'bg-emerald-500' : 'theme-bg-tertiary'
+                }`}>
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                    aiSettings.autoComplete?.enabled ? 'translate-x-7' : 'translate-x-1'
+                  }`}></div>
+                </div>
+              </div>
+            </button>
+
+            {/* Configuração de delay (só quando habilitado) */}
+            {aiSettings.autoComplete?.enabled && (
+              <div className="mt-4 p-4 rounded-lg theme-bg-secondary-30 border theme-border-input space-y-4">
+                <div>
+                  <label className="block text-xs font-medium theme-text-muted mb-2">
+                    Tempo de pausa antes de sugerir:{' '}
+                    <span className="theme-text-primary font-semibold">
+                      {((aiSettings.autoComplete?.delayMs ?? 3000) / 1000).toFixed(1)}s
+                    </span>
+                  </label>
+                  <input
+                    type="range"
+                    min={1000}
+                    max={10000}
+                    step={500}
+                    value={aiSettings.autoComplete?.delayMs ?? 3000}
+                    onChange={(e) => setAiSettings({
+                      ...aiSettings,
+                      autoComplete: {
+                        enabled: true,
+                        delayMs: Number(e.target.value)
+                      }
+                    })}
+                    className="w-full accent-emerald-500"
+                  />
+                  <div className="flex justify-between text-xs theme-text-muted mt-1">
+                    <span>1s</span>
+                    <span>10s</span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                  <div className="flex items-start gap-2">
+                    <span className="text-emerald-400">💡</span>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-200">
+                      Funciona nos editores de decisão (modo individual e global).
+                      Usa o provider de IA configurado acima. Cada sugestão consome tokens.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 5: Nível de Detalhe nos Mini-Relatórios
               ═══════════════════════════════════════════════════════════════════════════════ */}
           <div>
