@@ -926,8 +926,11 @@ export const selectApiTestStatus = (provider: AIProvider) => (state: AIStoreStat
 export const selectStreamingState = (state: AIStoreState): StreamingState =>
   state.streamingState;
 
+/** Fallback estável para evitar loop infinito quando autoComplete é undefined no estado persistido */
+const AUTO_COMPLETE_FALLBACK: AutoCompleteSettings = { enabled: false, delayMs: 3000 };
+
 /** Selector: Retorna configurações de Auto Complete (v1.40.31) */
 export const selectAutoComplete = (state: AIStoreState): AutoCompleteSettings =>
-  state.aiSettings.autoComplete ?? { enabled: false, delayMs: 3000 };
+  state.aiSettings.autoComplete ?? AUTO_COMPLETE_FALLBACK;
 
 export default useAIStore;
