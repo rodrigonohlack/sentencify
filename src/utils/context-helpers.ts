@@ -8,7 +8,7 @@
  * @usedBy App.tsx (buildApiRequest), AIIntegration
  */
 
-import type { AIMessageContent, ProofFile, ProofText, AnonymizationSettings, ProofAnalysisResult } from '../types';
+import type { AIMessageContent, ProofFile, ProofText, ProofAttachment, AnonymizationSettings, ProofAnalysisResult } from '../types';
 import { anonymizeText } from './text';
 import { isOralProof } from '../components';
 import { wrapUserContent } from './prompt-safety';
@@ -259,6 +259,71 @@ export const prepareProofsContext = async (
       }
     }
 
+    // Anexos da prova (v1.41.02) — incluídos quando proofSendFullContent ativo, respeitando processingMode por anexo
+    const attachments = (proof as ProofFile | ProofText).attachments || [];
+    if (attachments.length > 0 && proofManager.proofSendFullContent?.[proofId]) {
+      proofsContext += `\n--- ANEXOS (${attachments.length}) ---\n`;
+      for (let i = 0; i < attachments.length; i++) {
+        const attachment = attachments[i] as ProofAttachment;
+        const attachmentNum = i + 1;
+        const nomesParaAnonimizar = anonConfig?.nomesUsuario || [];
+
+        if (attachment.type === 'pdf') {
+          const usePdfPuro = attachment.processingMode === 'pdf-puro';
+
+          if (usePdfPuro) {
+            // Usuário escolheu PDF Puro (binário) → enviar PDF direto ao Claude
+            if (anonymizationEnabled) {
+              // Anon ativa: fallback para texto extraído
+              if (attachment.extractedText) {
+                const textToSend = anonymizeText(attachment.extractedText, anonConfig, nomesParaAnonimizar);
+                proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}:\n${textToSend}\n`;
+              } else {
+                proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}: [PDF sem texto extraído — anonimização ativa]\n`;
+              }
+            } else {
+              const attachFile = attachment.file;
+              const attachData = attachment.fileData;
+              if (attachFile && fileToBase64Fn) {
+                const base64 = await fileToBase64Fn(attachFile);
+                proofDocuments.push({
+                  type: 'document',
+                  source: { type: 'base64', media_type: 'application/pdf', data: base64 },
+                  cache_control: base64.length > 100000 ? { type: 'ephemeral' } : undefined
+                });
+                proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}: [PDF anexado como documento]\n`;
+              } else if (attachData) {
+                proofDocuments.push({
+                  type: 'document',
+                  source: { type: 'base64', media_type: 'application/pdf', data: attachData },
+                  cache_control: attachData.length > 100000 ? { type: 'ephemeral' } : undefined
+                });
+                proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}: [PDF anexado como documento]\n`;
+              } else {
+                proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}: [PDF não disponível — reabra o processo para restaurar o arquivo]\n`;
+              }
+            }
+          } else {
+            // Modo pdfjs / tesseract / claude-vision → precisa de texto extraído
+            if (attachment.extractedText) {
+              const textToSend = (anonymizationEnabled && anonConfig)
+                ? anonymizeText(attachment.extractedText, anonConfig, nomesParaAnonimizar)
+                : attachment.extractedText;
+              proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}:\n${textToSend}\n`;
+            } else {
+              proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}: [Texto não extraído — abra a prova e extraia o texto deste anexo antes de enviar]\n`;
+            }
+          }
+        } else {
+          // Anexo de texto
+          const textToSend = (anonymizationEnabled && anonConfig)
+            ? anonymizeText(attachment.text || '', anonConfig, nomesParaAnonimizar)
+            : (attachment.text || '');
+          proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}:\n${textToSend}\n`;
+        }
+      }
+    }
+
     proofsContext += '\n---\n\n';
   }
 
@@ -393,6 +458,67 @@ export const prepareOralProofsContext = async (
           ? anonymizeText((proof as ProofText).text, anonConfig, nomesParaAnonimizar)
           : (proof as ProofText).text;
         proofsContext += `\nConteúdo Completo da Prova:\n${textToSend}\n`;
+      }
+    }
+
+    // Anexos da prova oral (v1.41.02) — incluídos quando proofSendFullContent ativo, respeitando processingMode por anexo
+    const attachments = (proof as ProofFile | ProofText).attachments || [];
+    if (attachments.length > 0 && proofManager.proofSendFullContent?.[proofId]) {
+      proofsContext += `\n--- ANEXOS (${attachments.length}) ---\n`;
+      for (let i = 0; i < attachments.length; i++) {
+        const attachment = attachments[i] as ProofAttachment;
+        const attachmentNum = i + 1;
+        const nomesParaAnonimizar = anonConfig?.nomesUsuario || [];
+
+        if (attachment.type === 'pdf') {
+          const usePdfPuro = attachment.processingMode === 'pdf-puro';
+
+          if (usePdfPuro) {
+            if (anonymizationEnabled) {
+              if (attachment.extractedText) {
+                const textToSend = anonymizeText(attachment.extractedText, anonConfig, nomesParaAnonimizar);
+                proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}:\n${textToSend}\n`;
+              } else {
+                proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}: [PDF sem texto extraído — anonimização ativa]\n`;
+              }
+            } else {
+              const attachFile = attachment.file;
+              const attachData = attachment.fileData;
+              if (attachFile && fileToBase64Fn) {
+                const base64 = await fileToBase64Fn(attachFile);
+                proofDocuments.push({
+                  type: 'document',
+                  source: { type: 'base64', media_type: 'application/pdf', data: base64 },
+                  cache_control: base64.length > 100000 ? { type: 'ephemeral' } : undefined
+                });
+                proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}: [PDF anexado como documento]\n`;
+              } else if (attachData) {
+                proofDocuments.push({
+                  type: 'document',
+                  source: { type: 'base64', media_type: 'application/pdf', data: attachData },
+                  cache_control: attachData.length > 100000 ? { type: 'ephemeral' } : undefined
+                });
+                proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}: [PDF anexado como documento]\n`;
+              } else {
+                proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}: [PDF não disponível — reabra o processo para restaurar o arquivo]\n`;
+              }
+            }
+          } else {
+            if (attachment.extractedText) {
+              const textToSend = (anonymizationEnabled && anonConfig)
+                ? anonymizeText(attachment.extractedText, anonConfig, nomesParaAnonimizar)
+                : attachment.extractedText;
+              proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}:\n${textToSend}\n`;
+            } else {
+              proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}: [Texto não extraído — abra a prova e extraia o texto deste anexo antes de enviar]\n`;
+            }
+          }
+        } else {
+          const textToSend = (anonymizationEnabled && anonConfig)
+            ? anonymizeText(attachment.text || '', anonConfig, nomesParaAnonimizar)
+            : (attachment.text || '');
+          proofsContext += `\nAnexo ${attachmentNum} — ${attachment.name}:\n${textToSend}\n`;
+        }
       }
     }
 

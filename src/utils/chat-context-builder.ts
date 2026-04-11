@@ -60,8 +60,8 @@ export interface BuildChatContextParams {
   contextScope: 'current' | 'selected' | 'all';
   analyzedDocuments: ChatContextDocuments;
   proofManager: {
-    proofFiles?: Array<{ id: number | string; name: string; file?: File; extractedText?: string; analysisResult?: string; myConclusions?: string }>;
-    proofTexts?: Array<{ id: number | string; name: string; text?: string; analysisResult?: string; myConclusions?: string }>;
+    proofFiles?: Array<{ id: number | string; name: string; file?: File; extractedText?: string; analysisResult?: string; myConclusions?: string; attachments?: Array<{ id: string; name: string; type: 'pdf' | 'text'; file?: File; fileData?: string; text?: string; extractedText?: string; processingMode?: string }> }>;
+    proofTexts?: Array<{ id: number | string; name: string; text?: string; analysisResult?: string; myConclusions?: string; attachments?: Array<{ id: string; name: string; type: 'pdf' | 'text'; file?: File; fileData?: string; text?: string; extractedText?: string; processingMode?: string }> }>;
     proofTopicLinks?: Record<string, string[]>;
   };
   fileToBase64: (file: File) => Promise<string>;
