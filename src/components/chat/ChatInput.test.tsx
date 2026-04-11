@@ -157,14 +157,15 @@ describe('ChatInput', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Keyboard', () => {
-    it('should send on Enter (without Shift)', () => {
+    it('should NOT send on Enter (Enter inserts newline, send only via button)', () => {
+      // fix(chat) v1.40.31: Enter quebra linha; envio apenas pelo botão
       render(<ChatInput onSend={mockOnSend} disabled={false} placeholder="Type here" />);
 
       const textarea = screen.getByPlaceholderText('Type here');
       fireEvent.change(textarea, { target: { value: 'Test message' } });
       fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
-      expect(mockOnSend).toHaveBeenCalledWith('Test message');
+      expect(mockOnSend).not.toHaveBeenCalled();
     });
 
     it('should NOT send on Shift+Enter', () => {
@@ -177,15 +178,15 @@ describe('ChatInput', () => {
       expect(mockOnSend).not.toHaveBeenCalled();
     });
 
-    it('should clear input after Enter key send', () => {
+    it('should NOT clear input after Enter key (Enter inserts newline)', () => {
+      // fix(chat) v1.40.31: Enter não envia, portanto não limpa o campo
       render(<ChatInput onSend={mockOnSend} disabled={false} placeholder="Type here" />);
 
       const textarea = screen.getByPlaceholderText('Type here') as HTMLTextAreaElement;
       fireEvent.change(textarea, { target: { value: 'Test' } });
       fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
-      // Input should be cleared after sending via Enter
-      expect(textarea.value).toBe('');
+      expect(mockOnSend).not.toHaveBeenCalled();
     });
 
     it('should NOT send on other keys', () => {

@@ -78,7 +78,13 @@ function computeProofsHash(proofManager: ProofManagerData): string {
   try {
     // Hash dos arquivos de prova
     const proofFilesSig = (proofManager.proofFiles || [])
-      .map(p => `${p?.id || ''}-${p?.name || ''}-${p?.size || 0}`)
+      .map(p => {
+        // v1.41.06: Incluir attachments na assinatura para detectar add/remove
+        const attSig = ((p as any).attachments || [])
+          .map((a: any) => a?.id || '')
+          .join(',');
+        return `${p?.id || ''}-${p?.name || ''}-${p?.size || 0}-att:[${attSig}]`;
+      })
       .join('|');
 
     // Hash dos textos de prova

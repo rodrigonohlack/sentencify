@@ -23,6 +23,8 @@ import type { ChatMessage } from '../../types';
 // ═══════════════════════════════════════════════════════════════════════════
 
 vi.mock('../modals/BaseModal', () => ({
+  BaseModal: ({ isOpen, children }: { isOpen: boolean; children?: unknown }) =>
+    isOpen ? <div data-testid="base-modal">{children as any}</div> : null,
   CSS: {
     modalOverlay: 'modal-overlay',
     modalContainer: 'modal-container',
@@ -75,6 +77,17 @@ vi.mock('../ui/ContextScopeSelector', () => ({
 
 vi.mock('../../hooks', () => ({
   useAIIntegration: vi.fn(() => ({ callAI: vi.fn() })),
+  useKnowledgePackages: vi.fn(() => ({
+    packages: [],
+    isLoading: false,
+    error: null,
+    fetchPackages: vi.fn(),
+    createPackage: vi.fn(),
+    updatePackage: vi.fn(),
+    deletePackage: vi.fn(),
+    addFile: vi.fn(),
+    removeFile: vi.fn(),
+  })),
 }));
 
 vi.mock('../../hooks/useVoiceImprovement', () => ({

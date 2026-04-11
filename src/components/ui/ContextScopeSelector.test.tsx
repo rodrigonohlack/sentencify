@@ -369,9 +369,9 @@ describe('ContextScopeSelector', () => {
     it('should show lock warning when chat has history', () => {
       render(<ContextScopeSelector {...defaultProps} chatHistoryLength={2} />);
 
-      // v1.39.06: Now there are 2 messages (one for each toggle)
+      // v1.41.01: 5 mensagens — 2 checkboxes de documentos + 3 controles de escopo (radio buttons + dropdown)
       const warnings = screen.getAllByText('Limpe o chat para alterar');
-      expect(warnings).toHaveLength(2);
+      expect(warnings).toHaveLength(5);
     });
 
     it('should show hint text when toggle is unlocked', () => {
