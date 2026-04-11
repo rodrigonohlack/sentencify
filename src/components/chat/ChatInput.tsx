@@ -38,13 +38,6 @@ export const ChatInput = React.memo(({
     setValue('');
   };
 
-  const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
   // v1.35.59: Handler para Voice-to-Text - adiciona texto ao valor
   const handleVoiceTranscript = React.useCallback((text: string) => {
     setValue(prev => (prev ? prev + ' ' : '') + text);
@@ -56,7 +49,6 @@ export const ChatInput = React.memo(({
         ref={textareaRef}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        onKeyDown={handleKey}
         disabled={disabled}
         className="flex-1 min-h-[5rem] max-h-[200px] overflow-y-auto theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary resize-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
         placeholder={placeholder}
