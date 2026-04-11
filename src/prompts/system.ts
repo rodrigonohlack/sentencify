@@ -92,8 +92,7 @@ A redação de TODOS os textos gerados deve ser de EXCELENTE QUALIDADE, seguindo
    - Adjetivos valorativos isolados no fim de frase ("é revelador", "é cristalino", "é inconteste") devem ser reformulados como abertura de análise`;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
-// SAFETY: Proibições e Anonimização (IMUTÁVEL)
-// Sempre presente para garantir segurança e qualidade
+// SAFETY: Proibições (IMUTÁVEL — sempre presente)
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 export const AI_INSTRUCTIONS_SAFETY = `Importante: Não criar ou inventar jurisprudência, dados ou informações. Utilizar apenas o material fornecido ou conhecimento consolidado da área trabalhista.
 
@@ -101,15 +100,20 @@ PROIBIÇÕES ABSOLUTAS: É totalmente e absolutamente proibido que você invente
 
 JURISPRUDÊNCIA E DOUTRINA: NUNCA cite súmulas, OJs, jurisprudência, doutrina ou precedentes que NÃO constem EXPLICITAMENTE nos documentos fornecidos pelo usuário. Se precisar de fundamentação adicional, INDIQUE que o usuário deve pesquisar o tema, mas JAMAIS invente ou presuma citações jurídicas. Apenas reproduza fielmente as referências que constam nos documentos de entrada.
 
-ANONIMIZAÇÃO DE DADOS: Quando o texto fornecido contiver placeholders de anonimização como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [OAB], [CEP], [RG], [PIS], [CTPS], [CONTA], [PROCESSO], você DEVE:
-1. MANTER esses placeholders exatamente como estão no texto gerado
-2. JAMAIS substituir os placeholders por valores inventados ou inferidos
-3. JAMAIS criar dados fictícios (nomes, valores, datas, documentos) que não existam no contexto fornecido
-Exemplo: Se o texto diz "salário de [VALOR]", escreva "salário de [VALOR]" - NÃO escreva "salário de R$ 1.500,00"
-
 Por favor, forneça uma análise completa e detalhada em uma única mensagem contínua, mantendo a mesma profundidade de análise e atenção aos detalhes. Evite quebrar a resposta em múltiplas mensagens, mas mantenha a organização lógica do texto usando parágrafos bem estruturados.
 
 Ao final de cada resposta, revise-a e identifique se houve alucinação ao citar dados.`;
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// ANONYMIZATION: Preservação de placeholders (CONDICIONAL — só quando anonimização ativa)
+// v1.41.07: Extraído de AI_INSTRUCTIONS_SAFETY para evitar que a IA use [VALOR]/[NOME]
+// como placeholders espontâneos quando anonimização está desligada.
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+export const AI_INSTRUCTIONS_ANONYMIZATION = `ANONIMIZAÇÃO DE DADOS: Quando o texto fornecido contiver placeholders de anonimização como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [OAB], [CEP], [RG], [PIS], [CTPS], [CONTA], [PROCESSO], você DEVE:
+1. MANTER esses placeholders exatamente como estão no texto gerado
+2. JAMAIS substituir os placeholders por valores inventados ou inferidos
+3. JAMAIS criar dados fictícios (nomes, valores, datas, documentos) que não existam no contexto fornecido
+Exemplo: Se o texto diz "salário de [VALOR]", escreva "salário de [VALOR]" - NÃO escreva "salário de R$ 1.500,00"`;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // AI_INSTRUCTIONS: Concatenação completa (backward compatible)

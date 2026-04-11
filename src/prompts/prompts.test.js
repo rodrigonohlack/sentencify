@@ -11,7 +11,8 @@ import {
   AI_INSTRUCTIONS,
   AI_INSTRUCTIONS_CORE,
   AI_INSTRUCTIONS_STYLE,
-  AI_INSTRUCTIONS_SAFETY
+  AI_INSTRUCTIONS_SAFETY,
+  AI_INSTRUCTIONS_ANONYMIZATION
 } from './system.js';
 
 describe('Prompts - Snapshot Tests', () => {
@@ -240,13 +241,19 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       expect(AI_INSTRUCTIONS_STYLE).toContain('DIDÁTICA E CLAREZA');
     });
 
-    it('SAFETY deve conter proibições e anonimização', () => {
+    it('SAFETY deve conter proibições e instrução final', () => {
       expect(AI_INSTRUCTIONS_SAFETY).toContain('PROIBIÇÕES ABSOLUTAS');
-      expect(AI_INSTRUCTIONS_SAFETY).toContain('ANONIMIZAÇÃO DE DADOS');
-      expect(AI_INSTRUCTIONS_SAFETY).toContain('[PESSOA 1]');
-      expect(AI_INSTRUCTIONS_SAFETY).toContain('[PESSOA 2]');
-      expect(AI_INSTRUCTIONS_SAFETY).toContain('[VALOR]');
       expect(AI_INSTRUCTIONS_SAFETY).toContain('revise-a e identifique se houve alucinação');
+      // v1.41.07: bloco ANONIMIZAÇÃO extraído para AI_INSTRUCTIONS_ANONYMIZATION
+      expect(AI_INSTRUCTIONS_SAFETY).not.toContain('ANONIMIZAÇÃO DE DADOS');
+    });
+
+    it('ANONYMIZATION deve conter placeholders de anonimização', () => {
+      // v1.41.07: bloco condicional — só injetado quando anonymization.enabled=true
+      expect(AI_INSTRUCTIONS_ANONYMIZATION).toContain('ANONIMIZAÇÃO DE DADOS');
+      expect(AI_INSTRUCTIONS_ANONYMIZATION).toContain('[PESSOA 1]');
+      expect(AI_INSTRUCTIONS_ANONYMIZATION).toContain('[PESSOA 2]');
+      expect(AI_INSTRUCTIONS_ANONYMIZATION).toContain('[VALOR]');
     });
 
     it('snapshot: AI_INSTRUCTIONS completo (detectar mudanças acidentais)', () => {

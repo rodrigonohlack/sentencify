@@ -43,7 +43,9 @@ vi.mock('../stores/useAIStore', () => ({
 vi.mock('../prompts', () => ({
   AI_INSTRUCTIONS: 'Test AI instructions full',
   AI_INSTRUCTIONS_CORE: 'Test AI instructions core',
+  AI_INSTRUCTIONS_STYLE: 'Test AI instructions style',
   AI_INSTRUCTIONS_SAFETY: 'Test AI instructions safety',
+  AI_INSTRUCTIONS_ANONYMIZATION: 'Test AI instructions anonymization',
 }));
 
 // Mock constants/api
@@ -2090,12 +2092,16 @@ describe('useAIIntegration', () => {
 
   describe('getAiInstructions', () => {
     it('should return default instructions when no custom prompt', () => {
+      // v1.41.07: instrução construída inline com CORE + STYLE + SAFETY (sem anon block)
       const { result } = renderHook(() => useAIIntegration());
       const instructions = result.current.getAiInstructions();
 
       expect(Array.isArray(instructions)).toBe(true);
       expect(instructions[0].type).toBe('text');
-      expect(instructions[0].text).toBe('Test AI instructions full');
+      expect(instructions[0].text).toContain('Test AI instructions core');
+      expect(instructions[0].text).toContain('Test AI instructions style');
+      expect(instructions[0].text).toContain('Test AI instructions safety');
+      expect(instructions[0].text).not.toContain('Test AI instructions anonymization');
       expect(instructions[0].cache_control).toEqual({ type: 'ephemeral' });
     });
 

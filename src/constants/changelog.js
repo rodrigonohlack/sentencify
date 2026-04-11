@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.41.07', feature: 'Fix(prompts): extrair bloco ANONIMIZAÇÃO DE DADOS de AI_INSTRUCTIONS_SAFETY para novo export condicional AI_INSTRUCTIONS_ANONYMIZATION — antes a instrução era sempre enviada no system prompt, fazendo a IA usar [VALOR]/[NOME] espontaneamente como placeholders mesmo sem anonimização ativa; agora o bloco só é injetado quando anonymization.enabled=true.' },
   { version: '1.41.06', feature: 'Fix(provas): autosave não disparava ao adicionar sub-anexos — computeProofsHash em useChangeDetectionHashes.ts agora inclui IDs dos attachments na assinatura do proofFilesSig; antes a hash era idêntica após add/remove de anexo, impedindo markSessionDirty de ser chamado.' },
   { version: '1.41.05', feature: 'UX(provas): seleção múltipla de PDFs no botão "+ PDF" da seção de Anexos — input agora tem atributo multiple e o handler itera sobre todos os arquivos selecionados, adicionando e salvando no IndexedDB em sequência.' },
   { version: '1.41.04', feature: 'Fix(provas): incluir anexos de provas no Export/Import de Projeto — exportProject serializa cada attachment com fileData (base64 do PDF) ou texto; importProjectFromJson restaura attachments criando File objects e salvando no IndexedDB via saveAttachmentToIndexedDB. Antes os sub-anexos eram perdidos ao exportar o projeto e reimportar.' },

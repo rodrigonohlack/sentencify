@@ -85,12 +85,6 @@ PROIBIÇÕES ABSOLUTAS: É totalmente e absolutamente proibido que você invente
 
 JURISPRUDÊNCIA E DOUTRINA: NUNCA cite súmulas, OJs, jurisprudência, doutrina ou precedentes que NÃO constem EXPLICITAMENTE nos documentos fornecidos pelo usuário. Se precisar de fundamentação adicional, INDIQUE que o usuário deve pesquisar o tema, mas JAMAIS invente ou presuma citações jurídicas. Apenas reproduza fielmente as referências que constam nos documentos de entrada.
 
-ANONIMIZAÇÃO DE DADOS: Quando o texto fornecido contiver placeholders de anonimização como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [OAB], [CEP], [RG], [PIS], [CTPS], [CONTA], [PROCESSO], você DEVE:
-1. MANTER esses placeholders exatamente como estão no texto gerado
-2. JAMAIS substituir os placeholders por valores inventados ou inferidos
-3. JAMAIS criar dados fictícios (nomes, valores, datas, documentos) que não existam no contexto fornecido
-Exemplo: Se o texto diz "salário de [VALOR]", escreva "salário de [VALOR]" - NÃO escreva "salário de R$ 1.500,00"
-
 Por favor, forneça uma análise completa e detalhada em uma única mensagem contínua, mantendo a mesma profundidade de análise e atenção aos detalhes. Evite quebrar a resposta em múltiplas mensagens, mas mantenha a organização lógica do texto usando parágrafos bem estruturados.
 
 Ao final de cada resposta, revise-a e identifique se houve alucinação ao citar dados."
@@ -129,12 +123,6 @@ exports[`Prompts - Snapshot Tests > AI_INSTRUCTIONS Modular > snapshot: AI_INSTR
 PROIBIÇÕES ABSOLUTAS: É totalmente e absolutamente proibido que você invente dados em caso de algum documento estiver faltante. Por exemplo, caso eu peça no prompt para você relatar algo sobre uma petição inicial e sobre uma contestação, mas o arquivo da contestação estiver ausente, JAMAIS invente informações. Nesses casos, analise o documento presente e o que faltar deve ser indicado com algo do tipo "documento TAL inexistente".
 
 JURISPRUDÊNCIA E DOUTRINA: NUNCA cite súmulas, OJs, jurisprudência, doutrina ou precedentes que NÃO constem EXPLICITAMENTE nos documentos fornecidos pelo usuário. Se precisar de fundamentação adicional, INDIQUE que o usuário deve pesquisar o tema, mas JAMAIS invente ou presuma citações jurídicas. Apenas reproduza fielmente as referências que constam nos documentos de entrada.
-
-ANONIMIZAÇÃO DE DADOS: Quando o texto fornecido contiver placeholders de anonimização como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [OAB], [CEP], [RG], [PIS], [CTPS], [CONTA], [PROCESSO], você DEVE:
-1. MANTER esses placeholders exatamente como estão no texto gerado
-2. JAMAIS substituir os placeholders por valores inventados ou inferidos
-3. JAMAIS criar dados fictícios (nomes, valores, datas, documentos) que não existam no contexto fornecido
-Exemplo: Se o texto diz "salário de [VALOR]", escreva "salário de [VALOR]" - NÃO escreva "salário de R$ 1.500,00"
 
 Por favor, forneça uma análise completa e detalhada em uma única mensagem contínua, mantendo a mesma profundidade de análise e atenção aos detalhes. Evite quebrar a resposta em múltiplas mensagens, mas mantenha a organização lógica do texto usando parágrafos bem estruturados.
 

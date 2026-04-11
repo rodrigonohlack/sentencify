@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { useAIStore } from '../stores/useAIStore';
-import { AI_INSTRUCTIONS, AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_SAFETY } from '../prompts';
+import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
 import { API_BASE } from '../constants/api';
 import { withRetry } from '../utils/retry';
 import type {
@@ -206,30 +206,28 @@ const useAIIntegration = () => {
   // v1.35.76: Estilo personalizado SUBSTITUI (não complementa) o estilo default
   const getAiInstructions = React.useCallback(() => {
     const customPrompt = aiSettings?.customPrompt?.trim();
+    // v1.41.07: Bloco de anonimização injetado APENAS quando anonimização está ativa,
+    // evitando que a IA use [VALOR]/[NOME] espontaneamente como placeholders.
+    const anonBlock = aiSettings?.anonymization?.enabled
+      ? `\n\n${AI_INSTRUCTIONS_ANONYMIZATION}`
+      : '';
 
     if (customPrompt) {
       // SUBSTITUTIVO: customPrompt substitui STYLE, mas CORE e SAFETY permanecem
-      const customInstructions = `${AI_INSTRUCTIONS_CORE}
-
-📝 ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO:
-${customPrompt}
-
-${AI_INSTRUCTIONS_SAFETY}`;
-
       return [
         {
           type: "text",
-          text: customInstructions,
+          text: `${AI_INSTRUCTIONS_CORE}\n\n📝 ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO:\n${customPrompt}\n\n${AI_INSTRUCTIONS_SAFETY}${anonBlock}`,
           cache_control: { type: "ephemeral" }
         }
       ];
     }
 
-    // Sem customização: usa AI_INSTRUCTIONS completo (inclui STYLE default)
+    // Sem customização: monta com CORE + STYLE default + SAFETY (+ anon se ativo)
     return [
       {
         type: "text",
-        text: AI_INSTRUCTIONS,
+        text: `${AI_INSTRUCTIONS_CORE}\n\n${AI_INSTRUCTIONS_STYLE}\n\n${AI_INSTRUCTIONS_SAFETY}${anonBlock}`,
         cache_control: { type: "ephemeral" }
       }
     ];
