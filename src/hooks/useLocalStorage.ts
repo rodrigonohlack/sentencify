@@ -28,6 +28,7 @@ import type {
   Proof,
   ProofFile,
   ProofText,
+  ProofAttachment,
   ProofAnalysisResult,
   UploadedFile,
   ProcessingMode,
@@ -55,6 +56,7 @@ import {
   saveUploadTextToIndexedDB,
   getUploadTextFromIndexedDB,
   clearAllUploadTextsFromIndexedDB,
+  getAttachmentFromIndexedDB,
   type UploadTextCategory,
 } from './usePdfStorage';
 
@@ -258,8 +260,19 @@ export function useLocalStorage(): UseLocalStorageReturn {
         name: proof.name,
         type: proof.type,
         size: proof.size,
-        uploadDate: proof.uploadDate
+        uploadDate: proof.uploadDate,
         // Sem fileData - PDFs estão no IndexedDB
+        // v1.41.03: Preservar metadados dos anexos (file omitido — PDFs no IndexedDB)
+        attachments: ((proof as ProofFile).attachments || []).map((att: ProofAttachment) => ({
+          id: att.id,
+          name: att.name,
+          type: att.type,
+          size: att.size,
+          uploadDate: att.uploadDate,
+          text: att.text,
+          extractedText: att.extractedText,
+          processingMode: att.processingMode
+        }))
       }));
 
       // v1.40.17: Salvar proofTexts no IndexedDB para evitar estouro do localStorage
@@ -757,13 +770,34 @@ export function useLocalStorage(): UseLocalStorageReturn {
         const results = await Promise.allSettled(
           session.proofFiles.map(async (proof: Proof) => {
             const pdfFile = await getPdfFromIndexedDB(`proof-${proof.id}`);
+            // v1.41.03: Restaurar anexos — metadados do localStorage + file do IndexedDB
+            const savedAttachments = ((proof as ProofFile).attachments || []) as ProofAttachment[];
+            const restoredAttachments: ProofAttachment[] = await Promise.all(
+              savedAttachments.map(async (att: ProofAttachment) => {
+                const attachFile = att.type === 'pdf'
+                  ? await getAttachmentFromIndexedDB(proof.id, att.id)
+                  : null;
+                return {
+                  id: att.id,
+                  name: att.name,
+                  type: att.type,
+                  file: attachFile || undefined,
+                  size: att.size,
+                  uploadDate: att.uploadDate,
+                  text: att.text,
+                  extractedText: att.extractedText,
+                  processingMode: att.processingMode
+                } as ProofAttachment;
+              })
+            );
             return {
               id: proof.id,
               file: pdfFile,
               name: proof.name,
               type: proof.type,
               size: proof.size,
-              uploadDate: proof.uploadDate
+              uploadDate: proof.uploadDate,
+              ...(restoredAttachments.length > 0 ? { attachments: restoredAttachments } : {})
             };
           })
         );
