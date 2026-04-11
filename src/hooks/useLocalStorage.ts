@@ -57,6 +57,7 @@ import {
   getUploadTextFromIndexedDB,
   clearAllUploadTextsFromIndexedDB,
   getAttachmentFromIndexedDB,
+  saveAttachmentToIndexedDB,
   type UploadTextCategory,
 } from './usePdfStorage';
 
@@ -979,24 +980,31 @@ export function useLocalStorage(): UseLocalStorageReturn {
 
     const proofFilesSerializable = await Promise.all(
       (proofFiles || []).map(async (proof: Proof) => {
-        if (!proof.file) {
-          return {
-            id: proof.id,
-            name: proof.name,
-            type: proof.type,
-            size: proof.size,
-            uploadDate: proof.uploadDate,
-            fileData: null
-          };
-        }
-        const base64 = await fileToBase64(proof.file);
+        const mainFileData = proof.file ? await fileToBase64(proof.file) : null;
+
+        // v1.41.04: Exportar anexos com fileData base64
+        const exportedAttachments = await Promise.all(
+          ((proof as ProofFile).attachments || []).map(async (att: ProofAttachment) => ({
+            id: att.id,
+            name: att.name,
+            type: att.type,
+            size: att.size,
+            uploadDate: att.uploadDate,
+            text: att.text,
+            extractedText: att.extractedText,
+            processingMode: att.processingMode,
+            fileData: att.type === 'pdf' && att.file ? await fileToBase64(att.file) : undefined
+          }))
+        );
+
         return {
           id: proof.id,
           name: proof.name,
           type: proof.type,
           size: proof.size,
           uploadDate: proof.uploadDate,
-          fileData: base64
+          fileData: mainFileData,
+          ...(exportedAttachments.length > 0 ? { attachments: exportedAttachments } : {})
         };
       })
     );
@@ -1378,9 +1386,28 @@ export function useLocalStorage(): UseLocalStorageReturn {
           restoredProofFiles.push(proof);
           continue;
         }
+
+        // v1.41.04: Helper para restaurar anexos de um proof importado
+        const importAttachments = async (proofId: string | number): Promise<ProofAttachment[]> => {
+          const importedAttachments: ProofAttachment[] = [];
+          for (const att of ((proof as ProofFile).attachments || []) as ProofAttachment[]) {
+            if (att.type === 'pdf' && (att as ProofAttachment & { fileData?: string }).fileData) {
+              const attFileData = (att as ProofAttachment & { fileData?: string }).fileData!;
+              const attFile = base64ToFile(attFileData, att.name, 'application/pdf');
+              await saveAttachmentToIndexedDB(proofId, att.id, attFile);
+              importedAttachments.push({ id: att.id, name: att.name, type: 'pdf' as const, file: attFile, size: att.size, uploadDate: att.uploadDate, extractedText: att.extractedText, processingMode: att.processingMode });
+            } else if (att.type === 'text') {
+              importedAttachments.push({ id: att.id, name: att.name, type: 'text' as const, text: att.text, uploadDate: att.uploadDate, extractedText: att.extractedText, processingMode: att.processingMode });
+            }
+            await yieldToMain();
+          }
+          return importedAttachments;
+        };
+
         if (!proof.fileData) {
-          // ProofFile without data - mark as placeholder
-          restoredProofFiles.push({ id: proof.id, name: proof.name, type: 'pdf' as const, size: proof.size, uploadDate: proof.uploadDate, isPlaceholder: true });
+          // ProofFile without data - mark as placeholder, preserve attachments if any
+          const attachments = await importAttachments(proof.id);
+          restoredProofFiles.push({ id: proof.id, name: proof.name, type: 'pdf' as const, size: proof.size, uploadDate: proof.uploadDate, isPlaceholder: true, ...(attachments.length > 0 ? { attachments } : {}) });
           continue;
         }
         // Converter base64 para File (otimizado sem array intermediário)
@@ -1392,7 +1419,8 @@ export function useLocalStorage(): UseLocalStorageReturn {
         const blob = new Blob([byteArray], { type: 'application/pdf' });
         const restoredFile = new File([blob], proof.name, { type: 'application/pdf' });
         await savePdfToIndexedDB(`proof-${proof.id}`, restoredFile, 'proof');
-        restoredProofFiles.push({ id: proof.id, file: restoredFile, name: proof.name, type: 'pdf' as const, size: proof.size, uploadDate: proof.uploadDate });
+        const attachments = await importAttachments(proof.id);
+        restoredProofFiles.push({ id: proof.id, file: restoredFile, name: proof.name, type: 'pdf' as const, size: proof.size, uploadDate: proof.uploadDate, ...(attachments.length > 0 ? { attachments } : {}) });
         // Yield para permitir GC do base64 processado
         await yieldToMain();
       }
