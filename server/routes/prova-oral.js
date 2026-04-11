@@ -69,6 +69,13 @@ router.put('/sharing', (req, res) => {
       return res.status(400).json({ error: 'recipientIds deve ser um array' });
     }
 
+    // Filtrar apenas IDs de usuários que existem de fato (defesa em profundidade)
+    const validIds = recipientIds.filter(id => {
+      if (typeof id !== 'string' || !id.trim()) return false;
+      const user = db.prepare('SELECT id FROM users WHERE id = ?').get(id);
+      return !!user;
+    });
+
     // Transação: remove antigos e insere novos
     const transaction = db.transaction(() => {
       db.prepare('DELETE FROM prova_oral_access WHERE owner_id = ?').run(userId);
@@ -78,14 +85,14 @@ router.put('/sharing', (req, res) => {
         VALUES (?, ?, ?)
       `);
 
-      for (const recipientId of recipientIds) {
+      for (const recipientId of validIds) {
         insert.run(uuidv4(), userId, recipientId);
       }
     });
 
     transaction();
 
-    res.json({ success: true, count: recipientIds.length });
+    res.json({ success: true, count: validIds.length });
   } catch (error) {
     console.error('[ProvaOral] Sharing update error:', error);
     res.status(500).json({ error: 'Erro ao atualizar compartilhamentos' });

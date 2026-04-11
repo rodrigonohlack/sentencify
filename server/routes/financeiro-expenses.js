@@ -10,7 +10,8 @@ router.get('/', authMiddleware, (req, res) => {
   try {
     const db = getDb();
     const { month, category, holder, card, source, search, date_from, date_to, page = 1, limit = 50 } = req.query;
-    const offset = (Number(page) - 1) * Number(limit);
+    const safeLimit = Math.min(Math.max(1, Number(limit) || 50), 500);
+    const offset = (Math.max(1, Number(page)) - 1) * safeLimit;
 
     let where = 'WHERE e.user_id = ? AND e.deleted_at IS NULL';
     const params = [req.user.id];
@@ -65,7 +66,7 @@ router.get('/', authMiddleware, (req, res) => {
       ${where}
       ORDER BY e.purchase_date DESC, e.created_at DESC
       LIMIT ? OFFSET ?
-    `).all(...params, Number(limit), offset);
+    `).all(...params, safeLimit, offset);
 
     const uncategorizedCount = db.prepare(
       'SELECT COUNT(*) as total FROM expenses WHERE user_id = ? AND category_id IS NULL AND deleted_at IS NULL'
@@ -74,11 +75,11 @@ router.get('/', authMiddleware, (req, res) => {
     res.json({
       expenses,
       pagination: {
-        page: Number(page),
-        limit: Number(limit),
+        page: Math.max(1, Number(page)),
+        limit: safeLimit,
         total: countRow.total,
         total_amount: countRow.total_amount,
-        pages: Math.ceil(countRow.total / Number(limit)),
+        pages: Math.ceil(countRow.total / safeLimit),
       },
       uncategorized_total: uncategorizedCount.total,
     });
