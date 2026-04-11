@@ -67,6 +67,12 @@ export interface BuildChatContextParams {
   fileToBase64: (file: File) => Promise<string>;
   anonymizationEnabled?: boolean;
   anonymizationSettings?: AnonymizationSettings;
+  /** Pacote de conhecimento selecionado pelo usuário (instruções + arquivos de texto) */
+  knowledgePackage?: {
+    name: string;
+    instructions: string;
+    files: { name: string; content: string }[];
+  } | null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -195,7 +201,20 @@ Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
 ${currentContent || 'Ainda não foi escrito nada'}`;
   }
 
-  // 6. Montar prompt completo
+  // 6. Injetar pacote de conhecimento (se selecionado)
+  if (params.knowledgePackage) {
+    const { name, instructions, files } = params.knowledgePackage;
+    let pkgText = `📚 PACOTE DE CONHECIMENTO: ${name}\n`;
+    if (instructions?.trim()) pkgText += `\n${instructions.trim()}\n`;
+    for (const f of files) {
+      if (f.content?.trim()) {
+        pkgText += `\n--- ${f.name} ---\n${f.content.trim()}\n`;
+      }
+    }
+    contentArray.push({ type: 'text', text: pkgText });
+  }
+
+  // 7. Montar prompt completo
   contentArray.push({
     type: 'text',
     text: `Você está auxiliando na redação de uma DECISÃO JUDICIAL TRABALHISTA.

@@ -60,6 +60,33 @@ export interface Topic {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// KNOWLEDGE PACKAGE TYPES
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface KnowledgePackageFile {
+  id: string;
+  packageId: string;
+  name: string;
+  /** Texto colado pelo usuário — enviado para a LLM como contexto */
+  content: string;
+  fileSize?: number;
+  createdAt: string;
+}
+
+export interface KnowledgePackage {
+  id: string;
+  name: string;
+  description?: string;
+  /** Instruções personalizadas de como o juiz decide esse tipo de tópico */
+  instructions: string;
+  files: KnowledgePackageFile[];
+  createdAt: string;
+  updatedAt: string;
+  syncVersion?: number;
+  deletedAt?: string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MODEL TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 

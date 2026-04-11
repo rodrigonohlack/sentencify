@@ -66,6 +66,7 @@ const runMigrations = () => {
     { name: '015_financeiro_installments', fn: migration015FinanceiroInstallments },
     { name: '016_csv_imports_bank_id', fn: migration016CSVImportsBankId },
     { name: '017_financeiro_projected_card_info', fn: migration017FinanceiroProjectedCardInfo },
+    { name: '018_knowledge_packages', fn: migration018KnowledgePackages },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -622,6 +623,47 @@ function migration017FinanceiroProjectedCardInfo(db) {
       AND installment_group_id IS NOT NULL
   `).run();
   console.log(`[Database] Migration 017: Backfilled card info on ${result.changes} projected transactions`);
+}
+
+// Migration 018: Pacotes de Conhecimento
+function migration018KnowledgePackages(db) {
+  db.exec(`
+    -- ═══════════════════════════════════════════════════════════════
+    -- TABELA: knowledge_packages
+    -- Pacotes de conhecimento por usuário (instruções + arquivos de texto)
+    -- ═══════════════════════════════════════════════════════════════
+    CREATE TABLE IF NOT EXISTS knowledge_packages (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT,
+      instructions TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      deleted_at TEXT,
+      sync_version INTEGER DEFAULT 1
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_kp_user ON knowledge_packages(user_id);
+    CREATE INDEX IF NOT EXISTS idx_kp_updated ON knowledge_packages(updated_at);
+
+    -- ═══════════════════════════════════════════════════════════════
+    -- TABELA: knowledge_package_files
+    -- Arquivos de texto vinculados a um pacote
+    -- ═══════════════════════════════════════════════════════════════
+    CREATE TABLE IF NOT EXISTS knowledge_package_files (
+      id TEXT PRIMARY KEY,
+      package_id TEXT NOT NULL REFERENCES knowledge_packages(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      content TEXT NOT NULL,
+      file_size INTEGER,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_kpf_package ON knowledge_package_files(package_id);
+  `);
+  console.log('[Database] Migration 018: Created knowledge_packages and knowledge_package_files tables');
 }
 
 // Exportar

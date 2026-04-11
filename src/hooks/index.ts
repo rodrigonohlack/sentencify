@@ -398,3 +398,7 @@ export type { UseProofModalCallbacksProps, UseProofModalCallbacksReturn } from '
 // Prova Oral Import hook (v1.39.08 - importar análises de prova oral)
 export { useProvaOralImport } from './useProvaOralImport';
 export type { UseProvaOralImportReturn } from './useProvaOralImport';
+
+// Pacotes de Conhecimento (v1.40.34)
+export { useKnowledgePackages } from './useKnowledgePackages';
+export type { UseKnowledgePackagesReturn } from './useKnowledgePackages';

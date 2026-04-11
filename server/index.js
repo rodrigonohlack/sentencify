@@ -28,6 +28,7 @@ import authRoutes from './routes/auth.js';
 import authMagicRoutes from './routes/auth-magic.js';
 import modelsRoutes from './routes/models.js';
 import syncRoutes from './routes/sync.js';
+import knowledgePackagesRoutes from './routes/knowledge-packages.js';
 import adminRoutes from './routes/admin.js';
 import shareRoutes from './routes/share.js';
 import analysesRoutes from './routes/analyses.js';
@@ -188,6 +189,9 @@ app.use('/api/auth/magic', authMagicRoutes);
 // Rotas de modelos e sincronização (v1.34.0)
 app.use('/api/models', modelsRoutes);
 app.use('/api/sync', syncRoutes);
+
+// Rotas de pacotes de conhecimento (v1.40.34)
+app.use(knowledgePackagesRoutes);
 
 // Rotas de administração (v1.34.4)
 app.use('/api/admin', adminRoutes);

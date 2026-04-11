@@ -17,6 +17,9 @@ import { CSS } from '../modals/BaseModal';
 import { ChatHistoryArea, ChatInput, InsertDropdown } from '../chat';
 import { VoiceButton } from '../VoiceButton';
 import { ContextScopeSelector } from '../ui/ContextScopeSelector';
+import { KnowledgePackageSelector } from './KnowledgePackageSelector';
+import { KnowledgePackagesManagerModal } from '../modals/KnowledgePackagesManagerModal';
+import { useKnowledgePackages } from '../../hooks';
 import { useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
 import { useAIStore } from '../../stores/useAIStore';
@@ -559,6 +562,11 @@ export const AIAssistantModal = React.memo(({
   // v1.21.2: Estado para erro no botão do quick prompt
   const [qpError, setQpError] = React.useState<{ id: string; message: string } | null>(null);
 
+  // v1.40.34: Pacotes de conhecimento
+  const knowledgePackages = useKnowledgePackages();
+  const [selectedPackageId, setSelectedPackageId] = React.useState<string | null>(null);
+  const [showPackageManager, setShowPackageManager] = React.useState(false);
+
   // v1.38.12: Estados locais que resetam ao reabrir modal (se não fornecidos externamente)
   const [localSelectedTopics, setLocalSelectedTopics] = React.useState<string[]>([]);
   const [localIncludeMainDocs, setLocalIncludeMainDocs] = React.useState(true);
@@ -606,15 +614,22 @@ export const AIAssistantModal = React.memo(({
 
   // v1.38.12: Handler para mensagens normais - passa opções de contexto
   // v1.39.06: Inclui includeComplementaryDocs
+  // v1.40.34: Inclui knowledgePackage selecionado
+  const selectedPackage = React.useMemo(
+    () => knowledgePackages.packages.find(p => p.id === selectedPackageId) ?? null,
+    [knowledgePackages.packages, selectedPackageId]
+  );
+
   const handleSendMessage = React.useCallback((message: string, extraOptions?: { proofFilter?: string }) => {
     const options = {
       ...extraOptions,
       includeMainDocs,
       includeComplementaryDocs,
-      selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
+      selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined,
+      knowledgePackage: selectedPackage,
     };
     onSendMessage(message, options);
-  }, [onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics]);
+  }, [onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics, selectedPackage]);
 
   // v1.40.XX: Handler para quickprompts com sub-opções (ex: Decidir com Provas)
   const proofAnalysisResults = useProofsStore((s) => s.proofAnalysisResults);
@@ -667,42 +682,59 @@ export const AIAssistantModal = React.memo(({
   // v1.38.12: Usa ContextScopeSelector unificado
   // v1.38.16: Passa chatHistoryLength para bloquear toggle quando chat tem histórico
   // v1.39.06: Passa includeComplementaryDocs
-  const scopeSelector = (
-    <ContextScopeSelector
-      contextScope={contextScope}
-      setContextScope={setContextScope}
-      allTopics={allTopics}
-      currentTopicTitle={topicTitle || ''}
-      selectedContextTopics={selectedContextTopics}
-      setSelectedContextTopics={setSelectedContextTopics}
-      includeMainDocs={includeMainDocs}
-      setIncludeMainDocs={setIncludeMainDocs}
-      includeComplementaryDocs={includeComplementaryDocs}
-      setIncludeComplementaryDocs={setIncludeComplementaryDocs}
-      chatHistoryLength={chatHistory.length}
-    />
+  // v1.40.34: Adiciona KnowledgePackageSelector acima do ContextScopeSelector
+  const extraContent = (
+    <>
+      <KnowledgePackageSelector
+        packages={knowledgePackages.packages}
+        selectedPackageId={selectedPackageId}
+        onSelect={setSelectedPackageId}
+        disabled={chatHistory.length > 0}
+        onManage={() => setShowPackageManager(true)}
+      />
+      <ContextScopeSelector
+        contextScope={contextScope}
+        setContextScope={setContextScope}
+        allTopics={allTopics}
+        currentTopicTitle={topicTitle || ''}
+        selectedContextTopics={selectedContextTopics}
+        setSelectedContextTopics={setSelectedContextTopics}
+        includeMainDocs={includeMainDocs}
+        setIncludeMainDocs={setIncludeMainDocs}
+        includeComplementaryDocs={includeComplementaryDocs}
+        setIncludeComplementaryDocs={setIncludeComplementaryDocs}
+        chatHistoryLength={chatHistory.length}
+      />
+    </>
   );
 
   return (
-    <AIAssistantBase
-      isOpen={isOpen}
-      onClose={onClose}
-      chatHistory={chatHistory}
-      onSendMessage={handleSendMessage}
-      onInsertResponse={onInsertResponse}
-      generating={generating}
-      onClear={onClear}
-      lastResponse={lastResponse}
-      zIndex={60}
-      subtitle={topicTitle ? <>Tópico: <span className="font-semibold text-purple-400">{topicTitle}</span></> : null}
-      extraContent={scopeSelector}
-      sanitizeHTML={sanitizeHTML}
-      quickPrompts={quickPrompts}
-      topicTitle={topicTitle}
-      onQuickPromptClick={handleQuickPromptClick}
-      onSubOptionSelect={handleSubOptionSelect}
-      qpError={qpError}
-    />
+    <>
+      <AIAssistantBase
+        isOpen={isOpen}
+        onClose={onClose}
+        chatHistory={chatHistory}
+        onSendMessage={handleSendMessage}
+        onInsertResponse={onInsertResponse}
+        generating={generating}
+        onClear={onClear}
+        lastResponse={lastResponse}
+        zIndex={60}
+        subtitle={topicTitle ? <>Tópico: <span className="font-semibold text-purple-400">{topicTitle}</span></> : null}
+        extraContent={extraContent}
+        sanitizeHTML={sanitizeHTML}
+        quickPrompts={quickPrompts}
+        topicTitle={topicTitle}
+        onQuickPromptClick={handleQuickPromptClick}
+        onSubOptionSelect={handleSubOptionSelect}
+        qpError={qpError}
+      />
+      <KnowledgePackagesManagerModal
+        isOpen={showPackageManager}
+        onClose={() => setShowPackageManager(false)}
+        knowledgePackages={knowledgePackages}
+      />
+    </>
   );
 });
 
@@ -740,6 +772,11 @@ export const AIAssistantGlobalModal = React.memo(({
 }: AIAssistantGlobalModalProps) => {
   // v1.21.2: Estado para erro no botão do quick prompt
   const [qpError, setQpError] = React.useState<{ id: string; message: string } | null>(null);
+
+  // v1.40.34: Pacotes de conhecimento
+  const knowledgePackages = useKnowledgePackages();
+  const [selectedPackageId, setSelectedPackageId] = React.useState<string | null>(null);
+  const [showPackageManager, setShowPackageManager] = React.useState(false);
 
   // v1.38.12: Estados locais que resetam ao reabrir modal (se não fornecidos externamente)
   const [localSelectedTopics, setLocalSelectedTopics] = React.useState<string[]>([]);
@@ -788,15 +825,22 @@ export const AIAssistantGlobalModal = React.memo(({
 
   // v1.38.12: Handler para mensagens normais - passa opções de contexto
   // v1.39.06: Inclui includeComplementaryDocs
+  // v1.40.34: Inclui knowledgePackage selecionado
+  const selectedPackage = React.useMemo(
+    () => knowledgePackages.packages.find(p => p.id === selectedPackageId) ?? null,
+    [knowledgePackages.packages, selectedPackageId]
+  );
+
   const handleSendMessage = React.useCallback((message: string, extraOptions?: { proofFilter?: string }) => {
     const options = {
       ...extraOptions,
       includeMainDocs,
       includeComplementaryDocs,
-      selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
+      selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined,
+      knowledgePackage: selectedPackage,
     };
     onSendMessage(message, options);
-  }, [onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics]);
+  }, [onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics, selectedPackage]);
 
   // v1.40.XX: Handler para quickprompts com sub-opções (ex: Decidir com Provas)
   const proofAnalysisResultsGlobal = useProofsStore((s) => s.proofAnalysisResults);
@@ -849,42 +893,59 @@ export const AIAssistantGlobalModal = React.memo(({
   // v1.38.12: Usa ContextScopeSelector unificado
   // v1.38.16: Passa chatHistoryLength para bloquear toggle quando chat tem histórico
   // v1.39.06: Passa includeComplementaryDocs
-  const scopeSelector = (
-    <ContextScopeSelector
-      contextScope={contextScope}
-      setContextScope={setContextScope}
-      allTopics={allTopics}
-      currentTopicTitle={topicTitle || ''}
-      selectedContextTopics={selectedContextTopics}
-      setSelectedContextTopics={setSelectedContextTopics}
-      includeMainDocs={includeMainDocs}
-      setIncludeMainDocs={setIncludeMainDocs}
-      includeComplementaryDocs={includeComplementaryDocs}
-      setIncludeComplementaryDocs={setIncludeComplementaryDocs}
-      chatHistoryLength={chatHistory.length}
-    />
+  // v1.40.34: Adiciona KnowledgePackageSelector acima do ContextScopeSelector
+  const extraContent = (
+    <>
+      <KnowledgePackageSelector
+        packages={knowledgePackages.packages}
+        selectedPackageId={selectedPackageId}
+        onSelect={setSelectedPackageId}
+        disabled={chatHistory.length > 0}
+        onManage={() => setShowPackageManager(true)}
+      />
+      <ContextScopeSelector
+        contextScope={contextScope}
+        setContextScope={setContextScope}
+        allTopics={allTopics}
+        currentTopicTitle={topicTitle || ''}
+        selectedContextTopics={selectedContextTopics}
+        setSelectedContextTopics={setSelectedContextTopics}
+        includeMainDocs={includeMainDocs}
+        setIncludeMainDocs={setIncludeMainDocs}
+        includeComplementaryDocs={includeComplementaryDocs}
+        setIncludeComplementaryDocs={setIncludeComplementaryDocs}
+        chatHistoryLength={chatHistory.length}
+      />
+    </>
   );
 
   return (
-    <AIAssistantBase
-      isOpen={isOpen}
-      onClose={onClose}
-      chatHistory={chatHistory}
-      onSendMessage={handleSendMessage}
-      onInsertResponse={onInsertResponse}
-      generating={generating}
-      onClear={onClear}
-      lastResponse={lastResponse}
-      zIndex={70}
-      subtitle={<>Tópico: <span className="font-semibold text-purple-400">{topicTitle}</span></>}
-      extraContent={scopeSelector}
-      sanitizeHTML={sanitizeHTML}
-      quickPrompts={quickPrompts}
-      topicTitle={topicTitle}
-      onQuickPromptClick={handleQuickPromptClick}
-      onSubOptionSelect={handleSubOptionSelectGlobal}
-      qpError={qpError}
-    />
+    <>
+      <AIAssistantBase
+        isOpen={isOpen}
+        onClose={onClose}
+        chatHistory={chatHistory}
+        onSendMessage={handleSendMessage}
+        onInsertResponse={onInsertResponse}
+        generating={generating}
+        onClear={onClear}
+        lastResponse={lastResponse}
+        zIndex={70}
+        subtitle={<>Tópico: <span className="font-semibold text-purple-400">{topicTitle}</span></>}
+        extraContent={extraContent}
+        sanitizeHTML={sanitizeHTML}
+        quickPrompts={quickPrompts}
+        topicTitle={topicTitle}
+        onQuickPromptClick={handleQuickPromptClick}
+        onSubOptionSelect={handleSubOptionSelectGlobal}
+        qpError={qpError}
+      />
+      <KnowledgePackagesManagerModal
+        isOpen={showPackageManager}
+        onClose={() => setShowPackageManager(false)}
+        knowledgePackages={knowledgePackages}
+      />
+    </>
   );
 });
 

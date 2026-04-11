@@ -151,6 +151,12 @@ export interface ChatContextOptions {
   proofFilter?: string;
   includeMainDocs?: boolean;
   selectedContextTopics?: string[];
+  /** v1.40.34: Pacote de conhecimento selecionado para injetar no contexto inicial */
+  knowledgePackage?: {
+    name: string;
+    instructions: string;
+    files: { name: string; content: string }[];
+  } | null;
 }
 
 export interface UseDecisionTextGenerationReturn {
@@ -408,6 +414,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
       fileToBase64: storage.fileToBase64,
       anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
       anonymizationSettings: aiIntegration?.aiSettings?.anonymization as AnonymizationSettings | undefined,
+      knowledgePackage: options.knowledgePackage,
     });
   }, [editingTopic, selectedTopics, topicContextScope, analyzedDocuments, proofManager, storage.fileToBase64, aiIntegration?.aiSettings?.anonymization, editorRef]);
 
