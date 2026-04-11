@@ -212,30 +212,32 @@ export const ProofCard = React.memo(({
   const updateAttachmentExtractedText = useProofsStore((s) => s.updateAttachmentExtractedText);
   const updateAttachmentProcessingMode = useProofsStore((s) => s.updateAttachmentProcessingMode);
 
-  // Handler: Adicionar anexo PDF
+  // Handler: Adicionar anexo PDF (suporta seleção múltipla)
   const handleAddAttachmentPdf = React.useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    const attachmentId = `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const attachment: ProofAttachment = {
-      id: attachmentId,
-      name: file.name,
-      type: 'pdf',
-      file,
-      size: file.size,
-      uploadDate: new Date().toISOString()
-    };
+    for (const file of files) {
+      const attachmentId = `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const attachment: ProofAttachment = {
+        id: attachmentId,
+        name: file.name,
+        type: 'pdf',
+        file,
+        size: file.size,
+        uploadDate: new Date().toISOString()
+      };
 
-    // Salvar no IndexedDB
-    try {
-      await saveAttachmentToIndexedDB(proof.id, attachmentId, file);
-    } catch (err) {
-      console.error('[ProofCard] Erro ao salvar anexo:', err);
+      // Salvar no IndexedDB
+      try {
+        await saveAttachmentToIndexedDB(proof.id, attachmentId, file);
+      } catch (err) {
+        console.error('[ProofCard] Erro ao salvar anexo:', err);
+      }
+
+      // Adicionar ao store
+      addAttachment(proof.id, attachment);
     }
-
-    // Adicionar ao store
-    addAttachment(proof.id, attachment);
 
     // Limpar input
     if (attachmentFileInputRef.current) {
@@ -529,6 +531,7 @@ export const ProofCard = React.memo(({
               ref={attachmentFileInputRef}
               type="file"
               accept=".pdf"
+              multiple
               onChange={handleAddAttachmentPdf}
               className="hidden"
             />

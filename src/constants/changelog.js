@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.41.05', feature: 'UX(provas): seleção múltipla de PDFs no botão "+ PDF" da seção de Anexos — input agora tem atributo multiple e o handler itera sobre todos os arquivos selecionados, adicionando e salvando no IndexedDB em sequência.' },
   { version: '1.41.04', feature: 'Fix(provas): incluir anexos de provas no Export/Import de Projeto — exportProject serializa cada attachment com fileData (base64 do PDF) ou texto; importProjectFromJson restaura attachments criando File objects e salvando no IndexedDB via saveAttachmentToIndexedDB. Antes os sub-anexos eram perdidos ao exportar o projeto e reimportar.' },
   { version: '1.41.03', feature: 'Fix(provas): corrigir persistência de anexos após F5/reload — auto-save agora serializa metadados dos attachments no localStorage (id, name, type, extractedText, processingMode, text — sem file); restore reconstrói cada attachment restaurando o File do IndexedDB via getAttachmentFromIndexedDB. Antes do fix, todos os sub-anexos desapareciam ao recarregar a página.' },
   { version: '1.41.02', feature: 'Fix(provas): incluir anexos de provas no contexto do Assistente de Redação IA — prepareProofsContext e prepareOralProofsContext agora processam proof.attachments quando proofSendFullContent está ativo, respeitando o processingMode individual de cada anexo (pdf-puro envia binário; pdfjs/tesseract/claude-vision exige extractedText); anonimização bloqueia PDF binário com fallback para texto extraído.' },
