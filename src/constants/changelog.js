@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.40.33', feature: 'Refactor: migrar Auto Complete para useAIIntegration/callAI — elimina fetch direto duplicado, passa a contabilizar tokens no sistema centralizado de tracking (logMetrics: true), suporte automático a todos os providers configurados.' },
   { version: '1.40.32', feature: 'UX: campo de mensagem do Assistente de Redação IA agora cresce automaticamente conforme o texto digitado (auto-resize), com altura máxima de 200px e scroll interno. Volta ao tamanho inicial ao enviar.' },
   { version: '1.40.31', feature: 'Auto Complete com IA: sugestão de próxima frase em tempo real no editor de decisão (modo individual e global). Aparece em cinza claro/escuro após pausa configurável (1–10s, default 3s). Pressionar TAB aceita a sugestão; qualquer outra tecla descarta. Usa o provider e modelo de IA configurados. Ativável nas configurações de IA.' },
   { version: '1.40.30', feature: 'Estilo: adicionar regra SOBRIEDADE ASSERTIVA (evitar "voz de narrador") ao prompt de estilo — combate construções em que o texto anuncia o valor ou peso de algo antes de demonstrá-lo, padrão típico de LLM; regra 11 em estiloRedacao (ai-prompts.ts) e regra 6 em AI_INSTRUCTIONS_STYLE (system.ts)' },

@@ -13,8 +13,7 @@
  */
 
 import React from 'react';
-import { useAIStore } from '../stores/useAIStore';
-import { API_BASE } from '../constants/api';
+import { useAIIntegration } from './useAIIntegration';
 import type { QuillInstance } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -85,11 +84,7 @@ export function useAutoComplete(
 ): void {
   const { enabled, relatorio, delayMs, editorTheme, quillReady } = options;
 
-  const provider = useAIStore((s) => s.aiSettings.provider);
-  const claudeModel = useAIStore((s) => s.aiSettings.claudeModel);
-  const geminiModel = useAIStore((s) => s.aiSettings.geminiModel);
-  const claudeKey = useAIStore((s) => s.aiSettings.apiKeys?.claude ?? '');
-  const geminiKey = useAIStore((s) => s.aiSettings.apiKeys?.gemini ?? '');
+  const { callAI } = useAIIntegration();
 
   // Refs para controle interno
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -105,21 +100,13 @@ export function useAutoComplete(
   const relatorioRef = React.useRef(relatorio);
   const delayMsRef = React.useRef(delayMs);
   const editorThemeRef = React.useRef(editorTheme);
-  const providerRef = React.useRef(provider);
-  const claudeModelRef = React.useRef(claudeModel);
-  const geminiModelRef = React.useRef(geminiModel);
-  const claudeKeyRef = React.useRef(claudeKey);
-  const geminiKeyRef = React.useRef(geminiKey);
+  const callAIRef = React.useRef(callAI);
 
   React.useEffect(() => { enabledRef.current = enabled; }, [enabled]);
   React.useEffect(() => { relatorioRef.current = relatorio; }, [relatorio]);
   React.useEffect(() => { delayMsRef.current = delayMs; }, [delayMs]);
   React.useEffect(() => { editorThemeRef.current = editorTheme; }, [editorTheme]);
-  React.useEffect(() => { providerRef.current = provider; }, [provider]);
-  React.useEffect(() => { claudeModelRef.current = claudeModel; }, [claudeModel]);
-  React.useEffect(() => { geminiModelRef.current = geminiModel; }, [geminiModel]);
-  React.useEffect(() => { claudeKeyRef.current = claudeKey; }, [claudeKey]);
-  React.useEffect(() => { geminiKeyRef.current = geminiKey; }, [geminiKey]);
+  React.useEffect(() => { callAIRef.current = callAI; }, [callAI]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Funções de overlay DOM
@@ -212,65 +199,19 @@ export function useAutoComplete(
 
     isLoadingRef.current = true;
 
-    const currentProvider = providerRef.current;
     const userPrompt = `MINI-RELATÓRIO:\n${relatorioRef.current || '(sem relatório)'}\n\nDECISÃO ATÉ AGORA:\n${currentText}\n\nComplete a próxima frase:`;
 
     try {
-      let suggestion = '';
-
-      if (currentProvider === 'claude') {
-        const apiKey = claudeKeyRef.current;
-        if (!apiKey) return;
-
-        const body = {
-          model: claudeModelRef.current || 'claude-sonnet-4-20250514',
-          max_tokens: 150,
-          system: SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: userPrompt }]
-        };
-
-        const resp = await fetch(`${API_BASE}/api/claude/messages`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
-          body: JSON.stringify(body),
-          signal: abortRef.current.signal
-        });
-
-        if (!resp.ok) return;
-        const data = await resp.json();
-        suggestion = (data.content?.[0]?.text || '').trim();
-
-      } else if (currentProvider === 'gemini') {
-        const apiKey = geminiKeyRef.current;
-        if (!apiKey) return;
-
-        const isGemini3 = geminiModelRef.current.includes('gemini-3');
-        const geminiRequest: Record<string, unknown> = {
-          contents: [
-            { role: 'user', parts: [{ text: `${SYSTEM_PROMPT}\n\n${userPrompt}` }] }
-          ],
-          generationConfig: {
-            maxOutputTokens: 150,
-            temperature: 1.0,
-            ...(isGemini3 ? {
-              thinking_config: { thinking_budget: 512, includeThoughts: false }
-            } : {})
-          }
-        };
-
-        const resp = await fetch(`${API_BASE}/api/gemini/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
-          body: JSON.stringify({ model: geminiModelRef.current, request: geminiRequest }),
-          signal: abortRef.current.signal
-        });
-
-        if (!resp.ok) return;
-        const data = await resp.json();
-        const parts = data.candidates?.[0]?.content?.parts || [];
-        const textPart = parts.find((p: { thought?: boolean; text?: string }) => p.text && !p.thought);
-        suggestion = (textPart?.text || '').trim();
-      }
+      const suggestion = ((await callAIRef.current(
+        [{ role: 'user', content: [{ type: 'text', text: userPrompt }] }],
+        {
+          systemPrompt: SYSTEM_PROMPT,
+          maxTokens: 150,
+          useInstructions: false,
+          abortSignal: abortRef.current.signal,
+          logMetrics: true
+        }
+      )) as string | null)?.trim() ?? '';
 
       // Verificar se quill ainda existe e texto não mudou
       if (!quill || !quillRef.current || !enabledRef.current) return;
