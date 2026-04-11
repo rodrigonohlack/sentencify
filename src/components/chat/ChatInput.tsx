@@ -17,6 +17,15 @@ export const ChatInput = React.memo(({
   placeholder
 }: ChatInputProps) => {
   const [value, setValue] = React.useState('');
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize: cresce com o conteúdo, reseta ao enviar
+  React.useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  }, [value]);
 
   // v1.38.5: Voice improvement com IA
   const aiSettings = useAIStore((state) => state.aiSettings);
@@ -42,13 +51,14 @@ export const ChatInput = React.memo(({
   }, []);
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 items-end">
       <textarea
+        ref={textareaRef}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKey}
         disabled={disabled}
-        className="flex-1 h-20 theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary resize-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
+        className="flex-1 min-h-[5rem] max-h-[200px] overflow-y-auto theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary resize-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
         placeholder={placeholder}
       />
       {/* v1.35.59: VoiceButton para ditado */}
