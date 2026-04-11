@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.41.09', feature: 'Fix(google-drive): auto-renovação de token OAuth — token expira após 1h; hook useGoogleDrive agora usa getValidToken() que verifica expiração antes de cada chamada à API Drive e, se necessário, executa silent refresh (prompt: none) sem interromper a operação; fallback para popup de login se silent falhar. Antes o usuário precisava deslogar e relogar manualmente.' },
   { version: '1.41.08', feature: 'fix(security): cap de 500 no parâmetro limit da paginação de despesas (financeiro-expenses.js) e validação de existência de usuários em recipientIds antes de inserir em prova_oral_access (prova-oral.js).' },
   { version: '1.41.07', feature: 'Fix(prompts): extrair bloco ANONIMIZAÇÃO DE DADOS de AI_INSTRUCTIONS_SAFETY para novo export condicional AI_INSTRUCTIONS_ANONYMIZATION — antes a instrução era sempre enviada no system prompt, fazendo a IA usar [VALOR]/[NOME] espontaneamente como placeholders mesmo sem anonimização ativa; agora o bloco só é injetado quando anonymization.enabled=true.' },
   { version: '1.41.06', feature: 'Fix(provas): autosave não disparava ao adicionar sub-anexos — computeProofsHash em useChangeDetectionHashes.ts agora inclui IDs dos attachments na assinatura do proofFilesSig; antes a hash era idêntica após add/remove de anexo, impedindo markSessionDirty de ser chamado.' },

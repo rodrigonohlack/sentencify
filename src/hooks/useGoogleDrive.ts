@@ -2,10 +2,10 @@
  * Hook para integração com Google Drive
  * Permite salvar/restaurar projetos Sentencify no Drive do usuário
  *
- * @version 1.35.54 - Foto do perfil Google no status de conexão
+ * @version 1.41.09 - Auto-renovação de token (silent refresh quando sessão expira)
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useGoogleLogin, TokenResponse } from '@react-oauth/google';
 
 // ============================================================================
@@ -77,6 +77,12 @@ const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
 // v1.35.45: Versão 2 para forçar re-auth com novo escopo (drive.readonly)
 const STORAGE_KEY = 'sentencify-google-drive-token-v2';
 
+// Margem de segurança antes de considerar o token expirado (2 minutos)
+const TOKEN_EXPIRY_MARGIN_MS = 2 * 60 * 1000;
+
+// Timeout máximo aguardando renovação de token (15 segundos)
+const TOKEN_REFRESH_TIMEOUT_MS = 15 * 1000;
+
 // Limpar token antigo (v1) se existir
 if (typeof window !== 'undefined') {
   const oldKey = 'sentencify-google-drive-token';
@@ -92,11 +98,19 @@ if (typeof window !== 'undefined') {
 
 export function useGoogleDrive(): UseGoogleDriveReturn {
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userPhoto, setUserPhoto] = useState<string | null>(null);  // v1.35.54
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // v1.41.09: Mirror síncrono do token (evita stale closure nas funções de API)
+  const accessTokenRef = useRef<string | null>(null);
+
+  // v1.41.09: Operação pendente aguardando renovação de token
+  const pendingTokenRef = useRef<{
+    resolve: (token: string) => void;
+    reject: (err: Error) => void;
+  } | null>(null);
 
   // Restaurar token do localStorage ao inicializar
   useEffect(() => {
@@ -104,9 +118,9 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     if (stored) {
       try {
         const { token, email, photo, expiresAt }: StoredToken = JSON.parse(stored);
-        // Verificar se o token ainda é válido (com margem de 5 min)
-        if (expiresAt && Date.now() < expiresAt - 5 * 60 * 1000) {
-          setAccessToken(token);
+        // Verificar se o token ainda é válido (com margem)
+        if (expiresAt && Date.now() < expiresAt - TOKEN_EXPIRY_MARGIN_MS) {
+          accessTokenRef.current = token;
           setUserEmail(email);
           if (photo) setUserPhoto(photo);  // v1.35.54
           setIsConnected(true);
@@ -120,16 +134,29 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     }
   }, []);
 
-  // Callback de sucesso do OAuth
+  // v1.41.09: Verificar se o token armazenado ainda é válido
+  const isTokenValid = useCallback((): boolean => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return false;
+    try {
+      const { expiresAt } = JSON.parse(stored) as StoredToken;
+      return Date.now() < expiresAt - TOKEN_EXPIRY_MARGIN_MS;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Callback de sucesso do OAuth (compartilhado entre login regular e silent refresh)
   const handleLoginSuccess = useCallback(async (tokenResponse: TokenResponse) => {
     const token = tokenResponse.access_token;
     const expiresIn = tokenResponse.expires_in || 3600; // padrão 1 hora
 
-    setAccessToken(token);
+    // Atualizar ref ANTES do estado (evita race condition nas operações pendentes)
+    accessTokenRef.current = token;
     setIsConnected(true);
     setError(null);
 
-    // Buscar email do usuário
+    // Buscar email e foto do usuário
     try {
       const userInfo = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: `Bearer ${token}` }
@@ -149,27 +176,82 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     } catch (e) {
       console.error('[GoogleDrive] Erro ao buscar info do usuário:', e);
     }
+
+    // v1.41.09: Executar operação que estava aguardando renovação de token
+    if (pendingTokenRef.current) {
+      const { resolve } = pendingTokenRef.current;
+      pendingTokenRef.current = null;
+      resolve(token);
+    }
   }, []);
 
-  // Hook do Google OAuth
+  // Login regular (com popup de autorização)
   const googleLogin = useGoogleLogin({
     onSuccess: handleLoginSuccess,
-    onError: (error) => {
-      console.error('[GoogleDrive] Erro no login:', error);
+    onError: (err) => {
+      console.error('[GoogleDrive] Erro no login:', err);
       setError('Falha ao conectar com Google Drive');
+      // Rejeitar operação pendente se houver
+      if (pendingTokenRef.current) {
+        pendingTokenRef.current.reject(new Error('Falha ao reconectar com Google Drive'));
+        pendingTokenRef.current = null;
+      }
     },
     scope: SCOPES,
   });
 
+  // v1.41.09: Silent refresh — renova token sem popup se o usuário tiver sessão Google ativa
+  const googleSilentRefresh = useGoogleLogin({
+    onSuccess: handleLoginSuccess,
+    onError: () => {
+      // Silent falhou (ex: sessão Google expirada) → fallback para popup
+      console.log('[GoogleDrive] Silent refresh falhou, abrindo popup de login...');
+      googleLogin();
+    },
+    scope: SCOPES,
+    prompt: 'none',
+  });
+
+  // v1.41.09: Obtém token válido — renova automaticamente se expirado
+  const getValidToken = useCallback((): Promise<string> => {
+    // Token atual ainda válido → retornar imediatamente
+    if (accessTokenRef.current && isTokenValid()) {
+      return Promise.resolve(accessTokenRef.current);
+    }
+
+    // Token expirado → iniciar silent refresh e aguardar novo token
+    return new Promise<string>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        if (pendingTokenRef.current) {
+          pendingTokenRef.current = null;
+          reject(new Error('Tempo esgotado ao renovar sessão com Google Drive. Tente reconectar.'));
+        }
+      }, TOKEN_REFRESH_TIMEOUT_MS);
+
+      pendingTokenRef.current = {
+        resolve: (token) => { clearTimeout(timeoutId); resolve(token); },
+        reject: (err) => { clearTimeout(timeoutId); reject(err); },
+      };
+
+      console.log('[GoogleDrive] Token expirado, iniciando silent refresh...');
+      googleSilentRefresh();
+    });
+  }, [isTokenValid, googleSilentRefresh]);
+
   // Conectar ao Google Drive
   const connect = useCallback(() => {
     setError(null);
+    // Cancelar operação pendente antes de iniciar novo login
+    if (pendingTokenRef.current) {
+      pendingTokenRef.current.reject(new Error('Login cancelado'));
+      pendingTokenRef.current = null;
+    }
     googleLogin();
   }, [googleLogin]);
 
   // Desconectar (limpar token)
   const disconnect = useCallback(() => {
-    setAccessToken(null);
+    accessTokenRef.current = null;
     setUserEmail(null);
     setUserPhoto(null);  // v1.35.54
     setIsConnected(false);
@@ -177,18 +259,15 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
   }, []);
 
   // v1.35.47: Obter ou criar pasta "Sentencify" no Drive
-  const getOrCreateFolder = useCallback(async (): Promise<string> => {
-    if (!accessToken) {
-      throw new Error('Não conectado ao Google Drive');
-    }
-
+  // v1.41.09: Recebe token como parâmetro (evita duplo getValidToken nas callers)
+  const getOrCreateFolder = useCallback(async (token: string): Promise<string> => {
     try {
       // Buscar pasta existente
       const query = encodeURIComponent("name='Sentencify' and mimeType='application/vnd.google-apps.folder' and trashed=false");
       const response = await fetch(
         `${DRIVE_API_BASE}/files?q=${query}&fields=files(id,name)`,
         {
-          headers: { Authorization: `Bearer ${accessToken}` }
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
 
@@ -203,7 +282,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       const createResponse = await fetch(`${DRIVE_API_BASE}/files`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -219,20 +298,19 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       console.error('[GoogleDrive] Erro ao obter/criar pasta:', e);
       throw e;
     }
-  }, [accessToken]);
+  }, []);
 
   // Listar arquivos Sentencify no Drive
   const listFiles = useCallback(async (): Promise<GoogleDriveFile[]> => {
-    if (!accessToken) {
-      throw new Error('Não conectado ao Google Drive');
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
+      // v1.41.09: Obtém token válido (renova se expirado)
+      const token = await getValidToken();
+
       // v1.35.47: Obter pasta Sentencify
-      const folderId = await getOrCreateFolder();
+      const folderId = await getOrCreateFolder(token);
 
       // v1.35.46: Filtrar por appProperties para mostrar APENAS arquivos do Sentencify
       // v1.35.47: Filtrar também pela pasta
@@ -250,7 +328,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         `${DRIVE_API_BASE}/files?q=${query}&fields=${fields}&orderBy=modifiedTime desc&pageSize=50`,
         {
           headers: {
-            Authorization: `Bearer ${accessToken}`
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -277,20 +355,19 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken, getOrCreateFolder]);
+  }, [getValidToken, getOrCreateFolder]);
 
   // Salvar arquivo no Drive
   const saveFile = useCallback(async (fileName: string, content: unknown): Promise<GoogleDriveFile> => {
-    if (!accessToken) {
-      throw new Error('Não conectado ao Google Drive');
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
+      // v1.41.09: Obtém token válido (renova se expirado)
+      const token = await getValidToken();
+
       // v1.35.47: Obter pasta Sentencify
-      const folderId = await getOrCreateFolder();
+      const folderId = await getOrCreateFolder(token);
 
       // Primeiro, verificar se já existe um arquivo com esse nome
       const existingFiles = await listFiles();
@@ -325,7 +402,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         response = await fetch(`${DRIVE_UPLOAD_API}/files/${existing.id}?uploadType=multipart`, {
           method: 'PATCH',
           headers: {
-            Authorization: `Bearer ${accessToken}`
+            Authorization: `Bearer ${token}`
           },
           body: formData
         });
@@ -334,7 +411,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         response = await fetch(`${DRIVE_UPLOAD_API}/files?uploadType=multipart`, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${accessToken}`
+            Authorization: `Bearer ${token}`
           },
           body: formData
         });
@@ -356,23 +433,22 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken, getOrCreateFolder, listFiles]);
+  }, [getValidToken, getOrCreateFolder, listFiles]);
 
   // Carregar arquivo do Drive
   const loadFile = useCallback(async (fileId: string): Promise<unknown> => {
-    if (!accessToken) {
-      throw new Error('Não conectado ao Google Drive');
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
+      // v1.41.09: Obtém token válido (renova se expirado)
+      const token = await getValidToken();
+
       const response = await fetch(
         `${DRIVE_API_BASE}/files/${fileId}?alt=media`,
         {
           headers: {
-            Authorization: `Bearer ${accessToken}`
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -393,24 +469,23 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken]);
+  }, [getValidToken]);
 
   // Deletar arquivo do Drive
   const deleteFile = useCallback(async (fileId: string): Promise<boolean> => {
-    if (!accessToken) {
-      throw new Error('Não conectado ao Google Drive');
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
+      // v1.41.09: Obtém token válido (renova se expirado)
+      const token = await getValidToken();
+
       const response = await fetch(
         `${DRIVE_API_BASE}/files/${fileId}`,
         {
           method: 'DELETE',
           headers: {
-            Authorization: `Bearer ${accessToken}`
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -430,24 +505,23 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken]);
+  }, [getValidToken]);
 
   // Compartilhar arquivo com outro usuário
   const shareFile = useCallback(async (fileId: string, email: string, role: 'reader' | 'writer' = 'reader'): Promise<GoogleDrivePermission> => {
-    if (!accessToken) {
-      throw new Error('Não conectado ao Google Drive');
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
+      // v1.41.09: Obtém token válido (renova se expirado)
+      const token = await getValidToken();
+
       const response = await fetch(
         `${DRIVE_API_BASE}/files/${fileId}/permissions`,
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -474,20 +548,19 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken]);
+  }, [getValidToken]);
 
   // v1.35.45: Buscar permissões de um arquivo (quem tem acesso)
   const getPermissions = useCallback(async (fileId: string): Promise<GoogleDrivePermission[]> => {
-    if (!accessToken) {
-      throw new Error('Não conectado ao Google Drive');
-    }
-
     try {
+      // v1.41.09: Obtém token válido (renova se expirado)
+      const token = await getValidToken();
+
       const response = await fetch(
         `${DRIVE_API_BASE}/files/${fileId}/permissions?fields=permissions(id,emailAddress,role,displayName,type)`,
         {
           headers: {
-            Authorization: `Bearer ${accessToken}`
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -504,21 +577,20 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       console.error('[GoogleDrive] Erro ao buscar permissões:', e);
       return []; // Retornar array vazio em caso de erro (não bloquear UI)
     }
-  }, [accessToken]);
+  }, [getValidToken]);
 
   // v1.35.48: Remover permissão de um arquivo (revogar acesso)
   const removePermission = useCallback(async (fileId: string, permissionId: string): Promise<boolean> => {
-    if (!accessToken) {
-      throw new Error('Não conectado ao Google Drive');
-    }
-
     try {
+      // v1.41.09: Obtém token válido (renova se expirado)
+      const token = await getValidToken();
+
       const response = await fetch(
         `${DRIVE_API_BASE}/files/${fileId}/permissions/${permissionId}`,
         {
           method: 'DELETE',
           headers: {
-            Authorization: `Bearer ${accessToken}`
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -534,7 +606,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       console.error('[GoogleDrive] Erro ao remover permissão:', e);
       throw e;
     }
-  }, [accessToken]);
+  }, [getValidToken]);
 
   return {
     isConnected,
