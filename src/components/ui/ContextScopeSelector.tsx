@@ -117,62 +117,77 @@ export const ContextScopeSelector: React.FC<ContextScopeSelectorProps> = ({
       {/* Radio buttons - 3 opções */}
       <div className="flex flex-wrap gap-2">
         {/* Apenas este tópico */}
-        <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${
+        <label className={`flex items-center gap-2 p-3 rounded-lg border transition-all ${
           contextScope === 'current'
             ? 'border-purple-500 bg-purple-500/10'
-            : 'theme-border-input theme-bg-secondary-30 hover:border-purple-500/50'
-        }`}>
+            : 'theme-border-input theme-bg-secondary-30'
+        } ${isToggleLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-purple-500/50'}`}>
           <input
             type="radio"
             name="contextScope"
             value="current"
             checked={contextScope === 'current'}
-            onChange={() => setContextScope('current')}
-            className="w-4 h-4 text-purple-600"
+            onChange={() => !isToggleLocked && setContextScope('current')}
+            disabled={isToggleLocked}
+            className="w-4 h-4 text-purple-600 disabled:opacity-50"
           />
           <div>
             <span className="text-sm font-medium theme-text-primary">Apenas este tópico</span>
-            <p className="text-xs theme-text-muted">Mini-relatório + decisão do tópico atual</p>
+            {isToggleLocked ? (
+              <p className="text-xs text-amber-500">Limpe o chat para alterar</p>
+            ) : (
+              <p className="text-xs theme-text-muted">Mini-relatório + decisão do tópico atual</p>
+            )}
           </div>
         </label>
 
         {/* Tópicos selecionados */}
-        <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${
+        <label className={`flex items-center gap-2 p-3 rounded-lg border transition-all ${
           contextScope === 'selected'
             ? 'border-purple-500 bg-purple-500/10'
-            : 'theme-border-input theme-bg-secondary-30 hover:border-purple-500/50'
-        }`}>
+            : 'theme-border-input theme-bg-secondary-30'
+        } ${isToggleLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-purple-500/50'}`}>
           <input
             type="radio"
             name="contextScope"
             value="selected"
             checked={contextScope === 'selected'}
-            onChange={() => setContextScope('selected')}
-            className="w-4 h-4 text-purple-600"
+            onChange={() => !isToggleLocked && setContextScope('selected')}
+            disabled={isToggleLocked}
+            className="w-4 h-4 text-purple-600 disabled:opacity-50"
           />
           <div>
             <span className="text-sm font-medium theme-text-primary">Tópicos selecionados</span>
-            <p className="text-xs theme-text-muted">Escolha quais tópicos incluir</p>
+            {isToggleLocked ? (
+              <p className="text-xs text-amber-500">Limpe o chat para alterar</p>
+            ) : (
+              <p className="text-xs theme-text-muted">Escolha quais tópicos incluir</p>
+            )}
           </div>
         </label>
 
         {/* Toda a decisão */}
-        <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${
+        <label className={`flex items-center gap-2 p-3 rounded-lg border transition-all ${
           contextScope === 'all'
             ? 'border-purple-500 bg-purple-500/10'
-            : 'theme-border-input theme-bg-secondary-30 hover:border-purple-500/50'
-        }`}>
+            : 'theme-border-input theme-bg-secondary-30'
+        } ${isToggleLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-purple-500/50'}`}>
           <input
             type="radio"
             name="contextScope"
             value="all"
             checked={contextScope === 'all'}
-            onChange={() => setContextScope('all')}
-            className="w-4 h-4 text-purple-600"
+            onChange={() => !isToggleLocked && setContextScope('all')}
+            disabled={isToggleLocked}
+            className="w-4 h-4 text-purple-600 disabled:opacity-50"
           />
           <div>
             <span className="text-sm font-medium theme-text-primary">Toda a decisão</span>
-            <p className="text-xs theme-text-muted">RELATÓRIO + todos os tópicos</p>
+            {isToggleLocked ? (
+              <p className="text-xs text-amber-500">Limpe o chat para alterar</p>
+            ) : (
+              <p className="text-xs theme-text-muted">RELATÓRIO + todos os tópicos</p>
+            )}
           </div>
         </label>
       </div>
@@ -183,8 +198,11 @@ export const ContextScopeSelector: React.FC<ContextScopeSelectorProps> = ({
           {/* Botão do dropdown */}
           <button
             type="button"
-            onClick={() => setShowTopicDropdown(!showTopicDropdown)}
-            className="w-full flex items-center justify-between p-3 rounded-lg border theme-border-input theme-bg-secondary hover:border-purple-500/50 transition-all"
+            onClick={() => !isToggleLocked && setShowTopicDropdown(!showTopicDropdown)}
+            disabled={isToggleLocked}
+            className={`w-full flex items-center justify-between p-3 rounded-lg border theme-border-input theme-bg-secondary transition-all ${
+              isToggleLocked ? 'opacity-60 cursor-not-allowed' : 'hover:border-purple-500/50'
+            }`}
           >
             <span className="text-sm theme-text-primary">
               {selectedContextTopics.length === 0
