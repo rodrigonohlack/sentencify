@@ -51,7 +51,7 @@ interface AIPromptsType {
   instrucoesDispositivoPadrao: string;
   instrucoesRelatorioPadrao: string;
   mapeamentoPlaceholders: string;
-  buildPartesDoProcesso: (primeiroParagrafo: string | null | undefined) => string;
+  buildPartesDoProcesso: (primeiroParagrafo: string | null | undefined, anonymizationEnabled?: boolean) => string;
   buildTopicosSection: (topicosComDecisao: TopicoDispositivo[], topicosSemDecisao: TopicoSemDecisao[]) => string;
   revisaoSentenca: (incluiDocumentos: boolean) => string;
 }
@@ -647,7 +647,8 @@ Exemplo de substituição:
 - E: [RECLAMADA] = Empresa XYZ Ltda`,
 
   // Função: Constrói seção PARTES DO PROCESSO (reutilizada em generateDispositivo e regenerateDispositivoWithInstruction)
-  buildPartesDoProcesso: function(primeiroParagrafo: string | null | undefined): string {
+  // v1.41.10: anonymizationEnabled controla se injeta mapeamento de placeholders ou instrução de nomes reais
+  buildPartesDoProcesso: function(primeiroParagrafo: string | null | undefined, anonymizationEnabled: boolean = false): string {
     return primeiroParagrafo ? `
 ═══════════════════════════════════════════════════════════════
 📋 PARTES DO PROCESSO (extraído do RELATÓRIO):
@@ -657,7 +658,12 @@ ${primeiroParagrafo}
 
 Este parágrafo contém os nomes das partes do processo.
 
-${this.mapeamentoPlaceholders}
+${anonymizationEnabled
+  ? this.mapeamentoPlaceholders
+  : `INSTRUÇÕES DE NOMES:
+Use os nomes REAIS das partes extraídos do parágrafo acima.
+NÃO use nem crie placeholders como [RECLAMANTE] ou [RECLAMADA].`
+}
 
 ═══════════════════════════════════════════════════════════════
 ` : '';

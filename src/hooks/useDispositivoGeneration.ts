@@ -31,6 +31,7 @@ export interface AIIntegrationForDispositivo {
   }) => Promise<string>;
   aiSettings: {
     modeloDispositivo?: string;
+    anonymization?: { enabled?: boolean };
     doubleCheck?: {
       enabled: boolean;
       operations: {
@@ -233,7 +234,7 @@ ATENÇÃO CRÍTICA: O usuário SELECIONOU EXPLICITAMENTE o resultado de cada dec
 
 Com base nos tópicos e resultados fornecidos abaixo, gere um DISPOSITIVO completo e bem estruturado para uma sentença trabalhista.
 
-${AI_PROMPTS.buildPartesDoProcesso(primeiroParagrafoRelatorio)}
+${AI_PROMPTS.buildPartesDoProcesso(primeiroParagrafoRelatorio, !!aiIntegration.aiSettings.anonymization?.enabled)}
 
 ${AI_PROMPTS.buildTopicosSection(topicosComDecisao, topicosSemDecisao)}
 
@@ -484,7 +485,7 @@ ATENÇÃO CRÍTICA: O usuário SELECIONOU EXPLICITAMENTE o resultado de cada dec
 
 Com base nos tópicos e resultados fornecidos abaixo, gere um DISPOSITIVO completo e bem estruturado para uma sentença trabalhista.
 
-${AI_PROMPTS.buildPartesDoProcesso(primeiroParagrafoRelatorio)}
+${AI_PROMPTS.buildPartesDoProcesso(primeiroParagrafoRelatorio, !!aiIntegration.aiSettings.anonymization?.enabled)}
 
 ${AI_PROMPTS.buildTopicosSection(topicosComDecisao, topicosSemDecisao)}
 
