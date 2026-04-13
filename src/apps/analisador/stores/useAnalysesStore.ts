@@ -157,6 +157,7 @@ interface AnalysesActions {
   // Pauta groups expanded state
   togglePautaGroupExpanded: (dataPauta: string) => void;
   isPautaGroupExpanded: (dataPauta: string) => boolean;
+  collapseAllPautaGroups: (keys: string[]) => void;
 
   // Computed
   getFilteredAnalyses: () => SavedAnalysis[];
@@ -390,6 +391,13 @@ export const useAnalysesStore = create<AnalysesState & AnalysesActions>((set, ge
     const { expandedPautaGroups } = get();
     // Default: expandido (true)
     return expandedPautaGroups[dataPauta] ?? true;
+  },
+
+  collapseAllPautaGroups: (keys) => {
+    const collapsed: Record<string, boolean> = {};
+    keys.forEach((k) => { collapsed[k] = false; });
+    set({ expandedPautaGroups: collapsed });
+    saveExpandedGroups(collapsed);
   },
 
   // ═══════════════════════════════════════════════════════════════════════════

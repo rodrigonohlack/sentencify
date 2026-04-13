@@ -457,6 +457,7 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
     selectAll,
     clearSelection,
     getGroupedByPauta,
+    collapseAllPautaGroups,
     isLoading,
     analyses,
   } = useAnalysesStore();
@@ -533,6 +534,11 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
     const withoutPauta = filteredAnalyses.filter(a => !a.dataPauta);
     setSelectedIds(new Set(withoutPauta.map(a => a.id)));
   }, [groupedAnalyses, setSelectedIds]);
+
+  const handleCollapseAll = useCallback(() => {
+    const keys = groupedAnalyses.map((g) => g.dataPauta || '__sem_data__');
+    collapseAllPautaGroups(keys);
+  }, [groupedAnalyses, collapseAllPautaGroups]);
 
   const handleDeleteClick = useCallback(() => {
     if (selectedIds.size === 0) return;
@@ -760,6 +766,17 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
             </div>
           ) : (
             <div>
+              {groupedAnalyses.length > 1 && (
+                <div className="flex justify-end mb-2">
+                  <button
+                    onClick={handleCollapseAll}
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md hover:border-slate-300 dark:hover:border-slate-500 transition-colors"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                    Colapsar todos
+                  </button>
+                </div>
+              )}
               {groupedAnalyses.map((group) => (
                 <PautaGroupSection
                   key={group.dataPauta || 'sem-data'}
