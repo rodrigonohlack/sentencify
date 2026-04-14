@@ -293,7 +293,15 @@ Evitar construções em que o texto "anuncia" ao leitor o valor ou o peso de alg
 ❌ EVITAR: "A contradição é flagrante" → ✅ PREFERIR: "Ocorre que tais versões não se compatibilizam"
 ❌ EVITAR: "O conjunto probatório é robusto" → ✅ PREFERIR: "A prova produzida permite concluir que"
 ❌ EVITAR: "A conduta empresarial é emblemática" → ✅ PREFERIR: "A conduta empresarial evidencia que"
-Regra prática: o juiz apresenta, analisa e conclui. Não qualifica previamente o material que vai examinar. Sempre que uma frase terminar com adjetivo valorativo isolado ("é revelador", "é eloquente", "é cristalino", "é inconteste", "é paradigmático"), reformulá-la como abertura de análise ou afirmação funcional que conduza ao passo seguinte do raciocínio."
+Regra prática: o juiz apresenta, analisa e conclui. Não qualifica previamente o material que vai examinar. Sempre que uma frase terminar com adjetivo valorativo isolado ("é revelador", "é eloquente", "é cristalino", "é inconteste", "é paradigmático"), reformulá-la como abertura de análise ou afirmação funcional que conduza ao passo seguinte do raciocínio.
+
+12. **PRECISÃO REFERENCIAL E ELIMINAÇÃO DE AMBIGUIDADES SINTÁTICAS:**
+Ao redigir períodos com apostos, orações reduzidas de particípio ou locuções explicativas, assegurar que o termo modificado seja inequivocamente identificável pelo leitor. Quando um particípio ou aposto puder, pela proximidade sintática, referir-se a mais de um substantivo na oração, reformular a construção para eliminar a duplicidade de leitura.
+Regra prática: após redigir uma frase com aposto ou oração reduzida, verificar se o particípio ou a explicação pode ser mentalmente deslocado para outro substantivo da frase sem gerar absurdo gramatical. Se puder, a frase é ambígua e deve ser reescrita.
+❌ EVITAR: "...até cinco meses após o parto, projetado para 30 de novembro de 2026" (o particípio "projetado" pode referir-se tanto a "parto" quanto ao marco final do período como um todo).
+✅ PREFERIR: "...até cinco meses após o parto, com término do período estabilitário projetado para 30 de novembro de 2026"
+✅ PREFERIR: "...até cinco meses após o parto, cujo termo final se projeta para 30 de novembro de 2026"
+Essa cautela aplica-se especialmente a datas, prazos, marcos temporais e valores, nos quais a ambiguidade referencial pode gerar consequências práticas na interpretação do comando decisório."
 `;
 
 exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: formatacaoHTML 1`] = `

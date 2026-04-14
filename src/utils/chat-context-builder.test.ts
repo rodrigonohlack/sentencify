@@ -23,6 +23,13 @@ function getLastTextItem(result: AIMessageContent[]): AITextContent {
   return lastItem as AITextContent;
 }
 
+/** Helper para concatenar o texto de todos os itens do resultado */
+function getAllText(result: AIMessageContent[]): string {
+  return result
+    .map(item => typeof item === 'string' ? item : (item as AITextContent).text || '')
+    .join('\n');
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOCKS
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -158,23 +165,20 @@ describe('buildChatContext', () => {
 
     it('inclui SOCRATIC_INTERN_LOGIC no prompt', async () => {
       const result = await buildChatContext(createParams());
-      const lastItem = getLastTextItem(result);
 
-      expect(lastItem.text).toContain('[SOCRATIC_INTERN_LOGIC]');
+      expect(getAllText(result)).toContain('[SOCRATIC_INTERN_LOGIC]');
     });
 
     it('inclui INSTRUCAO_NAO_PRESUMIR no prompt', async () => {
       const result = await buildChatContext(createParams());
-      const lastItem = getLastTextItem(result);
 
-      expect(lastItem.text).toContain('[INSTRUCAO_NAO_PRESUMIR]');
+      expect(getAllText(result)).toContain('[INSTRUCAO_NAO_PRESUMIR]');
     });
 
     it('inclui estilo de redação no prompt', async () => {
       const result = await buildChatContext(createParams());
-      const lastItem = getLastTextItem(result);
 
-      expect(lastItem.text).toContain('[ESTILO_REDACAO]');
+      expect(getAllText(result)).toContain('[ESTILO_REDACAO]');
     });
   });
 
@@ -186,18 +190,17 @@ describe('buildChatContext', () => {
     describe('contextScope: current', () => {
       it('inclui apenas o tópico atual', async () => {
         const result = await buildChatContext(createParams({ contextScope: 'current' }));
-        const lastItem = getLastTextItem(result);
+        const allText = getAllText(result);
 
-        expect(lastItem.text).toContain('CONTEXTO DO TÓPICO');
-        expect(lastItem.text).toContain(mockTopic.title);
-        expect(lastItem.text).not.toContain('CONTEXTO COMPLETO DA DECISÃO');
+        expect(allText).toContain('CONTEXTO DO TÓPICO');
+        expect(allText).toContain(mockTopic.title);
+        expect(allText).not.toContain('CONTEXTO COMPLETO DA DECISÃO');
       });
 
       it('usa editedRelatorio se disponível', async () => {
         const result = await buildChatContext(createParams({ contextScope: 'current' }));
-        const lastItem = getLastTextItem(result);
 
-        expect(lastItem.text).toContain('Mini-relatório editado');
+        expect(getAllText(result)).toContain('Mini-relatório editado');
       });
 
       it('usa relatorio original se editedRelatorio não disponível', async () => {
@@ -209,44 +212,43 @@ describe('buildChatContext', () => {
           contextScope: 'current',
           currentTopic: topicSemEdited,
         }));
-        const lastItem = getLastTextItem(result);
 
-        expect(lastItem.text).toContain('Relatório original apenas');
+        expect(getAllText(result)).toContain('Relatório original apenas');
       });
     });
 
     describe('contextScope: all', () => {
       it('inclui todos os tópicos', async () => {
         const result = await buildChatContext(createParams({ contextScope: 'all' }));
-        const lastItem = getLastTextItem(result);
+        const allText = getAllText(result);
 
-        expect(lastItem.text).toContain('CONTEXTO COMPLETO DA DECISÃO');
-        expect(lastItem.text).toContain('Horas Extras');
-        expect(lastItem.text).toContain('FGTS');
+        expect(allText).toContain('CONTEXTO COMPLETO DA DECISÃO');
+        expect(allText).toContain('Horas Extras');
+        expect(allText).toContain('FGTS');
       });
 
       it('formata RELATÓRIO corretamente', async () => {
         const result = await buildChatContext(createParams({ contextScope: 'all' }));
-        const lastItem = getLastTextItem(result);
+        const allText = getAllText(result);
 
-        expect(lastItem.text).toContain('RELATÓRIO GERAL');
-        expect(lastItem.text).toContain('Relatório geral do caso');
+        expect(allText).toContain('RELATÓRIO GERAL');
+        expect(allText).toContain('Relatório geral do caso');
       });
 
       it('formata DISPOSITIVO corretamente', async () => {
         const result = await buildChatContext(createParams({ contextScope: 'all' }));
-        const lastItem = getLastTextItem(result);
+        const allText = getAllText(result);
 
-        expect(lastItem.text).toContain('DISPOSITIVO');
-        expect(lastItem.text).toContain('Julgo procedente em parte');
+        expect(allText).toContain('DISPOSITIVO');
+        expect(allText).toContain('Julgo procedente em parte');
       });
 
       it('indica tópico sendo editado', async () => {
         const result = await buildChatContext(createParams({ contextScope: 'all' }));
-        const lastItem = getLastTextItem(result);
+        const allText = getAllText(result);
 
-        expect(lastItem.text).toContain('TÓPICO SENDO EDITADO');
-        expect(lastItem.text).toContain(mockTopic.title);
+        expect(allText).toContain('TÓPICO SENDO EDITADO');
+        expect(allText).toContain(mockTopic.title);
       });
     });
 
@@ -259,13 +261,13 @@ describe('buildChatContext', () => {
           contextScope: 'selected',
           options,
         }));
-        const lastItem = getLastTextItem(result);
+        const allText = getAllText(result);
 
-        expect(lastItem.text).toContain('CONTEXTO DOS TÓPICOS SELECIONADOS');
-        expect(lastItem.text).toContain('Horas Extras');
-        expect(lastItem.text).toContain('FGTS');
+        expect(allText).toContain('CONTEXTO DOS TÓPICOS SELECIONADOS');
+        expect(allText).toContain('Horas Extras');
+        expect(allText).toContain('FGTS');
         // RELATÓRIO não foi selecionado
-        expect(lastItem.text).not.toContain('Relatório geral do caso');
+        expect(allText).not.toContain('Relatório geral do caso');
       });
 
       it('selectedContextTopics sobrescreve contextScope', async () => {
@@ -277,9 +279,8 @@ describe('buildChatContext', () => {
           contextScope: 'current', // será ignorado
           options,
         }));
-        const lastItem = getLastTextItem(result);
 
-        expect(lastItem.text).toContain('CONTEXTO DOS TÓPICOS SELECIONADOS');
+        expect(getAllText(result)).toContain('CONTEXTO DOS TÓPICOS SELECIONADOS');
       });
     });
   });
@@ -455,18 +456,16 @@ describe('buildChatContext', () => {
       const result = await buildChatContext(createParams({
         anonymizationEnabled: true,
       }));
-      const lastItem = getLastTextItem(result);
 
-      expect(lastItem.text).toContain('[PRESERVAR_ANONIMIZACAO]');
+      expect(getAllText(result)).toContain('[PRESERVAR_ANONIMIZACAO]');
     });
 
     it('não inclui preservarAnonimizacao quando desabilitado', async () => {
       const result = await buildChatContext(createParams({
         anonymizationEnabled: false,
       }));
-      const lastItem = getLastTextItem(result);
 
-      expect(lastItem.text).not.toContain('[PRESERVAR_ANONIMIZACAO]');
+      expect(getAllText(result)).not.toContain('[PRESERVAR_ANONIMIZACAO]');
     });
   });
 
@@ -479,9 +478,8 @@ describe('buildChatContext', () => {
       const result = await buildChatContext(createParams({
         currentContent: '',
       }));
-      const lastItem = getLastTextItem(result);
 
-      expect(lastItem.text).toContain('Ainda não foi escrito nada');
+      expect(getAllText(result)).toContain('Ainda não foi escrito nada');
     });
 
     it('trata documentos vazios sem erro', async () => {
@@ -501,9 +499,8 @@ describe('buildChatContext', () => {
         currentTopic: topicSemCategoria,
         contextScope: 'current',
       }));
-      const lastItem = getLastTextItem(result);
 
-      expect(lastItem.text).toContain('Não especificada');
+      expect(getAllText(result)).toContain('Não especificada');
     });
 
     it('trata tópico sem relatório', async () => {
@@ -514,9 +511,8 @@ describe('buildChatContext', () => {
         currentTopic: topicSemRelatorio,
         contextScope: 'current',
       }));
-      const lastItem = getLastTextItem(result);
 
-      expect(lastItem.text).toContain('Não disponível');
+      expect(getAllText(result)).toContain('Não disponível');
     });
 
     it('allTopics vazio não causa erro', async () => {
@@ -541,17 +537,16 @@ describe('buildChatContext', () => {
   describe('Formatação do prompt', () => {
     it('inclui instruções de HTML', async () => {
       const result = await buildChatContext(createParams());
-      const lastItem = getLastTextItem(result);
+      const allText = getAllText(result);
 
-      expect(lastItem.text).toContain('[FORMATACAO_HTML:');
-      expect(lastItem.text).toContain('[FORMATACAO_PARAGRAFOS:');
+      expect(allText).toContain('[FORMATACAO_HTML:');
+      expect(allText).toContain('[FORMATACAO_PARAGRAFOS:');
     });
 
     it('inclui aviso sobre mini-relatório', async () => {
       const result = await buildChatContext(createParams());
-      const lastItem = getLastTextItem(result);
 
-      expect(lastItem.text).toContain('NÃO INCLUIR MINI-RELATÓRIO');
+      expect(getAllText(result)).toContain('NÃO INCLUIR MINI-RELATÓRIO');
     });
 
     it('inclui instruções socráticas de confirmação', async () => {
