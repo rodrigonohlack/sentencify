@@ -166,7 +166,7 @@ export function useDecisionExport({
         // Adicionar "FUNDAMENTAÇÃO" após o primeiro tópico (RELATÓRIO)
         if (index === 0) {
           plainText += '\nFUNDAMENTAÇÃO\n\n';
-          htmlText += `<div style="${EXPORT_STYLES.fundamentacaoHeader}">FUNDAMENTAÇÃO</div>`;
+          htmlText += `<h2 style="${EXPORT_STYLES.h2}">FUNDAMENTAÇÃO</h2>`;
         }
       });
 
