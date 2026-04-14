@@ -201,19 +201,6 @@ Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
 ${currentContent || 'Ainda não foi escrito nada'}`;
   }
 
-  // 6. Injetar pacote de conhecimento (se selecionado)
-  if (params.knowledgePackage) {
-    const { name, instructions, files } = params.knowledgePackage;
-    let pkgText = `📚 PACOTE DE CONHECIMENTO: ${name}\n`;
-    if (instructions?.trim()) pkgText += `\n${instructions.trim()}\n`;
-    for (const f of files) {
-      if (f.content?.trim()) {
-        pkgText += `\n--- ${f.name} ---\n${f.content.trim()}\n`;
-      }
-    }
-    contentArray.push({ type: 'text', text: pkgText });
-  }
-
   // 7. Montar prompt completo
   contentArray.push({
     type: 'text',
@@ -257,6 +244,22 @@ Quando gerar texto para a decisão, responda em HTML.
 ${AI_PROMPTS.formatacaoHTML("A <strong>CLT</strong> estabelece...")}
 ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágrafo.</p>")}`
   });
+
+  // 8. Injetar pacote de conhecimento APÓS o prompt principal (prioridade máxima)
+  if (params.knowledgePackage) {
+    const { name, instructions, files } = params.knowledgePackage;
+    let pkgText = `📚 INSTRUÇÕES VINCULANTES — PACOTE DE CONHECIMENTO SELECIONADO: ${name}\n\n`;
+    pkgText += `⚠️ ATENÇÃO: Você DEVE seguir rigorosamente as instruções abaixo.\n`;
+    pkgText += `Se houver um modelo base (<modelobase>), utilize-o como estrutura da sua resposta, adaptando ao caso concreto dos autos.\n`;
+    pkgText += `Estas instruções têm prioridade sobre o estilo padrão de redação.\n\n`;
+    if (instructions?.trim()) pkgText += `${instructions.trim()}\n`;
+    for (const f of files) {
+      if (f.content?.trim()) {
+        pkgText += `\n--- ${f.name} ---\n${f.content.trim()}\n`;
+      }
+    }
+    contentArray.push({ type: 'text', text: pkgText });
+  }
 
   return contentArray;
 }
