@@ -230,22 +230,12 @@ ${anonymizationEnabled ? AI_PROMPTS.preservarAnonimizacao : ''}
 
 ⚠️ NÃO INCLUIR MINI-RELATÓRIO no texto gerado.
 
-🎯 INSTRUÇÃO DO USUÁRIO:
-${userMessage}
-
-Quando faltar informação expressa necessária à redação, PERGUNTE ao usuário antes de redigir. Prefira perguntar a presumir.
-
-⚠️ ANTES DE REDIGIR QUALQUER TEXTO DE DECISÃO:
-Liste as informações/conclusões que você precisa confirmar com o usuário.
-Só prossiga com a redação APÓS receber as respostas.
-Se não houver nada a confirmar, indique "Nenhuma informação pendente" e prossiga.
-
 Quando gerar texto para a decisão, responda em HTML.
 ${AI_PROMPTS.formatacaoHTML("A <strong>CLT</strong> estabelece...")}
 ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágrafo.</p>")}`
   });
 
-  // 8. Injetar pacote de conhecimento APÓS o prompt principal (prioridade máxima)
+  // 8. Injetar pacote de conhecimento (template geral do juiz)
   if (params.knowledgePackage) {
     const { name, instructions, files } = params.knowledgePackage;
     let pkgText = `📚 INSTRUÇÕES VINCULANTES — PACOTE DE CONHECIMENTO SELECIONADO: ${name}\n\n`;
@@ -260,6 +250,20 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
     }
     contentArray.push({ type: 'text', text: pkgText });
   }
+
+  // 9. Instrução do usuário por ÚLTIMO (maior peso — pode refinar ou sobrepor o pacote)
+  contentArray.push({
+    type: 'text',
+    text: `🎯 INSTRUÇÃO DO USUÁRIO:
+${userMessage}
+
+Quando faltar informação expressa necessária à redação, PERGUNTE ao usuário antes de redigir. Prefira perguntar a presumir.
+
+⚠️ ANTES DE REDIGIR QUALQUER TEXTO DE DECISÃO:
+Liste as informações/conclusões que você precisa confirmar com o usuário.
+Só prossiga com a redação APÓS receber as respostas.
+Se não houver nada a confirmar, indique "Nenhuma informação pendente" e prossiga.`
+  });
 
   return contentArray;
 }
