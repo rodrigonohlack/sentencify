@@ -149,7 +149,9 @@ const MODEL_PRICES: Record<string, { input: number; output: number }> = {
   'gpt-5.2-chat-latest': { input: 2.50, output: 10.00 },
   // Grok (xAI) - v1.36.35
   'grok-4-1-fast-reasoning': { input: 0.30, output: 1.50 },
-  'grok-4-1-fast-non-reasoning': { input: 0.15, output: 0.75 }
+  'grok-4-1-fast-non-reasoning': { input: 0.15, output: 0.75 },
+  'grok-4.20-0309-reasoning': { input: 2.00, output: 6.00 },
+  'grok-4.20-0309-non-reasoning': { input: 2.00, output: 6.00 }
 };
 
 // Nomes amigáveis dos modelos
@@ -166,7 +168,9 @@ const MODEL_NAMES: Record<string, string> = {
   'gpt-5.2-chat-latest': 'GPT-5.2 Instant',
   // Grok (xAI)
   'grok-4-1-fast-reasoning': 'Grok 4.1 Fast',
-  'grok-4-1-fast-non-reasoning': 'Grok 4.1 Lite'
+  'grok-4-1-fast-non-reasoning': 'Grok 4.1 Lite',
+  'grok-4.20-0309-reasoning': 'Grok 4.20 Fast',
+  'grok-4.20-0309-non-reasoning': 'Grok 4.20 Instant'
 };
 
 // Estimativas de tokens para cálculo de custo (calibrado com dados reais)

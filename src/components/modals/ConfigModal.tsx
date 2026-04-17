@@ -82,7 +82,10 @@ const getModelDisplayName = (modelId: string): string => {
     'gpt-5.2-chat-latest': 'GPT-5.2 Instant',
     // xAI Grok 4.1
     'grok-4-1-fast-reasoning': 'Grok 4.1 Fast',
-    'grok-4-1-fast-non-reasoning': 'Grok 4.1 Instant'
+    'grok-4-1-fast-non-reasoning': 'Grok 4.1 Instant',
+    // xAI Grok 4.20
+    'grok-4.20-0309-reasoning': 'Grok 4.20 Fast',
+    'grok-4.20-0309-non-reasoning': 'Grok 4.20 Instant'
   };
   return models[modelId] || modelId;
 };
@@ -476,11 +479,13 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               {aiSettings.provider === 'grok' && (
                 <select
                   value={aiSettings.grokModel || 'grok-4-1-fast-reasoning'}
-                  onChange={(e) => setAiSettings({ ...aiSettings, grokModel: e.target.value as 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning' })}
+                  onChange={(e) => setAiSettings({ ...aiSettings, grokModel: e.target.value as 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning' | 'grok-4.20-0309-reasoning' | 'grok-4.20-0309-non-reasoning' })}
                   className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
                 >
                   <option value="grok-4-1-fast-reasoning">Grok 4.1 Fast ($0.20/$0.50 por 1M) - 2M contexto</option>
                   <option value="grok-4-1-fast-non-reasoning">Grok 4.1 Instant ($0.20/$0.50 por 1M) - sem thinking</option>
+                  <option value="grok-4.20-0309-reasoning">Grok 4.20 Fast ($2.00/$6.00 por 1M) - com reasoning</option>
+                  <option value="grok-4.20-0309-non-reasoning">Grok 4.20 Instant ($2.00/$6.00 por 1M) - sem thinking</option>
                 </select>
               )}
             </div>

@@ -325,7 +325,8 @@ interface AIStoreState {
   setClaudeModel: (model: string) => void;
   setGeminiModel: (model: string) => void;
   setOpenAIModel: (model: 'gpt-5.2' | 'gpt-5.2-chat-latest') => void;
-  setGrokModel: (model: 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning') => void;
+  setGrokModel: (model: 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning'
+                      | 'grok-4.20-0309-reasoning' | 'grok-4.20-0309-non-reasoning') => void;
   setApiKey: (provider: AIProvider, key: string) => void;
   setThinkingBudget: (budget: string) => void;
   setUseExtendedThinking: (enabled: boolean) => void;
