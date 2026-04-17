@@ -84,6 +84,16 @@ export const AI_PROVIDERS: Record<AIProvider, ProviderInfo> = {
         id: 'grok-4-1-fast-non-reasoning',
         name: 'Grok 4.1 Instant',
         description: 'Sem thinking - $0.20/$0.50 por 1M'
+      },
+      {
+        id: 'grok-4.20-0309-reasoning',
+        name: 'Grok 4.20 Fast',
+        description: 'Com reasoning - $2.00/$6.00 por 1M - 2M contexto'
+      },
+      {
+        id: 'grok-4.20-0309-non-reasoning',
+        name: 'Grok 4.20 Instant',
+        description: 'Sem thinking - $2.00/$6.00 por 1M'
       }
     ]
   }
@@ -128,6 +138,8 @@ export const MODEL_MAX_OUTPUT_TOKENS: Record<string, number> = {
   // Grok
   'grok-4-1-fast-reasoning': 32000,
   'grok-4-1-fast-non-reasoning': 32000,
+  'grok-4.20-0309-reasoning': 32000,
+  'grok-4.20-0309-non-reasoning': 32000,
 };
 
 export const DEFAULT_MAX_OUTPUT_TOKENS = 32000;

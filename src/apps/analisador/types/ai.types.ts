@@ -24,7 +24,8 @@ export interface AISettings {
   geminiModel: string;
   openaiModel: 'gpt-5.2' | 'gpt-5.2-chat-latest';
   openaiReasoningLevel: OpenAIReasoningLevel;
-  grokModel: 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning';
+  grokModel: 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning'
+           | 'grok-4.20-0309-reasoning' | 'grok-4.20-0309-non-reasoning';
   apiKeys: APIKeys;
   useExtendedThinking: boolean;
   thinkingBudget: string;
