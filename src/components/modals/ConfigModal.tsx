@@ -864,6 +864,40 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               </div>
             )}
 
+            {/* GROK 4.20 Reasoning: Thinking embutido */}
+            {aiSettings.provider === 'grok' && aiSettings.grokModel === 'grok-4.20-0309-reasoning' && (
+              <div className="p-4 rounded-lg border-2 border-purple-500/50 bg-purple-500/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-purple-400">🧠</span>
+                  <span className="font-semibold theme-text-primary">Grok 4.20 Fast</span>
+                  <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded">Thinking Embutido</span>
+                </div>
+                <p className="text-xs theme-text-muted">
+                  Modelo da xAI com 2M de contexto e raciocínio integrado. O thinking é automático e não configurável.
+                </p>
+                <p className="text-xs text-emerald-400 mt-2">
+                  💰 $2.00/1M input + $6.00/1M output = ~$4.00/1M total
+                </p>
+              </div>
+            )}
+
+            {/* GROK 4.20 Instant: Sem suporte a thinking */}
+            {aiSettings.provider === 'grok' && aiSettings.grokModel === 'grok-4.20-0309-non-reasoning' && (
+              <div className="p-4 rounded-lg border-2 border-amber-500/50 bg-amber-500/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-amber-400">⚡</span>
+                  <span className="font-semibold theme-text-primary">Grok 4.20 Instant</span>
+                  <span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded">Sem Thinking</span>
+                </div>
+                <p className="text-xs theme-text-muted">
+                  Modelo da xAI com 2M de contexto, modo instant para respostas rápidas. Este modelo não suporta pensamento prolongado.
+                </p>
+                <p className="text-xs text-emerald-400 mt-2">
+                  💰 $2.00/1M input + $6.00/1M output = ~$4.00/1M total
+                </p>
+              </div>
+            )}
+
             {/* Log Thinking - desabilitado para modelos sem reasoning */}
             {(() => {
               const isDisabled = aiSettings.provider === 'grok' ||
@@ -1020,6 +1054,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       <>
                         <option value="grok-4-1-fast-reasoning">Grok 4.1 Fast Thinking</option>
                         <option value="grok-4-1-fast-non-reasoning">Grok 4.1 Fast Instant</option>
+                        <option value="grok-4.20-0309-reasoning">Grok 4.20 Fast (com reasoning)</option>
+                        <option value="grok-4.20-0309-non-reasoning">Grok 4.20 Instant (sem thinking)</option>
                       </>
                     )}
                   </select>
@@ -1146,11 +1182,14 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 )}
 
                 {aiSettings.doubleCheck?.provider === 'grok' &&
-                 aiSettings.doubleCheck?.model?.includes('reasoning') && (
+                 aiSettings.doubleCheck?.model?.includes('reasoning') &&
+                 !aiSettings.doubleCheck?.model?.includes('non-reasoning') && (
                   <div className="p-3 rounded-lg border border-purple-500/30 bg-purple-500/10">
                     <div className="flex items-center gap-2">
                       <span className="text-purple-400">🧠</span>
-                      <span className="text-sm theme-text-primary">Grok 4.1 Fast Thinking</span>
+                      <span className="text-sm theme-text-primary">
+                        {aiSettings.doubleCheck?.model?.startsWith('grok-4.20') ? 'Grok 4.20 Fast' : 'Grok 4.1 Fast Thinking'}
+                      </span>
                     </div>
                     <p className="text-xs theme-text-muted mt-1">
                       Thinking é automático e não configurável
@@ -1161,7 +1200,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 {aiSettings.doubleCheck?.provider === 'grok' &&
                  aiSettings.doubleCheck?.model?.includes('non-reasoning') && (
                   <p className="text-xs theme-text-muted p-2 rounded bg-gray-500/10">
-                    ⚡ Grok 4.1 Fast Instant não suporta thinking
+                    ⚡ {aiSettings.doubleCheck?.model?.startsWith('grok-4.20') ? 'Grok 4.20 Instant' : 'Grok 4.1 Fast Instant'} não suporta thinking
                   </p>
                 )}
 
