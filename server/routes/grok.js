@@ -103,7 +103,7 @@ router.post('/stream', async (req, res) => {
         'Authorization': `Bearer ${apiKey}`,
         'x-grok-conv-id': convId
       },
-      body: JSON.stringify({ ...req.body, stream: true })
+      body: JSON.stringify({ ...req.body, stream: true, stream_options: { include_usage: true } })
     });
 
     if (!response.ok) {
