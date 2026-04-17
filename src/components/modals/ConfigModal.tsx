@@ -2601,6 +2601,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             const grok420Prices = { input: 2.00, output: 6.00, cacheWrite: 2.00, cacheRead: 0.20 };
             const getGrokPrices = (modelId?: string) =>
               modelId?.startsWith('grok-4.20') ? grok420Prices : grokPrices;
+            const getGeminiPrices = (modelId?: string) =>
+              modelId?.includes('pro') ? geminiPrices : geminiFlashPrices;
 
             return (
               <div className="border-t theme-border-secondary pt-4 mt-4">
@@ -2678,14 +2680,15 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                           {Object.entries(metrics.byModel)
                             .sort((a, b) => (b[1].input + b[1].output) - (a[1].input + a[1].output))
                             .map(([modelId, modelMetrics]) => {
-                              // Calcular custo real baseado no provider (Grok: preço varia por modelo)
+                              // Calcular custo real baseado no provider e modelo específico
                               const providerPrices = modelMetrics.provider === 'grok'
                                 ? getGrokPrices(modelId)
-                                : ({
-                                    claude: sonnetPrices,
-                                    gemini: geminiFlashPrices,
-                                    openai: openaiPrices
-                                  }[modelMetrics.provider] || sonnetPrices);
+                                : modelMetrics.provider === 'gemini'
+                                  ? getGeminiPrices(modelId)
+                                  : ({
+                                      claude: sonnetPrices,
+                                      openai: openaiPrices
+                                    }[modelMetrics.provider] || sonnetPrices);
                               const modelCost = ((modelMetrics.input / 1000000) * providerPrices.input) +
                                               ((modelMetrics.output / 1000000) * providerPrices.output) +
                                               ((modelMetrics.cacheRead / 1000000) * providerPrices.cacheRead) +
@@ -2720,11 +2723,12 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                             ${Object.entries(metrics.byModel).reduce((acc, [mId, m]) => {
                               const prices = m.provider === 'grok'
                                 ? getGrokPrices(mId)
-                                : ({
-                                    claude: sonnetPrices,
-                                    gemini: geminiFlashPrices,
-                                    openai: openaiPrices
-                                  }[m.provider] || sonnetPrices);
+                                : m.provider === 'gemini'
+                                  ? getGeminiPrices(mId)
+                                  : ({
+                                      claude: sonnetPrices,
+                                      openai: openaiPrices
+                                    }[m.provider] || sonnetPrices);
                               return acc +
                                 ((m.input / 1000000) * prices.input) +
                                 ((m.output / 1000000) * prices.output) +

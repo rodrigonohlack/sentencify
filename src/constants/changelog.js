@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.41.15', feature: 'fix(custo): estimativa "Uso de Tokens" agora usa preço correto por modelo — Gemini 3.1 Pro usava preço do Flash ($0.50/$3.00 em vez de $2.00/$12.00); corrigido com getGeminiPrices() model-aware no byModel breakdown. Mesma correção já existia para Grok 4.20 vs 4.1.' },
   { version: '1.41.14', feature: 'fix(modelos): Grok 4.20-0309 não aparecia no main SentencifyAI — ConfigModal.tsx (select + type cast + nome), useAIStore.ts (setGrokModel type) e TopicCurationModal.tsx (pricing + nomes) não haviam sido atualizados na primeira rodada.' },
   { version: '1.41.13', feature: 'feat(modelos): adicionar Grok 4.20-0309 (reasoning e non-reasoning) como novas opções de modelo em todos os apps (SentencifyAI, Analisador, Prova Oral, Notícias) — mantém modelos Grok 4.1 existentes como padrão.' },
   { version: '1.41.12', feature: 'Fix(exportação): título "FUNDAMENTAÇÃO" agora exportado como <h2> — antes era <div> com estilo idêntico mas sem semântica de heading, fazendo Word e Google Docs tratar como texto comum; substituído por <h2 style=EXPORT_STYLES.h2> para consistência com RELATÓRIO e DISPOSITIVO. Remove chave obsoleta fundamentacaoHeader de export-styles.ts.' },
