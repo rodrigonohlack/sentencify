@@ -45,6 +45,38 @@ export const SPACING_PRESETS: Record<string, SpacingPreset> = {
   }
 };
 
+export interface EditorWidthPreset {
+  label: string;
+  maxWidth: string;
+  icon: string;
+}
+
+// ⚙️ CONFIGURAÇÃO DE LARGURA DO EDITOR EM TELA CHEIA (v1.41.17)
+export const EDITOR_WIDTH_PRESETS: Record<string, EditorWidthPreset> = {
+  narrow: {
+    label: 'Estreito',
+    maxWidth: '800px',
+    icon: '◫'
+  },
+  normal: {
+    label: 'Normal',
+    maxWidth: '1200px',
+    icon: '▣'
+  },
+  wide: {
+    label: 'Largo',
+    maxWidth: '1600px',
+    icon: '⬜'
+  },
+  full: {
+    label: 'Total',
+    maxWidth: '100%',
+    icon: '⬛'
+  }
+};
+
+export type EditorWidthPresetKey = keyof typeof EDITOR_WIDTH_PRESETS;
+
 // ⚙️ CONFIGURAÇÃO DE TAMANHO DE FONTE DOS EDITORES (v1.10.8)
 export const FONTSIZE_PRESETS: Record<string, FontSizePreset> = {
   normal: {

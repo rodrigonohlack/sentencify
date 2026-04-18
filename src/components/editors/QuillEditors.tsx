@@ -11,9 +11,9 @@ import React from 'react';
 import { Save, Sparkles, Scale, BookOpen } from 'lucide-react';
 import { CSS } from '../modals/BaseModal';
 import { VoiceButton } from '../VoiceButton';
-import { SpacingDropdown, FontSizeDropdown } from '../ui';
+import { SpacingDropdown, FontSizeDropdown, EditorWidthDropdown } from '../ui';
 import { useQuillEditor, sanitizeQuillHTML } from '../../hooks/useQuillEditor';
-import { useSpacingControl, useFontSizeControl, useFullscreen, useAIIntegration } from '../../hooks';
+import { useSpacingControl, useFontSizeControl, useFullscreen, useAIIntegration, useEditorWidthControl } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
 import { useAutoComplete } from '../../hooks/useAutoComplete';
 import { useAIStore, selectAutoComplete } from '../../stores/useAIStore';
@@ -702,6 +702,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
 
   const { spacing, setSpacing } = useSpacingControl();
   const { fontSize, setFontSize } = useFontSizeControl();
+  const { editorWidth, setEditorWidth, currentPreset: widthPreset } = useEditorWidthControl();
   const { isFullscreen, toggleFullscreen, isSplitMode, toggleSplitMode, splitPosition, handleSplitDrag, containerRef } = useFullscreen();
 
   // v1.40.05: Usar stores como fallback
@@ -829,7 +830,9 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
     <div ref={containerRef} className={`${isFullscreen ? 'editor-fullscreen' : ''} ${isSplitMode ? 'editor-fullscreen-split' : ''}`}>
       <div
         className={`flex flex-col flex-1 min-h-0 ${isSplitMode ? 'split-editor-pane' : ''}`}
-        style={editorPaneStyle}
+        style={isFullscreen && !isSplitMode
+          ? { ...editorPaneStyle, maxWidth: widthPreset.maxWidth, marginLeft: 'auto', marginRight: 'auto', width: '100%' }
+          : editorPaneStyle}
       >
         {isFullscreen ? (
           <div className="flex items-center gap-2 mb-2 flex-shrink-0">
@@ -997,6 +1000,16 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
                 ariaLabel="Espaçamento do editor de tópicos"
               />
             </div>
+            {isFullscreen && !isSplitMode && (
+              <div className="flex items-center gap-2">
+                <span className={CSS.textMuted}>Largura:</span>
+                <EditorWidthDropdown
+                  value={editorWidth}
+                  onChange={setEditorWidth}
+                  ariaLabel="Largura do editor em tela cheia"
+                />
+              </div>
+            )}
           </div>
         </div>
 

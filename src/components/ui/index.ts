@@ -10,6 +10,9 @@ export type { SpacingDropdownProps } from './SpacingDropdown';
 export { FontSizeDropdown } from './FontSizeDropdown';
 export type { FontSizeDropdownProps } from './FontSizeDropdown';
 
+export { EditorWidthDropdown } from './EditorWidthDropdown';
+export type { EditorWidthDropdownProps } from './EditorWidthDropdown';
+
 export { ProcessingModeSelector } from './ProcessingModeSelector';
 export type { ProcessingModeSelectorProps } from './ProcessingModeSelector';
 

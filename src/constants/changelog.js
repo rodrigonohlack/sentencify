@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.41.17', feature: 'UX(editor): largura do editor em tela cheia agora é ajustável pelo usuário — dropdown "Largura" na toolbar com 4 opções (Estreito 800px / Normal 1200px / Largo 1600px / Total 100%); visível apenas em tela cheia sem split view; preferência persiste no localStorage.' },
   { version: '1.41.16', feature: 'UX(editor): adicionar margens laterais confortáveis no modo tela cheia sem split view — editor agora usa max-width: 1200px centralizado; sem efeito no split view de modelos.' },
   { version: '1.41.15', feature: 'fix(custo): estimativa "Uso de Tokens" agora usa preço correto por modelo — Gemini 3.1 Pro usava preço do Flash ($0.50/$3.00 em vez de $2.00/$12.00); corrigido com getGeminiPrices() model-aware no byModel breakdown. Mesma correção já existia para Grok 4.20 vs 4.1.' },
   { version: '1.41.14', feature: 'fix(modelos): Grok 4.20-0309 não aparecia no main SentencifyAI — ConfigModal.tsx (select + type cast + nome), useAIStore.ts (setGrokModel type) e TopicCurationModal.tsx (pricing + nomes) não haviam sido atualizados na primeira rodada.' },
