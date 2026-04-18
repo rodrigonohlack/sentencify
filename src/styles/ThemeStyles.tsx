@@ -450,6 +450,13 @@ const ThemeStyles = () => (
       flex-direction: column !important;
       margin: 0 !important;
     }
+    /* Margem lateral confortável quando fullscreen sem split view */
+    .editor-fullscreen:not(.editor-fullscreen-split) > div:first-child {
+      max-width: 1200px !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+      width: 100% !important;
+    }
     /* v1.9.31: Sem gap no inicio */
     .editor-fullscreen > div:first-child > *:first-child {
       margin-top: 0 !important;
