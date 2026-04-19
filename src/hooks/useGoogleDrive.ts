@@ -80,8 +80,10 @@ const STORAGE_KEY = 'sentencify-google-drive-token-v2';
 // Margem de segurança antes de considerar o token expirado (2 minutos)
 const TOKEN_EXPIRY_MARGIN_MS = 2 * 60 * 1000;
 
-// Timeout máximo aguardando renovação de token (15 segundos)
+// Timeout máximo aguardando silent refresh (15 segundos)
 const TOKEN_REFRESH_TIMEOUT_MS = 15 * 1000;
+// Timeout máximo aguardando interação do usuário no popup de login (2 minutos)
+const TOKEN_POPUP_TIMEOUT_MS = 2 * 60 * 1000;
 
 // Limpar token antigo (v1) se existir
 if (typeof window !== 'undefined') {
@@ -110,6 +112,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
   const pendingTokenRef = useRef<{
     resolve: (token: string) => void;
     reject: (err: Error) => void;
+    extendForPopup: () => void;
   } | null>(null);
 
   // Restaurar token do localStorage ao inicializar
@@ -204,8 +207,9 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
   const googleSilentRefresh = useGoogleLogin({
     onSuccess: handleLoginSuccess,
     onError: () => {
-      // Silent falhou (ex: sessão Google expirada) → fallback para popup
+      // Silent falhou (ex: sessão Google expirada) → estende timeout e abre popup
       console.log('[GoogleDrive] Silent refresh falhou, abrindo popup de login...');
+      pendingTokenRef.current?.extendForPopup();
       googleLogin();
     },
     scope: SCOPES,
@@ -221,7 +225,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
 
     // Token expirado → iniciar silent refresh e aguardar novo token
     return new Promise<string>((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
+      let timeoutId = setTimeout(() => {
         if (pendingTokenRef.current) {
           pendingTokenRef.current = null;
           reject(new Error('Tempo esgotado ao renovar sessão com Google Drive. Tente reconectar.'));
@@ -231,6 +235,16 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       pendingTokenRef.current = {
         resolve: (token) => { clearTimeout(timeoutId); resolve(token); },
         reject: (err) => { clearTimeout(timeoutId); reject(err); },
+        // Chamado quando silent refresh falha e abre popup: estende o timeout para interação humana
+        extendForPopup: () => {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            if (pendingTokenRef.current) {
+              pendingTokenRef.current = null;
+              reject(new Error('Login cancelado ou tempo esgotado. Tente salvar novamente.'));
+            }
+          }, TOKEN_POPUP_TIMEOUT_MS);
+        },
       };
 
       console.log('[GoogleDrive] Token expirado, iniciando silent refresh...');
