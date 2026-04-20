@@ -4,4 +4,4 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 export * from './noticias.types';
-export * from './ai.types';
+export * from '../../../types/ai';

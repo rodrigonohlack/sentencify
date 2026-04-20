@@ -4,4 +4,4 @@
  */
 
 export * from './prova-oral.types';
-export * from './ai.types';
+export * from '../../../types/ai';

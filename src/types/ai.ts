@@ -1,7 +1,12 @@
-// ═══════════════════════════════════════════════════════════════════════════
-// TIPOS IA - App de Notícias Jurídicas
-// v1.41.0 - Tipos para integração com provedores de IA
-// ═══════════════════════════════════════════════════════════════════════════
+/**
+ * @file ai.ts
+ * @description Tipos base de integração com provedores de IA, compartilhados
+ *              entre os apps (analisador, noticias, prova-oral). O Core
+ *              (src/types/index.ts) possui sua própria versão extendida de
+ *              AISettings/TokenMetrics com features adicionais (quickPrompts,
+ *              anonymization, doubleCheck, etc.); esses tipos extendidos NÃO
+ *              devem ser movidos para cá sem revisão.
+ */
 
 export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok';
 
