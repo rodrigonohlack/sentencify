@@ -27,6 +27,18 @@ import type {
   ModalKey,
 } from '../types';
 import type { GoogleDriveFile } from './useGoogleDrive';
+import { SESSION_EXPIRED_CODE } from './useGoogleDrive';
+
+// v1.41.21: Mensagem padrão para sessão Google Drive expirada.
+// Aponta o usuário para o botão "Projeto" no header — o popup de reconexão
+// só abre a partir de clique direto do usuário (evita popup-blocker).
+const SESSION_EXPIRED_MESSAGE =
+  'Sua sessão do Google Drive expirou. Clique em "Projeto" no topo e selecione "Conectar Google Drive".';
+
+function isSessionExpired(err: unknown): boolean {
+  const e = err as { code?: string; message?: string };
+  return e?.code === SESSION_EXPIRED_CODE || e?.message === SESSION_EXPIRED_CODE;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -215,6 +227,10 @@ export function useGoogleDriveActions(props: UseGoogleDriveActionsProps): UseGoo
       await googleDrive.saveFile(fileName, projectJson);
       showToast(`Projeto salvo no Google Drive: ${fileName}`, 'success');
     } catch (err) {
+      if (isSessionExpired(err)) {
+        showToast(SESSION_EXPIRED_MESSAGE, 'error');
+        return;
+      }
       showToast(`Erro ao salvar no Drive: ${(err as Error).message}`, 'error');
     }
   }, [buildAllStates, storage, googleDrive, documentState.processoNumero, showToast]);
@@ -228,6 +244,10 @@ export function useGoogleDriveActions(props: UseGoogleDriveActionsProps): UseGoo
       setDriveFiles(files);
       setDriveFilesModalOpen(true);
     } catch (err) {
+      if (isSessionExpired(err)) {
+        showToast(SESSION_EXPIRED_MESSAGE, 'error');
+        return;
+      }
       showToast(`Erro ao listar arquivos: ${(err as Error).message}`, 'error');
     }
   }, [googleDrive, setDriveFiles, setDriveFilesModalOpen, showToast]);

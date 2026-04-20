@@ -10,6 +10,17 @@
 import { useCallback } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import type { UseGoogleDriveReturn, GoogleDriveFile } from './useGoogleDrive';
+import { SESSION_EXPIRED_CODE } from './useGoogleDrive';
+
+// v1.41.21: Mensagem padrão para sessão expirada. Orienta o usuário a clicar
+// no botão "Projeto" (header) — popup só abre a partir de clique direto.
+const SESSION_EXPIRED_MESSAGE =
+  'Sua sessão do Google Drive expirou. Clique em "Projeto" no topo e selecione "Conectar Google Drive".';
+
+function isSessionExpired(err: unknown): boolean {
+  const e = err as { code?: string; message?: string };
+  return e?.code === SESSION_EXPIRED_CODE || e?.message === SESSION_EXPIRED_CODE;
+}
 import type {
   ImportedProject,
   ImportCallbacks,
@@ -169,6 +180,10 @@ export function useDriveFileHandlers(props: UseDriveFileHandlersProps) {
       setDriveFilesModalOpen(false);
       setError({ type: 'success', message: `Projeto carregado do Google Drive: ${file.name}` });
     } catch (err) {
+      if (isSessionExpired(err)) {
+        setError({ type: 'error', message: SESSION_EXPIRED_MESSAGE });
+        return;
+      }
       setError({ type: 'error', message: `Erro ao carregar projeto: ${(err as Error).message}` });
     }
   }, [
@@ -204,6 +219,10 @@ export function useDriveFileHandlers(props: UseDriveFileHandlersProps) {
       setDriveFiles(currentFiles.filter(f => f.id !== file.id));
       setError({ type: 'success', message: `Arquivo excluído: ${file.name}` });
     } catch (err) {
+      if (isSessionExpired(err)) {
+        setError({ type: 'error', message: SESSION_EXPIRED_MESSAGE });
+        return;
+      }
       setError({ type: 'error', message: `Erro ao excluir: ${(err as Error).message}` });
     }
   }, [googleDrive, setDriveFiles, setError]);
@@ -217,6 +236,10 @@ export function useDriveFileHandlers(props: UseDriveFileHandlersProps) {
       const roleText = role === 'writer' ? 'edição' : 'visualização';
       setError({ type: 'success', message: `Compartilhado com ${email} (${roleText})` });
     } catch (err) {
+      if (isSessionExpired(err)) {
+        setError({ type: 'error', message: SESSION_EXPIRED_MESSAGE });
+        return;
+      }
       setError({ type: 'error', message: `Erro ao compartilhar: ${(err as Error).message}` });
     }
   }, [googleDrive, setError]);
@@ -229,6 +252,10 @@ export function useDriveFileHandlers(props: UseDriveFileHandlersProps) {
       const files = await googleDrive.listFiles();
       setDriveFiles(files);
     } catch (err) {
+      if (isSessionExpired(err)) {
+        setError({ type: 'error', message: SESSION_EXPIRED_MESSAGE });
+        return;
+      }
       setError({ type: 'error', message: `Erro ao atualizar: ${(err as Error).message}` });
     }
   }, [googleDrive, setDriveFiles, setError]);
