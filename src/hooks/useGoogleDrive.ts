@@ -2,8 +2,9 @@
  * Hook para integração com Google Drive
  * Permite salvar/restaurar projetos Sentencify no Drive do usuário
  *
- * @version 1.41.21 - Sessão expirada: popup só a partir de clique do usuário
- *                    (evita popup-blocker); refresh proativo em background
+ * @version 1.41.24 - Silent refresh apenas sob demanda (de clique do usuário).
+ *                    Refresh proativo removido — @react-oauth/google usa popup,
+ *                    não iframe, e setTimeout perde user activation no navegador.
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
@@ -84,11 +85,6 @@ const TOKEN_EXPIRY_MARGIN_MS = 2 * 60 * 1000;
 // Timeout máximo aguardando silent refresh (15 segundos)
 const TOKEN_REFRESH_TIMEOUT_MS = 15 * 1000;
 
-// v1.41.21: Refresh proativo — dispara silent refresh 5 min antes da expiração.
-// Se a sessão Google ainda estiver ativa, o token é renovado sem qualquer
-// intervenção do usuário; se falhar, a UI só notifica na próxima ação.
-const PROACTIVE_REFRESH_LEAD_MS = 5 * 60 * 1000;
-
 // v1.41.21: Código de erro tipado para expiração de sessão.
 // Handlers de UI inspecionam este código para mostrar toast de reconexão.
 export const SESSION_EXPIRED_CODE = 'SESSION_EXPIRED';
@@ -123,15 +119,6 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     reject: (err: Error) => void;
   } | null>(null);
 
-  // v1.41.21: Timer do refresh proativo em background
-  const refreshTimerRef = useRef<number | null>(null);
-
-  // v1.41.21: Ref para o silent refresh (atualizada a cada render).
-  // Permite que scheduleProactiveRefresh, useEffect e outros callbacks
-  // disparem o silent refresh sem entrar nas deps do useCallback/useEffect
-  // (o que causaria re-execução em todo render).
-  const silentRefreshRef = useRef<() => void>(() => {});
-
   // v1.41.09: Verificar se o token armazenado ainda é válido
   const isTokenValid = useCallback((): boolean => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -141,28 +128,6 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       return Date.now() < expiresAt - TOKEN_EXPIRY_MARGIN_MS;
     } catch {
       return false;
-    }
-  }, []);
-
-  // v1.41.21: Agenda refresh proativo ~5 min antes da expiração do token.
-  // Usa silentRefreshRef para não precisar de googleSilentRefresh nas deps.
-  const scheduleProactiveRefresh = useCallback(() => {
-    if (refreshTimerRef.current !== null) {
-      clearTimeout(refreshTimerRef.current);
-      refreshTimerRef.current = null;
-    }
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return;
-    try {
-      const { expiresAt } = JSON.parse(stored) as StoredToken;
-      const delay = expiresAt - Date.now() - PROACTIVE_REFRESH_LEAD_MS;
-      if (delay <= 0) return; // Expira em <5 min; refresh sob demanda cobre.
-      refreshTimerRef.current = window.setTimeout(() => {
-        console.log('[GoogleDrive] Refresh proativo em background...');
-        silentRefreshRef.current();
-      }, delay);
-    } catch {
-      // Ignora JSON inválido; a próxima chamada a getValidToken limpa o estado.
     }
   }, []);
 
@@ -215,9 +180,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       } as StoredToken));
     }
 
-    // v1.41.21: Agenda próximo refresh proativo agora que o token foi persistido.
-    scheduleProactiveRefresh();
-  }, [userEmail, scheduleProactiveRefresh]);
+  }, [userEmail]);
 
   // Login regular (com popup de autorização).
   // Deve ser chamado APENAS a partir de clique direto do usuário para não
@@ -250,10 +213,6 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       setUserEmail(null);
       setUserPhoto(null);
       localStorage.removeItem(STORAGE_KEY);
-      if (refreshTimerRef.current !== null) {
-        clearTimeout(refreshTimerRef.current);
-        refreshTimerRef.current = null;
-      }
       if (pendingTokenRef.current) {
         const err = new Error(SESSION_EXPIRED_CODE) as Error & { code: string };
         err.code = SESSION_EXPIRED_CODE;
@@ -310,23 +269,9 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     setUserPhoto(null);  // v1.35.54
     setIsConnected(false);
     localStorage.removeItem(STORAGE_KEY);
-    if (refreshTimerRef.current !== null) {
-      clearTimeout(refreshTimerRef.current);
-      refreshTimerRef.current = null;
-    }
   }, []);
 
-  // v1.41.21: Mantém silentRefreshRef sempre apontando para a última versão
-  // de googleSilentRefresh (useGoogleLogin retorna função nova a cada render).
-  // Isso permite usar silentRefreshRef.current() em callbacks estáveis
-  // (scheduleProactiveRefresh, useEffect de init) sem entrar em loops de re-render.
-  useEffect(() => {
-    silentRefreshRef.current = googleSilentRefresh;
-  }, [googleSilentRefresh]);
-
-  // Inicialização única: restaurar token do localStorage e agendar refresh proativo.
-  // Deps vazias → executa apenas no mount. silentRefreshRef é atualizada pelo
-  // useEffect acima antes de scheduleProactiveRefresh rodar o setTimeout.
+  // Inicialização única: restaurar token do localStorage.
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -337,7 +282,6 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
           setUserEmail(email);
           if (photo) setUserPhoto(photo);
           setIsConnected(true);
-          scheduleProactiveRefresh();
         } else {
           localStorage.removeItem(STORAGE_KEY);
         }
@@ -345,13 +289,6 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         localStorage.removeItem(STORAGE_KEY);
       }
     }
-    return () => {
-      if (refreshTimerRef.current !== null) {
-        clearTimeout(refreshTimerRef.current);
-        refreshTimerRef.current = null;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // v1.35.47: Obter ou criar pasta "Sentencify" no Drive
