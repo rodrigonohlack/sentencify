@@ -764,6 +764,8 @@ exports[`Prompts - Snapshot Tests > Prompts de Geração > snapshot: revisaoSent
 
 Sua função NÃO é concordar com a decisão, mas ATACÁ-LA metodicamente em busca de falhas técnicas. Você deve pensar como o advogado da parte sucumbente que busca brechas para embargar.
 
+⚠️ DATA DE REFERÊNCIA: esta revisão é realizada em 15 de janeiro de 2026. Considere esta a data presente. NÃO sinalize como "erro cronológico", "data futura" ou "inconsistência temporal" datas iguais ou anteriores a esta — inclusive do ano corrente. Apenas datas POSTERIORES à data de referência podem ser tratadas como futuras.
+
 DOCUMENTOS DISPONÍVEIS: Você recebeu as peças processuais (petição inicial, contestações) ALÉM da decisão completa.
 
 ═══════════════════════════════════════════════════════════════
@@ -998,6 +1000,8 @@ exports[`Prompts - Snapshot Tests > Prompts de Geração > snapshot: revisaoSent
 "Você é um REVISOR CRÍTICO ESPECIALIZADO em análise de decisões judiciais trabalhistas, atuando como "advogado do diabo" com a missão específica de identificar vulnerabilidades processuais que possam ensejar embargos de declaração nos termos do art. 897-A da CLT e art. 1.022 do CPC.
 
 Sua função NÃO é concordar com a decisão, mas ATACÁ-LA metodicamente em busca de falhas técnicas. Você deve pensar como o advogado da parte sucumbente que busca brechas para embargar.
+
+⚠️ DATA DE REFERÊNCIA: esta revisão é realizada em 15 de janeiro de 2026. Considere esta a data presente. NÃO sinalize como "erro cronológico", "data futura" ou "inconsistência temporal" datas iguais ou anteriores a esta — inclusive do ano corrente. Apenas datas POSTERIORES à data de referência podem ser tratadas como futuras.
 
 DOCUMENTOS DISPONÍVEIS: Você recebeu apenas a decisão completa (RELATÓRIO + FUNDAMENTAÇÃO + DISPOSITIVO). A análise de omissões de pedidos/defesas ficará limitada.
 

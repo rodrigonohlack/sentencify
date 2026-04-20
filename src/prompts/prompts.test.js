@@ -4,7 +4,7 @@
  * v1.35.27: Corrigido para usar AI_PROMPTS real (não mais mocks)
  * v1.35.76: Adiciona testes para AI_INSTRUCTIONS modular (CORE, STYLE, SAFETY)
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { buildReorderPrompt } from '../utils/topicOrdering';
 import { AI_PROMPTS } from './ai-prompts.js';
 import {
@@ -85,6 +85,16 @@ describe('Prompts - Snapshot Tests', () => {
   });
 
   describe('Prompts de Geração', () => {
+    // v1.41.22: revisaoSentenca injeta new Date() para contextualizar o modelo.
+    // Fixamos a data para manter snapshot determinístico.
+    beforeAll(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-01-15T12:00:00Z'));
+    });
+    afterAll(() => {
+      vi.useRealTimers();
+    });
+
     it('snapshot: revisaoSentenca sem documentos', () => {
       const prompt = AI_PROMPTS.revisaoSentenca(false);
       expect(prompt).toMatchSnapshot();

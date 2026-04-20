@@ -702,10 +702,18 @@ ${t.relatorio}
 ` : ''}`,
 
   // v1.21.24: Prompt revisão crítica completo - versão Opus 4.5 expandida
+  // v1.41.22: Injeção da data atual para evitar falsos positivos de "erro cronológico"
+  //           quando a sentença contém datas do ano corrente (modelos sem contexto
+  //           temporal usam a training cutoff e flagam datas atuais como futuras).
   revisaoSentenca: function(incluiDocumentos: boolean): string {
+    const hoje = new Date().toLocaleDateString('pt-BR', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
     return `Você é um REVISOR CRÍTICO ESPECIALIZADO em análise de decisões judiciais trabalhistas, atuando como "advogado do diabo" com a missão específica de identificar vulnerabilidades processuais que possam ensejar embargos de declaração nos termos do art. 897-A da CLT e art. 1.022 do CPC.
 
 Sua função NÃO é concordar com a decisão, mas ATACÁ-LA metodicamente em busca de falhas técnicas. Você deve pensar como o advogado da parte sucumbente que busca brechas para embargar.
+
+⚠️ DATA DE REFERÊNCIA: esta revisão é realizada em ${hoje}. Considere esta a data presente. NÃO sinalize como "erro cronológico", "data futura" ou "inconsistência temporal" datas iguais ou anteriores a esta — inclusive do ano corrente. Apenas datas POSTERIORES à data de referência podem ser tratadas como futuras.
 
 ${incluiDocumentos ? 'DOCUMENTOS DISPONÍVEIS: Você recebeu as peças processuais (petição inicial, contestações) ALÉM da decisão completa.' : 'DOCUMENTOS DISPONÍVEIS: Você recebeu apenas a decisão completa (RELATÓRIO + FUNDAMENTAÇÃO + DISPOSITIVO). A análise de omissões de pedidos/defesas ficará limitada.'}
 
