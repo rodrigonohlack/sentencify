@@ -95,9 +95,11 @@ export interface ProofManagerForDecisionText {
 export interface ChatAssistantForDecisionText {
   lastResponse: string | null;
   /** v1.38.34: Retorna response diretamente para evitar race condition */
+  /** v1.42.02: callOptions permite habilitar web search por turn */
   send: (
     message: string,
-    contextBuilder: (msg: string) => Promise<AIMessageContent[]>
+    contextBuilder: (msg: string) => Promise<AIMessageContent[]>,
+    callOptions?: { webSearch?: boolean }
   ) => Promise<{ success: boolean; error?: string; response?: string | null }>;
   // v1.37.65: Double Check para quick prompts
   updateLastAssistantMessage: (newContent: string) => void;
@@ -157,6 +159,8 @@ export interface ChatContextOptions {
     instructions: string;
     files: { name: string; content: string }[];
   } | null;
+  /** v1.42.02: Habilita busca na web (Gemini only) — bloqueada se anonimização ativa */
+  webSearch?: boolean;
 }
 
 export interface UseDecisionTextGenerationReturn {
@@ -458,7 +462,10 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
 
   const handleSendChatMessage = React.useCallback(async (message: string, options: ChatContextOptions = {}) => {
     const contextBuilderWithOptions = (msg: string) => buildContextForChat(msg, options);
-    const result = await chatAssistant.send(message, contextBuilderWithOptions);
+    // v1.42.02: Repassar flag de web search ao callAI via callOptions
+    const result = await chatAssistant.send(message, contextBuilderWithOptions, {
+      webSearch: options.webSearch,
+    });
 
     // ═══════════════════════════════════════════════════════════════════════════
     // DOUBLE CHECK DO QUICK PROMPT (v1.37.65)

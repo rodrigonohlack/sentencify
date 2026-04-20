@@ -154,11 +154,13 @@ router.post('/stream', async (req, res) => {
     const decoder = new TextDecoder();
     let buffer = '';
     let usage = null;
+    let groundingMetadata = null; // v1.42.02: forward grounding do web search
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
-        // Processar buffer restante antes de terminar (pode conter usageMetadata)
+        // Processar buffer restante antes de terminar (pode conter usageMetadata
+        // e/ou groundingMetadata no último evento)
         if (buffer.trim()) {
           const line = buffer.trim();
           if (line.startsWith('data: ')) {
@@ -167,12 +169,14 @@ router.post('/stream', async (req, res) => {
               if (parsed.usageMetadata) {
                 usage = parsed.usageMetadata;
               }
+              const gm = parsed.candidates?.[0]?.groundingMetadata;
+              if (gm) groundingMetadata = gm;
             } catch (e) {
               // Ignorar erros de parse no buffer final
             }
           }
         }
-        res.write(`data: ${JSON.stringify({ type: 'done', usage })}\n\n`);
+        res.write(`data: ${JSON.stringify({ type: 'done', usage, groundingMetadata })}\n\n`);
         break;
       }
 
@@ -197,6 +201,11 @@ router.post('/stream', async (req, res) => {
             if (parsed.usageMetadata) {
               usage = parsed.usageMetadata;
             }
+            // v1.42.02: Capturar grounding metadata quando web search é usado.
+            // Pode vir em qualquer evento do stream, não só no último — guardar
+            // o mais recente que tiver conteúdo.
+            const gm = parsed.candidates?.[0]?.groundingMetadata;
+            if (gm) groundingMetadata = gm;
           } catch (e) {
             // Ignorar erros de parse
           }

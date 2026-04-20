@@ -27,6 +27,12 @@ export interface ChatContextOptions {
   includeMainDocs?: boolean;
   includeComplementaryDocs?: boolean;  // v1.39.06: Toggle "Incluir documentos complementares" no chat
   selectedContextTopics?: string[];
+  /**
+   * v1.42.02: Habilita busca na web para este turn (Gemini only).
+   * Este campo é apenas veículo — não altera a construção do contexto;
+   * flui até o callAI que aplica via registry provider-agnostic.
+   */
+  webSearch?: boolean;
 }
 
 /** Tópico mínimo necessário para construção de contexto */

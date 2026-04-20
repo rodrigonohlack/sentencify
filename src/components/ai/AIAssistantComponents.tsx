@@ -37,6 +37,9 @@ import type {
 import { QuickPromptWithOptions } from './QuickPromptWithOptions';
 import { collectProofDecisionData, buildProofDecisionPrompt } from '../../utils/proof-decision-helpers';
 import { useProofsStore } from '../../stores/useProofsStore';
+// v1.42.02: Web search opt-in no Assistente de Redação (Gemini only)
+import { WebSearchToggle } from './WebSearchToggle';
+import { providerSupportsWebSearch } from '../../utils/ai-tools/webSearch';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
@@ -572,6 +575,13 @@ export const AIAssistantModal = React.memo(({
   const [localIncludeMainDocs, setLocalIncludeMainDocs] = React.useState(true);
   const [localIncludeComplementaryDocs, setLocalIncludeComplementaryDocs] = React.useState(false);  // v1.39.06
 
+  // v1.42.02: Toggle opt-in de web search (Gemini only, default OFF, não persistido entre aberturas)
+  const [webSearchEnabled, setWebSearchEnabled] = React.useState(false);
+  const aiSettingsForWebSearch = useAIStore((s) => s.aiSettings);
+  const webSearchProvider = aiSettingsForWebSearch?.provider || 'claude';
+  const webSearchAnonActive = !!aiSettingsForWebSearch?.anonymization?.enabled;
+  const showWebSearchToggle = providerSupportsWebSearch(webSearchProvider);
+
   // Usar props externas se fornecidas, senão usar estado local
   const selectedContextTopics = externalSelectedTopics ?? localSelectedTopics;
   const setSelectedContextTopics = externalSetSelectedTopics ?? setLocalSelectedTopics;
@@ -581,21 +591,24 @@ export const AIAssistantModal = React.memo(({
   const setIncludeComplementaryDocs = externalSetIncludeComplementaryDocs ?? setLocalIncludeComplementaryDocs;  // v1.39.06
 
   // v1.38.12: Resetar estados locais ao reabrir modal
+  // v1.42.02: Também reseta webSearchEnabled → default OFF em cada abertura
   React.useEffect(() => {
     if (isOpen) {
       if (!externalSelectedTopics) setLocalSelectedTopics([]);
       if (externalIncludeMainDocs === undefined) setLocalIncludeMainDocs(true);
       if (externalIncludeComplementaryDocs === undefined) setLocalIncludeComplementaryDocs(false);  // v1.39.06
+      setWebSearchEnabled(false);
     }
   }, [isOpen, externalSelectedTopics, externalIncludeMainDocs, externalIncludeComplementaryDocs]);
 
   // v1.38.12: Handler para quick prompts com validação - passa opções de contexto
   // v1.39.06: Inclui includeComplementaryDocs
   const handleQuickPromptClick = React.useCallback((qp: QuickPrompt, resolvedPrompt: string) => {
-    const options: { proofFilter?: string; includeMainDocs?: boolean; includeComplementaryDocs?: boolean; selectedContextTopics?: string[] } = {
+    const options: { proofFilter?: string; includeMainDocs?: boolean; includeComplementaryDocs?: boolean; selectedContextTopics?: string[]; webSearch?: boolean } = {
       includeMainDocs,
       includeComplementaryDocs,
-      selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
+      selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined,
+      webSearch: webSearchEnabled && !webSearchAnonActive,
     };
 
     if (qp.proofFilter === 'oral') {
@@ -610,7 +623,7 @@ export const AIAssistantModal = React.memo(({
     } else {
       onSendMessage(resolvedPrompt, options);
     }
-  }, [proofManager, topicTitle, onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics]);
+  }, [proofManager, topicTitle, onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics, webSearchEnabled, webSearchAnonActive]);
 
   // v1.38.12: Handler para mensagens normais - passa opções de contexto
   // v1.39.06: Inclui includeComplementaryDocs
@@ -627,9 +640,11 @@ export const AIAssistantModal = React.memo(({
       includeComplementaryDocs,
       selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined,
       knowledgePackage: selectedPackage,
+      // v1.42.02: Propaga flag de web search (bloqueia se anonimização ativa — 2ª camada)
+      webSearch: webSearchEnabled && !webSearchAnonActive,
     };
     onSendMessage(message, options);
-  }, [onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics, selectedPackage]);
+  }, [onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics, selectedPackage, webSearchEnabled, webSearchAnonActive]);
 
   // v1.40.XX: Handler para quickprompts com sub-opções (ex: Decidir com Provas)
   const proofAnalysisResults = useProofsStore((s) => s.proofAnalysisResults);
@@ -685,6 +700,17 @@ export const AIAssistantModal = React.memo(({
   // v1.40.34: Adiciona KnowledgePackageSelector acima do ContextScopeSelector
   const extraContent = (
     <>
+      {/* v1.42.02: Toggle opt-in de web search (Gemini only). Só aparece quando
+          o provider suporta; fica desabilitado quando anonimização está ativa. */}
+      {showWebSearchToggle && (
+        <div className="flex justify-end">
+          <WebSearchToggle
+            enabled={webSearchEnabled}
+            onToggle={setWebSearchEnabled}
+            disabled={webSearchAnonActive}
+          />
+        </div>
+      )}
       <KnowledgePackageSelector
         packages={knowledgePackages.packages}
         selectedPackageId={selectedPackageId}
@@ -783,6 +809,13 @@ export const AIAssistantGlobalModal = React.memo(({
   const [localIncludeMainDocs, setLocalIncludeMainDocs] = React.useState(true);
   const [localIncludeComplementaryDocs, setLocalIncludeComplementaryDocs] = React.useState(false);  // v1.39.06
 
+  // v1.42.02: Toggle opt-in de web search (Gemini only, default OFF, não persistido entre aberturas)
+  const [webSearchEnabled, setWebSearchEnabled] = React.useState(false);
+  const aiSettingsForWebSearch = useAIStore((s) => s.aiSettings);
+  const webSearchProvider = aiSettingsForWebSearch?.provider || 'claude';
+  const webSearchAnonActive = !!aiSettingsForWebSearch?.anonymization?.enabled;
+  const showWebSearchToggle = providerSupportsWebSearch(webSearchProvider);
+
   // Usar props externas se fornecidas, senão usar estado local
   const selectedContextTopics = externalSelectedTopics ?? localSelectedTopics;
   const setSelectedContextTopics = externalSetSelectedTopics ?? setLocalSelectedTopics;
@@ -792,21 +825,24 @@ export const AIAssistantGlobalModal = React.memo(({
   const setIncludeComplementaryDocs = externalSetIncludeComplementaryDocs ?? setLocalIncludeComplementaryDocs;  // v1.39.06
 
   // v1.38.12: Resetar estados locais ao reabrir modal
+  // v1.42.02: Também reseta webSearchEnabled → default OFF em cada abertura
   React.useEffect(() => {
     if (isOpen) {
       if (!externalSelectedTopics) setLocalSelectedTopics([]);
       if (externalIncludeMainDocs === undefined) setLocalIncludeMainDocs(true);
       if (externalIncludeComplementaryDocs === undefined) setLocalIncludeComplementaryDocs(false);  // v1.39.06
+      setWebSearchEnabled(false);
     }
   }, [isOpen, externalSelectedTopics, externalIncludeMainDocs, externalIncludeComplementaryDocs]);
 
   // v1.38.12: Handler para quick prompts com validação - passa opções de contexto
   // v1.39.06: Inclui includeComplementaryDocs
   const handleQuickPromptClick = React.useCallback((qp: QuickPrompt, resolvedPrompt: string) => {
-    const options: { proofFilter?: string; includeMainDocs?: boolean; includeComplementaryDocs?: boolean; selectedContextTopics?: string[] } = {
+    const options: { proofFilter?: string; includeMainDocs?: boolean; includeComplementaryDocs?: boolean; selectedContextTopics?: string[]; webSearch?: boolean } = {
       includeMainDocs,
       includeComplementaryDocs,
-      selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined
+      selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined,
+      webSearch: webSearchEnabled && !webSearchAnonActive,
     };
 
     if (qp.proofFilter === 'oral') {
@@ -821,7 +857,7 @@ export const AIAssistantGlobalModal = React.memo(({
     } else {
       onSendMessage(resolvedPrompt, options);
     }
-  }, [proofManager, topicTitle, onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics]);
+  }, [proofManager, topicTitle, onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics, webSearchEnabled, webSearchAnonActive]);
 
   // v1.38.12: Handler para mensagens normais - passa opções de contexto
   // v1.39.06: Inclui includeComplementaryDocs
@@ -838,9 +874,11 @@ export const AIAssistantGlobalModal = React.memo(({
       includeComplementaryDocs,
       selectedContextTopics: contextScope === 'selected' ? selectedContextTopics : undefined,
       knowledgePackage: selectedPackage,
+      // v1.42.02: Propaga flag de web search (bloqueia se anonimização ativa — 2ª camada)
+      webSearch: webSearchEnabled && !webSearchAnonActive,
     };
     onSendMessage(message, options);
-  }, [onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics, selectedPackage]);
+  }, [onSendMessage, includeMainDocs, includeComplementaryDocs, contextScope, selectedContextTopics, selectedPackage, webSearchEnabled, webSearchAnonActive]);
 
   // v1.40.XX: Handler para quickprompts com sub-opções (ex: Decidir com Provas)
   const proofAnalysisResultsGlobal = useProofsStore((s) => s.proofAnalysisResults);
@@ -896,6 +934,17 @@ export const AIAssistantGlobalModal = React.memo(({
   // v1.40.34: Adiciona KnowledgePackageSelector acima do ContextScopeSelector
   const extraContent = (
     <>
+      {/* v1.42.02: Toggle opt-in de web search (Gemini only). Só aparece quando
+          o provider suporta; fica desabilitado quando anonimização está ativa. */}
+      {showWebSearchToggle && (
+        <div className="flex justify-end">
+          <WebSearchToggle
+            enabled={webSearchEnabled}
+            onToggle={setWebSearchEnabled}
+            disabled={webSearchAnonActive}
+          />
+        </div>
+      )}
       <KnowledgePackageSelector
         packages={knowledgePackages.packages}
         selectedPackageId={selectedPackageId}

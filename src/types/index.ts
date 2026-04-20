@@ -800,6 +800,19 @@ export interface AIMessage {
   content: AIMessageContent | AIMessageContent[];
 }
 
+/**
+ * v1.42.02: Metadata de grounding quando a IA consulta a web durante a resposta.
+ * Estrutura minimalista para exibir fontes consultadas na UI.
+ */
+export interface GroundingMetadata {
+  /** Queries que a IA enviou ao motor de busca (útil para debug/transparência) */
+  webSearchQueries?: string[];
+  /** Páginas web que forneceram informação para a resposta */
+  groundingChunks?: Array<{
+    web?: { uri: string; title: string };
+  }>;
+}
+
 /** Opções para chamada de IA */
 export interface AICallOptions {
   useInstructions?: boolean;
@@ -821,6 +834,18 @@ export interface AICallOptions {
   provider?: 'claude' | 'gemini' | 'openai' | 'grok';
   /** v1.38.44: Override do thinking level do Gemini para chamadas específicas */
   geminiThinkingLevel?: GeminiThinkingLevel;
+  /**
+   * v1.42.02: Habilita busca na web durante a resposta. Apenas suportado
+   * em providers com `supportsWebSearch=true` no WEB_SEARCH_REGISTRY (v1:
+   * apenas Gemini). Bloqueado automaticamente se anonimização estiver ativa.
+   */
+  webSearch?: boolean;
+  /**
+   * v1.42.02: Callback disparado quando o provider retorna metadata de
+   * grounding (fontes consultadas). Usado pelo chat para anexar as fontes
+   * na mensagem do assistente.
+   */
+  onGrounding?: (metadata: GroundingMetadata) => void;
 }
 
 /** Tipo para função callAI */
@@ -921,6 +946,12 @@ export interface ChatMessage {
   ts?: number;
   contentForApi?: AIMessageContent[] | string;
   error?: string;
+  /**
+   * v1.42.02: Fontes consultadas na web quando o assistente usou o tool
+   * `google_search` (Gemini). Presente apenas em mensagens do assistente
+   * que dispararam uma busca.
+   */
+  groundingMetadata?: GroundingMetadata;
 }
 
 /** Entrada de cache do histórico de chat por tópico (v1.37.92) */
@@ -2143,7 +2174,7 @@ export interface JurisprudenciaCardProps {
 }
 
 export interface ChatBubbleProps {
-  msg: { role: string; content: string; ts?: number; error?: string };
+  msg: { role: string; content: string; ts?: number; error?: string; groundingMetadata?: GroundingMetadata };
   onUse: (content: string) => void;
   showUse: boolean;
   sanitizeHTML?: (html: string) => string;

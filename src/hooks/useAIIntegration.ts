@@ -12,6 +12,8 @@ import { useAIStore } from '../stores/useAIStore';
 import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
 import { API_BASE } from '../constants/api';
 import { withRetry } from '../utils/retry';
+// v1.42.02: Registry provider-agnostic para habilitar web search
+import { applyWebSearchTool, extractGrounding } from '../utils/ai-tools/webSearch';
 import type {
   AIMessage,
   AIMessageContent,
@@ -806,13 +808,23 @@ const useAIIntegration = () => {
           };
         }
 
+        // v1.42.02: Web search via registry provider-agnostic.
+        // 3 camadas de defesa verificadas dentro do applyWebSearchTool:
+        //   1. options.webSearch === true
+        //   2. anonimização NÃO pode estar ativa
+        //   3. provider tem supportsWebSearch: true
+        const finalRequest = applyWebSearchTool('gemini', geminiRequest, {
+          enabled: options.webSearch,
+          anonymizationEnabled: !!aiSettings?.anonymization?.enabled,
+        });
+
         // Fazer requisicao via proxy local
         const response = await fetch(`${API_BASE}/api/gemini/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys?.gemini || '' },
           body: JSON.stringify({
             model,
-            request: geminiRequest
+            request: finalRequest
           }),
           signal
         });
@@ -853,6 +865,13 @@ const useAIIntegration = () => {
             model,
             provider: 'gemini'
           });
+        }
+
+        // v1.42.02: Emitir grounding metadata se o modelo buscou na web.
+        // Extraído via registry — irmão de content.parts, não é afetado por thinking.
+        if (options.onGrounding) {
+          const grounding = extractGrounding('gemini', data);
+          if (grounding) options.onGrounding(grounding);
         }
 
         // Retornar resposta bruta se solicitado
@@ -1562,12 +1581,18 @@ const useAIIntegration = () => {
       };
     }
 
+    // v1.42.02: Injeção do tool google_search via registry (3 camadas de defesa)
+    const finalRequest = applyWebSearchTool('gemini', geminiRequest, {
+      enabled: options.webSearch,
+      anonymizationEnabled: !!aiSettings?.anonymization?.enabled,
+    });
+
     const response = await fetch(`${API_BASE}/api/gemini/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys?.gemini || '' },
       body: JSON.stringify({
         model,
-        request: geminiRequest
+        request: finalRequest
       })
     });
 
@@ -1605,13 +1630,23 @@ const useAIIntegration = () => {
               throw new Error(parsed.error?.message || 'Erro no streaming');
             }
 
-            if (parsed.type === 'done' && parsed.usage) {
-              addTokenUsage({
-                input: parsed.usage.promptTokenCount || 0,
-                output: parsed.usage.candidatesTokenCount || 0,
-                model,
-                provider: 'gemini'
-              });
+            if (parsed.type === 'done') {
+              if (parsed.usage) {
+                addTokenUsage({
+                  input: parsed.usage.promptTokenCount || 0,
+                  output: parsed.usage.candidatesTokenCount || 0,
+                  model,
+                  provider: 'gemini'
+                });
+              }
+              // v1.42.02: Emitir grounding do web search (sincroniza formato
+              // com callGeminiAPI não-streaming via extractGrounding).
+              if (parsed.groundingMetadata && options.onGrounding) {
+                const grounding = extractGrounding('gemini', {
+                  candidates: [{ groundingMetadata: parsed.groundingMetadata }],
+                });
+                if (grounding) options.onGrounding(grounding);
+              }
             }
           } catch (e) {
             if (e instanceof SyntaxError) continue;

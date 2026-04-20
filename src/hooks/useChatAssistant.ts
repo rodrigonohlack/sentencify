@@ -8,7 +8,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import type { ChatMessage, CallAIFunction, AIMessageContent } from '../types';
+import type { ChatMessage, CallAIFunction, AIMessageContent, GroundingMetadata } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -45,9 +45,11 @@ export interface UseChatAssistantReturn {
   generating: boolean;
   /** Envia mensagem para a IA */
   /** v1.38.34: Retorna response diretamente para evitar race condition */
+  /** v1.42.02: callOptions permite habilitar web search por turn */
   send: (
     message: string,
-    contextBuilder: (msg: string) => AIMessageContent[] | string | Promise<AIMessageContent[] | string>
+    contextBuilder: (msg: string) => AIMessageContent[] | string | Promise<AIMessageContent[] | string>,
+    callOptions?: { webSearch?: boolean }
   ) => Promise<{ success: boolean; error?: string; response?: string | null }>;
   /** Limpa o histórico do chat */
   clear: () => void;
@@ -188,14 +190,19 @@ export function useChatAssistant(
 
   // Envia mensagem e atualiza histórico
   // v1.19.5: Suporta contextBuilder assíncrono
+  // v1.42.02: callOptions permite habilitar web search por turn
   const send = useCallback(async (
     message: string,
-    contextBuilder: (msg: string) => AIMessageContent[] | string | Promise<AIMessageContent[] | string>
+    contextBuilder: (msg: string) => AIMessageContent[] | string | Promise<AIMessageContent[] | string>,
+    callOptions?: { webSearch?: boolean }
   ) => {
     if (!message?.trim()) return { success: false, error: 'Mensagem vazia' };
     if (!aiIntegration?.callAI) return { success: false, error: 'IA não disponível' };
 
     setGenerating(true);
+
+    // v1.42.02: Captura grounding metadata se o provider emitir (Gemini + web search)
+    let capturedGrounding: GroundingMetadata | null = null;
 
     try {
       const apiMessages: Array<{ role: 'user' | 'assistant'; content: string | AIMessageContent[] }> = [];
@@ -234,32 +241,41 @@ export function useChatAssistant(
 
       // v1.21.26: Parametros para assistente interativo (criativo moderado)
       // v1.32.26: maxTokens aumentado para 16000 (respostas longas no chat)
+      // v1.42.02: webSearch e onGrounding repassados ao provider (só Gemini aplica no v1)
       const response = await aiIntegration.callAI(apiMessages, {
         maxTokens: 16000,
         useInstructions: true,
         logMetrics: true,
         temperature: 0.5,
         topP: 0.9,
-        topK: 80
+        topK: 80,
+        webSearch: callOptions?.webSearch,
+        onGrounding: (g) => { capturedGrounding = g; }
       });
 
       const trimmedResponse = response.trim();
 
-      // Atualiza histórico (com limite)
+      // Atualiza histórico (com limite). Se houve grounding, anexa na msg do assistente.
       setHistory(prev => {
+        const assistantMsg: ChatMessage = {
+          role: 'assistant',
+          content: trimmedResponse,
+          ts: Date.now(),
+          ...(capturedGrounding ? { groundingMetadata: capturedGrounding } : {})
+        };
         let newHistory: ChatMessage[];
         if (prev.length === 0) {
           // Primeira interação: salvar content completo para cache
           newHistory = [
             { role: 'user', content: message, contentForApi: contextContent ?? undefined, ts: Date.now() },
-            { role: 'assistant', content: trimmedResponse, ts: Date.now() }
+            assistantMsg
           ];
         } else {
           // Interações seguintes
           newHistory = [
             ...prev,
             { role: 'user', content: message, ts: Date.now() },
-            { role: 'assistant', content: trimmedResponse, ts: Date.now() }
+            assistantMsg
           ];
         }
 

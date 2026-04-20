@@ -6,6 +6,7 @@
 
 import React from 'react';
 import type { ChatBubbleProps } from '../../types';
+import { ChatGroundingFooter } from './ChatGroundingFooter';
 
 /**
  * v1.19.4: Converter Markdown básico para HTML
@@ -47,6 +48,10 @@ export const ChatBubble = React.memo(({
             />
           )}
         </div>
+        {/* v1.42.02: Fontes consultadas na web (apenas msgs do assistente com grounding) */}
+        {!isUser && msg.groundingMetadata && (
+          <ChatGroundingFooter metadata={msg.groundingMetadata} />
+        )}
         {msg.error && (
           <div className="text-xs text-red-400 mt-1">⚠️ Erro: {msg.error}</div>
         )}
