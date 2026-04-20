@@ -390,6 +390,30 @@ export function injectQuillStyles(): void {
     .quill-light-theme .ql-toolbar.ql-snow button:hover .ql-stroke {
       stroke: #000000 !important;
     }
+
+    /* v1.41.23: Estado ativo (.ql-active) no tema claro — antes herdava o fundo
+       slate-600 do tema escuro, tornando o ícone ilegível. Agora usa fundo
+       azul claro com ícone/texto em azul escuro para contraste adequado. */
+    .quill-light-theme .ql-toolbar.ql-snow button.ql-active,
+    .quill-light-theme .ql-toolbar.ql-snow .ql-picker-label.ql-active {
+      background: #dbeafe !important;
+      color: #1e3a8a !important;
+    }
+
+    .quill-light-theme .ql-toolbar.ql-snow button.ql-active .ql-stroke,
+    .quill-light-theme .ql-toolbar.ql-snow .ql-picker-label.ql-active .ql-stroke {
+      stroke: #1e3a8a !important;
+    }
+
+    .quill-light-theme .ql-toolbar.ql-snow button.ql-active .ql-fill,
+    .quill-light-theme .ql-toolbar.ql-snow .ql-picker-label.ql-active .ql-fill {
+      fill: #1e3a8a !important;
+    }
+
+    .quill-light-theme .ql-toolbar.ql-snow .ql-picker-item.ql-selected {
+      color: #1e3a8a !important;
+      background: #dbeafe !important;
+    }
   `;
 
   document.head.appendChild(style);
