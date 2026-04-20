@@ -159,7 +159,16 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     setIsConnected(true);
     setError(null);
 
-    // Buscar email e foto do usuário
+    // v1.41.19: Resolver operação pendente ANTES do fetch de userInfo para cancelar
+    // o timer de 2 min (extendForPopup) imediatamente — sem isso, o fetch lento
+    // causava race condition onde o timer disparava antes do resolve ser chamado.
+    if (pendingTokenRef.current) {
+      const { resolve } = pendingTokenRef.current;
+      pendingTokenRef.current = null;
+      resolve(token);
+    }
+
+    // Buscar email e foto do usuário (não bloqueia mais operações pendentes)
     try {
       const userInfo = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: `Bearer ${token}` }
@@ -169,24 +178,23 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       setUserPhoto(user.picture || null);  // v1.35.54
 
       // Persistir token com expiração
-      const storedData: StoredToken = {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
         token,
         email: user.email,
         photo: user.picture,  // v1.35.54
         expiresAt: Date.now() + expiresIn * 1000
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedData));
+      } as StoredToken));
     } catch (e) {
       console.error('[GoogleDrive] Erro ao buscar info do usuário:', e);
+      // v1.41.19: Persistir token mesmo sem userInfo para que isTokenValid() funcione
+      // nas próximas chamadas — evita ciclo de silent refresh desnecessário.
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        token,
+        email: userEmail || 'conectado@google.com',
+        expiresAt: Date.now() + expiresIn * 1000
+      } as StoredToken));
     }
-
-    // v1.41.09: Executar operação que estava aguardando renovação de token
-    if (pendingTokenRef.current) {
-      const { resolve } = pendingTokenRef.current;
-      pendingTokenRef.current = null;
-      resolve(token);
-    }
-  }, []);
+  }, [userEmail]);
 
   // Login regular (com popup de autorização)
   const googleLogin = useGoogleLogin({

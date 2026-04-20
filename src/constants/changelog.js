@@ -2,6 +2,7 @@
 // Extraído do App.jsx para melhor organização
 
 export const CHANGELOG = [
+  { version: '1.41.19', feature: 'fix(google-drive): corrigir race condition em handleLoginSuccess — resolve(token) agora é chamado antes do await fetch(userInfo), eliminando a janela onde o timer de 2min disparava enquanto o fetch de userInfo estava pendente; token também é persistido no localStorage mesmo quando o fetch de userInfo falha, evitando ciclos desnecessários de silent refresh.' },
   { version: '1.41.18', feature: 'fix(google-drive): corrigir timeout ao renovar sessão expirada via popup — timeout de 15s era mantido após silent refresh falhar e abrir popup, rejeitando a operação antes do usuário conseguir logar; agora extendForPopup() cancela o timer curto e inicia um de 2 min quando o fallback para popup é ativado.' },
   { version: '1.41.17', feature: 'UX(editor): largura do editor em tela cheia agora é ajustável pelo usuário — dropdown "Largura" na toolbar com 4 opções (Estreito 800px / Normal 1200px / Largo 1600px / Total 100%); visível apenas em tela cheia sem split view; preferência persiste no localStorage.' },
   { version: '1.41.16', feature: 'UX(editor): adicionar margens laterais confortáveis no modo tela cheia sem split view — editor agora usa max-width: 1200px centralizado; sem efeito no split view de modelos.' },
