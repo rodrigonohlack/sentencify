@@ -33,6 +33,24 @@ import { useThemeManagement } from '../../hooks';
 import type { SavedAnalysis } from './types/analysis.types';
 
 // ═══════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * v1.42.01: Formata contador do badge elegantemente.
+ * - 1-999: número direto
+ * - 1.000-9.999: abreviado com 1 casa decimal ("1,2k")
+ * - 10.000-999.999: abreviado inteiro ("12k")
+ * - 1.000.000+: abreviado com "M" ("1,2M")
+ */
+function formatBadgeCount(n: number): string {
+  if (n < 1000) return String(n);
+  if (n < 10_000) return `${(n / 1000).toFixed(1).replace('.', ',')}k`;
+  if (n < 1_000_000) return `${Math.floor(n / 1000)}k`;
+  return `${(n / 1_000_000).toFixed(1).replace('.', ',')}M`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // COMPONENTE DE CONTEÚDO (AUTENTICADO)
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -190,8 +208,11 @@ const AnalisadorContent: React.FC = () => {
               >
                 Ver Análises Salvas
                 {analyses.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
-                    {analyses.length > 99 ? '99+' : analyses.length}
+                  <span
+                    title={`${analyses.length} análise${analyses.length === 1 ? '' : 's'} salva${analyses.length === 1 ? '' : 's'}`}
+                    className="absolute -top-1 -right-1 h-5 min-w-5 px-1.5 bg-indigo-500 text-white text-xs font-semibold rounded-full inline-flex items-center justify-center tabular-nums"
+                  >
+                    {formatBadgeCount(analyses.length)}
                   </span>
                 )}
               </Button>
