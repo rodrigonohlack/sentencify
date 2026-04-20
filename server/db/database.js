@@ -67,6 +67,7 @@ const runMigrations = () => {
     { name: '016_csv_imports_bank_id', fn: migration016CSVImportsBankId },
     { name: '017_financeiro_projected_card_info', fn: migration017FinanceiroProjectedCardInfo },
     { name: '018_knowledge_packages', fn: migration018KnowledgePackages },
+    { name: '019_google_drive_tokens', fn: migration019GoogleDriveTokens },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -666,6 +667,26 @@ function migration018KnowledgePackages(db) {
   console.log('[Database] Migration 018: Created knowledge_packages and knowledge_package_files tables');
 }
 
-// Exportar
+// Migration 019 v1.42.00 — Google Drive OAuth tokens
+function migration019GoogleDriveTokens(db) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS google_drive_tokens (
+      user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      google_email TEXT NOT NULL,
+      google_user_id TEXT,
+      photo_url TEXT,
+      refresh_token_encrypted TEXT NOT NULL,
+      access_token TEXT,
+      access_token_expires_at INTEGER,
+      scope TEXT NOT NULL,
+      connected_at TEXT NOT NULL DEFAULT (datetime('now')),
+      last_used_at TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_gdt_google_email ON google_drive_tokens(google_email);
+  `);
+  console.log('[Database] Migration 019: Created google_drive_tokens table');
+}
+
 export const getDb = () => db || initDatabase();
 export { DB_PATH };

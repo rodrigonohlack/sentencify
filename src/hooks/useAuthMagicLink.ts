@@ -201,7 +201,20 @@ export function useAuthMagicLink(): UseAuthMagicLinkReturn {
     const refreshToken = localStorage.getItem(REFRESH_KEY);
     const accessToken = localStorage.getItem(AUTH_KEY);
 
-    // Tentar revogar no servidor (fire and forget)
+    // v1.42.00: Revogar também Google Drive (decisão do usuário: logout do
+    // magic link desconecta Drive e exige nova autorização no próximo login).
+    if (accessToken) {
+      try {
+        await fetch('/api/google-drive/disconnect', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+      } catch {
+        // Ignorar: logout local do magic link é suficiente
+      }
+    }
+
+    // Tentar revogar magic link no servidor (fire and forget)
     if (accessToken) {
       try {
         await fetch('/api/auth/magic/logout', {

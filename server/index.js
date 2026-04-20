@@ -41,6 +41,7 @@ import finCategorizeRoutes from './routes/financeiro-categorize.js';
 import finRecurringRoutes from './routes/financeiro-recurring.js';
 import finDashboardRoutes from './routes/financeiro-dashboard.js';
 import finSettingsRoutes from './routes/financeiro-settings.js';
+import googleDriveRoutes from './routes/google-drive.js';
 import financeiroAccess from './middleware/financeiro-access.js';
 import { initDatabase } from './db/database.js';
 import rssScheduler from './services/RSSSchedulerService.js';
@@ -218,6 +219,9 @@ app.use('/api/financeiro/categorize', financeiroAccess, finCategorizeRoutes);
 app.use('/api/financeiro/recurring', financeiroAccess, finRecurringRoutes);
 app.use('/api/financeiro/dashboard', financeiroAccess, finDashboardRoutes);
 app.use('/api/financeiro/settings', financeiroAccess, finSettingsRoutes);
+
+// v1.42.00: Google Drive OAuth Authorization Code Flow
+app.use('/api/google-drive', googleDriveRoutes);
 
 // Rotas de proxy para APIs de IA
 app.use('/api/claude', claudeRoutes);

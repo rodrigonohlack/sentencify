@@ -70,8 +70,7 @@ import { FinanceiroApp } from './apps/financeiro';
 import TopicCurationModal from './components/TopicCurationModal';
 
 // v1.35.40: Google Drive - Salvar/Carregar projetos na nuvem
-import { GoogleOAuthProvider } from '@react-oauth/google';
-import { useGoogleDrive, GOOGLE_CLIENT_ID } from './hooks/useGoogleDrive';
+import { useGoogleDrive } from './hooks/useGoogleDrive';
 import { DriveFilesModal } from './components/GoogleDriveButton';
 import { ModelGeneratorModal } from './components/ModelGeneratorModal';
 import { FactsComparisonModalContent } from './components/FactsComparisonModal';
@@ -377,7 +376,29 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const fieldVersioning = useFieldVersioning();
 
   // ☁️ v1.35.40: Google Drive - Salvar/Carregar projetos
+  // v1.42.00: Refresh token no backend; connect() usa redirect (não popup)
   const googleDrive = useGoogleDrive();
+
+  // v1.42.00: Feedback ao voltar do callback do Google Drive
+  // (URL passa a ter ?drive=connected ou ?drive=error após o fluxo OAuth)
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const driveStatus = params.get('drive');
+    if (!driveStatus) return;
+
+    if (driveStatus === 'connected') {
+      showToast('Google Drive conectado com sucesso. Sessão permanente ativa.', 'success');
+    } else if (driveStatus === 'error') {
+      const reason = params.get('reason') || 'erro desconhecido';
+      showToast(`Falha ao conectar Google Drive: ${reason}`, 'error');
+    }
+    // Limpar query string sem recarregar (histórico limpo)
+    const url = new URL(window.location.href);
+    url.searchParams.delete('drive');
+    url.searchParams.delete('reason');
+    window.history.replaceState({}, '', url.toString());
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // v1.37.49: driveFilesModalOpen e driveFiles migrados para useUIStore
   const driveFilesModalOpen = useUIStore((s) => s.modals.driveFiles);
   const setDriveFilesModalOpen = React.useCallback((open: boolean) => {
@@ -3560,11 +3581,6 @@ const SentencifyAI = () => {
   );
 };
 
-// v1.35.40: Wrapper com GoogleOAuthProvider para integração com Google Drive
-const SentencifyAIWithGoogleDrive = () => (
-  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-    <SentencifyAI />
-  </GoogleOAuthProvider>
-);
-
-export default SentencifyAIWithGoogleDrive;
+// v1.42.00: GoogleOAuthProvider removido — Google Drive agora usa fluxo
+// Authorization Code com refresh token no backend (sem popup client-side).
+export default SentencifyAI;
