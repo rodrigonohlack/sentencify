@@ -700,17 +700,6 @@ export const AIAssistantModal = React.memo(({
   // v1.40.34: Adiciona KnowledgePackageSelector acima do ContextScopeSelector
   const extraContent = (
     <>
-      {/* v1.42.02: Toggle opt-in de web search (Gemini only). Só aparece quando
-          o provider suporta; fica desabilitado quando anonimização está ativa. */}
-      {showWebSearchToggle && (
-        <div className="flex justify-end">
-          <WebSearchToggle
-            enabled={webSearchEnabled}
-            onToggle={setWebSearchEnabled}
-            disabled={webSearchAnonActive}
-          />
-        </div>
-      )}
       <KnowledgePackageSelector
         packages={knowledgePackages.packages}
         selectedPackageId={selectedPackageId}
@@ -730,6 +719,15 @@ export const AIAssistantModal = React.memo(({
         includeComplementaryDocs={includeComplementaryDocs}
         setIncludeComplementaryDocs={setIncludeComplementaryDocs}
         chatHistoryLength={chatHistory.length}
+        extraSlot={
+          showWebSearchToggle ? (
+            <WebSearchToggle
+              enabled={webSearchEnabled}
+              onToggle={setWebSearchEnabled}
+              disabled={webSearchAnonActive}
+            />
+          ) : undefined
+        }
       />
     </>
   );
@@ -934,17 +932,6 @@ export const AIAssistantGlobalModal = React.memo(({
   // v1.40.34: Adiciona KnowledgePackageSelector acima do ContextScopeSelector
   const extraContent = (
     <>
-      {/* v1.42.02: Toggle opt-in de web search (Gemini only). Só aparece quando
-          o provider suporta; fica desabilitado quando anonimização está ativa. */}
-      {showWebSearchToggle && (
-        <div className="flex justify-end">
-          <WebSearchToggle
-            enabled={webSearchEnabled}
-            onToggle={setWebSearchEnabled}
-            disabled={webSearchAnonActive}
-          />
-        </div>
-      )}
       <KnowledgePackageSelector
         packages={knowledgePackages.packages}
         selectedPackageId={selectedPackageId}
@@ -964,6 +951,15 @@ export const AIAssistantGlobalModal = React.memo(({
         includeComplementaryDocs={includeComplementaryDocs}
         setIncludeComplementaryDocs={setIncludeComplementaryDocs}
         chatHistoryLength={chatHistory.length}
+        extraSlot={
+          showWebSearchToggle ? (
+            <WebSearchToggle
+              enabled={webSearchEnabled}
+              onToggle={setWebSearchEnabled}
+              disabled={webSearchAnonActive}
+            />
+          ) : undefined
+        }
       />
     </>
   );

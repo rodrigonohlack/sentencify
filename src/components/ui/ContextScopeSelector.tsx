@@ -45,6 +45,9 @@ export interface ContextScopeSelectorProps {
   setIncludeComplementaryDocs: (include: boolean) => void;
   /** v1.38.16: Tamanho do histórico de chat (0 = limpo, >0 = tem histórico) */
   chatHistoryLength?: number;
+  /** v1.42.02: Slot opcional para componente exibido ao lado de "Toda a decisão"
+   *  (usado para o toggle de web search no Assistente de Redação). */
+  extraSlot?: React.ReactNode;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -62,7 +65,8 @@ export const ContextScopeSelector: React.FC<ContextScopeSelectorProps> = ({
   setIncludeMainDocs,
   includeComplementaryDocs,  // v1.39.06
   setIncludeComplementaryDocs,  // v1.39.06
-  chatHistoryLength = 0  // v1.38.16
+  chatHistoryLength = 0,  // v1.38.16
+  extraSlot  // v1.42.02
 }) => {
   // v1.38.16: Toggle bloqueado quando chat tem histórico
   const isToggleLocked = chatHistoryLength > 0;
@@ -190,6 +194,13 @@ export const ContextScopeSelector: React.FC<ContextScopeSelectorProps> = ({
             )}
           </div>
         </label>
+
+        {/* v1.42.02: Slot opcional — ex: WebSearchToggle no Assistente de Redação */}
+        {extraSlot && (
+          <div className="flex items-center">
+            {extraSlot}
+          </div>
+        )}
       </div>
 
       {/* Dropdown de seleção de tópicos (apenas quando scope='selected') */}
