@@ -2429,8 +2429,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   // movidos para useFactsComparison hook. Código removido: ~200 linhas
 
   // v1.21.21: Função para montar texto completo da decisão (RELATÓRIO + TÓPICOS + DISPOSITIVO)
-  const buildDecisionText = React.useCallback(() => {
+  // v1.42.04: Aceita { excludeNoResult } para filtrar tópicos com resultado 'SEM RESULTADO'
+  const buildDecisionText = React.useCallback((options?: { excludeNoResult?: boolean }) => {
     const parts = [];
+    const excludeNoResult = options?.excludeNoResult === true;
 
     // RELATÓRIO
     const relatorio = selectedTopics.find(isRelatorio);
@@ -2443,6 +2445,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     parts.push('\n\n=== FUNDAMENTAÇÃO ===\n');
     selectedTopics
       .filter(t => !isRelatorio(t) && !isDispositivo(t))
+      .filter(t => {
+        if (!excludeNoResult) return true;
+        const resultado = (t.resultado || '').toString().toUpperCase().trim();
+        return resultado !== 'SEM RESULTADO';
+      })
       .forEach(topic => {
         const miniRelatorio = htmlToFormattedText(topic.editedRelatorio || topic.relatorio || '');
         const decisao = htmlToFormattedText(topic.editedFundamentacao || '');
@@ -2460,8 +2467,11 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   }, [selectedTopics]);
 
   // ✅ v1.37.43: useReviewSentence - Revisão crítica de sentença extraída (FASE 44)
+  // v1.42.04: + excludeNoResultTopics / setExcludeNoResultTopics
   const {
-    reviewScope, setReviewScope, reviewResult,
+    reviewScope, setReviewScope,
+    excludeNoResultTopics, setExcludeNoResultTopics,
+    reviewResult,
     generatingReview, reviewFromCache, cachedScopes, reviewSentence, clearReviewCache
   } = useReviewSentence({
     canGenerateDispositivo,
@@ -2843,9 +2853,12 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       />
 
       {/* v1.37.51: Modais de Revisão de Sentença extraídos para componentes */}
+      {/* v1.42.04: + excludeNoResultTopics / setExcludeNoResultTopics */}
       <SentenceReviewOptionsModal
         reviewScope={reviewScope}
         setReviewScope={setReviewScope}
+        excludeNoResultTopics={excludeNoResultTopics}
+        setExcludeNoResultTopics={setExcludeNoResultTopics}
         analyzedDocuments={analyzedDocuments}
         generatingReview={generatingReview}
         reviewSentence={reviewSentence}

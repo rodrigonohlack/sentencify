@@ -12,11 +12,12 @@
  */
 
 import React, { useRef, useState, useCallback } from 'react';
-import { Scale, Sparkles, AlertTriangle, Copy, Check, RotateCcw } from 'lucide-react';
+import { Scale, Sparkles, AlertTriangle, Copy, Check, RotateCcw, Filter } from 'lucide-react';
 import { BaseModal, CSS } from './BaseModal';
 import { useModalManager } from '../../hooks/useModalManager';
 import { extractPlainText } from '../';  // Barrel export do components
 import type { ReviewScope } from '../../hooks/useReviewSentence';
+import { buildCacheKey } from '../../hooks/useSentenceReviewCache';
 import type { AnalyzedDocuments } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -26,10 +27,14 @@ import type { AnalyzedDocuments } from '../../types';
 interface SentenceReviewOptionsModalProps {
   reviewScope: ReviewScope;
   setReviewScope: (scope: ReviewScope) => void;
+  /** v1.42.04: Excluir tópicos com resultado 'SEM RESULTADO' do envio à IA */
+  excludeNoResultTopics: boolean;
+  setExcludeNoResultTopics: (value: boolean) => void;
   analyzedDocuments: AnalyzedDocuments | null;
   generatingReview: boolean;
   reviewSentence: () => Promise<void>;
-  cachedScopes?: Set<ReviewScope>;
+  /** Conjunto de chaves compostas (`scope` ou `scope:noEmpty`) com cache disponível */
+  cachedScopes?: Set<string>;
 }
 
 interface SentenceReviewResultModalProps {
@@ -54,6 +59,8 @@ interface SentenceReviewResultModalProps {
 export const SentenceReviewOptionsModal: React.FC<SentenceReviewOptionsModalProps> = ({
   reviewScope,
   setReviewScope,
+  excludeNoResultTopics,
+  setExcludeNoResultTopics,
   analyzedDocuments,
   generatingReview,
   reviewSentence,
@@ -62,6 +69,10 @@ export const SentenceReviewOptionsModal: React.FC<SentenceReviewOptionsModalProp
   const { modals, closeModal } = useModalManager();
 
   const hasDocuments = (analyzedDocuments?.peticoesText?.length || 0) > 0 || (analyzedDocuments?.contestacoesText?.length || 0) > 0;
+
+  // v1.42.04: Badge de cache reflete a combinação atual (scope + flag)
+  const hasCacheFor = (scope: ReviewScope): boolean =>
+    cachedScopes?.has(buildCacheKey(scope, excludeNoResultTopics)) ?? false;
 
   return (
     <BaseModal
@@ -115,7 +126,7 @@ export const SentenceReviewOptionsModal: React.FC<SentenceReviewOptionsModalProp
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium theme-text-primary">Apenas a decisão completa</span>
-              {cachedScopes?.has('decisionOnly') && (
+              {hasCacheFor('decisionOnly') && (
                 <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-medium">Cache</span>
               )}
             </div>
@@ -137,7 +148,7 @@ export const SentenceReviewOptionsModal: React.FC<SentenceReviewOptionsModalProp
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium theme-text-primary">Decisão + peças processuais</span>
-              {cachedScopes?.has('decisionWithDocs') && (
+              {hasCacheFor('decisionWithDocs') && (
                 <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-medium">Cache</span>
               )}
             </div>
@@ -147,6 +158,39 @@ export const SentenceReviewOptionsModal: React.FC<SentenceReviewOptionsModalProp
             )}
           </div>
         </label>
+        {/* v1.42.04: Toggle para excluir tópicos com resultado 'SEM RESULTADO' */}
+        <div className="flex items-start justify-between gap-3 p-4 rounded-lg border theme-border-input theme-bg-secondary-30">
+          <div className="flex items-start gap-3">
+            <Filter className="w-4 h-4 mt-0.5 text-amber-500" aria-hidden="true" />
+            <div>
+              <span className="text-sm font-medium theme-text-primary">Excluir tópicos sem resultado</span>
+              <p className="text-xs theme-text-muted mt-1">
+                Não envia tópicos marcados como &quot;SEM RESULTADO&quot; — economiza tokens e foca a revisão.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={excludeNoResultTopics}
+            aria-pressed={excludeNoResultTopics}
+            aria-label={excludeNoResultTopics ? 'Desativar exclusão de tópicos sem resultado' : 'Ativar exclusão de tópicos sem resultado'}
+            onClick={() => setExcludeNoResultTopics(!excludeNoResultTopics)}
+            disabled={generatingReview}
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              excludeNoResultTopics
+                ? 'bg-amber-600 hover:bg-amber-500'
+                : 'bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500'
+            }`}
+          >
+            <span
+              aria-hidden="true"
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                excludeNoResultTopics ? 'translate-x-5' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+        </div>
       </div>
     </BaseModal>
   );

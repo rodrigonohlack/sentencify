@@ -68,6 +68,8 @@ describe('SentenceReviewOptionsModal', () => {
   const defaultProps = {
     reviewScope: 'decisionOnly' as const,
     setReviewScope: vi.fn(),
+    excludeNoResultTopics: true,
+    setExcludeNoResultTopics: vi.fn(),
     analyzedDocuments: createAnalyzedDocuments(),
     generatingReview: false,
     reviewSentence: vi.fn(),
@@ -154,6 +156,62 @@ describe('SentenceReviewOptionsModal', () => {
       };
       render(<SentenceReviewOptionsModal {...propsNoDocuments} />);
       expect(screen.getByText('Nenhum documento extraído disponível')).toBeInTheDocument();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EXCLUDE NO-RESULT TOGGLE (v1.42.04)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Exclude No-Result Toggle', () => {
+    it('should render the toggle with its label', () => {
+      render(<SentenceReviewOptionsModal {...defaultProps} />);
+      expect(screen.getByText('Excluir tópicos sem resultado')).toBeInTheDocument();
+    });
+
+    it('should be on by default (aria-checked=true)', () => {
+      render(<SentenceReviewOptionsModal {...defaultProps} />);
+      const toggle = screen.getByRole('switch');
+      expect(toggle).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('should reflect aria-checked=false when off', () => {
+      render(<SentenceReviewOptionsModal {...defaultProps} excludeNoResultTopics={false} />);
+      const toggle = screen.getByRole('switch');
+      expect(toggle).toHaveAttribute('aria-checked', 'false');
+    });
+
+    it('should call setExcludeNoResultTopics when clicked', () => {
+      render(<SentenceReviewOptionsModal {...defaultProps} />);
+      fireEvent.click(screen.getByRole('switch'));
+      expect(defaultProps.setExcludeNoResultTopics).toHaveBeenCalledWith(false);
+    });
+
+    it('should be disabled while generating', () => {
+      render(<SentenceReviewOptionsModal {...defaultProps} generatingReview={true} />);
+      expect(screen.getByRole('switch')).toBeDisabled();
+    });
+
+    it('badge "Cache" follows current toggle state (decisionOnly:noEmpty when ON)', () => {
+      render(
+        <SentenceReviewOptionsModal
+          {...defaultProps}
+          excludeNoResultTopics={true}
+          cachedScopes={new Set<string>(['decisionOnly:noEmpty'])}
+        />
+      );
+      expect(screen.getByText('Cache')).toBeInTheDocument();
+    });
+
+    it('badge "Cache" hidden if cache exists only for the opposite flag state', () => {
+      render(
+        <SentenceReviewOptionsModal
+          {...defaultProps}
+          excludeNoResultTopics={true}
+          cachedScopes={new Set<string>(['decisionOnly'])}
+        />
+      );
+      expect(screen.queryByText('Cache')).not.toBeInTheDocument();
     });
   });
 

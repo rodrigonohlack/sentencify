@@ -10,6 +10,8 @@ import useSentenceReviewCache, {
   REVIEW_DB_NAME,
   REVIEW_STORE_NAME,
   REVIEW_DB_VERSION,
+  buildCacheKey,
+  CACHE_SUFFIX_NO_EMPTY,
   openReviewDB as _openReviewDB
 } from './useSentenceReviewCache';
 import type { ReviewScope, SentenceReviewCacheEntry } from '../types';
@@ -45,6 +47,30 @@ describe('useSentenceReviewCache', () => {
 
     it('REVIEW_DB_VERSION should be 1', () => {
       expect(REVIEW_DB_VERSION).toBe(1);
+    });
+
+    it('CACHE_SUFFIX_NO_EMPTY should be ":noEmpty"', () => {
+      expect(CACHE_SUFFIX_NO_EMPTY).toBe(':noEmpty');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUILD CACHE KEY (v1.42.04)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('buildCacheKey', () => {
+    it('returns plain scope when excludeNoResult is false', () => {
+      expect(buildCacheKey('decisionOnly', false)).toBe('decisionOnly');
+      expect(buildCacheKey('decisionWithDocs', false)).toBe('decisionWithDocs');
+    });
+
+    it('returns plain scope when excludeNoResult is undefined', () => {
+      expect(buildCacheKey('decisionOnly')).toBe('decisionOnly');
+    });
+
+    it('appends ":noEmpty" suffix when excludeNoResult is true', () => {
+      expect(buildCacheKey('decisionOnly', true)).toBe('decisionOnly:noEmpty');
+      expect(buildCacheKey('decisionWithDocs', true)).toBe('decisionWithDocs:noEmpty');
     });
   });
 

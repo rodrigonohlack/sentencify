@@ -72,7 +72,7 @@ export interface AIIntegrationForReview {
 export interface UseReviewSentenceProps {
   canGenerateDispositivo: CanGenerateResult;
   setError: (error: string) => void;
-  buildDecisionText: () => string;
+  buildDecisionText: (options?: { excludeNoResult?: boolean }) => string;
   buildDocumentContentArray: (docs: AnalyzedDocuments, options: { includeComplementares: boolean }) => AIMessageContent[];
   analyzedDocuments: AnalyzedDocuments | null;
   aiIntegration: AIIntegrationForReview;
@@ -85,11 +85,15 @@ export interface UseReviewSentenceReturn {
   // Estados
   reviewScope: ReviewScope;
   setReviewScope: (scope: ReviewScope) => void;
+  /** v1.42.04: Excluir tópicos com resultado 'SEM RESULTADO' do envio à IA (default true) */
+  excludeNoResultTopics: boolean;
+  setExcludeNoResultTopics: (value: boolean) => void;
   reviewResult: string;
   setReviewResult: (result: string) => void;
   generatingReview: boolean;
   reviewFromCache: boolean;
-  cachedScopes: Set<ReviewScope>;
+  /** Conjunto de chaves compostas (`scope` ou `scope:noEmpty`) com cache disponível */
+  cachedScopes: Set<string>;
 
   // Funções
   reviewSentence: () => Promise<void>;
@@ -121,10 +125,12 @@ export function useReviewSentence({
   // ═══════════════════════════════════════════════════════════════════════════════
 
   const [reviewScope, setReviewScope] = useState<ReviewScope>('decisionOnly');
+  // v1.42.04: Filtro de tópicos sem resultado — default ligado para poupar tokens
+  const [excludeNoResultTopics, setExcludeNoResultTopics] = useState<boolean>(true);
   const [reviewResult, setReviewResult] = useState('');
   const [generatingReview, setGeneratingReview] = useState(false);
   const [reviewFromCache, setReviewFromCache] = useState(false);
-  const [cachedScopes, setCachedScopes] = useState<Set<ReviewScope>>(new Set());
+  const [cachedScopes, setCachedScopes] = useState<Set<string>>(new Set());
 
   // Double Check Review - Zustand actions (v1.37.59)
   const openDoubleCheckReview = useUIStore(state => state.openDoubleCheckReview);
@@ -146,10 +152,10 @@ export function useReviewSentence({
   // Cache de revisão de sentença
   const sentenceReviewCache = useSentenceReviewCache();
 
-  // Verificar quais scopes têm cache
+  // Verificar quais combinações scope+flag têm cache (chaves compostas)
   const checkCachedScopes = useCallback(async () => {
     const entries = await sentenceReviewCache.getAllReviews();
-    const scopes = new Set<ReviewScope>(entries.map(e => e.scope));
+    const scopes = new Set<string>(entries.map(e => e.scope));
     setCachedScopes(scopes);
   }, [sentenceReviewCache]);
 
@@ -172,8 +178,8 @@ export function useReviewSentence({
     setError('');
 
     try {
-      // Verificar cache primeiro
-      const cachedReview = await sentenceReviewCache.getReview(reviewScope);
+      // Verificar cache primeiro (chave composta scope + flag)
+      const cachedReview = await sentenceReviewCache.getReview(reviewScope, excludeNoResultTopics);
       if (cachedReview) {
         setReviewResult(cachedReview);
         setReviewFromCache(true);
@@ -193,10 +199,10 @@ export function useReviewSentence({
         contentArray.push(...docsArray);
       }
 
-      // Adicionar decisão completa
+      // Adicionar decisão completa (filtra tópicos sem resultado se a flag estiver ligada)
       contentArray.push({
         type: 'text' as const,
-        text: `DECISÃO PARA REVISÃO:\n\n${buildDecisionText()}`
+        text: `DECISÃO PARA REVISÃO:\n\n${buildDecisionText({ excludeNoResult: excludeNoResultTopics })}`
       });
 
       // v1.40.01: Usar streaming silencioso para evitar timeout de 30s no Render
@@ -305,8 +311,8 @@ export function useReviewSentence({
         }
       }
 
-      // Salvar no cache após gerar
-      await sentenceReviewCache.saveReview(reviewScope, reviewFinal);
+      // Salvar no cache após gerar (chave composta scope + flag)
+      await sentenceReviewCache.saveReview(reviewScope, reviewFinal, excludeNoResultTopics);
       await checkCachedScopes();
 
       setReviewResult(reviewFinal);
@@ -321,6 +327,7 @@ export function useReviewSentence({
     canGenerateDispositivo,
     setError,
     reviewScope,
+    excludeNoResultTopics,
     sentenceReviewCache,
     checkCachedScopes,
     buildDecisionText,
@@ -338,14 +345,16 @@ export function useReviewSentence({
   // ═══════════════════════════════════════════════════════════════════════════════
 
   const clearReviewCache = useCallback(async () => {
-    await sentenceReviewCache.deleteReview(reviewScope);
+    await sentenceReviewCache.deleteReview(reviewScope, excludeNoResultTopics);
     setReviewFromCache(false);
     await checkCachedScopes();
-  }, [sentenceReviewCache, reviewScope, checkCachedScopes]);
+  }, [sentenceReviewCache, reviewScope, excludeNoResultTopics, checkCachedScopes]);
 
   return {
     reviewScope,
     setReviewScope,
+    excludeNoResultTopics,
+    setExcludeNoResultTopics,
     reviewResult,
     setReviewResult,
     generatingReview,

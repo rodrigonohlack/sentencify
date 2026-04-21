@@ -2,7 +2,10 @@
  * Hook: useSentenceReviewCache - Cache de revisão de sentença
  * Armazena resultados de revisão/análise crítica em IndexedDB com TTL infinito
  *
- * @version 1.36.57
+ * @version 1.42.04
+ *
+ * v1.42.04: Suporte a chave composta scope + excludeNoResult via sufixo `:noEmpty`.
+ * Caches antigos (sem sufixo) seguem válidos como "flag desligada".
  */
 import { useCallback, useMemo } from 'react';
 import type { ReviewScope, SentenceReviewCacheEntry } from '../types';
@@ -15,16 +18,30 @@ export const REVIEW_DB_NAME = 'sentencify-sentence-review';
 export const REVIEW_STORE_NAME = 'reviews';
 export const REVIEW_DB_VERSION = 1;
 
+/** Sufixo aplicado à chave do cache quando o filtro de tópicos sem resultado está ligado */
+export const CACHE_SUFFIX_NO_EMPTY = ':noEmpty';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Constrói a chave persistida no IndexedDB combinando scope + flag.
+ * Quando excludeNoResult=false, retorna o scope puro (compat com caches antigos).
+ */
+export const buildCacheKey = (scope: ReviewScope, excludeNoResult?: boolean): string =>
+  excludeNoResult ? `${scope}${CACHE_SUFFIX_NO_EMPTY}` : scope;
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** Retorno do hook useSentenceReviewCache */
 export interface UseSentenceReviewCacheReturn {
-  saveReview: (scope: ReviewScope, result: string) => Promise<void>;
-  getReview: (scope: ReviewScope) => Promise<string | null>;
+  saveReview: (scope: ReviewScope, result: string, excludeNoResult?: boolean) => Promise<void>;
+  getReview: (scope: ReviewScope, excludeNoResult?: boolean) => Promise<string | null>;
   getAllReviews: () => Promise<SentenceReviewCacheEntry[]>;
-  deleteReview: (scope?: ReviewScope) => Promise<void>;
+  deleteReview: (scope?: ReviewScope, excludeNoResult?: boolean) => Promise<void>;
   clearAllReviews: () => Promise<void>;
   exportAll: () => Promise<Record<string, string>>;
   importAll: (data: Record<string, string>) => Promise<void>;
@@ -55,28 +72,30 @@ export const openReviewDB = (): Promise<IDBDatabase> =>
 
 const useSentenceReviewCache = (): UseSentenceReviewCacheReturn => {
   /**
-   * Salva uma revisão no cache (substitui se já existir para o mesmo scope)
+   * Salva uma revisão no cache (substitui se já existir para a mesma chave)
    */
   const saveReview = useCallback(async (
     scope: ReviewScope,
-    result: string
+    result: string,
+    excludeNoResult?: boolean
   ): Promise<void> => {
     if (!scope || !result) return;
+    const key = buildCacheKey(scope, excludeNoResult);
     try {
       const db = await openReviewDB();
       const tx = db.transaction(REVIEW_STORE_NAME, 'readwrite');
       const store = tx.objectStore(REVIEW_STORE_NAME);
       const index = store.index('scope');
 
-      // Verificar se já existe entrada para este scope
+      // Verificar se já existe entrada para esta chave
       const existing = await new Promise<SentenceReviewCacheEntry | undefined>((resolve) => {
-        const req = index.get(scope);
+        const req = index.get(key);
         req.onsuccess = () => resolve(req.result as SentenceReviewCacheEntry | undefined);
         req.onerror = () => resolve(undefined);
       });
 
       const entry: SentenceReviewCacheEntry = {
-        scope,
+        scope: key as ReviewScope,
         result,
         createdAt: Date.now()
       };
@@ -105,16 +124,18 @@ const useSentenceReviewCache = (): UseSentenceReviewCacheReturn => {
    * Recupera uma revisão do cache
    */
   const getReview = useCallback(async (
-    scope: ReviewScope
+    scope: ReviewScope,
+    excludeNoResult?: boolean
   ): Promise<string | null> => {
     if (!scope) return null;
+    const key = buildCacheKey(scope, excludeNoResult);
     try {
       const db = await openReviewDB();
       const store = db.transaction(REVIEW_STORE_NAME).objectStore(REVIEW_STORE_NAME);
       const index = store.index('scope');
 
       const entry = await new Promise<SentenceReviewCacheEntry | undefined>((resolve) => {
-        const req = index.get(scope);
+        const req = index.get(key);
         req.onsuccess = () => resolve(req.result as SentenceReviewCacheEntry | undefined);
         req.onerror = () => resolve(undefined);
       });
@@ -150,10 +171,11 @@ const useSentenceReviewCache = (): UseSentenceReviewCacheReturn => {
   }, []);
 
   /**
-   * Deleta revisão (opcionalmente filtrando por scope)
+   * Deleta revisão (opcionalmente filtrando por scope + flag)
    */
   const deleteReview = useCallback(async (
-    scope?: ReviewScope
+    scope?: ReviewScope,
+    excludeNoResult?: boolean
   ): Promise<void> => {
     try {
       const db = await openReviewDB();
@@ -161,10 +183,11 @@ const useSentenceReviewCache = (): UseSentenceReviewCacheReturn => {
       const store = tx.objectStore(REVIEW_STORE_NAME);
 
       if (scope) {
-        // Deletar apenas o scope específico
+        // Deletar apenas a chave específica
+        const key = buildCacheKey(scope, excludeNoResult);
         const index = store.index('scope');
         const entry = await new Promise<SentenceReviewCacheEntry | undefined>((resolve) => {
-          const req = index.get(scope);
+          const req = index.get(key);
           req.onsuccess = () => resolve(req.result as SentenceReviewCacheEntry | undefined);
           req.onerror = () => resolve(undefined);
         });
@@ -228,17 +251,19 @@ const useSentenceReviewCache = (): UseSentenceReviewCacheReturn => {
   }, [getAllReviews]);
 
   /**
-   * Importa revisões de um projeto JSON
+   * Importa revisões de um projeto JSON.
+   * Aceita chaves no formato `<scope>` (compat) e `<scope>:noEmpty` (com filtro ligado).
    */
   const importAll = useCallback(async (
     data: Record<string, string>
   ): Promise<void> => {
     if (!data || typeof data !== 'object') return;
     try {
-      for (const [scope, result] of Object.entries(data)) {
-        // Validar scope
+      for (const [key, result] of Object.entries(data)) {
+        const excludeNoResult = key.endsWith(CACHE_SUFFIX_NO_EMPTY);
+        const scope = excludeNoResult ? key.slice(0, -CACHE_SUFFIX_NO_EMPTY.length) : key;
         if (scope === 'decisionOnly' || scope === 'decisionWithDocs') {
-          await saveReview(scope as ReviewScope, result);
+          await saveReview(scope as ReviewScope, result, excludeNoResult);
         }
       }
     } catch (e) {

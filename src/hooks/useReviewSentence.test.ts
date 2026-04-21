@@ -111,12 +111,88 @@ describe('useReviewSentence', () => {
 
       expect(result.current.reviewScope).toBe('decisionOnly');
       expect(result.current.setReviewScope).toBeInstanceOf(Function);
+      expect(result.current.excludeNoResultTopics).toBe(true);
+      expect(result.current.setExcludeNoResultTopics).toBeInstanceOf(Function);
       expect(result.current.reviewResult).toBe('');
       expect(result.current.setReviewResult).toBeInstanceOf(Function);
       expect(result.current.generatingReview).toBe(false);
       expect(result.current.reviewFromCache).toBe(false);
       expect(result.current.reviewSentence).toBeInstanceOf(Function);
       expect(result.current.clearReviewCache).toBeInstanceOf(Function);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EXCLUDE NO-RESULT TOPICS (v1.42.04)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Exclude No-Result Topics', () => {
+    it('should default to true', () => {
+      const { result } = renderHook(() =>
+        useReviewSentence(createDefaultProps())
+      );
+
+      expect(result.current.excludeNoResultTopics).toBe(true);
+    });
+
+    it('should toggle the flag', () => {
+      const { result } = renderHook(() =>
+        useReviewSentence(createDefaultProps())
+      );
+
+      act(() => {
+        result.current.setExcludeNoResultTopics(false);
+      });
+
+      expect(result.current.excludeNoResultTopics).toBe(false);
+    });
+
+    it('should pass excludeNoResult=true to buildDecisionText by default', async () => {
+      mockGetReview.mockResolvedValueOnce(null);
+
+      const { result } = renderHook(() =>
+        useReviewSentence(createDefaultProps())
+      );
+
+      await act(async () => {
+        await result.current.reviewSentence();
+      });
+
+      expect(mockBuildDecisionText).toHaveBeenCalledWith({ excludeNoResult: true });
+    });
+
+    it('should pass excludeNoResult=false when toggle is off', async () => {
+      mockGetReview.mockResolvedValueOnce(null);
+
+      const { result } = renderHook(() =>
+        useReviewSentence(createDefaultProps())
+      );
+
+      act(() => {
+        result.current.setExcludeNoResultTopics(false);
+      });
+
+      await act(async () => {
+        await result.current.reviewSentence();
+      });
+
+      expect(mockBuildDecisionText).toHaveBeenCalledWith({ excludeNoResult: false });
+    });
+
+    it('should pass flag to cache get/save', async () => {
+      mockGetReview.mockResolvedValueOnce(null);
+      mockCallAI.mockResolvedValueOnce('Filtered review');
+
+      const { result } = renderHook(() =>
+        useReviewSentence(createDefaultProps())
+      );
+
+      await act(async () => {
+        await result.current.reviewSentence();
+      });
+
+      expect(mockGetReview).toHaveBeenCalledWith('decisionOnly', true);
+      expect(mockSaveReview).toHaveBeenCalledWith('decisionOnly', 'Filtered review', true);
     });
   });
 
@@ -213,7 +289,8 @@ describe('useReviewSentence', () => {
         await result.current.reviewSentence();
       });
 
-      expect(mockSaveReview).toHaveBeenCalledWith('decisionOnly', 'New Review');
+      // v1.42.04: cache key inclui a flag excludeNoResultTopics (default true)
+      expect(mockSaveReview).toHaveBeenCalledWith('decisionOnly', 'New Review', true);
     });
 
     it('should include documents when scope is decisionWithDocs', async () => {
@@ -392,7 +469,8 @@ describe('useReviewSentence', () => {
         await result.current.clearReviewCache();
       });
 
-      expect(mockDeleteReview).toHaveBeenCalledWith('decisionOnly');
+      // v1.42.04: deleteReview inclui a flag excludeNoResultTopics (default true)
+      expect(mockDeleteReview).toHaveBeenCalledWith('decisionOnly', true);
     });
 
     it('should reset reviewFromCache flag', async () => {
