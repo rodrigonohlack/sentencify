@@ -1576,16 +1576,18 @@ export function useLocalStorage(): UseLocalStorageReturn {
     }
 
     // v1.36.57: Importar cache de revisão de sentença
+    // v1.42.05: Aceitar chaves compostas com sufixo `:noEmpty` (toggle excluir tópicos sem resultado)
     if (project.sentenceReviewCache && typeof project.sentenceReviewCache === 'object') {
       try {
         const db = await openReviewDB();
         const tx = db.transaction(REVIEW_STORE_NAME, 'readwrite');
         const store = tx.objectStore(REVIEW_STORE_NAME);
 
-        for (const [scope, result] of Object.entries(project.sentenceReviewCache)) {
-          if (scope === 'decisionOnly' || scope === 'decisionWithDocs') {
+        for (const [key, result] of Object.entries(project.sentenceReviewCache)) {
+          const baseScope = key.endsWith(':noEmpty') ? key.slice(0, -':noEmpty'.length) : key;
+          if (baseScope === 'decisionOnly' || baseScope === 'decisionWithDocs') {
             store.add({
-              scope,
+              scope: key,
               result,
               createdAt: Date.now()
             });
