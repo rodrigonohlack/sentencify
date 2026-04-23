@@ -11,13 +11,13 @@
  */
 
 import React from 'react';
-import { Upload, FileText, Scale, AlertCircle, Mic } from 'lucide-react';
-import { ProofCard } from '../cards';
+import { Upload, FileText, Scale, AlertCircle, Mic, FileAudio, FileVideo, Lock } from 'lucide-react';
+import { ProofCard, MediaProofCard } from '../cards';
 import { useUIStore } from '../../stores/useUIStore';
 import { useTopicsStore } from '../../stores/useTopicsStore';
 import { useAIStore } from '../../stores/useAIStore';
 import { useThemeManagement, useAuthMagicLink } from '../../hooks';
-import type { ProofsTabProps, Proof } from '../../types';
+import type { ProofsTabProps, Proof, ProofMedia } from '../../types';
 
 export const ProofsTab: React.FC<ProofsTabProps> = ({
   proofManager,
@@ -34,6 +34,21 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
   const aiSettings = useAIStore((s) => s.aiSettings);
   const { appTheme } = useThemeManagement();
   const { isAuthenticated } = useAuthMagicLink();
+
+  // v1.43.00: Suporte a áudio/vídeo é Gemini-only
+  const isGemini = aiSettings?.provider === 'gemini';
+  const proofMedia: ProofMedia[] = proofManager.proofMedia || [];
+
+  const handleMediaUpload = React.useCallback(async (files: FileList | null, kind: 'audio' | 'video') => {
+    const arr = files ? Array.from(files) : [];
+    for (const file of arr) {
+      try {
+        await proofManager.handleUploadProofMedia(file, kind);
+      } catch (err) {
+        setError((err as Error).message || 'Falha no upload');
+      }
+    }
+  }, [proofManager, setError]);
 
   return (
     <div className="space-y-6">
@@ -104,6 +119,65 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
                 Importar Análise de Prova Oral
               </button>
             )}
+
+            {/* v1.43.00: Upload de áudio/vídeo (Gemini-only) */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* Áudio */}
+              <label
+                htmlFor="proof-audio-upload"
+                className={`py-3 px-3 rounded-lg border transition-colors flex items-center justify-center gap-2 text-sm
+                  ${isGemini && isAuthenticated
+                    ? 'bg-purple-100 dark:bg-purple-600/15 border-purple-400 dark:border-purple-500/40 hover:bg-purple-200 dark:hover:bg-purple-600/25 text-purple-700 dark:text-purple-300 cursor-pointer'
+                    : 'bg-slate-100 dark:bg-slate-700/20 border-slate-300 dark:border-slate-600/30 text-slate-400 dark:text-slate-500 cursor-not-allowed'}`}
+                title={
+                  !isAuthenticated
+                    ? 'Faça login para enviar áudio'
+                    : !isGemini
+                      ? 'Disponível apenas com o provider Gemini selecionado'
+                      : 'Enviar arquivo de áudio'
+                }
+              >
+                {isGemini && isAuthenticated ? <FileAudio className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                Áudio
+                <input
+                  type="file"
+                  accept="audio/*"
+                  multiple
+                  disabled={!isGemini || !isAuthenticated}
+                  className="hidden"
+                  id="proof-audio-upload"
+                  onChange={(e) => { handleMediaUpload(e.target.files, 'audio'); e.target.value = ''; }}
+                />
+              </label>
+
+              {/* Vídeo */}
+              <label
+                htmlFor="proof-video-upload"
+                className={`py-3 px-3 rounded-lg border transition-colors flex items-center justify-center gap-2 text-sm
+                  ${isGemini && isAuthenticated
+                    ? 'bg-purple-100 dark:bg-purple-600/15 border-purple-400 dark:border-purple-500/40 hover:bg-purple-200 dark:hover:bg-purple-600/25 text-purple-700 dark:text-purple-300 cursor-pointer'
+                    : 'bg-slate-100 dark:bg-slate-700/20 border-slate-300 dark:border-slate-600/30 text-slate-400 dark:text-slate-500 cursor-not-allowed'}`}
+                title={
+                  !isAuthenticated
+                    ? 'Faça login para enviar vídeo'
+                    : !isGemini
+                      ? 'Disponível apenas com o provider Gemini selecionado'
+                      : 'Enviar arquivo de vídeo'
+                }
+              >
+                {isGemini && isAuthenticated ? <FileVideo className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                Vídeo
+                <input
+                  type="file"
+                  accept="video/*"
+                  multiple
+                  disabled={!isGemini || !isAuthenticated}
+                  className="hidden"
+                  id="proof-video-upload"
+                  onChange={(e) => { handleMediaUpload(e.target.files, 'video'); e.target.value = ''; }}
+                />
+              </label>
+            </div>
           </div>
         </div>
 
@@ -111,10 +185,10 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
         <div className="space-y-4">
           <h4 className="text-lg font-semibold theme-text-secondary flex items-center gap-2">
             <FileText className="w-5 h-5" />
-            Provas Enviadas ({proofManager.proofFiles.length + proofManager.proofTexts.length})
+            Provas Enviadas ({proofManager.proofFiles.length + proofManager.proofTexts.length + proofMedia.length})
           </h4>
 
-          {proofManager.proofFiles.length === 0 && proofManager.proofTexts.length === 0 ? (
+          {proofManager.proofFiles.length === 0 && proofManager.proofTexts.length === 0 && proofMedia.length === 0 ? (
             <div className="text-center py-12 theme-text-muted border border-dashed theme-border-input rounded-lg">
               <Scale className="w-16 h-16 mx-auto mb-4 opacity-30" />
               <p>Nenhuma prova enviada ainda</p>
@@ -166,6 +240,16 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
                   nomesParaAnonimizar={aiSettings?.anonymization?.nomesUsuario || []}
                   editorTheme={appTheme}
                   setTextPreview={setTextPreview}
+                />
+              ))}
+
+              {/* v1.43.00: Provas em Áudio/Vídeo (Gemini) */}
+              {proofMedia.map((media) => (
+                <MediaProofCard
+                  key={media.id}
+                  proof={media}
+                  proofManager={proofManager}
+                  providerIsGemini={isGemini}
                 />
               ))}
             </div>

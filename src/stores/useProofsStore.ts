@@ -14,6 +14,8 @@ import { immer } from 'zustand/middleware/immer';
 import type {
   ProofFile,
   ProofText,
+  ProofMedia,
+  ProofMediaStatus,
   ProofAttachment,
   ProofAnalysisResult,
   ProcessingMode
@@ -59,6 +61,9 @@ interface ProofsStoreState {
   /** Flag para enviar conteúdo completo à IA */
   proofSendFullContent: Record<string, boolean>;
 
+  /** v1.43.00: Provas de áudio/vídeo (Gemini-only) */
+  proofMedia: ProofMedia[];
+
   // ═══════════════════════════════════════════════════════════════════════════
   // SETTERS CORE (10)
   // ═══════════════════════════════════════════════════════════════════════════
@@ -73,6 +78,13 @@ interface ProofsStoreState {
   setProofConclusions: (conclusions: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void;
   setProofProcessingModes: (modes: Record<string, ProcessingMode> | ((prev: Record<string, ProcessingMode>) => Record<string, ProcessingMode>)) => void;
   setProofSendFullContent: (content: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void;
+
+  // v1.43.00: Setters/actions para mídia
+  setProofMedia: (media: ProofMedia[] | ((prev: ProofMedia[]) => ProofMedia[])) => void;
+  addProofMedia: (media: ProofMedia) => void;
+  updateProofMedia: (id: string, patch: Partial<ProofMedia>) => void;
+  removeProofMedia: (id: string) => void;
+  setProofMediaStatus: (id: string, status: ProofMediaStatus, extra?: Partial<ProofMedia>) => void;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ACTIONS DE ANÁLISE
@@ -115,6 +127,7 @@ interface ProofsStoreState {
     proofConclusions: Record<string, string>;
     proofProcessingModes: Record<string, ProcessingMode>;
     proofSendFullContent: Record<string, boolean>;
+    proofMedia: ProofMedia[];
   };
 
   restoreFromPersistence: (data: Record<string, unknown> | null) => void;
@@ -142,6 +155,7 @@ export const useProofsStore = create<ProofsStoreState>()(
       proofConclusions: {},
       proofProcessingModes: {},
       proofSendFullContent: {},
+      proofMedia: [],
 
       // ═══════════════════════════════════════════════════════════════════════
       // SETTERS CORE
@@ -236,6 +250,55 @@ export const useProofsStore = create<ProofsStoreState>()(
             state.proofSendFullContent = contentOrUpdater;
           }
         }, false, 'setProofSendFullContent'),
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // v1.43.00: ACTIONS DE MÍDIA (áudio/vídeo - Gemini)
+      // ═══════════════════════════════════════════════════════════════════════
+
+      setProofMedia: (mediaOrUpdater) =>
+        set((state) => {
+          if (typeof mediaOrUpdater === 'function') {
+            state.proofMedia = mediaOrUpdater(state.proofMedia);
+          } else {
+            state.proofMedia = mediaOrUpdater;
+          }
+        }, false, 'setProofMedia'),
+
+      addProofMedia: (media) =>
+        set((state) => {
+          state.proofMedia.push(media);
+        }, false, 'addProofMedia'),
+
+      updateProofMedia: (id, patch) =>
+        set((state) => {
+          const idx = state.proofMedia.findIndex((m) => m.id === id);
+          if (idx !== -1) {
+            state.proofMedia[idx] = { ...state.proofMedia[idx], ...patch };
+          }
+        }, false, 'updateProofMedia'),
+
+      removeProofMedia: (id) =>
+        set((state) => {
+          // Revoga objectUrl se ainda existir (defesa em profundidade — o
+          // chamador idealmente revoga antes; mas aqui é o "último ponto").
+          const target = state.proofMedia.find((m) => m.id === id);
+          if (target?.objectUrl) {
+            try { URL.revokeObjectURL(target.objectUrl); } catch { /* */ }
+          }
+          state.proofMedia = state.proofMedia.filter((m) => m.id !== id);
+          delete state.proofTopicLinks[id];
+          delete state.proofAnalysisResults[id];
+          delete state.proofConclusions[id];
+          delete state.proofSendFullContent[id];
+        }, false, 'removeProofMedia'),
+
+      setProofMediaStatus: (id, status, extra = {}) =>
+        set((state) => {
+          const idx = state.proofMedia.findIndex((m) => m.id === id);
+          if (idx !== -1) {
+            state.proofMedia[idx] = { ...state.proofMedia[idx], status, ...extra };
+          }
+        }, false, 'setProofMediaStatus'),
 
       // ═══════════════════════════════════════════════════════════════════════
       // ACTIONS DE ANÁLISE
@@ -398,6 +461,11 @@ export const useProofsStore = create<ProofsStoreState>()(
 
       serializeForPersistence: () => {
         const state = get();
+        // Mídia: stripa objectUrl/file (não persistível) e mantém só metadados
+        const serializedMedia = state.proofMedia.map((m) => {
+          const { objectUrl: _o, ...rest } = m;
+          return rest;
+        });
         return {
           proofFiles: state.proofFiles,
           proofTexts: state.proofTexts,
@@ -408,7 +476,8 @@ export const useProofsStore = create<ProofsStoreState>()(
           proofAnalysisResults: state.proofAnalysisResults,
           proofConclusions: state.proofConclusions,
           proofProcessingModes: state.proofProcessingModes,
-          proofSendFullContent: state.proofSendFullContent
+          proofSendFullContent: state.proofSendFullContent,
+          proofMedia: serializedMedia,
         };
       },
 
@@ -445,10 +514,31 @@ export const useProofsStore = create<ProofsStoreState>()(
           if (data.proofConclusions) state.proofConclusions = data.proofConclusions as Record<string, string>;
           if (data.proofProcessingModes) state.proofProcessingModes = data.proofProcessingModes as Record<string, ProcessingMode>;
           if (data.proofSendFullContent) state.proofSendFullContent = data.proofSendFullContent as Record<string, boolean>;
+
+          // v1.43.00: restaurar mídia, marcando como expirada quando o TTL passou
+          if (data.proofMedia && Array.isArray(data.proofMedia)) {
+            const now = Date.now();
+            state.proofMedia = (data.proofMedia as ProofMedia[]).map((m) => {
+              if (m.cacheExpiresAt && m.cacheExpiresAt < now) {
+                return { ...m, status: 'expired' as ProofMediaStatus };
+              }
+              // Status 'uploading' nunca sobrevive a um reload
+              if (m.status === 'uploading') {
+                return { ...m, status: 'failed' as ProofMediaStatus, errorMessage: 'Upload interrompido' };
+              }
+              return m;
+            });
+          }
         }, false, 'restoreFromPersistence'),
 
       resetAll: () =>
         set((state) => {
+          // Revoga todos os objectUrl pendentes antes de zerar
+          for (const m of state.proofMedia) {
+            if (m.objectUrl) {
+              try { URL.revokeObjectURL(m.objectUrl); } catch { /* */ }
+            }
+          }
           state.proofFiles = [];
           state.proofTexts = [];
           state.proofUsePdfMode = {};
@@ -459,6 +549,7 @@ export const useProofsStore = create<ProofsStoreState>()(
           state.proofConclusions = {};
           state.proofProcessingModes = {};
           state.proofSendFullContent = {};
+          state.proofMedia = [];
         }, false, 'resetAll'),
     })),
     { name: 'ProofsStore' }

@@ -45,6 +45,7 @@ import googleDriveRoutes from './routes/google-drive.js';
 import financeiroAccess from './middleware/financeiro-access.js';
 import { initDatabase } from './db/database.js';
 import rssScheduler from './services/RSSSchedulerService.js';
+import geminiPruneScheduler from './services/GeminiPruneService.js';
 
 // Inicializar banco de dados SQLite
 initDatabase();
@@ -372,4 +373,7 @@ app.listen(PORT, () => {
 
   // Iniciar coleta automática de RSS (a cada 8 horas + fetch inicial 30s após startup)
   rssScheduler.start();
+
+  // v1.43.00: Housekeeping horário de caches e media files do Gemini
+  geminiPruneScheduler.start();
 });

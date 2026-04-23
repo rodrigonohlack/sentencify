@@ -68,6 +68,7 @@ const runMigrations = () => {
     { name: '017_financeiro_projected_card_info', fn: migration017FinanceiroProjectedCardInfo },
     { name: '018_knowledge_packages', fn: migration018KnowledgePackages },
     { name: '019_google_drive_tokens', fn: migration019GoogleDriveTokens },
+    { name: '020_gemini_caches', fn: migration020GeminiCaches },
   ];
 
   const applied = db.prepare('SELECT name FROM migrations').all().map(r => r.name);
@@ -686,6 +687,52 @@ function migration019GoogleDriveTokens(db) {
     CREATE INDEX IF NOT EXISTS idx_gdt_google_email ON google_drive_tokens(google_email);
   `);
   console.log('[Database] Migration 019: Created google_drive_tokens table');
+}
+
+// Migration 020 v1.43.00 — Context caching nativo do Gemini + provas de áudio/vídeo
+function migration020GeminiCaches(db) {
+  const statements = [
+    `CREATE TABLE IF NOT EXISTS gemini_caches (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      cache_key_hash TEXT NOT NULL,
+      cache_name TEXT NOT NULL,
+      model TEXT NOT NULL,
+      token_count INTEGER NOT NULL DEFAULT 0,
+      ttl_seconds INTEGER NOT NULL DEFAULT 3600,
+      expires_at INTEGER NOT NULL,
+      hit_count INTEGER NOT NULL DEFAULT 0,
+      last_used_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      deleted_at TEXT
+    )`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_gc_user_hash_model
+      ON gemini_caches(user_id, cache_key_hash, model)`,
+    `CREATE INDEX IF NOT EXISTS idx_gc_expires ON gemini_caches(expires_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_gc_user ON gemini_caches(user_id)`,
+
+    `CREATE TABLE IF NOT EXISTS gemini_media_files (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      file_uri TEXT NOT NULL,
+      file_mime TEXT NOT NULL,
+      file_name TEXT NOT NULL,
+      file_size INTEGER NOT NULL,
+      duration_seconds INTEGER,
+      status TEXT NOT NULL,
+      cache_id TEXT REFERENCES gemini_caches(id) ON DELETE SET NULL,
+      uploaded_at TEXT NOT NULL DEFAULT (datetime('now')),
+      expires_at INTEGER NOT NULL,
+      deleted_at TEXT
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_gmf_user ON gemini_media_files(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_gmf_expires ON gemini_media_files(expires_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_gmf_status ON gemini_media_files(status)`,
+  ];
+  for (const sql of statements) {
+    db.prepare(sql).run();
+  }
+  console.log('[Database] Migration 020: Created gemini_caches and gemini_media_files tables');
 }
 
 export const getDb = () => db || initDatabase();

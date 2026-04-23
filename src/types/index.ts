@@ -123,9 +123,10 @@ export interface Model {
 // PROOF TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
-export type ProofType = 'pdf' | 'text';
+export type ProofType = 'pdf' | 'text' | 'audio' | 'video';
 export type ProcessingMode = 'pdfjs' | 'pdf-puro' | 'claude-vision' | 'tesseract';
 export type InsertMode = 'replace' | 'append' | 'prepend';
+export type ProofMediaStatus = 'uploading' | 'processing' | 'ready' | 'failed' | 'expired';
 
 export interface ProofFile {
   id: string | number;
@@ -174,7 +175,52 @@ export interface ProofAttachment {
   processingMode?: ProcessingMode;  // v1.38.10: Modo de extração para PDFs
 }
 
-export type Proof = ProofFile | ProofText;
+/**
+ * v1.43.00: Prova de áudio/vídeo (Gemini-only)
+ * O binário NÃO é persistido localmente nem no backend; vive no Gemini File API
+ * (auto-delete em 48h). Aqui guardamos apenas metadados + ponteiros server-side.
+ */
+export interface ProofMedia {
+  id: string;
+  name: string;
+  type: 'audio' | 'video';
+  mimeType: string;
+  size: number;
+  uploadDate: string;
+  durationSeconds?: number;
+  // Estado do upload/análise:
+  status: ProofMediaStatus;
+  uploadProgress?: number;       // 0-100 durante 'uploading'
+  errorMessage?: string;
+  // Refs server-side:
+  serverFileId?: string;         // gemini_media_files.id no backend
+  fileUri?: string;              // 'files/xxx' do Gemini
+  cacheId?: string;              // gemini_caches.id
+  cacheName?: string;            // 'cachedContents/xxx'
+  cacheExpiresAt?: number;       // epoch ms
+  // Player local (não persistido):
+  objectUrl?: string;            // URL.createObjectURL para preview enquanto File está em memória
+  // Compatibilidade com Proof union:
+  file?: never;
+  text?: never;
+  fileData?: never;
+  isPdf?: never;
+  isPlaceholder?: never;
+  attachments?: never;
+}
+
+export type Proof = ProofFile | ProofText | ProofMedia;
+
+/**
+ * v1.43.00: Referência a um CachedContent do Gemini.
+ */
+export interface GeminiCacheRef {
+  cacheId: string;
+  cacheName: string;
+  expiresAt: number;
+  tokenCount: number;
+  hit: boolean;
+}
 
 export interface ProofAnalysisResult {
   id: string;
@@ -213,6 +259,9 @@ export interface GeminiRequest {
   contents: unknown[];
   systemInstruction?: { parts: { text: string }[] };
   generationConfig?: GeminiGenerationConfig;
+  /** v1.43.00: Referência a CachedContent (cachedContents/xxx) */
+  cachedContent?: string;
+  tools?: unknown[];
 }
 
 export interface AnonymizationSettings {
@@ -846,6 +895,17 @@ export interface AICallOptions {
    * na mensagem do assistente.
    */
   onGrounding?: (metadata: GroundingMetadata) => void;
+  /**
+   * v1.43.00: Desabilita context caching nativo do Gemini para esta chamada.
+   * Cache é ativado por padrão quando há conteúdo estável >= 4k tokens.
+   */
+  disableCache?: boolean;
+  /**
+   * v1.43.00: Nome de um CachedContent já criado (cachedContents/xxx) para
+   * usar diretamente. Pula o auto-split e envia só os contents da request.
+   * Usado para análise de provas de áudio/vídeo, onde o file vive no cache.
+   */
+  geminiCachedContent?: string;
 }
 
 /** Tipo para função callAI */
@@ -2760,6 +2820,15 @@ export interface ProofsTabProps {
     proofTexts: Proof[];
     handleUploadProofPdf: (files: File[]) => void;
     setNewProofTextData: (data: { name: string; text: string }) => void;
+    // v1.43.00: Mídia (Gemini)
+    proofMedia: ProofMedia[];
+    handleUploadProofMedia: (file: File, kind: 'audio' | 'video') => Promise<string>;
+    handleDeleteProof: (proof: Proof) => void | Promise<void>;
+    setProofToAnalyze: (proof: Proof | null) => void;
+    proofAnalysisResults: Record<string, ProofAnalysisResult[]>;
+    removeProofAnalysis: (proofId: string, analysisId: string) => void;
+    updateProofAnalysis: (proofId: string, analysisId: string, newResult: string) => void;
+    isAnalyzingProof: (id: string | number) => boolean;
   };
 
   // Document services (I/O - PDF extraction)

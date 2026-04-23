@@ -1,8 +1,11 @@
 {
   "name": "sentencify-standalone",
-  "version": "1.42.05",
+  "version": "1.43.00",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "client": "vite --port 3000",
