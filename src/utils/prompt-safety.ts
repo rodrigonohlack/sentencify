@@ -1,57 +1,21 @@
 /**
  * @file prompt-safety.ts
- * @description Detecção de tentativas de prompt injection em documentos do usuário
- * NAO bloqueia (pode ser texto jurídico legítimo), mas loga para awareness
+ * @description Defesa estrutural contra prompt injection em documentos do usuário.
+ *
+ * v1.42.06: Removido detector regex (`detectPromptInjection`). Era frágil contra
+ * atacantes humanos (qualquer mudança de palavra burlava) e dava falsa sensação
+ * de segurança. A defesa real é estrutural via `wrapUserContent` abaixo —
+ * envolve o documento com tags XML + instrução explícita ao modelo de tratar
+ * como dados, não como comandos. Modelos modernos (Claude/Gemini/GPT) respeitam
+ * essa instrução de forma robusta.
  */
 
-// Padroes comuns de prompt injection
-const INJECTION_PATTERNS: Array<{ pattern: RegExp; description: string }> = [
-  { pattern: /ignore\s+(all\s+)?previous\s+instructions/i, description: 'Ignore previous instructions' },
-  { pattern: /you\s+are\s+now\s+a/i, description: 'Role override attempt' },
-  { pattern: /forget\s+(everything|all|your\s+instructions)/i, description: 'Memory wipe attempt' },
-  { pattern: /system\s*:\s*you\s+are/i, description: 'System prompt injection' },
-  { pattern: /disregard\s+(all|any|the)\s+(above|previous)/i, description: 'Disregard instructions' },
-  { pattern: /new\s+instructions?\s*:/i, description: 'New instructions injection' },
-  { pattern: /override\s+(system|safety|previous)/i, description: 'Override attempt' },
-  { pattern: /output\s+(your|the)\s+system\s+prompt/i, description: 'System prompt extraction' },
-  { pattern: /repeat\s+(your|the)\s+(system|initial)\s+(prompt|instructions)/i, description: 'Prompt repetition request' },
-];
-
-export interface InjectionDetectionResult {
-  detected: boolean;
-  patterns: string[];
-  riskLevel: 'none' | 'low' | 'medium' | 'high';
-}
-
 /**
- * Detecta padroes de prompt injection em texto
- * @param text - Texto a ser analisado (conteudo de documento do usuario)
- * @returns Resultado da deteccao com padroes encontrados
- */
-export function detectPromptInjection(text: string): InjectionDetectionResult {
-  if (!text || text.length < 10) {
-    return { detected: false, patterns: [], riskLevel: 'none' };
-  }
-
-  const matches: string[] = [];
-  for (const { pattern, description } of INJECTION_PATTERNS) {
-    if (pattern.test(text)) {
-      matches.push(description);
-    }
-  }
-
-  if (matches.length === 0) {
-    return { detected: false, patterns: [], riskLevel: 'none' };
-  }
-
-  const riskLevel = matches.length >= 3 ? 'high' : matches.length >= 2 ? 'medium' : 'low';
-
-  return { detected: true, patterns: matches, riskLevel };
-}
-
-/**
- * Envolve conteudo do usuario com delimitadores de seguranca
- * Instrui a IA a tratar o conteudo como dados, nao como comandos
+ * Envolve conteúdo do usuário com delimitadores de segurança e instrução
+ * explícita para o modelo tratar como dados, não como comandos.
+ *
+ * Defesa estrutural contra prompt injection: mesmo que o documento contenha
+ * "ATENÇÃO IA, faça X", o modelo é instruído a ignorar.
  */
 export function wrapUserContent(content: string, label: string): string {
   return `<USER_DOCUMENT label="${label}">
