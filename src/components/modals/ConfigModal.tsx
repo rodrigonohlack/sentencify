@@ -2577,8 +2577,13 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             const metrics = tokenMetrics || {};
             const totalTokens = (metrics.totalInput || 0) + (metrics.totalOutput || 0) +
                                 (metrics.totalCacheRead || 0) + (metrics.totalCacheCreation || 0);
-            const cacheRate = totalTokens > 0
-              ? Math.round(((metrics.totalCacheRead || 0) / totalTokens) * 100)
+            // v1.42.08: Cache rate = % dos tokens de INPUT que vieram do cache.
+            // Antes o denominador incluía output, diluindo a taxa artificialmente.
+            const totalInputTokens = (metrics.totalInput || 0) +
+                                     (metrics.totalCacheRead || 0) +
+                                     (metrics.totalCacheCreation || 0);
+            const cacheRate = totalInputTokens > 0
+              ? Math.round(((metrics.totalCacheRead || 0) / totalInputTokens) * 100)
               : 0;
             const formatNumber = (n: number) => {
               if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';

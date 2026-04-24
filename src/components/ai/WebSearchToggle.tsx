@@ -23,8 +23,8 @@ export interface WebSearchToggleProps {
   disabled?: boolean;
 }
 
-const DEFAULT_ON_TOOLTIP = 'Buscar na web ativado (Gemini) — clique para desligar';
-const DEFAULT_OFF_TOOLTIP = 'Ativar busca na web (Gemini) — permite consulta a informações atualizadas durante esta conversa';
+const DEFAULT_ON_TOOLTIP = 'Buscar na web ativado (Gemini) — cache desativado nesta requisição (bug conhecido do Gemini 3 com tools). Clique para desligar.';
+const DEFAULT_OFF_TOOLTIP = 'Ativar busca na web (Gemini) — permite consulta a informações atualizadas durante esta conversa. Atenção: ativar desativa o implicit cache do Gemini.';
 const DISABLED_TOOLTIP = 'Busca na web indisponível enquanto a anonimização estiver ativa. As queries enviadas ao Google poderiam expor dados sensíveis do processo.';
 
 export const WebSearchToggle: React.FC<WebSearchToggleProps> = ({

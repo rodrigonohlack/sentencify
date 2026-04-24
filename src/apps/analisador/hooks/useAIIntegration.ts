@@ -159,9 +159,14 @@ export const useAIIntegration = () => {
         }
 
         if (data.usageMetadata) {
+          // v1.42.08: promptTokenCount já inclui cachedContentTokenCount — subtrair
+          // para evitar double-count (consistente com Claude, onde input_tokens é fresh only).
+          const cached = data.usageMetadata.cachedContentTokenCount || 0;
+          const prompt = data.usageMetadata.promptTokenCount || 0;
           addTokenUsage({
-            input: data.usageMetadata.promptTokenCount || 0,
-            output: data.usageMetadata.candidatesTokenCount || 0
+            input: Math.max(0, prompt - cached),
+            output: data.usageMetadata.candidatesTokenCount || 0,
+            cacheRead: cached
           });
         }
 
@@ -531,9 +536,16 @@ export const useAIIntegration = () => {
               throw new Error(parsed.error?.message || 'Erro no streaming');
             }
             if (parsed.type === 'done' && parsed.usage) {
+              // v1.42.08: normaliza Gemini (prompt já inclui cached); Claude/OpenAI passam direto
+              const cached = parsed.usage.cachedContentTokenCount || 0;
+              const gemPrompt = parsed.usage.promptTokenCount;
+              const geminiInput = gemPrompt !== undefined
+                ? Math.max(0, gemPrompt - cached)
+                : (parsed.usage.input_tokens || 0);
               addTokenUsage({
-                input: parsed.usage.promptTokenCount || parsed.usage.input_tokens || 0,
-                output: parsed.usage.candidatesTokenCount || parsed.usage.output_tokens || 0
+                input: geminiInput,
+                output: parsed.usage.candidatesTokenCount || parsed.usage.output_tokens || 0,
+                cacheRead: cached
               });
             }
           } catch (e) {

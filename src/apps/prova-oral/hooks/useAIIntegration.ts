@@ -196,10 +196,14 @@ export const useAIIntegration = () => {
         }
 
         if (data.usageMetadata) {
+          // v1.42.08: promptTokenCount já inclui cachedContentTokenCount — subtrair
+          // para evitar double-count (consistente com Claude).
+          const cached = data.usageMetadata.cachedContentTokenCount || 0;
+          const prompt = data.usageMetadata.promptTokenCount || 0;
           addTokenUsage({
-            input: data.usageMetadata.promptTokenCount || 0,
+            input: Math.max(0, prompt - cached),
             output: data.usageMetadata.candidatesTokenCount || 0,
-            cacheRead: data.usageMetadata.cachedContentTokenCount || 0
+            cacheRead: cached
           });
         }
 
@@ -836,10 +840,13 @@ export const useAIIntegration = () => {
                 throw new Error('A análise foi truncada por exceder o limite de tokens. Tente com uma transcrição menor.');
               }
               if (parsed.usage) {
+                // v1.42.08: promptTokenCount já inclui cached — subtrair para não contar duas vezes
+                const cached = parsed.usage.cachedContentTokenCount || 0;
+                const prompt = parsed.usage.promptTokenCount || 0;
                 addTokenUsage({
-                  input: parsed.usage.promptTokenCount || 0,
+                  input: Math.max(0, prompt - cached),
                   output: parsed.usage.candidatesTokenCount || 0,
-                  cacheRead: parsed.usage.cachedContentTokenCount || 0
+                  cacheRead: cached
                 });
               }
             }

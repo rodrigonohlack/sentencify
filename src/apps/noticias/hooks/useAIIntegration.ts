@@ -157,9 +157,14 @@ export const useAIIntegration = () => {
         }
 
         if (data.usageMetadata) {
+          // v1.42.08: promptTokenCount já inclui cachedContentTokenCount — subtrair
+          // para evitar double-count (consistente com Claude, onde input_tokens é fresh only).
+          const cached = data.usageMetadata.cachedContentTokenCount || 0;
+          const prompt = data.usageMetadata.promptTokenCount || 0;
           addTokenUsage({
-            input: data.usageMetadata.promptTokenCount || 0,
-            output: data.usageMetadata.candidatesTokenCount || 0
+            input: Math.max(0, prompt - cached),
+            output: data.usageMetadata.candidatesTokenCount || 0,
+            cacheRead: cached
           });
         }
 

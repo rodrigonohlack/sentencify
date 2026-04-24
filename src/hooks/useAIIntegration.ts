@@ -510,10 +510,11 @@ const useAIIntegration = () => {
 
   // Converter formato de mensagens Claude → Gemini
   const convertToGeminiFormat = React.useCallback((claudeMessages: AIMessage[], systemPrompt: string | null | Record<string, unknown>[] = null): GeminiRequest => {
-    const contents = claudeMessages.map((msg: AIMessage) => ({
-      role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: Array.isArray(msg.content)
-        ? msg.content.map((c: AIMessageContent) => {
+    type GeminiPart = { text?: string; inlineData?: { mimeType: string; data: string } };
+
+    const contents = claudeMessages.map((msg: AIMessage) => {
+      const parts: GeminiPart[] = Array.isArray(msg.content)
+        ? msg.content.map((c: AIMessageContent): GeminiPart => {
             // String direta
             if (typeof c === 'string') return { text: c };
             // Texto simples
@@ -534,8 +535,19 @@ const useAIIntegration = () => {
             // Fallback
             return { text: JSON.stringify(c) };
           })
-        : [{ text: msg.content as string }]
-    }));
+        : [{ text: msg.content as string }];
+
+      // v1.42.08: inlineData (PDFs/imagens — conteúdo estável e caro) vem
+      // ANTES dos text parts (pergunta variável). Isso maximiza prefix match
+      // do implicit cache do Gemini 3. Array.sort é estável (ES2019),
+      // preservando ordem relativa entre parts do mesmo tipo.
+      parts.sort((a, b) => (a.inlineData ? 0 : 1) - (b.inlineData ? 0 : 1));
+
+      return {
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts
+      };
+    });
 
     const result: GeminiRequest = { contents };
 
@@ -629,10 +641,16 @@ const useAIIntegration = () => {
     }
     if (provider === 'gemini') {
       const usage = (data.usageMetadata || {}) as Record<string, number>;
+      // v1.42.08: promptTokenCount JÁ INCLUI cachedContentTokenCount na API
+      // do Gemini. Subtrair para evitar double-count — mantém consistência
+      // com Claude (onde input_tokens = fresh only). Sem essa correção, o
+      // cálculo de custo cobra preço full de tokens que são cacheados.
+      const prompt = usage.promptTokenCount || 0;
+      const cached = usage.cachedContentTokenCount || 0;
       return {
-        input: usage.promptTokenCount || 0,
+        input: Math.max(0, prompt - cached),
         output: usage.candidatesTokenCount || 0,
-        cacheRead: usage.cachedContentTokenCount || 0,
+        cacheRead: cached,
         cacheCreation: 0
       };
     }
@@ -1632,9 +1650,13 @@ const useAIIntegration = () => {
 
             if (parsed.type === 'done') {
               if (parsed.usage) {
+                // v1.42.08: promptTokenCount já inclui cached — subtrair para não contar duas vezes
+                const cached = parsed.usage.cachedContentTokenCount || 0;
+                const prompt = parsed.usage.promptTokenCount || 0;
                 addTokenUsage({
-                  input: parsed.usage.promptTokenCount || 0,
+                  input: Math.max(0, prompt - cached),
                   output: parsed.usage.candidatesTokenCount || 0,
+                  cacheRead: cached,
                   model,
                   provider: 'gemini'
                 });

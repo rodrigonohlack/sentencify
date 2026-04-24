@@ -44,9 +44,19 @@ router.post('/generate', async (req, res) => {
     if (process.env.NODE_ENV !== 'production') {
       const usage = data.usageMetadata || {};
       const finishReason = data.candidates?.[0]?.finishReason;
+      // v1.42.08: cached=X mede implicit caching (cachedContentTokenCount).
+      // Esperado 0 na 1a request e >0 em requests subsequentes com mesmo prefixo.
+      // Quando request tem tools (web search), Gemini 3 desativa implicit cache.
       console.log(`[Gemini] ${model} - ${response.status} - ` +
-        `${usage.promptTokenCount || 0} in / ${usage.candidatesTokenCount || 0} out` +
-        (finishReason ? ` - ${finishReason}` : '')); // v1.32.26: Log finishReason
+        `in=${usage.promptTokenCount || 0} ` +
+        `out=${usage.candidatesTokenCount || 0} ` +
+        `cached=${usage.cachedContentTokenCount || 0}` +
+        (finishReason ? ` - ${finishReason}` : ''));
+
+      // Detalhes por modalidade (text vs image vs audio) quando presentes
+      if (usage.cacheTokensDetails?.length) {
+        console.log(`[Gemini] cacheTokensDetails:`, JSON.stringify(usage.cacheTokensDetails));
+      }
 
       // Log de thought signature se presente (Gemini 3)
       const signature = data.candidates?.[0]?.content?.parts?.[0]?.thoughtSignature;
@@ -174,6 +184,16 @@ router.post('/stream', async (req, res) => {
             } catch (e) {
               // Ignorar erros de parse no buffer final
             }
+          }
+        }
+        // v1.42.08: log de cache no fim do stream (mesmo shape do /generate)
+        if (process.env.NODE_ENV !== 'production' && usage) {
+          console.log(`[Gemini/stream] ${model} - ` +
+            `in=${usage.promptTokenCount || 0} ` +
+            `out=${usage.candidatesTokenCount || 0} ` +
+            `cached=${usage.cachedContentTokenCount || 0}`);
+          if (usage.cacheTokensDetails?.length) {
+            console.log(`[Gemini/stream] cacheTokensDetails:`, JSON.stringify(usage.cacheTokensDetails));
           }
         }
         res.write(`data: ${JSON.stringify({ type: 'done', usage, groundingMetadata })}\n\n`);

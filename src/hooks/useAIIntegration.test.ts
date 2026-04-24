@@ -511,8 +511,12 @@ describe('useAIIntegration', () => {
       });
     });
 
-    it('should extract Gemini token metrics', () => {
+    it('should extract Gemini token metrics (subtracting cached from prompt)', () => {
       const { result } = renderHook(() => useAIIntegration());
+      // v1.42.08: promptTokenCount (400) já inclui cachedContentTokenCount (60),
+      // então input fresh = 400 - 60 = 340 (consistente com Claude, onde
+      // input_tokens exclui os cacheados). Sem essa correção, o custo era
+      // cobrado duas vezes.
       const data = {
         usageMetadata: {
           promptTokenCount: 400,
@@ -522,9 +526,26 @@ describe('useAIIntegration', () => {
       };
       const metrics = result.current.extractTokenMetrics(data, 'gemini');
       expect(metrics).toEqual({
-        input: 400,
+        input: 340,
         output: 180,
         cacheRead: 60,
+        cacheCreation: 0
+      });
+    });
+
+    it('should handle Gemini response without cache (input = promptTokenCount)', () => {
+      const { result } = renderHook(() => useAIIntegration());
+      const data = {
+        usageMetadata: {
+          promptTokenCount: 400,
+          candidatesTokenCount: 180
+        }
+      };
+      const metrics = result.current.extractTokenMetrics(data, 'gemini');
+      expect(metrics).toEqual({
+        input: 400,
+        output: 180,
+        cacheRead: 0,
         cacheCreation: 0
       });
     });
@@ -848,6 +869,50 @@ describe('useAIIntegration', () => {
       const geminiReq = result.current.convertToGeminiFormat(messages);
 
       expect((geminiReq.contents[0] as any).parts).toEqual([{ text: 'Just a string' }]);
+    });
+
+    // v1.42.08: Gemini implicit cache exige prefixo bit-identical entre requests.
+    // Call sites frequentemente montam content como [text pergunta, documento PDF];
+    // reordenar para [PDF, text] maximiza prefix match.
+    it('should reorder parts: inlineData before text (for implicit cache prefix match)', () => {
+      const { result } = renderHook(() => useAIIntegration());
+      const messages = [{
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Analise este PDF' },
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: 'pdfdata' } }
+        ]
+      }] as any;
+      const geminiReq = result.current.convertToGeminiFormat(messages);
+      const parts = (geminiReq.contents[0] as any).parts;
+
+      expect(parts).toHaveLength(2);
+      expect(parts[0]).toEqual({ inlineData: { mimeType: 'application/pdf', data: 'pdfdata' } });
+      expect(parts[1]).toEqual({ text: 'Analise este PDF' });
+    });
+
+    it('should preserve relative order among parts of the same type (stable sort)', () => {
+      const { result } = renderHook(() => useAIIntegration());
+      const messages = [{
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Primeira pergunta' },
+          { type: 'image', source: { media_type: 'image/png', data: 'img1' } },
+          { type: 'text', text: 'Segunda pergunta' },
+          { type: 'image', source: { media_type: 'image/jpeg', data: 'img2' } }
+        ]
+      }] as any;
+      const geminiReq = result.current.convertToGeminiFormat(messages);
+      const parts = (geminiReq.contents[0] as any).parts;
+
+      // Ambos inlineData vêm antes, mantendo ordem relativa img1 → img2;
+      // ambos text depois, mantendo ordem "Primeira" → "Segunda"
+      expect(parts).toEqual([
+        { inlineData: { mimeType: 'image/png', data: 'img1' } },
+        { inlineData: { mimeType: 'image/jpeg', data: 'img2' } },
+        { text: 'Primeira pergunta' },
+        { text: 'Segunda pergunta' }
+      ]);
     });
   });
 
@@ -1423,9 +1488,10 @@ describe('useAIIntegration', () => {
         );
       });
 
+      // v1.42.08: input = promptTokenCount (100) - cachedContentTokenCount (20) = 80
       expect(mockAddTokenUsage).toHaveBeenCalledWith(
         expect.objectContaining({
-          input: 100,
+          input: 80,
           output: 50,
           cacheRead: 20,
           provider: 'gemini'
