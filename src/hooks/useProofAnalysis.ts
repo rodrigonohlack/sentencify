@@ -9,7 +9,6 @@
 
 import { useCallback, useRef, useEffect } from 'react';
 import { anonymizeText } from '../utils/text';
-import { API_BASE } from '../constants/api';
 import { getCorrectionDescription } from '../utils/double-check-utils';
 import { useUIStore } from '../stores/useUIStore';
 import { isOralProof } from '../components/ai/AIAssistantComponents';
@@ -50,16 +49,12 @@ export interface AIIntegrationForProofs {
     temperature?: number;
     topP?: number;
     topK?: number;
-    /** v1.43.00: Cache explícito do Gemini (cachedContents/xxx) */
-    geminiCachedContent?: string;
   }) => Promise<string>;
   // v1.39.09: Streaming para evitar timeout
   callAIStream?: (messages: AIMessage[], options?: {
     maxTokens?: number;
     useInstructions?: boolean;
     onChunk?: StreamChunkCallback;
-    /** v1.43.00: Cache explícito do Gemini (cachedContents/xxx) */
-    geminiCachedContent?: string;
   }) => Promise<string>;
   // v1.37.65: Double Check para analise de provas
   performDoubleCheck?: PerformDoubleCheckFunction;
@@ -285,102 +280,6 @@ export const useProofAnalysis = ({
     try {
       proofManager.addAnalyzingProof(proofId);
       setError('');
-
-      // ═══════════════════════════════════════════════════════════════════════
-      // v1.43.00: Branch para mídia (áudio/vídeo). O cache do Gemini já tem
-      // o arquivo. Mandamos apenas o prompt do usuário e o cacheName.
-      // Se o cache expirou no Google (404), recria via /media/:id/cache e
-      // retenta uma vez. Sem isso, sem cache → Gemini não tem o arquivo.
-      // ═══════════════════════════════════════════════════════════════════════
-      if (proof.type === 'audio' || proof.type === 'video') {
-        const media = proof as {
-          id: string;
-          name: string;
-          serverFileId?: string;
-          cacheName?: string;
-          status: string;
-        };
-        if (aiIntegration.aiSettings.provider !== 'gemini') {
-          showToast('Análise de áudio/vídeo só está disponível com o provider Gemini.', 'error');
-          proofManager.removeAnalyzingProof(proofId);
-          return;
-        }
-        if (media.status !== 'ready' || !media.cacheName || !media.serverFileId) {
-          showToast('Mídia ainda não está pronta para análise.', 'error');
-          proofManager.removeAnalyzingProof(proofId);
-          return;
-        }
-
-        const userPrompt = customInstructions?.trim()
-          ? customInstructions.trim()
-          : 'Sintetize integralmente esta gravação no formato de ata de audiência, com timestamps MM:SS por fala.';
-
-        const messages: AIMessage[] = [
-          { role: 'user', content: [{ type: 'text', text: userPrompt }] },
-        ];
-
-        const callOnce = async (cacheName: string): Promise<string> => {
-          if (useStreaming && aiIntegration.callAIStream) {
-            return aiIntegration.callAIStream(messages, {
-              maxTokens: 8000,
-              onChunk,
-              geminiCachedContent: cacheName,
-            });
-          }
-          return aiIntegration.callAI(messages, {
-            maxTokens: 8000,
-            geminiCachedContent: cacheName,
-          });
-        };
-
-        let result: string;
-        try {
-          result = await callOnce(media.cacheName);
-        } catch (err) {
-          // Cache de mídia expirado/apagado no Google → recria e retenta uma vez
-          const e = err as { __cacheInvalid?: boolean; __mediaCache?: boolean };
-          if (e?.__cacheInvalid && e?.__mediaCache) {
-            const apiKey = aiIntegration.aiSettings.apiKeys?.gemini || '';
-            const authToken = typeof localStorage !== 'undefined'
-              ? localStorage.getItem('authToken') : null;
-            const model = aiIntegration.aiSettings.geminiModel || 'gemini-3-flash-preview';
-
-            const recreateResp = await fetch(
-              `${API_BASE}/api/gemini/media/${media.serverFileId}/cache`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'x-api-key': apiKey,
-                  ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-                },
-                body: JSON.stringify({ model, ttlSeconds: 3600 }),
-              }
-            );
-            if (!recreateResp.ok) {
-              throw new Error('Não foi possível recriar o cache da mídia. Reenvie o arquivo.');
-            }
-            const recreateData = await recreateResp.json();
-            // Atualiza store com novo cacheName/expiresAt
-            (proofManager as { updateProofMedia?: (id: string, patch: Record<string, unknown>) => void })
-              .updateProofMedia?.(media.id, {
-                cacheName: recreateData.cacheName,
-                cacheId: recreateData.cacheId,
-                cacheExpiresAt: recreateData.expiresAt,
-              });
-            result = await callOnce(recreateData.cacheName);
-          } else {
-            throw err;
-          }
-        }
-
-        proofManager.addProofAnalysis(media.id, {
-          type: 'livre',
-          result,
-        });
-        proofManager.removeAnalyzingProof(proofId);
-        return;
-      }
 
       // v1.16.2: Anonimizacao de provas (ProcessingModeSelector ja forca PDF.js quando ativo)
       // v1.21.3: Adicionado nomesUsuario para anonimizar nomes customizados

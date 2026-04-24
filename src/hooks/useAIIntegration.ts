@@ -14,14 +14,6 @@ import { API_BASE } from '../constants/api';
 import { withRetry } from '../utils/retry';
 // v1.42.02: Registry provider-agnostic para habilitar web search
 import { applyWebSearchTool, extractGrounding } from '../utils/ai-tools/webSearch';
-// v1.43.00: Context caching nativo do Gemini
-import {
-  splitStableFromVolatile,
-  shouldCacheRequest,
-  ensureGeminiCache,
-  isCacheInvalidError,
-  localHashKey,
-} from '../utils/ai-tools/geminiCache';
 import type {
   AIMessage,
   AIMessageContent,
@@ -773,7 +765,7 @@ const useAIIntegration = () => {
     const signal = abortSignal || internalController?.signal;
 
     // Funcao de requisicao que sera retentada
-    const makeRequest = async (useCacheNow: boolean = !options.disableCache) => {
+    const makeRequest = async () => {
       try {
         // Converter mensagens para formato Gemini
         const geminiRequest = convertToGeminiFormat(messages, finalSystemPrompt);
@@ -824,81 +816,15 @@ const useAIIntegration = () => {
         const finalRequest = applyWebSearchTool('gemini', geminiRequest, {
           enabled: options.webSearch,
           anonymizationEnabled: !!aiSettings?.anonymization?.enabled,
-        }) as GeminiRequest;
-
-        // v1.43.00: Context caching nativo do Gemini. Quando o request tem
-        // bloco estável (mídia, system longo, documentos com marcadores),
-        // criamos/recuperamos um CachedContent e enviamos apenas a parte
-        // volátil (a pergunta atual). Idempotente via hash no backend.
-        // Web search desabilita cache (Gemini não permite tools + cachedContent).
-        let requestToSend: GeminiRequest = finalRequest;
-        // cacheId pode ser null para o caminho de mídia (lookup por cacheName)
-        let cacheUsed: { cacheId: string | null; cacheName: string } | null = null;
-        const cacheEnabled = !options.webSearch && useCacheNow;
-
-        // v1.43.00: Cache explícito (mídia já cacheada) tem precedência.
-        // Não fazemos split — só enviamos a request volátil. Não embedamos
-        // cachedContent no requestToSend (vai apenas no top-level do body).
-        if (options.geminiCachedContent && useCacheNow) {
-          cacheUsed = { cacheId: null, cacheName: options.geminiCachedContent };
-          requestToSend = { ...finalRequest };
-          delete (requestToSend as Partial<GeminiRequest>).systemInstruction;
-          delete (requestToSend as Partial<GeminiRequest>).cachedContent;
-        } else if (cacheEnabled) {
-          const split = splitStableFromVolatile(finalRequest);
-          // shouldCacheRequest agora exige stableContents.length > 0 (fix #9)
-          if (shouldCacheRequest(split)) {
-            try {
-              const hashKey = await localHashKey(model, split.systemInstruction, split.stableContents);
-              const inMemory = useAIStore.getState().geminiActiveCaches[hashKey];
-              const now = Date.now();
-              const valid = inMemory && inMemory.expiresAt > now + 30_000;
-
-              const ref = valid
-                ? { cacheId: inMemory.cacheId, cacheName: inMemory.cacheName, expiresAt: inMemory.expiresAt, tokenCount: inMemory.tokenCount, hit: true }
-                : await ensureGeminiCache({
-                    model,
-                    systemInstruction: split.systemInstruction,
-                    stableContents: split.stableContents,
-                    apiKey: aiSettings.apiKeys?.gemini || '',
-                    authToken: localStorage.getItem('authToken'),
-                  });
-
-              if (!valid) {
-                useAIStore.getState().setGeminiCache(hashKey, {
-                  cacheId: ref.cacheId,
-                  cacheName: ref.cacheName,
-                  expiresAt: ref.expiresAt,
-                  tokenCount: ref.tokenCount,
-                });
-              }
-
-              requestToSend = {
-                ...finalRequest,
-                contents: split.volatileContents,
-              };
-              delete (requestToSend as Partial<GeminiRequest>).systemInstruction;
-              delete (requestToSend as Partial<GeminiRequest>).cachedContent;
-              cacheUsed = { cacheId: ref.cacheId, cacheName: ref.cacheName };
-            } catch (cacheErr) {
-              // Falha no cache não pode quebrar a chamada — fallback transparente
-              console.warn('[Gemini cache] Falha ao preparar cache, seguindo sem:', (cacheErr as Error).message);
-            }
-          }
-        }
+        });
 
         // Fazer requisicao via proxy local
         const response = await fetch(`${API_BASE}/api/gemini/generate`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': aiSettings.apiKeys?.gemini || '',
-            ...(localStorage.getItem('authToken') ? { Authorization: `Bearer ${localStorage.getItem('authToken')}` } : {}),
-          },
+          headers: { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys?.gemini || '' },
           body: JSON.stringify({
             model,
-            request: requestToSend,
-            cachedContent: cacheUsed?.cacheName,
+            request: finalRequest
           }),
           signal
         });
@@ -912,44 +838,10 @@ const useAIIntegration = () => {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          // v1.43.00: cache inválido/expirado → invalidar entrada local e
-          // retornar uma flag para o fluxo externo refazer a chamada sem cache.
-          if (cacheUsed && (response.status === 404 || isCacheInvalidError({ status: response.status, message: errorData.error?.message }))) {
-            const caches = useAIStore.getState().geminiActiveCaches;
-            for (const [k, v] of Object.entries(caches)) {
-              if (v.cacheId === cacheUsed.cacheId) {
-                useAIStore.getState().setGeminiCache(k, null);
-                break;
-              }
-            }
-            const e = new Error('GEMINI_CACHE_INVALID') as Error & { __cacheInvalid: boolean };
-            e.__cacheInvalid = true;
-            throw e;
-          }
           throw new Error(errorData.error?.message || `HTTP ${response.status}`);
         }
 
         const data = await response.json();
-
-        // Tracking de hit_count quando o cache foi efetivamente usado.
-        // Para mídia (cacheId=null), usa endpoint sentinela 'lookup-by-name'
-        // que resolve por cacheName + valida ownership server-side.
-        if (cacheUsed && data.usageMetadata?.cachedContentTokenCount > 0) {
-          const path = cacheUsed.cacheId
-            ? `/api/gemini/cache/${cacheUsed.cacheId}/used`
-            : `/api/gemini/cache/lookup-by-name/used`;
-          const body = cacheUsed.cacheId
-            ? undefined
-            : JSON.stringify({ cacheName: cacheUsed.cacheName });
-          fetch(`${API_BASE}${path}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(localStorage.getItem('authToken') ? { Authorization: `Bearer ${localStorage.getItem('authToken')}` } : {}),
-            },
-            body,
-          }).catch(() => { /* fire-and-forget */ });
-        }
 
         // v1.32.39: Log thinking no console do browser
         if (aiSettings.logThinking) {
@@ -999,45 +891,21 @@ const useAIIntegration = () => {
     };
 
     try {
-      try {
-        return await withRetry(makeRequest, {
-          maxRetries: 3,
-          initialDelayMs: 5000,
-          backoffType: 'exponential',
-          backoffMultiplier: 2,
-          retryableStatusCodes: GEMINI_RETRY_CODES,
-          abortSignal,
-          onRetry: (attempt, err, delay) => {
-            console.warn(`[Gemini] Retry ${attempt}, aguardando ${delay}ms:`, err.message);
-          }
-        });
-      } catch (err) {
-        // v1.43.00: cache inválido → comportamento depende do tipo de cache
-        if ((err as { __cacheInvalid?: boolean })?.__cacheInvalid) {
-          // Mídia: o caller (useProofAnalysis) precisa recriar o cache via
-          // /api/gemini/media/:id/cache. Sem o cache, a chamada não tem
-          // o arquivo e geraria alucinação. Propaga para o caller tratar.
-          if (options.geminiCachedContent) {
-            const e = new Error('GEMINI_MEDIA_CACHE_INVALID') as Error & {
-              __cacheInvalid: boolean; __mediaCache: boolean; cacheName: string;
-            };
-            e.__cacheInvalid = true;
-            e.__mediaCache = true;
-            e.cacheName = options.geminiCachedContent;
-            throw e;
-          }
-          // Cache genérico (split): o conteúdo vai estar nas mensagens →
-          // refaz sem cache transparentemente.
-          console.warn('[Gemini] Cache inválido — refazendo chamada sem cache');
-          return await makeRequest(false);
+      return await withRetry(makeRequest, {
+        maxRetries: 3,
+        initialDelayMs: 5000,
+        backoffType: 'exponential',
+        backoffMultiplier: 2,
+        retryableStatusCodes: GEMINI_RETRY_CODES,
+        abortSignal,
+        onRetry: (attempt, err, delay) => {
+          console.warn(`[Gemini] Retry ${attempt}, aguardando ${delay}ms:`, err.message);
         }
-        throw err;
-      }
+      });
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aiSettings, convertToGeminiFormat, extractTokenMetrics, extractResponseText, getGeminiThinkingConfig, setTokenMetrics, getAiInstructions, addTokenUsage]);
+  }, [aiSettings, convertToGeminiFormat, extractTokenMetrics, extractResponseText, getGeminiThinkingConfig, setTokenMetrics, getAiInstructions]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // OPENAI GPT-5.2 INTEGRATION (v1.35.97)
@@ -1717,29 +1585,14 @@ const useAIIntegration = () => {
     const finalRequest = applyWebSearchTool('gemini', geminiRequest, {
       enabled: options.webSearch,
       anonymizationEnabled: !!aiSettings?.anonymization?.enabled,
-    }) as GeminiRequest;
-
-    // v1.43.00: Cache explícito (mídia já cacheada) → enviar só no top-level
-    let requestToSend: GeminiRequest = finalRequest;
-    let cachedContentName: string | undefined;
-    if (options.geminiCachedContent) {
-      cachedContentName = options.geminiCachedContent;
-      requestToSend = { ...finalRequest };
-      delete (requestToSend as Partial<GeminiRequest>).systemInstruction;
-      delete (requestToSend as Partial<GeminiRequest>).cachedContent;
-    }
+    });
 
     const response = await fetch(`${API_BASE}/api/gemini/stream`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': aiSettings.apiKeys?.gemini || '',
-        ...(localStorage.getItem('authToken') ? { Authorization: `Bearer ${localStorage.getItem('authToken')}` } : {}),
-      },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys?.gemini || '' },
       body: JSON.stringify({
         model,
-        request: requestToSend,
-        cachedContent: cachedContentName,
+        request: finalRequest
       })
     });
 

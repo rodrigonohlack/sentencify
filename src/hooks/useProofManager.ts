@@ -13,9 +13,7 @@ import React from 'react';
 import { useProofsStore } from '../stores/useProofsStore';
 import { useProofUIStore } from '../stores/useProofUIStore';
 import { savePdfToIndexedDB } from './useLocalStorage';
-import { useAIStore } from '../stores/useAIStore';
-import { API_BASE } from '../constants/api';
-import type { ProofFile, ProofText, ProofMedia, Proof } from '../types';
+import type { ProofFile, ProofText, Proof } from '../types';
 
 /**
  * Hook para gerenciamento de provas
@@ -32,7 +30,6 @@ const useProofManager = (_documentServices: unknown = null) => {
   // Core Data States
   const proofFiles = useProofsStore((s) => s.proofFiles);
   const proofTexts = useProofsStore((s) => s.proofTexts);
-  const proofMedia = useProofsStore((s) => s.proofMedia);
   const proofUsePdfMode = useProofsStore((s) => s.proofUsePdfMode);
   const extractedProofTexts = useProofsStore((s) => s.extractedProofTexts);
   const proofExtractionFailed = useProofsStore((s) => s.proofExtractionFailed);
@@ -102,19 +99,13 @@ const useProofManager = (_documentServices: unknown = null) => {
   const updateAttachmentExtractedText = useProofsStore((s) => s.updateAttachmentExtractedText);
   const updateAttachmentProcessingMode = useProofsStore((s) => s.updateAttachmentProcessingMode);
 
-  // v1.43.00: Media (Gemini áudio/vídeo)
-  const addProofMedia = useProofsStore((s) => s.addProofMedia);
-  const updateProofMedia = useProofsStore((s) => s.updateProofMedia);
-  const removeProofMedia = useProofsStore((s) => s.removeProofMedia);
-  const setProofMediaStatus = useProofsStore((s) => s.setProofMediaStatus);
-
   // Persistence
   const serializeForPersistence = useProofsStore((s) => s.serializeForPersistence);
   const restoreFromPersistence = useProofsStore((s) => s.restoreFromPersistence);
   const resetAll = useProofsStore((s) => s.resetAll);
 
   // Computed helpers
-  const totalProofs = proofFiles.length + proofTexts.length + proofMedia.length;
+  const totalProofs = proofFiles.length + proofTexts.length;
   const hasProofs = totalProofs > 0;
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -171,31 +162,8 @@ const useProofManager = (_documentServices: unknown = null) => {
     setNewProofTextData({ name: '', text: '' });
   }, [newProofTextData, setProofTexts, setNewProofTextData]);
 
-  // Handler: Deletar prova (PDF, texto ou mídia)
-  const handleDeleteProof = React.useCallback(async (proof: Proof) => {
-    if (proof.type === 'audio' || proof.type === 'video') {
-      const media = proof as ProofMedia;
-      // Limpa no backend (apaga File API + cache no Google)
-      if (media.serverFileId) {
-        try {
-          const apiKey = useAIStore.getState().aiSettings.apiKeys?.gemini || '';
-          const authToken = localStorage.getItem('authToken');
-          await fetch(`${API_BASE}/api/gemini/media/${media.serverFileId}`, {
-            method: 'DELETE',
-            headers: {
-              'x-api-key': apiKey,
-              ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-            },
-          });
-        } catch { /* swallow — limpeza local procede */ }
-      }
-      if (media.objectUrl) {
-        try { URL.revokeObjectURL(media.objectUrl); } catch { /* */ }
-      }
-      removeProofMedia(media.id);
-      return;
-    }
-
+  // Handler: Deletar prova (PDF ou texto)
+  const handleDeleteProof = React.useCallback((proof: Proof) => {
     if (proof.isPdf || proof.type === 'pdf') {
       setProofFiles(prev => removeById(prev, proof.id));
     } else {
@@ -209,139 +177,7 @@ const useProofManager = (_documentServices: unknown = null) => {
     setProofAnalysisResults(prev => { const { [proof.id]: _, ...rest } = prev; return rest; });
     setProofConclusions(prev => { const { [proof.id]: _, ...rest } = prev; return rest; });
     setProofProcessingModes(prev => { const { [proof.id]: _, ...rest } = prev; return rest; });
-  }, [removeById, setProofFiles, setProofTexts, setProofUsePdfMode, setExtractedProofTexts, setProofExtractionFailed, setProofTopicLinks, setProofAnalysisResults, setProofConclusions, setProofProcessingModes, removeProofMedia]);
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // v1.43.00: HANDLER DE UPLOAD DE MÍDIA (áudio/vídeo via Gemini File API)
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Faz upload de áudio/vídeo, faz polling até ACTIVE no Gemini, cria o
-   * CachedContent automaticamente. Retorna o ID local da prova.
-   *
-   * O binário é enviado em stream (octet-stream) — nada é gravado em disco
-   * no backend ou no IndexedDB.
-   */
-  const handleUploadProofMedia = React.useCallback(async (file: File, kind: 'audio' | 'video') => {
-    const apiKey = useAIStore.getState().aiSettings.apiKeys?.gemini || '';
-    const model = useAIStore.getState().aiSettings.geminiModel || 'gemini-3-flash-preview';
-    const authToken = localStorage.getItem('authToken');
-
-    if (!apiKey) {
-      throw new Error('API key do Gemini não configurada');
-    }
-    if (!authToken) {
-      throw new Error('Login necessário (magic link) para upload de mídia');
-    }
-
-    const localId = `media-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const objectUrl = URL.createObjectURL(file);
-
-    const media: ProofMedia = {
-      id: localId,
-      name: file.name,
-      type: kind,
-      mimeType: file.type || (kind === 'audio' ? 'audio/mpeg' : 'video/mp4'),
-      size: file.size,
-      uploadDate: new Date().toISOString(),
-      status: 'uploading',
-      uploadProgress: 0,
-      objectUrl,
-    };
-    addProofMedia(media);
-
-    try {
-      // 1) Upload streaming para o backend → Gemini File API.
-      // O browser aceita File como body sem duplex (clonável); duplex só
-      // é necessário em Node ao enviar ReadableStream.
-      const uploadResp = await fetch(`${API_BASE}/api/gemini/media/upload`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/octet-stream',
-          'x-api-key': apiKey,
-          'Authorization': `Bearer ${authToken}`,
-          'X-File-Name': encodeURIComponent(file.name),
-          'X-File-Mime': media.mimeType,
-          'X-File-Size': String(file.size),
-        },
-        body: file,
-      });
-
-      if (!uploadResp.ok) {
-        const err = await uploadResp.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `Upload falhou (${uploadResp.status})`);
-      }
-      const uploadData: { id: string; fileUri: string; status: string; expiresAt: number } = await uploadResp.json();
-
-      updateProofMedia(localId, {
-        status: 'processing',
-        serverFileId: uploadData.id,
-        fileUri: uploadData.fileUri,
-        uploadProgress: 100,
-      });
-
-      // 2) Polling de status (intervalo cresce de 3s até 30s)
-      let delay = 3000;
-      const deadline = Date.now() + 10 * 60 * 1000; // 10min máximo
-      let serverStatus = uploadData.status;
-      while (serverStatus !== 'ACTIVE' && Date.now() < deadline) {
-        await new Promise((r) => setTimeout(r, delay));
-        delay = Math.min(delay * 1.5, 30000);
-        const statusResp = await fetch(
-          `${API_BASE}/api/gemini/media/${uploadData.id}/status`,
-          { headers: { 'x-api-key': apiKey, 'Authorization': `Bearer ${authToken}` } }
-        );
-        if (statusResp.status === 401) {
-          throw new Error('Sessão expirada durante upload — faça login novamente');
-        }
-        if (!statusResp.ok) continue;
-        const sd = await statusResp.json();
-        serverStatus = sd.status;
-        if (sd.durationSeconds) {
-          updateProofMedia(localId, { durationSeconds: sd.durationSeconds });
-        }
-        if (serverStatus === 'FAILED') {
-          throw new Error('Gemini reportou FAILED ao processar o arquivo');
-        }
-      }
-      if (serverStatus !== 'ACTIVE') {
-        throw new Error('Timeout aguardando ACTIVE do Gemini');
-      }
-
-      // 3) Criar CachedContent
-      const cacheResp = await fetch(
-        `${API_BASE}/api/gemini/media/${uploadData.id}/cache`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'Authorization': `Bearer ${authToken}`,
-          },
-          body: JSON.stringify({ model, ttlSeconds: 3600 }),
-        }
-      );
-      if (!cacheResp.ok) {
-        const err = await cacheResp.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `Falha ao criar cache (${cacheResp.status})`);
-      }
-      const cacheData: { cacheId: string; cacheName: string; expiresAt: number } = await cacheResp.json();
-
-      setProofMediaStatus(localId, 'ready', {
-        cacheId: cacheData.cacheId,
-        cacheName: cacheData.cacheName,
-        cacheExpiresAt: cacheData.expiresAt,
-      });
-
-      return localId;
-    } catch (err) {
-      const message = (err as Error).message || 'Erro desconhecido';
-      // Revoga o objectUrl para não vazar memória (200-500MB típicos)
-      try { URL.revokeObjectURL(objectUrl); } catch { /* */ }
-      setProofMediaStatus(localId, 'failed', { errorMessage: message, objectUrl: undefined });
-      throw err;
-    }
-  }, [addProofMedia, updateProofMedia, setProofMediaStatus]);
+  }, [removeById, setProofFiles, setProofTexts, setProofUsePdfMode, setExtractedProofTexts, setProofExtractionFailed, setProofTopicLinks, setProofAnalysisResults, setProofConclusions, setProofProcessingModes]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RETORNO
@@ -429,18 +265,10 @@ const useProofManager = (_documentServices: unknown = null) => {
     restoreFromPersistence,
     resetAll,
 
-    // Handlers com I/O (4) - específicos deste hook
+    // Handlers com I/O (3) - específicos deste hook
     handleUploadProofPdf,
     handleAddProofText,
-    handleDeleteProof,
-    handleUploadProofMedia, // v1.43.00
-
-    // v1.43.00: estado e ações de mídia
-    proofMedia,
-    addProofMedia,
-    updateProofMedia,
-    removeProofMedia,
-    setProofMediaStatus,
+    handleDeleteProof
   };
 };
 

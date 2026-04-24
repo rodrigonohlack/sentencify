@@ -80,15 +80,6 @@ export const ProofAnalysisModal = React.memo(({
   if (!isOpen || !proofToAnalyze) return null;
 
   const linkedTopicsCount = proofTopicLinks[proofToAnalyze.id]?.length || 0;
-  // v1.43.00: Mídia (áudio/vídeo) tem atalhos pré-definidos para casos típicos
-  const isMedia = proofToAnalyze.type === 'audio' || proofToAnalyze.type === 'video';
-  const MEDIA_PROMPTS: { label: string; prompt: string }[] = [
-    { label: 'Transcrever com timestamps', prompt: 'Transcreva integralmente o áudio/vídeo, com marcação MM:SS a cada fala. Identifique cada locutor.' },
-    { label: 'Síntese tipo ata', prompt: 'Sintetize no formato de ata de audiência: identificação dos depoentes, principais afirmações resumidas em texto corrido com timestamps.' },
-    { label: 'Contradições internas', prompt: 'Identifique contradições internas no(s) depoimento(s): pontos onde o mesmo depoente afirmou coisas conflitantes, com timestamps.' },
-    { label: 'Confissões e admissões', prompt: 'Extraia confissões e admissões de fato relevantes para análise judicial trabalhista, citando timestamps.' },
-    { label: 'Pontos por pedido', prompt: 'Liste, separados por pedido típico de uma reclamatória trabalhista (horas extras, intervalo, adicional, vínculo etc.), os trechos relevantes do depoimento, com timestamps.' },
-  ];
 
   return (
     <BaseModal
@@ -103,40 +94,18 @@ export const ProofAnalysisModal = React.memo(({
     >
       <div className="space-y-4">
         <p className="text-sm theme-text-tertiary">
-          {isMedia
-            ? 'Esta é uma prova multimídia. Selecione um atalho ou escreva instruções específicas:'
-            : 'Selecione o tipo de análise que deseja realizar nesta prova:'}
+          Selecione o tipo de análise que deseja realizar nesta prova:
         </p>
-
-        {/* v1.43.00: Atalhos para mídia */}
-        {isMedia && (
-          <div className="flex flex-wrap gap-2">
-            {MEDIA_PROMPTS.map((shortcut) => (
-              <button
-                key={shortcut.label}
-                type="button"
-                onClick={() => setCustomInstructions(shortcut.prompt)}
-                className="px-3 py-1.5 text-xs rounded border border-purple-400 dark:border-purple-500/40
-                  bg-purple-100 dark:bg-purple-600/10 hover:bg-purple-200 dark:hover:bg-purple-600/20
-                  text-purple-700 dark:text-purple-300 transition-colors"
-              >
-                {shortcut.label}
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* Campo de Instruções Personalizadas */}
         <div>
           <label className={CSS.label}>
-            {isMedia ? 'Instruções para o Gemini' : 'Instruções Personalizadas (Opcional)'}
+            Instruções Personalizadas (Opcional)
           </label>
           <textarea
             value={customInstructions}
             onChange={(e) => setCustomInstructions(e.target.value)}
-            placeholder={isMedia
-              ? "Ex: 'Sintetize a fala da testemunha sobre a jornada de trabalho'"
-              : "Adicione instruções específicas para esta análise (ex: 'Focar em valores monetários', 'Verificar datas de vínculos empregatícios', 'Identificar assinaturas e testemunhas', etc.)..."}
+            placeholder="Adicione instruções específicas para esta análise (ex: 'Focar em valores monetários', 'Verificar datas de vínculos empregatícios', 'Identificar assinaturas e testemunhas', etc.)..."
             rows={3}
             className="w-full px-3 py-2 theme-bg-secondary-50 border theme-border-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-text-secondary text-sm resize-none"
           />

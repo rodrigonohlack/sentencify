@@ -13,9 +13,6 @@ export { ModelCard } from './ModelCard';
 // Proof card
 export { ProofCard } from './ProofCard';
 
-// v1.43.00: Card de prova em áudio/vídeo (Gemini-only)
-export { MediaProofCard } from './MediaProofCard';
-
 // Virtual list
 export { VirtualList } from './VirtualList';
 

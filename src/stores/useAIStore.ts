@@ -307,14 +307,6 @@ const initialStreamingState: StreamingState = {
 // SEÇÃO 2: TIPOS DO STORE
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** v1.43.00: Cache ativo do Gemini em memória (não persistido) */
-export interface GeminiCacheEntry {
-  cacheId: string;
-  cacheName: string;
-  expiresAt: number;
-  tokenCount: number;
-}
-
 /** Interface do estado do store */
 interface AIStoreState {
   // Estado
@@ -326,11 +318,6 @@ interface AIStoreState {
 
   // Estado - Streaming (v1.39.09)
   streamingState: StreamingState;
-
-  // v1.43.00: caches ativos do Gemini, indexados por hashKey local
-  geminiActiveCaches: Record<string, GeminiCacheEntry>;
-  setGeminiCache: (hashKey: string, entry: GeminiCacheEntry | null) => void;
-  clearGeminiCaches: () => void;
 
   // Actions - Settings
   setAiSettings: (settings: AISettings | ((prev: AISettings) => AISettings)) => void;
@@ -404,21 +391,6 @@ export const useAIStore = create<AIStoreState>()(
       immer((set) => ({
         // Estado inicial
         aiSettings: initialAISettings,
-        geminiActiveCaches: {},
-
-        setGeminiCache: (hashKey, entry) =>
-          set((state) => {
-            if (entry === null) {
-              delete state.geminiActiveCaches[hashKey];
-            } else {
-              state.geminiActiveCaches[hashKey] = entry;
-            }
-          }, false, 'setGeminiCache'),
-
-        clearGeminiCaches: () =>
-          set((state) => {
-            state.geminiActiveCaches = {};
-          }, false, 'clearGeminiCaches'),
         tokenMetrics: initialTokenMetrics,
 
         // Estado - API Test (v1.37.49)

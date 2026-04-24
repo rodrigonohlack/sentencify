@@ -40,19 +40,19 @@ interface ProofManagerForModals {
     proof: Proof;
     executeExtraction?: (nomes: string[]) => void;
   } | null) => void;
-  proofToAnalyze: Proof | null;
-  setProofToAnalyze: (proof: Proof | null) => void;
+  proofToAnalyze: ProofFile | ProofText | null;
+  setProofToAnalyze: (proof: ProofFile | ProofText | null) => void;
   proofAnalysisCustomInstructions: string;
   setProofAnalysisCustomInstructions: (instructions: string) => void;
   useOnlyMiniRelatorios: boolean;
   setUseOnlyMiniRelatorios: (value: boolean) => void;
   includeLinkedTopicsInFree: boolean;
   setIncludeLinkedTopicsInFree: (value: boolean) => void;
-  proofToDelete: Proof | null;
-  setProofToDelete: (proof: Proof | null) => void;
+  proofToDelete: ProofFile | ProofText | null;
+  setProofToDelete: (proof: ProofFile | ProofText | null) => void;
   proofProcessingModes: Record<string, string>;
   setProofTexts: React.Dispatch<React.SetStateAction<ProofText[]>>;
-  handleDeleteProof: (proof: Proof) => void | Promise<void>;
+  handleDeleteProof: (proof: ProofFile | ProofText) => void;
 }
 
 /**
@@ -84,7 +84,7 @@ export interface UseProofModalCallbacksProps {
   setDetectingNames: (detecting: boolean) => void;
   detectarNomesAutomaticamente: (text: string | undefined, isProof: boolean) => Promise<void>;
   analyzeProof: (
-    proof: Proof,
+    proof: ProofFile | ProofText,
     type: 'contextual' | 'livre',
     customInstructions: string,
     useOnlyMiniRelatorios: boolean,
