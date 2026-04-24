@@ -95,6 +95,100 @@ describe('splitStableFromVolatile', () => {
     expect(result.stableContents).toHaveLength(1);
   });
 
+  // v1.43.01: PDFs/imagens em base64 entram como inlineData (formato dominante)
+  it('detecta inlineData (PDF base64) como part estável', () => {
+    const req: GeminiRequest = {
+      contents: [
+        { role: 'user', parts: [{ inlineData: { mimeType: 'application/pdf', data: 'BASE64...' } }] },
+        { role: 'user', parts: [{ text: 'q?' }] },
+      ],
+    };
+    const result = splitStableFromVolatile(req);
+    expect(result.stableContents).toHaveLength(1);
+  });
+
+  it('detecta inline_data (snake_case) como part estável', () => {
+    const req: GeminiRequest = {
+      contents: [
+        { role: 'user', parts: [{ inline_data: { mime_type: 'image/png', data: 'B64' } }] },
+        { role: 'user', parts: [{ text: 'q?' }] },
+      ],
+    };
+    const result = splitStableFromVolatile(req);
+    expect(result.stableContents).toHaveLength(1);
+  });
+
+  // v1.43.01: padrão dominante no Sentencify — análise é UMA mensagem com
+  // contexto + pergunta. Antes, tudo caía como volátil.
+  describe('single-shot (1 user message com vários parts)', () => {
+    it('splita a nível de PART: docs estáveis vão pro cache, prompt fica volátil', () => {
+      const req: GeminiRequest = {
+        contents: [{
+          role: 'user',
+          parts: [
+            { inlineData: { mimeType: 'application/pdf', data: 'PDF_GRANDE_BASE64' } },
+            { text: 'PROVA: contexto extenso com ' + 'x'.repeat(3000) },
+            { text: 'Analise esta petição e extraia os tópicos.' },
+          ],
+        }],
+      };
+      const result = splitStableFromVolatile(req);
+      expect(result.stableContents).toHaveLength(1);
+      const stable = result.stableContents[0] as { parts: unknown[] };
+      expect(stable.parts).toHaveLength(2); // PDF + texto longo
+      expect(result.volatileContents).toHaveLength(1);
+      const volatile = result.volatileContents[0] as { parts: unknown[] };
+      expect(volatile.parts).toHaveLength(1);
+      expect(volatile.parts[0]).toEqual({ text: 'Analise esta petição e extraia os tópicos.' });
+    });
+
+    it('detecta marker [CONTESTAÇÃO em texto curto', () => {
+      const req: GeminiRequest = {
+        contents: [{
+          role: 'user',
+          parts: [
+            { text: '[CONTESTAÇÃO da empresa]\n\nA reclamada nega...' },
+            { text: 'O vínculo foi reconhecido?' },
+          ],
+        }],
+      };
+      const result = splitStableFromVolatile(req);
+      expect(result.stableContents).toHaveLength(1);
+      const stable = result.stableContents[0] as { parts: unknown[] };
+      expect(stable.parts).toHaveLength(1);
+    });
+
+    it('NÃO splita se não há nenhum part estável (mantém tudo volátil)', () => {
+      const req: GeminiRequest = {
+        contents: [{
+          role: 'user',
+          parts: [
+            { text: 'oi' },
+            { text: 'tudo bem?' },
+          ],
+        }],
+      };
+      const result = splitStableFromVolatile(req);
+      expect(result.stableContents).toHaveLength(0);
+      expect(result.volatileContents).toHaveLength(1);
+      const volatile = result.volatileContents[0] as { parts: unknown[] };
+      expect(volatile.parts).toHaveLength(2); // ambos os parts pequenos
+    });
+
+    it('mensagem única com 1 só part (sem prompt separado) cai em volátil (sem split)', () => {
+      const req: GeminiRequest = {
+        contents: [{
+          role: 'user',
+          parts: [{ text: 'a'.repeat(10000) }],
+        }],
+      };
+      const result = splitStableFromVolatile(req);
+      // 1 part só → não tem como splitar (volátil = pergunta atual)
+      expect(result.stableContents).toHaveLength(0);
+      expect(result.volatileContents).toHaveLength(1);
+    });
+  });
+
   it('classifica mensagem com texto > 2000 chars como estável', () => {
     const req: GeminiRequest = {
       contents: [

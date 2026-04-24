@@ -37,27 +37,31 @@ export function estimateTokens(input: unknown): number {
   return Math.ceil(s.length / 4);
 }
 
-/** Detecta se um part contém referência a fileData (mídia anexada). */
-function partHasFileData(part: unknown): boolean {
+/**
+ * v1.43.01: Detecta se um part é "estável" (deve ir para o cache).
+ *  - fileData/file_data: mídia anexada via Gemini File API
+ *  - inlineData/inline_data: PDFs/imagens em base64 (formato dominante no
+ *    Sentencify quando o usuário sobe documentos)
+ *  - text > 2000 chars: documentos longos colados
+ *  - text com marcadores [CONTESTAÇÃO/INICIAL/PROVA/etc]: convenção do projeto
+ */
+function isStablePart(part: unknown): boolean {
   if (!part || typeof part !== 'object') return false;
   const p = part as Record<string, unknown>;
-  return Boolean(p.fileData || p.file_data);
-}
-
-/** Detecta se uma mensagem é "contextual" (longa ou contém marcadores). */
-function isStableMessage(msg: { role?: string; parts?: unknown[] }): boolean {
-  if (!msg || !Array.isArray(msg.parts)) return false;
-  // Qualquer part com fileData → estável (mídia)
-  if (msg.parts.some(partHasFileData)) return true;
-  // Texto muito longo ou com marcadores → estável
-  for (const p of msg.parts) {
-    if (p && typeof p === 'object' && 'text' in p) {
-      const t = String((p as Record<string, unknown>).text || '');
-      if (t.length > 2000) return true;
-      if (STABLE_MARKERS.some((m) => t.includes(m))) return true;
-    }
+  if (p.fileData || p.file_data) return true;
+  if (p.inlineData || p.inline_data) return true;
+  if ('text' in p) {
+    const t = String(p.text || '');
+    if (t.length > 2000) return true;
+    if (STABLE_MARKERS.some((m) => t.includes(m))) return true;
   }
   return false;
+}
+
+/** Detecta se uma mensagem inteira é "estável" (qualquer part estável). */
+function isStableMessage(msg: { role?: string; parts?: unknown[] }): boolean {
+  if (!msg || !Array.isArray(msg.parts)) return false;
+  return msg.parts.some(isStablePart);
 }
 
 export interface SplitResult {
@@ -73,17 +77,45 @@ export interface SplitResult {
 
 /**
  * Separa o request em (estável → cache) + (volátil → request normal).
- * Regras:
- *  - systemInstruction sempre estável.
- *  - Mensagens com fileData OU > 2k chars OU com marcadores → estáveis.
- *  - Tudo o mais (incl. a última mensagem do usuário) → volátil.
+ *
+ * v1.43.01: lida com dois padrões dominantes no Sentencify:
+ *
+ * 1) **Multi-turn chat** (várias mensagens user/model alternadas):
+ *    - Mensagens não-finais com parts estáveis → cache
+ *    - Última mensagem do usuário → volátil (a pergunta atual)
+ *
+ * 2) **Análise single-shot** (UMA mensagem do user com vários parts: doc + prompt):
+ *    - Padrão típico em useProofAnalysis, prompts de tópicos, etc.
+ *    - Splita a nível de PART: parts iniciais estáveis (docs/inlineData) → cache;
+ *      última part (presumivelmente a pergunta/instrução curta) → volátil.
+ *    - Sem isso, todo o conteúdo do PDF cai como volátil → cache nunca dispara.
  */
 export function splitStableFromVolatile(req: GeminiRequest): SplitResult {
   const contents = (req.contents || []) as Array<{ role?: string; parts?: unknown[] }>;
+  const systemInstruction = req.systemInstruction;
+
+  // Padrão single-shot: 1 mensagem user com >= 2 parts e pelo menos 1 estável
+  if (
+    contents.length === 1 &&
+    contents[0].role === 'user' &&
+    Array.isArray(contents[0].parts) &&
+    contents[0].parts.length >= 2 &&
+    contents[0].parts.slice(0, -1).some(isStablePart)
+  ) {
+    const allParts = contents[0].parts;
+    const stableParts = allParts.slice(0, -1);
+    const volatilePart = allParts[allParts.length - 1];
+
+    const stableContents = [{ role: 'user', parts: stableParts }];
+    const volatileContents = [{ role: 'user', parts: [volatilePart] }];
+    const stableTokens = estimateTokens(stableContents) + estimateTokens(systemInstruction);
+
+    return { stableContents, volatileContents, systemInstruction, stableTokens };
+  }
+
+  // Padrão multi-turn: split a nível de mensagem
   const stableContents: unknown[] = [];
   const volatileContents: unknown[] = [];
-
-  // Última mensagem do usuário sempre volátil (a pergunta atual)
   const lastIdx = contents.length - 1;
 
   contents.forEach((msg, idx) => {
@@ -98,9 +130,7 @@ export function splitStableFromVolatile(req: GeminiRequest): SplitResult {
     }
   });
 
-  const systemInstruction = req.systemInstruction;
   const stableTokens = estimateTokens(stableContents) + estimateTokens(systemInstruction);
-
   return { stableContents, volatileContents, systemInstruction, stableTokens };
 }
 
