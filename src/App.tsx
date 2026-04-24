@@ -25,6 +25,7 @@ import LoginMagicModal from './components/LoginMagicModal';
 // v1.36.61+: Zustand Stores - Estado global gerenciado
 // useModalManagerCompat movido para src/hooks/useModalManager.ts (v1.36.78)
 import { useUIStore } from './stores/useUIStore';
+import { useTopicsStore } from './stores/useTopicsStore';
 import { useModelsStore } from './stores/useModelsStore';
 // v1.40.05: Novas stores para editor e regeneração
 import { useEditorStore } from './stores/useEditorStore';
@@ -2031,6 +2032,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     setExtractedTopics,
     setSelectedTopics,
     setPartesProcesso,
+    setDetectedInjections: useTopicsStore((s) => s.setDetectedInjections),
     setExtractedTexts,
     setAnalyzedDocuments,
     setPeticaoFiles,

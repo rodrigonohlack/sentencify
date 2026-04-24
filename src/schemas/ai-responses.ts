@@ -88,13 +88,28 @@ export const TopicSchema = z.object({
   category: z.string().nullable().default('').transform(v => v ?? ''),
 }).passthrough();
 
+/**
+ * v1.42.07: Detecção de prompt injection nos documentos do processo.
+ * Reportada pela própria IA durante a extração de tópicos — defesa semântica.
+ */
+export const PromptInjectionDetectionSchema = z.object({
+  trecho: z.string().nullable().default('').transform(v => v ?? ''),
+  documento: z.string().nullable().default('').transform(v => v ?? ''),
+  descricao: z.string().nullable().default('').transform(v => v ?? ''),
+  gravidade: z.enum(['baixa', 'media', 'alta']).nullable().default('media').transform(v => v ?? 'media'),
+}).passthrough();
+
 export const TopicExtractionSchema = z.object({
   partes: z.object({
     reclamante: z.string().nullable().default('').transform(v => v ?? ''),
     reclamadas: z.array(z.string()).default([]),
   }).passthrough().optional().default({ reclamante: '', reclamadas: [] }),
   topics: z.array(TopicSchema).default([]),
+  /** v1.42.07: Tentativas de prompt injection identificadas pela IA. Default vazio. */
+  promptInjections: z.array(PromptInjectionDetectionSchema).optional().default([]),
 }).passthrough();
+
+export type PromptInjectionDetection = z.infer<typeof PromptInjectionDetectionSchema>;
 
 // ═══════════════════════════════════════════════════════════════════
 // SCHEMA: Confronto de Fatos

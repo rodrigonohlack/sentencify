@@ -21,8 +21,13 @@ import {
   DollarSign,
   FileText,
   ChevronDown,
-  Pin
+  ChevronUp,
+  Pin,
+  ShieldAlert,
+  Copy
 } from 'lucide-react';
+import { useTopicsStore } from '../stores/useTopicsStore';
+import type { PromptInjectionDetection } from '../schemas/ai-responses';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -886,6 +891,129 @@ const AddTopicInline: React.FC<AddTopicInlineProps> = ({ onAdd, onCancel, isDark
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// v1.42.07: BANNER DE PROMPT INJECTION
+// Aparece colapsado por default; expande para listar tentativas detectadas.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const GRAVIDADE_STYLE: Record<PromptInjectionDetection['gravidade'], {
+  light: string; dark: string; iconBg: string; label: string; emoji: string;
+}> = {
+  alta: {
+    light: 'bg-red-50 border-red-300 text-red-900',
+    dark: 'bg-red-900/30 border-red-500/40 text-red-200',
+    iconBg: 'bg-red-500',
+    label: 'Alta',
+    emoji: '🚨',
+  },
+  media: {
+    light: 'bg-amber-50 border-amber-300 text-amber-900',
+    dark: 'bg-amber-900/30 border-amber-500/40 text-amber-200',
+    iconBg: 'bg-amber-500',
+    label: 'Média',
+    emoji: '⚠️',
+  },
+  baixa: {
+    light: 'bg-blue-50 border-blue-300 text-blue-900',
+    dark: 'bg-blue-900/30 border-blue-500/40 text-blue-200',
+    iconBg: 'bg-blue-500',
+    label: 'Baixa',
+    emoji: 'ℹ️',
+  },
+};
+
+interface PromptInjectionBannerProps {
+  injections: PromptInjectionDetection[];
+  isDarkMode: boolean;
+}
+
+const PromptInjectionBanner: React.FC<PromptInjectionBannerProps> = ({ injections, isDarkMode }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  if (injections.length === 0) return null;
+
+  const highestGravity: PromptInjectionDetection['gravidade'] =
+    injections.some(i => i.gravidade === 'alta') ? 'alta' :
+    injections.some(i => i.gravidade === 'media') ? 'media' : 'baixa';
+
+  const headerStyle = GRAVIDADE_STYLE[highestGravity];
+
+  const handleCopy = (trecho: string) => {
+    navigator.clipboard?.writeText(trecho).catch(() => { /* clipboard pode estar indisponível */ });
+  };
+
+  return (
+    <div className={`border-b ${isDarkMode ? 'border-slate-700/50' : 'border-slate-200'}`}>
+      {/* Header clicável (badge compacto) */}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className={`w-full px-4 py-2.5 flex items-center justify-between gap-2 text-sm transition-colors
+          ${isDarkMode ? headerStyle.dark : headerStyle.light}
+          hover:opacity-90`}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <ShieldAlert className="w-4 h-4 flex-shrink-0" />
+          <span className="font-medium">
+            {injections.length} {injections.length === 1 ? 'tentativa' : 'tentativas'} de prompt injection {injections.length === 1 ? 'detectada' : 'detectadas'} nos documentos
+          </span>
+          <span className="text-xs opacity-75">— clique para {expanded ? 'recolher' : 'detalhes'}</span>
+        </div>
+        {expanded ? <ChevronUp className="w-4 h-4 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 flex-shrink-0" />}
+      </button>
+
+      {/* Accordion expandido */}
+      {expanded && (
+        <div className={`px-4 py-3 space-y-2 max-h-72 overflow-y-auto ${isDarkMode ? 'bg-slate-900/40' : 'bg-slate-50'}`}>
+          {injections.map((injection, idx) => {
+            const style = GRAVIDADE_STYLE[injection.gravidade];
+            return (
+              <div
+                key={idx}
+                className={`p-3 rounded border ${isDarkMode ? style.dark : style.light}`}
+              >
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2 text-xs font-semibold">
+                    <span>{style.emoji}</span>
+                    <span>{style.label}</span>
+                    <span className="opacity-60">·</span>
+                    <span className="opacity-90">{injection.documento || 'documento desconhecido'}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(injection.trecho)}
+                    className={`text-xs flex items-center gap-1 px-2 py-1 rounded transition-colors
+                      ${isDarkMode ? 'hover:bg-slate-700/50' : 'hover:bg-slate-200/70'}`}
+                    title="Copiar trecho"
+                  >
+                    <Copy className="w-3 h-3" />
+                    Copiar
+                  </button>
+                </div>
+                {injection.trecho && (
+                  <blockquote className={`text-sm italic mt-1 pl-3 border-l-2 ${isDarkMode ? 'border-slate-500' : 'border-slate-400'}`}>
+                    "{injection.trecho}"
+                  </blockquote>
+                )}
+                {injection.descricao && (
+                  <p className="text-xs mt-2 opacity-80">
+                    <strong>Por quê:</strong> {injection.descricao}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+          <p className={`text-xs italic mt-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            A análise prosseguiu normalmente — a IA é instruída a tratar o conteúdo dos documentos como
+            dados, não como comandos. Esses trechos podem fundamentar petição de litigância de má-fé
+            (CPC art. 80).
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL: TopicCurationModal
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -913,6 +1041,9 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
   const [deletedTopics, setDeletedTopics] = useState<{topic: Topic, index: number}[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  // v1.42.07: Tentativas de prompt injection identificadas pela IA
+  const detectedInjections = useTopicsStore((s) => s.detectedInjections);
 
   useEffect(() => {
     if (isOpen && initialTopics.length > 0) {
@@ -1202,6 +1333,10 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
           <span>📝 Clique para editar</span>
           <span>🗑️ Apague desnecessários</span>
         </div>
+
+        {/* v1.42.07: Banner de prompt injection (colapsado por default; só renderiza se houver) */}
+        <PromptInjectionBanner injections={detectedInjections} isDarkMode={isDarkMode} />
+
 
         <div className="flex-1 overflow-y-auto p-4 space-y-2" data-modal-scroll-container>
           {showMergeConfirm && selectedForMerge.length >= 2 && (

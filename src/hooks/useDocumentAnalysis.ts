@@ -14,6 +14,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import { anonymizeText, normalizeHTMLSpacing } from '../utils/text';
 import { parseAIResponse, extractJSON, TopicExtractionSchema } from '../schemas/ai-responses';
+import type { PromptInjectionDetection } from '../schemas/ai-responses';
 import { buildAnalysisPrompt } from '../prompts';
 import type {
   AIMessage,
@@ -131,6 +132,8 @@ export interface UseDocumentAnalysisProps {
   setExtractedTopics: (topics: Topic[]) => void;
   setSelectedTopics: (topics: Topic[]) => void;
   setPartesProcesso: (partes: PartesProcesso) => void;
+  /** v1.42.07: Persistir tentativas de prompt injection detectadas pela IA */
+  setDetectedInjections?: (injections: PromptInjectionDetection[]) => void;
   setExtractedTexts: (texts: ExtractedTexts) => void;
   setAnalyzedDocuments: (docs: AnalyzedDocuments) => void;
   setPeticaoFiles: (files: UploadedFile[]) => void;
@@ -195,6 +198,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
     setExtractedTopics,
     setSelectedTopics,
     setPartesProcesso,
+    setDetectedInjections,
     setExtractedTexts,
     setAnalyzedDocuments,
     setPeticaoFiles,
@@ -703,6 +707,20 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
           reclamante: parsed.partes.reclamante || '',
           reclamadas: parsed.partes.reclamadas || []
         });
+      }
+
+      // v1.42.07: Armazenar detecções de prompt injection (se existirem)
+      // A IA reportou tentativas no JSON. Banner aparece no TopicCurationModal.
+      if (setDetectedInjections) {
+        const injections = (parsed.promptInjections || []) as PromptInjectionDetection[];
+        setDetectedInjections(injections);
+        if (injections.length > 0) {
+          console.warn(
+            `[PromptSafety] IA detectou ${injections.length} tentativa(s) de prompt injection ` +
+            `nos documentos. Detalhes no painel de curadoria de tópicos.`,
+            injections
+          );
+        }
       }
 
       // Reordenar tópicos via LLM

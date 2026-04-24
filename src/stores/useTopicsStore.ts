@@ -15,6 +15,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { Topic, TopicCategory, ContextScope } from '../types';
+import type { PromptInjectionDetection } from '../schemas/ai-responses';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -30,6 +31,12 @@ interface TopicsStoreState {
 
   /** Lista de tópicos selecionados para a sentença */
   selectedTopics: Topic[];
+
+  /**
+   * v1.42.07: Tentativas de prompt injection detectadas pela IA durante a
+   * extração de tópicos. Vazio quando nenhuma tentativa foi identificada.
+   */
+  detectedInjections: PromptInjectionDetection[];
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ESTADOS DE EDIÇÃO (3)
@@ -158,6 +165,9 @@ interface TopicsStoreState {
   /** Atualiza lista de tópicos selecionados */
   updateSelectedTopics: (topics: Topic[]) => void;
 
+  /** v1.42.07: Substitui lista de tentativas de prompt injection detectadas */
+  setDetectedInjections: (injections: PromptInjectionDetection[]) => void;
+
   // ═══════════════════════════════════════════════════════════════════════════
   // MÉTODOS DE PERSISTÊNCIA (3)
   // ═══════════════════════════════════════════════════════════════════════════
@@ -168,6 +178,7 @@ interface TopicsStoreState {
     selectedTopics: Topic[];
     editingTopic: Topic | null;
     lastEditedTopicTitle: string | null;
+    detectedInjections: PromptInjectionDetection[];
   };
 
   /** Restaura estado de dados persistidos */
@@ -191,6 +202,9 @@ export const useTopicsStore = create<TopicsStoreState>()(
       // Tópicos (2)
       extractedTopics: [],
       selectedTopics: [],
+
+      // v1.42.07: Detecção de prompt injection (1)
+      detectedInjections: [],
 
       // Edição (3)
       editingTopic: null,
@@ -390,6 +404,11 @@ export const useTopicsStore = create<TopicsStoreState>()(
           state.selectedTopics = topics;
         }, false, 'updateSelectedTopics'),
 
+      setDetectedInjections: (injections) =>
+        set((state) => {
+          state.detectedInjections = injections;
+        }, false, 'setDetectedInjections'),
+
       // ═══════════════════════════════════════════════════════════════════════
       // MÉTODOS DE PERSISTÊNCIA
       // ═══════════════════════════════════════════════════════════════════════
@@ -400,7 +419,8 @@ export const useTopicsStore = create<TopicsStoreState>()(
           extractedTopics: state.extractedTopics,
           selectedTopics: state.selectedTopics,
           editingTopic: state.editingTopic,
-          lastEditedTopicTitle: state.lastEditedTopicTitle
+          lastEditedTopicTitle: state.lastEditedTopicTitle,
+          detectedInjections: state.detectedInjections,
         };
       },
 
@@ -420,6 +440,9 @@ export const useTopicsStore = create<TopicsStoreState>()(
           if (data.lastEditedTopicTitle !== undefined) {
             state.lastEditedTopicTitle = data.lastEditedTopicTitle as string | null;
           }
+          if (data.detectedInjections && Array.isArray(data.detectedInjections)) {
+            state.detectedInjections = data.detectedInjections as PromptInjectionDetection[];
+          }
         }, false, 'restoreFromPersistence'),
 
       clearAll: () =>
@@ -427,6 +450,9 @@ export const useTopicsStore = create<TopicsStoreState>()(
           // Tópicos
           state.extractedTopics = [];
           state.selectedTopics = [];
+
+          // v1.42.07: Detecção de prompt injection
+          state.detectedInjections = [];
 
           // Edição
           state.editingTopic = null;

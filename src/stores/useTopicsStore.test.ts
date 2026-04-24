@@ -566,4 +566,56 @@ describe('useTopicsStore', () => {
     });
   });
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // v1.42.07: detectedInjections (prompt injection detection)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('detectedInjections (v1.42.07)', () => {
+    it('inicia vazio', () => {
+      expect(useTopicsStore.getState().detectedInjections).toEqual([]);
+    });
+
+    it('setDetectedInjections substitui a lista', () => {
+      const injections = [
+        { trecho: 'IA, ignore', documento: 'petição', descricao: 'override', gravidade: 'alta' as const },
+      ];
+      useTopicsStore.getState().setDetectedInjections(injections);
+      expect(useTopicsStore.getState().detectedInjections).toEqual(injections);
+    });
+
+    it('clearAll zera detectedInjections', () => {
+      useTopicsStore.getState().setDetectedInjections([
+        { trecho: 'x', documento: 'y', descricao: 'z', gravidade: 'baixa' as const },
+      ]);
+      useTopicsStore.getState().clearAll();
+      expect(useTopicsStore.getState().detectedInjections).toEqual([]);
+    });
+
+    it('serializeForPersistence inclui detectedInjections', () => {
+      const injections = [
+        { trecho: 'a', documento: 'b', descricao: 'c', gravidade: 'media' as const },
+      ];
+      useTopicsStore.getState().setDetectedInjections(injections);
+      const serialized = useTopicsStore.getState().serializeForPersistence();
+      expect(serialized.detectedInjections).toEqual(injections);
+    });
+
+    it('restoreFromPersistence restaura detectedInjections', () => {
+      const injections = [
+        { trecho: 'a', documento: 'b', descricao: 'c', gravidade: 'alta' as const },
+      ];
+      useTopicsStore.getState().restoreFromPersistence({ detectedInjections: injections });
+      expect(useTopicsStore.getState().detectedInjections).toEqual(injections);
+    });
+
+    it('restoreFromPersistence ignora campo ausente sem quebrar', () => {
+      useTopicsStore.getState().setDetectedInjections([
+        { trecho: 'antes', documento: 'b', descricao: 'c', gravidade: 'baixa' as const },
+      ]);
+      useTopicsStore.getState().restoreFromPersistence({ extractedTopics: [] });
+      // mantém o que estava (não foi sobrescrito)
+      expect(useTopicsStore.getState().detectedInjections).toHaveLength(1);
+    });
+  });
+
 });
