@@ -187,6 +187,46 @@ describe('splitStableFromVolatile', () => {
       expect(result.stableContents).toHaveLength(0);
       expect(result.volatileContents).toHaveLength(1);
     });
+
+    // GARANTIA DE INTEGRIDADE: o split não pode perder conteúdo. A LLM
+    // precisa ver 100% do original (cache + request = original).
+    // Esse teste é a salvaguarda contra regressões silenciosas que
+    // poderiam truncar/descartar partes do PDF/texto enviado.
+    it('preserva 100% do conteúdo: stable.parts + volatile.parts === parts originais', () => {
+      const originalParts = [
+        { inlineData: { mimeType: 'application/pdf', data: 'PDF_BASE64_LONGO' } },
+        { text: 'PROVA: ' + 'x'.repeat(5000) },
+        { text: 'INSTRUÇÕES: faça uma análise jurídica trabalhista' },
+        { text: 'Pergunta: extraia os tópicos da petição.' },
+      ];
+      const req: GeminiRequest = {
+        contents: [{ role: 'user', parts: originalParts }],
+      };
+      const result = splitStableFromVolatile(req);
+
+      const stable = result.stableContents[0] as { parts: unknown[] };
+      const volatile = result.volatileContents[0] as { parts: unknown[] };
+      const reconstructed = [...stable.parts, ...volatile.parts];
+
+      // Identidade referencial: cada part é EXATAMENTE o mesmo objeto
+      expect(reconstructed).toEqual(originalParts);
+      expect(reconstructed.length).toBe(originalParts.length);
+      reconstructed.forEach((p, i) => {
+        expect(p).toBe(originalParts[i]);
+      });
+    });
+
+    it('preserva 100% multi-turn: ordem e conteúdo das mensagens intactos', () => {
+      const msg1 = { role: 'user', parts: [{ text: '[PROVA: doc1] ' + 'x'.repeat(3000) }] };
+      const msg2 = { role: 'model', parts: [{ text: 'resposta do modelo' }] };
+      const msg3 = { role: 'user', parts: [{ text: 'pergunta seguinte' }] };
+      const req: GeminiRequest = { contents: [msg1, msg2, msg3] };
+      const result = splitStableFromVolatile(req);
+
+      // Ordem: stable primeiro (msg1), depois volatile (msg2 + msg3)
+      const reconstructed = [...result.stableContents, ...result.volatileContents];
+      expect(reconstructed).toEqual([msg1, msg2, msg3]);
+    });
   });
 
   it('classifica mensagem com texto > 2000 chars como estável', () => {
