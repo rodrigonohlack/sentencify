@@ -952,13 +952,6 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       let topicsComRelatorios = topicsSemRelatorio;
 
       if (topicsSemRelatorio.length > 0) {
-        // v1.42.09: delay de 2s antes do batch paralelo para dar tempo do cache
-        // implicit do Gemini (plantado por generateRelatorioProcessual acima) estar
-        // indexado no backend — caso contrário, o batch 1 de chamadas paralelas
-        // dispara antes do cache estar disponível e perde hit.
-        setAnalysisProgress('Aguardando cache do Gemini estabilizar...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
         setAnalysisProgress(`Gerando mini-relatórios... 0/${topicsSemRelatorio.length}`);
 
         const { results, errors } = await generateMiniReportsBatch(
