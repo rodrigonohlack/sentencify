@@ -235,6 +235,7 @@ function getPlaceholderForProvider(provider: string): string {
     case 'gemini': return 'AIza...';
     case 'openai': return 'sk-...';
     case 'grok': return 'xai-...';
+    case 'deepseek': return 'sk-...';
     default: return 'API Key...';
   }
 }

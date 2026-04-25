@@ -2,12 +2,14 @@ import { Sparkles } from 'lucide-react';
 
 interface ProviderSelectorProps {
   value: string;
-  onChange: (provider: 'gemini' | 'grok') => void;
+  onChange: (provider: 'gemini' | 'grok' | 'deepseek') => void;
 }
 
 const providers = [
   { id: 'gemini' as const, name: 'Gemini 3 Flash', description: 'Google AI - Rápido e preciso' },
   { id: 'grok' as const, name: 'Grok 3 Fast', description: 'xAI - Rapido e economico' },
+  // v1.43.10: DeepSeek V4 Flash — opção mais barata ($0.14/$0.28 por 1M)
+  { id: 'deepseek' as const, name: 'DeepSeek V4 Flash', description: 'DeepSeek - Imbatível em custo' },
 ];
 
 export default function ProviderSelector({ value, onChange }: ProviderSelectorProps) {

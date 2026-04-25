@@ -45,7 +45,7 @@ export default function SettingsPage() {
     loadApiKeys();
   }, []);
 
-  const handleProviderChange = async (provider: 'gemini' | 'grok') => {
+  const handleProviderChange = async (provider: 'gemini' | 'grok' | 'deepseek') => {
     try {
       const data = await apiFetch<{ settings: Settings }>(ENDPOINTS.SETTINGS, {
         method: 'PUT',
@@ -110,6 +110,13 @@ export default function SettingsPage() {
             label="xAI Grok"
             value={apiKeys.grok || ''}
             onSave={(key) => handleSaveApiKey('grok', key)}
+          />
+          <div className="border-t border-indigo-500/10 dark:border-indigo-400/15" />
+          <APIKeyInput
+            provider="deepseek"
+            label="DeepSeek"
+            value={apiKeys.deepseek || ''}
+            onSave={(key) => handleSaveApiKey('deepseek', key)}
           />
         </div>
 

@@ -357,6 +357,105 @@ export const useAIIntegration = () => {
     throw lastError || new Error('Todas as tentativas falharam');
   }, [aiSettings, addTokenUsage]);
 
+  // v1.43.10: DeepSeek V4 (non-stream) — mantém paridade com src/hooks/useAIIntegration.ts
+  const callDeepseekAPI = useCallback(async (
+    messages: AIMessage[],
+    options: AICallOptions = {}
+  ): Promise<string> => {
+    const {
+      maxTokens = 8000,
+      systemPrompt = null,
+      model = aiSettings.deepseekModel || 'deepseek-v4-flash',
+      disableThinking = false
+    } = options;
+
+    const deepseekMessages: GrokMessage[] = [];
+    if (systemPrompt) {
+      deepseekMessages.push({ role: 'system', content: systemPrompt });
+    }
+    for (const msg of messages) {
+      deepseekMessages.push({
+        role: msg.role,
+        content: Array.isArray(msg.content)
+          ? msg.content.map(c => {
+              if (typeof c === 'string') return c;
+              if (c.type === 'text') return c.text;
+              return JSON.stringify(c);
+            }).join('\n')
+          : msg.content
+      });
+    }
+
+    // Thinking config (respeita aiSettings.deepseekThinking global + options.disableThinking override)
+    const thinkingEnabled = !disableThinking && (aiSettings.deepseekThinking !== false);
+    const reasoningEffort = aiSettings.deepseekReasoningEffort || 'high';
+    const requestBody: Record<string, unknown> = {
+      model,
+      messages: deepseekMessages,
+      max_tokens: maxTokens,
+      thinking: { type: thinkingEnabled ? 'enabled' : 'disabled' }
+    };
+    if (thinkingEnabled) {
+      requestBody.reasoning_effort = reasoningEffort;
+    }
+
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt < RETRY_MAX_ATTEMPTS; attempt++) {
+      try {
+        const response = await fetch(`${API_BASE}/api/deepseek/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': aiSettings.apiKeys.deepseek || ''
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if ([429, 500, 502, 503, 529].includes(response.status) && attempt < RETRY_MAX_ATTEMPTS - 1) {
+          const delay = RETRY_INITIAL_DELAY * Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt);
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error?.message || `HTTP ${response.status}`);
+        }
+
+        // DeepSeek usa prompt_cache_hit_tokens / prompt_cache_miss_tokens
+        if (data.usage) {
+          const cacheHit = data.usage.prompt_cache_hit_tokens || 0;
+          const cacheMiss = data.usage.prompt_cache_miss_tokens || 0;
+          addTokenUsage({
+            input: cacheMiss || data.usage.prompt_tokens || 0,
+            output: data.usage.completion_tokens || 0,
+            cacheRead: cacheHit
+          });
+        }
+
+        // Fallback pra reasoning_content se content vier vazio
+        const message = data.choices?.[0]?.message;
+        const content = (message?.content || '').trim();
+        if (!content && message?.reasoning_content) {
+          console.warn('[DeepSeek] content vazio, usando reasoning_content como fallback');
+          return String(message.reasoning_content).trim();
+        }
+        return content;
+
+      } catch (err) {
+        lastError = err as Error;
+        if (attempt < RETRY_MAX_ATTEMPTS - 1) {
+          await new Promise(r => setTimeout(r, RETRY_INITIAL_DELAY * Math.pow(RETRY_BACKOFF_MULTIPLIER, attempt)));
+          continue;
+        }
+      }
+    }
+
+    throw lastError || new Error('Todas as tentativas falharam');
+  }, [aiSettings, addTokenUsage]);
+
   // ═══════════════════════════════════════════════════════════════════════════
   // STREAMING APIs - Evita timeout em operações longas
   // ═══════════════════════════════════════════════════════════════════════════
@@ -758,6 +857,117 @@ export const useAIIntegration = () => {
     return fullText.trim();
   }, [aiSettings, addTokenUsage]);
 
+  // v1.43.10: DeepSeek V4 streaming — mantém paridade com src/hooks/useAIIntegration.ts
+  const callDeepseekAPIStream = useCallback(async (
+    messages: AIMessage[],
+    options: AICallOptions = {}
+  ): Promise<string> => {
+    const {
+      maxTokens = 16000,
+      systemPrompt = null,
+      model = aiSettings.deepseekModel || 'deepseek-v4-flash',
+      disableThinking = false
+    } = options;
+
+    const deepseekMessages: GrokMessage[] = [];
+    if (systemPrompt) {
+      deepseekMessages.push({ role: 'system', content: systemPrompt });
+    }
+    for (const msg of messages) {
+      deepseekMessages.push({
+        role: msg.role,
+        content: Array.isArray(msg.content)
+          ? msg.content.map(c => {
+              if (typeof c === 'string') return c;
+              if (c.type === 'text') return c.text;
+              return JSON.stringify(c);
+            }).join('\n')
+          : msg.content
+      });
+    }
+
+    const thinkingEnabled = !disableThinking && (aiSettings.deepseekThinking !== false);
+    const reasoningEffort = aiSettings.deepseekReasoningEffort || 'high';
+    const streamBody: Record<string, unknown> = {
+      model,
+      messages: deepseekMessages,
+      max_tokens: maxTokens,
+      stream: true,
+      thinking: { type: thinkingEnabled ? 'enabled' : 'disabled' }
+    };
+    if (thinkingEnabled) {
+      streamBody.reasoning_effort = reasoningEffort;
+    }
+
+    const response = await fetch(`${API_BASE}/api/deepseek/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': aiSettings.apiKeys.deepseek || ''
+      },
+      body: JSON.stringify(streamBody)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    if (!response.body) {
+      throw new Error('Response body is null');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+    let reasoningText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const parsed = JSON.parse(line.slice(6));
+            if (parsed.type === 'text' && parsed.text) {
+              fullText += parsed.text;
+            }
+            if (parsed.type === 'reasoning' && parsed.text) {
+              reasoningText += parsed.text;
+            }
+            if (parsed.type === 'error') {
+              throw new Error(parsed.error?.message || 'Erro no streaming');
+            }
+            if (parsed.type === 'done' && parsed.usage) {
+              const cacheHit = parsed.usage.prompt_cache_hit_tokens || 0;
+              const cacheMiss = parsed.usage.prompt_cache_miss_tokens || 0;
+              addTokenUsage({
+                input: cacheMiss || parsed.usage.prompt_tokens || 0,
+                output: parsed.usage.completion_tokens || 0,
+                cacheRead: cacheHit
+              });
+            }
+          } catch (e) {
+            if (e instanceof SyntaxError) continue;
+            throw e;
+          }
+        }
+      }
+    }
+
+    // Fallback pra reasoning se content vier vazio (thinking consumiu tudo)
+    if (!fullText.trim() && reasoningText.trim()) {
+      console.warn('[DeepSeek] content vazio, usando reasoning_content como fallback');
+      return reasoningText.trim();
+    }
+
+    return fullText.trim();
+  }, [aiSettings, addTokenUsage]);
+
   /**
    * Chamada IA com streaming - escolhe provider automaticamente
    * Usa SSE para evitar timeout em operações longas
@@ -777,10 +987,12 @@ export const useAIIntegration = () => {
         return callOpenAIAPIStream(messages, options);
       case 'grok':
         return callGrokAPIStream(messages, options);
+      case 'deepseek':
+        return callDeepseekAPIStream(messages, options);
       default:
         return callClaudeAPIStream(messages, options);
     }
-  }, [aiSettings.provider, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream]);
+  }, [aiSettings.provider, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream]);
 
   const callAI = useCallback(async (
     messages: AIMessage[],
@@ -797,10 +1009,12 @@ export const useAIIntegration = () => {
         return callOpenAIAPI(messages, options);
       case 'grok':
         return callGrokAPI(messages, options);
+      case 'deepseek':
+        return callDeepseekAPI(messages, options);
       default:
         return callClaudeAPI(messages, options);
     }
-  }, [aiSettings.provider, callClaudeAPI, callGeminiAPI, callOpenAIAPI, callGrokAPI]);
+  }, [aiSettings.provider, callClaudeAPI, callGeminiAPI, callOpenAIAPI, callGrokAPI, callDeepseekAPI]);
 
   return {
     callAI,
@@ -809,10 +1023,12 @@ export const useAIIntegration = () => {
     callGeminiAPI,
     callOpenAIAPI,
     callGrokAPI,
+    callDeepseekAPI,
     callClaudeAPIStream,
     callGeminiAPIStream,
     callOpenAIAPIStream,
     callGrokAPIStream,
+    callDeepseekAPIStream,
     aiSettings
   };
 };

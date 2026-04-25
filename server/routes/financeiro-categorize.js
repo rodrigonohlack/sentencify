@@ -272,6 +272,40 @@ async function callLLM(provider, prompt, apiKey) {
     return data.choices?.[0]?.message?.content || '';
   }
 
+  // v1.43.10: DeepSeek V4 Flash pra categorização
+  // Thinking desligado (tarefa simples de classificação, não precisa reasoning).
+  // Flash é 12× mais barato que Pro e dá conta da tarefa.
+  if (provider === 'deepseek') {
+    const key = apiKey || process.env.DEEPSEEK_API_KEY;
+    if (!key) throw new Error('API key DeepSeek não configurada');
+
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.1,
+        max_tokens: 2048,
+        thinking: { type: 'disabled' },
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      const error = new Error(`DeepSeek ${response.status}: ${err}`);
+      error.status = response.status;
+      error.retryAfter = parseInt(response.headers.get('retry-after') || '0', 10);
+      throw error;
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '';
+  }
+
   throw new Error(`Provider desconhecido: ${provider}`);
 }
 

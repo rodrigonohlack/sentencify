@@ -22,6 +22,9 @@ const MODEL_PRICES = {
   geminiFlash: { input: 0.50, output: 3.00, cacheWrite: 0.625, cacheRead: 0.05 },
   openai: { input: 1.75, output: 14.00, cacheWrite: 1.75, cacheRead: 0.175 },
   grok: { input: 0.20, output: 0.50, cacheWrite: 0.20, cacheRead: 0.05 },
+  // v1.43.10: DeepSeek V4
+  deepseekFlash: { input: 0.14, output: 0.28, cacheWrite: 0.14, cacheRead: 0.028 },
+  deepseekPro: { input: 1.74, output: 3.48, cacheWrite: 1.74, cacheRead: 0.145 },
 } as const;
 
 const calculateCost = (m: TokenMetrics, prices: { input: number; output: number; cacheWrite: number; cacheRead: number }): number => {
@@ -50,6 +53,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const setThinkingBudget = useAIStore((s) => s.setThinkingBudget);
   const setGeminiThinkingLevel = useAIStore((s) => s.setGeminiThinkingLevel);
   const setOpenAIReasoningLevel = useAIStore((s) => s.setOpenAIReasoningLevel);
+  // v1.43.10: DeepSeek thinking
+  const deepseekThinking = useAIStore((s) => s.aiSettings.deepseekThinking);
+  const deepseekReasoningEffort = useAIStore((s) => s.aiSettings.deepseekReasoningEffort);
+  const setAiSettings = useAIStore((s) => s.setAiSettings);
+  const setDeepseekThinking = (val: boolean) => setAiSettings({ ...useAIStore.getState().aiSettings, deepseekThinking: val });
+  const setDeepseekReasoningEffort = (val: 'high' | 'max') => setAiSettings({ ...useAIStore.getState().aiSettings, deepseekReasoningEffort: val });
 
   const getProviderKeyConfig = () => {
     switch (provider) {
@@ -61,6 +70,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         return { label: 'API Key OpenAI', placeholder: 'sk-...' };
       case 'grok':
         return { label: 'API Key xAI', placeholder: 'xai-...' };
+      case 'deepseek':
+        return { label: 'API Key DeepSeek', placeholder: 'sk-...' };
       default:
         return { label: 'API Key', placeholder: '' };
     }
@@ -175,6 +186,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 : 'Modo Instant: respostas rápidas sem thinking.'}
             </p>
           )}
+
+          {/* v1.43.10: DeepSeek thinking config */}
+          {provider === 'deepseek' && (
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={deepseekThinking !== false}
+                  onChange={(e) => setDeepseekThinking(e.target.checked)}
+                  className="w-4 h-4 text-indigo-600 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500"
+                />
+                <span className="text-sm text-slate-700 dark:text-slate-300">Thinking Mode</span>
+              </label>
+              {deepseekThinking !== false && (
+                <div>
+                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                    Reasoning Effort
+                  </label>
+                  <select
+                    value={deepseekReasoningEffort || 'high'}
+                    onChange={(e) => setDeepseekReasoningEffort(e.target.value as 'high' | 'max')}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="high">High (Padrão)</option>
+                    <option value="max">Max (complexas)</option>
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* API Key do provedor selecionado */}
@@ -216,6 +257,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 provider="grok"
                 label="API Key xAI"
                 placeholder="xai-..."
+              />
+            )}
+            {provider !== 'deepseek' && (
+              <APIKeyInput
+                provider="deepseek"
+                label="API Key DeepSeek"
+                placeholder="sk-..."
               />
             )}
           </div>
@@ -305,6 +353,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   <span className="text-slate-500 dark:text-slate-400">Grok 4.1 Fast</span>
                   <span className="font-mono text-slate-700 dark:text-slate-200">
                     ${calculateCost(tokenMetrics, MODEL_PRICES.grok).toFixed(4)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-indigo-600 dark:text-indigo-400">DeepSeek V4 Flash</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-200">
+                    ${calculateCost(tokenMetrics, MODEL_PRICES.deepseekFlash).toFixed(4)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-indigo-700 dark:text-indigo-300">DeepSeek V4 Pro</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-200">
+                    ${calculateCost(tokenMetrics, MODEL_PRICES.deepseekPro).toFixed(4)}
                   </span>
                 </div>
               </div>

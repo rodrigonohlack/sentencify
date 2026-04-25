@@ -20,6 +20,7 @@ export const ModelSelector: React.FC = () => {
       case 'gemini': return aiSettings.geminiModel;
       case 'openai': return aiSettings.openaiModel;
       case 'grok': return aiSettings.grokModel;
+      case 'deepseek': return aiSettings.deepseekModel || 'deepseek-v4-flash';
       default: return aiSettings.claudeModel;
     }
   };

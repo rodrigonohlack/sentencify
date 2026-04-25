@@ -4,9 +4,9 @@ import type { Settings } from '../types';
 function loadApiKeysFromStorage(): Record<string, string> {
   try {
     const stored = localStorage.getItem('ger-despesas-api-keys');
-    return stored ? JSON.parse(stored) : { gemini: '', grok: '' };
+    return stored ? JSON.parse(stored) : { gemini: '', grok: '', deepseek: '' };
   } catch {
-    return { gemini: '', grok: '' };
+    return { gemini: '', grok: '', deepseek: '' };
   }
 }
 
