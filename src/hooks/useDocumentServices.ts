@@ -347,10 +347,15 @@ INSTRUÇÕES IMPORTANTES:
   // Diferença: chama aiIntegration.callGeminiAPI (que faz proxy para /api/gemini/generate
   // via convertToGeminiFormat — mesmo formato AIMessage[] do Claude, conversão automática).
   const extractTextFromPDFWithGeminiVision = React.useCallback(async (file: File, progressCallback: ((page: number, total: number, status?: string) => void) | null = null) => {
-    const BATCH_SIZE = 50;
+    // v1.43.18: BATCH_SIZE 50→30 + MAX_TOKENS 16384→65536. PDFs A4 do ABBYY produzem
+    // ~1500 tokens/página. Com 16K, 11+ páginas em batch único causavam truncamento
+    // silencioso (finishReason: MAX_TOKENS) — Gemini cortava no meio sem aviso.
+    // Gemini 3 Flash suporta até 384K tokens de output; 64K dá margem confortável
+    // pra 30 páginas densas. Custo só é cobrado pelo que efetivamente gera.
+    const BATCH_SIZE = 30;
     const SCALE = 1.5;
     const JPEG_QUALITY = 0.85;
-    const MAX_TOKENS = 16384;
+    const MAX_TOKENS = 65536;
 
     let pdf: PdfDocument | null = null;
     try {
@@ -448,18 +453,41 @@ INSTRUÇÕES IMPORTANTES:
         });
 
         try {
-          // callGeminiAPI cuida de retry, métricas e conversão de formato
-          const batchText = await aiIntegration.callGeminiAPI!(
+          // v1.43.18: extractText: false para inspecionar finishReason e detectar truncamento.
+          // callGeminiAPI cuida de retry, métricas e conversão de formato.
+          const data = await aiIntegration.callGeminiAPI!(
             [{ role: 'user', content: content as unknown as AIMessage['content'] }],
             {
               maxTokens: MAX_TOKENS,
               model: aiIntegration.aiSettings?.geminiModel || 'gemini-3-flash-preview',
               disableThinking: true,  // OCR não precisa thinking — força output direto
-              extractText: true,
+              extractText: false,
               logMetrics: true
             }
-          );
-          fullText += (batchText || '') + '\n\n';
+          ) as unknown as {
+            candidates?: Array<{
+              finishReason?: string;
+              content?: { parts?: Array<{ thought?: boolean; text?: string }> };
+            }>;
+          };
+
+          const candidate = data?.candidates?.[0];
+          const finishReason = candidate?.finishReason;
+          const parts = candidate?.content?.parts || [];
+          const textPart = parts.find((p) => !p.thought && p.text);
+          const batchText = textPart?.text || '';
+
+          // v1.43.18: Detectar truncamento por max tokens e avisar explicitamente
+          if (finishReason === 'MAX_TOKENS') {
+            console.warn(
+              `[Gemini Vision] ⚠️ Páginas ${firstPage}-${lastPage} TRUNCADAS em MAX_TOKENS ` +
+              `(${MAX_TOKENS} tokens). Texto retornado é parcial. ` +
+              `Considere reduzir BATCH_SIZE ou usar Claude Vision para PDFs muito densos.`
+            );
+            fullText += batchText + `\n\n[AVISO: extração das páginas ${firstPage}-${lastPage} truncada em ${MAX_TOKENS} tokens — considere Claude Vision]\n\n`;
+          } else {
+            fullText += batchText + '\n\n';
+          }
         } catch (err) {
           // Se falhar no primeiro batch, fallback para PDF.js puro
           if (batchIdx === 0) {
