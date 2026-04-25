@@ -1048,15 +1048,19 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             {(() => {
               const isDisabled = aiSettings.provider === 'grok' ||
                 (aiSettings.provider === 'openai' && aiSettings.openaiModel === 'gpt-5.2-chat-latest');
+              // v1.43.09: DeepSeek com thinking OFF não tem reasoning pra logar
+              const isDeepseekThinkingOff = aiSettings.provider === 'deepseek' &&
+                aiSettings.deepseekThinking === false;
+              const effectivelyDisabled = isDisabled || isDeepseekThinkingOff;
               return (
                 <label className={`flex items-center gap-3 p-3 mt-4 rounded-lg theme-bg-secondary-30 border theme-border-input transition-colors ${
-                  isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:theme-bg-secondary'
+                  effectivelyDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:theme-bg-secondary'
                 }`}>
                   <input
                     type="checkbox"
                     checked={aiSettings.logThinking || false}
                     onChange={(e) => setAiSettings({ ...aiSettings, logThinking: e.target.checked })}
-                    disabled={isDisabled}
+                    disabled={effectivelyDisabled}
                     className="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <div className="flex-1">
@@ -1064,6 +1068,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     <p className="text-xs theme-text-muted mt-0.5">
                       Exibe o raciocínio da IA no console (F12).
                       {isDisabled && <span className="text-amber-400"> Este modelo não expõe reasoning.</span>}
+                      {isDeepseekThinkingOff && <span className="text-amber-400"> Thinking está desligado no DeepSeek — nada pra logar.</span>}
                     </p>
                   </div>
                 </label>

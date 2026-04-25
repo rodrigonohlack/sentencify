@@ -707,6 +707,14 @@ const useAIIntegration = () => {
         console.log('[OpenAI Reasoning]', message.reasoning_details);
       }
 
+      // v1.43.09: Log reasoning_content do DeepSeek (non-streaming path)
+      // DeepSeek V4 retorna reasoning_content em message quando thinking está ON.
+      if (provider === 'deepseek' && aiSettings.logThinking && message?.reasoning_content) {
+        console.group('[DeepSeek] Thinking');
+        console.log(message.reasoning_content);
+        console.groupEnd();
+      }
+
       // Verificar finish_reason para erros
       const finishReason = choices?.[0]?.finish_reason;
       if (finishReason === 'content_filter') {
@@ -1811,11 +1819,10 @@ const useAIIntegration = () => {
 
             // v1.43.03: capturar reasoning_content para fallback caso content venha vazio
             // (DeepSeek V4 em modo thinking pode mandar JSON dentro do reasoning).
+            // v1.43.09: não logar chunk-a-chunk (spam). Acumulamos e logamos no fim,
+            // usando console.group igual Claude/Gemini/Grok fazem.
             if (parsed.type === 'reasoning' && parsed.text) {
               reasoningText += parsed.text;
-              if (aiSettings.logThinking) {
-                console.log('[DeepSeek] reasoning chunk:', parsed.text.slice(0, 100));
-              }
             }
 
             if (parsed.type === 'error') {
@@ -1841,6 +1848,13 @@ const useAIIntegration = () => {
           }
         }
       }
+    }
+
+    // v1.43.09: log consolidado do reasoning (padrão Claude/Gemini/Grok)
+    if (aiSettings.logThinking && reasoningText.trim()) {
+      console.group('[DeepSeek] Thinking');
+      console.log(reasoningText);
+      console.groupEnd();
     }
 
     // v1.43.03: se a resposta veio vazia mas há reasoning_content, usar como fallback.
