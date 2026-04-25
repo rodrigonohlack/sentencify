@@ -124,7 +124,7 @@ export interface Model {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export type ProofType = 'pdf' | 'text';
-export type ProcessingMode = 'pdfjs' | 'pdf-puro' | 'claude-vision' | 'tesseract';
+export type ProcessingMode = 'pdfjs' | 'pdf-puro' | 'claude-vision' | 'gemini-vision' | 'tesseract';
 export type InsertMode = 'replace' | 'append' | 'prepend';
 
 export interface ProofFile {

@@ -25,8 +25,9 @@ describe('ProcessingModeSelector', () => {
       render(<ProcessingModeSelector value="pdfjs" onChange={mockOnChange} />);
 
       expect(screen.getByText('PDF.js (Texto)')).toBeInTheDocument();
-      expect(screen.getByText('Tesseract OCR (Offline)')).toBeInTheDocument();
+      expect(screen.getByText('Gemini Vision (API)')).toBeInTheDocument();
       expect(screen.getByText('Claude Vision (API)')).toBeInTheDocument();
+      expect(screen.getByText('Tesseract OCR (Offline)')).toBeInTheDocument();
       expect(screen.getByText('PDF Puro (binário)')).toBeInTheDocument();
     });
 
@@ -77,6 +78,13 @@ describe('ProcessingModeSelector', () => {
       expect(select.value).toBe('claude-vision');
     });
 
+    it('should show gemini-vision as selected value', () => {
+      render(<ProcessingModeSelector value="gemini-vision" onChange={mockOnChange} />);
+
+      const select = screen.getByRole('combobox') as HTMLSelectElement;
+      expect(select.value).toBe('gemini-vision');
+    });
+
     it('should show pdf-puro as selected value', () => {
       render(<ProcessingModeSelector value="pdf-puro" onChange={mockOnChange} />);
 
@@ -112,6 +120,23 @@ describe('ProcessingModeSelector', () => {
       );
 
       expect(screen.getByText('🔒 Claude Vision')).toBeInTheDocument();
+    });
+
+    it('should block gemini-vision when anonymization is enabled', () => {
+      render(
+        <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} anonymizationEnabled={true} />
+      );
+
+      expect(screen.getByText('🔒 Gemini Vision')).toBeInTheDocument();
+    });
+
+    it('should fallback to pdfjs when gemini-vision is blocked by anonymization', () => {
+      render(
+        <ProcessingModeSelector value="gemini-vision" onChange={mockOnChange} anonymizationEnabled={true} />
+      );
+
+      const select = screen.getByRole('combobox') as HTMLSelectElement;
+      expect(select.value).toBe('pdfjs');
     });
 
     it('should fallback to pdfjs when pdf-puro is blocked by anonymization', () => {
@@ -170,6 +195,27 @@ describe('ProcessingModeSelector', () => {
 
       const select = screen.getByRole('combobox');
       expect(select.title).toBe('Grok não suporta PDF binário');
+    });
+  });
+
+  describe('Gemini Vision availability', () => {
+    it('should NOT block gemini-vision when binaryPdfBlocked by DeepSeek (OCR independente do provider)', () => {
+      render(
+        <ProcessingModeSelector value="gemini-vision" onChange={mockOnChange} binaryPdfBlocked={true} blockReason="deepseek" />
+      );
+
+      const select = screen.getByRole('combobox') as HTMLSelectElement;
+      expect(select.value).toBe('gemini-vision');
+      expect(screen.getByText('Gemini Vision (API)')).toBeInTheDocument();
+    });
+
+    it('should NOT block gemini-vision when binaryPdfBlocked by Grok', () => {
+      render(
+        <ProcessingModeSelector value="gemini-vision" onChange={mockOnChange} binaryPdfBlocked={true} blockReason="grok" />
+      );
+
+      const select = screen.getByRole('combobox') as HTMLSelectElement;
+      expect(select.value).toBe('gemini-vision');
     });
   });
 

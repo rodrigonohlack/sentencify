@@ -1,7 +1,7 @@
 /**
  * @file ProcessingModeSelector.tsx
  * @description Seletor de modo de processamento de PDF
- * @version 1.43.14
+ * @version 1.43.16
  */
 
 import React from 'react';
@@ -14,6 +14,9 @@ export type { ProcessingModeSelectorProps };
 // v1.36.36: grokEnabled bloqueia apenas pdf-puro (Grok não suporta binário, mas texto ok)
 // v1.43.14: grokEnabled → binaryPdfBlocked + blockReason ('grok' | 'deepseek')
 //           DeepSeek V4 também é text-only (Vision Mode anunciado mas indisponível em abr/2026).
+// v1.43.16: + opção 'gemini-vision' (OCR via Gemini Flash, ~4× mais barato que Claude).
+//           isClaudeVisionBlocked → isVisionBlocked cobrindo claude-vision E gemini-vision
+//           (ambos enviam binário pra API externa, incompatível com anonimização).
 export const ProcessingModeSelector = React.memo(({
   value,
   onChange,
@@ -23,14 +26,14 @@ export const ProcessingModeSelector = React.memo(({
   blockReason,
   className = ''
 }: ProcessingModeSelectorProps) => {
-  // Bloqueio binário: pdf-puro | Anonimização: pdf-puro E claude-vision
+  // Bloqueio binário: pdf-puro | Anonimização: pdf-puro E claude-vision E gemini-vision
   const isPdfPuroBlocked = anonymizationEnabled || binaryPdfBlocked;
-  const isClaudeVisionBlocked = anonymizationEnabled;
+  const isVisionBlocked = anonymizationEnabled;
 
   // Determinar valor efetivo (fallback para pdfjs se bloqueado)
   const blockedModes = [
     ...(isPdfPuroBlocked ? ['pdf-puro'] : []),
-    ...(isClaudeVisionBlocked ? ['claude-vision'] : [])
+    ...(isVisionBlocked ? ['claude-vision', 'gemini-vision'] : [])
   ];
   const isValueBlocked = blockedModes.includes(value);
   const effectiveValue = isValueBlocked ? 'pdfjs' : (value || 'pdfjs');
@@ -66,8 +69,9 @@ export const ProcessingModeSelector = React.memo(({
       onClick={(e) => e.stopPropagation()}
     >
       <option value="pdfjs" className="theme-bg-secondary theme-text-primary">PDF.js (Texto)</option>
+      <option value="gemini-vision" className="theme-bg-secondary theme-text-primary" disabled={isVisionBlocked}>{isVisionBlocked ? '🔒 Gemini Vision' : 'Gemini Vision (API)'}</option>
+      <option value="claude-vision" className="theme-bg-secondary theme-text-primary" disabled={isVisionBlocked}>{isVisionBlocked ? '🔒 Claude Vision' : 'Claude Vision (API)'}</option>
       <option value="tesseract" className="theme-bg-secondary theme-text-primary">Tesseract OCR (Offline)</option>
-      <option value="claude-vision" className="theme-bg-secondary theme-text-primary" disabled={isClaudeVisionBlocked}>{isClaudeVisionBlocked ? '🔒 Claude Vision' : 'Claude Vision (API)'}</option>
       <option value="pdf-puro" className="theme-bg-secondary theme-text-primary" disabled={isPdfPuroBlocked}>{getPdfPuroLabel()}</option>
     </select>
   );

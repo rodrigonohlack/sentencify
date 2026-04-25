@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import type { PdfjsLib, MammothLib, TesseractLib, PdfDocument, TesseractScheduler, AISettings } from '../types';
+import type { PdfjsLib, MammothLib, TesseractLib, PdfDocument, TesseractScheduler, AISettings, AIMessage, AICallOptions } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -21,6 +21,8 @@ export interface AIIntegrationForDocuments {
   aiSettings?: AISettings;
   getApiHeaders: () => Record<string, string>;
   logCacheMetrics: (data: { usage?: { input_tokens?: number; output_tokens?: number } }) => void;
+  // v1.43.16: callGeminiAPI usado pelo modo gemini-vision (OCR via Gemini Flash)
+  callGeminiAPI?: (messages: AIMessage[], options?: AICallOptions) => Promise<string>;
 }
 
 export type UseDocumentServicesReturn = ReturnType<typeof useDocumentServices>;
@@ -339,6 +341,148 @@ INSTRUÇÕES IMPORTANTES:
     }
   }, [loadPDFJS, aiIntegration, extractTextFromPDFPure]);
 
+  // 🆕 v1.43.16: OCR via Gemini Flash Vision
+  // Espelha extractTextFromPDFWithClaudeVision mas usa Gemini Flash (~4× mais barato).
+  // Pipeline idêntico: render PDF.js → canvas → JPEG (SCALE 1.5, qual 0.85) → batch 50 págs.
+  // Diferença: chama aiIntegration.callGeminiAPI (que faz proxy para /api/gemini/generate
+  // via convertToGeminiFormat — mesmo formato AIMessage[] do Claude, conversão automática).
+  const extractTextFromPDFWithGeminiVision = React.useCallback(async (file: File, progressCallback: ((page: number, total: number, status?: string) => void) | null = null) => {
+    const BATCH_SIZE = 50;
+    const SCALE = 1.5;
+    const JPEG_QUALITY = 0.85;
+    const MAX_TOKENS = 16384;
+
+    let pdf: PdfDocument | null = null;
+    try {
+      if (!aiIntegration?.callGeminiAPI) {
+        console.warn('[Gemini Vision] callGeminiAPI indisponível — fallback para PDF.js');
+        return await extractTextFromPDFPure(file, progressCallback);
+      }
+
+      if (progressCallback) {
+        progressCallback(0, 0, 'iniciando');
+      }
+
+      const pdfjsLib = await loadPDFJS();
+      const arrayBuffer = await file.arrayBuffer();
+
+      pdf = await pdfjsLib.getDocument({
+        data: arrayBuffer,
+        useSystemFonts: true,
+        disableFontFace: true
+      } as unknown as { data: ArrayBuffer }).promise;
+
+      const totalPages = pdf.numPages;
+
+      // FASE 1: Renderizar TODAS as páginas para imagens base64
+      const pageImages: { pageNum: number; base64: string }[] = [];
+      for (let i = 1; i <= totalPages; i++) {
+        if (progressCallback) {
+          progressCallback(i, totalPages, 'renderizando');
+        }
+
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: SCALE });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        try {
+          const context = canvas.getContext('2d');
+          if (!context) throw new Error('Canvas 2D context not available');
+          await page.render({
+            canvasContext: context,
+            viewport: viewport
+          }).promise;
+
+          const base64Image = canvas.toDataURL('image/jpeg', JPEG_QUALITY).split(',')[1];
+          pageImages.push({ pageNum: i, base64: base64Image });
+        } finally {
+          canvas.width = 0;
+          canvas.height = 0;
+        }
+      }
+
+      // FASE 2: Processar em batches de até 50 páginas via Gemini
+      let fullText = '';
+      const totalBatches = Math.ceil(totalPages / BATCH_SIZE);
+
+      for (let batchIdx = 0; batchIdx < totalBatches; batchIdx++) {
+        const startIdx = batchIdx * BATCH_SIZE;
+        const endIdx = Math.min(startIdx + BATCH_SIZE, totalPages);
+        const batchImages = pageImages.slice(startIdx, endIdx);
+        const batchPageNumbers = batchImages.map(img => img.pageNum);
+
+        if (progressCallback) {
+          progressCallback(endIdx, totalPages, `processando batch ${batchIdx + 1}/${totalBatches}`);
+        }
+
+        // Montar conteúdo no formato Claude (callGeminiAPI converte para Gemini internamente)
+        const content: Array<{ type: string; source?: { type: string; media_type: string; data: string }; text?: string }> = [];
+
+        batchImages.forEach((img) => {
+          content.push({
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: 'image/jpeg',
+              data: img.base64
+            }
+          });
+        });
+
+        const idioma = aiIntegration?.aiSettings?.ocrLanguage === 'por' ? 'Português' : 'English';
+        const firstPage = batchPageNumbers[0] || 1;
+        const lastPage = batchPageNumbers[batchPageNumbers.length - 1] || firstPage;
+        content.push({
+          type: 'text',
+          text: `Extraia TODO o texto de TODAS as ${batchImages.length} imagens acima. São as páginas ${firstPage} a ${lastPage} de um documento legal.
+
+INSTRUÇÕES IMPORTANTES:
+- Processe CADA página na ordem exata apresentada
+- Para CADA página, inicie com uma linha "--- PÁGINA ${firstPage <= 1 ? 'X' : firstPage + ' a ' + lastPage} ---" (substitua X pelo número)
+- Retorne APENAS o texto extraído, sem comentários ou explicações
+- Preserve a formatação de parágrafos e estrutura do documento
+- Idioma do documento: ${idioma}`
+        });
+
+        try {
+          // callGeminiAPI cuida de retry, métricas e conversão de formato
+          const batchText = await aiIntegration.callGeminiAPI!(
+            [{ role: 'user', content: content as unknown as AIMessage['content'] }],
+            {
+              maxTokens: MAX_TOKENS,
+              model: aiIntegration.aiSettings?.geminiModel || 'gemini-3-flash-preview',
+              disableThinking: true,  // OCR não precisa thinking — força output direto
+              extractText: true,
+              logMetrics: true
+            }
+          );
+          fullText += (batchText || '') + '\n\n';
+        } catch (err) {
+          // Se falhar no primeiro batch, fallback para PDF.js puro
+          if (batchIdx === 0) {
+            console.warn('[Gemini Vision] Fallback para PDF.js puro:', (err as Error).message);
+            return await extractTextFromPDFPure(file, progressCallback);
+          }
+          // Se falhar em batches subsequentes, marcar erro e continuar
+          fullText += `\n\n[ERRO: Páginas ${startIdx + 1} a ${endIdx} não puderam ser processadas via OCR Gemini]\n\n`;
+          continue;
+        }
+      }
+
+      return fullText.trim();
+    } catch (err) {
+      console.warn('[Gemini Vision] Erro geral, fallback para PDF.js:', (err as Error).message);
+      return await extractTextFromPDFPure(file, progressCallback);
+    } finally {
+      if (pdf) {
+        try { pdf.destroy(); } catch (e) { /* ignore */ }
+      }
+    }
+  }, [loadPDFJS, aiIntegration, extractTextFromPDFPure]);
+
   // 🆕 v1.31: OCR offline com Tesseract.js
   // v1.31.02: Paralelo com Scheduler (pool de workers)
   // v1.31.03: Batching + Workers dinâmicos (75% cores, max 8)
@@ -493,8 +637,9 @@ INSTRUÇÕES IMPORTANTES:
   }, [aiIntegration, extractTextFromPDFWithClaudeVision, extractTextFromPDFPure]);
 
   // 🆕 v1.12.20: Extração de texto com modo específico (para provas individuais)
+  // v1.43.16: + 'gemini-vision' (OCR via Gemini Flash, ~4× mais barato que Claude)
   const extractTextFromPDFWithMode = React.useCallback(async (file: File, mode: string, progressCallback: ((page: number, total: number) => void) | null = null) => {
-    // Modos: 'pdfjs' | 'tesseract' | 'claude-vision' | 'pdf-puro'
+    // Modos: 'pdfjs' | 'tesseract' | 'claude-vision' | 'gemini-vision' | 'pdf-puro'
     switch (mode) {
       case 'pdf-puro':
         return null;
@@ -502,11 +647,13 @@ INSTRUÇÕES IMPORTANTES:
         return await extractTextFromPDFWithTesseract(file, progressCallback);
       case 'claude-vision':
         return await extractTextFromPDFWithClaudeVision(file, progressCallback);
+      case 'gemini-vision':
+        return await extractTextFromPDFWithGeminiVision(file, progressCallback);
       case 'pdfjs':
       default:
         return await extractTextFromPDFPure(file, progressCallback);
     }
-  }, [extractTextFromPDFWithClaudeVision, extractTextFromPDFPure, extractTextFromPDFWithTesseract]);
+  }, [extractTextFromPDFWithClaudeVision, extractTextFromPDFWithGeminiVision, extractTextFromPDFPure, extractTextFromPDFWithTesseract]);
 
   // 🔢 DETECÇÃO DE NÚMERO DO PROCESSO
 
