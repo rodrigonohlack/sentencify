@@ -567,13 +567,22 @@ const useAIIntegration = () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Converte mensagens do formato Claude para formato OpenAI (também usado pelo Grok)
+   * Converte mensagens do formato Claude para formato OpenAI (também usado pelo Grok e DeepSeek)
    * @param claudeMessages - Array de mensagens no formato Claude (AIMessage[])
    * @param systemPrompt - System prompt opcional (string ou array de objetos)
+   * @param stripBinaryContent - v1.43.14: Se true, descarta {type:'document'} e {type:'image'}
+   *        (safety net para providers text-only como DeepSeek V4 que rejeitam content array com binário).
+   *        Loga warning no console quando descarta.
    * @returns Array de mensagens no formato OpenAI (OpenAIMessage[])
    */
-  const convertToOpenAIFormat = React.useCallback((claudeMessages: AIMessage[], systemPrompt: string | null = null): OpenAIMessage[] => {
+  const convertToOpenAIFormat = React.useCallback((
+    claudeMessages: AIMessage[],
+    systemPrompt: string | null = null,
+    stripBinaryContent: boolean = false
+  ): OpenAIMessage[] => {
     const messages: OpenAIMessage[] = [];
+    let strippedDocs = 0;
+    let strippedImages = 0;
 
     // System prompt primeiro (se houver)
     if (systemPrompt) {
@@ -593,6 +602,7 @@ const useAIIntegration = () => {
           if (c.type === 'text') {
             parts.push({ type: 'text', text: c.text as string });
           } else if (c.type === 'image') {
+            if (stripBinaryContent) { strippedImages++; continue; }
             // Converter formato Claude → OpenAI para imagens
             const source = c.source as Record<string, unknown>;
             const mediaType = source?.media_type || 'image/png';
@@ -602,6 +612,7 @@ const useAIIntegration = () => {
               image_url: { url: `data:${mediaType};base64,${data}` }
             });
           } else if (c.type === 'document') {
+            if (stripBinaryContent) { strippedDocs++; continue; }
             // v1.36.29: OpenAI suporta PDF via base64 (Grok não - requer Files API)
             // Nota: Para Grok, UI mostra aviso para usar texto extraído
             const source = c.source as Record<string, unknown>;
@@ -630,10 +641,27 @@ const useAIIntegration = () => {
           return aIsBinary - bIsBinary;
         });
 
-        messages.push({ role: msg.role as 'user' | 'assistant', content: parts });
+        // v1.43.14: Se strip removeu tudo, deixar placeholder textual para não enviar
+        // content array vazio (alguns providers OpenAI-compat rejeitam).
+        if (parts.length === 0 && stripBinaryContent) {
+          messages.push({
+            role: msg.role as 'user' | 'assistant',
+            content: '[Conteúdo binário (PDF/imagem) descartado: provider não suporta. Extraia o texto antes de enviar.]'
+          });
+        } else {
+          messages.push({ role: msg.role as 'user' | 'assistant', content: parts });
+        }
       } else {
         messages.push({ role: msg.role as 'user' | 'assistant', content: msg.content as string });
       }
+    }
+
+    if (stripBinaryContent && (strippedDocs > 0 || strippedImages > 0)) {
+      console.warn(
+        `[convertToOpenAIFormat] Conteúdo binário descartado (provider text-only): ` +
+        `${strippedDocs} documento(s), ${strippedImages} imagem(ns). ` +
+        `Use texto extraído (PDF.js/Tesseract) em vez de PDF binário.`
+      );
     }
 
     return messages;
@@ -1266,7 +1294,10 @@ const useAIIntegration = () => {
 
     const makeRequest = async () => {
       try {
-        const deepseekMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
+        // v1.43.14: stripBinaryContent=true — DeepSeek V4 é text-only (abr/2026).
+        // API rejeita {type:'file'} e {type:'image_url'}. Safety net contra mudança
+        // de provider mid-flow ou sessões antigas com pdf-puro selecionado.
+        const deepseekMessages = convertToOpenAIFormat(messages, finalSystemPrompt, true);
 
         // v1.43.03: thinking/reasoning_effort (docs.deepseek.com/guides/thinking_mode)
         // API default é thinking ON; aqui respeitamos a config do usuário.

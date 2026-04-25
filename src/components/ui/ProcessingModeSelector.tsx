@@ -1,7 +1,7 @@
 /**
  * @file ProcessingModeSelector.tsx
  * @description Seletor de modo de processamento de PDF
- * @version 1.36.82
+ * @version 1.43.14
  */
 
 import React from 'react';
@@ -12,16 +12,19 @@ export type { ProcessingModeSelectorProps };
 // v1.14.1: Restaurado PDF Puro como opção (config global é apenas padrão, usuário pode mudar por arquivo)
 // v1.32.13: anonymizationEnabled bloqueia apenas modos que não extraem texto (claude-vision, pdf-puro)
 // v1.36.36: grokEnabled bloqueia apenas pdf-puro (Grok não suporta binário, mas texto ok)
+// v1.43.14: grokEnabled → binaryPdfBlocked + blockReason ('grok' | 'deepseek')
+//           DeepSeek V4 também é text-only (Vision Mode anunciado mas indisponível em abr/2026).
 export const ProcessingModeSelector = React.memo(({
   value,
   onChange,
   disabled = false,
   anonymizationEnabled = false,
-  grokEnabled = false,
+  binaryPdfBlocked = false,
+  blockReason,
   className = ''
 }: ProcessingModeSelectorProps) => {
-  // Grok: só bloqueia pdf-puro | Anonimização: bloqueia pdf-puro E claude-vision
-  const isPdfPuroBlocked = anonymizationEnabled || grokEnabled;
+  // Bloqueio binário: pdf-puro | Anonimização: pdf-puro E claude-vision
+  const isPdfPuroBlocked = anonymizationEnabled || binaryPdfBlocked;
   const isClaudeVisionBlocked = anonymizationEnabled;
 
   // Determinar valor efetivo (fallback para pdfjs se bloqueado)
@@ -35,13 +38,21 @@ export const ProcessingModeSelector = React.memo(({
   // Labels com motivo do bloqueio
   const getPdfPuroLabel = () => {
     if (anonymizationEnabled) return '🔒 PDF Binário (anonimização)';
-    if (grokEnabled) return '🔒 PDF Binário (Grok)';
+    if (binaryPdfBlocked) {
+      if (blockReason === 'deepseek') return '🔒 PDF Binário (DeepSeek)';
+      if (blockReason === 'grok') return '🔒 PDF Binário (Grok)';
+      return '🔒 PDF Binário (provider sem suporte)';
+    }
     return 'PDF Puro (binário)';
   };
 
   const getTitle = () => {
     if (anonymizationEnabled) return 'Anonimização ativa: modos binários bloqueados';
-    if (grokEnabled) return 'Grok não suporta PDF binário';
+    if (binaryPdfBlocked) {
+      if (blockReason === 'deepseek') return 'DeepSeek não suporta PDF binário (text-only em abr/2026)';
+      if (blockReason === 'grok') return 'Grok não suporta PDF binário';
+      return 'Provider atual não suporta PDF binário';
+    }
     return undefined;
   };
 

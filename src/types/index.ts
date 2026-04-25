@@ -2158,7 +2158,8 @@ export interface ProofCardProps {
   setError: (error: string) => void;
   extractTextFromPDFWithMode: (file: File, mode: string, progressCallback?: ((page: number, total: number) => void) | null) => Promise<string | null>;
   anonymizationEnabled?: boolean;
-  grokEnabled?: boolean;  // v1.36.36: Bloquear PDF Puro quando Grok selecionado
+  binaryPdfBlocked?: boolean;  // v1.43.14: Bloquear PDF Puro quando provider não suporta binário (Grok, DeepSeek)
+  blockReason?: 'grok' | 'deepseek';  // v1.43.14: Motivo do bloqueio para tooltip/label
   anonConfig?: AnonymizationSettings | null;
   nomesParaAnonimizar?: string[];
   editorTheme?: 'dark' | 'light' | string;
@@ -2217,7 +2218,8 @@ export interface ProcessingModeSelectorProps {
   onChange: (value: ProcessingMode) => void;
   disabled?: boolean;
   anonymizationEnabled?: boolean;
-  grokEnabled?: boolean;  // v1.36.36: Bloquear PDF Puro quando Grok selecionado
+  binaryPdfBlocked?: boolean;  // v1.43.14: Bloquear PDF Puro quando provider não suporta binário (Grok, DeepSeek)
+  blockReason?: 'grok' | 'deepseek';  // v1.43.14: Motivo do bloqueio para label/tooltip
   className?: string;
 }
 

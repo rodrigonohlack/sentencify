@@ -149,7 +149,7 @@ describe('ProofCard', () => {
     setError: vi.fn(),
     extractTextFromPDFWithMode: vi.fn().mockResolvedValue('Texto extraído do PDF'),
     anonymizationEnabled: false,
-    grokEnabled: false,
+    binaryPdfBlocked: false,
     anonConfig: null,
     nomesParaAnonimizar: [],
     editorTheme: 'dark',
@@ -390,10 +390,11 @@ describe('ProofCard', () => {
   // GROK TESTS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  describe('Grok Support', () => {
-    it('should show Grok warning when enabled and no text extracted', () => {
+  describe('Binary PDF Blocked Support (Grok / DeepSeek)', () => {
+    it('should show Grok warning when binary blocked with reason=grok', () => {
       const props = createDefaultProps({
-        grokEnabled: true,
+        binaryPdfBlocked: true,
+        blockReason: 'grok',
         isPdf: true,
       });
       render(<ProofCard {...props} />);
@@ -401,9 +402,21 @@ describe('ProofCard', () => {
       expect(screen.getByText(/Grok selecionado/)).toBeInTheDocument();
     });
 
-    it('should not show Grok warning when anonymization is also enabled', () => {
+    it('should show DeepSeek warning when binary blocked with reason=deepseek', () => {
       const props = createDefaultProps({
-        grokEnabled: true,
+        binaryPdfBlocked: true,
+        blockReason: 'deepseek',
+        isPdf: true,
+      });
+      render(<ProofCard {...props} />);
+
+      expect(screen.getByText(/DeepSeek selecionado/)).toBeInTheDocument();
+    });
+
+    it('should not show provider warning when anonymization is also enabled', () => {
+      const props = createDefaultProps({
+        binaryPdfBlocked: true,
+        blockReason: 'grok',
         anonymizationEnabled: true,
         isPdf: true,
       });
@@ -414,9 +427,20 @@ describe('ProofCard', () => {
       expect(screen.queryByText(/Grok selecionado/)).not.toBeInTheDocument();
     });
 
-    it('should disable Usar PDF when Grok enabled', () => {
+    it('should disable Usar PDF when binary is blocked', () => {
       const props = createDefaultProps({
-        grokEnabled: true,
+        binaryPdfBlocked: true,
+        blockReason: 'grok',
+      });
+      render(<ProofCard {...props} />);
+
+      expect(screen.getByText('Usar PDF')).toBeDisabled();
+    });
+
+    it('should disable Usar PDF when binary is blocked by DeepSeek', () => {
+      const props = createDefaultProps({
+        binaryPdfBlocked: true,
+        blockReason: 'deepseek',
       });
       render(<ProofCard {...props} />);
 

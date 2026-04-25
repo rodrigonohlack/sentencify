@@ -142,7 +142,8 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
                   setError={setError}
                   extractTextFromPDFWithMode={documentServices.extractTextFromPDFWithMode}
                   anonymizationEnabled={aiSettings?.anonymization?.enabled}
-                  grokEnabled={aiSettings?.provider === 'grok'}
+                  binaryPdfBlocked={aiSettings?.provider === 'grok' || aiSettings?.provider === 'deepseek'}
+                  blockReason={aiSettings?.provider === 'deepseek' ? 'deepseek' : aiSettings?.provider === 'grok' ? 'grok' : undefined}
                   anonConfig={aiSettings?.anonymization}
                   nomesParaAnonimizar={aiSettings?.anonymization?.nomesUsuario || []}
                   editorTheme={appTheme}
@@ -161,7 +162,8 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
                   setError={setError}
                   extractTextFromPDFWithMode={documentServices.extractTextFromPDFWithMode}
                   anonymizationEnabled={aiSettings?.anonymization?.enabled}
-                  grokEnabled={aiSettings?.provider === 'grok'}
+                  binaryPdfBlocked={aiSettings?.provider === 'grok' || aiSettings?.provider === 'deepseek'}
+                  blockReason={aiSettings?.provider === 'deepseek' ? 'deepseek' : aiSettings?.provider === 'grok' ? 'grok' : undefined}
                   anonConfig={aiSettings?.anonymization}
                   nomesParaAnonimizar={aiSettings?.anonymization?.nomesUsuario || []}
                   editorTheme={appTheme}

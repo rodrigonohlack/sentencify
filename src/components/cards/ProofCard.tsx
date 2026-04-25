@@ -1,11 +1,12 @@
 /**
  * @file ProofCard.tsx
  * @description Card de prova PDF/Texto com extração, anonimização e análise
- * @version 1.36.86
+ * @version 1.43.14
  *
  * Extraído do App.tsx como parte da FASE 3 de refatoração.
  * v1.21.5: Suporte a anonimização de provas
  * v1.36.36: Bloquear PDF Puro quando Grok selecionado
+ * v1.43.14: grokEnabled → binaryPdfBlocked (cobre Grok e DeepSeek text-only)
  */
 
 import React from 'react';
@@ -31,7 +32,8 @@ export const ProofCard = React.memo(({
   setError: _setError,
   extractTextFromPDFWithMode,
   anonymizationEnabled = false,
-  grokEnabled = false,
+  binaryPdfBlocked = false,
+  blockReason,
   anonConfig = null,
   nomesParaAnonimizar = [],
   editorTheme = 'dark',
@@ -120,8 +122,8 @@ export const ProofCard = React.memo(({
         proofManager.setProofExtractionFailed((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: false }));
       } else {
         proofManager.setProofExtractionFailed((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
-        // So fazer fallback para PDF se NAO estiver bloqueado (anon/Grok)
-        const pdfBinaryBlocked = anonymizationEnabled || grokEnabled;
+        // So fazer fallback para PDF se NAO estiver bloqueado (anon/Grok/DeepSeek)
+        const pdfBinaryBlocked = anonymizationEnabled || binaryPdfBlocked;
         if (!pdfBinaryBlocked) {
           proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
         }
@@ -129,13 +131,13 @@ export const ProofCard = React.memo(({
     } catch (err) {
       setExtractionProgress(null);
       proofManager.setProofExtractionFailed((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
-      // So fazer fallback para PDF se NAO estiver bloqueado (anon/Grok)
-      const pdfBinaryBlocked = anonymizationEnabled || grokEnabled;
+      // So fazer fallback para PDF se NAO estiver bloqueado (anon/Grok/DeepSeek)
+      const pdfBinaryBlocked = anonymizationEnabled || binaryPdfBlocked;
       if (!pdfBinaryBlocked) {
         proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
       }
     }
-  }, [proof.id, proof.file, proofManager, extractTextFromPDFWithMode, anonymizationEnabled, anonConfig, grokEnabled]);
+  }, [proof.id, proof.file, proofManager, extractTextFromPDFWithMode, anonymizationEnabled, anonConfig, binaryPdfBlocked]);
 
   // Handler: Extrair texto do PDF
   const handleExtractText = React.useCallback(async () => {
@@ -290,12 +292,12 @@ export const ProofCard = React.memo(({
       // Usar modo do anexo (default: pdfjs)
       const userMode = attachment.processingMode || 'pdfjs';
       // Bloquear claude-vision se anonimização ativa
-      // Bloquear pdf-puro se anonimização OU Grok ativos
+      // Bloquear pdf-puro se anonimização OU provider sem suporte a binário (Grok, DeepSeek)
       let selectedMode = userMode;
       if (anonymizationEnabled && userMode === 'claude-vision') {
         selectedMode = 'pdfjs';
       }
-      if ((anonymizationEnabled || grokEnabled) && userMode === 'pdf-puro') {
+      if ((anonymizationEnabled || binaryPdfBlocked) && userMode === 'pdf-puro') {
         selectedMode = 'pdfjs';
       }
 
@@ -310,7 +312,7 @@ export const ProofCard = React.memo(({
     } catch (err) {
       console.error('[ProofCard] Erro ao extrair texto do anexo:', err);
     }
-  }, [proof.id, anonymizationEnabled, grokEnabled, anonConfig, nomesParaAnonimizar, extractTextFromPDFWithMode, updateAttachmentExtractedText]);
+  }, [proof.id, anonymizationEnabled, binaryPdfBlocked, anonConfig, nomesParaAnonimizar, extractTextFromPDFWithMode, updateAttachmentExtractedText]);
 
   // Obter anexos da prova atual
   const attachments = proof.attachments || [];
@@ -387,8 +389,8 @@ export const ProofCard = React.memo(({
             </div>
           )}
 
-          {/* Aviso para PDF com Grok selecionado (só mostra se anonimização não ativa) */}
-          {isPdf && grokEnabled && !anonymizationEnabled && !proofManager.extractedProofTexts[proof.id] && (
+          {/* Aviso para PDF com provider que não suporta binário (só mostra se anonimização não ativa) */}
+          {isPdf && binaryPdfBlocked && !anonymizationEnabled && !proofManager.extractedProofTexts[proof.id] && (
             <div className={`mb-3 p-2 rounded text-xs flex items-start gap-2 ${
               editorTheme === 'dark'
                 ? 'bg-orange-600/20 border border-orange-500/30 text-orange-300'
@@ -396,7 +398,12 @@ export const ProofCard = React.memo(({
             }`}>
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <div>
-                <span className="font-medium">Grok selecionado:</span> Grok não suporta PDF binário. Extraia o texto primeiro.
+                <span className="font-medium">
+                  {blockReason === 'deepseek' ? 'DeepSeek selecionado:' : blockReason === 'grok' ? 'Grok selecionado:' : 'Provider sem suporte:'}
+                </span>{' '}
+                {blockReason === 'deepseek'
+                  ? 'DeepSeek não suporta PDF binário (text-only). Extraia o texto primeiro.'
+                  : 'Provider atual não suporta PDF binário. Extraia o texto primeiro.'}
               </div>
             </div>
           )}
@@ -412,15 +419,23 @@ export const ProofCard = React.memo(({
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSetPdfMode}
-                  disabled={proof.isPlaceholder || !!extractionProgress || anonymizationEnabled || grokEnabled}
+                  disabled={proof.isPlaceholder || !!extractionProgress || anonymizationEnabled || binaryPdfBlocked}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                    proof.isPlaceholder || extractionProgress || anonymizationEnabled || grokEnabled
+                    proof.isPlaceholder || extractionProgress || anonymizationEnabled || binaryPdfBlocked
                       ? 'theme-bg-tertiary-30 theme-text-disabled cursor-not-allowed'
                       : proofManager.proofUsePdfMode[proof.id]
                       ? 'bg-blue-600 text-white shadow-lg hover-blue-700-from-600'
                       : 'theme-bg-tertiary-50 theme-text-muted hover-slate-600'
                   }`}
-                  title={proof.isPlaceholder ? 'PDF original não disponível' : anonymizationEnabled ? 'Anonimização ativa: PDF binário bloqueado' : grokEnabled ? 'Grok não suporta PDF binário' : ''}
+                  title={
+                    proof.isPlaceholder
+                      ? 'PDF original não disponível'
+                      : anonymizationEnabled
+                        ? 'Anonimização ativa: PDF binário bloqueado'
+                        : binaryPdfBlocked
+                          ? (blockReason === 'deepseek' ? 'DeepSeek não suporta PDF binário (text-only)' : 'Grok não suporta PDF binário')
+                          : ''
+                  }
                 >
                   Usar PDF
                 </button>
@@ -450,7 +465,8 @@ export const ProofCard = React.memo(({
                   }))}
                   disabled={proofManager.isAnalyzingProof(String(proof.id)) || !!extractionProgress}
                   anonymizationEnabled={anonymizationEnabled}
-                  grokEnabled={grokEnabled}
+                  binaryPdfBlocked={binaryPdfBlocked}
+                  blockReason={blockReason}
                 />
               </div>
 
@@ -481,10 +497,10 @@ export const ProofCard = React.memo(({
               {/* Indicador de extração falhada - mensagem diferente quando PDF bloqueado */}
               {proofManager.proofExtractionFailed[proof.id] && (
                 <div className={`mt-2 text-xs flex items-center gap-1 ${
-                  (anonymizationEnabled || grokEnabled) ? 'text-red-400' : 'text-amber-400'
+                  (anonymizationEnabled || binaryPdfBlocked) ? 'text-red-400' : 'text-amber-400'
                 }`}>
                   <AlertCircle className="w-3 h-3" />
-                  {(anonymizationEnabled || grokEnabled)
+                  {(anonymizationEnabled || binaryPdfBlocked)
                     ? 'PDF sem texto extraível - extração obrigatória (tente Tesseract OCR)'
                     : 'PDF sem texto extraível (imagem) - usando PDF completo'}
                 </div>
@@ -615,7 +631,8 @@ export const ProofCard = React.memo(({
                             value={attachment.processingMode || 'pdfjs'}
                             onChange={(mode) => updateAttachmentProcessingMode(proof.id, attachment.id, mode)}
                             anonymizationEnabled={anonymizationEnabled}
-                            grokEnabled={grokEnabled}
+                            binaryPdfBlocked={binaryPdfBlocked}
+                            blockReason={blockReason}
                           />
                         </div>
                         <button

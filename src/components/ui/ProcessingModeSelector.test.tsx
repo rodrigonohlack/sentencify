@@ -134,21 +134,21 @@ describe('ProcessingModeSelector', () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // GROK MODE TESTS
+  // BINARY PDF BLOCKED TESTS (Grok / DeepSeek)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  describe('Grok Mode', () => {
-    it('should block pdf-puro when Grok is enabled', () => {
+  describe('Binary PDF Blocked - Grok', () => {
+    it('should block pdf-puro when Grok blocks binary PDFs', () => {
       render(
-        <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} grokEnabled={true} />
+        <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} binaryPdfBlocked={true} blockReason="grok" />
       );
 
       expect(screen.getByText('🔒 PDF Binário (Grok)')).toBeInTheDocument();
     });
 
-    it('should NOT block claude-vision when only Grok is enabled', () => {
+    it('should NOT block claude-vision when only binary is blocked', () => {
       render(
-        <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} grokEnabled={true} />
+        <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} binaryPdfBlocked={true} blockReason="grok" />
       );
 
       expect(screen.getByText('Claude Vision (API)')).toBeInTheDocument();
@@ -156,20 +156,48 @@ describe('ProcessingModeSelector', () => {
 
     it('should fallback to pdfjs when pdf-puro is blocked by Grok', () => {
       render(
-        <ProcessingModeSelector value="pdf-puro" onChange={mockOnChange} grokEnabled={true} />
+        <ProcessingModeSelector value="pdf-puro" onChange={mockOnChange} binaryPdfBlocked={true} blockReason="grok" />
       );
 
       const select = screen.getByRole('combobox') as HTMLSelectElement;
       expect(select.value).toBe('pdfjs');
     });
 
-    it('should show Grok tooltip when enabled', () => {
+    it('should show Grok tooltip when blocked by Grok', () => {
       render(
-        <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} grokEnabled={true} />
+        <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} binaryPdfBlocked={true} blockReason="grok" />
       );
 
       const select = screen.getByRole('combobox');
       expect(select.title).toBe('Grok não suporta PDF binário');
+    });
+  });
+
+  describe('Binary PDF Blocked - DeepSeek', () => {
+    it('should block pdf-puro when DeepSeek blocks binary PDFs', () => {
+      render(
+        <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} binaryPdfBlocked={true} blockReason="deepseek" />
+      );
+
+      expect(screen.getByText('🔒 PDF Binário (DeepSeek)')).toBeInTheDocument();
+    });
+
+    it('should fallback to pdfjs when pdf-puro is blocked by DeepSeek', () => {
+      render(
+        <ProcessingModeSelector value="pdf-puro" onChange={mockOnChange} binaryPdfBlocked={true} blockReason="deepseek" />
+      );
+
+      const select = screen.getByRole('combobox') as HTMLSelectElement;
+      expect(select.value).toBe('pdfjs');
+    });
+
+    it('should show DeepSeek tooltip when blocked by DeepSeek', () => {
+      render(
+        <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} binaryPdfBlocked={true} blockReason="deepseek" />
+      );
+
+      const select = screen.getByRole('combobox');
+      expect(select.title).toBe('DeepSeek não suporta PDF binário (text-only em abr/2026)');
     });
   });
 
@@ -178,13 +206,14 @@ describe('ProcessingModeSelector', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Combined Blocking', () => {
-    it('should prioritize anonymization label over Grok when both enabled', () => {
+    it('should prioritize anonymization label over binary block when both enabled', () => {
       render(
         <ProcessingModeSelector
           value="pdfjs"
           onChange={mockOnChange}
           anonymizationEnabled={true}
-          grokEnabled={true}
+          binaryPdfBlocked={true}
+          blockReason="grok"
         />
       );
 
