@@ -37,6 +37,12 @@ describe('useVoiceImprovement', () => {
     it('should have grok-instant config', () => {
       expect(VOICE_MODEL_CONFIG['grok-instant'].provider).toBe('grok');
     });
+
+    it('should have deepseek-flash config (v1.43.06)', () => {
+      expect(VOICE_MODEL_CONFIG['deepseek-flash'].provider).toBe('deepseek');
+      expect(VOICE_MODEL_CONFIG['deepseek-flash'].model).toBe('deepseek-v4-flash');
+      expect(VOICE_MODEL_CONFIG['deepseek-flash'].displayName).toBe('DeepSeek V4 Flash');
+    });
   });
 
   describe('improveText', () => {

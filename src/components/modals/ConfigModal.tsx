@@ -1158,6 +1158,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     <option value="gemini">Gemini (Google)</option>
                     <option value="openai">GPT (OpenAI)</option>
                     <option value="grok">Grok (xAI)</option>
+                    <option value="deepseek">DeepSeek (V4)</option>
                   </select>
                 </div>
 
@@ -1203,6 +1204,12 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                         <option value="grok-4-1-fast-non-reasoning">Grok 4.1 Fast Instant</option>
                         <option value="grok-4.20-0309-reasoning">Grok 4.20 Fast (com reasoning)</option>
                         <option value="grok-4.20-0309-non-reasoning">Grok 4.20 Instant (sem thinking)</option>
+                      </>
+                    )}
+                    {aiSettings.doubleCheck?.provider === 'deepseek' && (
+                      <>
+                        <option value="deepseek-v4-flash">DeepSeek V4 Flash</option>
+                        <option value="deepseek-v4-pro">DeepSeek V4 Pro</option>
                       </>
                     )}
                   </select>

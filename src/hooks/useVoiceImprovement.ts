@@ -21,7 +21,7 @@ import { buildVoiceImprovementPrompt } from '../prompts/voice-improvement-prompt
 
 /** Configuração de modelo por provider */
 interface ModelConfig {
-  provider: 'claude' | 'gemini' | 'openai' | 'grok';
+  provider: 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
   model: string;
   displayName: string;
 }
@@ -47,6 +47,14 @@ export const VOICE_MODEL_CONFIG: Record<VoiceImprovementModel, ModelConfig> = {
     provider: 'grok',
     model: 'grok-4-1-fast-non-reasoning',
     displayName: 'Grok Instant'
+  },
+  // v1.43.06: DeepSeek V4-Flash — opção mais barata ($0.14/$0.28 por 1M)
+  // disableThinking: true é aplicado pelo callAI, então usa modo non-thinking
+  // (texto ditado é simples rewrite — DeepSeek sem thinking dá conta sem lazy)
+  'deepseek-flash': {
+    provider: 'deepseek',
+    model: 'deepseek-v4-flash',
+    displayName: 'DeepSeek V4 Flash'
   }
 };
 

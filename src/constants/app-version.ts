@@ -3,4 +3,4 @@
  * @description Versão do aplicativo - centralizada para evitar duplicação
  */
 
-export const APP_VERSION = '1.43.05';
+export const APP_VERSION = '1.43.06';

@@ -322,7 +322,7 @@ export interface AISettings {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** Modelos disponíveis para melhoria de voz (rápidos/baratos) */
-export type VoiceImprovementModel = 'haiku' | 'flash' | 'gpt-4o-mini' | 'grok-instant';
+export type VoiceImprovementModel = 'haiku' | 'flash' | 'gpt-4o-mini' | 'grok-instant' | 'deepseek-flash';
 
 /** Configurações de melhoria de texto ditado por voz */
 export interface VoiceImprovementSettings {
@@ -836,7 +836,8 @@ export interface AICallOptions {
   extractText?: boolean;
   validateResponse?: boolean;
   /** v1.37.90: Override do provider para chamadas específicas (ex: voice improvement) */
-  provider?: 'claude' | 'gemini' | 'openai' | 'grok';
+  /** v1.43.06: deepseek adicionado ao union */
+  provider?: AIProvider;
   /** v1.38.44: Override do thinking level do Gemini para chamadas específicas */
   geminiThinkingLevel?: GeminiThinkingLevel;
   /**

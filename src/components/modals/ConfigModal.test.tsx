@@ -183,6 +183,7 @@ vi.mock('../../hooks', () => ({
     'flash': { provider: 'gemini', model: 'gemini-3-flash-preview', displayName: 'Gemini 3 Flash' },
     'gpt-4o-mini': { provider: 'openai', model: 'gpt-4o-mini', displayName: 'GPT-4o Mini' },
     'grok-instant': { provider: 'grok', model: 'grok-4-1-fast-non-reasoning', displayName: 'Grok Instant' },
+    'deepseek-flash': { provider: 'deepseek', model: 'deepseek-v4-flash', displayName: 'DeepSeek V4 Flash' },
   },
 }));
 
