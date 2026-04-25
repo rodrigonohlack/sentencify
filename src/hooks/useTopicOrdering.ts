@@ -103,12 +103,21 @@ Use os números originais da lista. Não use \`\`\`json nem nenhum cercado de c�
       const isGemini = provider === 'gemini';
       const isDeepseek = provider === 'deepseek';
 
-      // v1.43.12: REMOVIDO o force-flash da v1.43.07. A v1.43.11 (JSON mode)
-      // resolveu a causa estrutural que motivava o override — Pro com thinking
-      // já não estoura mais o budget porque response_format força output
-      // estruturado. Agora o provider escolhido pelo usuário (Flash OU Pro) é
-      // respeitado em topic ordering. Pro vai ser mais caro ($0.04 vs $0.004/call
-      // aprox), mas o usuário pagou pra usar Pro, então a decisão é dele.
+      // v1.43.13: VOLTOU o force-flash da v1.43.07 (revertendo v1.43.12).
+      // Motivo: teste empírico v1.43.12 com Pro + JSON mode mostrou 4.5 min /
+      // 446KB / ~22K output tokens (~$0.077 por chamada vs $0.0006 no Flash).
+      // JSON mode resolveu a viabilidade técnica do Pro (não trunca mais), mas
+      // não resolveu cost/UX — Pro continua sendo modelo maior com reasoning
+      // mais denso. Pattern simétrico ao Voice Improvement (sempre Flash desde
+      // v1.43.06). Topic ordering é sub-task estruturada, Flash é suficiente.
+      const modelOverride = isDeepseek ? 'deepseek-v4-flash' : undefined;
+      if (isDeepseek && aiIntegration.aiSettings?.deepseekModel === 'deepseek-v4-pro') {
+        console.log(
+          '[reorderTopicsViaLLM] Forçando deepseek-v4-flash pra esta chamada. ' +
+          'Pro teria 4.5 min / 22K tokens (vs Flash 1.1 min / 12K). ' +
+          'Topic ordering é sub-task estruturada — Flash é suficiente.'
+        );
+      }
 
       const messages: AIMessage[] = [{
         role: 'user',
@@ -118,13 +127,13 @@ Use os números originais da lista. Não use \`\`\`json nem nenhum cercado de c�
         // v1.43.05: 20000 (era 8000) — topic ordering NÃO é trivial. Reordenar
         // 16 tópicos trabalhistas exige classificação jurídica (Preliminar /
         // Prejudicial / Mérito / Q.Finais), ordenação de Art.337 CPC, etc.
-        // Com thinking ativo + JSON mode (v1.43.11), 20K tokens cobre ambos
-        // Flash e Pro com folga.
+        // Com thinking ativo + JSON mode (v1.43.11), 20K tokens cobre Flash com folga.
         maxTokens: 20000,
         useInstructions: false,
+        // v1.43.13: força flash mesmo se user escolheu Pro globalmente
+        model: modelOverride,
         // v1.43.11: JSON mode pra DeepSeek — força response_format JSON e reduz
-        // drasticamente reasoning verbose. Só ativa quando provider é deepseek;
-        // outros ignoram. v1.43.12: passou a viabilizar Pro também.
+        // drasticamente reasoning verbose. Só ativa quando provider é deepseek.
         deepseekJsonMode: isDeepseek,
         // v1.43.05: disableThinking REMOVIDO (era true em v1.43.04). Sem thinking,
         // DeepSeek V4-Flash retornava ordem identidade [1,2,...,16] — lazy response
