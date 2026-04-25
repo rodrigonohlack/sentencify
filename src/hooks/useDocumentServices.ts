@@ -378,6 +378,7 @@ INSTRUÇÕES IMPORTANTES:
       } as unknown as { data: ArrayBuffer }).promise;
 
       const totalPages = pdf.numPages;
+      console.log(`[Gemini Vision] Iniciando extração de ${totalPages} páginas (batch=${BATCH_SIZE}, max_tokens=${MAX_TOKENS})`);
 
       // FASE 1: Renderizar TODAS as páginas para imagens base64
       const pageImages: { pageNum: number; base64: string }[] = [];
@@ -408,8 +409,9 @@ INSTRUÇÕES IMPORTANTES:
           canvas.height = 0;
         }
       }
+      console.log(`[Gemini Vision] ${pageImages.length}/${totalPages} páginas renderizadas em base64`);
 
-      // FASE 2: Processar em batches de até 50 páginas via Gemini
+      // FASE 2: Processar em batches de até BATCH_SIZE páginas via Gemini
       let fullText = '';
       const totalBatches = Math.ceil(totalPages / BATCH_SIZE);
 
@@ -452,9 +454,11 @@ INSTRUÇÕES IMPORTANTES:
 - Idioma do documento: ${idioma}`
         });
 
+        console.log(`[Gemini Vision] Batch ${batchIdx + 1}/${totalBatches}: enviando páginas ${firstPage}-${lastPage} (${batchImages.length} imagens)`);
         try {
           // v1.43.18: extractText: false para inspecionar finishReason e detectar truncamento.
-          // callGeminiAPI cuida de retry, métricas e conversão de formato.
+          // v1.43.19: + tratamento explícito de SAFETY/RECITATION/MALFORMED/OTHER (perdidos
+          // ao trocar de extractText: true para false — extractResponseText cobria SAFETY/RECITATION).
           const data = await aiIntegration.callGeminiAPI!(
             [{ role: 'user', content: content as unknown as AIMessage['content'] }],
             {
@@ -469,6 +473,7 @@ INSTRUÇÕES IMPORTANTES:
               finishReason?: string;
               content?: { parts?: Array<{ thought?: boolean; text?: string }> };
             }>;
+            promptFeedback?: { blockReason?: string };
           };
 
           const candidate = data?.candidates?.[0];
@@ -476,31 +481,73 @@ INSTRUÇÕES IMPORTANTES:
           const parts = candidate?.content?.parts || [];
           const textPart = parts.find((p) => !p.thought && p.text);
           const batchText = textPart?.text || '';
+          const promptBlock = data?.promptFeedback?.blockReason;
 
-          // v1.43.18: Detectar truncamento por max tokens e avisar explicitamente
+          console.log(
+            `[Gemini Vision] Batch ${batchIdx + 1} resposta: ` +
+            `finishReason=${finishReason || 'undefined'}, ` +
+            `parts=${parts.length} (text=${parts.filter((p) => p.text).length}, thought=${parts.filter((p) => p.thought).length}), ` +
+            `batchText=${batchText.length} chars` +
+            (promptBlock ? `, promptBlock=${promptBlock}` : '')
+          );
+
+          // v1.43.19: Detectar e logar TODOS os finishReason problemáticos.
+          // Quando extractText: false, perdemos os checks que extractResponseText fazia
+          // (SAFETY, RECITATION, "apenas thinking"). Reimplementados aqui.
+          if (promptBlock) {
+            console.error(`[Gemini Vision] 🚫 Prompt bloqueado: ${promptBlock} (páginas ${firstPage}-${lastPage})`);
+            fullText += `\n\n[ERRO: páginas ${firstPage}-${lastPage} — prompt bloqueado por ${promptBlock}]\n\n`;
+            continue;
+          }
+
+          if (finishReason === 'SAFETY') {
+            console.error(`[Gemini Vision] 🚫 Páginas ${firstPage}-${lastPage} bloqueadas por SAFETY filter (conteúdo sensível detectado pelo Gemini). Use Claude Vision ou Tesseract.`);
+            fullText += `\n\n[ERRO: páginas ${firstPage}-${lastPage} bloqueadas pelo filtro de segurança do Gemini — tente Claude Vision ou Tesseract]\n\n`;
+            continue;
+          }
+          if (finishReason === 'RECITATION') {
+            console.error(`[Gemini Vision] 🚫 Páginas ${firstPage}-${lastPage} bloqueadas por RECITATION (conteúdo identificado como citação protegida).`);
+            fullText += `\n\n[ERRO: páginas ${firstPage}-${lastPage} bloqueadas por RECITATION]\n\n`;
+            continue;
+          }
           if (finishReason === 'MAX_TOKENS') {
             console.warn(
               `[Gemini Vision] ⚠️ Páginas ${firstPage}-${lastPage} TRUNCADAS em MAX_TOKENS ` +
-              `(${MAX_TOKENS} tokens). Texto retornado é parcial. ` +
-              `Considere reduzir BATCH_SIZE ou usar Claude Vision para PDFs muito densos.`
+              `(${MAX_TOKENS} tokens). Texto retornado é parcial.`
             );
             fullText += batchText + `\n\n[AVISO: extração das páginas ${firstPage}-${lastPage} truncada em ${MAX_TOKENS} tokens — considere Claude Vision]\n\n`;
-          } else {
-            fullText += batchText + '\n\n';
+            continue;
           }
+
+          // Detectar text vazio mesmo sem finishReason explícito (caso edge)
+          if (!batchText.trim()) {
+            const hasThought = parts.some((p) => p.thought);
+            console.error(
+              `[Gemini Vision] ⚠️ Páginas ${firstPage}-${lastPage}: text vazio. ` +
+              `finishReason=${finishReason}, hasThought=${hasThought}, parts=${parts.length}. ` +
+              `Possível Gemini gastou budget em thinking sem gerar resposta. Tente Claude Vision.`
+            );
+            fullText += `\n\n[ERRO: páginas ${firstPage}-${lastPage} — Gemini retornou vazio (finishReason=${finishReason || 'unknown'})]\n\n`;
+            continue;
+          }
+
+          fullText += batchText + '\n\n';
         } catch (err) {
+          console.error(`[Gemini Vision] Erro no batch ${batchIdx + 1} (páginas ${firstPage}-${lastPage}):`, err);
           // Se falhar no primeiro batch, fallback para PDF.js puro
           if (batchIdx === 0) {
-            console.warn('[Gemini Vision] Fallback para PDF.js puro:', (err as Error).message);
+            console.warn('[Gemini Vision] Fallback para PDF.js puro');
             return await extractTextFromPDFPure(file, progressCallback);
           }
           // Se falhar em batches subsequentes, marcar erro e continuar
-          fullText += `\n\n[ERRO: Páginas ${startIdx + 1} a ${endIdx} não puderam ser processadas via OCR Gemini]\n\n`;
+          fullText += `\n\n[ERRO: Páginas ${startIdx + 1} a ${endIdx} não puderam ser processadas via OCR Gemini: ${(err as Error).message}]\n\n`;
           continue;
         }
       }
 
-      return fullText.trim();
+      const finalText = fullText.trim();
+      console.log(`[Gemini Vision] Extração completa: ${finalText.length} chars total (${totalBatches} batch(es))`);
+      return finalText;
     } catch (err) {
       console.warn('[Gemini Vision] Erro geral, fallback para PDF.js:', (err as Error).message);
       return await extractTextFromPDFPure(file, progressCallback);
