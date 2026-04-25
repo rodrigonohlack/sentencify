@@ -133,6 +133,10 @@ Use os números originais da lista. Não use \`\`\`json nem nenhum cercado de c�
         useInstructions: false,
         // v1.43.07: override pra flash quando provider é deepseek (ver acima)
         model: modelOverride,
+        // v1.43.11: JSON mode pra DeepSeek — força response_format JSON e reduz
+        // drasticamente reasoning verbose (antes: 500KB de stream em 3 min; esperado:
+        // ~50KB em 20-30s). Só ativa quando provider é deepseek; outros ignoram.
+        deepseekJsonMode: isDeepseek,
         // v1.43.05: disableThinking REMOVIDO (era true em v1.43.04). Sem thinking,
         // DeepSeek V4-Flash retornava ordem identidade [1,2,...,16] — lazy response
         // pra tarefa de classificação que ele percebia complexa. Claude/Gemini/OpenAI

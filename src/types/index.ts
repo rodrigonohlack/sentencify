@@ -848,6 +848,12 @@ export interface AICallOptions {
   /** v1.43.08: Override do reasoning_effort do DeepSeek */
   deepseekReasoningEffort?: 'high' | 'max';
   /**
+   * v1.43.11: Força DeepSeek a retornar JSON via response_format.
+   * Só aplica em callDeepseekAPI/callDeepseekAPIStream — outros providers ignoram.
+   * Usado pelo useTopicOrdering pra reduzir reasoning verbose em tarefas estruturadas.
+   */
+  deepseekJsonMode?: boolean;
+  /**
    * v1.42.02: Habilita busca na web durante a resposta. Apenas suportado
    * em providers com `supportsWebSearch=true` no WEB_SEARCH_REGISTRY (v1:
    * apenas Gemini). Bloqueado automaticamente se anonimização estiver ativa.

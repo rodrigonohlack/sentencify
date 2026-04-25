@@ -1251,7 +1251,9 @@ const useAIIntegration = () => {
       disableThinking = false,
       // v1.43.08: overrides per-call (Double Check usa isso pra ter sua própria config)
       deepseekThinking: optThinking,
-      deepseekReasoningEffort: optEffort
+      deepseekReasoningEffort: optEffort,
+      // v1.43.11: JSON mode (usado pelo topic ordering pra reduzir reasoning verbose)
+      deepseekJsonMode = false
     } = options;
 
     let finalSystemPrompt = systemPrompt as string | null;
@@ -1285,6 +1287,10 @@ const useAIIntegration = () => {
         };
         if (thinkingEnabled) {
           requestBody.reasoning_effort = reasoningEffort;
+        }
+        // v1.43.11: JSON mode — força output estruturado, reduz reasoning rambling
+        if (deepseekJsonMode) {
+          requestBody.response_format = { type: 'json_object' };
         }
 
         const response = await fetch(`${API_BASE}/api/deepseek/chat`, {
@@ -1745,7 +1751,9 @@ const useAIIntegration = () => {
       disableThinking = false,
       // v1.43.08: overrides per-call (Double Check)
       deepseekThinking: optThinking,
-      deepseekReasoningEffort: optEffort
+      deepseekReasoningEffort: optEffort,
+      // v1.43.11: JSON mode
+      deepseekJsonMode = false
     } = options;
 
     let finalSystemPrompt = systemPrompt as string | null;
@@ -1774,6 +1782,10 @@ const useAIIntegration = () => {
     };
     if (thinkingEnabled) {
       streamBody.reasoning_effort = reasoningEffort;
+    }
+    // v1.43.11: JSON mode (força output estruturado)
+    if (deepseekJsonMode) {
+      streamBody.response_format = { type: 'json_object' };
     }
 
     const response = await fetch(`${API_BASE}/api/deepseek/stream`, {
