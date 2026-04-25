@@ -629,12 +629,16 @@ INSTRUÇÕES IMPORTANTES:
     switch (engine) {
       case 'claude-vision':
         return await extractTextFromPDFWithClaudeVision(file, progressCallback);
+      case 'gemini-vision':
+        return await extractTextFromPDFWithGeminiVision(file, progressCallback);
+      case 'tesseract':
+        return await extractTextFromPDFWithTesseract(file, progressCallback);
       case 'pdf-puro':
         return null;
       default:
         return await extractTextFromPDFPure(file, progressCallback);
     }
-  }, [aiIntegration, extractTextFromPDFWithClaudeVision, extractTextFromPDFPure]);
+  }, [aiIntegration, extractTextFromPDFWithClaudeVision, extractTextFromPDFWithGeminiVision, extractTextFromPDFWithTesseract, extractTextFromPDFPure]);
 
   // 🆕 v1.12.20: Extração de texto com modo específico (para provas individuais)
   // v1.43.16: + 'gemini-vision' (OCR via Gemini Flash, ~4× mais barato que Claude)
@@ -831,7 +835,7 @@ INSTRUÇÕES IMPORTANTES:
     try {
       if (files.peticao) {
         const engine = aiIntegration?.aiSettings?.ocrEngine || 'pdfjs';
-        const engineLabel = engine === 'claude-vision' ? ' (Claude Vision)' : engine === 'tesseract' ? ' (Tesseract)' : engine === 'pdfjs' ? ' (PDF.js)' : '';
+        const engineLabel = engine === 'claude-vision' ? ' (Claude Vision)' : engine === 'gemini-vision' ? ' (Gemini Vision)' : engine === 'tesseract' ? ' (Tesseract)' : engine === 'pdfjs' ? ' (PDF.js)' : '';
         setAnalysisProgress(`📄 Extraindo texto da petição inicial${engineLabel}...`);
 
         try {
@@ -849,7 +853,7 @@ INSTRUÇÕES IMPORTANTES:
 
       if (files.contestacoes && files.contestacoes.length > 0) {
         const engine = aiIntegration?.aiSettings?.ocrEngine || 'pdfjs';
-        const engineLabel = engine === 'claude-vision' ? ' (Claude Vision)' : engine === 'tesseract' ? ' (Tesseract)' : engine === 'pdfjs' ? ' (PDF.js)' : '';
+        const engineLabel = engine === 'claude-vision' ? ' (Claude Vision)' : engine === 'gemini-vision' ? ' (Gemini Vision)' : engine === 'tesseract' ? ' (Tesseract)' : engine === 'pdfjs' ? ' (PDF.js)' : '';
         for (let i = 0; i < files.contestacoes.length; i++) {
           try {
             setAnalysisProgress(`📑 Extraindo texto da contestação ${i + 1}/${files.contestacoes.length}${engineLabel}...`);
@@ -870,7 +874,7 @@ INSTRUÇÕES IMPORTANTES:
 
       if (files.complementares && files.complementares.length > 0) {
         const engine = aiIntegration?.aiSettings?.ocrEngine || 'pdfjs';
-        const engineLabel = engine === 'claude-vision' ? ' (Claude Vision)' : engine === 'tesseract' ? ' (Tesseract)' : engine === 'pdfjs' ? ' (PDF.js)' : '';
+        const engineLabel = engine === 'claude-vision' ? ' (Claude Vision)' : engine === 'gemini-vision' ? ' (Gemini Vision)' : engine === 'tesseract' ? ' (Tesseract)' : engine === 'pdfjs' ? ' (PDF.js)' : '';
         for (let i = 0; i < files.complementares.length; i++) {
           try {
             setAnalysisProgress(`📎 Extraindo texto do documento complementar ${i + 1}/${files.complementares.length}${engineLabel}...`);

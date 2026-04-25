@@ -193,7 +193,7 @@ export const MAX_PROOF_ANALYSES = 5;
 // ═══════════════════════════════════════════════════════════════════════════
 
 export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
-export type OCREngine = 'pdfjs' | 'tesseract' | 'pdf-puro' | 'claude-vision';
+export type OCREngine = 'pdfjs' | 'tesseract' | 'pdf-puro' | 'claude-vision' | 'gemini-vision';
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
 export type OpenAIReasoningLevel = 'low' | 'medium' | 'high' | 'xhigh';
 export type DeepseekModel = 'deepseek-v4-flash' | 'deepseek-v4-pro' | '';

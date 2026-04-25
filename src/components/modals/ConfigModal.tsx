@@ -2076,6 +2076,34 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     </div>
                   </button>
 
+                  {/* Gemini Vision (v1.43.16) — meio-termo: qualidade alta, ~6× mais barato que Claude */}
+                  <button
+                    onClick={() => setAiSettings({ ...aiSettings, ocrEngine: 'gemini-vision' })}
+                    className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
+                      aiSettings.ocrEngine === 'gemini-vision'
+                        ? 'bg-blue-600/20 border-blue-500'
+                        : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mt-0.5 ${
+                        aiSettings.ocrEngine === 'gemini-vision' ? 'border-blue-500 bg-blue-500' : 'theme-border'
+                      }`}>
+                        {aiSettings.ocrEngine === 'gemini-vision' && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                      </div>
+                      <div className="flex-1">
+                        <div className={CSS.flexGap2}>
+                          <span className="font-semibold theme-text-primary text-sm">Gemini Flash Vision - OCR Rápido</span>
+                          <span className="text-xs bg-yellow-500 text-stone-900 px-2 py-0.5 rounded">API</span>
+                          <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded">Recomendado</span>
+                        </div>
+                        <p className="text-xs theme-text-muted mt-1">
+                          💰 ~$0.01/10 páginas (6× mais barato que Claude) | ✅ Excelente em PT-BR | ⏱️ ~2-5s por página
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+
                   {/* Claude Vision */}
                   <button
                     onClick={() => setAiSettings({ ...aiSettings, ocrEngine: 'claude-vision' })}
@@ -2093,26 +2121,35 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       </div>
                       <div className="flex-1">
                         <div className={CSS.flexGap2}>
-                          <span className="font-semibold theme-text-primary text-sm">Claude Vision - OCR Avançado</span>
+                          <span className="font-semibold theme-text-primary text-sm">Claude Vision - OCR Premium</span>
                           <span className="text-xs bg-yellow-500 text-stone-900 px-2 py-0.5 rounded">API</span>
                         </div>
                         <p className="text-xs theme-text-muted mt-1">
-                          💰 ~$0.04/10 páginas | ✅ Funciona com PDFs escaneados | ⏱️ ~3-8s por página
+                          💰 ~$0.04/10 páginas | ✅ Layouts complexos | ⏱️ ~3-8s por página
                         </p>
                       </div>
                     </div>
                   </button>
 
-                  {/* Aviso de custo para Claude Vision */}
-                  {aiSettings.ocrEngine === 'claude-vision' && (
+                  {/* Aviso de custo para Gemini/Claude Vision */}
+                  {(aiSettings.ocrEngine === 'claude-vision' || aiSettings.ocrEngine === 'gemini-vision') && (
                     <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3">
                       <div className="flex items-start gap-2">
                         <AlertCircle className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
                           <p className="text-xs font-semibold text-yellow-500 mb-1">Atenção: Consumo de Tokens</p>
                           <ul className="text-xs theme-text-tertiary space-y-1">
-                            <li>• ~100-500 tokens/página (entrada) + ~100-300 tokens/página (saída)</li>
-                            <li>• Estimativa: ~$0.04 USD para 10 páginas</li>
+                            {aiSettings.ocrEngine === 'gemini-vision' ? (
+                              <>
+                                <li>• Gemini Flash compacta imagens em poucos tokens (input baratíssimo)</li>
+                                <li>• Estimativa: ~$0.01 USD para 10 páginas</li>
+                              </>
+                            ) : (
+                              <>
+                                <li>• ~100-500 tokens/página (entrada) + ~100-300 tokens/página (saída)</li>
+                                <li>• Estimativa: ~$0.04 USD para 10 páginas</li>
+                              </>
+                            )}
                           </ul>
                         </div>
                       </div>
@@ -2135,7 +2172,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   <div>
                     <p className="text-sm font-medium theme-text-muted">Indisponível com o método atual</p>
                     <p className="text-xs theme-text-muted mt-1">
-                      A anonimização só funciona com extração via PDF.js ou Tesseract. Com "{aiSettings.ocrEngine === 'pdf-puro' ? 'PDF Puro' : 'Claude Vision'}", o documento já é enviado à IA antes da anonimização.
+                      A anonimização só funciona com extração via PDF.js ou Tesseract. Com "{aiSettings.ocrEngine === 'pdf-puro' ? 'PDF Puro' : aiSettings.ocrEngine === 'gemini-vision' ? 'Gemini Vision' : 'Claude Vision'}", o documento já é enviado à IA antes da anonimização.
                     </p>
                   </div>
                 </div>

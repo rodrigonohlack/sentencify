@@ -269,7 +269,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       const globalOcrEngine = aiIntegration.aiSettings?.ocrEngine;
       const anonConfig = aiIntegration.aiSettings?.anonymization;
       const anonymizationEnabled = anonConfig?.enabled;
-      const blockedModes = ['claude-vision', 'pdf-puro'];
+      const blockedModes = ['claude-vision', 'gemini-vision', 'pdf-puro'];
 
       const getEffectiveMode = (docMode: string | undefined) => {
         if (anonymizationEnabled && docMode && blockedModes.includes(docMode)) return 'pdfjs';
