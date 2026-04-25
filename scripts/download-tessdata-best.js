@@ -14,7 +14,7 @@
  *   public/tessdata/eng.traineddata.gz   (~10MB gzipado, 14.7MB raw)
  */
 
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, stat } from 'node:fs/promises';
 import { gzipSync } from 'node:zlib';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,7 +35,25 @@ const MODELS = [
   }
 ];
 
+async function fileExists(path) {
+  try {
+    const s = await stat(path);
+    return s.size > 0;
+  } catch {
+    return false;
+  }
+}
+
 async function downloadAndGzip({ name, url, description }) {
+  const outputPath = join(OUTPUT_DIR, `${name}.traineddata.gz`);
+
+  // v1.43.21: skip se já existe (idempotente — usado como prebuild no Render).
+  // Pra forçar redownload: rm public/tessdata/*.gz
+  if (!process.argv.includes('--force') && await fileExists(outputPath)) {
+    console.log(`[${name}] Já existe (${outputPath}), pulando. Use --force pra redownload.`);
+    return;
+  }
+
   console.log(`\n[${name}] ${description}`);
   console.log(`[${name}] Baixando ${url}...`);
   const t0 = Date.now();
@@ -56,7 +74,6 @@ async function downloadAndGzip({ name, url, description }) {
   const ratio = ((1 - gzipped.length / buffer.length) * 100).toFixed(1);
   console.log(`[${name}] Gzipado: ${(gzipped.length / 1024 / 1024).toFixed(2)} MB (-${ratio}%) em ${gzipMs}ms`);
 
-  const outputPath = join(OUTPUT_DIR, `${name}.traineddata.gz`);
   await writeFile(outputPath, gzipped);
   console.log(`[${name}] Salvo em ${outputPath}`);
 }

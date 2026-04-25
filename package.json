@@ -8,6 +8,7 @@
     "client": "vite --port 3000",
     "server": "node server/index.js",
     "build": "tsc --noEmit && vite build",
+    "prebuild": "node scripts/download-tessdata-best.js",
     "preview": "vite preview",
     "start": "node server/index.js",
     "test": "vitest",
