@@ -629,7 +629,8 @@ const useAIIntegration = () => {
   // Extrair métricas de tokens da resposta (provider-aware)
   const extractTokenMetrics = React.useCallback((data: Record<string, unknown>, provider: AIProvider) => {
     // v1.35.97: OpenAI e Grok usam mesmo formato (OpenAI-compatible)
-    if (provider === 'openai' || provider === 'grok') {
+    // v1.43.00: DeepSeek também é OpenAI-compatible (mesmo usage.prompt_tokens_details.cached_tokens)
+    if (provider === 'openai' || provider === 'grok' || provider === 'deepseek') {
       const usage = (data.usage || {}) as Record<string, unknown>;
       const promptDetails = (usage.prompt_tokens_details || {}) as Record<string, number>;
       return {
@@ -667,7 +668,8 @@ const useAIIntegration = () => {
   // Extrair texto da resposta (provider-aware)
   const extractResponseText = React.useCallback((data: Record<string, unknown>, provider: AIProvider) => {
     // v1.35.97: OpenAI e Grok usam mesmo formato (OpenAI-compatible)
-    if (provider === 'openai' || provider === 'grok') {
+    // v1.43.00: DeepSeek também é OpenAI-compatible
+    if (provider === 'openai' || provider === 'grok' || provider === 'deepseek') {
       const choices = data.choices as Record<string, unknown>[] | undefined;
       const message = choices?.[0]?.message as Record<string, unknown> | undefined;
 
@@ -1176,6 +1178,105 @@ const useAIIntegration = () => {
     });
   }, [aiSettings, convertToOpenAIFormat, extractTokenMetrics, extractResponseText, setTokenMetrics, getAiInstructions]);
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DEEPSEEK V4 INTEGRATION (v1.43.00)
+  // API OpenAI-compatible: https://api.deepseek.com/v1/chat/completions
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const DEEPSEEK_RETRY_CODES = [429, 500, 502, 503, 529];
+
+  const DEEPSEEK_CONFIG = {
+    MAX_TOKENS_DEFAULT: 8192
+  } as const;
+
+  const callDeepseekAPI = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
+    const {
+      maxTokens = DEEPSEEK_CONFIG.MAX_TOKENS_DEFAULT,
+      systemPrompt = null,
+      useInstructions = false,
+      model = aiSettings.deepseekModel || 'deepseek-v4-flash',
+      abortSignal = null,
+      logMetrics = true,
+      extractText = true
+    } = options;
+
+    let finalSystemPrompt = systemPrompt as string | null;
+    if (!finalSystemPrompt && useInstructions) {
+      const instructions = getAiInstructions();
+      finalSystemPrompt = Array.isArray(instructions)
+        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
+        : instructions;
+    }
+
+    const makeRequest = async () => {
+      try {
+        const deepseekMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
+
+        const requestBody = {
+          model,
+          messages: deepseekMessages,
+          max_tokens: maxTokens
+        };
+
+        const response = await fetch(`${API_BASE}/api/deepseek/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': aiSettings.apiKeys?.deepseek || ''
+          },
+          body: JSON.stringify(requestBody),
+          signal: abortSignal
+        });
+
+        if (DEEPSEEK_RETRY_CODES.includes(response.status)) {
+          const error = new Error(`HTTP ${response.status}`) as Error & { status: number };
+          error.status = response.status;
+          throw error;
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const errorMsg = data.error?.message || `DeepSeek API error: ${response.status}`;
+          throw new Error(errorMsg);
+        }
+
+        if (logMetrics) {
+          const metrics = extractTokenMetrics(data, 'deepseek');
+          addTokenUsage({
+            input: metrics.input,
+            output: metrics.output,
+            cacheRead: metrics.cacheRead,
+            cacheCreation: metrics.cacheCreation,
+            model,
+            provider: 'deepseek'
+          });
+        }
+
+        if (extractText) {
+          return extractResponseText(data, 'deepseek');
+        }
+        return data;
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') {
+          throw new Error('Operação cancelada pelo usuário');
+        }
+        throw err;
+      }
+    };
+
+    return await withRetry(makeRequest, {
+      maxRetries: 3,
+      initialDelayMs: 5000,
+      backoffType: 'linear',
+      retryableStatusCodes: DEEPSEEK_RETRY_CODES,
+      abortSignal,
+      onRetry: (attempt, err, delay) => {
+        console.warn(`[DeepSeek] Retry ${attempt}, aguardando ${delay}ms:`, err.message);
+      }
+    });
+  }, [aiSettings, convertToOpenAIFormat, extractTokenMetrics, extractResponseText, addTokenUsage, getAiInstructions]);
+
   // Função unificada que escolhe Claude, Gemini, OpenAI ou Grok baseado no provider
   // v1.37.90: Permite override do provider via options para casos específicos (ex: voice improvement)
   const callAI = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
@@ -1197,6 +1298,14 @@ const useAIIntegration = () => {
       });
     }
 
+    // v1.43.00: DeepSeek V4
+    if (provider === 'deepseek') {
+      return await callDeepseekAPI(messages, {
+        ...options,
+        model: options.model || aiSettings.deepseekModel || 'deepseek-v4-flash'
+      });
+    }
+
     if (provider === 'gemini') {
       return await callGeminiAPI(messages, {
         ...options,
@@ -1209,7 +1318,7 @@ const useAIIntegration = () => {
       ...options,
       model: options.model || aiSettings.claudeModel || 'claude-sonnet-4-20250514'
     });
-  }, [aiSettings, callLLM, callGeminiAPI, callOpenAIAPI, callGrokAPI]);
+  }, [aiSettings, callLLM, callGeminiAPI, callOpenAIAPI, callGrokAPI, callDeepseekAPI]);
 
   // ========================================
   // END MULTI-PROVIDER SUPPORT
@@ -1228,7 +1337,10 @@ const useAIIntegration = () => {
       'gpt-5.2-chat-latest': 'GPT-5.2 Instant',
       // v1.35.97: xAI Grok 4.1
       'grok-4-1-fast-reasoning': 'Grok 4.1 Fast',
-      'grok-4-1-fast-non-reasoning': 'Grok 4.1 Instant'
+      'grok-4-1-fast-non-reasoning': 'Grok 4.1 Instant',
+      // v1.43.00: DeepSeek V4
+      'deepseek-v4-flash': 'DeepSeek V4 Flash',
+      'deepseek-v4-pro': 'DeepSeek V4 Pro'
     };
     return models[modelId] || modelId;
   }, []);
@@ -1549,6 +1661,98 @@ const useAIIntegration = () => {
   }, [aiSettings, addTokenUsage, convertToOpenAIFormat, getAiInstructions]);
 
   /**
+   * Chamada DeepSeek V4 com streaming (v1.43.00)
+   */
+  const callDeepseekAPIStream = React.useCallback(async (
+    messages: AIMessage[],
+    options: AIStreamOptions = {}
+  ): Promise<string> => {
+    const {
+      maxTokens = 8000,
+      systemPrompt = null,
+      useInstructions = false,
+      model = aiSettings.deepseekModel || 'deepseek-v4-flash',
+      onChunk
+    } = options;
+
+    let finalSystemPrompt = systemPrompt as string | null;
+    if (!finalSystemPrompt && useInstructions) {
+      const instructions = getAiInstructions();
+      finalSystemPrompt = Array.isArray(instructions)
+        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
+        : instructions;
+    }
+
+    const deepseekMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
+
+    const response = await fetch(`${API_BASE}/api/deepseek/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': aiSettings.apiKeys?.deepseek || ''
+      },
+      body: JSON.stringify({
+        model,
+        messages: deepseekMessages,
+        max_tokens: maxTokens
+      })
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error?.message || `HTTP ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('Stream não disponível');
+
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const parsed = JSON.parse(line.slice(6));
+
+            if (parsed.type === 'text') {
+              fullText += parsed.text;
+              onChunk?.(fullText);
+            }
+
+            if (parsed.type === 'error') {
+              throw new Error(parsed.error?.message || 'Erro no streaming');
+            }
+
+            if (parsed.type === 'done' && parsed.usage) {
+              addTokenUsage({
+                input: parsed.usage.prompt_tokens || 0,
+                output: parsed.usage.completion_tokens || 0,
+                cacheRead: parsed.usage.prompt_tokens_details?.cached_tokens || 0,
+                model,
+                provider: 'deepseek'
+              });
+            }
+          } catch (e) {
+            if (e instanceof SyntaxError) continue;
+            throw e;
+          }
+        }
+      }
+    }
+
+    return fullText.trim();
+  }, [aiSettings, addTokenUsage, convertToOpenAIFormat, getAiInstructions]);
+
+  /**
    * Chamada Gemini com streaming
    */
   const callGeminiAPIStream = React.useCallback(async (
@@ -1700,10 +1904,12 @@ const useAIIntegration = () => {
         return callOpenAIAPIStream(messages, options);
       case 'grok':
         return callGrokAPIStream(messages, options);
+      case 'deepseek':
+        return callDeepseekAPIStream(messages, options);
       default:
         return callClaudeAPIStream(messages, options);
     }
-  }, [aiSettings.provider, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream]);
+  }, [aiSettings.provider, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream]);
 
   /**
    * Chama a API com streaming para provider/modelo específico (para double check)

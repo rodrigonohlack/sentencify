@@ -65,6 +65,9 @@ describe('useAIStore', () => {
 
       store.setProvider('grok');
       expect(useAIStore.getState().aiSettings.provider).toBe('grok');
+
+      store.setProvider('deepseek');
+      expect(useAIStore.getState().aiSettings.provider).toBe('deepseek');
     });
 
     it('should set claude model correctly', () => {
@@ -109,6 +112,21 @@ describe('useAIStore', () => {
 
       expect(useAIStore.getState().aiSettings.grokModel).toBe('grok-4-1-fast-non-reasoning');
     });
+
+    it('should have empty deepseek model by default (user must choose)', () => {
+      const state = useAIStore.getState();
+      expect(state.aiSettings.deepseekModel).toBe('');
+    });
+
+    it('should set deepseek model correctly', () => {
+      const store = useAIStore.getState();
+
+      store.setDeepseekModel('deepseek-v4-pro');
+      expect(useAIStore.getState().aiSettings.deepseekModel).toBe('deepseek-v4-pro');
+
+      store.setDeepseekModel('deepseek-v4-flash');
+      expect(useAIStore.getState().aiSettings.deepseekModel).toBe('deepseek-v4-flash');
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -146,6 +164,14 @@ describe('useAIStore', () => {
       store.setApiKey('grok', 'xai-test-key');
 
       expect(useAIStore.getState().aiSettings.apiKeys.grok).toBe('xai-test-key');
+    });
+
+    it('should set api key for deepseek', () => {
+      const store = useAIStore.getState();
+
+      store.setApiKey('deepseek', 'sk-deepseek-test');
+
+      expect(useAIStore.getState().aiSettings.apiKeys.deepseek).toBe('sk-deepseek-test');
     });
   });
 

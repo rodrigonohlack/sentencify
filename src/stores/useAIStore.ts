@@ -214,6 +214,7 @@ export interface ApiTestStatuses {
   gemini: ApiTestStatus;
   openai: ApiTestStatus;
   grok: ApiTestStatus;
+  deepseek: ApiTestStatus;
 }
 
 /** Estado inicial dos testes de API */
@@ -222,6 +223,7 @@ const initialApiTestStatuses: ApiTestStatuses = {
   gemini: null,
   openai: null,
   grok: null,
+  deepseek: null,
 };
 
 /** Estado inicial do AISettings */
@@ -232,11 +234,13 @@ const initialAISettings: AISettings = {
   openaiModel: 'gpt-5.2-chat-latest',
   openaiReasoningLevel: 'medium',
   grokModel: 'grok-4-1-fast-reasoning',
+  deepseekModel: '',
   apiKeys: {
     claude: '',
     gemini: '',
     openai: '',
-    grok: ''
+    grok: '',
+    deepseek: ''
   },
   useExtendedThinking: false,
   thinkingBudget: '10000',
@@ -327,6 +331,7 @@ interface AIStoreState {
   setOpenAIModel: (model: 'gpt-5.2' | 'gpt-5.2-chat-latest') => void;
   setGrokModel: (model: 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning'
                       | 'grok-4.20-0309-reasoning' | 'grok-4.20-0309-non-reasoning') => void;
+  setDeepseekModel: (model: 'deepseek-v4-flash' | 'deepseek-v4-pro' | '') => void;
   setApiKey: (provider: AIProvider, key: string) => void;
   setThinkingBudget: (budget: string) => void;
   setUseExtendedThinking: (enabled: boolean) => void;
@@ -350,7 +355,7 @@ interface AIStoreState {
     cacheRead?: number;
     cacheCreation?: number;
     model?: string;
-    provider?: 'claude' | 'gemini' | 'openai' | 'grok';
+    provider?: 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
   }) => void;
   resetTokenMetrics: () => void;
 
@@ -498,6 +503,15 @@ export const useAIStore = create<AIStoreState>()(
             },
             false,
             `setGrokModel/${model}`
+          ),
+
+        setDeepseekModel: (model) =>
+          set(
+            (state) => {
+              state.aiSettings.deepseekModel = model;
+            },
+            false,
+            `setDeepseekModel/${model}`
           ),
 
         setApiKey: (provider, key) =>
@@ -807,7 +821,7 @@ export const useAIStore = create<AIStoreState>()(
           aiSettings: {
             ...state.aiSettings,
             // Remover apiKeys da persistência por segurança
-            apiKeys: { claude: '', gemini: '', openai: '', grok: '' }
+            apiKeys: { claude: '', gemini: '', openai: '', grok: '', deepseek: '' }
           },
           tokenMetrics: state.tokenMetrics
         }),
@@ -885,12 +899,13 @@ export const selectProvider = (state: AIStoreState): AIProvider =>
 
 /** Selector: Retorna modelo atual baseado no provider */
 export const selectCurrentModel = (state: AIStoreState): string => {
-  const { provider, claudeModel, geminiModel, openaiModel, grokModel } = state.aiSettings;
+  const { provider, claudeModel, geminiModel, openaiModel, grokModel, deepseekModel } = state.aiSettings;
   switch (provider) {
     case 'claude': return claudeModel;
     case 'gemini': return geminiModel;
     case 'openai': return openaiModel;
     case 'grok': return grokModel;
+    case 'deepseek': return deepseekModel;
     default: return claudeModel;
   }
 };

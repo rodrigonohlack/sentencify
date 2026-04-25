@@ -24,6 +24,7 @@ import claudeRoutes from './routes/claude.js';
 import geminiRoutes from './routes/gemini.js';
 import openaiRoutes from './routes/openai.js';
 import grokRoutes from './routes/grok.js';
+import deepseekRoutes from './routes/deepseek.js';
 import authRoutes from './routes/auth.js';
 import authMagicRoutes from './routes/auth-magic.js';
 import modelsRoutes from './routes/models.js';
@@ -100,7 +101,7 @@ app.use((req, res, next) => {
     "font-src 'self' https://fonts.gstatic.com",
 
     // Conexões: APIs de IA, Google, HuggingFace, GitHub, Sentry, CDNs
-    "connect-src 'self' https://api.anthropic.com https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://github.com https://raw.githubusercontent.com https://cdn-lfs.huggingface.co https://huggingface.co https://cas-bridge.xethub.hf.co https://o4510650008076288.ingest.us.sentry.io https://cdn.quilljs.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+    "connect-src 'self' https://api.anthropic.com https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://api.deepseek.com https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://github.com https://raw.githubusercontent.com https://cdn-lfs.huggingface.co https://huggingface.co https://cas-bridge.xethub.hf.co https://o4510650008076288.ingest.us.sentry.io https://cdn.quilljs.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
 
     // Frames: popup do Google OAuth
     "frame-src 'self' https://accounts.google.com",
@@ -178,6 +179,7 @@ app.use('/api/claude', aiLimiter);
 app.use('/api/gemini', aiLimiter);
 app.use('/api/openai', aiLimiter);
 app.use('/api/grok', aiLimiter);
+app.use('/api/deepseek', aiLimiter);
 app.use('/api/financeiro/categorize', aiLimiter);
 app.use('/api', generalLimiter);
 
@@ -228,6 +230,7 @@ app.use('/api/claude', claudeRoutes);
 app.use('/api/gemini', geminiRoutes);
 app.use('/api/openai', openaiRoutes);
 app.use('/api/grok', grokRoutes);
+app.use('/api/deepseek', deepseekRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

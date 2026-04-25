@@ -368,9 +368,11 @@ describe('ConfigModal', () => {
       expect(screen.getByPlaceholderText('AIza...')).toBeInTheDocument();
     });
 
-    it('should render OpenAI API key input', () => {
+    it('should render OpenAI and DeepSeek API key inputs (both use sk-... placeholder)', () => {
       render(<ConfigModal isOpen={true} onClose={vi.fn()} />);
-      expect(screen.getByPlaceholderText('sk-...')).toBeInTheDocument();
+      // OpenAI + DeepSeek usam o mesmo prefixo sk- (v1.43.00)
+      const skInputs = screen.getAllByPlaceholderText('sk-...');
+      expect(skInputs).toHaveLength(2);
     });
 
     it('should render Grok API key input', () => {
@@ -383,9 +385,10 @@ describe('ConfigModal', () => {
       const inputs = [
         screen.getByPlaceholderText('sk-ant-...'),
         screen.getByPlaceholderText('AIza...'),
-        screen.getByPlaceholderText('sk-...'),
+        ...screen.getAllByPlaceholderText('sk-...'),  // OpenAI + DeepSeek
         screen.getByPlaceholderText('xai-...'),
       ];
+      expect(inputs).toHaveLength(5);
       inputs.forEach(input => expect(input).toHaveAttribute('type', 'password'));
     });
 

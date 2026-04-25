@@ -85,7 +85,10 @@ const getModelDisplayName = (modelId: string): string => {
     'grok-4-1-fast-non-reasoning': 'Grok 4.1 Instant',
     // xAI Grok 4.20
     'grok-4.20-0309-reasoning': 'Grok 4.20 Fast',
-    'grok-4.20-0309-non-reasoning': 'Grok 4.20 Instant'
+    'grok-4.20-0309-non-reasoning': 'Grok 4.20 Instant',
+    // v1.43.00: DeepSeek V4
+    'deepseek-v4-flash': 'DeepSeek V4 Flash',
+    'deepseek-v4-pro': 'DeepSeek V4 Pro'
   };
   return models[modelId] || modelId;
 };
@@ -372,7 +375,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               ═══════════════════════════════════════════════════════════════════════════════ */}
           <div>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">Provedor de IA</label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-5 gap-2">
               <button
                 onClick={() => setAiSettings({ ...aiSettings, provider: 'claude' })}
                 className={`p-3 rounded-lg border-2 transition-all text-left ${
@@ -437,6 +440,22 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   </div>
                 </div>
               </button>
+              <button
+                onClick={() => setAiSettings({ ...aiSettings, provider: 'deepseek' })}
+                className={`p-3 rounded-lg border-2 transition-all text-left ${
+                  aiSettings.provider === 'deepseek'
+                    ? 'bg-indigo-600/20 border-indigo-500'
+                    : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <ProviderIcon provider="deepseek" size={20} className="text-indigo-400" />
+                  <div>
+                    <div className="font-semibold theme-text-primary text-sm">DeepSeek</div>
+                    <div className="text-xs theme-text-muted">V4</div>
+                  </div>
+                </div>
+              </button>
             </div>
 
             {/* Model Selection based on provider */}
@@ -444,7 +463,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               <label className="block text-xs theme-text-muted mb-1">
                 Modelo {aiSettings.provider === 'claude' ? 'Claude' :
                        aiSettings.provider === 'gemini' ? 'Gemini' :
-                       aiSettings.provider === 'openai' ? 'OpenAI' : 'Grok'}:
+                       aiSettings.provider === 'openai' ? 'OpenAI' :
+                       aiSettings.provider === 'grok' ? 'Grok' : 'DeepSeek'}:
               </label>
               {aiSettings.provider === 'claude' && (
                 <select
@@ -486,6 +506,17 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   <option value="grok-4-1-fast-non-reasoning">Grok 4.1 Instant ($0.20/$0.50 por 1M) - sem thinking</option>
                   <option value="grok-4.20-0309-reasoning">Grok 4.20 Fast ($2.00/$6.00 por 1M) - com reasoning</option>
                   <option value="grok-4.20-0309-non-reasoning">Grok 4.20 Instant ($2.00/$6.00 por 1M) - sem thinking</option>
+                </select>
+              )}
+              {aiSettings.provider === 'deepseek' && (
+                <select
+                  value={aiSettings.deepseekModel || ''}
+                  onChange={(e) => setAiSettings({ ...aiSettings, deepseekModel: e.target.value as 'deepseek-v4-flash' | 'deepseek-v4-pro' | '' })}
+                  className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                >
+                  <option value="">— selecione um modelo —</option>
+                  <option value="deepseek-v4-flash">DeepSeek V4 Flash ($0.14/$0.28 por 1M) - 1M contexto</option>
+                  <option value="deepseek-v4-pro">DeepSeek V4 Pro ($1.74/$3.48 por 1M) - 1M contexto, quase fronteira</option>
                 </select>
               )}
             </div>
@@ -667,6 +698,50 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     {apiTestStatuses.grok === 'testing' ? '...' :
                      apiTestStatuses.grok === 'ok' ? '✓' :
                      apiTestStatuses.grok === 'error' ? '✗' : 'Testar'}
+                  </button>
+                </div>
+              </div>
+              {/* DeepSeek API Key */}
+              <div>
+                <label className="block text-xs theme-text-muted mb-1">DeepSeek (V4):</label>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    value={aiSettings.apiKeys?.deepseek || ''}
+                    onChange={(e) => setAiSettings({
+                      ...aiSettings,
+                      apiKeys: { ...aiSettings.apiKeys, deepseek: e.target.value }
+                    })}
+                    placeholder="sk-..."
+                    className="flex-1 px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                  />
+                  <button
+                    onClick={async () => {
+                      setApiTestStatus('deepseek', 'testing');
+                      try {
+                        const resp = await fetch(`${API_BASE}/api/deepseek/chat`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys?.deepseek || '' },
+                          body: JSON.stringify({
+                            model: 'deepseek-v4-flash',
+                            max_tokens: 10,
+                            messages: [{ role: 'user', content: 'Olá' }]
+                          })
+                        });
+                        setApiTestStatus('deepseek', resp.ok ? 'ok' : 'error');
+                      } catch { setApiTestStatus('deepseek', 'error'); }
+                      setTimeout(() => setApiTestStatus('deepseek', null), 2000);
+                    }}
+                    disabled={apiTestStatuses.deepseek === 'testing'}
+                    className={`px-3 py-2 text-white rounded text-sm min-w-[60px] transition-colors ${
+                      apiTestStatuses.deepseek === 'ok' ? 'bg-green-600' :
+                      apiTestStatuses.deepseek === 'error' ? 'bg-red-600' :
+                      'bg-indigo-600 hover:bg-indigo-700'
+                    }`}
+                  >
+                    {apiTestStatuses.deepseek === 'testing' ? '...' :
+                     apiTestStatuses.deepseek === 'ok' ? '✓' :
+                     apiTestStatuses.deepseek === 'error' ? '✗' : 'Testar'}
                   </button>
                 </div>
               </div>
@@ -994,7 +1069,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                         claude: 'claude-sonnet-4-20250514',
                         gemini: 'gemini-3-flash-preview',
                         openai: 'gpt-5.2-chat-latest',
-                        grok: 'grok-4-1-fast-reasoning'
+                        grok: 'grok-4-1-fast-reasoning',
+                        deepseek: 'deepseek-v4-flash'
                       };
                       setAiSettings({
                         ...aiSettings,
@@ -2604,10 +2680,15 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             const openaiPrices = { input: 1.75, output: 14.00, cacheWrite: 1.75, cacheRead: 0.175 };
             const grokPrices = { input: 0.20, output: 0.50, cacheWrite: 0.20, cacheRead: 0.05 };
             const grok420Prices = { input: 2.00, output: 6.00, cacheWrite: 2.00, cacheRead: 0.20 };
+            // v1.43.00: DeepSeek V4 pricing (cacheWrite não existe — implicit cache; usamos input price como placeholder)
+            const deepseekFlashPrices = { input: 0.14, output: 0.28, cacheWrite: 0.14, cacheRead: 0.028 };
+            const deepseekProPrices = { input: 1.74, output: 3.48, cacheWrite: 1.74, cacheRead: 0.145 };
             const getGrokPrices = (modelId?: string) =>
               modelId?.startsWith('grok-4.20') ? grok420Prices : grokPrices;
             const getGeminiPrices = (modelId?: string) =>
               modelId?.includes('pro') ? geminiPrices : geminiFlashPrices;
+            const getDeepseekPrices = (modelId?: string) =>
+              modelId === 'deepseek-v4-pro' ? deepseekProPrices : deepseekFlashPrices;
 
             return (
               <div className="border-t theme-border-secondary pt-4 mt-4">
@@ -2690,10 +2771,12 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                                 ? getGrokPrices(modelId)
                                 : modelMetrics.provider === 'gemini'
                                   ? getGeminiPrices(modelId)
-                                  : ({
-                                      claude: sonnetPrices,
-                                      openai: openaiPrices
-                                    }[modelMetrics.provider] || sonnetPrices);
+                                  : modelMetrics.provider === 'deepseek'
+                                    ? getDeepseekPrices(modelId)
+                                    : ({
+                                        claude: sonnetPrices,
+                                        openai: openaiPrices
+                                      }[modelMetrics.provider as 'claude' | 'openai'] || sonnetPrices);
                               const modelCost = ((modelMetrics.input / 1000000) * providerPrices.input) +
                                               ((modelMetrics.output / 1000000) * providerPrices.output) +
                                               ((modelMetrics.cacheRead / 1000000) * providerPrices.cacheRead) +
@@ -2702,7 +2785,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                                 claude: 'text-orange-400',
                                 gemini: 'text-blue-400',
                                 openai: 'text-green-400',
-                                grok: 'text-gray-400'
+                                grok: 'text-gray-400',
+                                deepseek: 'text-indigo-400'
                               };
                               const colorClass = providerColors[modelMetrics.provider] || 'theme-text-secondary';
                               return (
@@ -2730,10 +2814,12 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                                 ? getGrokPrices(mId)
                                 : m.provider === 'gemini'
                                   ? getGeminiPrices(mId)
-                                  : ({
-                                      claude: sonnetPrices,
-                                      openai: openaiPrices
-                                    }[m.provider] || sonnetPrices);
+                                  : m.provider === 'deepseek'
+                                    ? getDeepseekPrices(mId)
+                                    : ({
+                                        claude: sonnetPrices,
+                                        openai: openaiPrices
+                                      }[m.provider as 'claude' | 'openai'] || sonnetPrices);
                               return acc +
                                 ((m.input / 1000000) * prices.input) +
                                 ((m.output / 1000000) * prices.output) +

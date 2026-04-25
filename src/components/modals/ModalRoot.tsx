@@ -487,7 +487,8 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
           claude: 'Claude',
           gemini: 'Gemini',
           openai: 'OpenAI',
-          grok: 'Grok'
+          grok: 'Grok',
+          deepseek: 'DeepSeek'
         }[aiSettings.provider] || 'IA'}
       />
     </>

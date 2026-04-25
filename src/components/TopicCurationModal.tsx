@@ -72,7 +72,7 @@ interface TopicCurationModalProps {
   parallelRequests?: number;
   isDarkMode?: boolean;
   // Configurações de custo
-  provider?: 'anthropic' | 'gemini' | 'claude' | 'openai' | 'grok';
+  provider?: 'anthropic' | 'gemini' | 'claude' | 'openai' | 'grok' | 'deepseek';
   thinkingBudget?: string;
   useExtendedThinking?: boolean;
   geminiThinkingLevel?: 'minimal' | 'low' | 'medium' | 'high';
@@ -156,7 +156,10 @@ const MODEL_PRICES: Record<string, { input: number; output: number }> = {
   'grok-4-1-fast-reasoning': { input: 0.30, output: 1.50 },
   'grok-4-1-fast-non-reasoning': { input: 0.15, output: 0.75 },
   'grok-4.20-0309-reasoning': { input: 2.00, output: 6.00 },
-  'grok-4.20-0309-non-reasoning': { input: 2.00, output: 6.00 }
+  'grok-4.20-0309-non-reasoning': { input: 2.00, output: 6.00 },
+  // DeepSeek V4 (v1.43.00)
+  'deepseek-v4-flash': { input: 0.14, output: 0.28 },
+  'deepseek-v4-pro': { input: 1.74, output: 3.48 }
 };
 
 // Nomes amigáveis dos modelos
@@ -175,7 +178,10 @@ const MODEL_NAMES: Record<string, string> = {
   'grok-4-1-fast-reasoning': 'Grok 4.1 Fast',
   'grok-4-1-fast-non-reasoning': 'Grok 4.1 Lite',
   'grok-4.20-0309-reasoning': 'Grok 4.20 Fast',
-  'grok-4.20-0309-non-reasoning': 'Grok 4.20 Instant'
+  'grok-4.20-0309-non-reasoning': 'Grok 4.20 Instant',
+  // DeepSeek V4 (v1.43.00)
+  'deepseek-v4-flash': 'DeepSeek V4 Flash',
+  'deepseek-v4-pro': 'DeepSeek V4 Pro'
 };
 
 // Estimativas de tokens para cálculo de custo (calibrado com dados reais)
@@ -198,7 +204,7 @@ const USD_TO_BRL = 5.50;
 // ═══════════════════════════════════════════════════════════════════════════════
 
 interface EstimateOptions {
-  provider?: 'anthropic' | 'gemini' | 'openai' | 'grok';
+  provider?: 'anthropic' | 'gemini' | 'openai' | 'grok' | 'deepseek';
   thinkingBudget?: string;
   useExtendedThinking?: boolean;
   geminiThinkingLevel?: string;

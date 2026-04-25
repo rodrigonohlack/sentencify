@@ -14,7 +14,7 @@ export const defaultAISettings: Partial<AISettings> = {
   openaiModel: 'gpt-5.2',
   openaiReasoningLevel: 'medium',
   grokModel: 'grok-4-1-fast-reasoning',
-  apiKeys: { claude: '', gemini: '', openai: '', grok: '' },
+  apiKeys: { claude: '', gemini: '', openai: '', grok: '', deepseek: '' },
   useExtendedThinking: true,
   thinkingBudget: '10000',
   geminiThinkingLevel: 'medium',

@@ -248,7 +248,7 @@ describe('createAIStore — persistKeys (fire-and-forget)', () => {
       apiKeyStorageKey: 'test-ai-persist-keys'
     });
 
-    persistKeys({ claude: 'sk-new', gemini: '', openai: '', grok: '' });
+    persistKeys({ claude: 'sk-new', gemini: '', openai: '', grok: '', deepseek: '' });
 
     // encryption é async — aguarda próxima microtask
     await new Promise((r) => setTimeout(r, 10));

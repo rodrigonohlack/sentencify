@@ -96,6 +96,23 @@ export const AI_PROVIDERS: Record<AIProvider, ProviderInfo> = {
         description: 'Sem thinking - $2.00/$6.00 por 1M'
       }
     ]
+  },
+  deepseek: {
+    name: 'DeepSeek',
+    icon: 'zap',
+    models: [
+      {
+        id: 'deepseek-v4-flash',
+        name: 'DeepSeek V4 Flash',
+        recommended: true,
+        description: '$0.14/$0.28 por 1M - 1M contexto'
+      },
+      {
+        id: 'deepseek-v4-pro',
+        name: 'DeepSeek V4 Pro',
+        description: '$1.74/$3.48 por 1M - 1M contexto, quase fronteira'
+      }
+    ]
   }
 };
 

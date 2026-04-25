@@ -52,7 +52,8 @@ const DEFAULT_AI_SETTINGS: AISettings = {
   openaiModel: 'gpt-5.2-chat-latest',
   openaiReasoningLevel: 'medium',
   grokModel: 'grok-4-1-fast-reasoning',
-  apiKeys: { claude: '', gemini: '', openai: '', grok: '' },
+  deepseekModel: '',
+  apiKeys: { claude: '', gemini: '', openai: '', grok: '', deepseek: '' },
   useExtendedThinking: false,
   thinkingBudget: '10000',
   geminiThinkingLevel: 'high'
@@ -68,7 +69,7 @@ const DEFAULT_TOKEN_METRICS: TokenMetrics = {
 };
 
 /** Retorna as apiKeys zeradas (usado no partialize para não gravar keys no persist do Zustand). */
-const emptyApiKeys = (): APIKeys => ({ claude: '', gemini: '', openai: '', grok: '' });
+const emptyApiKeys = (): APIKeys => ({ claude: '', gemini: '', openai: '', grok: '', deepseek: '' });
 
 /**
  * Cria um store de IA parametrizado. Devolve o hook e utilitários auxiliares.
@@ -194,7 +195,7 @@ export function createAIStore(config: AIStoreConfig) {
 export const selectProvider = (state: AIStoreBase): AIProvider => state.aiSettings.provider;
 
 export const selectCurrentModel = (state: AIStoreBase): string => {
-  const { provider, claudeModel, geminiModel, openaiModel, grokModel } = state.aiSettings;
+  const { provider, claudeModel, geminiModel, openaiModel, grokModel, deepseekModel } = state.aiSettings;
   switch (provider) {
     case 'claude':
       return claudeModel;
@@ -204,6 +205,8 @@ export const selectCurrentModel = (state: AIStoreBase): string => {
       return openaiModel;
     case 'grok':
       return grokModel;
+    case 'deepseek':
+      return deepseekModel;
     default:
       return claudeModel;
   }

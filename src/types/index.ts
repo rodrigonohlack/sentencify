@@ -192,10 +192,11 @@ export const MAX_PROOF_ANALYSES = 5;
 // AI SETTINGS TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
 export type OCREngine = 'pdfjs' | 'tesseract' | 'pdf-puro' | 'claude-vision';
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
 export type OpenAIReasoningLevel = 'low' | 'medium' | 'high' | 'xhigh';
+export type DeepseekModel = 'deepseek-v4-flash' | 'deepseek-v4-pro' | '';
 
 /** Gemini API types - v1.35.95 */
 export interface GeminiGenerationConfig {
@@ -276,7 +277,8 @@ export interface AISettings {
   openaiReasoningLevel: OpenAIReasoningLevel;
   grokModel: 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning'
            | 'grok-4.20-0309-reasoning' | 'grok-4.20-0309-non-reasoning';
-  apiKeys: { claude: string; gemini: string; openai: string; grok: string };
+  deepseekModel: DeepseekModel;
+  apiKeys: { claude: string; gemini: string; openai: string; grok: string; deepseek: string };
   useExtendedThinking: boolean;
   thinkingBudget: string;
   geminiThinkingLevel: GeminiThinkingLevel;
@@ -651,7 +653,7 @@ export type ModalState = Record<ModalKey, boolean>;
 
 /** v1.37.91: Métricas por modelo específico */
 export interface PerModelMetrics {
-  provider: 'claude' | 'gemini' | 'openai' | 'grok';
+  provider: 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
   input: number;
   output: number;
   cacheRead: number;

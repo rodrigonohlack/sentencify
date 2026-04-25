@@ -78,6 +78,22 @@ const GrokIcon: React.FC<{ size: number; className?: string }> = ({ size, classN
 );
 
 /**
+ * Ícone do DeepSeek - Baleia estilizada (v1.43.00)
+ */
+const DeepseekIcon: React.FC<{ size: number; className?: string }> = ({ size, className }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={className}
+  >
+    {/* Baleia minimalista — referência ao logo DeepSeek */}
+    <path d="M22 9.5c0-.55-.45-1-1-1h-1.5c-.28 0-.54.11-.73.3l-1.1 1.1c-1.02-1.74-2.9-2.9-5.04-2.9-2.47 0-4.6 1.53-5.47 3.7l-1.97-.66c-.48-.16-1 .09-1.2.55-.19.46.01 1 .46 1.22l1.97.85c-.03.27-.07.54-.07.82 0 3.25 2.64 5.9 5.9 5.9 2.47 0 4.6-1.52 5.47-3.68l1.98.66c.48.16 1-.09 1.2-.55.19-.46-.01-1-.46-1.22l-1.99-.84c.03-.28.07-.55.07-.83 0-.28-.03-.55-.07-.82L19.7 11c.19-.12.3-.32.3-.54V10h.5c.55 0 1 .45 1 1l.5-1.5zm-7 3.5c0 .55-.45 1-1 1s-1-.45-1-1 .45-1 1-1 1 .45 1 1zm-3.5 0c-1.93 0-3.5-1.57-3.5-3.5S10.07 6 12 6s3.5 1.57 3.5 3.5S13.43 13 11.5 13z" />
+  </svg>
+);
+
+/**
  * Componente principal que renderiza o ícone do provedor
  */
 export const ProviderIcon: React.FC<ProviderIconProps> = ({ provider, size = 20, className }) => {
@@ -90,6 +106,8 @@ export const ProviderIcon: React.FC<ProviderIconProps> = ({ provider, size = 20,
       return <OpenAIIcon size={size} className={className} />;
     case 'grok':
       return <GrokIcon size={size} className={className} />;
+    case 'deepseek':
+      return <DeepseekIcon size={size} className={className} />;
     default:
       return null;
   }

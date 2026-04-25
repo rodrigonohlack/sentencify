@@ -8,7 +8,7 @@
  *              devem ser movidos para cá sem revisão.
  */
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
 
 /** Níveis de thinking do Gemini */
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
@@ -16,11 +16,15 @@ export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
 /** Níveis de reasoning do OpenAI (para gpt-5.2) */
 export type OpenAIReasoningLevel = 'low' | 'medium' | 'high';
 
+/** Modelos DeepSeek V4 ('' = não selecionado, força escolha em ConfigModal) */
+export type DeepseekModel = 'deepseek-v4-flash' | 'deepseek-v4-pro' | '';
+
 export interface APIKeys {
   claude: string;
   gemini: string;
   openai: string;
   grok: string;
+  deepseek: string;
 }
 
 export interface AISettings {
@@ -31,6 +35,7 @@ export interface AISettings {
   openaiReasoningLevel: OpenAIReasoningLevel;
   grokModel: 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning'
            | 'grok-4.20-0309-reasoning' | 'grok-4.20-0309-non-reasoning';
+  deepseekModel: DeepseekModel;
   apiKeys: APIKeys;
   useExtendedThinking: boolean;
   thinkingBudget: string;
