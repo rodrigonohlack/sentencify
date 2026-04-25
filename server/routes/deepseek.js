@@ -40,9 +40,13 @@ router.post('/chat', async (req, res) => {
     if (process.env.NODE_ENV !== 'production') {
       const model = req.body.model || 'unknown';
       const usage = data.usage || {};
-      const cached = usage.prompt_tokens_details?.cached_tokens || 0;
+      // v1.43.02: DeepSeek tem campos próprios de cache (não segue padrão OpenAI)
+      const cacheHit = usage.prompt_cache_hit_tokens || 0;
+      const cacheMiss = usage.prompt_cache_miss_tokens || 0;
+      const total = usage.prompt_tokens || 0;
+      const hitRate = total > 0 ? Math.round((cacheHit / total) * 100) : 0;
       console.log(`[DeepSeek] ${model} - ${response.status} - ` +
-        `${usage.prompt_tokens || 0} in (${cached} cached) / ${usage.completion_tokens || 0} out`);
+        `${total} in (${cacheHit} hit / ${cacheMiss} miss = ${hitRate}%) / ${usage.completion_tokens || 0} out`);
     }
 
     if (data.error) {

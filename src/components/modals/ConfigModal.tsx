@@ -3009,6 +3009,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     ? getModelDisplayName(aiSettings.openaiModel || 'gpt-5.2-chat-latest')
                     : aiSettings.provider === 'grok'
                     ? getModelDisplayName(aiSettings.grokModel || 'grok-4-1-fast-reasoning')
+                    : aiSettings.provider === 'deepseek'
+                    ? (aiSettings.deepseekModel ? getModelDisplayName(aiSettings.deepseekModel) : '— selecione um modelo —')
                     : getModelDisplayName(aiSettings.claudeModel || aiSettings.model || '')}
                 </span>
                 {aiSettings.useExtendedThinking && <span className="ml-2 text-purple-400">• Pensamento prolongado ativo</span>}

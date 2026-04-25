@@ -617,6 +617,19 @@ const useAIIntegration = () => {
           }
         }
 
+        // v1.43.02: ordenar file/image_url ANTES de text para maximizar prefix-match
+        // do cache implícito (DeepSeek, OpenAI, Grok). Espelha o que Gemini faz desde
+        // v1.42.08 (parts.sort com inlineData primeiro). Sort estável (ES2019+)
+        // preserva a ordem relativa dentro de cada grupo, então PDFs continuam na
+        // ordem original de petição → contestação → complementar, e textos idem,
+        // só que agora todos os PDFs vêm primeiro, formando prefixo byte-estável
+        // entre chamadas consecutivas (ex: relatório → mini-relatórios).
+        parts.sort((a, b) => {
+          const aIsBinary = (a.type === 'file' || a.type === 'image_url') ? 0 : 1;
+          const bIsBinary = (b.type === 'file' || b.type === 'image_url') ? 0 : 1;
+          return aIsBinary - bIsBinary;
+        });
+
         messages.push({ role: msg.role as 'user' | 'assistant', content: parts });
       } else {
         messages.push({ role: msg.role as 'user' | 'assistant', content: msg.content as string });
@@ -628,9 +641,25 @@ const useAIIntegration = () => {
 
   // Extrair métricas de tokens da resposta (provider-aware)
   const extractTokenMetrics = React.useCallback((data: Record<string, unknown>, provider: AIProvider) => {
+    // v1.43.02: DeepSeek tem campos próprios (NÃO segue padrão OpenAI prompt_tokens_details).
+    // Docs: https://api-docs.deepseek.com/guides/kv_cache
+    // prompt_tokens = prompt_cache_hit_tokens + prompt_cache_miss_tokens (split nativo).
+    // Sem double-count: input = miss diretamente.
+    if (provider === 'deepseek') {
+      const usage = (data.usage || {}) as Record<string, unknown>;
+      const cacheHit = (usage.prompt_cache_hit_tokens as number) || 0;
+      const cacheMiss = (usage.prompt_cache_miss_tokens as number) || 0;
+      // Fallback defensivo: se a resposta não vier com o split, usa prompt_tokens
+      const input = cacheMiss || ((usage.prompt_tokens as number) || 0);
+      return {
+        input,
+        output: (usage.completion_tokens as number) || 0,
+        cacheRead: cacheHit,
+        cacheCreation: 0
+      };
+    }
     // v1.35.97: OpenAI e Grok usam mesmo formato (OpenAI-compatible)
-    // v1.43.00: DeepSeek também é OpenAI-compatible (mesmo usage.prompt_tokens_details.cached_tokens)
-    if (provider === 'openai' || provider === 'grok' || provider === 'deepseek') {
+    if (provider === 'openai' || provider === 'grok') {
       const usage = (data.usage || {}) as Record<string, unknown>;
       const promptDetails = (usage.prompt_tokens_details || {}) as Record<string, number>;
       return {
@@ -1733,10 +1762,14 @@ const useAIIntegration = () => {
             }
 
             if (parsed.type === 'done' && parsed.usage) {
+              // v1.43.02: DeepSeek usa prompt_cache_hit_tokens / prompt_cache_miss_tokens
+              // (não prompt_tokens_details.cached_tokens como OpenAI)
+              const cacheHit = parsed.usage.prompt_cache_hit_tokens || 0;
+              const cacheMiss = parsed.usage.prompt_cache_miss_tokens || 0;
               addTokenUsage({
-                input: parsed.usage.prompt_tokens || 0,
+                input: cacheMiss || parsed.usage.prompt_tokens || 0,
                 output: parsed.usage.completion_tokens || 0,
-                cacheRead: parsed.usage.prompt_tokens_details?.cached_tokens || 0,
+                cacheRead: cacheHit,
                 model,
                 provider: 'deepseek'
               });

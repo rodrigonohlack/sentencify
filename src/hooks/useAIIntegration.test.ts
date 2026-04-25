@@ -991,6 +991,49 @@ describe('useAIIntegration', () => {
 
       expect(openaiMsgs[0].role).toBe('assistant');
     });
+
+    // v1.43.02: cache prefix-match — file/image_url devem vir ANTES de text
+    // para que o cache implícito (DeepSeek/OpenAI/Grok) bata em chamadas
+    // consecutivas onde só o texto final varia (ex: relatório → mini-relatórios).
+    it('should sort file/image_url blocks before text blocks for cache hit (v1.43.02)', () => {
+      const { result } = renderHook(() => useAIIntegration());
+      const messages = [{
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Petição texto' },
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: 'pdf1' } },
+          { type: 'text', text: 'Contestação texto' },
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: 'pdf2' } },
+          { type: 'text', text: 'Pergunta variável (mini-relatório do tópico X)' }
+        ]
+      }] as any;
+      const openaiMsgs = result.current.convertToOpenAIFormat(messages);
+      const parts = openaiMsgs[0].content as any[];
+
+      // PDFs vêm primeiro (na ordem original entre eles), depois textos (na ordem original)
+      expect(parts.map((p: any) => p.type)).toEqual(['file', 'file', 'text', 'text', 'text']);
+      expect(parts[0].file.file_data).toContain('pdf1');
+      expect(parts[1].file.file_data).toContain('pdf2');
+      expect(parts[2].text).toBe('Petição texto');
+      expect(parts[3].text).toBe('Contestação texto');
+      expect(parts[4].text).toBe('Pergunta variável (mini-relatório do tópico X)');
+    });
+
+    it('should keep relative order of text blocks among themselves (stable sort)', () => {
+      const { result } = renderHook(() => useAIIntegration());
+      const messages = [{
+        role: 'user',
+        content: [
+          { type: 'text', text: 'A' },
+          { type: 'text', text: 'B' },
+          { type: 'text', text: 'C' }
+        ]
+      }] as any;
+      const openaiMsgs = result.current.convertToOpenAIFormat(messages);
+      const parts = openaiMsgs[0].content as any[];
+
+      expect(parts.map((p: any) => p.text)).toEqual(['A', 'B', 'C']);
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

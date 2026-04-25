@@ -93,8 +93,9 @@ ORDEM PROCESSUAL:
 TÓPICOS A ORDENAR:
 ${topicsList}
 
-Responda APENAS com JSON: {"order": [1, 3, 2, ...]}
-Use os números originais da lista.`;
+Responda APENAS com JSON, sem markdown, sem prosa, sem explicação.
+Formato EXATO (uma linha): {"order": [1, 3, 2, ...]}
+Use os números originais da lista. Não use \`\`\`json nem nenhum cercado de código.`;
 
     try {
       const isGemini = aiIntegration.aiSettings?.provider === 'gemini';
@@ -132,9 +133,20 @@ Use os números originais da lista.`;
         if (genericMatch) jsonMatch = genericMatch;
       }
 
+      // v1.43.01: Fallback super-permissivo — captura "order":[...] sem exigir chaves
+      // (DeepSeek às vezes retorna o array dentro de estruturas mais soltas)
+      if (!jsonMatch) {
+        const looseMatch = result.match(/"order"\s*:\s*\[([\d,\s\n\r]+)\]/);
+        if (looseMatch) {
+          jsonMatch = [`{"order":[${looseMatch[1]}]}`];
+        }
+      }
+
       if (!jsonMatch) {
         console.warn('[reorderTopicsViaLLM] JSON não encontrado na resposta, mantendo ordem original');
-        console.log('[reorderTopicsViaLLM] Resposta recebida:', result.substring(0, 500));
+        // v1.43.01: log estendido (2000 chars) para diagnóstico de novos providers
+        console.log('[reorderTopicsViaLLM] Resposta recebida (até 2000 chars):', result.substring(0, 2000));
+        console.log('[reorderTopicsViaLLM] Tamanho total da resposta:', result.length);
         return topics;
       }
 
