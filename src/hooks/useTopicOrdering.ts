@@ -110,6 +110,12 @@ Use os números originais da lista. Não use \`\`\`json nem nenhum cercado de c�
         // muito orçamento pra qualquer thinking moderado.
         maxTokens: 8000,
         useInstructions: false,
+        // v1.43.04: tarefa trivial (reordenar índices) NÃO precisa de thinking.
+        // No DeepSeek V4 com thinking ON, o modelo entrava em loop analítico
+        // de 28K caracteres sem chegar no JSON final. Aplica pra TODOS os
+        // providers: Claude pula extended thinking, Gemini cai pra minimal,
+        // OpenAI gpt-5.2 pula reasoning, DeepSeek força thinking disabled.
+        disableThinking: true,
         temperature: isGemini ? 0.5 : 0.0,
         topP: 0.9,
         topK: 40

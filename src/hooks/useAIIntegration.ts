@@ -1239,7 +1239,8 @@ const useAIIntegration = () => {
       model = aiSettings.deepseekModel || 'deepseek-v4-flash',
       abortSignal = null,
       logMetrics = true,
-      extractText = true
+      extractText = true,
+      disableThinking = false
     } = options;
 
     let finalSystemPrompt = systemPrompt as string | null;
@@ -1256,8 +1257,10 @@ const useAIIntegration = () => {
 
         // v1.43.03: thinking/reasoning_effort (docs.deepseek.com/guides/thinking_mode)
         // API default é thinking ON; aqui respeitamos a config do usuário.
+        // v1.43.04: options.disableThinking força OFF mesmo com aiSettings.deepseekThinking ON
+        // (uso para tarefas triviais como topic ordering que queimavam todo o budget no reasoning).
         // Quando thinking OFF, não envia reasoning_effort (irrelevante).
-        const thinkingEnabled = aiSettings.deepseekThinking !== false;
+        const thinkingEnabled = !disableThinking && (aiSettings.deepseekThinking !== false);
         const reasoningEffort = aiSettings.deepseekReasoningEffort || 'high';
         const requestBody: Record<string, unknown> = {
           model,
@@ -1723,7 +1726,8 @@ const useAIIntegration = () => {
       systemPrompt = null,
       useInstructions = false,
       model = aiSettings.deepseekModel || 'deepseek-v4-flash',
-      onChunk
+      onChunk,
+      disableThinking = false
     } = options;
 
     let finalSystemPrompt = systemPrompt as string | null;
@@ -1737,7 +1741,8 @@ const useAIIntegration = () => {
     const deepseekMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
 
     // v1.43.03: thinking/reasoning_effort (docs.deepseek.com/guides/thinking_mode)
-    const thinkingEnabled = aiSettings.deepseekThinking !== false;
+    // v1.43.04: options.disableThinking força OFF (override per-call para tarefas triviais)
+    const thinkingEnabled = !disableThinking && (aiSettings.deepseekThinking !== false);
     const reasoningEffort = aiSettings.deepseekReasoningEffort || 'high';
     const streamBody: Record<string, unknown> = {
       model,
