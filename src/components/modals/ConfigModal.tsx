@@ -1358,6 +1358,78 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   </p>
                 )}
 
+                {/* v1.43.08: DeepSeek thinking config para Double Check */}
+                {aiSettings.doubleCheck?.provider === 'deepseek' && (
+                  <div className="space-y-3">
+                    <label className="block text-xs font-medium theme-text-tertiary">
+                      Thinking Mode (DeepSeek)
+                    </label>
+                    <button
+                      onClick={() => setAiSettings({
+                        ...aiSettings,
+                        doubleCheck: {
+                          ...aiSettings.doubleCheck!,
+                          deepseekThinking: !(aiSettings.doubleCheck?.deepseekThinking !== false)
+                        }
+                      })}
+                      className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
+                        aiSettings.doubleCheck?.deepseekThinking !== false
+                          ? 'bg-indigo-600/20 border-indigo-500'
+                          : 'theme-bg-secondary border theme-border-input'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold theme-text-primary text-sm">
+                              {aiSettings.doubleCheck?.deepseekThinking !== false ? '✓ Ativado' : 'Desativado'}
+                            </span>
+                            {aiSettings.doubleCheck?.deepseekThinking !== false && (
+                              <span className="text-xs bg-indigo-500 text-white px-2 py-0.5 rounded">
+                                effort: {aiSettings.doubleCheck?.deepseekReasoningEffort || 'high'}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs theme-text-muted mt-1">
+                            {aiSettings.doubleCheck?.deepseekThinking !== false
+                              ? 'Verificação com raciocínio profundo. Melhor qualidade, mais tokens.'
+                              : 'Verificação direta, sem thinking. Mais rápida e barata.'
+                            }
+                          </p>
+                        </div>
+                        <div className={`w-10 h-5 rounded-full transition-colors relative ${
+                          aiSettings.doubleCheck?.deepseekThinking !== false ? 'bg-indigo-500' : 'theme-bg-tertiary'
+                        }`}>
+                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                            aiSettings.doubleCheck?.deepseekThinking !== false ? 'translate-x-5' : 'translate-x-0.5'
+                          }`}></div>
+                        </div>
+                      </div>
+                    </button>
+                    {aiSettings.doubleCheck?.deepseekThinking !== false && (
+                      <div>
+                        <label className="block text-xs font-medium theme-text-tertiary mb-2">
+                          Reasoning Effort
+                        </label>
+                        <select
+                          value={aiSettings.doubleCheck?.deepseekReasoningEffort || 'high'}
+                          onChange={(e) => setAiSettings({
+                            ...aiSettings,
+                            doubleCheck: {
+                              ...aiSettings.doubleCheck!,
+                              deepseekReasoningEffort: e.target.value as 'high' | 'max'
+                            }
+                          })}
+                          className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
+                        >
+                          <option value="high">High (Padrão) — raciocínio profundo, balanceado</option>
+                          <option value="max">Max — raciocínio máximo (mais lento e caro)</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Operações que usam Double Check */}
                 <div>
                   <label className="block text-xs font-medium theme-text-tertiary mb-2">

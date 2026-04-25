@@ -365,6 +365,9 @@ export interface DoubleCheckSettings {
   claudeThinkingBudget?: number;        // 0 = desativado, 10000-62000 para Sonnet, 10000-30000 para Opus
   geminiThinkingLevel?: GeminiThinkingLevel;  // minimal, low, medium, high
   openaiReasoningLevel?: 'low' | 'medium' | 'high' | 'xhigh';
+  // v1.43.08: DeepSeek V4 thinking config específico para Double Check
+  deepseekThinking?: boolean;                 // true = thinking enabled, false = disabled
+  deepseekReasoningEffort?: 'high' | 'max';   // usado quando thinking = true
 }
 
 /** Resultado do Double Check */
@@ -840,6 +843,10 @@ export interface AICallOptions {
   provider?: AIProvider;
   /** v1.38.44: Override do thinking level do Gemini para chamadas específicas */
   geminiThinkingLevel?: GeminiThinkingLevel;
+  /** v1.43.08: Override do thinking do DeepSeek (Double Check usa isso) */
+  deepseekThinking?: boolean;
+  /** v1.43.08: Override do reasoning_effort do DeepSeek */
+  deepseekReasoningEffort?: 'high' | 'max';
   /**
    * v1.42.02: Habilita busca na web durante a resposta. Apenas suportado
    * em providers com `supportsWebSearch=true` no WEB_SEARCH_REGISTRY (v1:

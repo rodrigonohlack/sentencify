@@ -1240,7 +1240,10 @@ const useAIIntegration = () => {
       abortSignal = null,
       logMetrics = true,
       extractText = true,
-      disableThinking = false
+      disableThinking = false,
+      // v1.43.08: overrides per-call (Double Check usa isso pra ter sua própria config)
+      deepseekThinking: optThinking,
+      deepseekReasoningEffort: optEffort
     } = options;
 
     let finalSystemPrompt = systemPrompt as string | null;
@@ -1259,9 +1262,13 @@ const useAIIntegration = () => {
         // API default é thinking ON; aqui respeitamos a config do usuário.
         // v1.43.04: options.disableThinking força OFF mesmo com aiSettings.deepseekThinking ON
         // (uso para tarefas triviais como topic ordering que queimavam todo o budget no reasoning).
+        // v1.43.08: optThinking/optEffort (Double Check) têm precedência sobre aiSettings global.
         // Quando thinking OFF, não envia reasoning_effort (irrelevante).
-        const thinkingEnabled = !disableThinking && (aiSettings.deepseekThinking !== false);
-        const reasoningEffort = aiSettings.deepseekReasoningEffort || 'high';
+        const effectiveThinking = optThinking !== undefined
+          ? optThinking
+          : (aiSettings.deepseekThinking !== false);
+        const thinkingEnabled = !disableThinking && effectiveThinking;
+        const reasoningEffort = optEffort || aiSettings.deepseekReasoningEffort || 'high';
         const requestBody: Record<string, unknown> = {
           model,
           messages: deepseekMessages,
@@ -1727,7 +1734,10 @@ const useAIIntegration = () => {
       useInstructions = false,
       model = aiSettings.deepseekModel || 'deepseek-v4-flash',
       onChunk,
-      disableThinking = false
+      disableThinking = false,
+      // v1.43.08: overrides per-call (Double Check)
+      deepseekThinking: optThinking,
+      deepseekReasoningEffort: optEffort
     } = options;
 
     let finalSystemPrompt = systemPrompt as string | null;
@@ -1742,8 +1752,12 @@ const useAIIntegration = () => {
 
     // v1.43.03: thinking/reasoning_effort (docs.deepseek.com/guides/thinking_mode)
     // v1.43.04: options.disableThinking força OFF (override per-call para tarefas triviais)
-    const thinkingEnabled = !disableThinking && (aiSettings.deepseekThinking !== false);
-    const reasoningEffort = aiSettings.deepseekReasoningEffort || 'high';
+    // v1.43.08: optThinking/optEffort (Double Check) têm precedência sobre aiSettings
+    const effectiveThinking = optThinking !== undefined
+      ? optThinking
+      : (aiSettings.deepseekThinking !== false);
+    const thinkingEnabled = !disableThinking && effectiveThinking;
+    const reasoningEffort = optEffort || aiSettings.deepseekReasoningEffort || 'high';
     const streamBody: Record<string, unknown> = {
       model,
       messages: deepseekMessages,
@@ -2038,6 +2052,9 @@ const useAIIntegration = () => {
       maxTokens,
       model,
       geminiThinkingLevel: dcSettings?.geminiThinkingLevel,
+      // v1.43.08: DeepSeek thinking overrides específicos do Double Check
+      deepseekThinking: dcSettings?.deepseekThinking,
+      deepseekReasoningEffort: dcSettings?.deepseekReasoningEffort,
       onChunk
     };
 
@@ -2058,9 +2075,13 @@ const useAIIntegration = () => {
     if (provider === 'gemini') {
       return await callGeminiAPIStream(messages, options);
     }
+    // v1.43.08: case deepseek (antes caía no default Claude — bug)
+    if (provider === 'deepseek') {
+      return await callDeepseekAPIStream(messages, options);
+    }
     // Default: Claude
     return await callClaudeAPIStream(messages, options);
-  }, [callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, aiSettings.doubleCheck]);
+  }, [callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, aiSettings.doubleCheck]);
 
   /**
    * Executa o double check em uma resposta da IA
