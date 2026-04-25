@@ -101,7 +101,10 @@ app.use((req, res, next) => {
     "font-src 'self' https://fonts.gstatic.com",
 
     // Conexões: APIs de IA, Google, HuggingFace, GitHub, Sentry, CDNs
-    "connect-src 'self' https://api.anthropic.com https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://api.deepseek.com https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://github.com https://raw.githubusercontent.com https://cdn-lfs.huggingface.co https://huggingface.co https://cas-bridge.xethub.hf.co https://o4510650008076288.ingest.us.sentry.io https://cdn.quilljs.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+    // v1.43.15: data: necessário para tesseract.js@5 — workers paralelos buscam o WASM core
+    // como data:application/octet-stream;base64,... (inline). Sem isso, primeiro worker carrega
+    // mas os 7 paralelos ficam travados em "Refused to connect".
+    "connect-src 'self' data: https://api.anthropic.com https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://api.deepseek.com https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://github.com https://raw.githubusercontent.com https://cdn-lfs.huggingface.co https://huggingface.co https://cas-bridge.xethub.hf.co https://o4510650008076288.ingest.us.sentry.io https://cdn.quilljs.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
 
     // Frames: popup do Google OAuth
     "frame-src 'self' https://accounts.google.com",
