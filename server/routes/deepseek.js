@@ -105,10 +105,23 @@ router.post('/stream', async (req, res) => {
     let buffer = '';
     let usage = null;
 
+    // v1.43.03: Diagnóstico — contar chunks por tipo (text vs reasoning vs vazio)
+    // para identificar por que algumas respostas vinham com fullText='' (DeepSeek
+    // V4 pode mandar tudo em delta.reasoning_content quando em modo thinking).
+    const debug = process.env.NODE_ENV !== 'production';
+    let contentChunks = 0;
+    let reasoningChunks = 0;
+    let emptyDeltaChunks = 0;
+    let firstSampleLogged = false;
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
         res.write(`data: ${JSON.stringify({ type: 'done', usage })}\n\n`);
+        if (debug) {
+          const model = req.body.model || 'unknown';
+          console.log(`[DeepSeek-stream] ${model} - chunks: ${contentChunks} content, ${reasoningChunks} reasoning, ${emptyDeltaChunks} empty`);
+        }
         break;
       }
 
@@ -117,16 +130,39 @@ router.post('/stream', async (req, res) => {
       buffer = lines.pop() || '';
 
       for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') continue;
+        // v1.43.03: aceitar tanto `data: ` (com espaço, padrão SSE) quanto `data:` (sem)
+        const trimmed = line.startsWith('data:') ? line.slice(line.startsWith('data: ') ? 6 : 5).trim() : null;
+        if (trimmed !== null) {
+          if (trimmed === '[DONE]') continue;
+          if (!trimmed) continue;
 
           try {
-            const parsed = JSON.parse(data);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              res.write(`data: ${JSON.stringify({ type: 'text', text: content })}\n\n`);
+            const parsed = JSON.parse(trimmed);
+
+            // v1.43.03: log do shape do PRIMEIRO chunk em dev pra diagnóstico
+            if (debug && !firstSampleLogged && parsed.choices?.[0]?.delta) {
+              firstSampleLogged = true;
+              const delta = parsed.choices[0].delta;
+              console.log(`[DeepSeek-stream] First delta keys:`, Object.keys(delta), '— sample:', JSON.stringify(delta).slice(0, 200));
             }
+
+            const delta = parsed.choices?.[0]?.delta || {};
+            const content = delta.content;
+            const reasoningContent = delta.reasoning_content;
+
+            if (content) {
+              contentChunks++;
+              res.write(`data: ${JSON.stringify({ type: 'text', text: content })}\n\n`);
+            } else if (reasoningContent) {
+              // v1.43.03: emitir reasoning como tipo separado (cliente pode ignorar
+              // ou logar). NÃO concatena na resposta final.
+              reasoningChunks++;
+              res.write(`data: ${JSON.stringify({ type: 'reasoning', text: reasoningContent })}\n\n`);
+            } else if (delta && Object.keys(delta).length > 0 && !delta.role) {
+              // delta tem campos mas nem content nem reasoning_content
+              emptyDeltaChunks++;
+            }
+
             if (parsed.usage) {
               usage = parsed.usage;
             }

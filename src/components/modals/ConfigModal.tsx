@@ -973,6 +973,77 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               </div>
             )}
 
+            {/* DEEPSEEK: Toggle thinking + reasoning_effort (v1.43.03) */}
+            {aiSettings.provider === 'deepseek' && (
+              <>
+                <button
+                  onClick={() => setAiSettings({ ...aiSettings, deepseekThinking: !(aiSettings.deepseekThinking !== false) })}
+                  className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                    aiSettings.deepseekThinking !== false
+                      ? 'bg-indigo-600/20 border-indigo-500'
+                      : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className={CSS.flexGap2}>
+                        <span className="font-semibold theme-text-primary">
+                          {aiSettings.deepseekThinking !== false ? '✓ Ativado' : 'Desativado'}
+                        </span>
+                        {aiSettings.deepseekThinking !== false && (
+                          <span className="text-xs bg-indigo-500 text-white px-2 py-0.5 rounded">
+                            effort: {aiSettings.deepseekReasoningEffort || 'high'}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs theme-text-muted mt-1">
+                        {aiSettings.deepseekThinking !== false
+                          ? 'A IA vai raciocinar antes de responder (thinking mode). Melhor qualidade, mas consome mais tokens de output.'
+                          : 'Modo não-thinking: respostas diretas, mais rápidas e baratas. Ideal para tarefas simples.'
+                        }
+                      </p>
+                    </div>
+                    <div className={`w-12 h-6 rounded-full transition-colors relative ${
+                      aiSettings.deepseekThinking !== false ? 'bg-indigo-500' : 'theme-bg-tertiary'
+                    }`}>
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                        aiSettings.deepseekThinking !== false ? 'translate-x-7' : 'translate-x-1'
+                      }`}></div>
+                    </div>
+                  </div>
+                </button>
+
+                {aiSettings.deepseekThinking !== false && (
+                  <div className="mt-3 pl-4">
+                    <label className="block text-xs theme-text-muted mb-1">Reasoning Effort:</label>
+                    <select
+                      value={aiSettings.deepseekReasoningEffort || 'high'}
+                      onChange={(e) => setAiSettings({ ...aiSettings, deepseekReasoningEffort: e.target.value as 'high' | 'max' })}
+                      className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                    >
+                      <option value="high">High (Padrão) — raciocínio profundo, balanceado</option>
+                      <option value="max">Max — raciocínio máximo (para tarefas agênticas complexas)</option>
+                    </select>
+                    <p className="text-xs theme-text-muted mt-2">
+                      💡 DeepSeek V4 liga thinking por padrão na API. Se você notar respostas truncadas ou vazias (ex: topic ordering), tente desligar thinking pra tarefas triviais.
+                    </p>
+                  </div>
+                )}
+
+                <p className="text-xs theme-text-muted mt-3 italic">
+                  Ambos os modelos V4 (Flash e Pro) suportam os dois modos. Docs:{' '}
+                  <a
+                    href="https://api-docs.deepseek.com/guides/thinking_mode"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-400 hover:text-indigo-300 underline"
+                  >
+                    api-docs.deepseek.com/guides/thinking_mode
+                  </a>
+                </p>
+              </>
+            )}
+
             {/* Log Thinking - desabilitado para modelos sem reasoning */}
             {(() => {
               const isDisabled = aiSettings.provider === 'grok' ||

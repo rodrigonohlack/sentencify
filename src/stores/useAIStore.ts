@@ -235,6 +235,8 @@ const initialAISettings: AISettings = {
   openaiReasoningLevel: 'medium',
   grokModel: 'grok-4-1-fast-reasoning',
   deepseekModel: '',
+  deepseekThinking: true,
+  deepseekReasoningEffort: 'high',
   apiKeys: {
     claude: '',
     gemini: '',

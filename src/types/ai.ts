@@ -19,6 +19,9 @@ export type OpenAIReasoningLevel = 'low' | 'medium' | 'high';
 /** Modelos DeepSeek V4 ('' = não selecionado, força escolha em ConfigModal) */
 export type DeepseekModel = 'deepseek-v4-flash' | 'deepseek-v4-pro' | '';
 
+/** Reasoning effort do DeepSeek V4 (quando thinking está ativo) */
+export type DeepseekReasoningEffort = 'high' | 'max';
+
 export interface APIKeys {
   claude: string;
   gemini: string;
@@ -36,6 +39,8 @@ export interface AISettings {
   grokModel: 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning'
            | 'grok-4.20-0309-reasoning' | 'grok-4.20-0309-non-reasoning';
   deepseekModel: DeepseekModel;
+  deepseekThinking: boolean;
+  deepseekReasoningEffort: DeepseekReasoningEffort;
   apiKeys: APIKeys;
   useExtendedThinking: boolean;
   thinkingBudget: string;

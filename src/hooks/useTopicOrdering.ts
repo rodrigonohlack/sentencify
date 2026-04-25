@@ -104,7 +104,11 @@ Use os números originais da lista. Não use \`\`\`json nem nenhum cercado de c�
         content: [{ type: 'text', text: prompt }]
       }];
       const options = {
-        maxTokens: 4000, // v1.32.25: Aumentado para evitar truncamento (thinking tokens do Gemini 3)
+        // v1.43.03: 8000 (era 4000) — defesa contra DeepSeek V4 em modo thinking
+        // que pode consumir todo o orçamento no reasoning antes de produzir o
+        // content (JSON da ordem). Resposta útil é só ~200 tokens, então sobra
+        // muito orçamento pra qualquer thinking moderado.
+        maxTokens: 8000,
         useInstructions: false,
         temperature: isGemini ? 0.5 : 0.0,
         topP: 0.9,

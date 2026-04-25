@@ -197,6 +197,7 @@ export type OCREngine = 'pdfjs' | 'tesseract' | 'pdf-puro' | 'claude-vision';
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
 export type OpenAIReasoningLevel = 'low' | 'medium' | 'high' | 'xhigh';
 export type DeepseekModel = 'deepseek-v4-flash' | 'deepseek-v4-pro' | '';
+export type DeepseekReasoningEffort = 'high' | 'max';
 
 /** Gemini API types - v1.35.95 */
 export interface GeminiGenerationConfig {
@@ -278,6 +279,8 @@ export interface AISettings {
   grokModel: 'grok-4-1-fast-reasoning' | 'grok-4-1-fast-non-reasoning'
            | 'grok-4.20-0309-reasoning' | 'grok-4.20-0309-non-reasoning';
   deepseekModel: DeepseekModel;
+  deepseekThinking: boolean;
+  deepseekReasoningEffort: DeepseekReasoningEffort;
   apiKeys: { claude: string; gemini: string; openai: string; grok: string; deepseek: string };
   useExtendedThinking: boolean;
   thinkingBudget: string;

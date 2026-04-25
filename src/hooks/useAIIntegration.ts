@@ -716,7 +716,20 @@ const useAIIntegration = () => {
         console.warn(`[${provider}] Resposta truncada por limite de tokens`);
       }
 
-      return (message?.content as string) || '';
+      const content = (message?.content as string) || '';
+
+      // v1.43.03: DeepSeek V4 em modo thinking pode mandar tudo em reasoning_content
+      // se max_tokens for consumido durante o thinking. Fallback para reasoning quando
+      // content vier vazio.
+      if (provider === 'deepseek' && !content.trim()) {
+        const reasoning = (message?.reasoning_content as string) || '';
+        if (reasoning.trim()) {
+          console.warn('[DeepSeek] content vazio na resposta, usando reasoning_content como fallback');
+          return reasoning;
+        }
+      }
+
+      return content;
     }
     if (provider === 'gemini') {
       const candidates = data.candidates as Record<string, unknown>[] | undefined;
@@ -1241,11 +1254,20 @@ const useAIIntegration = () => {
       try {
         const deepseekMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
 
-        const requestBody = {
+        // v1.43.03: thinking/reasoning_effort (docs.deepseek.com/guides/thinking_mode)
+        // API default é thinking ON; aqui respeitamos a config do usuário.
+        // Quando thinking OFF, não envia reasoning_effort (irrelevante).
+        const thinkingEnabled = aiSettings.deepseekThinking !== false;
+        const reasoningEffort = aiSettings.deepseekReasoningEffort || 'high';
+        const requestBody: Record<string, unknown> = {
           model,
           messages: deepseekMessages,
-          max_tokens: maxTokens
+          max_tokens: maxTokens,
+          thinking: { type: thinkingEnabled ? 'enabled' : 'disabled' }
         };
+        if (thinkingEnabled) {
+          requestBody.reasoning_effort = reasoningEffort;
+        }
 
         const response = await fetch(`${API_BASE}/api/deepseek/chat`, {
           method: 'POST',
@@ -1714,17 +1736,26 @@ const useAIIntegration = () => {
 
     const deepseekMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
 
+    // v1.43.03: thinking/reasoning_effort (docs.deepseek.com/guides/thinking_mode)
+    const thinkingEnabled = aiSettings.deepseekThinking !== false;
+    const reasoningEffort = aiSettings.deepseekReasoningEffort || 'high';
+    const streamBody: Record<string, unknown> = {
+      model,
+      messages: deepseekMessages,
+      max_tokens: maxTokens,
+      thinking: { type: thinkingEnabled ? 'enabled' : 'disabled' }
+    };
+    if (thinkingEnabled) {
+      streamBody.reasoning_effort = reasoningEffort;
+    }
+
     const response = await fetch(`${API_BASE}/api/deepseek/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': aiSettings.apiKeys?.deepseek || ''
       },
-      body: JSON.stringify({
-        model,
-        messages: deepseekMessages,
-        max_tokens: maxTokens
-      })
+      body: JSON.stringify(streamBody)
     });
 
     if (!response.ok) {
@@ -1738,6 +1769,8 @@ const useAIIntegration = () => {
     const decoder = new TextDecoder();
     let fullText = '';
     let buffer = '';
+    // v1.43.03: Diagnóstico de respostas vazias — capturar reasoning como fallback
+    let reasoningText = '';
 
     while (true) {
       const { done, value } = await reader.read();
@@ -1755,6 +1788,15 @@ const useAIIntegration = () => {
             if (parsed.type === 'text') {
               fullText += parsed.text;
               onChunk?.(fullText);
+            }
+
+            // v1.43.03: capturar reasoning_content para fallback caso content venha vazio
+            // (DeepSeek V4 em modo thinking pode mandar JSON dentro do reasoning).
+            if (parsed.type === 'reasoning' && parsed.text) {
+              reasoningText += parsed.text;
+              if (aiSettings.logThinking) {
+                console.log('[DeepSeek] reasoning chunk:', parsed.text.slice(0, 100));
+              }
             }
 
             if (parsed.type === 'error') {
@@ -1780,6 +1822,15 @@ const useAIIntegration = () => {
           }
         }
       }
+    }
+
+    // v1.43.03: se a resposta veio vazia mas há reasoning_content, usar como fallback.
+    // Isso cobre casos como DeepSeek V4-Flash em modo thinking onde max_tokens foi
+    // consumido todo no reasoning antes de produzir o `content` final. O conteúdo
+    // do reasoning pode conter o JSON ou texto útil mesmo sem chegar ao content.
+    if (!fullText.trim() && reasoningText.trim()) {
+      console.warn('[DeepSeek] content vazio, usando reasoning_content como fallback (resposta possivelmente truncada por max_tokens durante thinking)');
+      return reasoningText.trim();
     }
 
     return fullText.trim();

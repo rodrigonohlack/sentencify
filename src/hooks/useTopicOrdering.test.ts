@@ -295,7 +295,8 @@ describe('useTopicOrdering', () => {
       });
 
       const options = aiIntegration.callAI.mock.calls[0][1];
-      expect(options.maxTokens).toBe(4000);
+      // v1.43.03: 8000 (era 4000) — defesa contra DeepSeek V4 thinking budget
+      expect(options.maxTokens).toBe(8000);
     });
 
     it('should set useInstructions to false', async () => {
