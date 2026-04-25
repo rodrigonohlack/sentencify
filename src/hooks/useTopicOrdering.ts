@@ -104,18 +104,19 @@ Use os números originais da lista. Não use \`\`\`json nem nenhum cercado de c�
         content: [{ type: 'text', text: prompt }]
       }];
       const options = {
-        // v1.43.03: 8000 (era 4000) — defesa contra DeepSeek V4 em modo thinking
-        // que pode consumir todo o orçamento no reasoning antes de produzir o
-        // content (JSON da ordem). Resposta útil é só ~200 tokens, então sobra
-        // muito orçamento pra qualquer thinking moderado.
-        maxTokens: 8000,
+        // v1.43.05: 20000 (era 8000) — topic ordering NÃO é trivial. Reordenar
+        // 16 tópicos trabalhistas exige classificação jurídica (Preliminar /
+        // Prejudicial / Mérito / Q.Finais), ordenação de Art.337 CPC, etc.
+        // Com thinking ativo, 20K tokens cobre confortavelmente ~15K de reasoning
+        // + ~5K pro JSON final. Custo: ~$0.008 no Flash — desprezível.
+        maxTokens: 20000,
         useInstructions: false,
-        // v1.43.04: tarefa trivial (reordenar índices) NÃO precisa de thinking.
-        // No DeepSeek V4 com thinking ON, o modelo entrava em loop analítico
-        // de 28K caracteres sem chegar no JSON final. Aplica pra TODOS os
-        // providers: Claude pula extended thinking, Gemini cai pra minimal,
-        // OpenAI gpt-5.2 pula reasoning, DeepSeek força thinking disabled.
-        disableThinking: true,
+        // v1.43.05: disableThinking REMOVIDO (era true em v1.43.04). Sem thinking,
+        // DeepSeek V4-Flash retornava ordem identidade [1,2,...,16] — lazy response
+        // pra tarefa de classificação que ele percebia complexa. Claude/Gemini/OpenAI
+        // conseguem fazer sem thinking (são mais fortes no default), mas respeitar
+        // o setting global de cada um é mais previsível. Thinking ON pra todos
+        // garante qualidade consistente da ordenação.
         temperature: isGemini ? 0.5 : 0.0,
         topP: 0.9,
         topK: 40
@@ -165,6 +166,20 @@ Use os números originais da lista. Não use \`\`\`json nem nenhum cercado de c�
 
       // Novo formato: índices (evita RECITATION)
       if (parsed.order && Array.isArray(parsed.order)) {
+        // v1.43.05: diagnóstico — alertar quando LLM retorna ordem idêntica
+        // ao input (pattern de "lazy response" visto no DeepSeek V4 sem thinking)
+        const isIdentity = parsed.order.length === topics.length &&
+          parsed.order.every((idx: number, i: number) => idx === i + 1);
+        if (isIdentity) {
+          console.warn(
+            '[reorderTopicsViaLLM] ⚠️ LLM retornou ordem IDENTIDADE [1,2,...,n] — ' +
+            'sem reordenação real. Provavelmente o modelo foi "preguiçoso". ' +
+            'Considere trocar de provider ou ativar thinking.'
+          );
+        } else {
+          console.log('[reorderTopicsViaLLM] Order received:', parsed.order);
+        }
+
         const orderedTopics: Topic[] = [];
         for (const idx of parsed.order) {
           const topic = topics[idx - 1];

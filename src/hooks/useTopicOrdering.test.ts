@@ -295,8 +295,9 @@ describe('useTopicOrdering', () => {
       });
 
       const options = aiIntegration.callAI.mock.calls[0][1];
-      // v1.43.03: 8000 (era 4000) — defesa contra DeepSeek V4 thinking budget
-      expect(options.maxTokens).toBe(8000);
+      // v1.43.05: 20000 (era 8000) — topic ordering precisa de thinking,
+      // budget generoso pra reasoning + JSON final
+      expect(options.maxTokens).toBe(20000);
     });
 
     it('should set useInstructions to false', async () => {
