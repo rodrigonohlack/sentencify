@@ -898,6 +898,12 @@ const useAIIntegration = () => {
         if (topP !== null) geminiRequest.generationConfig.topP = topP;
         if (topK !== null) geminiRequest.generationConfig.topK = topK;
 
+        // v1.43.20: JSON mode — usado pelo OCR Gemini Vision para contornar RECITATION.
+        // Forçar output estruturado quebra a "similaridade literal" que dispara o filter.
+        if (options.geminiJsonMode) {
+          (geminiRequest.generationConfig as Record<string, unknown>).responseMimeType = 'application/json';
+        }
+
         // So adicionar thinking_config para Gemini 3
         if (isGemini3) {
           geminiRequest.generationConfig.thinking_config = {

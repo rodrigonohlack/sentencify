@@ -341,6 +341,40 @@ INSTRUÇÕES IMPORTANTES:
     }
   }, [loadPDFJS, aiIntegration, extractTextFromPDFPure]);
 
+  // 🆕 v1.43.20: Parser do output JSON do Gemini Vision OCR.
+  // Gemini com geminiJsonMode retorna {"paginas": [{"numero": N, "texto": "..."}]}.
+  // Parser robusto: tenta JSON direto, fallback regex pra markdown wrap, último caso texto bruto.
+  const parseGeminiOcrJson = React.useCallback((batchText: string, firstPage: number, lastPage: number): string => {
+    if (!batchText.trim()) return '';
+
+    // Tentativa 1: JSON direto
+    let cleaned = batchText.trim();
+
+    // Remove markdown code fence se vier (ex: ```json\n{...}\n```)
+    const fenceMatch = cleaned.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/);
+    if (fenceMatch) {
+      cleaned = fenceMatch[1].trim();
+    }
+
+    try {
+      const parsed = JSON.parse(cleaned) as { paginas?: Array<{ numero?: number; texto?: string }> };
+      if (Array.isArray(parsed.paginas)) {
+        const pageTexts = parsed.paginas.map((p) => {
+          const num = typeof p.numero === 'number' ? p.numero : '?';
+          const txt = (p.texto || '').trim();
+          return `--- PÁGINA ${num} ---\n${txt}`;
+        });
+        return pageTexts.join('\n\n');
+      }
+      console.warn(`[Gemini Vision] JSON parsed mas sem campo 'paginas' (${firstPage}-${lastPage}). Retornando bruto.`);
+    } catch (parseErr) {
+      console.warn(`[Gemini Vision] Falhou JSON.parse para páginas ${firstPage}-${lastPage}: ${(parseErr as Error).message}. Retornando texto bruto.`);
+    }
+
+    // Fallback: retornar texto bruto (pode estar OK como prosa mesmo sem JSON)
+    return batchText;
+  }, []);
+
   // 🆕 v1.43.16: OCR via Gemini Flash Vision
   // Espelha extractTextFromPDFWithClaudeVision mas usa Gemini Flash (~4× mais barato).
   // Pipeline idêntico: render PDF.js → canvas → JPEG (SCALE 1.5, qual 0.85) → batch 50 págs.
@@ -442,23 +476,40 @@ INSTRUÇÕES IMPORTANTES:
         const idioma = aiIntegration?.aiSettings?.ocrLanguage === 'por' ? 'Português' : 'English';
         const firstPage = batchPageNumbers[0] || 1;
         const lastPage = batchPageNumbers[batchPageNumbers.length - 1] || firstPage;
+        // v1.43.20: Prompt reformulado pra JSON estruturado + framing de "extrator estruturado"
+        // (não "transcritor"). Hipótese: RECITATION dispara em prosa contínua "muito similar"
+        // a treino. JSON quebra similaridade literal porque obriga estruturação.
+        // Mesma estratégia da v1.43.11 (deepseekJsonMode reduziu reasoning rambling 10×).
         content.push({
           type: 'text',
-          text: `Extraia TODO o texto de TODAS as ${batchImages.length} imagens acima. São as páginas ${firstPage} a ${lastPage} de um documento legal.
+          text: `Você é um extrator de dados estruturados de documentos. Sua tarefa é fazer OCR de ${batchImages.length} imagens de um documento (páginas ${firstPage} a ${lastPage}) e retornar os dados em JSON estruturado para análise interna.
 
-INSTRUÇÕES IMPORTANTES:
-- Processe CADA página na ordem exata apresentada
-- Para CADA página, inicie com uma linha "--- PÁGINA ${firstPage <= 1 ? 'X' : firstPage + ' a ' + lastPage} ---" (substitua X pelo número)
-- Retorne APENAS o texto extraído, sem comentários ou explicações
-- Preserve a formatação de parágrafos e estrutura do documento
-- Idioma do documento: ${idioma}`
+FORMATO DE SAÍDA (JSON estrito, sem markdown wrap):
+{
+  "paginas": [
+    {"numero": ${firstPage}, "texto": "..."},
+    {"numero": ${firstPage + 1}, "texto": "..."},
+    ...
+  ]
+}
+
+REGRAS:
+- Idioma: ${idioma}
+- Para cada página, transcreva integralmente o texto visível, preservando quebras de parágrafo (use \\n)
+- Inclua TODOS os elementos textuais: cabeçalhos, rodapés, números, datas, assinaturas, carimbos
+- Se uma página tiver imagem/foto sem texto, registre como "[imagem sem texto extraível]"
+- Retorne APENAS o JSON válido, sem comentários, sem markdown code fence, sem explicações
+- Você está processando dados de documentos para análise interna, não reproduzindo conteúdo`
         });
 
-        console.log(`[Gemini Vision] Batch ${batchIdx + 1}/${totalBatches}: enviando páginas ${firstPage}-${lastPage} (${batchImages.length} imagens)`);
+        const systemInstructionOCR = 'Você é um extrator de dados estruturados de documentos jurídicos brasileiros. Sua função é converter imagens de páginas em texto estruturado por página, em formato JSON. Você não está reproduzindo conteúdo — está extraindo dados textuais para análise jurídica interna do usuário.';
+
+        console.log(`[Gemini Vision] Batch ${batchIdx + 1}/${totalBatches}: enviando páginas ${firstPage}-${lastPage} (${batchImages.length} imagens) [JSON mode]`);
         try {
           // v1.43.18: extractText: false para inspecionar finishReason e detectar truncamento.
           // v1.43.19: + tratamento explícito de SAFETY/RECITATION/MALFORMED/OTHER (perdidos
           // ao trocar de extractText: true para false — extractResponseText cobria SAFETY/RECITATION).
+          // v1.43.20: + geminiJsonMode + systemPrompt "extrator estruturado" para contornar RECITATION.
           const data = await aiIntegration.callGeminiAPI!(
             [{ role: 'user', content: content as unknown as AIMessage['content'] }],
             {
@@ -466,7 +517,9 @@ INSTRUÇÕES IMPORTANTES:
               model: aiIntegration.aiSettings?.geminiModel || 'gemini-3-flash-preview',
               disableThinking: true,  // OCR não precisa thinking — força output direto
               extractText: false,
-              logMetrics: true
+              logMetrics: true,
+              systemPrompt: systemInstructionOCR,
+              geminiJsonMode: true
             }
           ) as unknown as {
             candidates?: Array<{
@@ -531,7 +584,12 @@ INSTRUÇÕES IMPORTANTES:
             continue;
           }
 
-          fullText += batchText + '\n\n';
+          // v1.43.20: Parse JSON output (geminiJsonMode: true).
+          // Gemini com responseMimeType: application/json deve retornar {"paginas": [...]}.
+          // Parser robusto: tenta JSON.parse direto, fallback pra extract regex se vier
+          // com markdown wrap (```json ... ```), e em último caso usa o texto bruto.
+          const parsedText = parseGeminiOcrJson(batchText, firstPage, lastPage);
+          fullText += parsedText + '\n\n';
         } catch (err) {
           console.error(`[Gemini Vision] Erro no batch ${batchIdx + 1} (páginas ${firstPage}-${lastPage}):`, err);
           // Se falhar no primeiro batch, fallback para PDF.js puro
@@ -556,7 +614,7 @@ INSTRUÇÕES IMPORTANTES:
         try { pdf.destroy(); } catch (e) { /* ignore */ }
       }
     }
-  }, [loadPDFJS, aiIntegration, extractTextFromPDFPure]);
+  }, [loadPDFJS, aiIntegration, extractTextFromPDFPure, parseGeminiOcrJson]);
 
   // 🆕 v1.31: OCR offline com Tesseract.js
   // v1.31.02: Paralelo com Scheduler (pool de workers)

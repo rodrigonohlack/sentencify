@@ -854,6 +854,13 @@ export interface AICallOptions {
    */
   deepseekJsonMode?: boolean;
   /**
+   * v1.43.20: Força Gemini a retornar JSON via responseMimeType='application/json'.
+   * Usado pelo extractTextFromPDFWithGeminiVision para contornar RECITATION em peças
+   * jurídicas com citações de jurisprudência (output JSON quebra similaridade literal
+   * que dispara o filter, mantendo texto extraído sem perda).
+   */
+  geminiJsonMode?: boolean;
+  /**
    * v1.42.02: Habilita busca na web durante a resposta. Apenas suportado
    * em providers com `supportsWebSearch=true` no WEB_SEARCH_REGISTRY (v1:
    * apenas Gemini). Bloqueado automaticamente se anonimização estiver ativa.
