@@ -28,6 +28,7 @@ export interface AIIntegrationForOrdering {
   ) => Promise<string>;
   aiSettings?: {
     provider?: string;
+    deepseekModel?: string;
   };
 }
 
@@ -98,7 +99,26 @@ Formato EXATO (uma linha): {"order": [1, 3, 2, ...]}
 Use os números originais da lista. Não use \`\`\`json nem nenhum cercado de código.`;
 
     try {
-      const isGemini = aiIntegration.aiSettings?.provider === 'gemini';
+      const provider = aiIntegration.aiSettings?.provider;
+      const isGemini = provider === 'gemini';
+      const isDeepseek = provider === 'deepseek';
+
+      // v1.43.07: Forçar deepseek-v4-flash pra topic ordering, mesmo se o usuário
+      // escolheu Pro globalmente. Motivo: Pro tem thinking muito mais verbose que
+      // Flash e estoura o budget de 20K tokens (usuário recebeu "content vazio,
+      // usando reasoning_content como fallback" + JSON não encontrado). Flash deu
+      // ordenação perfeita na v1.43.05 e custa 20× menos. Pattern simétrico ao
+      // Voice Improvement (que sempre usa 'deepseek-flash' independente do global).
+      // Se o usuário tiver escolhido Pro, log informativo pra transparência.
+      const modelOverride = isDeepseek ? 'deepseek-v4-flash' : undefined;
+      if (isDeepseek && aiIntegration.aiSettings?.deepseekModel === 'deepseek-v4-pro') {
+        console.log(
+          '[reorderTopicsViaLLM] Forçando deepseek-v4-flash pra esta chamada. ' +
+          'Pro teria thinking muito verbose (budget estouraria) + custa 20× mais. ' +
+          'Flash dá ordenação de qualidade pra topic ordering.'
+        );
+      }
+
       const messages: AIMessage[] = [{
         role: 'user',
         content: [{ type: 'text', text: prompt }]
@@ -111,6 +131,8 @@ Use os números originais da lista. Não use \`\`\`json nem nenhum cercado de c�
         // + ~5K pro JSON final. Custo: ~$0.008 no Flash — desprezível.
         maxTokens: 20000,
         useInstructions: false,
+        // v1.43.07: override pra flash quando provider é deepseek (ver acima)
+        model: modelOverride,
         // v1.43.05: disableThinking REMOVIDO (era true em v1.43.04). Sem thinking,
         // DeepSeek V4-Flash retornava ordem identidade [1,2,...,16] — lazy response
         // pra tarefa de classificação que ele percebia complexa. Claude/Gemini/OpenAI
