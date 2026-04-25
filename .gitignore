@@ -58,3 +58,7 @@ server/db/*.db-wal
 ssh/
 *.pem
 *.key
+
+# OCR Lab — modelos tessdata_best baixados via npm run download:tessdata
+# (~22MB raw / ~15MB gzipado — não comitar enquanto for throw-away test)
+public/tessdata/*.gz
