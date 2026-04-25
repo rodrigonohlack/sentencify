@@ -86,8 +86,7 @@ app.use((req, res, next) => {
     "default-src 'self'",
 
     // Scripts: CDNs necessários + unsafe-inline/eval para Quill e Transformers.js WASM
-    // v1.43.21: cdn.tailwindcss.com adicionado para a página /ocr-lab.html (throw-away test page)
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.quilljs.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://accounts.google.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.quilljs.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://accounts.google.com",
 
     // Estilos: Quill injeta estilos inline dinamicamente + Google Fonts (Outfit)
     "style-src 'self' 'unsafe-inline' https://cdn.quilljs.com https://cdn.jsdelivr.net https://fonts.googleapis.com",
