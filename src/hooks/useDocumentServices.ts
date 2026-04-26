@@ -9,6 +9,7 @@
 
 import React from 'react';
 import type { PdfjsLib, MammothLib, TesseractLib, PdfDocument, TesseractScheduler, AISettings, AIMessage, AICallOptions } from '../types';
+import { API_BASE } from '../constants/api';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -294,7 +295,10 @@ INSTRUÇÕES IMPORTANTES:
 - Idioma do documento: ${idioma}`
         });
 
-        // Fazer a requisição para o batch inteiro
+        // Fazer a requisição para o batch inteiro via proxy backend
+        // v1.43.23: fix CORS — antes chamava api.anthropic.com direto, navegador
+        // bloqueava em produção (CORS). Agora usa /api/claude/messages igual ao
+        // resto do app (callLLM em useAIIntegration.ts:410).
         if (!aiIntegration) throw new Error('AI integration not available');
         const requestBody = {
           model: aiIntegration.aiSettings?.model || 'claude-sonnet-4-20250514',
@@ -302,9 +306,12 @@ INSTRUÇÕES IMPORTANTES:
           messages: [{ role: 'user', content }]
         };
 
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+        const response = await fetch(`${API_BASE}/api/claude/messages`, {
           method: 'POST',
-          headers: aiIntegration.getApiHeaders(),
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': aiIntegration.aiSettings?.apiKeys?.claude || ''
+          },
           body: JSON.stringify(requestBody)
         });
 

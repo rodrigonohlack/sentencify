@@ -672,8 +672,10 @@ describe('useDocumentServices', () => {
       });
 
       expect(text).toBe('Extracted text from vision API');
+      // v1.43.23: chamada agora vai pelo proxy backend (/api/claude/messages),
+      // não direto pra api.anthropic.com (CORS bloqueava em produção).
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://api.anthropic.com/v1/messages',
+        expect.stringContaining('/api/claude/messages'),
         expect.objectContaining({
           method: 'POST',
           headers: expect.any(Object),
@@ -681,7 +683,7 @@ describe('useDocumentServices', () => {
       );
     });
 
-    it('should use getApiHeaders for request headers', async () => {
+    it('should send x-api-key header with claude API key', async () => {
       const mockPdfDoc = createMockPdfDocument(1, ['text']);
       (window as any).pdfjsLib = createMockPdfjsLib(mockPdfDoc);
 
@@ -699,7 +701,12 @@ describe('useDocumentServices', () => {
         await result.current.extractTextFromPDFWithClaudeVision(file);
       });
 
-      expect(mockAI.getApiHeaders).toHaveBeenCalled();
+      // v1.43.23: o proxy backend espera 'x-api-key' no header com a chave do user
+      const fetchCall = (global.fetch as any).mock.calls[0];
+      expect(fetchCall[1].headers).toMatchObject({
+        'Content-Type': 'application/json',
+        'x-api-key': 'test-key'
+      });
     });
 
     it('should log cache metrics when usage is present', async () => {
