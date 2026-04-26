@@ -200,6 +200,15 @@ const useDocumentServices = (aiIntegration: AIIntegrationForDocuments | null) =>
     const JPEG_QUALITY = 0.85;    // Qualidade JPEG (menor = mais rápido upload)
     const MAX_TOKENS = 16384;     // Tokens para acomodar múltiplas páginas
 
+    // v1.43.24: Validar API key antes de qualquer trabalho — falha clara em vez
+    // de fallback silencioso pra PDF.js (que é enganoso quando o PDF é digitalizado).
+    const claudeKey = aiIntegration?.aiSettings?.apiKeys?.claude;
+    if (!claudeKey || claudeKey.trim() === '') {
+      const err = new Error('API key Claude não configurada. Vá em Configurações IA → API Keys → Claude e cole sua chave (sk-ant-...). Ou troque o modo de OCR para Tesseract (offline) ou Gemini Vision.');
+      (err as Error & { isConfigError?: boolean }).isConfigError = true;
+      throw err;
+    }
+
     let pdf: PdfDocument | null = null;
     try {
       if (progressCallback) {
@@ -316,7 +325,13 @@ INSTRUÇÕES IMPORTANTES:
         });
 
         if (!response.ok) {
-          // Se falhar no primeiro batch, fazer fallback para PDF.js puro
+          // v1.43.24: 401/403 = problema de auth, NÃO fazer fallback silencioso
+          if (response.status === 401 || response.status === 403) {
+            const err = new Error(`API key Claude inválida (HTTP ${response.status}). Verifique a chave em Configurações IA → API Keys → Claude.`);
+            (err as Error & { isConfigError?: boolean }).isConfigError = true;
+            throw err;
+          }
+          // Outros erros (5xx, network): fallback continua igual
           if (batchIdx === 0) {
             console.warn('⚠️ Fallback para PDF.js puro');
             return await extractTextFromPDFPure(file, progressCallback);
@@ -340,6 +355,11 @@ INSTRUÇÕES IMPORTANTES:
       return finalText;
 
     } catch (err) {
+      // v1.43.24: erros de configuração NÃO devem cair no fallback silencioso —
+      // re-throw para o ProofCard mostrar mensagem clara via setError.
+      if ((err as Error & { isConfigError?: boolean }).isConfigError) {
+        throw err;
+      }
       return await extractTextFromPDFPure(file, progressCallback);
     } finally {
       if (pdf) {
@@ -397,6 +417,15 @@ INSTRUÇÕES IMPORTANTES:
     const SCALE = 1.5;
     const JPEG_QUALITY = 0.85;
     const MAX_TOKENS = 65536;
+
+    // v1.43.24: Validar API key antes de qualquer trabalho — falha clara em vez
+    // de fallback silencioso. Mesmo padrão do Claude Vision.
+    const geminiKey = aiIntegration?.aiSettings?.apiKeys?.gemini;
+    if (!geminiKey || geminiKey.trim() === '') {
+      const err = new Error('API key Gemini não configurada. Vá em Configurações IA → API Keys → Gemini e cole sua chave (AIza...). Ou troque o modo de OCR para Tesseract (offline) ou Claude Vision.');
+      (err as Error & { isConfigError?: boolean }).isConfigError = true;
+      throw err;
+    }
 
     let pdf: PdfDocument | null = null;
     try {
@@ -614,6 +643,11 @@ REGRAS:
       console.log(`[Gemini Vision] Extração completa: ${finalText.length} chars total (${totalBatches} batch(es))`);
       return finalText;
     } catch (err) {
+      // v1.43.24: erros de configuração NÃO devem cair no fallback silencioso —
+      // re-throw para o ProofCard mostrar mensagem clara via setError.
+      if ((err as Error & { isConfigError?: boolean }).isConfigError) {
+        throw err;
+      }
       console.warn('[Gemini Vision] Erro geral, fallback para PDF.js:', (err as Error).message);
       return await extractTextFromPDFPure(file, progressCallback);
     } finally {

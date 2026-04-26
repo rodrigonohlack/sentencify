@@ -29,7 +29,7 @@ export const ProofCard = React.memo(({
   isPdf,
   proofManager,
   openModal,
-  setError: _setError,
+  setError,
   extractTextFromPDFWithMode,
   anonymizationEnabled = false,
   binaryPdfBlocked = false,
@@ -131,13 +131,19 @@ export const ProofCard = React.memo(({
     } catch (err) {
       setExtractionProgress(null);
       proofManager.setProofExtractionFailed((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
+      // v1.43.24: mostrar mensagem clara para o usuário (especialmente em erros de
+      // configuração tipo API key faltando — antes caía no fallback silencioso e a
+      // UI mostrava "PDF sem texto extraível" enganoso).
+      if (setError) {
+        setError((err as Error).message || 'Falha ao extrair texto do PDF');
+      }
       // So fazer fallback para PDF se NAO estiver bloqueado (anon/Grok/DeepSeek)
       const pdfBinaryBlocked = anonymizationEnabled || binaryPdfBlocked;
       if (!pdfBinaryBlocked) {
         proofManager.setProofUsePdfMode((prev: Record<string, boolean>) => ({ ...prev, [proof.id]: true }));
       }
     }
-  }, [proof.id, proof.file, proofManager, extractTextFromPDFWithMode, anonymizationEnabled, anonConfig, binaryPdfBlocked]);
+  }, [proof.id, proof.file, proofManager, extractTextFromPDFWithMode, anonymizationEnabled, anonConfig, binaryPdfBlocked, setError]);
 
   // Handler: Extrair texto do PDF
   const handleExtractText = React.useCallback(async () => {

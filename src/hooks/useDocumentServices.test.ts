@@ -807,24 +807,27 @@ describe('useDocumentServices', () => {
       expect(callCount).toBeGreaterThanOrEqual(1);
     });
 
-    it('should throw error if aiIntegration is null', async () => {
+    it('should throw isConfigError when API key Claude is missing', async () => {
+      // v1.43.24: comportamento mudou — antes caía no fallback PDF.js silencioso;
+      // agora lança erro de configuração para o ProofCard mostrar mensagem clara.
       const mockPdfDoc = createMockPdfDocument(1, ['text']);
       (window as any).pdfjsLib = createMockPdfjsLib(mockPdfDoc);
-
-      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as any);
-      vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/jpeg;base64,abc');
 
       const { result } = renderHook(() => useDocumentServices(null));
       const file = createMockFile('scan.pdf', 'application/pdf');
 
-      // When aiIntegration is null, the catch block calls extractTextFromPDFPure as fallback
-      let text: string | null = null;
+      let caught: Error | null = null;
       await act(async () => {
-        text = await result.current.extractTextFromPDFWithClaudeVision(file);
+        try {
+          await result.current.extractTextFromPDFWithClaudeVision(file);
+        } catch (err) {
+          caught = err as Error;
+        }
       });
 
-      // Falls back to PDF pure extraction
-      expect(text).toBeDefined();
+      expect(caught).toBeTruthy();
+      expect((caught as unknown as Error).message).toContain('API key Claude não configurada');
+      expect((caught as unknown as Error & { isConfigError?: boolean }).isConfigError).toBe(true);
     });
 
     it('should process multiple batches for large PDFs', async () => {
