@@ -136,6 +136,8 @@ export const useAIIntegration = () => {
 
     // v1.32.38: Gemini thinking consome maxOutputTokens - adicionar buffer
     // Gemini Pro só aceita low/high - converter valores inválidos
+    // v1.43.25: gate isGemini3 — Gemma 4 não usa thinking_config nem temperature 1.0
+    const isGemini3 = model?.includes('gemini-3') || model?.includes('3-flash') || model?.includes('3-pro');
     let thinkingLevel = aiSettings.geminiThinkingLevel || 'high';
     const isPro = model?.includes('pro');
     if (isPro && (thinkingLevel === 'minimal' || thinkingLevel === 'medium')) {
@@ -152,13 +154,15 @@ export const useAIIntegration = () => {
 
     const request: Record<string, unknown> = {
       contents,
-      generationConfig: {
+      generationConfig: isGemini3 ? {
         maxOutputTokens: 128000,  // Fixo para evitar que o modelo "economize" texto
         temperature: 1.0,  // Gemini 3 requer temperature 1.0
         thinking_config: {
           thinking_budget: effectiveBuffer,
           includeThoughts: true
         }
+      } : {
+        maxOutputTokens: 128000  // Gemma 4: sem thinking_config, sem forçar temperature
       }
     };
 
@@ -860,6 +864,8 @@ export const useAIIntegration = () => {
         : [{ text: msg.content as string }]
     }));
 
+    // v1.43.25: gate isGemini3 — Gemma 4 não usa thinking_config nem temperature 1.0
+    const isGemini3 = model?.includes('gemini-3') || model?.includes('3-flash') || model?.includes('3-pro');
     let thinkingLevel = aiSettings.geminiThinkingLevel || 'high';
     const isPro = model?.includes('pro');
     if (isPro && (thinkingLevel === 'minimal' || thinkingLevel === 'medium')) {
@@ -876,13 +882,15 @@ export const useAIIntegration = () => {
 
     const request: Record<string, unknown> = {
       contents,
-      generationConfig: {
+      generationConfig: isGemini3 ? {
         maxOutputTokens: 128000,  // Fixo para evitar que o modelo "economize" texto
         temperature: 1.0,
         thinking_config: {
           thinking_budget: effectiveBuffer,
           includeThoughts: true
         }
+      } : {
+        maxOutputTokens: 128000
       }
     };
 

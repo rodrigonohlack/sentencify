@@ -913,13 +913,15 @@ const useAIIntegration = () => {
         }
 
         // v1.42.02: Web search via registry provider-agnostic.
-        // 3 camadas de defesa verificadas dentro do applyWebSearchTool:
+        // 4 camadas de defesa verificadas dentro do applyWebSearchTool:
         //   1. options.webSearch === true
         //   2. anonimização NÃO pode estar ativa
         //   3. provider tem supportsWebSearch: true
+        //   4. modelo não é Gemma (sem tool google_search) — v1.43.25
         const finalRequest = applyWebSearchTool('gemini', geminiRequest, {
           enabled: options.webSearch,
           anonymizationEnabled: !!aiSettings?.anonymization?.enabled,
+          model,
         });
 
         // Fazer requisicao via proxy local
@@ -1444,6 +1446,7 @@ const useAIIntegration = () => {
       // Gemini 3 (v1.32.36: removido 2.5)
       'gemini-3-flash-preview': 'Gemini 3 Flash',
       'gemini-3.1-pro-preview': 'Gemini 3.1 Pro',
+      'gemma-4-31b-it': 'Gemma 4 31B',
       // v1.35.97: OpenAI GPT-5.2
       'gpt-5.2': 'GPT-5.2 Thinking',
       'gpt-5.2-chat-latest': 'GPT-5.2 Instant',
@@ -1969,10 +1972,11 @@ const useAIIntegration = () => {
       };
     }
 
-    // v1.42.02: Injeção do tool google_search via registry (3 camadas de defesa)
+    // v1.42.02: Injeção do tool google_search via registry (4 camadas de defesa, v1.43.25)
     const finalRequest = applyWebSearchTool('gemini', geminiRequest, {
       enabled: options.webSearch,
       anonymizationEnabled: !!aiSettings?.anonymization?.enabled,
+      model,
     });
 
     const response = await fetch(`${API_BASE}/api/gemini/stream`, {

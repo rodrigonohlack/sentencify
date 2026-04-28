@@ -24,6 +24,8 @@ const MODEL_PRICES = {
   // v1.43.10: DeepSeek V4 Flash (opção mais barata do menu)
   deepseekFlash: { input: 0.14, output: 0.28, cacheWrite: 0.14, cacheRead: 0.028 },
   deepseekPro: { input: 1.74, output: 3.48, cacheWrite: 1.74, cacheRead: 0.145 },
+  // v1.43.25: Gemma 4 31B (cache prices estimados)
+  gemma31b: { input: 0.13, output: 0.38, cacheWrite: 0.16, cacheRead: 0.013 },
 } as const;
 
 const calculateCost = (m: TokenMetrics, prices: { input: number; output: number; cacheWrite: number; cacheRead: number }): number => {
@@ -395,6 +397,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   <span className="text-indigo-700 dark:text-indigo-300">DeepSeek V4 Pro</span>
                   <span className="font-mono text-slate-700 dark:text-slate-200">
                     ${calculateCost(tokenMetrics, MODEL_PRICES.deepseekPro).toFixed(4)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-fuchsia-600 dark:text-fuchsia-400">Gemma 4 31B</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-200">
+                    ${calculateCost(tokenMetrics, MODEL_PRICES.gemma31b).toFixed(4)}
                   </span>
                 </div>
               </div>

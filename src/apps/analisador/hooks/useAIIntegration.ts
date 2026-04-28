@@ -119,8 +119,10 @@ export const useAIIntegration = () => {
     }));
 
     // Configuração de thinking level para Gemini
+    // v1.43.25: gate isGemini3 — Gemma 4 não usa thinkingConfig
+    const isGemini3 = model?.includes('gemini-3') || model?.includes('3-flash') || model?.includes('3-pro');
     const thinkingLevel = aiSettings.geminiThinkingLevel || 'high';
-    const thinkingConfig = thinkingLevel !== 'minimal' ? {
+    const thinkingConfig = (isGemini3 && thinkingLevel !== 'minimal') ? {
       thinkingConfig: { thinkingBudget: thinkingLevel === 'high' ? 8192 : thinkingLevel === 'medium' ? 4096 : 2048 }
     } : {};
 
@@ -579,8 +581,10 @@ export const useAIIntegration = () => {
         : [{ text: msg.content as string }]
     }));
 
+    // v1.43.25: gate isGemini3 — Gemma 4 não usa thinkingConfig
+    const isGemini3 = model?.includes('gemini-3') || model?.includes('3-flash') || model?.includes('3-pro');
     const thinkingLevel = aiSettings.geminiThinkingLevel || 'high';
-    const thinkingConfig = thinkingLevel !== 'minimal' ? {
+    const thinkingConfig = (isGemini3 && thinkingLevel !== 'minimal') ? {
       thinkingConfig: { thinkingBudget: thinkingLevel === 'high' ? 8192 : thinkingLevel === 'medium' ? 4096 : 2048 }
     } : {};
 
