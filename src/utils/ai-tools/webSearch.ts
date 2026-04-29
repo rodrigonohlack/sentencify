@@ -124,21 +124,19 @@ export function providerSupportsWebSearch(provider: AIProvider): boolean {
 
 /**
  * Aplica (ou não) a ferramenta de web search ao request do provider, com
- * QUATRO camadas de defesa contra ativação indevida:
+ * TRÊS camadas de defesa contra ativação indevida:
  *   1. `enabled` precisa ser true
  *   2. Anonimização NÃO pode estar ativa (proteção de PII em queries)
  *   3. Provider precisa ter `supportsWebSearch: true` no registry
- *   4. Modelo não pode ser Gemma (open-weight, sem suporte ao tool google_search)
  */
 export function applyWebSearchTool(
   provider: AIProvider,
   request: unknown,
-  opts: { enabled?: boolean; anonymizationEnabled?: boolean; model?: string },
+  opts: { enabled?: boolean; anonymizationEnabled?: boolean },
 ): unknown {
   if (!opts.enabled) return request;
   if (opts.anonymizationEnabled) return request;
   if (!WEB_SEARCH_REGISTRY[provider].supportsWebSearch) return request;
-  if (opts.model?.startsWith('gemma')) return request;
   return WEB_SEARCH_REGISTRY[provider].applyToRequest(request);
 }
 

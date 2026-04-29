@@ -50,11 +50,6 @@ export const AI_PROVIDERS: Record<AIProvider, ProviderInfo> = {
         id: 'gemini-3.1-pro-preview',
         name: 'Gemini 3.1 Pro',
         description: '$2.00/$12 por 1M tokens'
-      },
-      {
-        id: 'gemma-4-31b-it',
-        name: 'Gemma 4 31B',
-        description: '$0.13/$0.38 por 1M tokens — alternativa econômica'
       }
     ]
   },

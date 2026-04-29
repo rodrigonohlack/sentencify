@@ -149,7 +149,6 @@ const MODEL_PRICES: Record<string, { input: number; output: number }> = {
   // Gemini
   'gemini-3-flash-preview': { input: 0.50, output: 3.00 },
   'gemini-3.1-pro-preview': { input: 2.00, output: 12.00 },
-  'gemma-4-31b-it': { input: 0.13, output: 0.38 },
   // OpenAI
   'gpt-5.2': { input: 2.50, output: 10.00 },
   'gpt-5.2-chat-latest': { input: 2.50, output: 10.00 },
@@ -172,7 +171,6 @@ const MODEL_NAMES: Record<string, string> = {
   // Gemini
   'gemini-3-flash-preview': 'Gemini 3 Flash',
   'gemini-3.1-pro-preview': 'Gemini 3.1 Pro',
-  'gemma-4-31b-it': 'Gemma 4 31B',
   // OpenAI
   'gpt-5.2': 'GPT-5.2',
   'gpt-5.2-chat-latest': 'GPT-5.2 Instant',
@@ -249,13 +247,8 @@ const estimateCostAndTime = (
   let thinkingLabel = '';
 
   if (provider === 'gemini') {
-    if (model.startsWith('gemma')) {
-      thinkingTokens = 0;
-      thinkingLabel = '';
-    } else {
-      thinkingTokens = GEMINI_THINKING_TOKENS[geminiThinkingLevel] || 0;
-      thinkingLabel = thinkingTokens > 0 ? `thinking ${geminiThinkingLevel}` : '';
-    }
+    thinkingTokens = GEMINI_THINKING_TOKENS[geminiThinkingLevel] || 0;
+    thinkingLabel = thinkingTokens > 0 ? `thinking ${geminiThinkingLevel}` : '';
   } else if (provider === 'grok') {
     // Grok: reasoning está embutido no modelo (sem budget separado)
     const isReasoning = model.includes('reasoning');

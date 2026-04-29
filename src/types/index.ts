@@ -322,7 +322,7 @@ export interface AISettings {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** Modelos disponíveis para melhoria de voz (rápidos/baratos) */
-export type VoiceImprovementModel = 'haiku' | 'flash' | 'gpt-4o-mini' | 'grok-instant' | 'deepseek-flash' | 'gemma-31b';
+export type VoiceImprovementModel = 'haiku' | 'flash' | 'gpt-4o-mini' | 'grok-instant' | 'deepseek-flash';
 
 /** Configurações de melhoria de texto ditado por voz */
 export interface VoiceImprovementSettings {

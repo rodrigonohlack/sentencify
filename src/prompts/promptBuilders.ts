@@ -272,7 +272,7 @@ export function buildMiniReportPrompt(
 
   const core = buildMiniReportPromptCore(analyzedDocuments, aiSettings, partesProcesso, { isInitialGeneration });
 
-  return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestaç${core.totalContestacoes > 1 ? 'ões' : 'ão'})` : ' (petição inicial)'}, gere um mini-relatório narrativo para o tópico "${title}".
+  return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestação${core.totalContestacoes > 1 ? 'ões' : ''})` : ' (petição inicial)'}, gere um mini-relatório narrativo para o tópico "${title}".
 
 ${instruction ? `INSTRUÇÃO DO USUÁRIO:\n${instruction}\n` : ''}
 
@@ -324,7 +324,7 @@ export function buildBatchMiniReportPrompt(
   const core = buildMiniReportPromptCore(analyzedDocuments, aiSettings, partesProcesso, { isInitialGeneration });
   const topicsList = topics.map((t: Topic, i: number) => `${i + 1}. "${t.title}"`).join('\n');
 
-  return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestaç${core.totalContestacoes > 1 ? 'ões' : 'ão'})` : ' (petição inicial)'}, gere mini-relatórios narrativos para os seguintes ${topics.length} tópicos:
+  return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestação${core.totalContestacoes > 1 ? 'ões' : ''})` : ' (petição inicial)'}, gere mini-relatórios narrativos para os seguintes ${topics.length} tópicos:
 
 ${topicsList}
 

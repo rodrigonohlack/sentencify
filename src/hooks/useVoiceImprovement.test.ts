@@ -43,12 +43,6 @@ describe('useVoiceImprovement', () => {
       expect(VOICE_MODEL_CONFIG['deepseek-flash'].model).toBe('deepseek-v4-flash');
       expect(VOICE_MODEL_CONFIG['deepseek-flash'].displayName).toBe('DeepSeek V4 Flash');
     });
-
-    it('should have gemma-31b config (v1.43.25)', () => {
-      expect(VOICE_MODEL_CONFIG['gemma-31b'].provider).toBe('gemini');
-      expect(VOICE_MODEL_CONFIG['gemma-31b'].model).toBe('gemma-4-31b-it');
-      expect(VOICE_MODEL_CONFIG['gemma-31b'].displayName).toBe('Gemma 4 31B');
-    });
   });
 
   describe('improveText', () => {

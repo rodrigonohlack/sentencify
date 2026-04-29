@@ -77,7 +77,6 @@ const getModelDisplayName = (modelId: string): string => {
     // Gemini 3
     'gemini-3-flash-preview': 'Gemini 3 Flash',
     'gemini-3.1-pro-preview': 'Gemini 3.1 Pro',
-    'gemma-4-31b-it': 'Gemma 4 31B',
     // OpenAI GPT-5.2
     'gpt-5.2': 'GPT-5.2 Thinking',
     'gpt-5.2-chat-latest': 'GPT-5.2 Instant',
@@ -485,7 +484,6 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 >
                   <option value="gemini-3-flash-preview">Gemini 3 Flash ($0.50/$3.00 por 1M)</option>
                   <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro ($2.00/$12 por 1M)</option>
-                  <option value="gemma-4-31b-it">Gemma 4 31B (econômico — $0.13/$0.38 por 1M)</option>
                 </select>
               )}
               {aiSettings.provider === 'openai' && (
@@ -832,8 +830,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               </>
             )}
 
-            {/* GEMINI 3: Dropdown de thinking_level (oculto pra Gemma — sem thinking_config) */}
-            {aiSettings.provider === 'gemini' && !aiSettings.geminiModel?.startsWith('gemma') && (
+            {/* GEMINI 3: Dropdown de thinking_level */}
+            {aiSettings.provider === 'gemini' && (
               <div className="p-4 rounded-lg border-2 border-amber-500/50 bg-amber-500/10">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-amber-400">⚠️</span>
@@ -1197,7 +1195,6 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       <>
                         <option value="gemini-3-flash-preview">Gemini 3 Flash</option>
                         <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
-                        <option value="gemma-4-31b-it">Gemma 4 31B</option>
                       </>
                     )}
                     {aiSettings.doubleCheck?.provider === 'openai' && (
@@ -1266,7 +1263,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   </div>
                 )}
 
-                {aiSettings.doubleCheck?.provider === 'gemini' && !aiSettings.doubleCheck?.model?.startsWith('gemma') && (
+                {aiSettings.doubleCheck?.provider === 'gemini' && (
                   <div>
                     <label className="block text-xs font-medium theme-text-tertiary mb-2">
                       Thinking Level

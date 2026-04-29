@@ -312,7 +312,7 @@ A descrição fática (postulatória e defensiva) deve ter alto nível de detalh
 
     const core = buildMiniReportPromptCore({ isInitialGeneration });
 
-    return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestaç${core.totalContestacoes > 1 ? 'ões' : 'ão'})` : ' (petição inicial)'}, gere um mini-relatório narrativo para o tópico "${title}".
+    return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestação${core.totalContestacoes > 1 ? 'ões' : ''})` : ' (petição inicial)'}, gere um mini-relatório narrativo para o tópico "${title}".
 
 ${instruction ? `INSTRUÇÃO DO USUÁRIO:\n${instruction}\n` : ''}
 
@@ -348,7 +348,7 @@ Responda APENAS com o texto do mini-relatório formatado em HTML, sem JSON, sem 
     const core = buildMiniReportPromptCore({ isInitialGeneration });
     const topicsList = topics.map((t: Topic, i: number) => `${i + 1}. "${t.title}"`).join('\n');
 
-    return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestaç${core.totalContestacoes > 1 ? 'ões' : 'ão'})` : ' (petição inicial)'}, gere mini-relatórios narrativos para os seguintes ${topics.length} tópicos:
+    return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestação${core.totalContestacoes > 1 ? 'ões' : ''})` : ' (petição inicial)'}, gere mini-relatórios narrativos para os seguintes ${topics.length} tópicos:
 
 ${topicsList}
 

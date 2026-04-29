@@ -55,13 +55,6 @@ export const VOICE_MODEL_CONFIG: Record<VoiceImprovementModel, ModelConfig> = {
     provider: 'deepseek',
     model: 'deepseek-v4-flash',
     displayName: 'DeepSeek V4 Flash'
-  },
-  // v1.43.25: Gemma 4 31B — alternativa econômica via Gemini API ($0.13/$0.38)
-  // gate isGemini3 em useAIIntegration não casa com 'gemma-' → não envia thinking_config
-  'gemma-31b': {
-    provider: 'gemini',
-    model: 'gemma-4-31b-it',
-    displayName: 'Gemma 4 31B'
   }
 };
 
