@@ -208,8 +208,7 @@ export function buildMiniReportPromptCore(
 SEGUNDO PARÁGRAFO (primeira defesa):
 ${totalContestacoes > 0
   ? `Há ${totalContestacoes} contestaç${totalContestacoes > 1 ? 'ões' : 'ão'} anexada${totalContestacoes > 1 ? 's' : ''} acima. LEIA o conteúdo da primeira contestação e resuma seus argumentos defensivos relevantes ao tópico em pauta. Formato:
-"A primeira reclamada, em defesa, alega [argumentos extraídos da contestação]. Sustenta que [posição da ré sobre este tópico]."
-PROIBIDO escrever "Não houve apresentação de contestação" — ela existe e está anexada acima.`
+"A primeira reclamada, em defesa, alega [argumentos extraídos da contestação]. Sustenta que [posição da ré sobre este tópico]."`
   : '"Não houve apresentação de contestação."'}
 
 ${totalContestacoes > 1 ? `TERCEIRO PARÁGRAFO (segunda defesa):
@@ -276,11 +275,11 @@ export function buildMiniReportPrompt(
 
   const core = buildMiniReportPromptCore(analyzedDocuments, aiSettings, partesProcesso, { isInitialGeneration });
 
-  // v1.43.27: instruction default quando há contestação e usuário não passou instruction.
-  // Replica empiricamente o efeito do "regere" manual que faz Gemma 4 31B re-focar e
-  // re-ler a contestação anexada (modelos grandes ignoram redundância sem regredir).
+  // v1.43.27 → v1.43.28: instruction default totalmente positiva (sem palavras negativas
+  // que possam plantar tokens tóxicos no contexto). Replica o efeito do "regere" manual
+  // que faz o modelo re-focar e re-ler a contestação anexada.
   const effectiveInstruction = instruction || (core.totalContestacoes > 0
-    ? 'Leia atentamente a(s) contestação(ões) anexada(s) acima ANTES de redigir o segundo parágrafo. Cite os argumentos defensivos específicos sobre este tópico — não escreva que houve ausência de defesa quando ela está anexada.'
+    ? 'Leia atentamente a(s) contestação(ões) anexada(s) acima e identifique os argumentos defensivos relevantes ao tópico em pauta. Cite-os no segundo parágrafo seguindo o formato indicado.'
     : '');
 
   return `Com base nos documentos processuais fornecidos acima${

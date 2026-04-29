@@ -308,12 +308,17 @@ describe('promptBuilders', () => {
         expect(result.modeloBase).toContain('LEIA o conteúdo');
       });
 
-      it('should include explicit prohibition against hallucinating absence (v1.43.26)', () => {
+      it('should NOT include negative prohibition against hallucinating absence (v1.43.28)', () => {
+        // v1.43.28: regressão da v1.43.26 — a frase "PROIBIDO escrever..." plantava o
+        // token tóxico no contexto e fazia modelos copiarem a frase mesmo com a proibição.
+        // Além disso, era logicamente incorreta: um tópico pode legitimamente não ser
+        // tratado pela contestação, e a IA deve poder expressar isso.
         const docs: AnalyzedDocumentsForPrompt = {
           contestacoes: ['pdf1'],
         };
         const result = buildMiniReportPromptCore(docs, undefined, null);
-        expect(result.modeloBase).toContain('PROIBIDO escrever "Não houve apresentação');
+        expect(result.modeloBase).not.toContain('PROIBIDO escrever');
+        expect(result.modeloBase).not.toContain('PROIBIDO');
       });
     });
 
@@ -435,13 +440,16 @@ describe('promptBuilders', () => {
       expect(result).toContain('você DEVE ler ambas');
     });
 
-    it('should inject default instruction when contestações > 0 and user provided no instruction (v1.43.27)', () => {
+    it('should inject default instruction when contestações > 0 and user provided no instruction (v1.43.27 → v1.43.28)', () => {
       const docs: AnalyzedDocumentsForPrompt = {
         contestacoes: ['pdf1'],
       };
       const result = buildMiniReportPrompt(docs, undefined, null, { title: 'Test' });
       expect(result).toContain('INSTRUÇÃO DO USUÁRIO');
       expect(result).toContain('Leia atentamente a(s) contestação(ões) anexada(s)');
+      // v1.43.28: instruction default sem palavras negativas (que plantam tokens tóxicos)
+      expect(result).not.toContain('não escreva');
+      expect(result).not.toContain('ausência de defesa');
     });
 
     it('should preserve user instruction when provided (v1.43.27)', () => {

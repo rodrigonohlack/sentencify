@@ -47,8 +47,7 @@ PRIMEIRO PARÁGRAFO (alegações do autor):
 SEGUNDO PARÁGRAFO (primeira defesa):
 ${totalContestacoes > 0
   ? `Há ${totalContestacoes} contestaç${totalContestacoes > 1 ? 'ões' : 'ão'} anexada${totalContestacoes > 1 ? 's' : ''} acima. LEIA o conteúdo da primeira contestação e resuma seus argumentos defensivos relevantes ao tópico em pauta. Formato:
-"A primeira reclamada, em defesa, alega [argumentos extraídos da contestação]. Sustenta que [posição da ré sobre este tópico]."
-PROIBIDO escrever "Não houve apresentação de contestação" — ela existe e está anexada acima.`
+"A primeira reclamada, em defesa, alega [argumentos extraídos da contestação]. Sustenta que [posição da ré sobre este tópico]."`
   : '"Não houve apresentação de contestação."'}
 
 ${totalContestacoes > 1 ? 'TERCEIRO PARÁGRAFO (segunda defesa):\n"A segunda ré, por sua vez, nega [posição]. Aduz [argumentos]."' : ''}
