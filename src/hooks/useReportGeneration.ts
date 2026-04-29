@@ -254,10 +254,7 @@ export const useReportGeneration = ({
 "O reclamante narra [resumo]. Sustenta [argumentos]. Indica que [situação]. Em decorrência, postula [pedido]."
 
 SEGUNDO PARÁGRAFO (primeira defesa):
-${totalContestacoes > 0
-  ? `Há ${totalContestacoes} contestaç${totalContestacoes > 1 ? 'ões' : 'ão'} anexada${totalContestacoes > 1 ? 's' : ''} acima. LEIA o conteúdo da primeira contestação e resuma seus argumentos defensivos relevantes ao tópico em pauta. Formato:
-"A primeira reclamada, em defesa, alega [argumentos extraídos da contestação]. Sustenta que [posição da ré sobre este tópico]."`
-  : '"Não houve apresentação de contestação."'}
+${totalContestacoes > 0 ? '"A primeira reclamada, em defesa, alega [argumentos]. Sustenta que [posição]."' : '"Não houve apresentação de contestação."'}
 
 ${totalContestacoes > 1 ? `TERCEIRO PARÁGRAFO (segunda defesa):
 "A segunda ré, por sua vez, nega [posição]. Aduz [argumentos]."` : ''}
@@ -315,20 +312,9 @@ A descrição fática (postulatória e defensiva) deve ter alto nível de detalh
 
     const core = buildMiniReportPromptCore({ isInitialGeneration });
 
-    // v1.43.27 → v1.43.28: instruction default totalmente positiva (sem palavras negativas
-    // que possam plantar tokens tóxicos no contexto). Replica o efeito do "regere" manual
-    // que faz o modelo re-focar e re-ler a contestação anexada.
-    const effectiveInstruction = instruction || (core.totalContestacoes > 0
-      ? 'Leia atentamente a(s) contestação(ões) anexada(s) acima e identifique os argumentos defensivos relevantes ao tópico em pauta. Cite-os no segundo parágrafo seguindo o formato indicado.'
-      : '');
+    return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestaç${core.totalContestacoes > 1 ? 'ões' : 'ão'})` : ' (petição inicial)'}, gere um mini-relatório narrativo para o tópico "${title}".
 
-    return `Com base nos documentos processuais fornecidos acima${
-      core.totalContestacoes > 0
-        ? ` (PETIÇÃO INICIAL + ${core.totalContestacoes} CONTESTAÇ${core.totalContestacoes > 1 ? 'ÕES' : 'ÃO'} ANEXADA${core.totalContestacoes > 1 ? 'S' : ''} — você DEVE ler ambas e citar argumentos de cada lado)`
-        : ' (apenas petição inicial, sem contestação)'
-    }, gere um mini-relatório narrativo para o tópico "${title}".
-
-${effectiveInstruction ? `INSTRUÇÃO DO USUÁRIO:\n${effectiveInstruction}\n` : ''}
+${instruction ? `INSTRUÇÃO DO USUÁRIO:\n${instruction}\n` : ''}
 
 ${context ? `CONTEXTO:\n${context}\n` : ''}
 
@@ -362,11 +348,7 @@ Responda APENAS com o texto do mini-relatório formatado em HTML, sem JSON, sem 
     const core = buildMiniReportPromptCore({ isInitialGeneration });
     const topicsList = topics.map((t: Topic, i: number) => `${i + 1}. "${t.title}"`).join('\n');
 
-    return `Com base nos documentos processuais fornecidos acima${
-      core.totalContestacoes > 0
-        ? ` (PETIÇÃO INICIAL + ${core.totalContestacoes} CONTESTAÇ${core.totalContestacoes > 1 ? 'ÕES' : 'ÃO'} ANEXADA${core.totalContestacoes > 1 ? 'S' : ''} — você DEVE ler ambas e citar argumentos de cada lado)`
-        : ' (apenas petição inicial, sem contestação)'
-    }, gere mini-relatórios narrativos para os seguintes ${topics.length} tópicos:
+    return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestaç${core.totalContestacoes > 1 ? 'ões' : 'ão'})` : ' (petição inicial)'}, gere mini-relatórios narrativos para os seguintes ${topics.length} tópicos:
 
 ${topicsList}
 

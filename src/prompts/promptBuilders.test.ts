@@ -298,28 +298,6 @@ describe('promptBuilders', () => {
         const result = buildMiniReportPromptCore(docs, undefined, null);
         expect(result.modeloBase).toContain('Não houve apresentação de contestação');
       });
-
-      it('should explicitly state count of contestações when > 0 (v1.43.26)', () => {
-        const docs: AnalyzedDocumentsForPrompt = {
-          contestacoesText: [{ text: 'defesa 1' }, { text: 'defesa 2' }],
-        };
-        const result = buildMiniReportPromptCore(docs, undefined, null);
-        expect(result.modeloBase).toContain('2 contestações anexadas');
-        expect(result.modeloBase).toContain('LEIA o conteúdo');
-      });
-
-      it('should NOT include negative prohibition against hallucinating absence (v1.43.28)', () => {
-        // v1.43.28: regressão da v1.43.26 — a frase "PROIBIDO escrever..." plantava o
-        // token tóxico no contexto e fazia modelos copiarem a frase mesmo com a proibição.
-        // Além disso, era logicamente incorreta: um tópico pode legitimamente não ser
-        // tratado pela contestação, e a IA deve poder expressar isso.
-        const docs: AnalyzedDocumentsForPrompt = {
-          contestacoes: ['pdf1'],
-        };
-        const result = buildMiniReportPromptCore(docs, undefined, null);
-        expect(result.modeloBase).not.toContain('PROIBIDO escrever');
-        expect(result.modeloBase).not.toContain('PROIBIDO');
-      });
     });
 
     describe('Partes Info', () => {
@@ -431,48 +409,6 @@ describe('promptBuilders', () => {
       expect(result).toContain('Horas Extras');
     });
 
-    it('should mention contestações in opening when > 0 (v1.43.26)', () => {
-      const docs: AnalyzedDocumentsForPrompt = {
-        contestacoes: ['pdf1'],
-      };
-      const result = buildMiniReportPrompt(docs, undefined, null, { title: 'Test' });
-      expect(result).toContain('PETIÇÃO INICIAL + 1 CONTESTAÇÃO ANEXADA');
-      expect(result).toContain('você DEVE ler ambas');
-    });
-
-    it('should inject default instruction when contestações > 0 and user provided no instruction (v1.43.27 → v1.43.28)', () => {
-      const docs: AnalyzedDocumentsForPrompt = {
-        contestacoes: ['pdf1'],
-      };
-      const result = buildMiniReportPrompt(docs, undefined, null, { title: 'Test' });
-      expect(result).toContain('INSTRUÇÃO DO USUÁRIO');
-      expect(result).toContain('Leia atentamente a(s) contestação(ões) anexada(s)');
-      // v1.43.28: instruction default sem palavras negativas (que plantam tokens tóxicos)
-      expect(result).not.toContain('não escreva');
-      expect(result).not.toContain('ausência de defesa');
-    });
-
-    it('should preserve user instruction when provided (v1.43.27)', () => {
-      const docs: AnalyzedDocumentsForPrompt = {
-        contestacoes: ['pdf1'],
-      };
-      const result = buildMiniReportPrompt(docs, undefined, null, {
-        title: 'Test',
-        instruction: 'Foque nos fatos principais',
-      });
-      expect(result).toContain('INSTRUÇÃO DO USUÁRIO');
-      expect(result).toContain('Foque nos fatos principais');
-      // Default não deve aparecer quando user já passou instruction
-      expect(result).not.toContain('Leia atentamente a(s) contestação(ões) anexada(s)');
-    });
-
-    it('should not inject default instruction when no contestações (v1.43.27)', () => {
-      const docs: AnalyzedDocumentsForPrompt = {};
-      const result = buildMiniReportPrompt(docs, undefined, null, { title: 'Test' });
-      // Sem contestação e sem instruction do user, bloco INSTRUÇÃO DO USUÁRIO não aparece
-      expect(result).not.toContain('INSTRUÇÃO DO USUÁRIO');
-    });
-
     it('should include instruction when provided', () => {
       const docs: AnalyzedDocumentsForPrompt = {};
       const result = buildMiniReportPrompt(docs, undefined, null, {
@@ -508,8 +444,8 @@ describe('promptBuilders', () => {
         contestacoes: ['pdf1', 'pdf2'],
       };
       const result = buildMiniReportPrompt(docs, undefined, null, { title: 'Test' });
-      // v1.43.26: corrigido plural ("contestaçãoões" → "CONTESTAÇÕES")
-      expect(result).toContain('2 CONTESTAÇÕES ANEXADAS');
+      // v1.43.29: revertido prompt ao original (mas plural correto preservado)
+      expect(result).toContain('2 contestações');
     });
 
     it('should use singular for 1 contestação', () => {
@@ -524,7 +460,7 @@ describe('promptBuilders', () => {
     it('should indicate petição inicial only when no contestações', () => {
       const docs: AnalyzedDocumentsForPrompt = {};
       const result = buildMiniReportPrompt(docs, undefined, null, { title: 'Test' });
-      expect(result).toContain('apenas petição inicial, sem contestação');
+      expect(result).toContain('(petição inicial)');
     });
 
     it('should indicate MODELO PERSONALIZADO when custom model used', () => {
