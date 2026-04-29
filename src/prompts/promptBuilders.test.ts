@@ -435,6 +435,36 @@ describe('promptBuilders', () => {
       expect(result).toContain('você DEVE ler ambas');
     });
 
+    it('should inject default instruction when contestações > 0 and user provided no instruction (v1.43.27)', () => {
+      const docs: AnalyzedDocumentsForPrompt = {
+        contestacoes: ['pdf1'],
+      };
+      const result = buildMiniReportPrompt(docs, undefined, null, { title: 'Test' });
+      expect(result).toContain('INSTRUÇÃO DO USUÁRIO');
+      expect(result).toContain('Leia atentamente a(s) contestação(ões) anexada(s)');
+    });
+
+    it('should preserve user instruction when provided (v1.43.27)', () => {
+      const docs: AnalyzedDocumentsForPrompt = {
+        contestacoes: ['pdf1'],
+      };
+      const result = buildMiniReportPrompt(docs, undefined, null, {
+        title: 'Test',
+        instruction: 'Foque nos fatos principais',
+      });
+      expect(result).toContain('INSTRUÇÃO DO USUÁRIO');
+      expect(result).toContain('Foque nos fatos principais');
+      // Default não deve aparecer quando user já passou instruction
+      expect(result).not.toContain('Leia atentamente a(s) contestação(ões) anexada(s)');
+    });
+
+    it('should not inject default instruction when no contestações (v1.43.27)', () => {
+      const docs: AnalyzedDocumentsForPrompt = {};
+      const result = buildMiniReportPrompt(docs, undefined, null, { title: 'Test' });
+      // Sem contestação e sem instruction do user, bloco INSTRUÇÃO DO USUÁRIO não aparece
+      expect(result).not.toContain('INSTRUÇÃO DO USUÁRIO');
+    });
+
     it('should include instruction when provided', () => {
       const docs: AnalyzedDocumentsForPrompt = {};
       const result = buildMiniReportPrompt(docs, undefined, null, {

@@ -316,13 +316,20 @@ A descrição fática (postulatória e defensiva) deve ter alto nível de detalh
 
     const core = buildMiniReportPromptCore({ isInitialGeneration });
 
+    // v1.43.27: instruction default quando há contestação e usuário não passou instruction.
+    // Replica empiricamente o efeito do "regere" manual que faz Gemma 4 31B re-focar e
+    // re-ler a contestação anexada (modelos grandes ignoram redundância sem regredir).
+    const effectiveInstruction = instruction || (core.totalContestacoes > 0
+      ? 'Leia atentamente a(s) contestação(ões) anexada(s) acima ANTES de redigir o segundo parágrafo. Cite os argumentos defensivos específicos sobre este tópico — não escreva que houve ausência de defesa quando ela está anexada.'
+      : '');
+
     return `Com base nos documentos processuais fornecidos acima${
       core.totalContestacoes > 0
         ? ` (PETIÇÃO INICIAL + ${core.totalContestacoes} CONTESTAÇ${core.totalContestacoes > 1 ? 'ÕES' : 'ÃO'} ANEXADA${core.totalContestacoes > 1 ? 'S' : ''} — você DEVE ler ambas e citar argumentos de cada lado)`
         : ' (apenas petição inicial, sem contestação)'
     }, gere um mini-relatório narrativo para o tópico "${title}".
 
-${instruction ? `INSTRUÇÃO DO USUÁRIO:\n${instruction}\n` : ''}
+${effectiveInstruction ? `INSTRUÇÃO DO USUÁRIO:\n${effectiveInstruction}\n` : ''}
 
 ${context ? `CONTEXTO:\n${context}\n` : ''}
 
