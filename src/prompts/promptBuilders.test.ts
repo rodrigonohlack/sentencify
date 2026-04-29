@@ -298,6 +298,23 @@ describe('promptBuilders', () => {
         const result = buildMiniReportPromptCore(docs, undefined, null);
         expect(result.modeloBase).toContain('Não houve apresentação de contestação');
       });
+
+      it('should explicitly state count of contestações when > 0 (v1.43.26)', () => {
+        const docs: AnalyzedDocumentsForPrompt = {
+          contestacoesText: [{ text: 'defesa 1' }, { text: 'defesa 2' }],
+        };
+        const result = buildMiniReportPromptCore(docs, undefined, null);
+        expect(result.modeloBase).toContain('2 contestações anexadas');
+        expect(result.modeloBase).toContain('LEIA o conteúdo');
+      });
+
+      it('should include explicit prohibition against hallucinating absence (v1.43.26)', () => {
+        const docs: AnalyzedDocumentsForPrompt = {
+          contestacoes: ['pdf1'],
+        };
+        const result = buildMiniReportPromptCore(docs, undefined, null);
+        expect(result.modeloBase).toContain('PROIBIDO escrever "Não houve apresentação');
+      });
     });
 
     describe('Partes Info', () => {
@@ -409,6 +426,15 @@ describe('promptBuilders', () => {
       expect(result).toContain('Horas Extras');
     });
 
+    it('should mention contestações in opening when > 0 (v1.43.26)', () => {
+      const docs: AnalyzedDocumentsForPrompt = {
+        contestacoes: ['pdf1'],
+      };
+      const result = buildMiniReportPrompt(docs, undefined, null, { title: 'Test' });
+      expect(result).toContain('PETIÇÃO INICIAL + 1 CONTESTAÇÃO ANEXADA');
+      expect(result).toContain('você DEVE ler ambas');
+    });
+
     it('should include instruction when provided', () => {
       const docs: AnalyzedDocumentsForPrompt = {};
       const result = buildMiniReportPrompt(docs, undefined, null, {
@@ -444,9 +470,8 @@ describe('promptBuilders', () => {
         contestacoes: ['pdf1', 'pdf2'],
       };
       const result = buildMiniReportPrompt(docs, undefined, null, { title: 'Test' });
-      // Note: The code produces "contestaçãoões" for plural (should be "contestações")
-      // Testing actual behavior
-      expect(result).toContain('2 contestaçãoões');
+      // v1.43.26: corrigido plural ("contestaçãoões" → "CONTESTAÇÕES")
+      expect(result).toContain('2 CONTESTAÇÕES ANEXADAS');
     });
 
     it('should use singular for 1 contestação', () => {
@@ -461,7 +486,7 @@ describe('promptBuilders', () => {
     it('should indicate petição inicial only when no contestações', () => {
       const docs: AnalyzedDocumentsForPrompt = {};
       const result = buildMiniReportPrompt(docs, undefined, null, { title: 'Test' });
-      expect(result).toContain('(petição inicial)');
+      expect(result).toContain('apenas petição inicial, sem contestação');
     });
 
     it('should indicate MODELO PERSONALIZADO when custom model used', () => {
