@@ -13,6 +13,13 @@ export interface PDFExtractionResult {
   base64?: string;
 }
 
+export interface PDFMetadataResult {
+  text: string;
+  pageCount: number;
+  base64: string;
+  hasUsableText: boolean;
+}
+
 /** PDF.js TextItem - item de texto extraído de uma página */
 interface PDFTextItem {
   str?: string;
@@ -78,6 +85,37 @@ export async function extractTextFromPDF(file: File): Promise<PDFExtractionResul
     text: textParts.join('\n\n'),
     pageCount: pdf.numPages,
     base64
+  };
+}
+
+/**
+ * Extrai texto + base64 de um PDF SEM lançar erro quando texto vier vazio.
+ * Diferente de extractTextFromPDF, devolve `hasUsableText` e deixa o caller
+ * decidir o que fazer (ex: fallback para PDF binário).
+ */
+export async function extractPdfMetadata(file: File): Promise<PDFMetadataResult> {
+  const pdfjsLib = await loadPDFJS();
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+  const textParts: string[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item: PDFTextItem) => item.str || '')
+      .join(' ');
+    textParts.push(pageText);
+  }
+
+  const text = textParts.join('\n\n');
+  const base64 = await fileToBase64(file);
+
+  return {
+    text,
+    pageCount: pdf.numPages,
+    base64,
+    hasUsableText: text.trim().length >= 100
   };
 }
 

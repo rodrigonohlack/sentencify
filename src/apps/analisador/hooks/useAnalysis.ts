@@ -5,11 +5,25 @@
  */
 
 import { useCallback } from 'react';
-import { useDocumentStore, useResultStore } from '../stores';
+import { useDocumentStore, useResultStore, useAIStore } from '../stores';
 import { useAIIntegration } from './useAIIntegration';
 import { ANALYSIS_SYSTEM_PROMPT, buildAnalysisPrompt } from '../prompts';
-import type { AnalysisResult, AIMessage, PedidoAnalise, TabelaPedido } from '../types';
+import { providerSupportsPdfBinary } from '../constants';
+import type { AnalysisResult, AIMessage, AIMessageContent, DocumentFile, PedidoAnalise, TabelaPedido } from '../types';
 import { parseAIResponse, extractJSON, AnalysisResponseSchema } from '../../../schemas/ai-responses';
+
+/**
+ * Constrói um content block de documento PDF base64.
+ * O shape é idêntico ao protocolo Claude; o adapter de Gemini converte para inline_data.
+ */
+const buildDocumentBlock = (base64: string): AIMessageContent => ({
+  type: 'document',
+  source: { type: 'base64', media_type: 'application/pdf', data: base64 }
+});
+
+/** Considera doc binário efetivamente enviável só se provider compatível E base64 disponível. */
+const isEffectiveBinary = (doc: DocumentFile | null | undefined, providerCanBinary: boolean): boolean =>
+  !!doc && doc.status === 'ready' && !!doc.useBinary && providerCanBinary && !!doc.base64;
 
 /**
  * Converte qualquer valor para string de forma segura
@@ -144,34 +158,60 @@ export const useAnalysis = () => {
     setProgress(10, 'Preparando documentos...');
 
     try {
-      // Obter todos os textos dos documentos
       const { peticao: peticaoText, emendas: emendasTexts, contestacoes: contestacoesTexts } =
         getAllDocumentsText();
 
-      // Obter nomes dos arquivos do store
       const state = useDocumentStore.getState();
       const nomeArquivoPeticao = state.peticao?.name;
       const nomesArquivosEmendas = state.emendas.map(e => e.name);
       const nomesArquivosContestacoes = state.contestacoes.map(c => c.name);
 
-      // Build the prompt with all documents and file names
+      // Determina quais documentos serão enviados como anexo binário (PDF base64).
+      // Docs com useBinary=true mas provider incompatível caem silenciosamente para texto.
+      const provider = useAIStore.getState().aiSettings.provider;
+      const providerCanBinary = providerSupportsPdfBinary(provider);
+      const readyEmendas = state.emendas.filter(e => e.status === 'ready').sort((a, b) => a.order - b.order);
+      const readyContestacoes = state.contestacoes.filter(c => c.status === 'ready').sort((a, b) => a.order - b.order);
+
+      const binaryFlags = {
+        peticao: isEffectiveBinary(state.peticao, providerCanBinary),
+        emendas: readyEmendas.map(e => isEffectiveBinary(e, providerCanBinary)),
+        contestacoes: readyContestacoes.map(c => isEffectiveBinary(c, providerCanBinary))
+      };
+
       const userPrompt = buildAnalysisPrompt(
         peticaoText,
         emendasTexts,
         contestacoesTexts,
         nomeArquivoPeticao,
         nomesArquivosEmendas,
-        nomesArquivosContestacoes
+        nomesArquivosContestacoes,
+        binaryFlags
       );
+
+      // Monta lista de blocks de documento na MESMA ordem em que aparecem no prompt
+      // (petição → emendas → contestações) para o LLM associar anexo↔referência.
+      const documentBlocks: AIMessageContent[] = [];
+      if (binaryFlags.peticao && state.peticao?.base64) {
+        documentBlocks.push(buildDocumentBlock(state.peticao.base64));
+      }
+      readyEmendas.forEach((e, i) => {
+        if (binaryFlags.emendas[i] && e.base64) documentBlocks.push(buildDocumentBlock(e.base64));
+      });
+      readyContestacoes.forEach((c, i) => {
+        if (binaryFlags.contestacoes[i] && c.base64) documentBlocks.push(buildDocumentBlock(c.base64));
+      });
 
       setProgress(30, 'Enviando para análise...');
 
-      // Call AI
-      const messages: AIMessage[] = [{ role: 'user', content: userPrompt }];
+      const content: string | AIMessageContent[] = documentBlocks.length > 0
+        ? [...documentBlocks, { type: 'text', text: userPrompt }]
+        : userPrompt;
+
+      const messages: AIMessage[] = [{ role: 'user', content }];
 
       setProgress(50, 'Analisando documentos...');
 
-      // Usa streaming para evitar timeout em análises longas
       const response = await callAIStream(messages, {
         maxTokens: 16000,
         systemPrompt: ANALYSIS_SYSTEM_PROMPT

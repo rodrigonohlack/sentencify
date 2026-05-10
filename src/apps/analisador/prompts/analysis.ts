@@ -218,6 +218,20 @@ INSTRUÇÕES ADICIONAIS:
     (ex: "0001234-56.2024.5.01.0001 - Petição.pdf")`;
 
 /**
+ * Flags indicando quais documentos foram enviados como PDF binário (anexo) em vez de texto.
+ * Quando true, o conteúdo textual é substituído por um placeholder pois o PDF acompanha
+ * a mensagem como anexo separado e o LLM o lê diretamente.
+ */
+export interface BinaryFlags {
+  peticao?: boolean;
+  emendas?: boolean[];
+  contestacoes?: boolean[];
+}
+
+const binaryPlaceholder = (nome: string): string =>
+  `[Conteúdo do arquivo "${nome}" enviado como PDF anexado a esta mensagem — leia o documento diretamente.]`;
+
+/**
  * Constrói o prompt de análise com os documentos
  * @param peticao Texto da petição inicial
  * @param emendas Array de textos das emendas
@@ -225,6 +239,7 @@ INSTRUÇÕES ADICIONAIS:
  * @param nomeArquivoPeticao Nome do arquivo da petição inicial (opcional)
  * @param nomesArquivosEmendas Nomes dos arquivos das emendas (opcional)
  * @param nomesArquivosContestacoes Nomes dos arquivos das contestações (opcional)
+ * @param binaryFlags Marcações de quais documentos foram enviados como anexo binário
  * @returns Prompt formatado para a IA
  */
 export const buildAnalysisPrompt = (
@@ -233,27 +248,32 @@ export const buildAnalysisPrompt = (
   contestacoes: string[] = [],
   nomeArquivoPeticao?: string,
   nomesArquivosEmendas?: string[],
-  nomesArquivosContestacoes?: string[]
+  nomesArquivosContestacoes?: string[],
+  binaryFlags?: BinaryFlags
 ): string => {
-  // Formatar seção de emendas (incluir nomes)
+  const peticaoBody = binaryFlags?.peticao
+    ? binaryPlaceholder(nomeArquivoPeticao || 'petição inicial')
+    : (peticao || 'Não fornecida');
+
   const emendasSection = emendas.length > 0
     ? emendas.map((e, i) => {
         const nome = nomesArquivosEmendas?.[i] || `Emenda ${i + 1}`;
-        return `--- ${nome} ---\n${e}`;
+        const body = binaryFlags?.emendas?.[i] ? binaryPlaceholder(nome) : e;
+        return `--- ${nome} ---\n${body}`;
       }).join('\n\n')
     : 'Não há emendas à petição inicial.';
 
-  // Formatar seção de contestações (incluir nomes)
   const contestacoesSection = contestacoes.length > 0
     ? contestacoes.map((c, i) => {
         const nome = nomesArquivosContestacoes?.[i] || `Contestação ${i + 1}`;
-        return `--- ${nome} ---\n${c}`;
+        const body = binaryFlags?.contestacoes?.[i] ? binaryPlaceholder(nome) : c;
+        return `--- ${nome} ---\n${body}`;
       }).join('\n\n')
     : 'Não há contestação nos autos.';
 
   return ANALYSIS_USER_PROMPT
     .replace('{PETICAO_NOME}', nomeArquivoPeticao || 'Não informado')
-    .replace('{PETICAO}', peticao || 'Não fornecida')
+    .replace('{PETICAO}', peticaoBody)
     .replace('{EMENDAS}', emendasSection)
     .replace('{CONTESTACOES}', contestacoesSection);
 };

@@ -6,9 +6,10 @@
 
 import React, { useCallback, useState } from 'react';
 import { Upload, FileText, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { useDocumentStore } from '../../stores';
+import { useDocumentStore, useAIStore } from '../../stores';
 import { useFileProcessing } from '../../hooks';
 import { formatFileSize } from '../../services/pdfService';
+import { providerSupportsPdfBinary } from '../../constants';
 import type { DocumentFile } from '../../types';
 
 interface FileUploaderProps {
@@ -26,7 +27,21 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const document = useDocumentStore((s) => s.peticao);
+  const setPeticao = useDocumentStore((s) => s.setPeticao);
+  const provider = useAIStore((s) => s.aiSettings.provider);
   const { processPeticao, removePeticao } = useFileProcessing();
+
+  const canBinary = providerSupportsPdfBinary(provider);
+  const isBinaryActive = document?.useBinary === true;
+  const binaryFallingBack = isBinaryActive && !canBinary;
+
+  const handleUseText = useCallback(() => {
+    if (document) setPeticao({ ...document, useBinary: false });
+  }, [document, setPeticao]);
+
+  const handleUseBinary = useCallback(() => {
+    if (document && canBinary) setPeticao({ ...document, useBinary: true });
+  }, [document, setPeticao, canBinary]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -106,6 +121,46 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               <div className="mt-1">
                 {renderStatus(document)}
               </div>
+              {document.status === 'ready' && (
+                <div className="flex items-center gap-1.5 mt-2">
+                  <button
+                    type="button"
+                    onClick={handleUseText}
+                    className={`text-xs px-2 py-0.5 rounded transition-colors ${
+                      !isBinaryActive
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200'
+                    }`}
+                    aria-pressed={!isBinaryActive}
+                  >
+                    Usar Texto
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleUseBinary}
+                    disabled={!canBinary}
+                    title={!canBinary ? 'Provider atual não suporta PDF binário (use Claude ou Gemini)' : ''}
+                    className={`text-xs px-2 py-0.5 rounded transition-colors ${
+                      isBinaryActive && canBinary
+                        ? 'bg-emerald-600 text-white'
+                        : !canBinary
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
+                          : 'bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200'
+                    }`}
+                    aria-pressed={isBinaryActive}
+                  >
+                    Usar PDF
+                  </button>
+                  {binaryFallingBack && (
+                    <span
+                      className="text-xs text-amber-600 dark:text-amber-400"
+                      title="Provider não compatível com PDF binário — texto extraído será usado na análise."
+                    >
+                      ⚠ fallback texto
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <button

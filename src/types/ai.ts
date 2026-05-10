@@ -114,7 +114,10 @@ export interface GrokMessage {
 /** Gemini API message format */
 export interface GeminiMessage {
   role: 'user' | 'model';
-  parts: Array<{ text?: string }>;
+  parts: Array<{
+    text?: string;
+    inline_data?: { mime_type: string; data: string };
+  }>;
 }
 
 /** Gemini API system instruction format */

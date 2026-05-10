@@ -5,9 +5,14 @@
  */
 
 import { useCallback } from 'react';
-import { useDocumentStore } from '../stores';
-import { extractTextFromPDF, isValidPDF, formatFileSize } from '../services/pdfService';
+import { useDocumentStore, useAIStore } from '../stores';
+import { extractTextFromPDF, extractPdfMetadata, isValidPDF, formatFileSize } from '../services/pdfService';
+import { providerSupportsPdfBinary } from '../constants';
 import type { DocumentFile, DocumentType } from '../types';
+
+const SCANNED_PDF_ERROR_TEXT =
+  'Não foi possível extrair texto do PDF (escaneado ou protegido). ' +
+  'Para enviar como PDF binário, selecione Claude ou Gemini como provider.';
 
 export const useFileProcessing = () => {
   const {
@@ -47,18 +52,21 @@ export const useFileProcessing = () => {
         throw new Error('Arquivo inválido. Por favor, envie um PDF.');
       }
 
-      const result = await extractTextFromPDF(file);
+      const meta = await extractPdfMetadata(file);
+      const provider = useAIStore.getState().aiSettings.provider;
+      const canBinary = providerSupportsPdfBinary(provider);
 
-      if (!result.text || result.text.trim().length < 100) {
-        throw new Error(
-          'Não foi possível extrair texto suficiente do PDF. O arquivo pode estar escaneado ou protegido.'
-        );
+      if (!meta.hasUsableText && !canBinary) {
+        throw new Error(SCANNED_PDF_ERROR_TEXT);
       }
+
+      const useBinary = !meta.hasUsableText && canBinary;
 
       setPeticao({
         ...initialDoc,
-        text: result.text,
-        base64: result.base64,
+        text: meta.text,
+        base64: meta.base64,
+        useBinary,
         status: 'ready'
       });
     } catch (error) {
@@ -101,17 +109,20 @@ export const useFileProcessing = () => {
         throw new Error('Arquivo inválido. Por favor, envie um PDF.');
       }
 
-      const result = await extractTextFromPDF(file);
+      const meta = await extractPdfMetadata(file);
+      const provider = useAIStore.getState().aiSettings.provider;
+      const canBinary = providerSupportsPdfBinary(provider);
 
-      if (!result.text || result.text.trim().length < 100) {
-        throw new Error(
-          'Não foi possível extrair texto suficiente do PDF. O arquivo pode estar escaneado ou protegido.'
-        );
+      if (!meta.hasUsableText && !canBinary) {
+        throw new Error(SCANNED_PDF_ERROR_TEXT);
       }
 
+      const useBinary = !meta.hasUsableText && canBinary;
+
       updateEmenda(id, {
-        text: result.text,
-        base64: result.base64,
+        text: meta.text,
+        base64: meta.base64,
+        useBinary,
         status: 'ready'
       });
     } catch (error) {
@@ -153,17 +164,20 @@ export const useFileProcessing = () => {
         throw new Error('Arquivo inválido. Por favor, envie um PDF.');
       }
 
-      const result = await extractTextFromPDF(file);
+      const meta = await extractPdfMetadata(file);
+      const provider = useAIStore.getState().aiSettings.provider;
+      const canBinary = providerSupportsPdfBinary(provider);
 
-      if (!result.text || result.text.trim().length < 100) {
-        throw new Error(
-          'Não foi possível extrair texto suficiente do PDF. O arquivo pode estar escaneado ou protegido.'
-        );
+      if (!meta.hasUsableText && !canBinary) {
+        throw new Error(SCANNED_PDF_ERROR_TEXT);
       }
 
+      const useBinary = !meta.hasUsableText && canBinary;
+
       updateContestacao(id, {
-        text: result.text,
-        base64: result.base64,
+        text: meta.text,
+        base64: meta.base64,
+        useBinary,
         status: 'ready'
       });
     } catch (error) {

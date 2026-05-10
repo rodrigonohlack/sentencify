@@ -17,6 +17,8 @@ import {
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { formatFileSize } from '../../services/pdfService';
+import { useDocumentStore, useAIStore } from '../../stores';
+import { providerSupportsPdfBinary } from '../../constants';
 import type { DocumentFile } from '../../types';
 
 interface DocumentCardProps {
@@ -38,6 +40,21 @@ const DocumentCardComponent: React.FC<DocumentCardProps> = ({
   onMoveDown,
   disabled = false
 }) => {
+  const provider = useAIStore((s) => s.aiSettings.provider);
+  const updateDocument = useDocumentStore((s) => s.updateDocument);
+  const canBinary = providerSupportsPdfBinary(provider);
+  const isBinaryActive = document.useBinary === true;
+  const binaryFallingBack = isBinaryActive && !canBinary;
+
+  const handleUseText = React.useCallback(() => {
+    updateDocument(document.type, { useBinary: false }, document.id);
+  }, [updateDocument, document.type, document.id]);
+
+  const handleUseBinary = React.useCallback(() => {
+    if (!canBinary) return;
+    updateDocument(document.type, { useBinary: true }, document.id);
+  }, [updateDocument, document.type, document.id, canBinary]);
+
   const {
     attributes,
     listeners,
@@ -135,6 +152,47 @@ const DocumentCardComponent: React.FC<DocumentCardProps> = ({
           </span>
           {renderStatus()}
         </div>
+        {document.status === 'ready' && (
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <button
+              type="button"
+              onClick={handleUseText}
+              disabled={disabled}
+              className={`text-xs px-2 py-0.5 rounded transition-colors ${
+                !isBinaryActive
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200'
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-pressed={!isBinaryActive}
+            >
+              Usar Texto
+            </button>
+            <button
+              type="button"
+              onClick={handleUseBinary}
+              disabled={disabled || !canBinary}
+              title={!canBinary ? 'Provider atual não suporta PDF binário (use Claude ou Gemini)' : ''}
+              className={`text-xs px-2 py-0.5 rounded transition-colors ${
+                isBinaryActive && canBinary
+                  ? 'bg-emerald-600 text-white'
+                  : !canBinary
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
+                    : 'bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200'
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-pressed={isBinaryActive}
+            >
+              Usar PDF
+            </button>
+            {binaryFallingBack && (
+              <span
+                className="text-xs text-amber-600 dark:text-amber-400"
+                title="Provider não compatível com PDF binário — texto extraído será usado na análise."
+              >
+                ⚠ fallback texto
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Botões de ordenação para acessibilidade */}

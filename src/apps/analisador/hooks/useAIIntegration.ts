@@ -113,7 +113,10 @@ export const useAIIntegration = () => {
         ? msg.content.map(c => {
             if (typeof c === 'string') return { text: c };
             if (c.type === 'text') return { text: c.text };
-            return { text: JSON.stringify(c) };
+            if (c.type === 'document' && c.source) {
+              return { inline_data: { mime_type: c.source.media_type, data: c.source.data } };
+            }
+            return { text: '' };
           })
         : [{ text: msg.content as string }]
     }));
@@ -211,7 +214,8 @@ export const useAIIntegration = () => {
           ? msg.content.map(c => {
               if (typeof c === 'string') return { type: 'text', text: c };
               if (c.type === 'text') return { type: 'text', text: c.text };
-              return { type: 'text', text: JSON.stringify(c) };
+              if (c.type === 'document') return { type: 'text', text: '[PDF anexo omitido — provider não suporta envio binário]' };
+              return { type: 'text', text: '' };
             })
           : msg.content
       });
@@ -301,7 +305,8 @@ export const useAIIntegration = () => {
           ? msg.content.map(c => {
               if (typeof c === 'string') return c;
               if (c.type === 'text') return c.text;
-              return JSON.stringify(c);
+              if (c.type === 'document') return '[PDF anexo omitido — provider não suporta envio binário]';
+              return '';
             }).join('\n')
           : msg.content
       });
@@ -380,7 +385,8 @@ export const useAIIntegration = () => {
           ? msg.content.map(c => {
               if (typeof c === 'string') return c;
               if (c.type === 'text') return c.text;
-              return JSON.stringify(c);
+              if (c.type === 'document') return '[PDF anexo omitido — provider não suporta envio binário]';
+              return '';
             }).join('\n')
           : msg.content
       });
@@ -574,7 +580,10 @@ export const useAIIntegration = () => {
         ? msg.content.map(c => {
             if (typeof c === 'string') return { text: c };
             if (c.type === 'text') return { text: c.text };
-            return { text: JSON.stringify(c) };
+            if (c.type === 'document' && c.source) {
+              return { inline_data: { mime_type: c.source.media_type, data: c.source.data } };
+            }
+            return { text: '' };
           })
         : [{ text: msg.content as string }]
     }));
@@ -684,7 +693,8 @@ export const useAIIntegration = () => {
           ? msg.content.map(c => {
               if (typeof c === 'string') return { type: 'text', text: c };
               if (c.type === 'text') return { type: 'text', text: c.text };
-              return { type: 'text', text: JSON.stringify(c) };
+              if (c.type === 'document') return { type: 'text', text: '[PDF anexo omitido — provider não suporta envio binário]' };
+              return { type: 'text', text: '' };
             })
           : msg.content
       });
@@ -788,7 +798,8 @@ export const useAIIntegration = () => {
           ? msg.content.map(c => {
               if (typeof c === 'string') return c;
               if (c.type === 'text') return c.text;
-              return JSON.stringify(c);
+              if (c.type === 'document') return '[PDF anexo omitido — provider não suporta envio binário]';
+              return '';
             }).join('\n')
           : msg.content
       });
@@ -880,7 +891,8 @@ export const useAIIntegration = () => {
           ? msg.content.map(c => {
               if (typeof c === 'string') return c;
               if (c.type === 'text') return c.text;
-              return JSON.stringify(c);
+              if (c.type === 'document') return '[PDF anexo omitido — provider não suporta envio binário]';
+              return '';
             }).join('\n')
           : msg.content
       });

@@ -16,6 +16,12 @@ export interface DocumentFile {
   error?: string;
   uploadedAt: Date;
   order: number;
+  /**
+   * Se true, o documento será enviado ao LLM como PDF binário (base64).
+   * Só efetivado quando o provider selecionado suporta (claude, gemini).
+   * Default: false (envia texto extraído).
+   */
+  useBinary?: boolean;
 }
 
 export interface DocumentStore {
