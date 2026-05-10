@@ -231,23 +231,76 @@ export const useAnalysis = () => {
   }, [canAnalyze, getAllDocumentsText, callAIStream, setResult, setIsAnalyzing, setProgress, setError, reset]);
 
   /**
-   * Analisa textos de petição, emendas e contestações diretamente (sem usar o store)
-   * Usado pelo BatchMode para processar múltiplos arquivos
+   * Analisa textos de petição, emendas e contestações diretamente (sem usar o store).
+   * Usado pelo BatchMode para processar múltiplos arquivos.
+   *
+   * Aceita `contestacao` como string única (string|null, compat) OU array de strings (novo).
+   * binaryDocs (opcional) anexa arquivos como PDF binário em vez de texto — silenciosamente
+   * ignorado quando o provider atual não suporta PDF binário.
    */
   const analyzeWithAI = useCallback(
     async (
       peticaoText: string,
-      contestacaoText: string | null,
-      emendasTexts: string[] = []
+      contestacao: string | string[] | null,
+      emendasTexts: string[] = [],
+      binaryDocs?: {
+        peticao?: { base64: string; name: string } | null;
+        emendas?: ({ base64: string; name: string } | null)[];
+        contestacoes?: ({ base64: string; name: string } | null)[];
+        nomeArquivoPeticao?: string;
+        nomesArquivosEmendas?: string[];
+        nomesArquivosContestacoes?: string[];
+      }
     ): Promise<AnalysisResult | null> => {
       const MAX_PARSE_RETRIES = 2;
-      const contestacoesArray = contestacaoText ? [contestacaoText] : [];
-      const userPrompt = buildAnalysisPrompt(peticaoText, emendasTexts, contestacoesArray);
-      const messages: AIMessage[] = [{ role: 'user', content: userPrompt }];
+      const contestacoesArray: string[] = Array.isArray(contestacao)
+        ? contestacao
+        : (contestacao ? [contestacao] : []);
+
+      const provider = useAIStore.getState().aiSettings.provider;
+      const providerCanBinary = providerSupportsPdfBinary(provider);
+
+      const peticaoBinary = providerCanBinary ? binaryDocs?.peticao : null;
+      const emendasBinary = providerCanBinary
+        ? (binaryDocs?.emendas || []).map(e => e || null)
+        : [];
+      const contestacoesBinary = providerCanBinary
+        ? (binaryDocs?.contestacoes || []).map(c => c || null)
+        : [];
+
+      const binaryFlags = {
+        peticao: !!peticaoBinary,
+        emendas: emendasBinary.map(e => !!e),
+        contestacoes: contestacoesBinary.map(c => !!c)
+      };
+
+      const userPrompt = buildAnalysisPrompt(
+        peticaoText,
+        emendasTexts,
+        contestacoesArray,
+        binaryDocs?.nomeArquivoPeticao,
+        binaryDocs?.nomesArquivosEmendas,
+        binaryDocs?.nomesArquivosContestacoes,
+        binaryFlags
+      );
+
+      const documentBlocks: AIMessageContent[] = [];
+      if (peticaoBinary?.base64) documentBlocks.push(buildDocumentBlock(peticaoBinary.base64));
+      emendasBinary.forEach(e => {
+        if (e?.base64) documentBlocks.push(buildDocumentBlock(e.base64));
+      });
+      contestacoesBinary.forEach(c => {
+        if (c?.base64) documentBlocks.push(buildDocumentBlock(c.base64));
+      });
+
+      const content: string | AIMessageContent[] = documentBlocks.length > 0
+        ? [...documentBlocks, { type: 'text', text: userPrompt }]
+        : userPrompt;
+
+      const messages: AIMessage[] = [{ role: 'user', content }];
 
       for (let attempt = 0; attempt <= MAX_PARSE_RETRIES; attempt++) {
         try {
-          // Usa streaming para evitar timeout em análises longas
           const response = await callAIStream(messages, {
             maxTokens: 16000,
             systemPrompt: ANALYSIS_SYSTEM_PROMPT

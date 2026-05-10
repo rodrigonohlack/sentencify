@@ -15,9 +15,11 @@ import {
   Scale,
   X,
 } from 'lucide-react';
-import { useAnalysesStore } from '../../stores';
+import { useAnalysesStore, useAIStore } from '../../stores';
 import { useAnalysesAPI } from '../../hooks';
-import { useAnalysis, useFileProcessing } from '../../hooks';
+import { useAnalysis } from '../../hooks';
+import { extractPdfMetadata, type PDFMetadataResult } from '../../services/pdfService';
+import { providerSupportsPdfBinary } from '../../constants';
 import { ProgressBar, useToast } from '../ui';
 import type { BatchFile, BatchPair } from '../../types/analysis.types';
 
@@ -101,9 +103,54 @@ interface ProcessCardProps {
   index: number;
   group: ProcessGroup;
   onRemove: (processoNum: string) => void;
+  onToggleBinary: (fileId: string, next: boolean) => void;
+  canBinary: boolean;
 }
 
-const ProcessCard: React.FC<ProcessCardProps> = React.memo(({ index, group, onRemove }) => {
+/**
+ * Toggle compacto por arquivo: alterna entre "TXT" (texto extraído via PDF.js)
+ * e "PDF" (envio do binário em base64). Desabilitado quando provider incompatível.
+ */
+const FileBinaryToggle: React.FC<{
+  file: BatchFile;
+  canBinary: boolean;
+  onToggle: (fileId: string, next: boolean) => void;
+  disabled?: boolean;
+}> = ({ file, canBinary, onToggle, disabled }) => {
+  const isBinary = file.useBinary === true;
+  const binaryFallingBack = isBinary && !canBinary;
+  const tooltip = !canBinary
+    ? 'Provider atual não suporta PDF binário (use Claude ou Gemini). Enviará como texto.'
+    : isBinary
+      ? 'Enviar como PDF binário (Gemini/Claude lê o documento diretamente)'
+      : 'Enviar como texto extraído (PDF.js)';
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onToggle(file.id, !isBinary); }}
+      disabled={disabled || (!canBinary && !isBinary)}
+      title={tooltip}
+      className={`
+        flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded transition-colors
+        ${binaryFallingBack
+          ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+          : isBinary && canBinary
+            ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+            : !canBinary
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
+              : 'bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200'
+        }
+      `}
+      aria-pressed={isBinary}
+      aria-label={`Modo de envio: ${binaryFallingBack ? 'fallback texto' : isBinary ? 'PDF binário' : 'texto'}`}
+    >
+      {binaryFallingBack ? '⚠ TXT' : isBinary ? 'PDF' : 'TXT'}
+    </button>
+  );
+};
+
+const ProcessCard: React.FC<ProcessCardProps> = React.memo(({ index, group, onRemove, onToggleBinary, canBinary }) => {
   const getStatusIcon = (file?: BatchFile) => {
     if (!file) return <FileText className="w-4 h-4 text-slate-300 dark:text-slate-600" />;
     switch (file.status) {
@@ -183,7 +230,12 @@ const ProcessCard: React.FC<ProcessCardProps> = React.memo(({ index, group, onRe
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">
               Petição Inicial
             </p>
-            {getFileLabel(group.peticao, 'Petição')}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="min-w-0 flex-1">{getFileLabel(group.peticao, 'Petição')}</div>
+              {group.peticao && (
+                <FileBinaryToggle file={group.peticao} canBinary={canBinary} onToggle={onToggleBinary} />
+              )}
+            </div>
             {group.peticao?.error && (
               <p className="text-xs text-red-500 mt-0.5 truncate">{group.peticao.error}</p>
             )}
@@ -202,9 +254,10 @@ const ProcessCard: React.FC<ProcessCardProps> = React.memo(({ index, group, onRe
                 {group.emendas.map(emenda => (
                   <div key={emenda.id} className="flex items-center gap-1.5">
                     {getStatusIcon(emenda)}
-                    <span className="text-sm text-slate-700 dark:text-slate-200 truncate" title={emenda.file.name}>
+                    <span className="text-sm text-slate-700 dark:text-slate-200 truncate flex-1" title={emenda.file.name}>
                       {emenda.file.name}
                     </span>
+                    <FileBinaryToggle file={emenda} canBinary={canBinary} onToggle={onToggleBinary} />
                     {emenda.error && (
                       <span className="text-xs text-red-500 truncate">{emenda.error}</span>
                     )}
@@ -233,9 +286,10 @@ const ProcessCard: React.FC<ProcessCardProps> = React.memo(({ index, group, onRe
                 {group.contestacoes.map(cont => (
                   <div key={cont.id} className="flex items-center gap-1.5">
                     {getStatusIcon(cont)}
-                    <span className="text-sm text-slate-700 dark:text-slate-200 truncate" title={cont.file.name}>
+                    <span className="text-sm text-slate-700 dark:text-slate-200 truncate flex-1" title={cont.file.name}>
                       {cont.file.name}
                     </span>
+                    <FileBinaryToggle file={cont} canBinary={canBinary} onToggle={onToggleBinary} />
                     {cont.error && (
                       <span className="text-xs text-red-500 truncate">{cont.error}</span>
                     )}
@@ -275,8 +329,9 @@ export const BatchMode: React.FC = () => {
 
   // Hooks
   const { createAnalysis, fetchAnalyses } = useAnalysesAPI();
-  const { extractPDFText } = useFileProcessing();
   const { analyzeWithAI } = useAnalysis();
+  const provider = useAIStore((s) => s.aiSettings.provider);
+  const canBinary = providerSupportsPdfBinary(provider);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // COMPUTED: Agrupar arquivos por número de processo
@@ -420,6 +475,13 @@ export const BatchMode: React.FC = () => {
     [handleUploadClick]
   );
 
+  const handleToggleBinary = useCallback(
+    (fileId: string, next: boolean) => {
+      updateBatchFile(fileId, { useBinary: next });
+    },
+    [updateBatchFile]
+  );
+
   const handleRemoveProcess = useCallback(
     (processoNum: string) => {
       // Remove all files with this process number
@@ -460,32 +522,55 @@ export const BatchMode: React.FC = () => {
         emendas.forEach(e => updateBatchFile(e.id, { status: 'processing' }));
         contestacoes.forEach(c => updateBatchFile(c.id, { status: 'processing' }));
 
-        // Extract text from petição
-        const peticaoResult = await extractPDFText(peticao.file);
+        // Extract metadata (texto + base64) — aceita PDF escaneado se provider suporta binário
+        const validateOrThrow = (meta: { hasUsableText: boolean }, file: File, useBinary: boolean) => {
+          if (!meta.hasUsableText && !(canBinary && useBinary)) {
+            throw new Error(
+              `Não foi possível extrair texto suficiente de "${file.name}" (PDF possivelmente escaneado). ` +
+              `Marque este arquivo como "PDF" e use Claude ou Gemini.`
+            );
+          }
+        };
 
-        // Extract text from emendas
+        const peticaoMeta = await extractPdfMetadata(peticao.file);
+        validateOrThrow(peticaoMeta, peticao.file, !!peticao.useBinary);
+
+        const emendasMetas: PDFMetadataResult[] = [];
         const emendasTexts: string[] = [];
         for (const emenda of emendas) {
-          const result = await extractPDFText(emenda.file);
-          emendasTexts.push(result.text);
+          const meta = await extractPdfMetadata(emenda.file);
+          validateOrThrow(meta, emenda.file, !!emenda.useBinary);
+          emendasMetas.push(meta);
+          emendasTexts.push(meta.text);
         }
 
-        // Extract text from contestações
+        const contestacoesMetas: PDFMetadataResult[] = [];
         const contestacoesTexts: string[] = [];
         for (const contestacao of contestacoes) {
-          const result = await extractPDFText(contestacao.file);
-          contestacoesTexts.push(result.text);
+          const meta = await extractPdfMetadata(contestacao.file);
+          validateOrThrow(meta, contestacao.file, !!contestacao.useBinary);
+          contestacoesMetas.push(meta);
+          contestacoesTexts.push(meta.text);
         }
 
-        // Concatenate contestações for analysis
-        const contestacaoTextoCompleto = contestacoesTexts.length > 0
-          ? contestacoesTexts.join('\n\n---\n\n')
-          : null;
+        // Passa array de contestações direto — buildAnalysisPrompt sabe formatar por nome.
+        // Cada doc vai como texto OU placeholder (quando binary), conforme binaryDocs.
+        const contestacoesArray: string[] | null = contestacoesTexts.length > 0 ? contestacoesTexts : null;
+
+        const binaryDocs = canBinary ? {
+          peticao: peticao.useBinary ? { base64: peticaoMeta.base64, name: peticao.file.name } : null,
+          emendas: emendas.map((e, i) => e.useBinary ? { base64: emendasMetas[i].base64, name: e.file.name } : null),
+          contestacoes: contestacoes.map((c, i) => c.useBinary ? { base64: contestacoesMetas[i].base64, name: c.file.name } : null),
+          nomeArquivoPeticao: peticao.file.name,
+          nomesArquivosEmendas: emendas.map(e => e.file.name),
+          nomesArquivosContestacoes: contestacoes.map(c => c.file.name)
+        } : undefined;
 
         const analysisResult = await analyzeWithAI(
-          peticaoResult.text,
-          contestacaoTextoCompleto,
-          emendasTexts
+          peticaoMeta.text,
+          contestacoesArray,
+          emendasTexts,
+          binaryDocs
         );
 
         if (!analysisResult) {
@@ -545,8 +630,8 @@ export const BatchMode: React.FC = () => {
     setBatchProcessing,
     setBatchProgress,
     updateBatchFile,
-    extractPDFText,
     analyzeWithAI,
+    canBinary,
     createAnalysis,
     showToast,
     fetchAnalyses,
@@ -646,6 +731,8 @@ export const BatchMode: React.FC = () => {
                 index={idx}
                 group={group}
                 onRemove={handleRemoveProcess}
+                onToggleBinary={handleToggleBinary}
+                canBinary={canBinary}
               />
             ))}
           </div>

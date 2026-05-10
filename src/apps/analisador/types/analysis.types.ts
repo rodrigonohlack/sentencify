@@ -257,6 +257,11 @@ export interface BatchFile {
   status: 'pending' | 'processing' | 'success' | 'error';
   error?: string;
   matchedWith?: string;
+  /**
+   * Se true, este arquivo será enviado ao LLM como PDF binário (base64).
+   * Efetivo apenas em providers compatíveis (claude, gemini). Default: false.
+   */
+  useBinary?: boolean;
 }
 
 /** Par de arquivos para análise */
