@@ -19,8 +19,10 @@ import {
   FilePlus2
 } from 'lucide-react';
 import { Button, ProgressBar } from '../ui';
-import { useResultStore, useDocumentStore } from '../../stores';
-import { useFileProcessing, useAnalysis, useAnalysesAPI } from '../../hooks';
+import { useResultStore, useDocumentStore, useAIStore } from '../../stores';
+import { useAnalysis, useAnalysesAPI } from '../../hooks';
+import { extractPdfMetadata } from '../../services/pdfService';
+import { providerSupportsPdfBinary } from '../../constants';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -31,6 +33,9 @@ interface CategorizedFile {
   name: string;
   file: File;
   text: string;
+  base64?: string;
+  useBinary?: boolean;
+  hasUsableText?: boolean;
   tipo: 'peticao' | 'emenda' | 'contestacao';
   status: 'processing' | 'ready' | 'error';
   error?: string;
@@ -71,6 +76,48 @@ const generateId = (): string => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
+// SUBCOMPONENTES
+// ═══════════════════════════════════════════════════════════════════════════
+
+const FileBinaryToggle: React.FC<{
+  file: CategorizedFile;
+  canBinary: boolean;
+  onToggle: (id: string, next: boolean) => void;
+}> = ({ file, canBinary, onToggle }) => {
+  const isBinary = file.useBinary === true;
+  const binaryFallingBack = isBinary && !canBinary;
+  const tooltip = !canBinary
+    ? 'Provider atual não suporta PDF binário (use Claude ou Gemini). Enviará como texto.'
+    : isBinary
+      ? 'Enviar como PDF binário (Gemini/Claude lê o documento diretamente)'
+      : 'Enviar como texto extraído (PDF.js)';
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onToggle(file.id, !isBinary); }}
+      disabled={!canBinary && !isBinary}
+      title={tooltip}
+      className={`
+        flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded transition-colors
+        ${binaryFallingBack
+          ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+          : isBinary && canBinary
+            ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+            : !canBinary
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
+              : 'bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200'
+        }
+      `}
+      aria-pressed={isBinary}
+      aria-label={`Modo de envio: ${binaryFallingBack ? 'fallback texto' : isBinary ? 'PDF binário' : 'texto'}`}
+    >
+      {binaryFallingBack ? '⚠ TXT' : isBinary ? 'PDF' : 'TXT'}
+    </button>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
 // COMPONENTE
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -82,9 +129,10 @@ export const ReanalyzePanel: React.FC = () => {
   const documentStore = useDocumentStore();
 
   // Hooks
-  const { extractPDFText } = useFileProcessing();
   const { analyzeWithAI } = useAnalysis();
   const { replaceAnalysisResult } = useAnalysesAPI();
+  const provider = useAIStore((s) => s.aiSettings.provider);
+  const canBinary = providerSupportsPdfBinary(provider);
 
   // Local state
   const [isExpanded, setIsExpanded] = useState(false);
@@ -130,9 +178,30 @@ export const ReanalyzePanel: React.FC = () => {
     setError(null);
 
     try {
-      const result = await extractPDFText(file);
+      const meta = await extractPdfMetadata(file);
+
+      if (!meta.hasUsableText && !canBinary) {
+        setFiles(prev =>
+          prev.map(f => f.id === id ? {
+            ...f,
+            status: 'error',
+            error: 'PDF escaneado ou protegido. Para enviar como PDF binário, selecione Claude ou Gemini.'
+          } : f)
+        );
+        return;
+      }
+
+      const useBinary = !meta.hasUsableText && canBinary;
+
       setFiles(prev =>
-        prev.map(f => f.id === id ? { ...f, text: result.text, status: 'ready' } : f)
+        prev.map(f => f.id === id ? {
+          ...f,
+          text: meta.text,
+          base64: meta.base64,
+          hasUsableText: meta.hasUsableText,
+          useBinary,
+          status: 'ready'
+        } : f)
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao processar arquivo';
@@ -140,7 +209,11 @@ export const ReanalyzePanel: React.FC = () => {
         prev.map(f => f.id === id ? { ...f, status: 'error', error: message } : f)
       );
     }
-  }, [extractPDFText]);
+  }, [canBinary]);
+
+  const handleToggleBinary = useCallback((id: string, next: boolean) => {
+    setFiles(prev => prev.map(f => f.id === id ? { ...f, useBinary: next } : f));
+  }, []);
 
   const handleFilesSelected = useCallback(async (selectedFiles: File[]) => {
     const pdfFiles = selectedFiles.filter(f => f.type === 'application/pdf');
@@ -206,46 +279,78 @@ export const ReanalyzePanel: React.FC = () => {
     setError(null);
 
     try {
-      // Obter textos
       let peticaoText: string;
       let emendasTexts: string[];
       let peticaoName: string;
       let emendasNames: string[];
 
+      let peticaoBin: { base64: string; name: string } | null = null;
+      let emendasBin: ({ base64: string; name: string } | null)[] = [];
+
       if (isFromHistory && !hasDocsInMemory) {
-        // Do histórico: usar arquivos carregados
         const peticaoReady = peticaoFiles.find(f => f.status === 'ready');
         peticaoText = peticaoReady?.text || '';
-        emendasTexts = emendaFiles.filter(f => f.status === 'ready').map(f => f.text);
         peticaoName = peticaoReady?.name || '';
-        emendasNames = emendaFiles.filter(f => f.status === 'ready').map(f => f.name);
+        if (peticaoReady?.useBinary && peticaoReady.base64 && canBinary) {
+          peticaoBin = { base64: peticaoReady.base64, name: peticaoReady.name };
+        }
+
+        const readyEmendas = emendaFiles.filter(f => f.status === 'ready');
+        emendasTexts = readyEmendas.map(f => f.text);
+        emendasNames = readyEmendas.map(f => f.name);
+        emendasBin = readyEmendas.map(f =>
+          f.useBinary && f.base64 && canBinary ? { base64: f.base64, name: f.name } : null
+        );
       } else {
-        // Análise recém-feita: usar documentStore
+        // Análise recém-feita: usar documentStore (herda useBinary já marcado no BatchMode)
         const docs = documentStore.getAllDocumentsText();
         peticaoText = docs.peticao;
-        emendasTexts = docs.emendas;
         peticaoName = documentStore.peticao?.name || '';
-        emendasNames = documentStore.emendas.map(e => e.name);
 
-        // Adicionar emendas carregadas agora (se houver)
+        const memPet = documentStore.peticao;
+        if (memPet?.useBinary && memPet.base64 && canBinary) {
+          peticaoBin = { base64: memPet.base64, name: memPet.name };
+        }
+
+        emendasTexts = docs.emendas;
+        emendasNames = documentStore.emendas.map(e => e.name);
+        emendasBin = documentStore.emendas.map(e =>
+          e.useBinary && e.base64 && canBinary ? { base64: e.base64, name: e.name } : null
+        );
+
+        // Acrescentar emendas uploaded novos (mantendo ordem texts/names/bin)
         const newEmendas = emendaFiles.filter(f => f.status === 'ready');
         emendasTexts.push(...newEmendas.map(f => f.text));
         emendasNames.push(...newEmendas.map(f => f.name));
+        emendasBin.push(...newEmendas.map(f =>
+          f.useBinary && f.base64 && canBinary ? { base64: f.base64, name: f.name } : null
+        ));
       }
 
-      // Textos das contestações carregadas
-      const contestacoesTexts = contestacaoFiles
-        .filter(f => f.status === 'ready')
-        .map(f => f.text);
-      const contestacoesNames = contestacaoFiles
-        .filter(f => f.status === 'ready')
-        .map(f => f.name);
+      const readyContestacoes = contestacaoFiles.filter(f => f.status === 'ready');
+      const contestacoesTexts = readyContestacoes.map(f => f.text);
+      const contestacoesNames = readyContestacoes.map(f => f.name);
+      const contestacoesBin: ({ base64: string; name: string } | null)[] = readyContestacoes.map(f =>
+        f.useBinary && f.base64 && canBinary ? { base64: f.base64, name: f.name } : null
+      );
 
       setProgress(30, 'Analisando documentos com IA...');
 
-      // Concatenar contestações para análise
-      const contestacaoTextoCompleto = contestacoesTexts.join('\n\n---\n\n');
-      const newResult = await analyzeWithAI(peticaoText, contestacaoTextoCompleto, emendasTexts);
+      const binaryDocs = canBinary ? {
+        peticao: peticaoBin,
+        emendas: emendasBin,
+        contestacoes: contestacoesBin,
+        nomeArquivoPeticao: peticaoName,
+        nomesArquivosEmendas: emendasNames,
+        nomesArquivosContestacoes: contestacoesNames
+      } : undefined;
+
+      const newResult = await analyzeWithAI(
+        peticaoText,
+        contestacoesTexts.length > 0 ? contestacoesTexts : null,
+        emendasTexts,
+        binaryDocs
+      );
 
       if (!newResult) {
         throw new Error('Erro ao analisar documentos. Tente novamente.');
@@ -293,6 +398,7 @@ export const ReanalyzePanel: React.FC = () => {
     documentStore,
     contestacaoFiles,
     analyzeWithAI,
+    canBinary,
     setResult,
     setFileNames,
     setProgress,
@@ -324,7 +430,7 @@ export const ReanalyzePanel: React.FC = () => {
       key={file.id}
       className="flex items-center justify-between py-1.5"
     >
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
         {file.status === 'processing' && (
           <Loader2 className="w-4 h-4 text-amber-500 animate-spin shrink-0" />
         )}
@@ -341,13 +447,18 @@ export const ReanalyzePanel: React.FC = () => {
           <span className="text-xs text-red-500 shrink-0">{file.error}</span>
         )}
       </div>
-      <button
-        onClick={() => handleRemoveFile(file.id)}
-        className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-red-500 transition-colors shrink-0"
-        title="Remover arquivo"
-      >
-        <X className="w-4 h-4" />
-      </button>
+      <div className="flex items-center gap-1.5 shrink-0">
+        {file.status === 'ready' && (
+          <FileBinaryToggle file={file} canBinary={canBinary} onToggle={handleToggleBinary} />
+        )}
+        <button
+          onClick={() => handleRemoveFile(file.id)}
+          className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-red-500 transition-colors"
+          title="Remover arquivo"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 
