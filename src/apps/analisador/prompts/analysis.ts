@@ -103,8 +103,8 @@ Retorne APENAS um JSON válido no seguinte formato (sem texto adicional antes ou
       "condicao": "string ou null - condição para aplicação do pedido (ex: 'caso não seja reconhecido o turno ininterrupto de revezamento')",
       "periodo": "string ou null",
       "valor": "number ou null",
-      "fatosReclamante": "string COMPLETA com TODOS os argumentos, valores, horários, datas e fundamentos alegados pelo reclamante - transcreva fielmente sem resumir",
-      "defesaReclamada": "string COMPLETA com TODOS os argumentos da defesa, incluindo teses numeradas, citações de normas coletivas, jurisprudência citada - transcreva fielmente sem resumir. Se não houver contestação: 'Não houve contestação (Ausência de manifestação)'",
+      "fatosReclamante": "string descritiva e densa (tipicamente 5-12 frases) com a tese do reclamante para este pedido específico. Inclua: datas concretas (admissão, demissão, mudanças de função), valores monetários citados (salário, parcelas, percentuais), dinâmica do trabalho relevante ao pedido (função real exercida, maquinário, ambiente físico, frequência da exposição/jornada), distinções temporais quando o histórico contratual envolver mudança de função/posto, dispositivos legais e súmulas explicitamente invocados (art. da CLT, NR, súmula do TST, cláusula de ACT/CCT). Use voz indireta no estilo 'O reclamante afirma que...', 'Alega que...', 'Sustenta que...'.",
+      "defesaReclamada": "string descritiva e densa (tipicamente 5-12 frases) com a tese da reclamada para este pedido específico, no mesmo nível de detalhe de fatosReclamante. Inclua: identificação da reclamada quando houver múltiplas (1ª Ré, 2ª Ré), datas e valores que a defesa apresenta de forma distinta da inicial, contraponto factual ao que o reclamante alegou, dispositivos legais e súmulas invocados pela defesa, alegação de quitação/comprovação documental quando houver. Se não houver contestação: 'Não houve contestação (Ausência de manifestação)'",
       "teseJuridica": "string ou null - fundamento jurídico principal",
       "controversia": true/false,
       "confissaoFicta": "string ou null - se há confissão ficta por ausência de impugnação específica",
@@ -186,8 +186,16 @@ Retorne APENAS um JSON válido no seguinte formato (sem texto adicional antes ou
 INSTRUÇÕES ADICIONAIS:
 1. Se não houver contestação, marque todos os pedidos como controversos por ausência de manifestação
 2. Identifique confissão ficta quando a reclamada não impugnar especificamente um fato
-3. IMPORTANTE: Nos campos 'fatosReclamante' e 'defesaReclamada' dos PEDIDOS, inclua TODOS os detalhes: valores específicos, horários, datas, argumentos numerados, citações de normas coletivas (ex: "cláusula 30ª do ACT"), jurisprudência citada. NÃO RESUMA.
-4. APENAS na tabela sintética ('tabelaSintetica'), resuma as teses de forma concisa (máximo 100 caracteres cada)
+3. DETALHAMENTO DOS PEDIDOS: 'fatosReclamante' e 'defesaReclamada' devem ser DENSOS — alcance prepauta-audiência, não índice. Para cada um, escreva 5-12 frases descrevendo a tese da parte para AQUELE pedido específico, com elementos concretos:
+   - Datas relevantes (admissão, demissão, mudança de função, período da exposição)
+   - Valores citados (salário, salário-base, parcelas, percentuais, multas)
+   - Dinâmica concreta do trabalho (função real, maquinário utilizado, ambiente físico, frequência da exposição, organização da jornada)
+   - Distinções temporais quando o contrato envolveu mudança de função/cargo (ex: "como auxiliar de serviços gerais de X a Y, depois promovido a eletricista a partir de Z")
+   - Dispositivos legais e súmulas invocados explicitamente (art. da CLT, NR, súmula do TST, cláusula de ACT/CCT)
+   - Quando houver múltiplas reclamadas, identifique qual delas apresenta cada argumento (1ª Ré, 2ª Ré)
+   - Use voz indireta ("Afirma que...", "Sustenta que...", "Impugna alegando que...")
+   Pense em texto que um juiz pode ler antes da audiência e já entender a controvérsia sem precisar consultar a inicial ou a contestação.
+4. RESUMOS APENAS NA TABELA: somente em 'tabelaSintetica' as teses devem ser comprimidas (~100 caracteres por campo)
 5. Alertas devem incluir: prazos próximos, possíveis nulidades, documentos faltantes, etc.
 6. Se o valor da causa não corresponder à soma dos pedidos, marque como inconsistência
 7. Considere que emendas podem adicionar pedidos, modificar valores ou corrigir informações da petição inicial
