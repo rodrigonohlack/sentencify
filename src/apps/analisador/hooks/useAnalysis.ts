@@ -9,8 +9,12 @@ import { useDocumentStore, useResultStore, useAIStore } from '../stores';
 import { useAIIntegration } from './useAIIntegration';
 import { ANALYSIS_SYSTEM_PROMPT, buildAnalysisPrompt } from '../prompts';
 import { providerSupportsPdfBinary } from '../constants';
-import type { AnalysisResult, AIMessage, AIMessageContent, DocumentFile, PedidoAnalise, TabelaPedido } from '../types';
+import type { AnalysisResult, AIMessage, AIMessageContent, DocumentFile, PedidoAnalise } from '../types';
 import { parseAIResponse, extractJSON, AnalysisResponseSchema } from '../../../schemas/ai-responses';
+import { generateTabelaSintetica } from '../utils/tabela';
+
+// Re-export para consumidores que importavam de useAnalysis (compat).
+export { generateTabelaSintetica };
 
 /**
  * Constrói um content block de documento PDF base64.
@@ -34,26 +38,6 @@ const ensureString = (value: unknown): string => {
   if (typeof value === 'string') return value;
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
-};
-
-/**
- * Gera tabelaSintetica a partir do array de pedidos
- * Garante que todos os pedidos apareçam em ambas as views
- */
-const generateTabelaSintetica = (pedidos: PedidoAnalise[]): TabelaPedido[] => {
-  return pedidos.map(p => ({
-    numero: p.numero,
-    tema: p.tema,
-    valor: p.valor,
-    teseAutor: p.fatosReclamante || '',
-    teseRe: p.defesaReclamada || 'Não houve contestação',
-    controversia: p.controversia,
-    confissaoFicta: p.confissaoFicta,
-    observacoes: p.pontosEsclarecer?.length > 0 ? p.pontosEsclarecer[0] : undefined,
-    tipoPedido: p.tipoPedido,
-    pedidoPrincipalNumero: p.pedidoPrincipalNumero,
-    condicao: p.condicao,
-  }));
 };
 
 export const useAnalysis = () => {

@@ -228,7 +228,7 @@ export interface BinaryFlags {
   contestacoes?: boolean[];
 }
 
-const binaryPlaceholder = (nome: string): string =>
+export const binaryPlaceholder = (nome: string): string =>
   `[Conteúdo do arquivo "${nome}" enviado como PDF anexado a esta mensagem — leia o documento diretamente.]`;
 
 /**
