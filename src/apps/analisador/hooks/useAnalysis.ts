@@ -197,7 +197,7 @@ export const useAnalysis = () => {
       setProgress(50, 'Analisando documentos...');
 
       const response = await callAIStream(messages, {
-        maxTokens: 16000,
+        maxTokens: 32000,
         systemPrompt: ANALYSIS_SYSTEM_PROMPT
       });
 
@@ -286,7 +286,7 @@ export const useAnalysis = () => {
       for (let attempt = 0; attempt <= MAX_PARSE_RETRIES; attempt++) {
         try {
           const response = await callAIStream(messages, {
-            maxTokens: 16000,
+            maxTokens: 32000,
             systemPrompt: ANALYSIS_SYSTEM_PROMPT
           });
           return parseAnalysisResult(response);
