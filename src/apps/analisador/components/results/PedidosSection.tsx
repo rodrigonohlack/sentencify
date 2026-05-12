@@ -4,10 +4,12 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { ListChecks, ChevronDown, AlertCircle, CheckCircle, HelpCircle, GitBranch, ArrowRightLeft, Link2 } from 'lucide-react';
+import { ListChecks, ChevronDown, AlertCircle, CheckCircle, HelpCircle, GitBranch, ArrowRightLeft, Link2, Sparkles, RotateCcw } from 'lucide-react';
 import { AccordionItem, Badge } from '../ui';
 import { safeRender } from '../../utils/safe-render';
 import { formatCurrency, parseThemeAndValue } from '../../utils/format-pedido';
+import { useResultStore } from '../../stores';
+import { RefinePedidoModal } from './RefinePedidoModal';
 import type { PedidoAnalise, TipoPedido } from '../../types';
 
 interface PedidosSectionProps {
@@ -59,7 +61,15 @@ const TipoPedidoBadge: React.FC<{ tipo?: TipoPedido }> = ({ tipo }) => {
   );
 };
 
-const PedidoCard: React.FC<{ pedido: PedidoAnalise; isChild?: boolean }> = ({ pedido, isChild = false }) => {
+interface PedidoCardProps {
+  pedido: PedidoAnalise;
+  isChild?: boolean;
+  onRefine: (numero: number) => void;
+  onUndo: (numero: number) => void;
+  hasUndo: boolean;
+}
+
+const PedidoCard: React.FC<PedidoCardProps> = ({ pedido, isChild = false, onRefine, onUndo, hasUndo }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const { cleanTema, extractedValor } = parseThemeAndValue(pedido.tema, pedido.valor);
@@ -99,6 +109,26 @@ const PedidoCard: React.FC<{ pedido: PedidoAnalise; isChild?: boolean }> = ({ pe
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {hasUndo && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onUndo(pedido.numero); }}
+              title="Desfazer última reanálise"
+              className="p-1.5 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/40 text-orange-500 dark:text-orange-400 transition-colors"
+              aria-label="Desfazer reanálise"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onRefine(pedido.numero); }}
+            title="Reanalisar este pedido com instruções específicas"
+            className="p-1.5 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 transition-colors"
+            aria-label="Reanalisar pedido"
+          >
+            <Sparkles className="w-4 h-4" />
+          </button>
           <Badge variant={pedido.controversia ? 'warning' : 'success'}>
             {pedido.controversia ? 'Controvertido' : 'Incontroverso'}
           </Badge>
@@ -179,6 +209,17 @@ const PedidoCard: React.FC<{ pedido: PedidoAnalise; isChild?: boolean }> = ({ pe
 };
 
 export const PedidosSection: React.FC<PedidosSectionProps> = ({ pedidos }) => {
+  const pedidoUndoStack = useResultStore(s => s.pedidoUndoStack);
+  const undoPedidoRefinement = useResultStore(s => s.undoPedidoRefinement);
+  const [refiningNumero, setRefiningNumero] = useState<number | null>(null);
+
+  const refiningPedido = useMemo(
+    () => (refiningNumero !== null ? pedidos.find(p => p.numero === refiningNumero) ?? null : null),
+    [pedidos, refiningNumero]
+  );
+
+  const hasUndoFor = (numero: number): boolean => (pedidoUndoStack[numero]?.length ?? 0) > 0;
+
   const controvertidos = pedidos.filter(p => p.controversia).length;
   const incontroversos = pedidos.length - controvertidos;
 
@@ -271,11 +312,23 @@ export const PedidosSection: React.FC<PedidosSectionProps> = ({ pedidos }) => {
         <div className="space-y-3">
           {organizedPedidos.map(({ pedido, filhos }) => (
             <div key={pedido.numero}>
-              <PedidoCard pedido={pedido} />
+              <PedidoCard
+                pedido={pedido}
+                onRefine={setRefiningNumero}
+                onUndo={undoPedidoRefinement}
+                hasUndo={hasUndoFor(pedido.numero)}
+              />
               {filhos.length > 0 && (
                 <div className="mt-2 space-y-2">
                   {filhos.map((filho) => (
-                    <PedidoCard key={filho.numero} pedido={filho} isChild />
+                    <PedidoCard
+                      key={filho.numero}
+                      pedido={filho}
+                      isChild
+                      onRefine={setRefiningNumero}
+                      onUndo={undoPedidoRefinement}
+                      hasUndo={hasUndoFor(filho.numero)}
+                    />
                   ))}
                 </div>
               )}
@@ -283,6 +336,11 @@ export const PedidosSection: React.FC<PedidosSectionProps> = ({ pedidos }) => {
           ))}
         </div>
       </div>
+
+      <RefinePedidoModal
+        pedido={refiningPedido}
+        onClose={() => setRefiningNumero(null)}
+      />
     </AccordionItem>
   );
 };
