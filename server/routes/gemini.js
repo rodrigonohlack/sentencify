@@ -129,6 +129,7 @@ router.get('/models', async (req, res) => {
  * POST /api/gemini/stream
  */
 router.post('/stream', async (req, res) => {
+  let keepAlive = null;
   try {
     const { model, request } = req.body;
     const key = req.headers['x-api-key'] || process.env.GOOGLE_API_KEY;
@@ -144,6 +145,11 @@ router.post('/stream', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
+    // Flush imediato para Cloudflare ver headers HTTP antes do timeout de 100s,
+    // mesmo quando o modelo está em fase de thinking sem emitir text parts.
+    res.flushHeaders();
+    // Keep-alive SSE: comentário ignorado pelo client, mantém conexão viva.
+    keepAlive = setInterval(() => res.write(': ping\n\n'), 15000);
 
     // URL com streamGenerateContent e alt=sse (key via header, não na URL)
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`;
@@ -157,6 +163,7 @@ router.post('/stream', async (req, res) => {
     if (!response.ok) {
       const errorData = await response.json();
       res.write(`data: ${JSON.stringify({ type: 'error', error: errorData.error })}\n\n`);
+      clearInterval(keepAlive);
       return res.end();
     }
 
@@ -233,9 +240,11 @@ router.post('/stream', async (req, res) => {
       }
     }
 
+    clearInterval(keepAlive);
     res.end();
 
   } catch (error) {
+    if (keepAlive) clearInterval(keepAlive);
     if (!res.headersSent) {
       res.status(500).json({ error: { message: error.message } });
     } else {

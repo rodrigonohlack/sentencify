@@ -57,6 +57,7 @@ router.post('/messages', async (req, res) => {
  * POST /api/claude/stream
  */
 router.post('/stream', async (req, res) => {
+  let keepAlive = null;
   try {
     const apiKey = req.headers['x-api-key'] || process.env.ANTHROPIC_API_KEY;
 
@@ -71,6 +72,12 @@ router.post('/stream', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
+    // Flush imediato para Cloudflare ver headers HTTP antes do timeout de 100s,
+    // mesmo quando o modelo está em fase de extended thinking sem emitir text_delta.
+    res.flushHeaders();
+    // Keep-alive SSE: comentário (linhas iniciadas por ":") ignorado pelo client,
+    // mas mantém a conexão viva contra idle timeouts de proxies intermediários.
+    keepAlive = setInterval(() => res.write(': ping\n\n'), 15000);
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -86,6 +93,7 @@ router.post('/stream', async (req, res) => {
     if (!response.ok) {
       const errorData = await response.json();
       res.write(`data: ${JSON.stringify({ type: 'error', error: errorData.error })}\n\n`);
+      clearInterval(keepAlive);
       return res.end();
     }
 
@@ -132,9 +140,11 @@ router.post('/stream', async (req, res) => {
       }
     }
 
+    clearInterval(keepAlive);
     res.end();
 
   } catch (error) {
+    if (keepAlive) clearInterval(keepAlive);
     if (!res.headersSent) {
       res.status(500).json({ error: { message: error.message } });
     } else {

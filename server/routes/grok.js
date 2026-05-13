@@ -77,6 +77,7 @@ router.post('/chat', async (req, res) => {
  * POST /api/grok/stream
  */
 router.post('/stream', async (req, res) => {
+  let keepAlive = null;
   try {
     const apiKey = req.headers['x-api-key'] || process.env.XAI_API_KEY;
 
@@ -91,6 +92,9 @@ router.post('/stream', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
+    // Flush imediato dos headers + keep-alive contra Cloudflare 524 (timeout 100s).
+    res.flushHeaders();
+    keepAlive = setInterval(() => res.write(': ping\n\n'), 15000);
 
     // Gerar conv-id para cache
     const hash = createHash('md5').update(apiKey).digest('hex');
@@ -109,6 +113,7 @@ router.post('/stream', async (req, res) => {
     if (!response.ok) {
       const errorData = await response.json();
       res.write(`data: ${JSON.stringify({ type: 'error', error: errorData.error })}\n\n`);
+      clearInterval(keepAlive);
       return res.end();
     }
 
@@ -149,9 +154,11 @@ router.post('/stream', async (req, res) => {
       }
     }
 
+    clearInterval(keepAlive);
     res.end();
 
   } catch (error) {
+    if (keepAlive) clearInterval(keepAlive);
     if (!res.headersSent) {
       res.status(500).json({ error: { message: error.message } });
     } else {
