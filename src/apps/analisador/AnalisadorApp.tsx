@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { History, Settings, LogOut, FileSearch, ArrowLeft, Sun, Moon, LayoutGrid } from 'lucide-react';
+import { History, Settings, LogOut, FileSearch, ArrowLeft, Sun, Moon, LayoutGrid, Upload } from 'lucide-react';
 import { AppSwitcher } from '../../components/shared/AppSwitcher';
 
 // Auth
@@ -22,6 +22,9 @@ import { ResultsContainer } from './components/results';
 
 // Settings
 import { SettingsModal } from './components/settings';
+
+// Import (v1.43.38)
+import { ImportAnalysisModal } from './components/import';
 
 // UI
 import { Button, ToastProvider, useToast } from './components/ui';
@@ -56,6 +59,7 @@ function formatBadgeCount(n: number): string {
 
 const AnalisadorContent: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [cameFromHistorico, setCameFromHistorico] = useState(false);
   const { showToast } = useToast();
   const { appTheme, toggleAppTheme } = useThemeManagement();
@@ -99,6 +103,14 @@ const AnalisadorContent: React.FC = () => {
   const handleOpenHistorico = useCallback(() => {
     openHistorico();
   }, [openHistorico]);
+
+  const handleOpenImport = useCallback(() => {
+    setImportOpen(true);
+  }, []);
+
+  const handleCloseImport = useCallback(() => {
+    setImportOpen(false);
+  }, []);
 
   const handleSelectAnalysis = useCallback(
     (analysis: SavedAnalysis) => {
@@ -198,8 +210,8 @@ const AnalisadorContent: React.FC = () => {
               </p>
             </div>
 
-            {/* Botão Histórico */}
-            <div className="text-center mb-8">
+            {/* Botões Histórico + Importar */}
+            <div className="flex items-center justify-center gap-3 mb-8">
               <Button
                 variant="secondary"
                 onClick={handleOpenHistorico}
@@ -216,6 +228,14 @@ const AnalisadorContent: React.FC = () => {
                   </span>
                 )}
               </Button>
+              <Button
+                variant="secondary"
+                onClick={handleOpenImport}
+                icon={<Upload className="w-4 h-4" />}
+                title="Importar análises geradas externamente (JSON)"
+              >
+                Importar
+              </Button>
             </div>
 
             {/* Batch Mode */}
@@ -227,6 +247,7 @@ const AnalisadorContent: React.FC = () => {
       {/* Modals */}
       <SettingsModal isOpen={settingsOpen} onClose={handleCloseSettings} />
       <HistoricoModal onSelectAnalysis={handleSelectAnalysis} />
+      <ImportAnalysisModal isOpen={importOpen} onClose={handleCloseImport} />
     </div>
   );
 };
