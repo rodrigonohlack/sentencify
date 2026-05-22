@@ -209,6 +209,54 @@ export function parseAIResponse<T>(
 const EmbargosVicioTipoSchema = z.enum(['omissao', 'contradicao', 'obscuridade', 'erroMaterial']);
 const EmbargosConclusaoTipoSchema = z.enum(['acolher', 'acolherParcial', 'rejeitar', 'sanarOficio']);
 
+/**
+ * Coerção tolerante: aceita boolean nativo, strings "true"/"false"/"sim"/"não"/"null"
+ * (com variações de case e acento), null e undefined.
+ * Necessário porque LLMs frequentemente serializam booleans como strings.
+ */
+const toleranteBooleanNullable = z.preprocess(
+  (v) => {
+    if (typeof v === 'boolean') return v;
+    if (v === null || v === undefined) return null;
+    if (typeof v === 'string') {
+      const s = v.toLowerCase().trim();
+      if (s === 'true' || s === 'sim') return true;
+      if (s === 'false' || s === 'não' || s === 'nao') return false;
+      if (s === 'null' || s === '' || s === 'não informado' || s === 'nao informado' || s === 'n/a') return null;
+    }
+    return v;
+  },
+  z.boolean().nullable()
+);
+
+const toleranteBoolean = z.preprocess(
+  (v) => {
+    if (typeof v === 'boolean') return v;
+    if (typeof v === 'string') {
+      const s = v.toLowerCase().trim();
+      if (s === 'true' || s === 'sim') return true;
+      if (s === 'false' || s === 'não' || s === 'nao' || s === '') return false;
+    }
+    return v;
+  },
+  z.boolean()
+);
+
+const toleranteIntimacao = z.preprocess(
+  (v) => {
+    if (v === null || v === undefined) return null;
+    if (typeof v === 'string') {
+      const s = v.toLowerCase().trim();
+      if (s === 'dispensada' || s.includes('dispens')) return 'dispensada';
+      if (s === 'manifestouse' || s === 'manifestou-se' || s.includes('manifest')) return 'manifestouSe';
+      if (s === 'silente' || s.includes('silen')) return 'silente';
+      if (s === 'null' || s === '' || s.includes('não informado') || s.includes('nao informado') || s === 'n/a') return null;
+    }
+    return v;
+  },
+  z.enum(['dispensada', 'manifestouSe', 'silente']).nullable()
+);
+
 const EmbargosPontoSchema = z.object({
   id: z.string().optional(),
   ordem: z.number(),
@@ -217,10 +265,10 @@ const EmbargosPontoSchema = z.object({
   vicioReconhecidoPelaIA: z.array(EmbargosVicioTipoSchema),
   divergenciaVicio: z.string().nullable(),
   oQueSentencaDisse: z.string(),
-  questaoSuscitadaNoProcesso: z.boolean().nullable(),
+  questaoSuscitadaNoProcesso: toleranteBooleanNullable,
   conclusaoPreliminar: EmbargosConclusaoTipoSchema,
   justificativaPreliminar: z.string(),
-  efeitosInfringentes: z.boolean(),
+  efeitosInfringentes: toleranteBoolean,
   outrosPedidos: z.array(z.string())
 });
 
@@ -231,14 +279,14 @@ export const SynthesisResponseSchema = z.object({
     parteEmbargada: z.string(),
     polo: z.enum(['reclamante', 'reclamada', 'ambas']),
     tempestividade: z.object({
-      tempestivo: z.boolean().nullable(),
+      tempestivo: toleranteBooleanNullable,
       observacao: z.string().nullable()
     })
   }),
   resumoSentenca: z.string(),
   resumoEmbargos: z.string(),
   resumoContrarrazoes: z.string().nullable(),
-  intimacaoContrariaStatus: z.enum(['dispensada', 'manifestouSe', 'silente']).nullable(),
+  intimacaoContrariaStatus: toleranteIntimacao,
   pontos: z.array(EmbargosPontoSchema)
 });
 

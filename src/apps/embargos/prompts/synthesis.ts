@@ -49,36 +49,44 @@ DOCUMENTOS:
 
 ${sections.join('\n\n')}
 
-Retorne APENAS um JSON válido neste shape (sem markdown, sem texto adicional):
+Retorne APENAS um JSON válido neste shape (sem markdown, sem texto adicional).
+
+REGRAS DE TIPO (CRÍTICAS):
+- Campos do tipo boolean DEVEM ser literais JSON true/false (sem aspas).
+- Campos nullable que não puderem ser preenchidos DEVEM ser literal JSON null (sem aspas).
+- Campos enum DEVEM usar EXATAMENTE um dos valores listados, entre aspas.
+- Strings normais entre aspas. Números sem aspas.
+
+SHAPE (os marcadores <...> descrevem o tipo esperado em cada posição):
 
 {
   "identificacao": {
-    "numeroProcesso": "string ou null",
-    "parteEmbargante": "nome da parte que opôs os embargos",
-    "parteEmbargada": "nome da parte contrária",
-    "polo": "reclamante | reclamada | ambas (polo do embargante)",
+    "numeroProcesso": <string ou null>,
+    "parteEmbargante": <string com o nome da parte que opôs os embargos>,
+    "parteEmbargada": <string com o nome da parte contrária>,
+    "polo": <enum: "reclamante" | "reclamada" | "ambas">,
     "tempestividade": {
-      "tempestivo": "true | false | null se não puder aferir",
-      "observacao": "string ou null"
+      "tempestivo": <boolean true ou false, ou null se não puder aferir>,
+      "observacao": <string ou null>
     }
   },
-  "resumoSentenca": "narrativa curta do que a sentença decidiu (3-5 frases)",
-  "resumoEmbargos": "narrativa curta dos embargos (3-5 frases)",
-  "resumoContrarrazoes": "narrativa curta ou null se não fornecidas",
-  "intimacaoContrariaStatus": "dispensada | manifestouSe | silente | null",
+  "resumoSentenca": <string com narrativa curta do que a sentença decidiu (3-5 frases)>,
+  "resumoEmbargos": <string com narrativa curta dos embargos (3-5 frases)>,
+  "resumoContrarrazoes": <string ou null se contrarrazões não fornecidas>,
+  "intimacaoContrariaStatus": <enum: "dispensada" | "manifestouSe" | "silente" | null>,
   "pontos": [
     {
-      "ordem": 1,
-      "trechoEmbargos": "trecho/resumo curto do que a parte alegou neste ponto",
-      "vicioAlegadoPelaParte": ["omissao | contradicao | obscuridade | erroMaterial"],
-      "vicioReconhecidoPelaIA": ["array do(s) vício(s) que a IA efetivamente reconhece (pode divergir)"],
-      "divergenciaVicio": "string explicando divergência ou null se não há",
-      "oQueSentencaDisse": "o que a sentença efetivamente decidiu sobre esse ponto",
-      "questaoSuscitadaNoProcesso": "true se a questão foi suscitada na inicial/contestação fornecida, false se não foi, null se inicial/contestação não foram fornecidas",
-      "conclusaoPreliminar": "acolher | acolherParcial | rejeitar | sanarOficio",
-      "justificativaPreliminar": "1-3 frases concisas (não a redação final)",
-      "efeitosInfringentes": "true | false (se a parte pleiteia efeito modificativo)",
-      "outrosPedidos": ["array com outros pedidos formulados, ex: 'prazo para recurso ordinário'"]
+      "ordem": <number, ex: 1>,
+      "trechoEmbargos": <string com trecho/resumo do que a parte alegou neste ponto>,
+      "vicioAlegadoPelaParte": [<array de enum: "omissao" | "contradicao" | "obscuridade" | "erroMaterial">],
+      "vicioReconhecidoPelaIA": [<array dos vícios que a análise reconhece — pode divergir do alegado>],
+      "divergenciaVicio": <string explicando divergência ou null se não há>,
+      "oQueSentencaDisse": <string com o que a sentença efetivamente decidiu sobre esse ponto>,
+      "questaoSuscitadaNoProcesso": <boolean true ou false, ou null se inicial/contestação não foram fornecidas>,
+      "conclusaoPreliminar": <enum: "acolher" | "acolherParcial" | "rejeitar" | "sanarOficio">,
+      "justificativaPreliminar": <string com 1-3 frases concisas (não a redação final)>,
+      "efeitosInfringentes": <boolean true ou false>,
+      "outrosPedidos": [<array de strings, ex: ["prazo para recurso ordinário"]>]
     }
   ]
 }
