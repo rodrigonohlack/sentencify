@@ -201,3 +201,57 @@ export function parseAIResponse<T>(
 
   return { success: true, data: result.data };
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// SCHEMA: Embargos de Declaração (subapp Embargos)
+// ═══════════════════════════════════════════════════════════════════
+
+const EmbargosVicioTipoSchema = z.enum(['omissao', 'contradicao', 'obscuridade', 'erroMaterial']);
+const EmbargosConclusaoTipoSchema = z.enum(['acolher', 'acolherParcial', 'rejeitar', 'sanarOficio']);
+
+const EmbargosPontoSchema = z.object({
+  id: z.string().optional(),
+  ordem: z.number(),
+  trechoEmbargos: z.string(),
+  vicioAlegadoPelaParte: z.array(EmbargosVicioTipoSchema),
+  vicioReconhecidoPelaIA: z.array(EmbargosVicioTipoSchema),
+  divergenciaVicio: z.string().nullable(),
+  oQueSentencaDisse: z.string(),
+  questaoSuscitadaNoProcesso: z.boolean().nullable(),
+  conclusaoPreliminar: EmbargosConclusaoTipoSchema,
+  justificativaPreliminar: z.string(),
+  efeitosInfringentes: z.boolean(),
+  outrosPedidos: z.array(z.string())
+});
+
+export const SynthesisResponseSchema = z.object({
+  identificacao: z.object({
+    numeroProcesso: z.string().nullable(),
+    parteEmbargante: z.string(),
+    parteEmbargada: z.string(),
+    polo: z.enum(['reclamante', 'reclamada', 'ambas']),
+    tempestividade: z.object({
+      tempestivo: z.boolean().nullable(),
+      observacao: z.string().nullable()
+    })
+  }),
+  resumoSentenca: z.string(),
+  resumoEmbargos: z.string(),
+  resumoContrarrazoes: z.string().nullable(),
+  intimacaoContrariaStatus: z.enum(['dispensada', 'manifestouSe', 'silente']).nullable(),
+  pontos: z.array(EmbargosPontoSchema)
+});
+
+export const DraftResponseSchema = z.object({
+  relatorio: z.string(),
+  fundamentacao: z.string(),
+  dispositivo: z.string()
+});
+
+export const RefineResponseSchema = z.object({
+  text: z.string()
+});
+
+export type SynthesisResponse = z.infer<typeof SynthesisResponseSchema>;
+export type DraftResponse = z.infer<typeof DraftResponseSchema>;
+export type RefineResponse = z.infer<typeof RefineResponseSchema>;
