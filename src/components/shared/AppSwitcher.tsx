@@ -4,13 +4,13 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Scale, FileSearch, Mic, Newspaper, Calculator, Wallet, ChevronDown } from 'lucide-react';
+import { Scale, FileSearch, Mic, Newspaper, Calculator, Wallet, ChevronDown, Gavel } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════
 
-type AppId = 'sentencify' | 'analisador' | 'prova-oral' | 'noticias' | 'seguro-desemprego' | 'financeiro';
+type AppId = 'sentencify' | 'analisador' | 'embargos' | 'prova-oral' | 'noticias' | 'seguro-desemprego' | 'financeiro';
 
 interface AppDefinition {
   id: AppId;
@@ -61,6 +61,18 @@ const APPS: AppDefinition[] = [
       text: 'text-blue-600 dark:text-blue-400',
       border: 'border-blue-500/20 dark:border-blue-400/20',
       hoverBg: 'hover:bg-blue-500/20 dark:hover:bg-blue-500/25',
+    },
+  },
+  {
+    id: 'embargos',
+    label: 'Embargos',
+    href: '/embargos',
+    icon: <Gavel className="w-4 h-4" />,
+    colors: {
+      bg: 'bg-amber-500/10 dark:bg-amber-500/15',
+      text: 'text-amber-600 dark:text-amber-400',
+      border: 'border-amber-500/20 dark:border-amber-400/20',
+      hoverBg: 'hover:bg-amber-500/20 dark:hover:bg-amber-500/25',
     },
   },
   {
