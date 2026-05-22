@@ -18,7 +18,6 @@ interface DocumentStoreState {
   updateSlotStatus: (slot: DocumentSlot, status: DocumentFile['status'], errorMessage?: string) => void;
   reset: () => void;
   canAnalyze: () => boolean;
-  getAllSlots: () => Record<DocumentSlot, DocumentFile | null>;
 }
 
 const INITIAL_STATE = {
@@ -45,17 +44,6 @@ export const useDocumentStore = create<DocumentStoreState>((set, get) => ({
   canAnalyze: () => {
     const state = get();
     return REQUIRED_SLOTS.every(slot => state[slot]?.status === 'ready');
-  },
-
-  getAllSlots: () => {
-    const s = get();
-    return {
-      decisaoEmbargada: s.decisaoEmbargada,
-      embargos: s.embargos,
-      contrarrazoes: s.contrarrazoes,
-      inicial: s.inicial,
-      contestacao: s.contestacao
-    };
   }
 }));
 

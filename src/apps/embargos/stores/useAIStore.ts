@@ -14,6 +14,7 @@ const store = createAIStore({
 
 export const useAIStore = store.useStore;
 
+/** Persiste API keys encriptadas no localStorage do Embargos. */
 export const persistApiKeys = (apiKeys: AISettings['apiKeys']): void => {
   store.persistKeys(apiKeys);
 };
