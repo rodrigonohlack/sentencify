@@ -295,10 +295,15 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+/**
+ * Estado persistido de uma seção da minuta.
+ * O status de refino em andamento NÃO fica aqui — é tracked exclusivamente em
+ * useDraftStore.refiningSection (em memória), para evitar estado "preso" caso
+ * o usuário feche a aba durante uma chamada à IA.
+ */
 export interface DraftSection {
   text: string;
   chatHistory: ChatMessage[];
-  isRefining: boolean;
 }
 
 export interface Draft {
@@ -420,18 +425,18 @@ git commit -m "feat(embargos): constants barrel"
 ```typescript
 /**
  * @file format-date.ts
- * @description Formatação de datas usadas no histórico (DD/MM/YYYY HH:mm).
+ * @description Formatação de datas (Unix timestamp) usadas no histórico.
  */
 
-export function formatDateBR(timestamp: number): string {
+const pad = (n: number) => String(n).padStart(2, '0');
+
+export function formatTimestampBR(timestamp: number): string {
   const d = new Date(timestamp);
-  const pad = (n: number) => String(n).padStart(2, '0');
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export function formatDateBROnly(timestamp: number): string {
+export function formatTimestampBROnly(timestamp: number): string {
   const d = new Date(timestamp);
-  const pad = (n: number) => String(n).padStart(2, '0');
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
 }
 ```
@@ -747,7 +752,7 @@ interface DraftStoreState {
   reset: () => void;
 }
 
-const emptySection = () => ({ text: '', chatHistory: [], isRefining: false });
+const emptySection = (): DraftSection => ({ text: '', chatHistory: [] });
 
 const INITIAL_STATE = {
   draft: null,
@@ -785,20 +790,7 @@ export const useDraftStore = create<DraftStoreState>((set, get) => ({
     set({ draft: { ...current, [key]: { ...current[key], text: newText } } });
   },
 
-  setRefining: (section) => {
-    const current = get().draft;
-    set({ refiningSection: section });
-    if (current && section) {
-      set({ draft: { ...current, [section]: { ...current[section], isRefining: true } } });
-    } else if (current) {
-      const updated: Draft = {
-        relatorio: { ...current.relatorio, isRefining: false },
-        fundamentacao: { ...current.fundamentacao, isRefining: false },
-        dispositivo: { ...current.dispositivo, isRefining: false }
-      };
-      set({ draft: updated });
-    }
-  },
+  setRefining: (section) => set({ refiningSection: section }),
 
   setIsGenerating: (v) => set({ isGenerating: v }),
   setProgress: (value, label) => set({ progress: { value, label } }),
@@ -1869,7 +1861,7 @@ function extractJSON(response: string): string {
   return objMatch ? objMatch[0] : body;
 }
 
-const emptySection = () => ({ text: '', chatHistory: [], isRefining: false });
+const emptySection = (): DraftSection => ({ text: '', chatHistory: [] });
 
 export function useDraftGeneration() {
   const { callAIStream } = useAIIntegration();
@@ -3470,7 +3462,7 @@ git commit -m "feat(embargos): draft barrel"
 
 import React from 'react';
 import { FileText, Trash2 } from 'lucide-react';
-import { formatDateBR } from '../../utils/format-date';
+import { formatTimestampBR } from '../../utils/format-date';
 import { SLOT_LABELS } from '../../types';
 import type { SavedEmbargos } from '../../types';
 
@@ -3492,7 +3484,7 @@ export const HistoricoItem: React.FC<HistoricoItemProps> = ({ item, onSelect, on
           {item.titulo}
         </p>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          {formatDateBR(item.updatedAt)} · {numDocs} {numDocs === 1 ? 'documento' : 'documentos'} · {hasDraft ? 'Minuta gerada' : 'Síntese pendente'}
+          {formatTimestampBR(item.updatedAt)} · {numDocs} {numDocs === 1 ? 'documento' : 'documentos'} · {hasDraft ? 'Minuta gerada' : 'Síntese pendente'}
         </p>
       </button>
       <button
