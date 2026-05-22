@@ -3,7 +3,7 @@
  * @description Roteamento entre Tela 1, Tela 2 e Tela 3 com base no estado dos stores.
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   History,
   Settings,
@@ -46,11 +46,19 @@ export const EmbargosContent: React.FC = () => {
 
   useAutoSave();
 
-  // Auto-advance forward when new analysis/draft completes
+  // Auto-advance forward APENAS na transição null → valor (não força view sempre que
+  // synthesis/draft existe — evita revert do "Voltar" enquanto o estado persiste).
+  const prevSynthesisRef = useRef<typeof synthesis>(null);
+  const prevDraftRef = useRef<typeof draft>(null);
   useEffect(() => {
-    if (draft && view !== 'draft') setView('draft');
-    else if (!draft && synthesis && view === 'upload') setView('synthesis');
-  }, [synthesis, draft, view]);
+    if (!prevDraftRef.current && draft) {
+      setView('draft');
+    } else if (!prevSynthesisRef.current && synthesis) {
+      setView('synthesis');
+    }
+    prevSynthesisRef.current = synthesis;
+    prevDraftRef.current = draft;
+  }, [synthesis, draft]);
 
   const handleLogout = useCallback(async () => {
     await logout();
