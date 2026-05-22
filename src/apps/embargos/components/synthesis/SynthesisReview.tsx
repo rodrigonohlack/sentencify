@@ -84,7 +84,7 @@ export const SynthesisReview: React.FC<SynthesisReviewProps> = ({ onBackToUpload
         <Button
           variant="primary"
           onClick={() => void generate()}
-          disabled={isGenerating || synthesis.pontos.length === 0}
+          disabled={isGenerating}
           icon={isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSignature className="w-4 h-4" />}
         >
           {isGenerating ? progressDraft.label || 'Gerando minuta…' : 'Gerar minuta'}

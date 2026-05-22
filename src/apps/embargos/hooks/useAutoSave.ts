@@ -36,7 +36,7 @@ function buildRecord(): SavedEmbargos | null {
 
   return {
     id,
-    createdAt: now,
+    createdAt: synth.savedCreatedAt ?? now,
     updatedAt: now,
     titulo,
     documents,
@@ -49,6 +49,7 @@ export function useAutoSave() {
   const synthesis = useSynthesisStore(s => s.synthesis);
   const draft = useDraftStore(s => s.draft);
   const setSavedId = useSynthesisStore(s => s.setSavedId);
+  const setSavedCreatedAt = useSynthesisStore(s => s.setSavedCreatedAt);
   const savedId = useSynthesisStore(s => s.savedId);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -63,7 +64,10 @@ export function useAutoSave() {
       if (!record) return;
       try {
         await saveMinuta(record);
-        if (!savedId) setSavedId(record.id);
+        if (!savedId) {
+          setSavedId(record.id);
+          setSavedCreatedAt(record.createdAt);
+        }
       } catch (err) {
         console.warn('[embargos] auto-save falhou:', err);
       }
@@ -72,7 +76,7 @@ export function useAutoSave() {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [synthesis, draft, savedId, setSavedId]);
+  }, [synthesis, draft, savedId, setSavedId, setSavedCreatedAt]);
 }
 
 /** Save imediato — usado ao aceitar refino. */

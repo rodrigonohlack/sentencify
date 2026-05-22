@@ -18,6 +18,7 @@ interface SynthesisStoreState {
   progress: { value: number; label: string };
   error: string | null;
   savedId: string | null;
+  savedCreatedAt: number | null;
 
   setSynthesis: (s: SynthesisResult) => void;
   updatePonto: (id: string, patch: Partial<PontoSuscitado>) => void;
@@ -28,6 +29,7 @@ interface SynthesisStoreState {
   setProgress: (value: number, label: string) => void;
   setError: (msg: string | null) => void;
   setSavedId: (id: string | null) => void;
+  setSavedCreatedAt: (ts: number | null) => void;
   reset: () => void;
 }
 
@@ -36,7 +38,8 @@ const INITIAL_STATE = {
   isAnalyzing: false,
   progress: { value: 0, label: '' },
   error: null,
-  savedId: null
+  savedId: null,
+  savedCreatedAt: null
 } as const;
 
 export const useSynthesisStore = create<SynthesisStoreState>((set, get) => ({
@@ -73,6 +76,7 @@ export const useSynthesisStore = create<SynthesisStoreState>((set, get) => ({
   setProgress: (value, label) => set({ progress: { value, label } }),
   setError: (msg) => set({ error: msg }),
   setSavedId: (id) => set({ savedId: id }),
+  setSavedCreatedAt: (ts) => set({ savedCreatedAt: ts }),
 
   reset: () => set(INITIAL_STATE)
 }));

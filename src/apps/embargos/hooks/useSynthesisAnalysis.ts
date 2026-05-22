@@ -13,7 +13,7 @@ import {
 import { useAIIntegration } from './useAIIntegration';
 import { SYNTHESIS_SYSTEM_PROMPT, buildSynthesisPrompt } from '../prompts';
 import { providerSupportsPdfBinary } from '../constants';
-import { SynthesisResponseSchema } from '../../../schemas/ai-responses';
+import { SynthesisResponseSchema, extractJSON } from '../../../schemas/ai-responses';
 import type {
   DocumentFile,
   DocumentSlot,
@@ -30,13 +30,6 @@ const buildDocumentBlock = (base64: string): AIMessageContent => ({
 
 const isBinaryEffective = (doc: DocumentFile | null, providerCanBinary: boolean) =>
   !!doc && doc.status === 'ready' && doc.useBinary && providerCanBinary && !!doc.base64;
-
-function extractJSON(response: string): string {
-  const fence = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  const body = fence ? fence[1] : response;
-  const objMatch = body.match(/\{[\s\S]*\}/);
-  return objMatch ? objMatch[0] : body;
-}
 
 const SLOT_ORDER: DocumentSlot[] = ['decisaoEmbargada', 'embargos', 'contrarrazoes', 'inicial', 'contestacao'];
 
@@ -88,46 +81,52 @@ export function useSynthesisAnalysis() {
 
       synth.setProgress(40, 'Analisando documentos…');
 
+      const response = await callAIStream(messages, {
+        maxTokens: 32000,
+        systemPrompt: SYNTHESIS_SYSTEM_PROMPT
+      });
+
+      synth.setProgress(80, 'Estruturando síntese…');
+
+      let parsed: ReturnType<typeof SynthesisResponseSchema.parse> | undefined;
+      let parseError: unknown = null;
       for (let attempt = 0; attempt <= MAX_PARSE_RETRIES; attempt++) {
         try {
-          const response = await callAIStream(messages, {
-            maxTokens: 32000,
-            systemPrompt: SYNTHESIS_SYSTEM_PROMPT
-          });
-
-          synth.setProgress(80, 'Estruturando síntese…');
-
-          const json = JSON.parse(extractJSON(response));
-          const parsed = SynthesisResponseSchema.parse(json);
-
-          // Hidrata IDs estáveis nos pontos
-          const pontos = parsed.pontos.map(p => ({
-            ...p,
-            id: p.id ?? crypto.randomUUID()
-          }));
-
-          const result: SynthesisResult = {
-            identificacao: parsed.identificacao,
-            resumoSentenca: parsed.resumoSentenca,
-            resumoEmbargos: parsed.resumoEmbargos,
-            resumoContrarrazoes: parsed.resumoContrarrazoes,
-            intimacaoContrariaStatus: parsed.intimacaoContrariaStatus,
-            pontos
-          };
-
-          synth.setSynthesis(result);
-          synth.setProgress(100, 'Concluído.');
-          synth.setIsAnalyzing(false);
-          return result;
+          const extracted = extractJSON(response);
+          if (!extracted) throw new Error('Não foi possível extrair JSON da resposta');
+          const json = JSON.parse(extracted);
+          parsed = SynthesisResponseSchema.parse(json);
+          parseError = null;
+          break;
         } catch (err) {
+          parseError = err;
           if (attempt < MAX_PARSE_RETRIES) {
-            console.warn(`[embargos] Tentativa ${attempt + 1} falhou:`, err);
+            console.warn(`[embargos] Parse tentativa ${attempt + 1} falhou:`, err);
             continue;
           }
-          throw err;
         }
       }
-      return null;
+      if (!parsed) throw parseError;
+
+      // Hidrata IDs estáveis nos pontos
+      const pontos = parsed.pontos.map(p => ({
+        ...p,
+        id: p.id ?? crypto.randomUUID()
+      }));
+
+      const result: SynthesisResult = {
+        identificacao: parsed.identificacao,
+        resumoSentenca: parsed.resumoSentenca,
+        resumoEmbargos: parsed.resumoEmbargos,
+        resumoContrarrazoes: parsed.resumoContrarrazoes,
+        intimacaoContrariaStatus: parsed.intimacaoContrariaStatus,
+        pontos
+      };
+
+      synth.setSynthesis(result);
+      synth.setProgress(100, 'Concluído.');
+      synth.setIsAnalyzing(false);
+      return result;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao analisar embargos';
       synth.setError(msg);

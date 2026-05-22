@@ -21,7 +21,14 @@ const SLOTS: DocumentSlot[] = ['decisaoEmbargada', 'embargos', 'contrarrazoes', 
 
 export const DraftView: React.FC<DraftViewProps> = ({ onBackToSynthesis, onNew }) => {
   const draft = useDraftStore(s => s.draft);
-  const docs = useDocumentStore.getState();
+  const decisaoEmbargada = useDocumentStore(s => s.decisaoEmbargada);
+  const embargos = useDocumentStore(s => s.embargos);
+  const contrarrazoes = useDocumentStore(s => s.contrarrazoes);
+  const inicial = useDocumentStore(s => s.inicial);
+  const contestacao = useDocumentStore(s => s.contestacao);
+  const slotsMap: Record<DocumentSlot, typeof decisaoEmbargada> = {
+    decisaoEmbargada, embargos, contrarrazoes, inicial, contestacao
+  };
   const [refining, setRefining] = useState<DraftSectionKey | null>(null);
 
   if (!draft) return null;
@@ -34,7 +41,7 @@ export const DraftView: React.FC<DraftViewProps> = ({ onBackToSynthesis, onNew }
     <div className="max-w-4xl mx-auto px-6 py-8">
       <div className="flex flex-wrap gap-2 mb-4">
         {SLOTS.map(slot => {
-          const d = docs[slot];
+          const d = slotsMap[slot];
           if (!d) return null;
           return (
             <span

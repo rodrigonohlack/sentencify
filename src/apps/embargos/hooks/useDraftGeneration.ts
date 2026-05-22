@@ -12,18 +12,11 @@ import {
 } from '../stores';
 import { useAIIntegration } from './useAIIntegration';
 import { DRAFT_SYSTEM_PROMPT, buildDraftPrompt } from '../prompts';
-import { DraftResponseSchema } from '../../../schemas/ai-responses';
+import { DraftResponseSchema, extractJSON } from '../../../schemas/ai-responses';
 import type { Draft } from '../types';
 import type { AIMessage } from '../../../types/ai';
 
 const MAX_PARSE_RETRIES = 2;
-
-function extractJSON(response: string): string {
-  const fence = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  const body = fence ? fence[1] : response;
-  const objMatch = body.match(/\{[\s\S]*\}/);
-  return objMatch ? objMatch[0] : body;
-}
 
 export function useDraftGeneration() {
   const { callAIStream } = useAIIntegration();
@@ -47,37 +40,43 @@ export function useDraftGeneration() {
 
       draft.setProgress(40, 'Redigindo…');
 
+      const response = await callAIStream(messages, {
+        maxTokens: 32000,
+        systemPrompt: DRAFT_SYSTEM_PROMPT
+      });
+
+      draft.setProgress(80, 'Processando minuta…');
+
+      let parsed: ReturnType<typeof DraftResponseSchema.parse> | undefined;
+      let parseError: unknown = null;
       for (let attempt = 0; attempt <= MAX_PARSE_RETRIES; attempt++) {
         try {
-          const response = await callAIStream(messages, {
-            maxTokens: 32000,
-            systemPrompt: DRAFT_SYSTEM_PROMPT
-          });
-
-          draft.setProgress(80, 'Processando minuta…');
-
-          const json = JSON.parse(extractJSON(response));
-          const parsed = DraftResponseSchema.parse(json);
-
-          const newDraft: Draft = {
-            relatorio: { ...emptySection(), text: parsed.relatorio },
-            fundamentacao: { ...emptySection(), text: parsed.fundamentacao },
-            dispositivo: { ...emptySection(), text: parsed.dispositivo }
-          };
-
-          draft.setDraft(newDraft);
-          draft.setProgress(100, 'Concluído.');
-          draft.setIsGenerating(false);
-          return newDraft;
+          const extracted = extractJSON(response);
+          if (!extracted) throw new Error('Não foi possível extrair JSON da resposta');
+          const json = JSON.parse(extracted);
+          parsed = DraftResponseSchema.parse(json);
+          parseError = null;
+          break;
         } catch (err) {
+          parseError = err;
           if (attempt < MAX_PARSE_RETRIES) {
             console.warn(`[embargos] Geração tentativa ${attempt + 1} falhou:`, err);
             continue;
           }
-          throw err;
         }
       }
-      return null;
+      if (!parsed) throw parseError;
+
+      const newDraft: Draft = {
+        relatorio: { ...emptySection(), text: parsed.relatorio },
+        fundamentacao: { ...emptySection(), text: parsed.fundamentacao },
+        dispositivo: { ...emptySection(), text: parsed.dispositivo }
+      };
+
+      draft.setDraft(newDraft);
+      draft.setProgress(100, 'Concluído.');
+      draft.setIsGenerating(false);
+      return newDraft;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao gerar minuta';
       draft.setError(msg);

@@ -3,7 +3,7 @@
  * @description Roteamento entre Tela 1, Tela 2 e Tela 3 com base no estado dos stores.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   History,
   Settings,
@@ -35,6 +35,7 @@ export const EmbargosContent: React.FC = () => {
   const resetDocuments = useDocumentStore(s => s.reset);
   const resetDraft = useDraftStore(s => s.reset);
 
+  const [view, setView] = useState<'upload' | 'synthesis' | 'draft'>('upload');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [historicoOpen, setHistoricoOpen] = useState(false);
 
@@ -45,6 +46,12 @@ export const EmbargosContent: React.FC = () => {
 
   useAutoSave();
 
+  // Auto-advance forward when new analysis/draft completes
+  useEffect(() => {
+    if (draft && view !== 'draft') setView('draft');
+    else if (!draft && synthesis && view === 'upload') setView('synthesis');
+  }, [synthesis, draft, view]);
+
   const handleLogout = useCallback(async () => {
     await logout();
     showToast('info', 'Sessão encerrada');
@@ -54,22 +61,23 @@ export const EmbargosContent: React.FC = () => {
     resetSynthesis();
     resetDocuments();
     resetDraft();
+    setView('upload');
   }, [resetSynthesis, resetDocuments, resetDraft]);
 
   const handleBackToUpload = useCallback(() => {
-    resetSynthesis();
-    resetDraft();
-  }, [resetSynthesis, resetDraft]);
+    setView('upload');
+  }, []);
 
   const handleBackToSynthesis = useCallback(() => {
     resetDraft();
+    setView('synthesis');
   }, [resetDraft]);
 
   // Escolha de tela
   let screen: React.ReactNode;
-  if (draft) {
+  if (view === 'draft' && draft) {
     screen = <DraftView onBackToSynthesis={handleBackToSynthesis} onNew={handleNew} />;
-  } else if (synthesis) {
+  } else if (view === 'synthesis' && synthesis) {
     screen = <SynthesisReview onBackToUpload={handleBackToUpload} />;
   } else {
     screen = <UploadView />;

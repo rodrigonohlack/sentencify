@@ -7,38 +7,40 @@ import { useCallback } from 'react';
 import { useDraftStore, useSynthesisStore } from '../stores';
 import { useAIIntegration } from './useAIIntegration';
 import { REFINE_SYSTEM_PROMPT, buildRefinePrompt } from '../prompts';
-import { RefineResponseSchema } from '../../../schemas/ai-responses';
+import { RefineResponseSchema, extractJSON } from '../../../schemas/ai-responses';
 import type { DraftSectionKey } from '../types';
 import type { AIMessage } from '../../../types/ai';
 
-function extractJSON(response: string): string {
-  const fence = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  const body = fence ? fence[1] : response;
-  const objMatch = body.match(/\{[\s\S]*\}/);
-  return objMatch ? objMatch[0] : body;
-}
-
 export function useSectionRefine(section: DraftSectionKey) {
   const { callAIStream } = useAIIntegration();
-  const draft = useDraftStore(s => s.draft);
   const appendChatMessage = useDraftStore(s => s.appendChatMessage);
   const acceptRefineResult = useDraftStore(s => s.acceptRefineResult);
   const setRefining = useDraftStore(s => s.setRefining);
-  const synthesis = useSynthesisStore(s => s.synthesis);
+
+  // Keep reactive draft for acceptLastSuggestion
+  const draft = useDraftStore(s => s.draft);
 
   const sendMessage = useCallback(async (instruction: string): Promise<string | null> => {
-    if (!draft || !synthesis) return null;
+    const initialDraft = useDraftStore.getState().draft;
+    const currentSynthesis = useSynthesisStore.getState().synthesis;
+    if (!initialDraft || !currentSynthesis) return null;
     if (!instruction.trim()) return null;
 
     appendChatMessage(section, { role: 'user', content: instruction, timestamp: Date.now() });
     setRefining(section);
 
     try {
+      const freshDraft = useDraftStore.getState().draft;
+      if (!freshDraft) {
+        setRefining(null);
+        return null;
+      }
+
       const userPrompt = buildRefinePrompt(
         section,
-        draft,
-        synthesis,
-        draft[section].chatHistory,
+        freshDraft,
+        currentSynthesis,
+        freshDraft[section].chatHistory,
         instruction
       );
 
@@ -49,7 +51,9 @@ export function useSectionRefine(section: DraftSectionKey) {
         systemPrompt: REFINE_SYSTEM_PROMPT
       });
 
-      const json = JSON.parse(extractJSON(response));
+      const extracted = extractJSON(response);
+      if (!extracted) throw new Error('Não foi possível extrair JSON da resposta');
+      const json = JSON.parse(extracted);
       const parsed = RefineResponseSchema.parse(json);
 
       appendChatMessage(section, { role: 'assistant', content: parsed.text, timestamp: Date.now() });
@@ -61,7 +65,7 @@ export function useSectionRefine(section: DraftSectionKey) {
       setRefining(null);
       return null;
     }
-  }, [draft, synthesis, section, appendChatMessage, setRefining, callAIStream]);
+  }, [section, appendChatMessage, setRefining, callAIStream]);
 
   const acceptLastSuggestion = useCallback(() => {
     if (!draft) return;
