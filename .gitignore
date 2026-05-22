@@ -58,3 +58,7 @@ server/db/*.db-wal
 ssh/
 *.pem
 *.key
+
+# Tool caches
+.claire/
+.playwright-mcp/
