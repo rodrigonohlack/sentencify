@@ -16,6 +16,7 @@ interface DocumentStoreState {
 
   setSlot: (slot: DocumentSlot, file: DocumentFile | null) => void;
   updateSlotStatus: (slot: DocumentSlot, status: DocumentFile['status'], errorMessage?: string) => void;
+  setSlotUseBinary: (slot: DocumentSlot, useBinary: boolean) => void;
   reset: () => void;
   canAnalyze: () => boolean;
 }
@@ -37,6 +38,12 @@ export const useDocumentStore = create<DocumentStoreState>((set, get) => ({
     const current = get()[slot];
     if (!current) return;
     set({ [slot]: { ...current, status, errorMessage } } as Partial<DocumentStoreState>);
+  },
+
+  setSlotUseBinary: (slot, useBinary) => {
+    const current = get()[slot];
+    if (!current) return;
+    set({ [slot]: { ...current, useBinary } } as Partial<DocumentStoreState>);
   },
 
   reset: () => set(INITIAL_STATE),

@@ -7,6 +7,8 @@ import React from 'react';
 import { FileText, X, AlertCircle, Loader2 } from 'lucide-react';
 import { PdfDropArea } from './PdfDropArea';
 import { usePdfUpload } from '../../hooks';
+import { useDocumentStore, useAIStore } from '../../stores';
+import { providerSupportsPdfBinary } from '../../constants';
 import { SLOT_LABELS, REQUIRED_SLOTS } from '../../types';
 import type { DocumentSlot } from '../../types';
 
@@ -22,7 +24,13 @@ const formatSize = (bytes: number) => {
 
 export const PdfSlot: React.FC<PdfSlotProps> = ({ slot }) => {
   const { uploadFile, removeFile, slot: file } = usePdfUpload(slot);
+  const setSlotUseBinary = useDocumentStore(s => s.setSlotUseBinary);
+  const provider = useAIStore(s => s.aiSettings.provider);
+  const canBinary = providerSupportsPdfBinary(provider);
   const isRequired = REQUIRED_SLOTS.includes(slot);
+
+  const isBinaryActive = file?.useBinary === true;
+  const binaryFallingBack = isBinaryActive && !canBinary;
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
@@ -56,13 +64,53 @@ export const PdfSlot: React.FC<PdfSlotProps> = ({ slot }) => {
       )}
 
       {file && file.status === 'ready' && (
-        <div className="flex items-start gap-3 text-sm">
-          <FileText className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-slate-700 dark:text-slate-200 font-medium">{file.name}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {formatSize(file.size)}{file.useBinary ? ' · enviado como PDF' : ' · texto extraído'}
-            </p>
+        <div className="flex flex-col gap-2 text-sm">
+          <div className="flex items-start gap-3">
+            <FileText className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-slate-700 dark:text-slate-200 font-medium">{file.name}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {formatSize(file.size)}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setSlotUseBinary(slot, false)}
+              className={`text-xs px-2 py-0.5 rounded transition-colors ${
+                !isBinaryActive
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200'
+              }`}
+              aria-pressed={!isBinaryActive}
+            >
+              Usar Texto
+            </button>
+            <button
+              type="button"
+              onClick={() => { if (canBinary && file.base64) setSlotUseBinary(slot, true); }}
+              disabled={!canBinary || !file.base64}
+              title={!canBinary ? 'Provider atual não suporta PDF binário (use Claude ou Gemini)' : ''}
+              className={`text-xs px-2 py-0.5 rounded transition-colors ${
+                isBinaryActive && canBinary
+                  ? 'bg-emerald-600 text-white'
+                  : !canBinary
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
+                    : 'bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200'
+              }`}
+              aria-pressed={isBinaryActive}
+            >
+              Usar PDF
+            </button>
+            {binaryFallingBack && (
+              <span
+                className="text-xs text-amber-600 dark:text-amber-400"
+                title="Provider não compatível com PDF binário — texto extraído será usado na análise."
+              >
+                ⚠ fallback texto
+              </span>
+            )}
           </div>
         </div>
       )}
