@@ -732,7 +732,7 @@ git commit -m "feat(embargos): synthesis store"
  */
 
 import { create } from 'zustand';
-import type { Draft, DraftSectionKey, ChatMessage } from '../types';
+import type { Draft, DraftSection, DraftSectionKey, ChatMessage } from '../types';
 
 interface DraftStoreState {
   draft: Draft | null;
@@ -752,7 +752,7 @@ interface DraftStoreState {
   reset: () => void;
 }
 
-const emptySection = (): DraftSection => ({ text: '', chatHistory: [] });
+export const emptySection = (): DraftSection => ({ text: '', chatHistory: [] });
 
 const INITIAL_STATE = {
   draft: null,
@@ -822,7 +822,7 @@ git commit -m "feat(embargos): draft store"
 export { useAIStore, persistApiKeys, selectProvider, selectCurrentModel, selectCurrentApiKey } from './useAIStore';
 export { useDocumentStore } from './useDocumentStore';
 export { useSynthesisStore } from './useSynthesisStore';
-export { useDraftStore } from './useDraftStore';
+export { useDraftStore, emptySection } from './useDraftStore';
 ```
 
 - [ ] **Step 2: `npx tsc --noEmit`** — PASS.
@@ -1850,6 +1850,11 @@ import {
 import { useAIIntegration } from './useAIIntegration';
 import { DRAFT_SYSTEM_PROMPT, buildDraftPrompt } from '../prompts';
 import { DraftResponseSchema } from '../../../schemas/ai-responses/embargos';
+import {
+  useSynthesisStore,
+  useDraftStore,
+  emptySection
+} from '../stores';
 import type { Draft, AIMessage } from '../types';
 
 const MAX_PARSE_RETRIES = 2;
@@ -1860,8 +1865,6 @@ function extractJSON(response: string): string {
   const objMatch = body.match(/\{[\s\S]*\}/);
   return objMatch ? objMatch[0] : body;
 }
-
-const emptySection = (): DraftSection => ({ text: '', chatHistory: [] });
 
 export function useDraftGeneration() {
   const { callAIStream } = useAIIntegration();
