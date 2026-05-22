@@ -516,6 +516,7 @@ const store = createAIStore({
 
 export const useAIStore = store.useStore;
 
+/** Persiste API keys encriptadas no localStorage do Embargos. */
 export const persistApiKeys = (apiKeys: AISettings['apiKeys']): void => {
   store.persistKeys(apiKeys);
 };
@@ -566,7 +567,6 @@ interface DocumentStoreState {
   updateSlotStatus: (slot: DocumentSlot, status: DocumentFile['status'], errorMessage?: string) => void;
   reset: () => void;
   canAnalyze: () => boolean;
-  getAllSlots: () => Record<DocumentSlot, DocumentFile | null>;
 }
 
 const INITIAL_STATE = {
@@ -593,17 +593,6 @@ export const useDocumentStore = create<DocumentStoreState>((set, get) => ({
   canAnalyze: () => {
     const state = get();
     return REQUIRED_SLOTS.every(slot => state[slot]?.status === 'ready');
-  },
-
-  getAllSlots: () => {
-    const s = get();
-    return {
-      decisaoEmbargada: s.decisaoEmbargada,
-      embargos: s.embargos,
-      contrarrazoes: s.contrarrazoes,
-      inicial: s.inicial,
-      contestacao: s.contestacao
-    };
   }
 }));
 
@@ -930,18 +919,38 @@ export async function getMinuta(id: string): Promise<SavedEmbargos | null> {
 
 export async function saveMinuta(record: SavedEmbargos): Promise<void> {
   const db = await openDB();
-  const tx = db.transaction(STORE_NAME, 'readwrite');
-  const store = tx.objectStore(STORE_NAME);
-  await promisify(store.put(record) as IDBRequest);
-  db.close();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error ?? new Error('saveMinuta tx error'));
+      tx.onabort = () => reject(tx.error ?? new Error('saveMinuta tx aborted'));
+      tx.objectStore(STORE_NAME).put(record);
+    });
+  } catch (err) {
+    console.warn('[embargos] saveMinuta falhou:', err);
+    throw err;
+  } finally {
+    db.close();
+  }
 }
 
 export async function deleteMinuta(id: string): Promise<void> {
   const db = await openDB();
-  const tx = db.transaction(STORE_NAME, 'readwrite');
-  const store = tx.objectStore(STORE_NAME);
-  await promisify(store.delete(id) as IDBRequest);
-  db.close();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error ?? new Error('deleteMinuta tx error'));
+      tx.onabort = () => reject(tx.error ?? new Error('deleteMinuta tx aborted'));
+      tx.objectStore(STORE_NAME).delete(id);
+    });
+  } catch (err) {
+    console.warn('[embargos] deleteMinuta falhou:', err);
+    throw err;
+  } finally {
+    db.close();
+  }
 }
 ```
 
