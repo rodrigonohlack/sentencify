@@ -31,13 +31,13 @@ export const ModelSelector: React.FC = () => {
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-slate-700">
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
         Modelo
       </label>
       <select
         value={getCurrentModel()}
         onChange={handleChange}
-        className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+        className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
       >
         {providerInfo.models.map((model) => (
           <option key={model.id} value={model.id}>
@@ -47,7 +47,7 @@ export const ModelSelector: React.FC = () => {
         ))}
       </select>
       {providerInfo.models.find(m => m.id === getCurrentModel())?.description && (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           {providerInfo.models.find(m => m.id === getCurrentModel())?.description}
         </p>
       )}

@@ -44,26 +44,26 @@ export const AIProviderSelector: React.FC = () => {
               className={`
                 relative p-4 rounded-xl border-2 text-left transition-all
                 ${isSelected
-                  ? 'border-indigo-500 bg-indigo-50'
-                  : 'border-slate-200 hover:border-slate-300 bg-white'
+                  ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800'
                 }
               `}
             >
               {isSelected && (
                 <div className="absolute top-2 right-2">
-                  <Check className="w-4 h-4 text-indigo-600" />
+                  <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 </div>
               )}
 
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${isSelected ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-600'}`}>
+                <div className={`p-2 rounded-lg ${isSelected ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
                   {providerIcons[key]}
                 </div>
                 <div>
-                  <p className={`font-medium ${isSelected ? 'text-indigo-700' : 'text-slate-700'}`}>
+                  <p className={`font-medium ${isSelected ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200'}`}>
                     {info.name}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     {hasApiKey ? 'API Key configurada' : 'API Key não configurada'}
                   </p>
                 </div>
