@@ -7,6 +7,7 @@ import React from 'react';
 import { Briefcase, AlertTriangle } from 'lucide-react';
 import { AccordionItem } from '../ui';
 import { safeRender } from '../../utils/safe-render';
+import { formatDateBR } from '../../utils/format-date';
 import type { Contrato } from '../../types';
 
 interface ContratoSectionProps {
@@ -45,16 +46,16 @@ export const ContratoSection: React.FC<ContratoSectionProps> = ({ data }) => {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               <tr>
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-400">Admissão</td>
-                <td className="px-4 py-3 text-slate-800 dark:text-slate-100">{safeRender(dadosInicial.dataAdmissao) || '-'}</td>
+                <td className="px-4 py-3 text-slate-800 dark:text-slate-100">{formatDateBR(safeRender(dadosInicial.dataAdmissao)) || '-'}</td>
                 {hasContestacao && (
-                  <td className="px-4 py-3 text-slate-800 dark:text-slate-100">{safeRender(dadosContestacao?.dataAdmissao) || '-'}</td>
+                  <td className="px-4 py-3 text-slate-800 dark:text-slate-100">{formatDateBR(safeRender(dadosContestacao?.dataAdmissao)) || '-'}</td>
                 )}
               </tr>
               <tr>
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-400">Demissão</td>
-                <td className="px-4 py-3 text-slate-800 dark:text-slate-100">{safeRender(dadosInicial.dataDemissao) || '-'}</td>
+                <td className="px-4 py-3 text-slate-800 dark:text-slate-100">{formatDateBR(safeRender(dadosInicial.dataDemissao)) || '-'}</td>
                 {hasContestacao && (
-                  <td className="px-4 py-3 text-slate-800 dark:text-slate-100">{safeRender(dadosContestacao?.dataDemissao) || '-'}</td>
+                  <td className="px-4 py-3 text-slate-800 dark:text-slate-100">{formatDateBR(safeRender(dadosContestacao?.dataDemissao)) || '-'}</td>
                 )}
               </tr>
               <tr>

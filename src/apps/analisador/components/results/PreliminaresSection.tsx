@@ -7,6 +7,7 @@ import React from 'react';
 import { Shield, Clock, AlertTriangle } from 'lucide-react';
 import { AccordionItem, Badge } from '../ui';
 import { safeRender } from '../../utils/safe-render';
+import { formatDateBR } from '../../utils/format-date';
 import type { Preliminar, Prejudiciais } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -112,7 +113,7 @@ export const PreliminaresSection: React.FC<PreliminaresSectionProps> = ({
             </div>
             {isValidContent(prescricao.dataBase) && (
               <p className="text-sm text-amber-700 dark:text-amber-400 mb-1">
-                <strong>Data base:</strong> {prescricao.dataBase}
+                <strong>Data base:</strong> {formatDateBR(prescricao.dataBase)}
               </p>
             )}
             {isValidContent(prescricao.fundamentacao) && (

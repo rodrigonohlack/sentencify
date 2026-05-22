@@ -7,6 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { User, Building2, FileText, Calendar, Scale, DollarSign, Sparkles, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
 import { Badge } from '../ui';
 import { safeRender } from '../../utils/safe-render';
+import { formatDateBR } from '../../utils/format-date';
 import { useSynthesis } from '../../hooks';
 import type { Identificacao, ValorCausa, RitoType, PedidoAnalise } from '../../types';
 
@@ -200,7 +201,7 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
             <Calendar className="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5" />
             <div>
               <p className="text-sm text-slate-500 dark:text-slate-400">Ajuizamento</p>
-              <p className="font-medium text-slate-800 dark:text-slate-200">{safeRender(data.dataAjuizamento)}</p>
+              <p className="font-medium text-slate-800 dark:text-slate-200">{formatDateBR(safeRender(data.dataAjuizamento))}</p>
             </div>
           </div>
         )}
