@@ -14,10 +14,15 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+/**
+ * Estado persistido de uma seção da minuta.
+ * O status de refino em andamento NÃO fica aqui — é tracked exclusivamente em
+ * useDraftStore.refiningSection (em memória), para evitar estado "preso" caso
+ * o usuário feche a aba durante uma chamada à IA.
+ */
 export interface DraftSection {
   text: string;
   chatHistory: ChatMessage[];
-  isRefining: boolean;
 }
 
 export interface Draft {
