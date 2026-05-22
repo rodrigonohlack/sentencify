@@ -29,7 +29,7 @@ src/apps/embargos/
 │   ├── ui/
 │   │   ├── Button.tsx                 # Cópia do Analisador
 │   │   ├── Toast.tsx                  # Cópia do Analisador
-│   │   ├── BaseModal.tsx              # Cópia do Analisador
+│   │   ├── Modal.tsx              # Cópia do Analisador
 │   │   └── index.ts
 │   ├── auth/
 │   │   └── LoginGate.tsx              # Cópia do Analisador
@@ -2181,7 +2181,7 @@ git commit -m "feat(embargos): hooks barrel"
 **Files:**
 - Create: `src/apps/embargos/components/ui/Button.tsx`
 - Create: `src/apps/embargos/components/ui/Toast.tsx`
-- Create: `src/apps/embargos/components/ui/BaseModal.tsx`
+- Create: `src/apps/embargos/components/ui/Modal.tsx`
 - Create: `src/apps/embargos/components/ui/index.ts`
 
 - [ ] **Step 1: Copiar**
@@ -2189,7 +2189,7 @@ git commit -m "feat(embargos): hooks barrel"
 ```bash
 cp src/apps/analisador/components/ui/Button.tsx src/apps/embargos/components/ui/Button.tsx
 cp src/apps/analisador/components/ui/Toast.tsx src/apps/embargos/components/ui/Toast.tsx
-cp src/apps/analisador/components/ui/BaseModal.tsx src/apps/embargos/components/ui/BaseModal.tsx
+cp src/apps/analisador/components/ui/Modal.tsx src/apps/embargos/components/ui/Modal.tsx
 cp src/apps/analisador/components/ui/index.ts src/apps/embargos/components/ui/index.ts
 ```
 
@@ -3533,7 +3533,7 @@ git commit -m "feat(embargos): HistoricoItem"
 
 import React from 'react';
 import { History } from 'lucide-react';
-import { BaseModal } from '../ui';
+import { Modal } from '../ui';
 import { HistoricoItem } from './HistoricoItem';
 import { useLocalHistory } from '../../hooks';
 import {
@@ -3562,7 +3562,7 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({ isOpen, onClose,
   };
 
   return (
-    <BaseModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title="Histórico"
@@ -3586,7 +3586,7 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({ isOpen, onClose,
           />
         ))}
       </div>
-    </BaseModal>
+    </Modal>
   );
 };
 ```
