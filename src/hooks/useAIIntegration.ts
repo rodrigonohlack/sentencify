@@ -11,6 +11,7 @@ import React from 'react';
 import { useAIStore } from '../stores/useAIStore';
 import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
 import { API_BASE } from '../constants/api';
+import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../utils/claude-cli-bridge';
 import { withRetry } from '../utils/retry';
 // v1.42.02: Registry provider-agnostic para habilitar web search
 import { applyWebSearchTool, extractGrounding } from '../utils/ai-tools/webSearch';
@@ -389,7 +390,8 @@ const useAIIntegration = () => {
       abortSignal = null,
       logMetrics = true,
       extractText = true,
-      validateResponse = true
+      validateResponse = true,
+      localBridge = false
     } = options;
 
     // v1.32.33: Auto-aumentar timeout para 5 min quando thinking budget >= 40K
@@ -407,12 +409,16 @@ const useAIIntegration = () => {
     // Funcao de requisicao que sera retentada
     const makeRequest = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/claude/messages`, {
+        const claudeUrl = localBridge
+          ? `${getClaudeCliBridgeUrl()}${CLAUDE_CLI_MESSAGES_PATH}`
+          : `${API_BASE}/api/claude/messages`;
+        const claudeHeaders = localBridge
+          ? { 'Content-Type': 'application/json' }
+          : { ...getApiHeaders(), 'x-api-key': aiSettings.apiKeys?.claude || '' };
+
+        const response = await fetch(claudeUrl, {
           method: 'POST',
-          headers: {
-            ...getApiHeaders(),
-            'x-api-key': aiSettings.apiKeys?.claude || ''
-          },
+          headers: claudeHeaders,
           body: JSON.stringify(buildApiRequest(messages, {
             maxTokens,
             useInstructions,
@@ -1422,6 +1428,15 @@ const useAIIntegration = () => {
       return await callGeminiAPI(messages, {
         ...options,
         model: options.model || aiSettings.geminiModel || 'gemini-3-flash-preview'
+      });
+    }
+
+    // Provider local: roteia para o daemon claude-bridge (assinatura, custo $0)
+    if (provider === 'claude-cli') {
+      return await callLLM(messages, {
+        ...options,
+        localBridge: true,
+        model: options.model || aiSettings.claudeModel || 'claude-sonnet-4-20250514'
       });
     }
 
