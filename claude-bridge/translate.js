@@ -102,6 +102,7 @@ export function translateResponse(stdout, model) {
   }
 
   if (result.is_error) {
+    // NOTE: casado contra a string literal do CLI; atualizar se o CLI mudar o texto.
     if (/not logged in/i.test(result.result || '')) {
       return { status: 401, body: { error: { type: 'authentication_error', message: 'Claude Code não está logado. Rode `claude` no terminal e faça /login.' } } };
     }
@@ -117,6 +118,7 @@ export function translateResponse(stdout, model) {
       role: 'assistant',
       model,
       content: [{ type: 'text', text: result.result || '' }],
+      // CLI não expõe stop_reason; 'end_turn' é o default correto.
       stop_reason: 'end_turn',
       usage: {
         input_tokens: u.input_tokens || 0,

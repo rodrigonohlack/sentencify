@@ -98,3 +98,13 @@ test('translateResponse: sem evento result → 500', () => {
   assert.equal(out.status, 500);
   assert.equal(out.body.error.type, 'server_error');
 });
+test('translateResponse: is_error genérico (não-auth) → 500 com a mensagem do CLI', () => {
+  const RESULT_ERR = JSON.stringify({
+    type: 'result', is_error: true, result: 'API Error: 429 rate_limit_exceeded',
+    session_id: 'sess-3', usage: {},
+  });
+  const out = translateResponse(`${RESULT_ERR}\n`, 'm');
+  assert.equal(out.status, 500);
+  assert.equal(out.body.error.type, 'server_error');
+  assert.match(out.body.error.message, /rate_limit_exceeded/);
+});
