@@ -49,6 +49,7 @@ import {
 } from '../../hooks';
 import type {
   AIProvider,
+  ClaudeCliEffort,
   GeminiThinkingLevel,
   QuickPrompt,
   TopicoComplementar,
@@ -785,8 +786,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               Pensamento Prolongado (Extended Thinking)
             </label>
 
-            {/* CLAUDE / CLAUDE-CLI: Toggle + Budget numérico */}
-            {(aiSettings.provider === 'claude' || aiSettings.provider === 'claude-cli') && (
+            {/* CLAUDE: Toggle + Budget numérico */}
+            {aiSettings.provider === 'claude' && (
               <>
                 <button
                   onClick={() => setAiSettings({ ...aiSettings, useExtendedThinking: !aiSettings.useExtendedThinking })}
@@ -854,6 +855,28 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   </div>
                 )}
               </>
+            )}
+
+            {/* CLAUDE-CLI: Dropdown de effort */}
+            {aiSettings.provider === 'claude-cli' && (
+              <div>
+                <label className="block text-xs theme-text-muted mb-1">Nível de raciocínio (effort):</label>
+                <select
+                  value={aiSettings.claudeCliEffort || 'high'}
+                  onChange={(e) => setAiSettings({ ...aiSettings, claudeCliEffort: e.target.value as ClaudeCliEffort })}
+                  className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                >
+                  <option value="off">Desligado (padrão do CLI)</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="xhigh">Xhigh</option>
+                  <option value="max">Max</option>
+                </select>
+                <p className="text-xs theme-text-muted mt-1">
+                  Controla o esforço de raciocínio do Claude Code local (<code>--effort</code>). Maior = mais lento e mais a fundo.
+                </p>
+              </div>
             )}
 
             {/* GEMINI 3: Dropdown de thinking_level */}
