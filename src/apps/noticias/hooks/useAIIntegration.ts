@@ -52,8 +52,8 @@ export const useAIIntegration = () => {
           };
         }
 
-        if (localBridge && aiSettings.claudeCliEffort && aiSettings.claudeCliEffort !== 'off') {
-          (requestBody as Record<string, unknown>).effort = aiSettings.claudeCliEffort;
+        if (localBridge) {
+          (requestBody as Record<string, unknown>).effort = aiSettings.claudeCliEffort || 'high';
         }
         const claudeUrl = localBridge
           ? `${getClaudeCliBridgeUrl()}${CLAUDE_CLI_MESSAGES_PATH}`

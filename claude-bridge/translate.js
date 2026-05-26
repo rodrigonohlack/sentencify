@@ -55,10 +55,12 @@ export function buildClaudeArgs(body) {
   }
 
   const VALID_EFFORT = ['low', 'medium', 'high', 'xhigh', 'max'];
-  if (VALID_EFFORT.includes(body.effort)) {
+  if (body.effort === 'off') {
+    // effort explicitamente desligado: nenhum --effort
+  } else if (VALID_EFFORT.includes(body.effort)) {
     args.push('--effort', body.effort);
   } else if (body.thinking && body.thinking.budget_tokens > 0) {
-    // fallback legado: budget>0 → high
+    // fallback legado (sem campo effort): budget>0 → high
     args.push('--effort', 'high');
   }
 

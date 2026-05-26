@@ -63,6 +63,11 @@ test('buildClaudeArgs: body.effort inválido/ausente cai no fallback de thinking
   assert.ok(!none.includes('--effort'));
 });
 
+test("buildClaudeArgs: effort 'off' desliga mesmo com thinking presente", () => {
+  const args = buildClaudeArgs({ model: 'm', effort: 'off', thinking: { budget_tokens: 40000 } });
+  assert.ok(!args.includes('--effort'));
+});
+
 test('buildStdin: mensagens viram stream-json por linha com role correto', () => {
   const body = {
     messages: [

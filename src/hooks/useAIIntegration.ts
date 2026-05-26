@@ -425,8 +425,8 @@ const useAIIntegration = () => {
           model: model ?? undefined,
           disableThinking
         });
-        if (localBridge && aiSettings.claudeCliEffort && aiSettings.claudeCliEffort !== 'off') {
-          (requestBody as Record<string, unknown>).effort = aiSettings.claudeCliEffort;
+        if (localBridge) {
+          (requestBody as Record<string, unknown>).effort = aiSettings.claudeCliEffort || 'high';
         }
         const response = await fetch(claudeUrl, {
           method: 'POST',
