@@ -7,7 +7,7 @@ import React from 'react';
 import { Loader2, Gavel } from 'lucide-react';
 import { PdfSlot } from './PdfSlot';
 import { Button } from '../ui';
-import { useDocumentStore, useSynthesisStore, useAIStore, selectCurrentApiKey } from '../../stores';
+import { useDocumentStore, useSynthesisStore, useAIStore, selectCurrentApiKey, selectProvider } from '../../stores';
 import { useSynthesisAnalysis } from '../../hooks';
 import type { DocumentSlot } from '../../types';
 
@@ -19,9 +19,10 @@ export const UploadView: React.FC = () => {
   const progress = useSynthesisStore(s => s.progress);
   const error = useSynthesisStore(s => s.error);
   const apiKey = useAIStore(selectCurrentApiKey);
+  const provider = useAIStore(selectProvider);
 
   const { analyze } = useSynthesisAnalysis();
-  const noApiKey = !apiKey;
+  const noApiKey = !apiKey && provider !== 'claude-cli';
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">

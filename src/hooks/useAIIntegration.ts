@@ -2087,10 +2087,13 @@ const useAIIntegration = () => {
         return callGrokAPIStream(messages, options);
       case 'deepseek':
         return callDeepseekAPIStream(messages, options);
+      case 'claude-cli':
+        // v1 sem streaming: cai para o caminho não-stream via bridge local
+        return callLLM(messages, { ...options, localBridge: true });
       default:
         return callClaudeAPIStream(messages, options);
     }
-  }, [aiSettings.provider, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream]);
+  }, [aiSettings.provider, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM]);
 
   /**
    * Chama a API com streaming para provider/modelo específico (para double check)
@@ -2157,9 +2160,12 @@ const useAIIntegration = () => {
     if (provider === 'deepseek') {
       return await callDeepseekAPIStream(messages, options);
     }
+    if (provider === 'claude-cli') {
+      return await callLLM(messages, { ...options, localBridge: true });
+    }
     // Default: Claude
     return await callClaudeAPIStream(messages, options);
-  }, [callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, aiSettings.doubleCheck]);
+  }, [callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM, aiSettings.doubleCheck]);
 
   /**
    * Executa o double check em uma resposta da IA

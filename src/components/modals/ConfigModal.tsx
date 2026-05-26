@@ -775,8 +775,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               Pensamento Prolongado (Extended Thinking)
             </label>
 
-            {/* CLAUDE: Toggle + Budget numérico */}
-            {aiSettings.provider === 'claude' && (
+            {/* CLAUDE / CLAUDE-CLI: Toggle + Budget numérico */}
+            {(aiSettings.provider === 'claude' || aiSettings.provider === 'claude-cli') && (
               <>
                 <button
                   onClick={() => setAiSettings({ ...aiSettings, useExtendedThinking: !aiSettings.useExtendedThinking })}
