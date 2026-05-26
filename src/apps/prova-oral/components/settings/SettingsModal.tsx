@@ -104,8 +104,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             Configurações de Raciocínio
           </h3>
 
-          {/* Claude: Extended Thinking */}
-          {provider === 'claude' && (
+          {/* Claude / Claude Local: Extended Thinking */}
+          {(provider === 'claude' || provider === 'claude-cli') && (
             <div className="space-y-3">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
@@ -219,11 +219,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         </div>
 
         {/* API Key do provedor selecionado */}
-        <APIKeyInput
-          provider={provider}
-          label={keyConfig.label}
-          placeholder={keyConfig.placeholder}
-        />
+        {provider === 'claude-cli' ? (
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Claude Local usa o login do Claude Code (OAuth) — nenhuma API key necessária. Rode <code>npm run claude-bridge</code> para ligar o daemon local.
+          </p>
+        ) : (
+          <APIKeyInput
+            provider={provider}
+            label={keyConfig.label}
+            placeholder={keyConfig.placeholder}
+          />
+        )}
 
         {/* Outras API Keys */}
         <div className="pt-4 border-t border-slate-200 dark:border-slate-700">

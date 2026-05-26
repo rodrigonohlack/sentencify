@@ -200,17 +200,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <ModelSelector />
 
             {/* API KEY DO PROVEDOR SELECIONADO */}
-            <div className="p-4 theme-bg-tertiary rounded-xl space-y-4">
-              <h4 className="text-sm font-medium theme-text-primary flex items-center gap-2">
-                <Brain className="w-4 h-4 text-blue-400" />
-                API Key - {AI_PROVIDERS[provider].name}
-              </h4>
-              <APIKeyInput
-                provider={provider}
-                label={`Chave API ${AI_PROVIDERS[provider].name}`}
-                placeholder={getPlaceholderForProvider(provider)}
-              />
-            </div>
+            {provider === 'claude-cli' ? (
+              <p className="text-xs theme-text-muted">
+                Claude Local usa o login do Claude Code (OAuth) — nenhuma API key necessária. Rode <code>npm run claude-bridge</code> para ligar o daemon local.
+              </p>
+            ) : (
+              <div className="p-4 theme-bg-tertiary rounded-xl space-y-4">
+                <h4 className="text-sm font-medium theme-text-primary flex items-center gap-2">
+                  <Brain className="w-4 h-4 text-blue-400" />
+                  API Key - {AI_PROVIDERS[provider].name}
+                </h4>
+                <APIKeyInput
+                  provider={provider}
+                  label={`Chave API ${AI_PROVIDERS[provider].name}`}
+                  placeholder={getPlaceholderForProvider(provider)}
+                />
+              </div>
+            )}
 
             {/* INFO */}
             <div className="theme-info-box p-3 rounded-lg text-xs theme-text-muted">

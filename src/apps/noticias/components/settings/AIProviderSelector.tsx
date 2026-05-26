@@ -64,8 +64,10 @@ export const AIProviderSelector: React.FC = () => {
                   <p className={`font-medium ${isSelected ? 'text-blue-400' : 'theme-text-primary'}`}>
                     {info.name}
                   </p>
-                  <p className={`text-xs ${hasApiKey ? 'text-green-400' : 'theme-text-muted'}`}>
-                    {hasApiKey ? 'API Key configurada' : 'API Key não configurada'}
+                  <p className={`text-xs ${key === 'claude-cli' ? 'theme-text-muted' : hasApiKey ? 'text-green-400' : 'theme-text-muted'}`}>
+                    {key === 'claude-cli'
+                      ? 'Sem chave — usa OAuth local'
+                      : hasApiKey ? 'API Key configurada' : 'API Key não configurada'}
                   </p>
                 </div>
               </div>

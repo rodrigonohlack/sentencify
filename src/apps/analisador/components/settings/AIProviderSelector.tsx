@@ -65,7 +65,9 @@ export const AIProviderSelector: React.FC = () => {
                     {info.name}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {hasApiKey ? 'API Key configurada' : 'API Key não configurada'}
+                    {key === 'claude-cli'
+                      ? 'Sem chave — usa OAuth local'
+                      : hasApiKey ? 'API Key configurada' : 'API Key não configurada'}
                   </p>
                 </div>
               </div>
