@@ -54,7 +54,11 @@ export function buildClaudeArgs(body) {
     args.push('--system-prompt', system);
   }
 
-  if (body.thinking && body.thinking.budget_tokens > 0) {
+  const VALID_EFFORT = ['low', 'medium', 'high', 'xhigh', 'max'];
+  if (VALID_EFFORT.includes(body.effort)) {
+    args.push('--effort', body.effort);
+  } else if (body.thinking && body.thinking.budget_tokens > 0) {
+    // fallback legado: budget>0 → high
     args.push('--effort', 'high');
   }
 

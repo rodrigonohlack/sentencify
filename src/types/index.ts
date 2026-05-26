@@ -199,6 +199,9 @@ export type OpenAIReasoningLevel = 'low' | 'medium' | 'high' | 'xhigh';
 export type DeepseekModel = 'deepseek-v4-flash' | 'deepseek-v4-pro' | '';
 export type DeepseekReasoningEffort = 'high' | 'max';
 
+/** Níveis de effort do claude-cli (--effort flag do CLI) */
+export type ClaudeCliEffort = 'off' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+
 /** Gemini API types - v1.35.95 */
 export interface GeminiGenerationConfig {
   maxOutputTokens?: number;
@@ -274,6 +277,7 @@ export interface AISettings {
   provider: AIProvider;
   claudeModel: string;
   claudeCliModel?: string;
+  claudeCliEffort?: ClaudeCliEffort;
   geminiModel: string;
   openaiModel: 'gpt-5.2' | 'gpt-5.2-chat-latest';
   openaiReasoningLevel: OpenAIReasoningLevel;

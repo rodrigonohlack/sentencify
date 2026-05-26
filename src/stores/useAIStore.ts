@@ -233,6 +233,7 @@ const initialAISettings: AISettings = {
   provider: 'claude',
   claudeModel: 'claude-sonnet-4-20250514',
   claudeCliModel: 'claude-sonnet-4-6',
+  claudeCliEffort: 'high' as const,
   geminiModel: 'gemini-3-flash-preview',
   openaiModel: 'gpt-5.2-chat-latest',
   openaiReasoningLevel: 'medium',

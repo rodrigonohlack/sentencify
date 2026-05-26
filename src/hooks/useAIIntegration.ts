@@ -418,16 +418,20 @@ const useAIIntegration = () => {
           ? { 'Content-Type': 'application/json' }
           : { ...getApiHeaders(), 'x-api-key': aiSettings.apiKeys?.claude || '' };
 
+        const requestBody = buildApiRequest(messages, {
+          maxTokens,
+          useInstructions,
+          systemPrompt: systemPrompt ?? undefined,
+          model: model ?? undefined,
+          disableThinking
+        });
+        if (localBridge && aiSettings.claudeCliEffort && aiSettings.claudeCliEffort !== 'off') {
+          (requestBody as Record<string, unknown>).effort = aiSettings.claudeCliEffort;
+        }
         const response = await fetch(claudeUrl, {
           method: 'POST',
           headers: claudeHeaders,
-          body: JSON.stringify(buildApiRequest(messages, {
-            maxTokens,
-            useInstructions,
-            systemPrompt: systemPrompt ?? undefined,
-            model: model ?? undefined,
-            disableThinking
-          })),
+          body: JSON.stringify(requestBody),
           signal
         });
 

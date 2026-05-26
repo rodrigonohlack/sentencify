@@ -22,6 +22,9 @@ export type DeepseekModel = 'deepseek-v4-flash' | 'deepseek-v4-pro' | '';
 /** Reasoning effort do DeepSeek V4 (quando thinking está ativo) */
 export type DeepseekReasoningEffort = 'high' | 'max';
 
+/** Níveis de effort do claude-cli (--effort flag do CLI) */
+export type ClaudeCliEffort = 'off' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+
 export interface APIKeys {
   claude: string;
   gemini: string;
@@ -35,6 +38,7 @@ export interface AISettings {
   provider: AIProvider;
   claudeModel: string;
   claudeCliModel?: string;
+  claudeCliEffort?: ClaudeCliEffort;
   geminiModel: string;
   openaiModel: 'gpt-5.2' | 'gpt-5.2-chat-latest';
   openaiReasoningLevel: OpenAIReasoningLevel;

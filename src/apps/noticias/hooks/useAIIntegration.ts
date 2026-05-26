@@ -52,6 +52,9 @@ export const useAIIntegration = () => {
           };
         }
 
+        if (localBridge && aiSettings.claudeCliEffort && aiSettings.claudeCliEffort !== 'off') {
+          (requestBody as Record<string, unknown>).effort = aiSettings.claudeCliEffort;
+        }
         const claudeUrl = localBridge
           ? `${getClaudeCliBridgeUrl()}${CLAUDE_CLI_MESSAGES_PATH}`
           : `${API_BASE}/api/claude/messages`;

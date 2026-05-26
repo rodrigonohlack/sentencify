@@ -52,6 +52,17 @@ test('buildClaudeArgs: sem thinking não inclui --effort', () => {
   assert.ok(!args.includes('--system-prompt'));
 });
 
+test('buildClaudeArgs: body.effort válido → --effort <nível>', () => {
+  const args = buildClaudeArgs({ model: 'claude-sonnet-4-6', effort: 'xhigh' });
+  assert.equal(args[args.indexOf('--effort') + 1], 'xhigh');
+});
+test('buildClaudeArgs: body.effort inválido/ausente cai no fallback de thinking', () => {
+  const withThinking = buildClaudeArgs({ model: 'm', thinking: { budget_tokens: 10000 } });
+  assert.equal(withThinking[withThinking.indexOf('--effort') + 1], 'high');
+  const none = buildClaudeArgs({ model: 'm', effort: 'off' });
+  assert.ok(!none.includes('--effort'));
+});
+
 test('buildStdin: mensagens viram stream-json por linha com role correto', () => {
   const body = {
     messages: [
