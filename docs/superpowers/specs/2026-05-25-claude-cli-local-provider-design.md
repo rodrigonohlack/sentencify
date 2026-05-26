@@ -123,7 +123,7 @@ O daemon parseia o `stream-json` do `claude`, pega o evento final `{"type":"resu
 ### Segurança
 
 - Bind **somente em `127.0.0.1`** (nunca `0.0.0.0`).
-- CORS allowlist: `https://sentencify.ia.br`, `http://localhost:5173`, `http://localhost:4173`, `http://localhost:3001`. Origem ecoada só se na lista.
+- CORS allowlist: `https://sentencify.ia.br`, `http://localhost:3000` (porta real do vite, `npm run client`), `http://localhost:3001`. Origem ecoada só se na lista.
 - **PNA**: responder `Access-Control-Allow-Private-Network: true` quando o preflight trouxer `Access-Control-Request-Private-Network: true`.
 - Body via **stdin** (não argv) → sem injeção de shell.
 - Sem API key trafegando (usa OAuth da máquina).
