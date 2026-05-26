@@ -75,6 +75,9 @@ const getModelDisplayName = (modelId: string): string => {
     // Claude
     'claude-sonnet-4-20250514': 'Claude Sonnet 4.5',
     'claude-opus-4-5-20251101': 'Claude Opus 4.5',
+    // Claude Local (CLI)
+    'claude-sonnet-4-6': 'Claude Sonnet 4.6',
+    'claude-opus-4-7': 'Claude Opus 4.7',
     // Gemini 3
     'gemini-3-flash-preview': 'Gemini 3 Flash',
     'gemini-3.1-pro-preview': 'Gemini 3.1 Pro',
@@ -3255,6 +3258,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     ? getModelDisplayName(aiSettings.grokModel || 'grok-4-1-fast-reasoning')
                     : aiSettings.provider === 'deepseek'
                     ? (aiSettings.deepseekModel ? getModelDisplayName(aiSettings.deepseekModel) : '— selecione um modelo —')
+                    : aiSettings.provider === 'claude-cli'
+                    ? getModelDisplayName(aiSettings.claudeCliModel || 'claude-sonnet-4-6')
                     : getModelDisplayName(aiSettings.claudeModel || aiSettings.model || '')}
                 </span>
                 {aiSettings.useExtendedThinking && <span className="ml-2 text-purple-400">• Pensamento prolongado ativo</span>}
