@@ -95,6 +95,16 @@ const server = http.createServer(async (req, res) => {
   sendJson(res, 404, { error: { type: 'not_found', message: 'Rota não encontrada.' } });
 });
 
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`[claude-bridge] porta ${PORT} já está em uso. ` +
+      `Outro daemon já está rodando, ou defina CLAUDE_BRIDGE_PORT=<outra porta>.`);
+  } else {
+    console.error(`[claude-bridge] erro no servidor: ${err.message}`);
+  }
+  process.exit(1);
+});
+
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`[claude-bridge] ouvindo em http://127.0.0.1:${PORT}`);
   console.log('[claude-bridge] requer `claude` logado (rode `claude` e /login se necessário).');
