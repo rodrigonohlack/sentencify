@@ -194,6 +194,7 @@ IMPORTANTE: Siga as instruções acima ao realizar a análise.
         // Determinar modelo atual baseado no provedor
         const currentModel =
           aiSettings.provider === 'claude' ? aiSettings.claudeModel :
+          aiSettings.provider === 'claude-cli' ? aiSettings.claudeModel :
           aiSettings.provider === 'gemini' ? aiSettings.geminiModel :
           aiSettings.provider === 'openai' ? aiSettings.openaiModel :
           aiSettings.grokModel;

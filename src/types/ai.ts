@@ -75,6 +75,8 @@ export interface AICallOptions {
   extractText?: boolean;
   validateResponse?: boolean;
   temperature?: number | null;
+  /** Quando true, roteia para o daemon claude-bridge local em vez do proxy remoto. */
+  localBridge?: boolean;
 }
 
 export interface TokenMetrics {
