@@ -68,19 +68,25 @@ export function buildClaudeArgs(body) {
 }
 
 /**
- * Remove cache_control de blocos de conteúdo (o CLI não suporta prompt caching).
- * @param {Array|*} content - Content array com possíveis blocos { cache_control, ... }
- * @returns {Array|*} - Content sem nenhum campo cache_control
+ * Normaliza o content para o formato array que o claude CLI espera,
+ * e remove cache_control (o CLI não suporta prompt caching).
+ * @param {string|Array|*} content - Content string, array, ou outro
+ * @returns {Array|*} - Content normalizado (string → [{type:'text',text}]), sem cache_control
  */
-function stripCacheControl(content) {
-  if (!Array.isArray(content)) return content;
-  return content.map((block) => {
-    if (block && typeof block === 'object' && 'cache_control' in block) {
-      const { cache_control, ...rest } = block;
-      return rest;
-    }
-    return block;
-  });
+function normalizeContent(content) {
+  if (typeof content === 'string') {
+    return [{ type: 'text', text: content }];
+  }
+  if (Array.isArray(content)) {
+    return content.map((block) => {
+      if (block && typeof block === 'object' && 'cache_control' in block) {
+        const { cache_control, ...rest } = block;
+        return rest;
+      }
+      return block;
+    });
+  }
+  return content;
 }
 
 /**
@@ -96,7 +102,7 @@ export function buildStdin(body) {
         const role = msg.role === 'assistant' ? 'assistant' : 'user';
         return JSON.stringify({
           type: role,
-          message: { role, content: stripCacheControl(msg.content) }
+          message: { role, content: normalizeContent(msg.content) }
         });
       })
       .join('\n') + '\n'

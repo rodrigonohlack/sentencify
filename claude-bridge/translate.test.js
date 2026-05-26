@@ -107,6 +107,26 @@ test('buildStdin: remove cache_control dos blocos de conteúdo', () => {
   assert.equal(line.message.content[1].text, 'oi');
 });
 
+test('buildStdin: content string vira array [{type:text,text}]', () => {
+  const body = { messages: [{ role: 'user', content: 'oi mundo' }] };
+  const line = JSON.parse(buildStdin(body).trim());
+  assert.ok(Array.isArray(line.message.content), 'content deve ser array');
+  assert.equal(line.message.content[0].type, 'text');
+  assert.equal(line.message.content[0].text, 'oi mundo');
+});
+
+test('buildStdin: multi-turn com content string preserva roles', () => {
+  const body = { messages: [
+    { role: 'user', content: 'a' },
+    { role: 'assistant', content: 'b' },
+    { role: 'user', content: 'c' },
+  ] };
+  const lines = buildStdin(body).trim().split('\n').map(JSON.parse);
+  assert.equal(lines[0].type, 'user');
+  assert.equal(lines[1].type, 'assistant');
+  assert.equal(lines[1].message.content[0].text, 'b');
+});
+
 const RESULT_OK = JSON.stringify({
   type: 'result', subtype: 'success', is_error: false,
   result: 'BATATA-FRITA-7392', session_id: 'sess-1',
