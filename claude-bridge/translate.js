@@ -80,3 +80,50 @@ export function buildStdin(body) {
       .join('\n') + '\n'
   );
 }
+
+/**
+ * Parseia o stream-json do claude e devolve {status, body} no formato Messages API.
+ * @param {string} stdout - Saída stdout do claude CLI (linhas JSON)
+ * @param {string} model - Model ID a usar na resposta
+ * @returns {Object} - {status: number, body: Object} no formato Messages API
+ */
+export function translateResponse(stdout, model) {
+  let result = null;
+  for (const line of stdout.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('{')) continue;
+    let obj;
+    try { obj = JSON.parse(trimmed); } catch { continue; }
+    if (obj.type === 'result') { result = obj; break; }
+  }
+
+  if (!result) {
+    return { status: 500, body: { error: { type: 'server_error', message: 'Nenhum evento `result` retornado pelo claude CLI.' } } };
+  }
+
+  if (result.is_error) {
+    if (/not logged in/i.test(result.result || '')) {
+      return { status: 401, body: { error: { type: 'authentication_error', message: 'Claude Code não está logado. Rode `claude` no terminal e faça /login.' } } };
+    }
+    return { status: 500, body: { error: { type: 'server_error', message: result.result || 'Erro desconhecido do claude CLI.' } } };
+  }
+
+  const u = result.usage || {};
+  return {
+    status: 200,
+    body: {
+      id: result.session_id || 'claude-cli',
+      type: 'message',
+      role: 'assistant',
+      model,
+      content: [{ type: 'text', text: result.result || '' }],
+      stop_reason: 'end_turn',
+      usage: {
+        input_tokens: u.input_tokens || 0,
+        output_tokens: u.output_tokens || 0,
+        cache_read_input_tokens: u.cache_read_input_tokens || 0,
+        cache_creation_input_tokens: u.cache_creation_input_tokens || 0,
+      },
+    },
+  };
+}
