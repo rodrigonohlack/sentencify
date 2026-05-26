@@ -375,7 +375,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               ═══════════════════════════════════════════════════════════════════════════════ */}
           <div>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">Provedor de IA</label>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => setAiSettings({ ...aiSettings, provider: 'claude' })}
                 className={`p-3 rounded-lg border-2 transition-all text-left ${
@@ -456,17 +456,33 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   </div>
                 </div>
               </button>
+              <button
+                onClick={() => setAiSettings({ ...aiSettings, provider: 'claude-cli' })}
+                className={`p-3 rounded-lg border-2 transition-all text-left ${
+                  aiSettings.provider === 'claude-cli'
+                    ? 'bg-amber-600/20 border-amber-500'
+                    : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <ProviderIcon provider="claude-cli" size={20} className="text-amber-400" />
+                  <div>
+                    <div className="font-semibold theme-text-primary text-sm">Claude Local</div>
+                    <div className="text-xs theme-text-muted">CLI · assinatura</div>
+                  </div>
+                </div>
+              </button>
             </div>
 
             {/* Model Selection based on provider */}
             <div className="mt-3">
               <label className="block text-xs theme-text-muted mb-1">
-                Modelo {aiSettings.provider === 'claude' ? 'Claude' :
+                Modelo {aiSettings.provider === 'claude' || aiSettings.provider === 'claude-cli' ? 'Claude' :
                        aiSettings.provider === 'gemini' ? 'Gemini' :
                        aiSettings.provider === 'openai' ? 'OpenAI' :
                        aiSettings.provider === 'grok' ? 'Grok' : 'DeepSeek'}:
               </label>
-              {aiSettings.provider === 'claude' && (
+              {(aiSettings.provider === 'claude' || aiSettings.provider === 'claude-cli') && (
                 <select
                   value={aiSettings.claudeModel || 'claude-sonnet-4-20250514'}
                   onChange={(e) => setAiSettings({ ...aiSettings, claudeModel: e.target.value, model: e.target.value })}
@@ -1161,6 +1177,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
                   >
                     <option value="claude">Claude (Anthropic)</option>
+                    <option value="claude-cli">Claude Local (CLI · assinatura)</option>
                     <option value="gemini">Gemini (Google)</option>
                     <option value="openai">GPT (OpenAI)</option>
                     <option value="grok">Grok (xAI)</option>
@@ -1186,7 +1203,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     }}
                     className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
                   >
-                    {aiSettings.doubleCheck?.provider === 'claude' && (
+                    {(aiSettings.doubleCheck?.provider === 'claude' || aiSettings.doubleCheck?.provider === 'claude-cli') && (
                       <>
                         <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
                         <option value="claude-opus-4-5-20251101">Claude Opus 4.5</option>
@@ -2976,6 +2993,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                                               ((modelMetrics.cacheCreation / 1000000) * providerPrices.cacheWrite);
                               const providerColors = {
                                 claude: 'text-orange-400',
+                                'claude-cli': 'text-amber-400',
                                 gemini: 'text-blue-400',
                                 openai: 'text-green-400',
                                 grok: 'text-gray-400',
