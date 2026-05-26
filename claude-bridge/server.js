@@ -65,6 +65,7 @@ const server = http.createServer(async (req, res) => {
       // Cliente desistiu → mata o processo filho (evita gerações órfãs)
       req.on('close', () => { if (!child.killed) child.kill(); });
       child.on('error', (err) => {
+        if (res.writableEnded) return;
         sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao executar 'claude': ${err.message}. O binário está no PATH?` } });
       });
       child.on('close', () => {
