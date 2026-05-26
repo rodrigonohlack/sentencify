@@ -68,6 +68,22 @@ export function buildClaudeArgs(body) {
 }
 
 /**
+ * Remove cache_control de blocos de conteúdo (o CLI não suporta prompt caching).
+ * @param {Array|*} content - Content array com possíveis blocos { cache_control, ... }
+ * @returns {Array|*} - Content sem nenhum campo cache_control
+ */
+function stripCacheControl(content) {
+  if (!Array.isArray(content)) return content;
+  return content.map((block) => {
+    if (block && typeof block === 'object' && 'cache_control' in block) {
+      const { cache_control, ...rest } = block;
+      return rest;
+    }
+    return block;
+  });
+}
+
+/**
  * Converte messages[] em linhas stream-json (JSONL) para o stdin do claude.
  * @param {Object} body - Request body com campo messages
  * @returns {string} - JSONL string (uma linha por mensagem)
@@ -80,7 +96,7 @@ export function buildStdin(body) {
         const role = msg.role === 'assistant' ? 'assistant' : 'user';
         return JSON.stringify({
           type: role,
-          message: { role, content: msg.content }
+          message: { role, content: stripCacheControl(msg.content) }
         });
       })
       .join('\n') + '\n'

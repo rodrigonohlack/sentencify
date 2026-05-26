@@ -85,6 +85,28 @@ test('buildStdin: mensagens viram stream-json por linha com role correto', () =>
   assert.deepEqual(lines[0].message.content, [{ type: 'text', text: 'oi' }]);
 });
 
+test('buildStdin: remove cache_control dos blocos de conteúdo', () => {
+  const body = {
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: 'AAAA' }, cache_control: { type: 'ephemeral' } },
+          { type: 'text', text: 'oi', cache_control: { type: 'ephemeral' } },
+        ]
+      }
+    ]
+  };
+  const line = JSON.parse(buildStdin(body).trim());
+  for (const block of line.message.content) {
+    assert.ok(!('cache_control' in block), 'cache_control deveria ter sido removido');
+  }
+  // garante que o resto do bloco foi preservado
+  assert.equal(line.message.content[0].type, 'document');
+  assert.equal(line.message.content[0].source.media_type, 'application/pdf');
+  assert.equal(line.message.content[1].text, 'oi');
+});
+
 const RESULT_OK = JSON.stringify({
   type: 'result', subtype: 'success', is_error: false,
   result: 'BATATA-FRITA-7392', session_id: 'sess-1',
