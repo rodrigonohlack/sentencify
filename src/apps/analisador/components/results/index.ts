@@ -5,6 +5,7 @@
 
 export { ResultsContainer } from './ResultsContainer';
 export { ReanalyzePanel } from './ReanalyzePanel';
+export { ImportJsonPanel } from './ImportJsonPanel';
 export { IdentificacaoSection } from './IdentificacaoSection';
 export { ContratoSection } from './ContratoSection';
 export { TutelasSection } from './TutelasSection';

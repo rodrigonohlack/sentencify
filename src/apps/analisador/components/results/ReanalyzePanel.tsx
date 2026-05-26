@@ -16,17 +16,22 @@ import {
   Loader2,
   CheckCircle,
   Scale,
-  FilePlus2
+  FilePlus2,
+  FileJson
 } from 'lucide-react';
 import { Button, ProgressBar } from '../ui';
 import { useResultStore, useDocumentStore, useAIStore } from '../../stores';
 import { useAnalysis, useAnalysesAPI } from '../../hooks';
 import { extractPdfMetadata } from '../../services/pdfService';
 import { providerSupportsPdfBinary } from '../../constants';
+import { ImportJsonPanel } from './ImportJsonPanel';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════
+
+/** Modo do painel: subir PDFs e rodar a IA, ou importar um JSON pronto. */
+type ReanalyzeMode = 'upload' | 'json';
 
 interface CategorizedFile {
   id: string;
@@ -136,6 +141,7 @@ export const ReanalyzePanel: React.FC = () => {
 
   // Local state
   const [isExpanded, setIsExpanded] = useState(false);
+  const [mode, setMode] = useState<ReanalyzeMode>('upload');
   const [isReanalyzing, setIsReanalyzing] = useState(false);
   const [files, setFiles] = useState<CategorizedFile[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -514,6 +520,39 @@ export const ReanalyzePanel: React.FC = () => {
       {isExpanded && (
         <div className="p-4 bg-white dark:bg-slate-800 border border-t-0 border-slate-200 dark:border-slate-700 rounded-b-xl space-y-4">
 
+          {/* Seletor de modo: subir PDFs (IA) ou importar JSON pronto */}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setMode('upload')}
+              className={`
+                flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                ${mode === 'upload'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                }
+              `}
+            >
+              <FilePlus2 className="w-4 h-4" /> Adicionar Documentos
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('json')}
+              className={`
+                flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                ${mode === 'json'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                }
+              `}
+            >
+              <FileJson className="w-4 h-4" /> Importar JSON
+            </button>
+          </div>
+
+          {/* MODO: upload de PDFs + reanálise via IA */}
+          {mode === 'upload' && (
+          <>
           {/* Área de Upload Única */}
           <div>
             <h4 className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
@@ -644,6 +683,13 @@ export const ReanalyzePanel: React.FC = () => {
               Reanalisar Processo
             </Button>
           </div>
+          </>
+          )}
+
+          {/* MODO: importar JSON pronto (substitui o resultado deste processo) */}
+          {mode === 'json' && (
+            <ImportJsonPanel onSuccess={() => setIsExpanded(false)} />
+          )}
         </div>
       )}
     </div>
