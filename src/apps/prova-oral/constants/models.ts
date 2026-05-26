@@ -160,6 +160,8 @@ export const MODEL_MAX_OUTPUT_TOKENS: Record<string, number> = {
   // Claude
   'claude-sonnet-4-20250514': 64000,
   'claude-opus-4-5-20251101': 32000,
+  'claude-sonnet-4-6': 64000,
+  'claude-opus-4-7': 32000,
 
   // Gemini
   'gemini-3-flash-preview': 128000,

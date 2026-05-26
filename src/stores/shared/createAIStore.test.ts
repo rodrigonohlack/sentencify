@@ -53,6 +53,13 @@ describe('createAIStore — setters básicos', () => {
     expect(useStore.getState().aiSettings.openaiModel).toBe('gpt-5.2');
   });
 
+  it('setModel("claude-cli") grava em claudeCliModel e não em claudeModel', () => {
+    const { useStore } = makeStore();
+    useStore.getState().setModel('claude-cli', 'claude-opus-4-7');
+    expect(useStore.getState().aiSettings.claudeCliModel).toBe('claude-opus-4-7');
+    expect(useStore.getState().aiSettings.claudeModel).toBe('claude-sonnet-4-20250514');
+  });
+
   it('setApiKey grava apenas a key do provider informado', () => {
     const { useStore } = makeStore();
     useStore.getState().setApiKey('claude', 'sk-abc');
