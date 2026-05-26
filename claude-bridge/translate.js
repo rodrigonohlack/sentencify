@@ -90,23 +90,54 @@ function normalizeContent(content) {
 }
 
 /**
- * Converte messages[] em linhas stream-json (JSONL) para o stdin do claude.
+ * Colapsa uma conversa multi-turn num único array de content (1 turno de usuário).
+ * Texto vira transcript rotulado por papel; blocos não-texto (document/image)
+ * são preservados e intercalados na ordem.
+ * @param {Array} messages - Array de mensagens {role, content}
+ * @returns {Array} - Array de blocos de content para um único turno de usuário
+ */
+function collapseMessages(messages) {
+  const out = [];
+  let textBuf = [];
+  const flush = () => {
+    if (textBuf.length) { out.push({ type: 'text', text: textBuf.join('\n\n') }); textBuf = []; }
+  };
+  for (const msg of messages) {
+    const label = msg.role === 'assistant' ? 'Assistente' : 'Usuário';
+    const blocks = normalizeContent(msg.content);
+    for (const b of blocks) {
+      if (b && typeof b === 'object' && b.type === 'text') {
+        textBuf.push(`${label}: ${b.text}`);
+      } else {
+        flush();
+        out.push(b);
+      }
+    }
+  }
+  flush();
+  return out;
+}
+
+/**
+ * Converte messages[] em stdin stream-json para o claude CLI.
+ * - Turno único (≤1 mensagem): envia como está (content normalizado).
+ * - Multi-turn: colapsa em 1 turno de usuário com o histórico como transcript
+ *   rotulado, pois o stream-json input do CLI não mantém histórico de forma
+ *   confiável (responde a turnos user intermediários, ignora assistant fornecidos).
  * @param {Object} body - Request body com campo messages
- * @returns {string} - JSONL string (uma linha por mensagem)
+ * @returns {string} - JSONL string (1 linha)
  */
 export function buildStdin(body) {
   const messages = Array.isArray(body.messages) ? body.messages : [];
-  return (
-    messages
-      .map((msg) => {
-        const role = msg.role === 'assistant' ? 'assistant' : 'user';
-        return JSON.stringify({
-          type: role,
-          message: { role, content: normalizeContent(msg.content) }
-        });
-      })
-      .join('\n') + '\n'
-  );
+  // Turno único (ex.: análise com PDFs) → enviar como está.
+  if (messages.length <= 1) {
+    const msg = messages[0] || { role: 'user', content: [] };
+    const role = msg.role === 'assistant' ? 'assistant' : 'user';
+    return JSON.stringify({ type: role, message: { role, content: normalizeContent(msg.content) } }) + '\n';
+  }
+  // Multi-turn: colapsa a conversa em UM único turno de usuário com o histórico como contexto.
+  const content = collapseMessages(messages);
+  return JSON.stringify({ type: 'user', message: { role: 'user', content } }) + '\n';
 }
 
 /**

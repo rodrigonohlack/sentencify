@@ -68,21 +68,13 @@ test("buildClaudeArgs: effort 'off' desliga mesmo com thinking presente", () => 
   assert.ok(!args.includes('--effort'));
 });
 
-test('buildStdin: mensagens viram stream-json por linha com role correto', () => {
-  const body = {
-    messages: [
-      { role: 'user', content: [{ type: 'text', text: 'oi' }] },
-      { role: 'assistant', content: [{ type: 'text', text: 'olá' }] }
-    ]
-  };
-  const lines = buildStdin(body)
-    .trim()
-    .split('\n')
-    .map(JSON.parse);
-  assert.equal(lines[0].type, 'user');
-  assert.equal(lines[0].message.role, 'user');
-  assert.equal(lines[1].type, 'assistant');
-  assert.deepEqual(lines[0].message.content, [{ type: 'text', text: 'oi' }]);
+test('buildStdin: turno único passa como está (content normalizado)', () => {
+  const body = { messages: [{ role: 'user', content: [{ type: 'text', text: 'oi' }] }] };
+  const lines = buildStdin(body).trim().split('\n');
+  assert.equal(lines.length, 1);
+  const o = JSON.parse(lines[0]);
+  assert.equal(o.type, 'user');
+  assert.equal(o.message.content[0].text, 'oi');
 });
 
 test('buildStdin: remove cache_control dos blocos de conteúdo', () => {
@@ -115,16 +107,34 @@ test('buildStdin: content string vira array [{type:text,text}]', () => {
   assert.equal(line.message.content[0].text, 'oi mundo');
 });
 
-test('buildStdin: multi-turn com content string preserva roles', () => {
+test('buildStdin: multi-turn colapsa em 1 turno de usuário com rótulos', () => {
   const body = { messages: [
-    { role: 'user', content: 'a' },
-    { role: 'assistant', content: 'b' },
-    { role: 'user', content: 'c' },
+    { role: 'user', content: 'Pergunta A' },
+    { role: 'assistant', content: 'Resposta B' },
+    { role: 'user', content: 'Pergunta C' },
   ] };
-  const lines = buildStdin(body).trim().split('\n').map(JSON.parse);
-  assert.equal(lines[0].type, 'user');
-  assert.equal(lines[1].type, 'assistant');
-  assert.equal(lines[1].message.content[0].text, 'b');
+  const lines = buildStdin(body).trim().split('\n');
+  assert.equal(lines.length, 1, 'multi-turn deve virar 1 linha');
+  const o = JSON.parse(lines[0]);
+  assert.equal(o.type, 'user');
+  const text = o.message.content.map(b => b.text || '').join('\n');
+  assert.match(text, /Usuário: Pergunta A/);
+  assert.match(text, /Assistente: Resposta B/);
+  assert.match(text, /Usuário: Pergunta C/);
+});
+
+test('buildStdin: multi-turn preserva blocos de documento (não-texto)', () => {
+  const body = { messages: [
+    { role: 'user', content: [
+      { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: 'AAAA' } },
+      { type: 'text', text: 'analise' },
+    ] },
+    { role: 'assistant', content: 'ok' },
+    { role: 'user', content: 'continue' },
+  ] };
+  const o = JSON.parse(buildStdin(body).trim());
+  const hasDoc = o.message.content.some(b => b.type === 'document');
+  assert.ok(hasDoc, 'bloco document deve ser preservado');
 });
 
 const RESULT_OK = JSON.stringify({
