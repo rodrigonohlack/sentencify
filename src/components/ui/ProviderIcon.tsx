@@ -108,6 +108,8 @@ export const ProviderIcon: React.FC<ProviderIconProps> = ({ provider, size = 20,
       return <GrokIcon size={size} className={className} />;
     case 'deepseek':
       return <DeepseekIcon size={size} className={className} />;
+    case 'claude-cli':
+      return <ClaudeIcon size={size} className={className} />;
     default:
       return null;
   }

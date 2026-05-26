@@ -8,7 +8,7 @@
  *              devem ser movidos para cá sem revisão.
  */
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli';
 
 /** Níveis de thinking do Gemini */
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';

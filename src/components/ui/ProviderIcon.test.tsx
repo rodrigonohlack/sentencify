@@ -187,6 +187,17 @@ describe('ProviderIcon', () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // CLAUDE-CLI PROVIDER TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('ClaudeCLI', () => {
+    it('deve renderizar um SVG para o provider claude-cli', () => {
+      const { container } = render(<ProviderIcon provider="claude-cli" />);
+      expect(container.querySelector('svg')).toBeInTheDocument();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // DISTINCT ICONS TESTS
   // ═══════════════════════════════════════════════════════════════════════════
 

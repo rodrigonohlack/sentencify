@@ -192,7 +192,7 @@ export const MAX_PROOF_ANALYSES = 5;
 // AI SETTINGS TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli';
 export type OCREngine = 'pdfjs' | 'tesseract' | 'pdf-puro' | 'claude-vision' | 'gemini-vision';
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
 export type OpenAIReasoningLevel = 'low' | 'medium' | 'high' | 'xhigh';
@@ -872,6 +872,8 @@ export interface AICallOptions {
    * na mensagem do assistente.
    */
   onGrounding?: (metadata: GroundingMetadata) => void;
+  /** Quando true, roteia a chamada Claude para o daemon local (claude-bridge) em vez da API. */
+  localBridge?: boolean;
 }
 
 /** Tipo para função callAI */
