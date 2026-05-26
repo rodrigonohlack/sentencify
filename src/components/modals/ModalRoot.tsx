@@ -485,6 +485,7 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
         operationType={streamingState.operationType}
         providerName={{
           claude: 'Claude',
+          'claude-cli': 'Claude Local',
           gemini: 'Gemini',
           openai: 'OpenAI',
           grok: 'Grok',

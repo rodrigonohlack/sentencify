@@ -215,6 +215,7 @@ export interface ApiTestStatuses {
   openai: ApiTestStatus;
   grok: ApiTestStatus;
   deepseek: ApiTestStatus;
+  'claude-cli'?: ApiTestStatus; // Sem API key — status de teste não aplicável
 }
 
 /** Estado inicial dos testes de API */
@@ -224,6 +225,7 @@ const initialApiTestStatuses: ApiTestStatuses = {
   openai: null,
   grok: null,
   deepseek: null,
+  'claude-cli': null,
 };
 
 /** Estado inicial do AISettings */
@@ -938,7 +940,7 @@ export const selectApiTestStatuses = (state: AIStoreState): ApiTestStatuses =>
 
 /** Selector: Retorna status de teste de um provider específico (v1.37.49) */
 export const selectApiTestStatus = (provider: AIProvider) => (state: AIStoreState): ApiTestStatus =>
-  state.apiTestStatuses[provider];
+  state.apiTestStatuses[provider] ?? null;
 
 /** Selector: Retorna estado de streaming (v1.39.09) */
 export const selectStreamingState = (state: AIStoreState): StreamingState =>

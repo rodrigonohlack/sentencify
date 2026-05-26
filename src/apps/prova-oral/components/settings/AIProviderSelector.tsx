@@ -11,6 +11,7 @@ import type { AIProvider } from '../../types';
 
 const providerIcons: Record<AIProvider, React.ReactNode> = {
   claude: <Brain className="w-5 h-5" />,
+  'claude-cli': <Brain className="w-5 h-5" />,
   gemini: <Sparkles className="w-5 h-5" />,
   openai: <MessageCircle className="w-5 h-5" />,
   grok: <Zap className="w-5 h-5" />,

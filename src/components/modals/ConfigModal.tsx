@@ -1143,6 +1143,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       const provider = e.target.value as AIProvider;
                       const defaultModels: Record<AIProvider, string> = {
                         claude: 'claude-sonnet-4-20250514',
+                        'claude-cli': 'claude-sonnet-4-20250514',
                         gemini: 'gemini-3-flash-preview',
                         openai: 'gpt-5.2-chat-latest',
                         grok: 'grok-4-1-fast-reasoning',

@@ -36,6 +36,23 @@ export const AI_PROVIDERS: Record<AIProvider, ProviderInfo> = {
       }
     ]
   },
+  'claude-cli': {
+    name: 'Claude Local (CLI)',
+    icon: 'brain',
+    models: [
+      {
+        id: 'claude-sonnet-4-20250514',
+        name: 'Claude 4 Sonnet',
+        recommended: true,
+        description: 'CLI · assinatura — custo $0'
+      },
+      {
+        id: 'claude-opus-4-5-20251101',
+        name: 'Claude 4.5 Opus',
+        description: 'CLI · assinatura — custo $0'
+      }
+    ]
+  },
   gemini: {
     name: 'Gemini (Google)',
     icon: 'sparkles',

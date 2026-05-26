@@ -28,6 +28,7 @@ export interface APIKeys {
   openai: string;
   grok: string;
   deepseek: string;
+  'claude-cli'?: string; // Sem API key — usa login OAuth local
 }
 
 export interface AISettings {

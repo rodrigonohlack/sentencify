@@ -281,7 +281,7 @@ export interface AISettings {
   deepseekModel: DeepseekModel;
   deepseekThinking: boolean;
   deepseekReasoningEffort: DeepseekReasoningEffort;
-  apiKeys: { claude: string; gemini: string; openai: string; grok: string; deepseek: string };
+  apiKeys: { claude: string; gemini: string; openai: string; grok: string; deepseek: string; 'claude-cli'?: string };
   useExtendedThinking: boolean;
   thinkingBudget: string;
   geminiThinkingLevel: GeminiThinkingLevel;
