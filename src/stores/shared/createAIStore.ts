@@ -109,7 +109,9 @@ export function createAIStore(config: AIStoreConfig) {
 
         setModel: (provider, model) =>
           set((state) => {
-            const key = `${provider}Model` as keyof AISettings;
+            // claude-cli reusa o modelo do claude (claudeModel), não tem chave própria
+            const effectiveProvider = provider === 'claude-cli' ? 'claude' : provider;
+            const key = `${effectiveProvider}Model` as keyof AISettings;
             return { aiSettings: { ...state.aiSettings, [key]: model } };
           }),
 
