@@ -41,15 +41,15 @@ export const AI_PROVIDERS: Record<AIProvider, ProviderInfo> = {
     icon: 'brain',
     models: [
       {
-        id: 'claude-sonnet-4-20250514',
-        name: 'Claude 4 Sonnet',
+        id: 'claude-sonnet-4-6',
+        name: 'Claude Sonnet 4.6',
         recommended: true,
-        description: 'CLI · assinatura — custo $0'
+        description: 'Mais recente — equilíbrio velocidade/qualidade'
       },
       {
-        id: 'claude-opus-4-5-20251101',
-        name: 'Claude 4.5 Opus',
-        description: 'CLI · assinatura — custo $0'
+        id: 'claude-opus-4-7',
+        name: 'Claude Opus 4.7',
+        description: 'Máxima qualidade e raciocínio'
       }
     ]
   },

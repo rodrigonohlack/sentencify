@@ -482,7 +482,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                        aiSettings.provider === 'openai' ? 'OpenAI' :
                        aiSettings.provider === 'grok' ? 'Grok' : 'DeepSeek'}:
               </label>
-              {(aiSettings.provider === 'claude' || aiSettings.provider === 'claude-cli') && (
+              {aiSettings.provider === 'claude' && (
                 <select
                   value={aiSettings.claudeModel || 'claude-sonnet-4-20250514'}
                   onChange={(e) => setAiSettings({ ...aiSettings, claudeModel: e.target.value, model: e.target.value })}
@@ -490,6 +490,16 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 >
                   <option value="claude-sonnet-4-20250514">Sonnet 4.5 ($3/$15 por 1M)</option>
                   <option value="claude-opus-4-5-20251101">Opus 4.5 ($15/$75 por 1M)</option>
+                </select>
+              )}
+              {aiSettings.provider === 'claude-cli' && (
+                <select
+                  value={aiSettings.claudeCliModel || 'claude-sonnet-4-6'}
+                  onChange={(e) => setAiSettings({ ...aiSettings, claudeCliModel: e.target.value })}
+                  className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                >
+                  <option value="claude-sonnet-4-6">Sonnet 4.6 (assinatura · $0)</option>
+                  <option value="claude-opus-4-7">Opus 4.7 (assinatura · $0)</option>
                 </select>
               )}
               {aiSettings.provider === 'gemini' && (

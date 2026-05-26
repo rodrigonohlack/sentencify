@@ -232,6 +232,7 @@ const initialApiTestStatuses: ApiTestStatuses = {
 const initialAISettings: AISettings = {
   provider: 'claude',
   claudeModel: 'claude-sonnet-4-20250514',
+  claudeCliModel: 'claude-sonnet-4-6',
   geminiModel: 'gemini-3-flash-preview',
   openaiModel: 'gpt-5.2-chat-latest',
   openaiReasoningLevel: 'medium',
@@ -903,9 +904,10 @@ export const selectProvider = (state: AIStoreState): AIProvider =>
 
 /** Selector: Retorna modelo atual baseado no provider */
 export const selectCurrentModel = (state: AIStoreState): string => {
-  const { provider, claudeModel, geminiModel, openaiModel, grokModel, deepseekModel } = state.aiSettings;
+  const { provider, claudeModel, claudeCliModel, geminiModel, openaiModel, grokModel, deepseekModel } = state.aiSettings;
   switch (provider) {
     case 'claude': return claudeModel;
+    case 'claude-cli': return claudeCliModel || 'claude-sonnet-4-6';
     case 'gemini': return geminiModel;
     case 'openai': return openaiModel;
     case 'grok': return grokModel;

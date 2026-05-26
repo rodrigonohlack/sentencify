@@ -1008,11 +1008,11 @@ export const useAIIntegration = () => {
         return callDeepseekAPIStream(messages, options);
       case 'claude-cli':
         // v1 sem streaming: cai para o caminho não-stream via bridge local
-        return callClaudeAPI(messages, { ...options, localBridge: true });
+        return callClaudeAPI(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
       default:
         return callClaudeAPIStream(messages, options);
     }
-  }, [aiSettings.provider, callClaudeAPI, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream]);
+  }, [aiSettings.provider, aiSettings.claudeCliModel, callClaudeAPI, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream]);
 
   const callAI = useCallback(async (
     messages: AIMessage[],
@@ -1032,11 +1032,11 @@ export const useAIIntegration = () => {
       case 'deepseek':
         return callDeepseekAPI(messages, options);
       case 'claude-cli':
-        return callClaudeAPI(messages, { ...options, localBridge: true });
+        return callClaudeAPI(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
       default:
         return callClaudeAPI(messages, options);
     }
-  }, [aiSettings.provider, callClaudeAPI, callGeminiAPI, callOpenAIAPI, callGrokAPI, callDeepseekAPI]);
+  }, [aiSettings.provider, aiSettings.claudeCliModel, callClaudeAPI, callGeminiAPI, callOpenAIAPI, callGrokAPI, callDeepseekAPI]);
 
   return {
     callAI,

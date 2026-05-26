@@ -1436,7 +1436,7 @@ const useAIIntegration = () => {
       return await callLLM(messages, {
         ...options,
         localBridge: true,
-        model: options.model || aiSettings.claudeModel || 'claude-sonnet-4-20250514'
+        model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6'
       });
     }
 
@@ -2089,11 +2089,11 @@ const useAIIntegration = () => {
         return callDeepseekAPIStream(messages, options);
       case 'claude-cli':
         // v1 sem streaming: cai para o caminho não-stream via bridge local
-        return callLLM(messages, { ...options, localBridge: true });
+        return callLLM(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
       default:
         return callClaudeAPIStream(messages, options);
     }
-  }, [aiSettings.provider, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM]);
+  }, [aiSettings.provider, aiSettings.claudeCliModel, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM]);
 
   /**
    * Chama a API com streaming para provider/modelo específico (para double check)
@@ -2161,11 +2161,11 @@ const useAIIntegration = () => {
       return await callDeepseekAPIStream(messages, options);
     }
     if (provider === 'claude-cli') {
-      return await callLLM(messages, { ...options, localBridge: true });
+      return await callLLM(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
     }
     // Default: Claude
     return await callClaudeAPIStream(messages, options);
-  }, [callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM, aiSettings.doubleCheck]);
+  }, [callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM, aiSettings.doubleCheck, aiSettings.claudeCliModel]);
 
   /**
    * Executa o double check em uma resposta da IA

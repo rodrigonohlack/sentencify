@@ -273,6 +273,7 @@ export interface TopicoComplementar {
 export interface AISettings {
   provider: AIProvider;
   claudeModel: string;
+  claudeCliModel?: string;
   geminiModel: string;
   openaiModel: 'gpt-5.2' | 'gpt-5.2-chat-latest';
   openaiReasoningLevel: OpenAIReasoningLevel;
