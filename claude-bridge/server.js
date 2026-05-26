@@ -5,6 +5,9 @@ import { spawn } from 'node:child_process';
 import { buildClaudeArgs, buildStdin, translateResponse } from './translate.js';
 
 const PORT = Number(process.env.CLAUDE_BRIDGE_PORT || 8787);
+if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+  throw new Error(`CLAUDE_BRIDGE_PORT inválido: "${process.env.CLAUDE_BRIDGE_PORT}"`);
+}
 const ALLOWED_ORIGINS = new Set([
   'https://sentencify.ia.br',
   'http://localhost:3000', // vite (npm run client)
@@ -19,7 +22,7 @@ function applyCors(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   // Private Network Access (Chrome): página pública → localhost
-  if (req.headers['access-control-request-private-network']) {
+  if (req.method === 'OPTIONS' && req.headers['access-control-request-private-network']) {
     res.setHeader('Access-Control-Allow-Private-Network', 'true');
   }
 }
@@ -52,27 +55,39 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    const args = buildClaudeArgs(body);
-    const child = spawn('claude', args, { cwd: os.tmpdir() });
-    let stdout = '', stderr = '';
-    child.stdout.on('data', (d) => { stdout += d.toString(); });
-    child.stderr.on('data', (d) => { stderr += d.toString(); });
-    // Cliente desistiu → mata o processo filho (evita gerações órfãs)
-    req.on('close', () => { if (!child.killed) child.kill(); });
-    child.on('error', (err) => {
-      sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao executar 'claude': ${err.message}. O binário está no PATH?` } });
-    });
-    child.on('close', () => {
-      if (res.writableEnded) return;
-      if (!stdout.trim()) {
-        sendJson(res, 500, { error: { type: 'server_error', message: `claude CLI sem saída. stderr: ${stderr.slice(0, 500)}` } });
-        return;
-      }
-      const out = translateResponse(stdout, body.model);
-      sendJson(res, out.status, out.body);
-    });
-    child.stdin.write(buildStdin(body));
-    child.stdin.end();
+    try {
+      const args = buildClaudeArgs(body);
+      const child = spawn('claude', args, { cwd: os.tmpdir() });
+      child.stdin.on('error', () => {});
+      let stdout = '', stderr = '';
+      child.stdout.on('data', (d) => { stdout += d.toString(); });
+      child.stderr.on('data', (d) => { stderr += d.toString(); });
+      // Cliente desistiu → mata o processo filho (evita gerações órfãs)
+      req.on('close', () => { if (!child.killed) child.kill(); });
+      child.on('error', (err) => {
+        sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao executar 'claude': ${err.message}. O binário está no PATH?` } });
+      });
+      child.on('close', () => {
+        if (res.writableEnded) return;
+        if (!stdout.trim()) {
+          sendJson(res, 500, { error: { type: 'server_error', message: `claude CLI sem saída. stderr: ${stderr.slice(0, 500)}` } });
+          return;
+        }
+        let out;
+        try {
+          out = translateResponse(stdout, body.model);
+        } catch (err) {
+          sendJson(res, 500, { error: { type: 'server_error', message: `Erro ao traduzir resposta: ${err.message}` } });
+          return;
+        }
+        sendJson(res, out.status, out.body);
+      });
+      child.stdin.write(buildStdin(body));
+      child.stdin.end();
+    } catch (err) {
+      if (!res.writableEnded) sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao iniciar geração: ${err.message}` } });
+      return;
+    }
     return;
   }
 
