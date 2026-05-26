@@ -11,6 +11,7 @@ import type { AIProvider } from '../../types';
 
 const providerIcons: Record<AIProvider, React.ReactNode> = {
   claude: <Brain className="w-5 h-5" />,
+  'claude-cli': <Brain className="w-5 h-5" />,
   gemini: <Sparkles className="w-5 h-5" />,
   openai: <MessageCircle className="w-5 h-5" />,
   grok: <Zap className="w-5 h-5" />,
@@ -64,7 +65,9 @@ export const AIProviderSelector: React.FC = () => {
                     {info.name}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {hasApiKey ? 'API Key configurada' : 'API Key não configurada'}
+                    {key === 'claude-cli'
+                      ? 'Sem chave — usa OAuth local'
+                      : hasApiKey ? 'API Key configurada' : 'API Key não configurada'}
                   </p>
                 </div>
               </div>

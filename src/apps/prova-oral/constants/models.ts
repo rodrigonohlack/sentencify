@@ -36,6 +36,23 @@ export const AI_PROVIDERS: Record<AIProvider, ProviderInfo> = {
       }
     ]
   },
+  'claude-cli': {
+    name: 'Claude Local (CLI)',
+    icon: 'brain',
+    models: [
+      {
+        id: 'claude-sonnet-4-6',
+        name: 'Claude Sonnet 4.6',
+        recommended: true,
+        description: 'Mais recente — equilíbrio velocidade/qualidade'
+      },
+      {
+        id: 'claude-opus-4-7',
+        name: 'Claude Opus 4.7',
+        description: 'Máxima qualidade e raciocínio'
+      }
+    ]
+  },
   gemini: {
     name: 'Gemini (Google)',
     icon: 'sparkles',
@@ -143,6 +160,8 @@ export const MODEL_MAX_OUTPUT_TOKENS: Record<string, number> = {
   // Claude
   'claude-sonnet-4-20250514': 64000,
   'claude-opus-4-5-20251101': 32000,
+  'claude-sonnet-4-6': 64000,
+  'claude-opus-4-7': 32000,
 
   // Gemini
   'gemini-3-flash-preview': 128000,

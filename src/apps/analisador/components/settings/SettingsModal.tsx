@@ -9,7 +9,7 @@ import { AIProviderSelector } from './AIProviderSelector';
 import { ModelSelector } from './ModelSelector';
 import { APIKeyInput } from './APIKeyInput';
 import { useAIStore, useAnalysesStore } from '../../stores';
-import type { GeminiThinkingLevel, OpenAIReasoningLevel, TokenMetrics } from '../../types';
+import type { GeminiThinkingLevel, OpenAIReasoningLevel, TokenMetrics, ClaudeCliEffort } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Preços por modelo (USD / 1M tokens)
@@ -58,6 +58,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const deepseekThinking = useAIStore((s) => s.aiSettings.deepseekThinking);
   const deepseekReasoningEffort = useAIStore((s) => s.aiSettings.deepseekReasoningEffort);
   const setAiSettings = useAIStore((s) => s.setAiSettings);
+  const claudeCliEffort = useAIStore((s) => s.aiSettings.claudeCliEffort);
   const setDeepseekThinking = (val: boolean) => setAiSettings({ ...useAIStore.getState().aiSettings, deepseekThinking: val });
   const setDeepseekReasoningEffort = (val: 'high' | 'max') => setAiSettings({ ...useAIStore.getState().aiSettings, deepseekReasoningEffort: val });
 
@@ -105,7 +106,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             Configurações de Raciocínio
           </h3>
 
-          {/* Claude: Extended Thinking */}
+          {/* Claude / Claude Local: Extended Thinking */}
           {provider === 'claude' && (
             <div className="space-y-3">
               <label className="flex items-center gap-3 cursor-pointer">
@@ -132,6 +133,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Claude Local: Effort dropdown */}
+          {provider === 'claude-cli' && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  Nível de raciocínio (effort)
+                </label>
+                <select
+                  value={claudeCliEffort || 'high'}
+                  onChange={(e) => setAiSettings({ ...useAIStore.getState().aiSettings, claudeCliEffort: e.target.value as ClaudeCliEffort })}
+                  className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="off">Desligado</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="xhigh">Xhigh</option>
+                  <option value="max">Max</option>
+                </select>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Esforço de raciocínio do Claude Code local (--effort).
+                </p>
+              </div>
             </div>
           )}
 
@@ -223,11 +250,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         </div>
 
         {/* API Key do provedor selecionado */}
-        <APIKeyInput
-          provider={provider}
-          label={keyConfig.label}
-          placeholder={keyConfig.placeholder}
-        />
+        {provider === 'claude-cli' ? (
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Claude Local usa o login do Claude Code (OAuth) — nenhuma API key necessária. Rode <code>npm run claude-bridge</code> para ligar o daemon local.
+          </p>
+        ) : (
+          <APIKeyInput
+            provider={provider}
+            label={keyConfig.label}
+            placeholder={keyConfig.placeholder}
+          />
+        )}
 
         {/* Outras API Keys */}
         <div className="pt-4 border-t border-slate-200 dark:border-slate-700">

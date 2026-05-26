@@ -192,12 +192,15 @@ export const MAX_PROOF_ANALYSES = 5;
 // AI SETTINGS TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli';
 export type OCREngine = 'pdfjs' | 'tesseract' | 'pdf-puro' | 'claude-vision' | 'gemini-vision';
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
 export type OpenAIReasoningLevel = 'low' | 'medium' | 'high' | 'xhigh';
 export type DeepseekModel = 'deepseek-v4-flash' | 'deepseek-v4-pro' | '';
 export type DeepseekReasoningEffort = 'high' | 'max';
+
+/** Níveis de effort do claude-cli (--effort flag do CLI) */
+export type ClaudeCliEffort = 'off' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
 
 /** Gemini API types - v1.35.95 */
 export interface GeminiGenerationConfig {
@@ -273,6 +276,8 @@ export interface TopicoComplementar {
 export interface AISettings {
   provider: AIProvider;
   claudeModel: string;
+  claudeCliModel?: string;
+  claudeCliEffort?: ClaudeCliEffort;
   geminiModel: string;
   openaiModel: 'gpt-5.2' | 'gpt-5.2-chat-latest';
   openaiReasoningLevel: OpenAIReasoningLevel;
@@ -281,7 +286,7 @@ export interface AISettings {
   deepseekModel: DeepseekModel;
   deepseekThinking: boolean;
   deepseekReasoningEffort: DeepseekReasoningEffort;
-  apiKeys: { claude: string; gemini: string; openai: string; grok: string; deepseek: string };
+  apiKeys: { claude: string; gemini: string; openai: string; grok: string; deepseek: string; 'claude-cli'?: string };
   useExtendedThinking: boolean;
   thinkingBudget: string;
   geminiThinkingLevel: GeminiThinkingLevel;
@@ -872,6 +877,8 @@ export interface AICallOptions {
    * na mensagem do assistente.
    */
   onGrounding?: (metadata: GroundingMetadata) => void;
+  /** Quando true, roteia a chamada Claude para o daemon local (claude-bridge) em vez da API. */
+  localBridge?: boolean;
 }
 
 /** Tipo para função callAI */

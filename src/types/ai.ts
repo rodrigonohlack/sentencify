@@ -8,7 +8,7 @@
  *              devem ser movidos para cá sem revisão.
  */
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli';
 
 /** Níveis de thinking do Gemini */
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
@@ -22,17 +22,23 @@ export type DeepseekModel = 'deepseek-v4-flash' | 'deepseek-v4-pro' | '';
 /** Reasoning effort do DeepSeek V4 (quando thinking está ativo) */
 export type DeepseekReasoningEffort = 'high' | 'max';
 
+/** Níveis de effort do claude-cli (--effort flag do CLI) */
+export type ClaudeCliEffort = 'off' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+
 export interface APIKeys {
   claude: string;
   gemini: string;
   openai: string;
   grok: string;
   deepseek: string;
+  'claude-cli'?: string; // Sem API key — usa login OAuth local
 }
 
 export interface AISettings {
   provider: AIProvider;
   claudeModel: string;
+  claudeCliModel?: string;
+  claudeCliEffort?: ClaudeCliEffort;
   geminiModel: string;
   openaiModel: 'gpt-5.2' | 'gpt-5.2-chat-latest';
   openaiReasoningLevel: OpenAIReasoningLevel;
@@ -74,6 +80,8 @@ export interface AICallOptions {
   extractText?: boolean;
   validateResponse?: boolean;
   temperature?: number | null;
+  /** Quando true, roteia para o daemon claude-bridge local em vez do proxy remoto. */
+  localBridge?: boolean;
 }
 
 export interface TokenMetrics {

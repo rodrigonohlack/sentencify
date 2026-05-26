@@ -17,6 +17,7 @@ export const ModelSelector: React.FC = () => {
   const getCurrentModel = () => {
     switch (provider) {
       case 'claude': return aiSettings.claudeModel;
+      case 'claude-cli': return aiSettings.claudeCliModel || 'claude-sonnet-4-6';
       case 'gemini': return aiSettings.geminiModel;
       case 'openai': return aiSettings.openaiModel;
       case 'grok': return aiSettings.grokModel;

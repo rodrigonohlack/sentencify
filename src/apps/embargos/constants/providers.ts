@@ -12,7 +12,7 @@ import type { AIProvider } from '../../../types/ai';
  * - grok / deepseek: text-only (não suportam binário)
  * - openai: suporta via file blocks, mas fora do escopo da entrega inicial
  */
-export const PROVIDERS_WITH_PDF_BINARY: ReadonlyArray<AIProvider> = ['claude', 'gemini'] as const;
+export const PROVIDERS_WITH_PDF_BINARY: ReadonlyArray<AIProvider> = ['claude', 'gemini', 'claude-cli'] as const;
 
 export function providerSupportsPdfBinary(provider: AIProvider): boolean {
   return PROVIDERS_WITH_PDF_BINARY.includes(provider);

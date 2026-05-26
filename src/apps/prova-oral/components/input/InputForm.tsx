@@ -58,6 +58,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onAnalysisComplete }) => {
   const aiSettings = useAIStore((s) => s.aiSettings);
   const providerNames: Record<string, string> = {
     claude: 'Claude',
+    'claude-cli': 'Claude Local',
     gemini: 'Gemini',
     openai: 'OpenAI',
     grok: 'Grok'

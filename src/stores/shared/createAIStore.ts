@@ -48,6 +48,8 @@ export interface AIStoreBase {
 const DEFAULT_AI_SETTINGS: AISettings = {
   provider: 'claude',
   claudeModel: 'claude-sonnet-4-20250514',
+  claudeCliModel: 'claude-sonnet-4-6',
+  claudeCliEffort: 'high' as const,
   geminiModel: 'gemini-3-flash-preview',
   openaiModel: 'gpt-5.2-chat-latest',
   openaiReasoningLevel: 'medium',
@@ -109,7 +111,8 @@ export function createAIStore(config: AIStoreConfig) {
 
         setModel: (provider, model) =>
           set((state) => {
-            const key = `${provider}Model` as keyof AISettings;
+            // claude-cli tem sua própria chave claudeCliModel
+            const key = (provider === 'claude-cli' ? 'claudeCliModel' : `${provider}Model`) as keyof AISettings;
             return { aiSettings: { ...state.aiSettings, [key]: model } };
           }),
 
@@ -197,10 +200,12 @@ export function createAIStore(config: AIStoreConfig) {
 export const selectProvider = (state: AIStoreBase): AIProvider => state.aiSettings.provider;
 
 export const selectCurrentModel = (state: AIStoreBase): string => {
-  const { provider, claudeModel, geminiModel, openaiModel, grokModel, deepseekModel } = state.aiSettings;
+  const { provider, claudeModel, claudeCliModel, geminiModel, openaiModel, grokModel, deepseekModel } = state.aiSettings;
   switch (provider) {
     case 'claude':
       return claudeModel;
+    case 'claude-cli':
+      return claudeCliModel || 'claude-sonnet-4-6';
     case 'gemini':
       return geminiModel;
     case 'openai':

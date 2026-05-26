@@ -49,6 +49,7 @@ import {
 } from '../../hooks';
 import type {
   AIProvider,
+  ClaudeCliEffort,
   GeminiThinkingLevel,
   QuickPrompt,
   TopicoComplementar,
@@ -375,7 +376,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               ═══════════════════════════════════════════════════════════════════════════════ */}
           <div>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">Provedor de IA</label>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => setAiSettings({ ...aiSettings, provider: 'claude' })}
                 className={`p-3 rounded-lg border-2 transition-all text-left ${
@@ -456,12 +457,28 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   </div>
                 </div>
               </button>
+              <button
+                onClick={() => setAiSettings({ ...aiSettings, provider: 'claude-cli' })}
+                className={`p-3 rounded-lg border-2 transition-all text-left ${
+                  aiSettings.provider === 'claude-cli'
+                    ? 'bg-amber-600/20 border-amber-500'
+                    : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <ProviderIcon provider="claude-cli" size={20} className="text-amber-400" />
+                  <div>
+                    <div className="font-semibold theme-text-primary text-sm">Claude Local</div>
+                    <div className="text-xs theme-text-muted">CLI · assinatura</div>
+                  </div>
+                </div>
+              </button>
             </div>
 
             {/* Model Selection based on provider */}
             <div className="mt-3">
               <label className="block text-xs theme-text-muted mb-1">
-                Modelo {aiSettings.provider === 'claude' ? 'Claude' :
+                Modelo {aiSettings.provider === 'claude' || aiSettings.provider === 'claude-cli' ? 'Claude' :
                        aiSettings.provider === 'gemini' ? 'Gemini' :
                        aiSettings.provider === 'openai' ? 'OpenAI' :
                        aiSettings.provider === 'grok' ? 'Grok' : 'DeepSeek'}:
@@ -474,6 +491,16 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 >
                   <option value="claude-sonnet-4-20250514">Sonnet 4.5 ($3/$15 por 1M)</option>
                   <option value="claude-opus-4-5-20251101">Opus 4.5 ($15/$75 por 1M)</option>
+                </select>
+              )}
+              {aiSettings.provider === 'claude-cli' && (
+                <select
+                  value={aiSettings.claudeCliModel || 'claude-sonnet-4-6'}
+                  onChange={(e) => setAiSettings({ ...aiSettings, claudeCliModel: e.target.value })}
+                  className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                >
+                  <option value="claude-sonnet-4-6">Sonnet 4.6 (assinatura · $0)</option>
+                  <option value="claude-opus-4-7">Opus 4.7 (assinatura · $0)</option>
                 </select>
               )}
               {aiSettings.provider === 'gemini' && (
@@ -830,6 +857,28 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               </>
             )}
 
+            {/* CLAUDE-CLI: Dropdown de effort */}
+            {aiSettings.provider === 'claude-cli' && (
+              <div>
+                <label className="block text-xs theme-text-muted mb-1">Nível de raciocínio (effort):</label>
+                <select
+                  value={aiSettings.claudeCliEffort || 'high'}
+                  onChange={(e) => setAiSettings({ ...aiSettings, claudeCliEffort: e.target.value as ClaudeCliEffort })}
+                  className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                >
+                  <option value="off">Desligado (padrão do CLI)</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="xhigh">Xhigh</option>
+                  <option value="max">Max</option>
+                </select>
+                <p className="text-xs theme-text-muted mt-1">
+                  Controla o esforço de raciocínio do Claude Code local (<code>--effort</code>). Maior = mais lento e mais a fundo.
+                </p>
+              </div>
+            )}
+
             {/* GEMINI 3: Dropdown de thinking_level */}
             {aiSettings.provider === 'gemini' && (
               <div className="p-4 rounded-lg border-2 border-amber-500/50 bg-amber-500/10">
@@ -1143,6 +1192,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       const provider = e.target.value as AIProvider;
                       const defaultModels: Record<AIProvider, string> = {
                         claude: 'claude-sonnet-4-20250514',
+                        'claude-cli': 'claude-sonnet-4-20250514',
                         gemini: 'gemini-3-flash-preview',
                         openai: 'gpt-5.2-chat-latest',
                         grok: 'grok-4-1-fast-reasoning',
@@ -1160,6 +1210,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
                   >
                     <option value="claude">Claude (Anthropic)</option>
+                    <option value="claude-cli">Claude Local (CLI · assinatura)</option>
                     <option value="gemini">Gemini (Google)</option>
                     <option value="openai">GPT (OpenAI)</option>
                     <option value="grok">Grok (xAI)</option>
@@ -1185,7 +1236,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     }}
                     className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
                   >
-                    {aiSettings.doubleCheck?.provider === 'claude' && (
+                    {(aiSettings.doubleCheck?.provider === 'claude' || aiSettings.doubleCheck?.provider === 'claude-cli') && (
                       <>
                         <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
                         <option value="claude-opus-4-5-20251101">Claude Opus 4.5</option>
@@ -2975,6 +3026,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                                               ((modelMetrics.cacheCreation / 1000000) * providerPrices.cacheWrite);
                               const providerColors = {
                                 claude: 'text-orange-400',
+                                'claude-cli': 'text-amber-400',
                                 gemini: 'text-blue-400',
                                 openai: 'text-green-400',
                                 grok: 'text-gray-400',

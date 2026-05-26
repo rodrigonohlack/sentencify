@@ -11,6 +11,7 @@ import React from 'react';
 import { useAIStore } from '../stores/useAIStore';
 import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
 import { API_BASE } from '../constants/api';
+import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../utils/claude-cli-bridge';
 import { withRetry } from '../utils/retry';
 // v1.42.02: Registry provider-agnostic para habilitar web search
 import { applyWebSearchTool, extractGrounding } from '../utils/ai-tools/webSearch';
@@ -263,7 +264,9 @@ const useAIIntegration = () => {
 
     const MODEL_MAX_TOKENS: Record<string, number> = {
       'claude-sonnet-4-20250514': 64000,
-      'claude-opus-4-5-20251101': 32000
+      'claude-opus-4-5-20251101': 32000,
+      'claude-sonnet-4-6': 64000,
+      'claude-opus-4-7': 32000
     };
     const modelMaxTokens = MODEL_MAX_TOKENS[modelToUse] || 64000;
 
@@ -389,7 +392,8 @@ const useAIIntegration = () => {
       abortSignal = null,
       logMetrics = true,
       extractText = true,
-      validateResponse = true
+      validateResponse = true,
+      localBridge = false
     } = options;
 
     // v1.32.33: Auto-aumentar timeout para 5 min quando thinking budget >= 40K
@@ -407,19 +411,27 @@ const useAIIntegration = () => {
     // Funcao de requisicao que sera retentada
     const makeRequest = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/claude/messages`, {
+        const claudeUrl = localBridge
+          ? `${getClaudeCliBridgeUrl()}${CLAUDE_CLI_MESSAGES_PATH}`
+          : `${API_BASE}/api/claude/messages`;
+        const claudeHeaders = localBridge
+          ? { 'Content-Type': 'application/json' }
+          : { ...getApiHeaders(), 'x-api-key': aiSettings.apiKeys?.claude || '' };
+
+        const requestBody = buildApiRequest(messages, {
+          maxTokens,
+          useInstructions,
+          systemPrompt: systemPrompt ?? undefined,
+          model: model ?? undefined,
+          disableThinking
+        });
+        if (localBridge) {
+          (requestBody as Record<string, unknown>).effort = aiSettings.claudeCliEffort || 'high';
+        }
+        const response = await fetch(claudeUrl, {
           method: 'POST',
-          headers: {
-            ...getApiHeaders(),
-            'x-api-key': aiSettings.apiKeys?.claude || ''
-          },
-          body: JSON.stringify(buildApiRequest(messages, {
-            maxTokens,
-            useInstructions,
-            systemPrompt: systemPrompt ?? undefined,
-            model: model ?? undefined,
-            disableThinking
-          })),
+          headers: claudeHeaders,
+          body: JSON.stringify(requestBody),
           signal
         });
 
@@ -1425,6 +1437,15 @@ const useAIIntegration = () => {
       });
     }
 
+    // Provider local: roteia para o daemon claude-bridge (assinatura, custo $0)
+    if (provider === 'claude-cli') {
+      return await callLLM(messages, {
+        ...options,
+        localBridge: true,
+        model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6'
+      });
+    }
+
     // Default: Claude
     return await callLLM(messages, {
       ...options,
@@ -2072,10 +2093,13 @@ const useAIIntegration = () => {
         return callGrokAPIStream(messages, options);
       case 'deepseek':
         return callDeepseekAPIStream(messages, options);
+      case 'claude-cli':
+        // v1 sem streaming: cai para o caminho não-stream via bridge local
+        return callLLM(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
       default:
         return callClaudeAPIStream(messages, options);
     }
-  }, [aiSettings.provider, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream]);
+  }, [aiSettings.provider, aiSettings.claudeCliModel, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM]);
 
   /**
    * Chama a API com streaming para provider/modelo específico (para double check)
@@ -2142,9 +2166,12 @@ const useAIIntegration = () => {
     if (provider === 'deepseek') {
       return await callDeepseekAPIStream(messages, options);
     }
+    if (provider === 'claude-cli') {
+      return await callLLM(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
+    }
     // Default: Claude
     return await callClaudeAPIStream(messages, options);
-  }, [callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, aiSettings.doubleCheck]);
+  }, [callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM, aiSettings.doubleCheck, aiSettings.claudeCliModel]);
 
   /**
    * Executa o double check em uma resposta da IA

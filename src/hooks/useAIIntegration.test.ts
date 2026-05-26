@@ -2332,6 +2332,37 @@ describe('useAIIntegration', () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // callAI - provider claude-cli (local bridge)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('callAI - provider claude-cli', () => {
+    it('callAI com provider claude-cli faz fetch para o bridge local sem x-api-key', async () => {
+      const mockResponse = {
+        ok: true, status: 200,
+        json: async () => ({ content: [{ type: 'text', text: 'PONG' }], usage: { input_tokens: 1, output_tokens: 1 } }),
+        text: async () => '',
+      };
+      vi.mocked(global.fetch).mockResolvedValue(mockResponse as any);
+
+      const { result } = renderHook(() => useAIIntegration());
+      let text = '';
+      await act(async () => {
+        text = await result.current.callAI(
+          [{ role: 'user', content: [{ type: 'text', text: 'oi' }] }] as any,
+          { provider: 'claude-cli' }
+        );
+      });
+
+      expect(text).toBe('PONG');
+      const fetchCalls = vi.mocked(global.fetch).mock.calls;
+      const calledUrl = fetchCalls[0][0] as string;
+      expect(calledUrl).toContain('http://localhost:8787/api/claude-cli/messages');
+      const opts = fetchCalls[0][1] as RequestInit;
+      expect((opts.headers as Record<string, string>)['x-api-key']).toBeUndefined();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // Token tracking
   // ═══════════════════════════════════════════════════════════════════════════
 

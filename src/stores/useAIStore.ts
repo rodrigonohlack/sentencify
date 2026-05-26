@@ -215,6 +215,7 @@ export interface ApiTestStatuses {
   openai: ApiTestStatus;
   grok: ApiTestStatus;
   deepseek: ApiTestStatus;
+  'claude-cli'?: ApiTestStatus; // Sem API key — status de teste não aplicável
 }
 
 /** Estado inicial dos testes de API */
@@ -224,12 +225,15 @@ const initialApiTestStatuses: ApiTestStatuses = {
   openai: null,
   grok: null,
   deepseek: null,
+  'claude-cli': null,
 };
 
 /** Estado inicial do AISettings */
 const initialAISettings: AISettings = {
   provider: 'claude',
   claudeModel: 'claude-sonnet-4-20250514',
+  claudeCliModel: 'claude-sonnet-4-6',
+  claudeCliEffort: 'high' as const,
   geminiModel: 'gemini-3-flash-preview',
   openaiModel: 'gpt-5.2-chat-latest',
   openaiReasoningLevel: 'medium',
@@ -901,9 +905,10 @@ export const selectProvider = (state: AIStoreState): AIProvider =>
 
 /** Selector: Retorna modelo atual baseado no provider */
 export const selectCurrentModel = (state: AIStoreState): string => {
-  const { provider, claudeModel, geminiModel, openaiModel, grokModel, deepseekModel } = state.aiSettings;
+  const { provider, claudeModel, claudeCliModel, geminiModel, openaiModel, grokModel, deepseekModel } = state.aiSettings;
   switch (provider) {
     case 'claude': return claudeModel;
+    case 'claude-cli': return claudeCliModel || 'claude-sonnet-4-6';
     case 'gemini': return geminiModel;
     case 'openai': return openaiModel;
     case 'grok': return grokModel;
@@ -938,7 +943,7 @@ export const selectApiTestStatuses = (state: AIStoreState): ApiTestStatuses =>
 
 /** Selector: Retorna status de teste de um provider específico (v1.37.49) */
 export const selectApiTestStatus = (provider: AIProvider) => (state: AIStoreState): ApiTestStatus =>
-  state.apiTestStatuses[provider];
+  state.apiTestStatuses[provider] ?? null;
 
 /** Selector: Retorna estado de streaming (v1.39.09) */
 export const selectStreamingState = (state: AIStoreState): StreamingState =>

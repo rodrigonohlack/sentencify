@@ -25,7 +25,7 @@
 
 import type { GroundingMetadata } from '../../types';
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli';
 
 export interface WebSearchProviderAdapter {
   /** Se este provider suporta web search via este registry no momento. */
@@ -107,10 +107,11 @@ const noopAdapter: WebSearchProviderAdapter = {
 
 export const WEB_SEARCH_REGISTRY: Record<AIProvider, WebSearchProviderAdapter> = {
   gemini: geminiAdapter,
-  claude: noopAdapter,    // v2: web_search_20250305
-  openai: noopAdapter,    // v2: Responses API web_search
-  grok: noopAdapter,      // v2: live_search (nativo no Grok 4+)
-  deepseek: noopAdapter,  // DeepSeek V4 não tem web search nativo (v1.43.00)
+  claude: noopAdapter,       // v2: web_search_20250305
+  'claude-cli': noopAdapter, // Espelha claude — web search via CLI local (futuro)
+  openai: noopAdapter,       // v2: Responses API web_search
+  grok: noopAdapter,         // v2: live_search (nativo no Grok 4+)
+  deepseek: noopAdapter,     // DeepSeek V4 não tem web search nativo (v1.43.00)
 };
 
 // ═══════════════════════════════════════════════════════════════════════════

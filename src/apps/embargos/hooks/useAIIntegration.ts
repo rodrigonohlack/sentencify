@@ -6,6 +6,7 @@
 import { useCallback } from 'react';
 import { useAIStore } from '../stores';
 import { API_BASE } from '../constants';
+import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../../../utils/claude-cli-bridge';
 import type { AIMessage, AICallOptions, ClaudeContentBlock, OpenAIMessage, GrokMessage, GeminiMessage } from '../../../types/ai';
 
 const RETRY_MAX_ATTEMPTS = 3;
@@ -24,7 +25,8 @@ export const useAIIntegration = () => {
       maxTokens = 8000,
       systemPrompt = null,
       model = aiSettings.claudeModel,
-      disableThinking = false
+      disableThinking = false,
+      localBridge = false
     } = options;
 
     let lastError: Error | null = null;
@@ -51,12 +53,18 @@ export const useAIIntegration = () => {
           };
         }
 
-        const response = await fetch(`${API_BASE}/api/claude/messages`, {
+        if (localBridge) {
+          (requestBody as Record<string, unknown>).effort = aiSettings.claudeCliEffort || 'high';
+        }
+        const claudeUrl = localBridge
+          ? `${getClaudeCliBridgeUrl()}${CLAUDE_CLI_MESSAGES_PATH}`
+          : `${API_BASE}/api/claude/messages`;
+        const claudeHeaders: Record<string, string> = localBridge
+          ? { 'Content-Type': 'application/json' }
+          : { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys.claude };
+        const response = await fetch(claudeUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': aiSettings.apiKeys.claude
-          },
+          headers: claudeHeaders,
           body: JSON.stringify(requestBody)
         });
 
@@ -1001,10 +1009,13 @@ export const useAIIntegration = () => {
         return callGrokAPIStream(messages, options);
       case 'deepseek':
         return callDeepseekAPIStream(messages, options);
+      case 'claude-cli':
+        // v1 sem streaming: cai para o caminho não-stream via bridge local
+        return callClaudeAPI(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
       default:
         return callClaudeAPIStream(messages, options);
     }
-  }, [aiSettings.provider, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream]);
+  }, [aiSettings.provider, aiSettings.claudeCliModel, callClaudeAPI, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream]);
 
   const callAI = useCallback(async (
     messages: AIMessage[],
@@ -1023,10 +1034,12 @@ export const useAIIntegration = () => {
         return callGrokAPI(messages, options);
       case 'deepseek':
         return callDeepseekAPI(messages, options);
+      case 'claude-cli':
+        return callClaudeAPI(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
       default:
         return callClaudeAPI(messages, options);
     }
-  }, [aiSettings.provider, callClaudeAPI, callGeminiAPI, callOpenAIAPI, callGrokAPI, callDeepseekAPI]);
+  }, [aiSettings.provider, aiSettings.claudeCliModel, callClaudeAPI, callGeminiAPI, callOpenAIAPI, callGrokAPI, callDeepseekAPI]);
 
   return {
     callAI,
