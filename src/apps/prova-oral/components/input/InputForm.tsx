@@ -14,9 +14,11 @@ import {
   Loader2,
   AlertCircle,
   Lightbulb,
+  FileJson,
 } from 'lucide-react';
 import { Button, TextArea, Card, CardHeader, CardTitle, CardContent } from '../ui';
 import { AnalysisSelectorModal } from './AnalysisSelectorModal';
+import { ImportJsonModal } from './ImportJsonModal';
 import { StreamingModal } from '../StreamingModal';
 import { useProvaOralStore } from '../../stores';
 import { useProvaOralAnalysis, useProvaOralAPI } from '../../hooks';
@@ -66,6 +68,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onAnalysisComplete }) => {
   const providerName = providerNames[aiSettings.provider] || 'IA';
 
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showImportJsonModal, setShowImportJsonModal] = useState(false);
 
   const handleAnalyze = useCallback(async () => {
     const analysisResult = await analyze(transcricao, sinteseProcesso, instrucoesExtras);
@@ -102,10 +105,19 @@ export const InputForm: React.FC<InputFormProps> = ({ onAnalysisComplete }) => {
       <div className="space-y-6">
         {/* Card de Transcrição */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle icon={<Mic className="w-5 h-5" />}>
               Transcrição da Audiência
             </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowImportJsonModal(true)}
+              disabled={isAnalyzing}
+              icon={<FileJson className="w-4 h-4" />}
+            >
+              Importar JSON
+            </Button>
           </CardHeader>
           <CardContent>
             <TextArea
@@ -248,6 +260,16 @@ Você pode:
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         onSelect={handleImportSintese}
+      />
+
+      {/* Modal de Importação de JSON */}
+      <ImportJsonModal
+        isOpen={showImportJsonModal}
+        onClose={() => setShowImportJsonModal(false)}
+        onSuccess={() => {
+          setShowImportJsonModal(false);
+          onAnalysisComplete?.();
+        }}
       />
 
       {/* Modal de Streaming - exibe progresso das 3 fases */}
