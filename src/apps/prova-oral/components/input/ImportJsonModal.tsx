@@ -56,7 +56,7 @@ async function parseSingleJson(file: File): Promise<ParsedJson> {
 
 export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const { showToast } = useToast();
-  const { createAnalysis } = useProvaOralAPI();
+  const { createAnalysis, error: apiError } = useProvaOralAPI();
   const loadAnalysis = useProvaOralStore((s) => s.loadAnalysis);
 
   const [parsed, setParsed] = useState<ParsedJson | null>(null);
@@ -100,7 +100,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ isOpen, onClos
       const { resultado, transcricao, sinteseProcesso } = payload;
       const id = await createAnalysis({ resultado, transcricao, sinteseProcesso });
       if (!id) {
-        showToast('error', 'Falha ao salvar a análise importada. Tente novamente.');
+        showToast('error', apiError || 'Falha ao salvar a análise importada. Tente novamente.');
         return;
       }
       loadAnalysis(id, transcricao, sinteseProcesso, resultado);
@@ -111,7 +111,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ isOpen, onClos
     } finally {
       setIsImporting(false);
     }
-  }, [parsed, createAnalysis, loadAnalysis, showToast, reset, onSuccess, onClose]);
+  }, [parsed, createAnalysis, apiError, loadAnalysis, showToast, reset, onSuccess, onClose]);
 
   const result = parsed?.result;
   const canImport = result?.valid === true && !isImporting;
