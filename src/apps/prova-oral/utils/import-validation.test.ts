@@ -80,4 +80,18 @@ describe('validateProvaOralImport', () => {
   it('rejeita entrada que não é objeto', () => {
     expect(validateProvaOralImport(42).valid).toBe(false);
   });
+
+  it('trata null em arrays opcionais como ausente (não erro)', () => {
+    const r = validateProvaOralImport({
+      ...validResultado,
+      sinteses: null,
+      analises: null,
+      contradicoes: null,
+      confissoes: null,
+      credibilidade: null,
+    });
+    expect(r.valid).toBe(true);
+    expect(r.payload?.resultado.sinteses).toEqual([]);
+    expect(r.payload?.resultado.credibilidade).toEqual([]);
+  });
 });

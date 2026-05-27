@@ -110,7 +110,7 @@ function validateSinteses(
   errors: string[],
   warnings: string[]
 ): Sintese[] {
-  if (raw === undefined) return [];
+  if (raw == null) return [];
   if (!Array.isArray(raw)) {
     errors.push('sinteses: deve ser array');
     return [];
@@ -138,7 +138,7 @@ function validateSinteses(
 }
 
 function validateAnalises(raw: unknown, errors: string[]): AnaliseTemaPedido[] {
-  if (raw === undefined) return [];
+  if (raw == null) return [];
   if (!Array.isArray(raw)) {
     errors.push('analises: deve ser array');
     return [];
@@ -169,7 +169,7 @@ function validateAnalises(raw: unknown, errors: string[]): AnaliseTemaPedido[] {
 }
 
 function validateContradicoes(raw: unknown, errors: string[]): Contradicao[] {
-  if (raw === undefined) return [];
+  if (raw == null) return [];
   if (!Array.isArray(raw)) {
     errors.push('contradicoes: deve ser array');
     return [];
@@ -202,7 +202,7 @@ function validateContradicoes(raw: unknown, errors: string[]): Contradicao[] {
 }
 
 function validateConfissoes(raw: unknown, errors: string[]): Confissao[] {
-  if (raw === undefined) return [];
+  if (raw == null) return [];
   if (!Array.isArray(raw)) {
     errors.push('confissoes: deve ser array');
     return [];
@@ -232,7 +232,7 @@ function validateCredibilidade(
   errors: string[],
   warnings: string[]
 ): AvaliacaoCredibilidade[] {
-  if (raw === undefined) return [];
+  if (raw == null) return [];
   if (!Array.isArray(raw)) {
     errors.push('credibilidade: deve ser array');
     return [];
