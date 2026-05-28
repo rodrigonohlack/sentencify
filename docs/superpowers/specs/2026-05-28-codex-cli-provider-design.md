@@ -52,14 +52,14 @@ Content-Type: application/json
     {"role": "user",      "content": "<turno 2 — atual>"}
   ],
   "max_tokens": 8192,
-  "reasoning": "medium"                // minimal | low | medium | high
+  "reasoning_effort": "medium"         // minimal | low | medium | high
 }
 ```
 
 ### O daemon deve
 
 1. Concatenar `messages[]` em **um único prompt** com marcadores de role (ou usar `--instructions` para system se preferível) — array recebido contém o histórico completo (padrão stateless idêntico ao claude-cli).
-2. Executar `codex exec --json --skip-git-repo-check --model <model> [--reasoning-effort <reasoning>] -- "<prompt>"`.
+2. Executar `codex exec --json --skip-git-repo-check --model <model> [--reasoning-effort <reasoning_effort>] -- "<prompt>"`.
 3. Parsear o NDJSON de eventos do Codex CLI, extrair o texto final da resposta e contagens de tokens.
 4. Retornar JSON no **formato Chat Completions OpenAI**.
 
@@ -154,7 +154,7 @@ const callOpenAIAPI = React.useCallback(async (messages, options = {}) => {
   // body montado pelo helper que `callOpenAIAPI` já usa (formato Chat Completions)
   const requestBody = /* …builder existente… */;
   if (localBridge) {
-    (requestBody as Record<string, unknown>).reasoning = aiSettings.codexCliReasoning || 'medium';
+    (requestBody as Record<string, unknown>).reasoning_effort = aiSettings.codexCliReasoning || 'medium';
   }
 
   // resto do fluxo (fetch, retry, parse de choices[0].message.content) inalterado
