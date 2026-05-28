@@ -508,14 +508,26 @@ describe('useProvaOralAPI', () => {
       });
 
       expect(ok).toBe(true);
+
+      // URL + method + headers — assertion frouxa para resistir a opções extras
+      // (ex.: AbortController.signal) que o hook possa adicionar no futuro.
       expect(mockAuthFetch).toHaveBeenCalledWith(
         '/api/prova-oral/analysis-1',
         expect.objectContaining({
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resultado: novoResultado }),
         })
       );
+
+      // Body parseado por campos — imune a ordem de chaves do JSON.stringify.
+      const callArgs = mockAuthFetch.mock.calls[0];
+      const sentBody = JSON.parse(callArgs[1].body);
+      expect(sentBody.resultado.processo.numeroProcesso).toBe('NOVO-001');
+      // Resto do resultado preservado.
+      expect(sentBody.resultado.processo.reclamante).toBe(mockAnalysis.resultado.processo.reclamante);
+
+      // Side-effect: store local recebe sync para manter posição na lista.
+      expect(mockUpdateAnalysis).toHaveBeenCalledWith('analysis-1', { resultado: novoResultado });
     });
 
     it('retorna false e seta error quando PUT falha', async () => {
