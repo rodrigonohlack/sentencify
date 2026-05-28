@@ -41,11 +41,17 @@ export function buildClaudeArgs(body) {
     'stream-json',
     '--output-format',
     'stream-json',
-    '--tools',
-    '',
     '--setting-sources',
     ''
   ];
+
+  // Tools: por default zera; se body.web_search=true ativa WebSearch + bypassPermissions
+  if (body?.web_search === true) {
+    args.push('--tools', 'WebSearch');
+    args.push('--permission-mode', 'bypassPermissions');
+  } else {
+    args.push('--tools', '');
+  }
 
   args.push('--model', mapModel(body.model));
 
@@ -148,11 +154,22 @@ export function buildStdin(body) {
  */
 export function translateResponse(stdout, model) {
   let result = null;
+  const webSearchQueries = [];
+
   for (const line of stdout.split('\n')) {
     const trimmed = line.trim();
     if (!trimmed.startsWith('{')) continue;
     let obj;
     try { obj = JSON.parse(trimmed); } catch { continue; }
+
+    // Coletar tool_use blocks WebSearch (vêm em assistant messages antes do result)
+    if (obj.type === 'assistant' && Array.isArray(obj.message?.content)) {
+      for (const block of obj.message.content) {
+        if (block?.type === 'tool_use' && block.name === 'WebSearch' && block.input?.query) {
+          webSearchQueries.push(block.input.query);
+        }
+      }
+    }
     if (obj.type === 'result') { result = obj; break; }
   }
 
@@ -169,22 +186,35 @@ export function translateResponse(stdout, model) {
   }
 
   const u = result.usage || {};
-  return {
-    status: 200,
-    body: {
-      id: result.session_id || 'claude-cli',
-      type: 'message',
-      role: 'assistant',
-      model,
-      content: [{ type: 'text', text: result.result || '' }],
-      // CLI não expõe stop_reason; 'end_turn' é o default correto.
-      stop_reason: 'end_turn',
-      usage: {
-        input_tokens: u.input_tokens || 0,
-        output_tokens: u.output_tokens || 0,
-        cache_read_input_tokens: u.cache_read_input_tokens || 0,
-        cache_creation_input_tokens: u.cache_creation_input_tokens || 0,
-      },
+  const body = {
+    id: result.session_id || 'claude-cli',
+    type: 'message',
+    role: 'assistant',
+    model,
+    content: [{ type: 'text', text: result.result || '' }],
+    // CLI não expõe stop_reason; 'end_turn' é o default correto.
+    stop_reason: 'end_turn',
+    usage: {
+      input_tokens: u.input_tokens || 0,
+      output_tokens: u.output_tokens || 0,
+      cache_read_input_tokens: u.cache_read_input_tokens || 0,
+      cache_creation_input_tokens: u.cache_creation_input_tokens || 0,
     },
   };
+
+  // Grounding: extrair URLs do markdown do result + queries dos tool_use anteriores
+  const urlRegex = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+  const groundingChunks = [];
+  const seen = new Set();
+  for (const m of String(result.result || '').matchAll(urlRegex)) {
+    const uri = m[2];
+    if (seen.has(uri)) continue;
+    seen.add(uri);
+    groundingChunks.push({ web: { uri, title: m[1] || uri } });
+  }
+  if (webSearchQueries.length || groundingChunks.length) {
+    body.grounding = { webSearchQueries, groundingChunks };
+  }
+
+  return { status: 200, body };
 }

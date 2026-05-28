@@ -53,6 +53,18 @@ export const AI_PROVIDERS: Record<AIProvider, ProviderInfo> = {
       }
     ]
   },
+  'codex-cli': {
+    name: 'Codex Local (CLI)',
+    icon: 'message-circle',
+    models: [
+      {
+        id: 'gpt-5.5',
+        name: 'GPT-5.5',
+        recommended: true,
+        description: 'Generalista — usado via codex CLI sob assinatura ChatGPT (custo $0)'
+      }
+    ]
+  },
   gemini: {
     name: 'Gemini (Google)',
     icon: 'sparkles',

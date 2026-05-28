@@ -3,6 +3,11 @@ import http from 'node:http';
 import os from 'node:os';
 import { spawn } from 'node:child_process';
 import { buildClaudeArgs, buildStdin, translateResponse } from './translate.js';
+import {
+  buildCodexArgs,
+  buildStdin as buildCodexStdin,
+  translateResponse as translateCodexResponse,
+} from './translate.codex.js';
 
 const PORT = Number(process.env.CLAUDE_BRIDGE_PORT || 8787);
 if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
@@ -84,6 +89,52 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, out.status, out.body);
       });
       child.stdin.write(buildStdin(body));
+      child.stdin.end();
+    } catch (err) {
+      if (!res.writableEnded) sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao iniciar geração: ${err.message}` } });
+      return;
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && req.url === '/api/codex-cli/messages') {
+    let body;
+    try { body = await readBody(req); }
+    catch { sendJson(res, 400, { error: { type: 'invalid_request', message: 'JSON inválido.' } }); return; }
+
+    if (!Array.isArray(body.messages) || body.messages.length === 0) {
+      sendJson(res, 400, { error: { type: 'invalid_request', message: 'Campo `messages` ausente ou vazio.' } });
+      return;
+    }
+
+    try {
+      const args = buildCodexArgs(body);
+      const child = spawn('codex', args, { cwd: os.tmpdir() });
+      child.stdin.on('error', () => {});
+      let stdout = '', stderr = '';
+      child.stdout.on('data', (d) => { stdout += d.toString(); });
+      child.stderr.on('data', (d) => { stderr += d.toString(); });
+      req.on('close', () => { if (!child.killed) child.kill(); });
+      child.on('error', (err) => {
+        if (res.writableEnded) return;
+        sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao executar 'codex': ${err.message}. O binário está no PATH?` } });
+      });
+      child.on('close', () => {
+        if (res.writableEnded) return;
+        if (!stdout.trim()) {
+          sendJson(res, 500, { error: { type: 'server_error', message: `codex CLI sem saída. stderr: ${stderr.slice(0, 500)}` } });
+          return;
+        }
+        let out;
+        try {
+          out = translateCodexResponse(stdout, body.model || 'gpt-5.5');
+        } catch (err) {
+          sendJson(res, 500, { error: { type: 'server_error', message: `Erro ao traduzir resposta: ${err.message}` } });
+          return;
+        }
+        sendJson(res, out.status, out.body);
+      });
+      child.stdin.write(buildCodexStdin(body));
       child.stdin.end();
     } catch (err) {
       if (!res.writableEnded) sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao iniciar geração: ${err.message}` } });

@@ -581,6 +581,10 @@ export const AIAssistantModal = React.memo(({
   const webSearchProvider = aiSettingsForWebSearch?.provider || 'claude';
   const webSearchAnonActive = !!aiSettingsForWebSearch?.anonymization?.enabled;
   const showWebSearchToggle = providerSupportsWebSearch(webSearchProvider);
+  const webSearchProviderLabel = webSearchProvider === 'gemini' ? 'Gemini'
+    : webSearchProvider === 'claude-cli' ? 'Claude Local (CLI)'
+    : webSearchProvider === 'codex-cli' ? 'Codex Local (CLI)'
+    : 'Provider atual';
 
   // Usar props externas se fornecidas, senão usar estado local
   const selectedContextTopics = externalSelectedTopics ?? localSelectedTopics;
@@ -725,6 +729,7 @@ export const AIAssistantModal = React.memo(({
               enabled={webSearchEnabled}
               onToggle={setWebSearchEnabled}
               disabled={webSearchAnonActive}
+              providerName={webSearchProviderLabel}
             />
           ) : undefined
         }
@@ -813,6 +818,10 @@ export const AIAssistantGlobalModal = React.memo(({
   const webSearchProvider = aiSettingsForWebSearch?.provider || 'claude';
   const webSearchAnonActive = !!aiSettingsForWebSearch?.anonymization?.enabled;
   const showWebSearchToggle = providerSupportsWebSearch(webSearchProvider);
+  const webSearchProviderLabel = webSearchProvider === 'gemini' ? 'Gemini'
+    : webSearchProvider === 'claude-cli' ? 'Claude Local (CLI)'
+    : webSearchProvider === 'codex-cli' ? 'Codex Local (CLI)'
+    : 'Provider atual';
 
   // Usar props externas se fornecidas, senão usar estado local
   const selectedContextTopics = externalSelectedTopics ?? localSelectedTopics;
@@ -957,6 +966,7 @@ export const AIAssistantGlobalModal = React.memo(({
               enabled={webSearchEnabled}
               onToggle={setWebSearchEnabled}
               disabled={webSearchAnonActive}
+              providerName={webSearchProviderLabel}
             />
           ) : undefined
         }

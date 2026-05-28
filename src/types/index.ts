@@ -192,7 +192,7 @@ export const MAX_PROOF_ANALYSES = 5;
 // AI SETTINGS TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli';
 export type OCREngine = 'pdfjs' | 'tesseract' | 'pdf-puro' | 'claude-vision' | 'gemini-vision';
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
 export type OpenAIReasoningLevel = 'low' | 'medium' | 'high' | 'xhigh';
@@ -201,6 +201,9 @@ export type DeepseekReasoningEffort = 'high' | 'max';
 
 /** Níveis de effort do claude-cli (--effort flag do CLI) */
 export type ClaudeCliEffort = 'off' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+
+/** Reasoning effort do codex-cli (mapeado para `model_reasoning_effort` do config Codex) */
+export type CodexCliReasoning = 'minimal' | 'low' | 'medium' | 'high';
 
 /** Gemini API types - v1.35.95 */
 export interface GeminiGenerationConfig {
@@ -278,6 +281,8 @@ export interface AISettings {
   claudeModel: string;
   claudeCliModel?: string;
   claudeCliEffort?: ClaudeCliEffort;
+  codexCliModel?: string;
+  codexCliReasoning?: CodexCliReasoning;
   geminiModel: string;
   openaiModel: 'gpt-5.2' | 'gpt-5.2-chat-latest';
   openaiReasoningLevel: OpenAIReasoningLevel;
@@ -286,7 +291,7 @@ export interface AISettings {
   deepseekModel: DeepseekModel;
   deepseekThinking: boolean;
   deepseekReasoningEffort: DeepseekReasoningEffort;
-  apiKeys: { claude: string; gemini: string; openai: string; grok: string; deepseek: string; 'claude-cli'?: string };
+  apiKeys: { claude: string; gemini: string; openai: string; grok: string; deepseek: string; 'claude-cli'?: string; 'codex-cli'?: string };
   useExtendedThinking: boolean;
   thinkingBudget: string;
   geminiThinkingLevel: GeminiThinkingLevel;

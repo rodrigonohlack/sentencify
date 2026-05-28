@@ -25,7 +25,7 @@
 
 import type { GroundingMetadata } from '../../types';
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli';
 
 export interface WebSearchProviderAdapter {
   /** Se este provider suporta web search via este registry no momento. */
@@ -93,6 +93,17 @@ const geminiAdapter: WebSearchProviderAdapter = {
   },
 };
 
+// Adapter local-bridge: tanto claude-cli quanto codex-cli usam o mesmo shape
+// (request precisa de web_search=true; response carrega grounding pronto).
+const localBridgeAdapter: WebSearchProviderAdapter = {
+  supportsWebSearch: true,
+  applyToRequest: (req) => ({ ...(req as object), web_search: true }),
+  extractGrounding: (resp) => {
+    const grounding = (resp as { grounding?: GroundingMetadata } | null)?.grounding;
+    return grounding ?? null;
+  }
+};
+
 // Adapters no-op para providers que ainda não implementam web search.
 // Quando for implementar, trocar `supportsWebSearch: true` e preencher as funções.
 const noopAdapter: WebSearchProviderAdapter = {
@@ -107,11 +118,12 @@ const noopAdapter: WebSearchProviderAdapter = {
 
 export const WEB_SEARCH_REGISTRY: Record<AIProvider, WebSearchProviderAdapter> = {
   gemini: geminiAdapter,
-  claude: noopAdapter,       // v2: web_search_20250305
-  'claude-cli': noopAdapter, // Espelha claude — web search via CLI local (futuro)
-  openai: noopAdapter,       // v2: Responses API web_search
-  grok: noopAdapter,         // v2: live_search (nativo no Grok 4+)
-  deepseek: noopAdapter,     // DeepSeek V4 não tem web search nativo (v1.43.00)
+  claude: noopAdapter,                // v2: web_search_20250305
+  'claude-cli': localBridgeAdapter,   // bridge local injeta web_search=true e devolve grounding pronto
+  openai: noopAdapter,                // v2: Responses API web_search
+  'codex-cli': localBridgeAdapter,    // bridge local injeta web_search=true e devolve grounding pronto
+  grok: noopAdapter,                  // v2: live_search (nativo no Grok 4+)
+  deepseek: noopAdapter,              // DeepSeek V4 não tem web search nativo (v1.43.00)
 };
 
 // ═══════════════════════════════════════════════════════════════════════════

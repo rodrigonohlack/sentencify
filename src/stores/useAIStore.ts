@@ -216,6 +216,7 @@ export interface ApiTestStatuses {
   grok: ApiTestStatus;
   deepseek: ApiTestStatus;
   'claude-cli'?: ApiTestStatus; // Sem API key — status de teste não aplicável
+  'codex-cli'?: ApiTestStatus; // Sem API key — status de teste não aplicável
 }
 
 /** Estado inicial dos testes de API */
@@ -226,6 +227,7 @@ const initialApiTestStatuses: ApiTestStatuses = {
   grok: null,
   deepseek: null,
   'claude-cli': null,
+  'codex-cli': null,
 };
 
 /** Estado inicial do AISettings */
@@ -234,6 +236,8 @@ const initialAISettings: AISettings = {
   claudeModel: 'claude-sonnet-4-20250514',
   claudeCliModel: 'claude-sonnet-4-6',
   claudeCliEffort: 'high' as const,
+  codexCliModel: 'gpt-5.5',
+  codexCliReasoning: 'medium' as const,
   geminiModel: 'gemini-3-flash-preview',
   openaiModel: 'gpt-5.2-chat-latest',
   openaiReasoningLevel: 'medium',
@@ -905,10 +909,11 @@ export const selectProvider = (state: AIStoreState): AIProvider =>
 
 /** Selector: Retorna modelo atual baseado no provider */
 export const selectCurrentModel = (state: AIStoreState): string => {
-  const { provider, claudeModel, claudeCliModel, geminiModel, openaiModel, grokModel, deepseekModel } = state.aiSettings;
+  const { provider, claudeModel, claudeCliModel, codexCliModel, geminiModel, openaiModel, grokModel, deepseekModel } = state.aiSettings;
   switch (provider) {
     case 'claude': return claudeModel;
     case 'claude-cli': return claudeCliModel || 'claude-sonnet-4-6';
+    case 'codex-cli': return codexCliModel || 'gpt-5.5';
     case 'gemini': return geminiModel;
     case 'openai': return openaiModel;
     case 'grok': return grokModel;

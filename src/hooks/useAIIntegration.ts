@@ -12,6 +12,7 @@ import { useAIStore } from '../stores/useAIStore';
 import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
 import { API_BASE } from '../constants/api';
 import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../utils/claude-cli-bridge';
+import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../utils/codex-cli-bridge';
 import { withRetry } from '../utils/retry';
 // v1.42.02: Registry provider-agnostic para habilitar web search
 import { applyWebSearchTool, extractGrounding } from '../utils/ai-tools/webSearch';
@@ -393,7 +394,9 @@ const useAIIntegration = () => {
       logMetrics = true,
       extractText = true,
       validateResponse = true,
-      localBridge = false
+      localBridge = false,
+      webSearch = false,
+      onGrounding
     } = options;
 
     // v1.32.33: Auto-aumentar timeout para 5 min quando thinking budget >= 40K
@@ -428,6 +431,9 @@ const useAIIntegration = () => {
         if (localBridge) {
           (requestBody as Record<string, unknown>).effort = aiSettings.claudeCliEffort || 'high';
         }
+        if (localBridge && webSearch) {
+          (requestBody as Record<string, unknown>).web_search = true;
+        }
         const response = await fetch(claudeUrl, {
           method: 'POST',
           headers: claudeHeaders,
@@ -450,6 +456,11 @@ const useAIIntegration = () => {
 
         // Parsear JSON
         const data = await response.json();
+
+        // Propagar grounding metadata (claude-cli com WebSearch)
+        if (localBridge && data?.grounding && onGrounding) {
+          onGrounding(data.grounding);
+        }
 
         // v1.32.39: Log thinking no console do browser
         if (aiSettings.logThinking) {
@@ -1050,7 +1061,10 @@ const useAIIntegration = () => {
       abortSignal = null,
       logMetrics = true,
       extractText = true,
-      disableThinking = false
+      disableThinking = false,
+      localBridge = false,
+      webSearch = false,
+      onGrounding
     } = options;
 
     // Resolver systemPrompt
@@ -1090,12 +1104,21 @@ const useAIIntegration = () => {
           requestBody.reasoning = { effort: reasoningLevel };
         }
 
-        const response = await fetch(`${API_BASE}/api/openai/chat`, {
+        if (localBridge) {
+          requestBody.reasoning_effort = aiSettings.codexCliReasoning || 'medium';
+          if (webSearch) requestBody.web_search = true;
+        }
+
+        const url = localBridge
+          ? `${getCodexCliBridgeUrl()}${CODEX_CLI_MESSAGES_PATH}`
+          : `${API_BASE}/api/openai/chat`;
+        const headers: Record<string, string> = localBridge
+          ? { 'Content-Type': 'application/json' }
+          : { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys?.openai || '' };
+
+        const response = await fetch(url, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': aiSettings.apiKeys?.openai || ''
-          },
+          headers,
           body: JSON.stringify(requestBody),
           signal
         });
@@ -1112,6 +1135,11 @@ const useAIIntegration = () => {
         if (!response.ok) {
           const errorMsg = data.error?.message || `OpenAI API error: ${response.status}`;
           throw new Error(errorMsg);
+        }
+
+        // Propagar grounding metadata se daemon devolveu (codex-cli com web search)
+        if (localBridge && data?.grounding && onGrounding) {
+          onGrounding(data.grounding);
         }
 
         // v1.37.91: Usa addTokenUsage com model/provider para tracking por modelo
@@ -1443,6 +1471,15 @@ const useAIIntegration = () => {
         ...options,
         localBridge: true,
         model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6'
+      });
+    }
+
+    // Provider codex-cli: roteia para o daemon claude-bridge (assinatura ChatGPT)
+    if (provider === 'codex-cli') {
+      return await callOpenAIAPI(messages, {
+        ...options,
+        localBridge: true,
+        model: options.model || aiSettings.codexCliModel || 'gpt-5.5'
       });
     }
 
@@ -2096,10 +2133,12 @@ const useAIIntegration = () => {
       case 'claude-cli':
         // v1 sem streaming: cai para o caminho não-stream via bridge local
         return callLLM(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
+      case 'codex-cli':
+        return callOpenAIAPI(messages, { ...options, localBridge: true, model: options.model || aiSettings.codexCliModel || 'gpt-5.5' });
       default:
         return callClaudeAPIStream(messages, options);
     }
-  }, [aiSettings.provider, aiSettings.claudeCliModel, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM]);
+  }, [aiSettings.provider, aiSettings.claudeCliModel, aiSettings.codexCliModel, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM, callOpenAIAPI]);
 
   /**
    * Chama a API com streaming para provider/modelo específico (para double check)
@@ -2169,9 +2208,12 @@ const useAIIntegration = () => {
     if (provider === 'claude-cli') {
       return await callLLM(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
     }
+    if (provider === 'codex-cli') {
+      return await callOpenAIAPI(messages, { ...options, localBridge: true, model: options.model || aiSettings.codexCliModel || 'gpt-5.5' });
+    }
     // Default: Claude
     return await callClaudeAPIStream(messages, options);
-  }, [callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM, aiSettings.doubleCheck, aiSettings.claudeCliModel]);
+  }, [callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM, callOpenAIAPI, aiSettings.doubleCheck, aiSettings.claudeCliModel, aiSettings.codexCliModel]);
 
   /**
    * Executa o double check em uma resposta da IA

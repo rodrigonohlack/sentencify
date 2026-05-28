@@ -8,7 +8,7 @@
  *              devem ser movidos para cá sem revisão.
  */
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli';
 
 /** Níveis de thinking do Gemini */
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
@@ -25,6 +25,9 @@ export type DeepseekReasoningEffort = 'high' | 'max';
 /** Níveis de effort do claude-cli (--effort flag do CLI) */
 export type ClaudeCliEffort = 'off' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
 
+/** Reasoning effort do codex-cli (mapeado para `model_reasoning_effort` do config Codex) */
+export type CodexCliReasoning = 'minimal' | 'low' | 'medium' | 'high';
+
 export interface APIKeys {
   claude: string;
   gemini: string;
@@ -32,6 +35,7 @@ export interface APIKeys {
   grok: string;
   deepseek: string;
   'claude-cli'?: string; // Sem API key — usa login OAuth local
+  'codex-cli'?: string; // Sem API key — usa OAuth ChatGPT local
 }
 
 export interface AISettings {
@@ -39,6 +43,8 @@ export interface AISettings {
   claudeModel: string;
   claudeCliModel?: string;
   claudeCliEffort?: ClaudeCliEffort;
+  codexCliModel?: string;
+  codexCliReasoning?: CodexCliReasoning;
   geminiModel: string;
   openaiModel: 'gpt-5.2' | 'gpt-5.2-chat-latest';
   openaiReasoningLevel: OpenAIReasoningLevel;

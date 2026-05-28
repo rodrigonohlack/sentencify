@@ -176,3 +176,42 @@ test('translateResponse: is_error genérico (não-auth) → 500 com a mensagem d
   assert.equal(out.body.error.type, 'server_error');
   assert.match(out.body.error.message, /rate_limit_exceeded/);
 });
+
+test('buildClaudeArgs: web_search=true ativa --tools WebSearch + bypassPermissions', () => {
+  const args = buildClaudeArgs({ model: 'sonnet', web_search: true });
+  const toolsIdx = args.indexOf('--tools');
+  assert.notEqual(toolsIdx, -1);
+  assert.equal(args[toolsIdx + 1], 'WebSearch');
+  const permIdx = args.indexOf('--permission-mode');
+  assert.notEqual(permIdx, -1);
+  assert.equal(args[permIdx + 1], 'bypassPermissions');
+});
+
+test('buildClaudeArgs: sem web_search mantém --tools "" (default seguro)', () => {
+  const args = buildClaudeArgs({ model: 'sonnet' });
+  const toolsIdx = args.indexOf('--tools');
+  assert.equal(args[toolsIdx + 1], '');
+  assert.equal(args.indexOf('--permission-mode'), -1);
+});
+
+test('translateResponse: extrai grounding de tool_use blocks WebSearch', () => {
+  const RESULT_WITH_TOOLS = JSON.stringify({
+    type: 'result',
+    subtype: 'success',
+    is_error: false,
+    result: 'A capital da França é Paris. Sources:\n- [Wikipedia](https://pt.wikipedia.org/wiki/Paris)',
+    session_id: 'sess-ws-1',
+    usage: { input_tokens: 10, output_tokens: 30 },
+  });
+  const stdout = [
+    '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"WebSearch","input":{"query":"capital França"}}]}}',
+    RESULT_WITH_TOOLS,
+  ].join('\n') + '\n';
+
+  const out = translateResponse(stdout, 'sonnet');
+  assert.equal(out.status, 200);
+  assert.ok(out.body.grounding, 'grounding deveria estar presente');
+  assert.deepEqual(out.body.grounding.webSearchQueries, ['capital França']);
+  assert.ok(out.body.grounding.groundingChunks.length >= 1);
+  assert.match(out.body.grounding.groundingChunks[0].web.uri, /wikipedia/);
+});

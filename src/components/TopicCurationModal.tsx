@@ -72,7 +72,7 @@ interface TopicCurationModalProps {
   parallelRequests?: number;
   isDarkMode?: boolean;
   // Configurações de custo
-  provider?: 'anthropic' | 'gemini' | 'claude' | 'claude-cli' | 'openai' | 'grok' | 'deepseek';
+  provider?: 'anthropic' | 'gemini' | 'claude' | 'claude-cli' | 'codex-cli' | 'openai' | 'grok' | 'deepseek';
   thinkingBudget?: string;
   useExtendedThinking?: boolean;
   geminiThinkingLevel?: 'minimal' | 'low' | 'medium' | 'high';

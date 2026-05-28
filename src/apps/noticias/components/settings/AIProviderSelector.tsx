@@ -14,6 +14,7 @@ const providerIcons: Record<AIProvider, React.ReactNode> = {
   'claude-cli': <Brain className="w-5 h-5" />,
   gemini: <Sparkles className="w-5 h-5" />,
   openai: <MessageCircle className="w-5 h-5" />,
+  'codex-cli': <MessageCircle className="w-5 h-5" />,
   grok: <Zap className="w-5 h-5" />,
   deepseek: <Zap className="w-5 h-5" />
 };
@@ -64,8 +65,8 @@ export const AIProviderSelector: React.FC = () => {
                   <p className={`font-medium ${isSelected ? 'text-blue-400' : 'theme-text-primary'}`}>
                     {info.name}
                   </p>
-                  <p className={`text-xs ${key === 'claude-cli' ? 'theme-text-muted' : hasApiKey ? 'text-green-400' : 'theme-text-muted'}`}>
-                    {key === 'claude-cli'
+                  <p className={`text-xs ${key === 'claude-cli' || key === 'codex-cli' ? 'theme-text-muted' : hasApiKey ? 'text-green-400' : 'theme-text-muted'}`}>
+                    {key === 'claude-cli' || key === 'codex-cli'
                       ? 'Sem chave — usa OAuth local'
                       : hasApiKey ? 'API Key configurada' : 'API Key não configurada'}
                   </p>

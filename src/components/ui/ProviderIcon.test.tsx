@@ -198,6 +198,25 @@ describe('ProviderIcon', () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // CODEX-CLI PROVIDER TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('CodexCLI', () => {
+    it('deve renderizar um SVG para o provider codex-cli', () => {
+      const { container } = render(<ProviderIcon provider="codex-cli" />);
+      expect(container.querySelector('svg')).toBeInTheDocument();
+    });
+
+    it('usa o mesmo path do OpenAIIcon (família OpenAI)', () => {
+      const { container: codexContainer } = render(<ProviderIcon provider="codex-cli" />);
+      const { container: openaiContainer } = render(<ProviderIcon provider="openai" />);
+      const codexPath = codexContainer.querySelector('svg path')?.getAttribute('d');
+      const openaiPath = openaiContainer.querySelector('svg path')?.getAttribute('d');
+      expect(codexPath).toBe(openaiPath);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // DISTINCT ICONS TESTS
   // ═══════════════════════════════════════════════════════════════════════════
 

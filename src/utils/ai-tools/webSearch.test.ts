@@ -151,6 +151,45 @@ describe('extractGrounding — providers não-suportados', () => {
   });
 });
 
+describe('claude-cli adapter', () => {
+  it('marca supportsWebSearch=true', () => {
+    expect(providerSupportsWebSearch('claude-cli')).toBe(true);
+  });
+  it('aplica web_search: true no request', () => {
+    const result = applyWebSearchTool('claude-cli', { foo: 'bar' }, { enabled: true });
+    expect((result as { web_search?: boolean }).web_search).toBe(true);
+  });
+  it('extrai grounding do campo data.grounding', () => {
+    const g = extractGrounding('claude-cli', {
+      grounding: {
+        webSearchQueries: ['q1'],
+        groundingChunks: [{ web: { uri: 'https://x', title: 't' } }]
+      }
+    });
+    expect(g?.webSearchQueries).toEqual(['q1']);
+    expect(g?.groundingChunks?.length).toBe(1);
+  });
+});
+
+describe('codex-cli adapter', () => {
+  it('marca supportsWebSearch=true', () => {
+    expect(providerSupportsWebSearch('codex-cli')).toBe(true);
+  });
+  it('aplica web_search: true no request', () => {
+    const result = applyWebSearchTool('codex-cli', { foo: 'bar' }, { enabled: true });
+    expect((result as { web_search?: boolean }).web_search).toBe(true);
+  });
+  it('extrai grounding do campo data.grounding', () => {
+    const g = extractGrounding('codex-cli', {
+      grounding: {
+        webSearchQueries: ['q1'],
+        groundingChunks: [{ web: { uri: 'https://x', title: 't' } }]
+      }
+    });
+    expect(g?.webSearchQueries).toEqual(['q1']);
+  });
+});
+
 describe('WEB_SEARCH_REGISTRY — shape', () => {
   it('tem entrada para todos os providers suportados', () => {
     expect(WEB_SEARCH_REGISTRY).toHaveProperty('gemini');

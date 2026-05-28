@@ -1,261 +1,304 @@
-# Provider "Codex Local (CLI)" — Design
+# Provider "Codex Local (CLI)" + Web Search nos providers CLI — Design
 
-> **Status:** spec aprovado para escrita de plano (brainstorming concluído em 2026-05-28)
-> **Versão alvo:** 1.49.0 (feat) — bump em CLAUDE.md, App.tsx (`APP_VERSION`), changelog.js, package.json
+> **Status:** spec aprovado para escrita de plano (brainstorming concluído em 2026-05-28; revisado no mesmo dia para incluir escopo do daemon e web search)
+> **Versão alvo:** 1.50.0 (feat) — bump em CLAUDE.md, App.tsx (`APP_VERSION`), changelog.js, package.json
 
 ## Objetivo
 
-Adicionar um sétimo provider de IA ao SentencifyAI — **"Codex Local (CLI)"** — simétrico ao `claude-cli` já existente. Em vez de chamar a API paga da OpenAI, executa o binário `codex` (Codex CLI) instalado na máquina do usuário usando o **login OAuth do ChatGPT** (Plus/Pro/Business). Uso exclusivo do autor, em uma única máquina. Funciona inclusive com o frontend servido em produção (Render), apontando para o mesmo daemon local que já hospeda o `claude-cli`.
+1. **Adicionar o sétimo provider de IA** ao SentencifyAI — **"Codex Local (CLI)"** — análogo ao `claude-cli` mas usando OAuth ChatGPT (Plus/Pro). Roda via daemon `claude-bridge` local em endpoint novo `/api/codex-cli/messages`, executando `codex exec --json -m gpt-5.5`.
+2. **Habilitar Web Search no chat do assistente** para os dois providers CLI (`claude-cli` e `codex-cli`), com extração de **grounding metadata** (footer "Fontes" igual ao do Gemini).
 
-## Pré-requisitos do usuário (já satisfeitos)
+Uso exclusivo do autor, em uma única máquina. Custo = $0 (assinaturas).
 
-- `codex` CLI instalado e `codex login` executado (token OAuth salvo em `~/.codex/auth.json`).
-- Daemon `claude-bridge` rodando localmente em `http://localhost:8787`.
+## Pré-requisitos do usuário
+
+| Item | Estado |
+|---|---|
+| `codex` CLI ≥ 0.134.0 instalado | ✅ (confirmado) |
+| `codex login` executado (OAuth ChatGPT) | ✅ (confirmado — `~/.codex/auth.json` existe) |
+| `claude` CLI ≥ 2.1.150 instalado e logado | ✅ (já era pré-req do claude-cli) |
+| Daemon `claude-bridge` rodando localmente | ✅ (`npm run claude-bridge`) |
 
 ## Arquitetura
 
 ```
-┌──────────────────────────┐         ┌──────────────────────────────────┐
-│ Sentencify (frontend)    │  POST   │ claude-bridge (daemon Node)      │
-│ Render OU local          │ ──────► │ http://127.0.0.1:8787            │
-│ provider = "codex-cli"   │  JSON   │ /api/codex-cli/messages          │
-│ body = Chat Completions  │ ◄────── │  1. traduz body → prompt único   │
-│ (callOpenAIAPI)          │         │  2. spawn `codex exec --json`    │
-└──────────────────────────┘         │  3. eventos NDJSON → resposta CC │
-                                      └──────────────────────────────────┘
-                                                    │ assinatura ChatGPT
-                                                    ▼  (custo $0)
-                                                  OpenAI
+┌──────────────────────────┐         ┌────────────────────────────────────────┐
+│ Sentencify (frontend)    │  POST   │ claude-bridge (daemon Node)            │
+│ Render OU local          │ ──────► │ http://127.0.0.1:8787                  │
+│                          │         │                                        │
+│ provider = "claude-cli"  │         │ POST /api/claude-cli/messages          │
+│ body = Messages API      │ ──────► │  spawn `claude` (+ WebSearch opcional) │
+│                          │ ◄────── │  parse stream-json + grounding         │
+│                          │         │                                        │
+│ provider = "codex-cli"   │         │ POST /api/codex-cli/messages           │
+│ body = Chat Completions  │ ──────► │  spawn `codex exec --json` (+ --search)│
+│                          │ ◄────── │  parse JSONL + citations               │
+└──────────────────────────┘         └────────────────────────────────────────┘
+                                                    │
+                                                    ▼ OAuth (assinatura)
+                                            Anthropic    OpenAI
+                                            (Claude)     (Codex)
 ```
 
-Dois componentes envolvidos:
+Três componentes envolvidos, todos no escopo deste plano:
 
-1. **Daemon `claude-bridge`** — já existe; ganha um endpoint novo `/api/codex-cli/messages`. **Não faz parte deste plano de implementação** (vive em repositório separado). Este spec define apenas o **contrato** que o daemon deve respeitar.
-2. **Provider no frontend (`codex-cli`)** — nova opção que roteia para o daemon. Foco deste plano.
+1. **Daemon `claude-bridge/`** (já existe em `/home/nohlack/sentencify/claude-bridge/`)
+   - Novo endpoint `/api/codex-cli/messages` (formato Chat Completions, traduz para `codex exec --json`)
+   - Endpoint existente `/api/claude-cli/messages` ganha suporte ao campo `web_search: true` (passa `--tools WebSearch --permission-mode bypassPermissions`)
+   - Ambos endpoints extraem grounding metadata e devolvem no campo `grounding`
+2. **Provider `codex-cli` no frontend** — nova opção que roteia `callOpenAIAPI` com flag `localBridge: true` para `/api/codex-cli/messages`.
+3. **Web Search adapters no frontend** — `WEB_SEARCH_REGISTRY` em `src/utils/ai-tools/webSearch.ts` ganha adapters reais para `claude-cli` e `codex-cli`.
 
 ---
 
-## Componente 1: contrato do endpoint (lado daemon, fora do escopo de código deste repo)
+## Componente 1: daemon `claude-bridge/` (Node)
 
-### Request
+### 1.1 Novo arquivo `claude-bridge/translate.codex.js`
 
-```
-POST http://localhost:8787/api/codex-cli/messages
-Content-Type: application/json
+Espelha `translate.js` (que serve o claude-cli), mas para Codex CLI.
 
-{
-  "model": "gpt-5",                    // ou "gpt-5-codex"
-  "messages": [
-    {"role": "system",    "content": "<system prompt do Sentencify>"},
-    {"role": "user",      "content": "<turno 1>"},
-    {"role": "assistant", "content": "<resposta 1>"},
-    {"role": "user",      "content": "<turno 2 — atual>"}
-  ],
-  "max_tokens": 8192,
-  "reasoning_effort": "medium"         // minimal | low | medium | high
+**Responsabilidades**:
+- `mapModel(model)` → sempre devolve `'gpt-5.5'` (único modelo suportado nesta versão)
+- `extractSystemAndPrompt(body)` → concatena system + messages num único prompt textual com marcadores de role (Codex `exec` não tem `--system`; usamos `--instructions` para system e prompt como argumento principal)
+- `buildCodexArgs(body)` → monta args para `codex exec`:
+  ```js
+  [
+    'exec',
+    '--json',
+    '--skip-git-repo-check',
+    '--ephemeral',
+    '-s', 'read-only',
+    '-a', 'never',
+    '-m', mapModel(body.model),
+    '-c', `model_reasoning_effort=${VALID_EFFORT.has(body.reasoning_effort) ? body.reasoning_effort : 'medium'}`,
+    ...(body.web_search === true ? ['--search'] : []),
+    ...(body.instructions ? ['--instructions', body.instructions] : []),
+  ]
+  ```
+- `buildStdin(body)` → o prompt é passado via stdin (codex aceita `-` como prompt). Concatena messages em texto rotulado por role, igual ao `collapseMessages` do claude-bridge.
+- `translateResponse(stdout, model)` → parseia o JSONL emitido pelo `codex exec --json`, identifica o evento terminal `task_completed` (ou equivalente), extrai o texto da resposta + citations, devolve `{status, body}` no formato Chat Completions:
+  ```json
+  {
+    "id": "chatcmpl-codex-<session_id>",
+    "object": "chat.completion",
+    "model": "gpt-5.5",
+    "choices": [{
+      "index": 0,
+      "message": {"role": "assistant", "content": "..."},
+      "finish_reason": "stop"
+    }],
+    "usage": {"prompt_tokens": N, "completion_tokens": N, "total_tokens": N},
+    "grounding": {
+      "webSearchQueries": [...],
+      "groundingChunks": [{"web": {"uri": "...", "title": "..."}}]
+    }
+  }
+  ```
+
+> **Discovery durante implementação**: o formato exato dos eventos JSONL e dos blocos de citation do Codex CLI 0.134.0 é descoberto via smoke test (Task D3 do plano). O parser é escrito contra a saída real, não contra suposições.
+
+### 1.2 Modificação em `claude-bridge/translate.js` (claude-cli) — Web Search
+
+`buildClaudeArgs(body)` ganha tratamento para `body.web_search`:
+
+```js
+// Tools: por default --tools "" (zera). Se web_search=true, passa --tools WebSearch
+//        e --permission-mode bypassPermissions (auto-aprova WebSearch).
+if (body.web_search === true) {
+  args.push('--tools', 'WebSearch');
+  args.push('--permission-mode', 'bypassPermissions');
+} else {
+  args.push('--tools', '');
 }
 ```
 
-### O daemon deve
+`translateResponse(stdout, model)` ganha parser de grounding:
+- Coleta `tool_use` blocks com `name === 'WebSearch'` → cada um vira uma entrada em `webSearchQueries[]` (campo `input.query`).
+- Coleta URLs/títulos citados no texto final do `result` (markdown links `[title](uri)`) → cada um vira um `groundingChunks[i].web`.
+- O campo `grounding` é anexado ao body devolvido (formato `GroundingMetadata` do Sentencify).
 
-1. Concatenar `messages[]` em **um único prompt** com marcadores de role (ou usar `--instructions` para system se preferível) — array recebido contém o histórico completo (padrão stateless idêntico ao claude-cli).
-2. Executar `codex exec --json --skip-git-repo-check --model <model> [--reasoning-effort <reasoning_effort>] -- "<prompt>"`.
-3. Parsear o NDJSON de eventos do Codex CLI, extrair o texto final da resposta e contagens de tokens.
-4. Retornar JSON no **formato Chat Completions OpenAI**.
+> Se `permission_denials` aparecer no result e contiver `WebSearch`, devolve 503 com mensagem clara ("WebSearch foi bloqueado pelo CLI — verifique `--allowed-tools` ou permission-mode").
 
-### Response
+### 1.3 Modificação em `claude-bridge/server.js`
 
-```json
-{
-  "id": "chatcmpl-codex-<uuid>",
-  "object": "chat.completion",
-  "model": "gpt-5",
-  "choices": [{
-    "index": 0,
-    "message": {"role": "assistant", "content": "<resposta>"},
-    "finish_reason": "stop"
-  }],
-  "usage": {"prompt_tokens": N, "completion_tokens": N, "total_tokens": N}
-}
-```
+- Nova rota `POST /api/codex-cli/messages`:
+  - Lê body JSON, valida `messages[]` não-vazio
+  - Importa `buildCodexArgs`, `buildStdin`, `translateResponse` de `translate.codex.js`
+  - Spawna `codex` com os args, alimenta stdin, parseia stdout
+  - Mesmo padrão de handling de erros do endpoint claude-cli (cliente desistiu → kill, sem stdout → 500, etc.)
+- Rota existente `/api/claude-cli/messages` herda automaticamente o suporte a `web_search` (passou para o `translate.js`).
+- ALLOWED_ORIGINS: sem mudança (já cobre prod + dev).
 
-Em caso de falha do CLI, devolver `{ "error": { "message": "...", "type": "codex_cli_error" } }` com status HTTP ≥ 400.
+### 1.4 Testes do daemon
+
+Arquivo novo `claude-bridge/translate.codex.test.js`:
+- `mapModel`: sempre `'gpt-5.5'`
+- `buildCodexArgs`: flags corretas; `--search` só quando `web_search=true`; `model_reasoning_effort` correto para cada nível; default `medium` se ausente
+- `buildStdin`: turno único + multi-turn (igual claude-bridge: colapsa em texto rotulado)
+- `translateResponse`: success normal, success com citations, erro de auth, erro genérico
+
+Arquivo modificado `claude-bridge/translate.test.js` (testes existentes do claude):
+- Novos testes: `buildClaudeArgs` com `web_search=true` adiciona `--tools WebSearch --permission-mode bypassPermissions`
+- `translateResponse` com tool_use blocks `WebSearch` extrai grounding
+
+**1 smoke test real** (separado, opt-in via env `SMOKE=1`):
+- `claude-bridge/translate.codex.smoke.test.js` — invoca `codex exec --json` real com prompt curto. Roda quando `SMOKE=1 npm test`. Pula caso contrário.
 
 ---
 
-## Componente 2: provider `codex-cli` no frontend (escopo deste plano)
+## Componente 2: provider `codex-cli` no frontend
 
-### 2.1 Tipos
-
-**`src/types/ai.ts`** e **`src/types/index.ts`** (manter espelhamento):
+### 2.1 Tipos (`src/types/ai.ts` + `src/types/index.ts`)
 
 ```ts
 export type AIProvider =
   | 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek'
   | 'claude-cli' | 'codex-cli';
 
-/** Reasoning effort do codex-cli (--reasoning-effort flag do CLI) */
+/** Reasoning effort do codex-cli (mapeado para `model_reasoning_effort` do config Codex) */
 export type CodexCliReasoning = 'minimal' | 'low' | 'medium' | 'high';
 
 export interface APIKeys {
-  claude: string;
-  gemini: string;
-  openai: string;
-  grok: string;
-  deepseek: string;
-  'claude-cli'?: string;
-  'codex-cli'?: string;   // Sem API key — usa OAuth ChatGPT local
+  // ...
+  'codex-cli'?: string; // Sem API key — usa OAuth ChatGPT local
 }
 
 export interface AISettings {
-  // ...existing...
-  codexCliModel?: string;                  // default 'gpt-5'
-  codexCliReasoning?: CodexCliReasoning;   // default 'medium'
+  // ...
+  codexCliModel?: string;            // default 'gpt-5.5'
+  codexCliReasoning?: CodexCliReasoning;  // default 'medium'
 }
 ```
 
-### 2.2 Utilitário de URL: `src/utils/codex-cli-bridge.ts`
+### 2.2 Util `src/utils/codex-cli-bridge.ts`
 
-Espelha `src/utils/claude-cli-bridge.ts`:
+Espelha `claude-cli-bridge.ts`: URL default `http://localhost:8787`, override em `localStorage` chave `sentencify-codex-cli-bridge-url`, exporta `CODEX_CLI_MESSAGES_PATH = '/api/codex-cli/messages'`.
+
+### 2.3 `callOpenAIAPI` ganha branch `localBridge`
+
+No `src/hooks/useAIIntegration.ts` (core) e nos 4 hooks dos subapps:
 
 ```ts
-const DEFAULT_BRIDGE_URL = 'http://localhost:8787';
-const OVERRIDE_KEY = 'sentencify-codex-cli-bridge-url';
+const { localBridge = false } = options;
+// ... montagem do body OpenAI Chat Completions ...
 
-export const CODEX_CLI_MESSAGES_PATH = '/api/codex-cli/messages';
-
-export function getCodexCliBridgeUrl(): string {
-  try {
-    return localStorage.getItem(OVERRIDE_KEY) || DEFAULT_BRIDGE_URL;
-  } catch {
-    return DEFAULT_BRIDGE_URL;
-  }
+if (localBridge) {
+  requestBody.reasoning_effort = aiSettings.codexCliReasoning || 'medium';
+  if (options.webSearchEnabled) requestBody.web_search = true;
 }
+
+const url = localBridge
+  ? `${getCodexCliBridgeUrl()}${CODEX_CLI_MESSAGES_PATH}`
+  : `${API_BASE}/api/openai/chat`;
+const headers = localBridge
+  ? { 'Content-Type': 'application/json' }
+  : { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys?.openai };
+
+// fetch normal, parse choices[0].message.content
+// adicional: if (data.grounding) → propagar para o callsite via onGrounding callback
 ```
 
-URL default é a mesma do `claude-cli` (mesmo daemon, mesma porta), mas mantém **override independente** via localStorage para permitir apontar para daemons diferentes no futuro sem regressão.
+### 2.4 Switches de roteamento (core + 4 subapps)
 
-### 2.3 Chamada — `callOpenAIAPI` ganha branch `localBridge`
+Em `callAI`, `callAIStream`, `callDoubleCheckAPIStream`: `case 'codex-cli'` → `callOpenAIAPI(..., { localBridge: true, model: codexCliModel || 'gpt-5.5' })`.
 
-No `src/hooks/useAIIntegration.ts` (core) e nos 4 hooks dos subapps que têm sua própria versão de `callOpenAIAPI`:
+### 2.5 Store factory + store core
 
-```ts
-const callOpenAIAPI = React.useCallback(async (messages, options = {}) => {
-  // ...preâmbulo existente...
+- `DEFAULT_AI_SETTINGS`: `codexCliModel: 'gpt-5.5'`, `codexCliReasoning: 'medium'`
+- `setModel('codex-cli', id)` → grava em `codexCliModel`
+- `selectCurrentModel`: case 'codex-cli' → `codexCliModel || 'gpt-5.5'`
 
-  const { localBridge } = options;
-  const url = localBridge
-    ? `${getCodexCliBridgeUrl()}${CODEX_CLI_MESSAGES_PATH}`
-    : `${API_BASE}/api/openai/messages`;
-  const headers = localBridge
-    ? { 'Content-Type': 'application/json' }
-    : { ...getApiHeaders(), 'Authorization': `Bearer ${aiSettings.apiKeys?.openai || ''}` };
-
-  // body montado pelo helper que `callOpenAIAPI` já usa (formato Chat Completions)
-  const requestBody = /* …builder existente… */;
-  if (localBridge) {
-    (requestBody as Record<string, unknown>).reasoning_effort = aiSettings.codexCliReasoning || 'medium';
-  }
-
-  // resto do fluxo (fetch, retry, parse de choices[0].message.content) inalterado
-}, [/* deps + aiSettings.codexCliReasoning */]);
-```
-
-E nos switches de roteamento por provider (em `useAIIntegration` core + 4 subapps):
-
-```ts
-case 'codex-cli':
-  return callOpenAIAPI(messages, {
-    ...options,
-    localBridge: true,
-    model: options.model || aiSettings.codexCliModel || 'gpt-5'
-  });
-```
-
-### 2.4 Store factory: `src/stores/shared/createAIStore.ts`
-
-- `DEFAULT_AI_SETTINGS`: adicionar `codexCliModel: 'gpt-5'`, `codexCliReasoning: 'medium' as const`.
-- `setModel`: branch para `'codex-cli'` → grava em `codexCliModel` (em vez da chave padrão `<provider>Model`).
-- `selectCurrentModel`: `case 'codex-cli': return codexCliModel || 'gpt-5';`.
-
-### 2.5 Store core: `src/stores/useAIStore.ts`
-
-Espelhar as mesmas adições da factory no store core (que tem sua própria versão extendida).
-
-### 2.6 Constants — `AI_PROVIDERS` (4 subapps)
-
-Em `src/apps/{analisador,noticias,prova-oral,embargos}/constants/models.ts`:
+### 2.6 Constants `AI_PROVIDERS` (4 subapps)
 
 ```ts
 'codex-cli': {
   name: 'Codex Local (CLI)',
   icon: 'message-circle',
   models: [
-    { id: 'gpt-5',       name: 'GPT-5',       recommended: true,
-      description: 'Generalista — recomendado para análise jurídica' },
-    { id: 'gpt-5-codex', name: 'GPT-5 Codex',
-      description: 'Variante tuned para coding (uso alternativo)' }
+    { id: 'gpt-5.5', name: 'GPT-5.5', recommended: true,
+      description: 'Generalista — usado via codex CLI sob assinatura ChatGPT' }
   ]
 }
 ```
 
-### 2.7 PDF binário
+### 2.7 UI
 
-**Não incluir** em `PROVIDERS_WITH_PDF_BINARY` (`src/apps/analisador/constants/providers.ts` e `src/apps/embargos/constants/providers.ts`). Codex CLI é text-only nesta entrega.
+- `ProviderIcon.tsx`: `case 'codex-cli'` → `<OpenAIIcon …>` (família OpenAI)
+- `AIProviderSelector.tsx` (4 subapps): tile `MessageCircle`, subtítulo "Sem chave — usa OAuth local"
+- `ConfigModal.tsx` (core): botão, select de modelo (só gpt-5.5), select de reasoning, doubleCheck, providerColors (`text-emerald-400`), display de "modelo atual"
 
-### 2.8 UI
+---
 
-#### `src/components/ui/ProviderIcon.tsx`
-Adicionar `case 'codex-cli': return <MessageCircle … />` (mesmo ícone do `openai`, espelhando como `claude-cli` espelha `claude` com `Brain`).
+## Componente 3: Web Search nos providers CLI
 
-#### `AIProviderSelector.tsx` (4 subapps)
-Adicionar `'codex-cli': <MessageCircle className="w-5 h-5" />` no map `providerIcons` e o subtítulo:
+### 3.1 `src/utils/ai-tools/webSearch.ts` — adapters reais
 
-```tsx
-{key === 'claude-cli' || key === 'codex-cli'
-  ? 'Sem chave — usa OAuth local'
-  : hasApiKey ? 'API Key configurada' : 'API Key não configurada'}
+Substituir `claude-cli: noopAdapter` e adicionar `codex-cli`:
+
+```ts
+const claudeCliAdapter: WebSearchProviderAdapter = {
+  supportsWebSearch: true,
+  applyToRequest: (req) => ({ ...(req as object), web_search: true }),
+  extractGrounding: (resp) => {
+    const grounding = (resp as { grounding?: GroundingMetadata } | null)?.grounding;
+    return grounding ?? null;
+  }
+};
+
+const codexCliAdapter: WebSearchProviderAdapter = {
+  supportsWebSearch: true,
+  applyToRequest: (req) => ({ ...(req as object), web_search: true }),
+  extractGrounding: (resp) => {
+    const grounding = (resp as { grounding?: GroundingMetadata } | null)?.grounding;
+    return grounding ?? null;
+  }
+};
+
+// no registry:
+export const WEB_SEARCH_REGISTRY: Record<AIProvider, WebSearchProviderAdapter> = {
+  gemini: geminiAdapter,
+  claude: noopAdapter,
+  'claude-cli': claudeCliAdapter,   // ← era noop
+  openai: noopAdapter,
+  'codex-cli': codexCliAdapter,     // ← novo
+  grok: noopAdapter,
+  deepseek: noopAdapter,
+};
 ```
 
-#### `ModelSelector.tsx` (4 subapps)
-Render do `<select>` quando `provider === 'codex-cli'` listando os dois modelos definidos em `AI_PROVIDERS['codex-cli']`. Padrão: ler/gravar em `aiSettings.codexCliModel`.
+Também: estender o `AIProvider` exportado neste arquivo para incluir `'codex-cli'`.
 
-#### `ConfigModal.tsx` (core)
-Três adições espelhando o que existe para `claude-cli`:
+### 3.2 `WebSearchToggle.tsx` — tooltip multi-provider
 
-1. **Botão do provider** ao lado de "Claude Local (CLI)":
-   ```tsx
-   <button onClick={() => setAiSettings({ ...aiSettings, provider: 'codex-cli' })}>
-     <ProviderIcon provider="codex-cli" size={20} className="text-emerald-400" />
-     Codex Local (CLI · assinatura)
-   </button>
-   ```
-2. **Select de modelo** quando `provider === 'codex-cli'`:
-   - lê/grava em `codexCliModel`
-   - opções: `gpt-5` (recomendado), `gpt-5-codex`
-3. **Select de reasoning effort** quando `provider === 'codex-cli'`:
-   - lê/grava em `codexCliReasoning`
-   - opções: `minimal` | `low` | `medium` (default) | `high`
-4. **doubleCheck**: incluir `'codex-cli': 'gpt-5'` no fallback de modelo e adicionar a opção `<option value="codex-cli">Codex Local (CLI · assinatura)</option>` no select de provider do doubleCheck.
+Substituir tooltips hardcoded para "(Gemini)" por neutros, ou aceitar prop `providerName?: string` que injeta o nome correto. Decisão simples: parametrizar com `providerName`, callers passam o nome.
 
-### 2.9 Testes
+### 3.3 Propagação `webSearchEnabled` no fluxo de chamada
 
-| Arquivo | Cobertura |
-|---|---|
-| `src/utils/codex-cli-bridge.test.ts` (novo) | URL default, override via localStorage, fallback em ambiente sem localStorage — espelha `claude-cli-bridge.test.ts` |
-| `src/stores/shared/createAIStore.test.ts` (update) | Defaults novos (`codexCliModel`, `codexCliReasoning`); `setModel('codex-cli', 'gpt-5-codex')` grava em `codexCliModel` |
-| `src/hooks/useAIIntegration.test.ts` (update) | Branch `provider === 'codex-cli'` chama `callOpenAIAPI` com `localBridge: true` e o modelo do `codexCliModel` |
-| `src/components/ui/ProviderIcon.test.tsx` (update) | Renderiza ícone correto para `codex-cli` |
+O chat do assistente já tem um state `webSearchEnabled` (controlado pelo toggle). Hoje ele é propagado para `applyWebSearchTool` somente para Gemini. Vamos garantir que ele chegue até `callClaudeAPI` (com flag `localBridge: true`) e `callOpenAIAPI` (com flag `localBridge: true`) via `options.webSearchEnabled`, que adiciona `web_search: true` no body do request.
+
+> A 3-camadas de defesa permanece: `enabled && !anonymizationEnabled && supportsWebSearch`.
+
+### 3.4 Extração de grounding na response
+
+Onde hoje há código tipo:
+```ts
+const grounding = extractGrounding(provider, data);
+if (grounding) onGrounding(grounding);
+```
+(busca por callsites; replicar para o caminho `localBridge: true` quando a response contém `data.grounding`).
 
 ---
 
 ## Versionamento (5 arquivos — guideline 8 do CLAUDE.md)
 
-Bump para **v1.49.0** em:
+Bump para **v1.50.0** em:
 - `CLAUDE.md` (linha 7)
 - `src/App.tsx` (`APP_VERSION` ~linha 209)
 - `src/constants/changelog.js` (nova entrada no topo)
 - `package.json`
+
+Changelog (entrada principal):
+> feat: provider "Codex Local (CLI)" usando assinatura ChatGPT via daemon (gpt-5.5, reasoning effort minimal/low/medium/high). Web search habilitado em Claude Local (CLI) e Codex Local (CLI) — toggle Web no assistente de redação agora funciona nos três providers que suportam (Gemini + dois CLIs locais), com footer "Fontes" exibindo URLs consultadas.
 
 ---
 
@@ -263,12 +306,12 @@ Bump para **v1.49.0** em:
 
 | Item | Por quê |
 |---|---|
-| Streaming de eventos do Codex | Paridade com claude-cli inicial; daemon devolve resposta completa. Adicionar depois se necessário. |
-| PDF binário / multimodal | Codex CLI não suporta PDF nativo; modelos GPT-5 aceitam imagens via Responses API, mas via `codex exec` é fluxo separado. |
-| Reuso de sessões nativas do Codex | Cada call do daemon é um `codex exec` independente. O histórico do chat é preservado normalmente via `messages[]` enviado pelo frontend (mesmo padrão stateless do claude-cli e dos demais providers). |
-| Modificações no daemon `claude-bridge` | Vive em outro repositório; este spec só define o contrato. |
-| Suporte a tools/function-calling do Codex | Não é usado pelo Sentencify. |
-| `o4-mini` ou outros modelos OpenAI via CLI | Início com `gpt-5` e `gpt-5-codex` apenas. Modelos a mais entram no `AI_PROVIDERS['codex-cli'].models` sem mais ajustes estruturais. |
+| Streaming de eventos do Codex/Claude no chat | Paridade com claude-cli inicial; bridge devolve resposta completa. |
+| PDF binário no codex-cli | Codex CLI não tem suporte direto a PDF; modelos GPT-5 aceitam imagens via Responses API mas requer fluxo separado. |
+| Reuso de sessões nativas do Codex | Cada call do daemon é um `codex exec --ephemeral` independente. Histórico do chat é preservado via `messages[]` (stateless, igual a todos os outros providers). |
+| Variantes `gpt-5-codex`/`gpt-5-codex-mini` | Uso do usuário não é coding; só `gpt-5.5` faz sentido. |
+| Web search no Claude (API) / OpenAI / Grok | Fora deste plano. Esses providers continuam noopAdapter (a estrutura está pronta para adicioná-los depois). |
+| Citations estruturadas dentro de `tool_use` no Claude | claude CLI hoje devolve markdown links inline no texto. O parser do daemon extrai esses URLs via regex; uma extração mais rica (citations API da Anthropic) é trabalho futuro. |
 
 ---
 
@@ -276,27 +319,38 @@ Bump para **v1.49.0** em:
 
 | Risco | Mitigação |
 |---|---|
-| Daemon ainda não implementa `/api/codex-cli/messages` quando o frontend for ao ar | Endpoint retorna 404; UI já lida com erros HTTP. Aceitável: feature flag implícita pelo provider só funcionar quando daemon estiver pronto. |
-| `codex` CLI atualiza e muda formato de saída NDJSON | Risco do daemon, não do frontend. Frontend só consome o JSON Chat-Completions estabilizado pelo daemon. |
-| Usuário sem `codex login` ativo | Daemon retorna erro 401/500; UI exibe a mensagem. Documentar como pré-requisito no changelog. |
-| Quebra acidental do `claude-cli` ao tocar nos mesmos arquivos | Mitigação: adições puramente aditivas (novos casos no switch, novos campos opcionais); testes existentes do `claude-cli` rodam inalterados. |
+| Formato JSONL do Codex CLI muda entre versões | Smoke test no daemon (`SMOKE=1`) detecta quebra cedo. Pin de versão mínima documentado (0.134.0). |
+| `--permission-mode bypassPermissions` no claude permite outros tools acidentalmente | Combinado com `--tools WebSearch` explícito que limita o conjunto a só WebSearch — bypassPermissions só remove o prompt, não amplia o tool set. |
+| Quebra acidental do `claude-cli` ao mexer no daemon | Mitigação: testes do `translate.js` cobrem o caminho atual (`--tools ""`) e o novo (`--tools WebSearch`); regressão no path padrão pega no test suite. |
+| Codex CLI cobra créditos da assinatura ChatGPT | Esperado (mesma lógica do claude-cli usar créditos da assinatura Claude). Sem cobrança de API. |
+| Token OAuth ChatGPT expira | Daemon devolve 401; UI exibe mensagem orientando `codex login`. Manter consistência com mensagem do claude-cli. |
+| Citations no Codex CLI sem URLs (modelo respondeu da memória) | Aceitável — `groundingChunks` vazio, `webSearchQueries: []`. UI lida com `grounding: null` (já lida hoje em Gemini quando nada foi consultado). |
 
 ---
 
-## Checklist de paridade com `claude-cli`
+## Checklist de paridade
 
-- [x] Tipo `AIProvider` estendido
-- [x] `APIKeys` com chave opcional
-- [x] `AISettings` com campos próprios de modelo + effort
-- [x] Util de URL (`codex-cli-bridge.ts`) com override em localStorage
-- [x] Branch `localBridge: true` em `callOpenAIAPI`
-- [x] Switch de roteamento por provider em `useAIIntegration` (core + 4 subapps)
-- [x] Defaults na factory + store core
-- [x] `selectCurrentModel` cobre o novo provider
-- [x] `setModel` grava na chave certa
-- [x] `AI_PROVIDERS` em todos os 4 subapps
-- [x] UI: `AIProviderSelector`, `ModelSelector`, `ConfigModal` (4 subapps + core)
-- [x] `ProviderIcon` cobre o novo provider
-- [x] doubleCheck no ConfigModal aceita o novo provider
-- [x] Testes (`codex-cli-bridge`, `createAIStore`, `useAIIntegration`, `ProviderIcon`)
-- [x] Bump de versão nos 5 arquivos
+**Codex-cli (provider novo):**
+- [x] `AIProvider`, `APIKeys`, `AISettings`, `CodexCliReasoning` tipados
+- [x] Util `codex-cli-bridge.ts` (com testes)
+- [x] `callOpenAIAPI` ganha branch `localBridge` (core + 4 subapps)
+- [x] Switches `case 'codex-cli'` (core + 4 subapps)
+- [x] Defaults nos stores (factory + core)
+- [x] `AI_PROVIDERS` em 4 subapps
+- [x] UI: `AIProviderSelector`, `ModelSelector`, `ConfigModal`, `ProviderIcon`
+- [x] doubleCheck com codex-cli
+- [x] Bump v1.50.0 nos 5 arquivos
+
+**Daemon `claude-bridge/`:**
+- [x] `translate.codex.js` novo
+- [x] `server.js` ganha rota `/api/codex-cli/messages`
+- [x] `translate.js` aceita `body.web_search` para claude-cli
+- [x] Testes unitários (translate.codex.test.js novo + translate.test.js update)
+- [x] Smoke test real opt-in
+
+**Web search (claude-cli + codex-cli):**
+- [x] `webSearch.ts`: adapters reais (não-noop) com `applyToRequest` e `extractGrounding`
+- [x] `WebSearchToggle.tsx` parametrizado por providerName
+- [x] Toggle visível e funcional nos 3 providers (Gemini, claude-cli, codex-cli)
+- [x] Footer "Fontes" exibe URLs nos providers CLI
+- [x] Daemon devolve `grounding` no response body

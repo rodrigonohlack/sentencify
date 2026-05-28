@@ -7,6 +7,7 @@ import { useCallback } from 'react';
 import { useAIStore } from '../stores';
 import { API_BASE } from '../constants';
 import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../../../utils/claude-cli-bridge';
+import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../../../utils/codex-cli-bridge';
 import type { AIMessage, AICallOptions, ClaudeContentBlock, OpenAIMessage, GrokMessage, GeminiMessage } from '../types';
 
 const RETRY_MAX_ATTEMPTS = 3;
@@ -200,7 +201,8 @@ export const useAIIntegration = () => {
     const {
       maxTokens = 8000,
       systemPrompt = null,
-      model = aiSettings.openaiModel
+      model = aiSettings.openaiModel,
+      localBridge = false
     } = options;
 
     const openaiMessages: OpenAIMessage[] = [];
@@ -238,12 +240,19 @@ export const useAIIntegration = () => {
           requestBody.reasoning_effort = reasoningLevel;
         }
 
-        const response = await fetch(`${API_BASE}/api/openai/chat`, {
+        if (localBridge) {
+          requestBody.reasoning_effort = aiSettings.codexCliReasoning || 'medium';
+        }
+
+        const openaiUrl = localBridge
+          ? `${getCodexCliBridgeUrl()}${CODEX_CLI_MESSAGES_PATH}`
+          : `${API_BASE}/api/openai/chat`;
+        const openaiHeaders: Record<string, string> = localBridge
+          ? { 'Content-Type': 'application/json' }
+          : { 'Content-Type': 'application/json', 'x-api-key': aiSettings.apiKeys.openai };
+        const response = await fetch(openaiUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': aiSettings.apiKeys.openai
-          },
+          headers: openaiHeaders,
           body: JSON.stringify(requestBody)
         });
 
@@ -483,10 +492,12 @@ export const useAIIntegration = () => {
         return callDeepseekAPI(messages, options);
       case 'claude-cli':
         return callClaudeAPI(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
+      case 'codex-cli':
+        return callOpenAIAPI(messages, { ...options, localBridge: true, model: options.model || aiSettings.codexCliModel || 'gpt-5.5' });
       default:
         return callClaudeAPI(messages, options);
     }
-  }, [aiSettings.provider, aiSettings.claudeCliModel, callClaudeAPI, callGeminiAPI, callOpenAIAPI, callGrokAPI, callDeepseekAPI]);
+  }, [aiSettings.provider, aiSettings.claudeCliModel, aiSettings.codexCliModel, callClaudeAPI, callGeminiAPI, callOpenAIAPI, callGrokAPI, callDeepseekAPI]);
 
   return {
     callAI,

@@ -486,6 +486,7 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
         providerName={{
           claude: 'Claude',
           'claude-cli': 'Claude Local',
+          'codex-cli': 'Codex Local',
           gemini: 'Gemini',
           openai: 'OpenAI',
           grok: 'Grok',

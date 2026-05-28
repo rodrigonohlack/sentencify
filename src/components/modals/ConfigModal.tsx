@@ -50,6 +50,7 @@ import {
 import type {
   AIProvider,
   ClaudeCliEffort,
+  CodexCliReasoning,
   GeminiThinkingLevel,
   QuickPrompt,
   TopicoComplementar,
@@ -476,6 +477,22 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   </div>
                 </div>
               </button>
+              <button
+                onClick={() => setAiSettings({ ...aiSettings, provider: 'codex-cli' })}
+                className={`p-3 rounded-lg border-2 transition-all text-left ${
+                  aiSettings.provider === 'codex-cli'
+                    ? 'bg-emerald-600/20 border-emerald-500'
+                    : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <ProviderIcon provider="codex-cli" size={20} className="text-emerald-400" />
+                  <div>
+                    <div className="font-semibold theme-text-primary text-sm">Codex Local</div>
+                    <div className="text-xs theme-text-muted">CLI · assinatura</div>
+                  </div>
+                </div>
+              </button>
             </div>
 
             {/* Model Selection based on provider */}
@@ -484,6 +501,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 Modelo {aiSettings.provider === 'claude' || aiSettings.provider === 'claude-cli' ? 'Claude' :
                        aiSettings.provider === 'gemini' ? 'Gemini' :
                        aiSettings.provider === 'openai' ? 'OpenAI' :
+                       aiSettings.provider === 'codex-cli' ? 'Codex' :
                        aiSettings.provider === 'grok' ? 'Grok' : 'DeepSeek'}:
               </label>
               {aiSettings.provider === 'claude' && (
@@ -504,6 +522,15 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 >
                   <option value="claude-sonnet-4-6">Sonnet 4.6 (assinatura · $0)</option>
                   <option value="claude-opus-4-7">Opus 4.7 (assinatura · $0)</option>
+                </select>
+              )}
+              {aiSettings.provider === 'codex-cli' && (
+                <select
+                  value={aiSettings.codexCliModel || 'gpt-5.5'}
+                  onChange={(e) => setAiSettings({ ...aiSettings, codexCliModel: e.target.value })}
+                  className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                >
+                  <option value="gpt-5.5">GPT-5.5 (assinatura · $0)</option>
                 </select>
               )}
               {aiSettings.provider === 'gemini' && (
@@ -882,6 +909,26 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               </div>
             )}
 
+            {/* CODEX-CLI: Dropdown de reasoning effort */}
+            {aiSettings.provider === 'codex-cli' && (
+              <div>
+                <label className="block text-xs theme-text-muted mb-1">Nível de raciocínio (reasoning):</label>
+                <select
+                  value={aiSettings.codexCliReasoning || 'medium'}
+                  onChange={(e) => setAiSettings({ ...aiSettings, codexCliReasoning: e.target.value as CodexCliReasoning })}
+                  className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
+                >
+                  <option value="minimal">Minimal</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+                <p className="text-xs theme-text-muted mt-1">
+                  Controla o esforço de raciocínio do Codex CLI local (<code>model_reasoning_effort</code>). Maior = mais lento e mais a fundo.
+                </p>
+              </div>
+            )}
+
             {/* GEMINI 3: Dropdown de thinking_level */}
             {aiSettings.provider === 'gemini' && (
               <div className="p-4 rounded-lg border-2 border-amber-500/50 bg-amber-500/10">
@@ -1199,7 +1246,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                         gemini: 'gemini-3-flash-preview',
                         openai: 'gpt-5.2-chat-latest',
                         grok: 'grok-4-1-fast-reasoning',
-                        deepseek: 'deepseek-v4-flash'
+                        deepseek: 'deepseek-v4-flash',
+                        'codex-cli': 'gpt-5.5'
                       };
                       setAiSettings({
                         ...aiSettings,
@@ -1214,6 +1262,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   >
                     <option value="claude">Claude (Anthropic)</option>
                     <option value="claude-cli">Claude Local (CLI · assinatura)</option>
+                    <option value="codex-cli">Codex Local (CLI · assinatura)</option>
                     <option value="gemini">Gemini (Google)</option>
                     <option value="openai">GPT (OpenAI)</option>
                     <option value="grok">Grok (xAI)</option>
@@ -1256,6 +1305,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                         <option value="gpt-5.2-chat-latest">GPT-5.2 Instant</option>
                         <option value="gpt-5.2">GPT-5.2 Thinking</option>
                       </>
+                    )}
+                    {aiSettings.doubleCheck?.provider === 'codex-cli' && (
+                      <option value="gpt-5.5">GPT-5.5 (assinatura · $0)</option>
                     )}
                     {aiSettings.doubleCheck?.provider === 'grok' && (
                       <>
@@ -3032,6 +3084,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                                 'claude-cli': 'text-amber-400',
                                 gemini: 'text-blue-400',
                                 openai: 'text-green-400',
+                                'codex-cli': 'text-emerald-400',
                                 grok: 'text-gray-400',
                                 deepseek: 'text-indigo-400'
                               };
@@ -3260,6 +3313,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     ? (aiSettings.deepseekModel ? getModelDisplayName(aiSettings.deepseekModel) : '— selecione um modelo —')
                     : aiSettings.provider === 'claude-cli'
                     ? getModelDisplayName(aiSettings.claudeCliModel || 'claude-sonnet-4-6')
+                    : aiSettings.provider === 'codex-cli'
+                    ? getModelDisplayName(aiSettings.codexCliModel || 'gpt-5.5')
                     : getModelDisplayName(aiSettings.claudeModel || aiSettings.model || '')}
                 </span>
                 {aiSettings.useExtendedThinking && <span className="ml-2 text-purple-400">• Pensamento prolongado ativo</span>}

@@ -50,6 +50,8 @@ const DEFAULT_AI_SETTINGS: AISettings = {
   claudeModel: 'claude-sonnet-4-20250514',
   claudeCliModel: 'claude-sonnet-4-6',
   claudeCliEffort: 'high' as const,
+  codexCliModel: 'gpt-5.5',
+  codexCliReasoning: 'medium' as const,
   geminiModel: 'gemini-3-flash-preview',
   openaiModel: 'gpt-5.2-chat-latest',
   openaiReasoningLevel: 'medium',
@@ -111,8 +113,11 @@ export function createAIStore(config: AIStoreConfig) {
 
         setModel: (provider, model) =>
           set((state) => {
-            // claude-cli tem sua própria chave claudeCliModel
-            const key = (provider === 'claude-cli' ? 'claudeCliModel' : `${provider}Model`) as keyof AISettings;
+            const specialKeys: Partial<Record<AIProvider, keyof AISettings>> = {
+              'claude-cli': 'claudeCliModel',
+              'codex-cli': 'codexCliModel'
+            };
+            const key = (specialKeys[provider] ?? `${provider}Model`) as keyof AISettings;
             return { aiSettings: { ...state.aiSettings, [key]: model } };
           }),
 
@@ -200,12 +205,14 @@ export function createAIStore(config: AIStoreConfig) {
 export const selectProvider = (state: AIStoreBase): AIProvider => state.aiSettings.provider;
 
 export const selectCurrentModel = (state: AIStoreBase): string => {
-  const { provider, claudeModel, claudeCliModel, geminiModel, openaiModel, grokModel, deepseekModel } = state.aiSettings;
+  const { provider, claudeModel, claudeCliModel, codexCliModel, geminiModel, openaiModel, grokModel, deepseekModel } = state.aiSettings;
   switch (provider) {
     case 'claude':
       return claudeModel;
     case 'claude-cli':
       return claudeCliModel || 'claude-sonnet-4-6';
+    case 'codex-cli':
+      return codexCliModel || 'gpt-5.5';
     case 'gemini':
       return geminiModel;
     case 'openai':

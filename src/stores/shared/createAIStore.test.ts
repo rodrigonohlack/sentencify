@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createAIStore } from './createAIStore';
+import { createAIStore, selectCurrentModel } from './createAIStore';
 import { loadApiKeysFromStorage, resolveApiKeys } from './aiKeyPersistence';
 
 // Mock crypto: "encriptação" é prefixar com 'encrypted:', decriptação tira o prefixo.
@@ -265,5 +265,42 @@ describe('createAIStore — persistKeys (fire-and-forget)', () => {
     const parsed = JSON.parse(raw!);
     expect(parsed.claude).toBe('encrypted:sk-new');
     expect(parsed.gemini).toBe('');
+  });
+});
+
+describe('codex-cli provider support', () => {
+  const { useStore } = createAIStore({
+    persistName: 'test-codex-cli',
+    apiKeyStorageKey: 'test-codex-cli-keys'
+  });
+
+  beforeEach(() => {
+    useStore.getState().resetSettings();
+  });
+
+  it('tem defaults codexCliModel e codexCliReasoning', () => {
+    const s = useStore.getState().aiSettings;
+    expect(s.codexCliModel).toBe('gpt-5.5');
+    expect(s.codexCliReasoning).toBe('medium');
+  });
+
+  it('setModel("codex-cli", id) grava em codexCliModel', () => {
+    useStore.getState().setModel('codex-cli', 'gpt-5.5');
+    expect(useStore.getState().aiSettings.codexCliModel).toBe('gpt-5.5');
+  });
+
+  it('selectCurrentModel devolve codexCliModel quando provider=codex-cli', () => {
+    useStore.getState().setProvider('codex-cli');
+    useStore.getState().setModel('codex-cli', 'gpt-5.5');
+    expect(selectCurrentModel(useStore.getState())).toBe('gpt-5.5');
+  });
+
+  it('selectCurrentModel cai em "gpt-5.5" se codexCliModel for vazio', () => {
+    useStore.getState().setProvider('codex-cli');
+    useStore.setState((s) => ({
+      ...s,
+      aiSettings: { ...s.aiSettings, codexCliModel: '' }
+    }));
+    expect(selectCurrentModel(useStore.getState())).toBe('gpt-5.5');
   });
 });

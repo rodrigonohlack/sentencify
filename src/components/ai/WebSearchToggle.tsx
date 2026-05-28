@@ -21,22 +21,29 @@ export interface WebSearchToggleProps {
   onToggle: (enabled: boolean) => void;
   /** Se true, toggle aparece desabilitado (ex: anonimização ativa). */
   disabled?: boolean;
+  /** Nome amigável do provider em uso, exibido nos tooltips. Default: "Provider atual". */
+  providerName?: string;
 }
 
-const DEFAULT_ON_TOOLTIP = 'Buscar na web ativado (Gemini) — cache desativado nesta requisição (bug conhecido do Gemini 3 com tools). Clique para desligar.';
-const DEFAULT_OFF_TOOLTIP = 'Ativar busca na web (Gemini) — permite consulta a informações atualizadas durante esta conversa. Atenção: ativar desativa o implicit cache do Gemini.';
-const DISABLED_TOOLTIP = 'Busca na web indisponível enquanto a anonimização estiver ativa. As queries enviadas ao Google poderiam expor dados sensíveis do processo.';
+const buildOnTooltip = (providerName: string) =>
+  `Buscar na web ativado (${providerName}). Clique para desligar.`;
+
+const buildOffTooltip = (providerName: string) =>
+  `Ativar busca na web (${providerName}) — permite consulta a informações atualizadas durante esta conversa.`;
+
+const DISABLED_TOOLTIP = 'Busca na web indisponível enquanto a anonimização estiver ativa. As queries enviadas ao provider poderiam expor dados sensíveis do processo.';
 
 export const WebSearchToggle: React.FC<WebSearchToggleProps> = ({
   enabled,
   onToggle,
   disabled = false,
+  providerName = 'Provider atual',
 }) => {
   const tooltip = disabled
     ? DISABLED_TOOLTIP
     : enabled
-      ? DEFAULT_ON_TOOLTIP
-      : DEFAULT_OFF_TOOLTIP;
+      ? buildOnTooltip(providerName)
+      : buildOffTooltip(providerName);
 
   const handleClick = React.useCallback(() => {
     if (disabled) return;
