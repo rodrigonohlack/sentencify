@@ -479,6 +479,67 @@ describe('useProvaOralAPI', () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // UPDATE ANALYSIS (RENAME DE PROCESSO)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('updateAnalysis (rename de processo)', () => {
+    it('PUT com resultado contendo numeroProcesso modificado', async () => {
+      mockAuthFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'analysis-1', message: 'ok' }),
+      });
+
+      const { result } = renderHook(() => useProvaOralAPI());
+
+      const novoResultado = {
+        ...mockAnalysis.resultado,
+        processo: {
+          ...mockAnalysis.resultado.processo,
+          numeroProcesso: 'NOVO-001',
+        },
+      };
+
+      let ok = false;
+      await act(async () => {
+        ok = await result.current.updateAnalysis({
+          id: 'analysis-1',
+          resultado: novoResultado,
+        });
+      });
+
+      expect(ok).toBe(true);
+      expect(mockAuthFetch).toHaveBeenCalledWith(
+        '/api/prova-oral/analysis-1',
+        expect.objectContaining({
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resultado: novoResultado }),
+        })
+      );
+    });
+
+    it('retorna false e seta error quando PUT falha', async () => {
+      mockAuthFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Erro de teste' }),
+      });
+
+      const { result } = renderHook(() => useProvaOralAPI());
+
+      let ok = true;
+      await act(async () => {
+        ok = await result.current.updateAnalysis({
+          id: 'analysis-1',
+          resultado: mockAnalysis.resultado,
+        });
+      });
+
+      expect(ok).toBe(false);
+      expect(mockSetError).toHaveBeenCalledWith('Erro de teste');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // FETCH USERS
   // ═══════════════════════════════════════════════════════════════════════════
 
