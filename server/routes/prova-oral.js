@@ -307,24 +307,40 @@ router.put('/:id', (req, res) => {
     // Re-extrair colunas desnormalizadas para manter em sincronia com o JSON.
     // Sem isso, edições no resultado.processo (ex: rename do número) ficam
     // invisíveis na listagem, que lê das colunas indexadas.
-    const numeroProcesso = resultado.processo?.numeroProcesso || null;
-    const reclamante = resultado.processo?.reclamante || null;
-    const reclamada = resultado.processo?.reclamada || null;
-    const vara = resultado.processo?.vara || null;
+    //
+    // Guarda: se o payload não traz `processo`, não tocamos as colunas
+    // desnormalizadas — evita zerar valores legítimos em updates parciais.
+    let result;
+    if (resultado.processo) {
+      const numeroProcesso = resultado.processo.numeroProcesso || null;
+      const reclamante = resultado.processo.reclamante || null;
+      const reclamada = resultado.processo.reclamada || null;
+      const vara = resultado.processo.vara || null;
 
-    const result = db.prepare(`
-      UPDATE prova_oral_analyses
-      SET resultado = ?, numero_processo = ?, reclamante = ?, reclamada = ?, vara = ?, updated_at = ?
-      WHERE id = ? AND deleted_at IS NULL
-    `).run(
-      JSON.stringify(resultado),
-      numeroProcesso,
-      reclamante,
-      reclamada,
-      vara,
-      now,
-      id
-    );
+      result = db.prepare(`
+        UPDATE prova_oral_analyses
+        SET resultado = ?, numero_processo = ?, reclamante = ?, reclamada = ?, vara = ?, updated_at = ?
+        WHERE id = ? AND deleted_at IS NULL
+      `).run(
+        JSON.stringify(resultado),
+        numeroProcesso,
+        reclamante,
+        reclamada,
+        vara,
+        now,
+        id
+      );
+    } else {
+      result = db.prepare(`
+        UPDATE prova_oral_analyses
+        SET resultado = ?, updated_at = ?
+        WHERE id = ? AND deleted_at IS NULL
+      `).run(JSON.stringify(resultado), now, id);
+    }
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Análise não encontrada' });
+    }
 
     res.json({ id, message: 'Análise atualizada com sucesso' });
   } catch (error) {
