@@ -99,11 +99,9 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
       const analysis = analyses.find((a) => a.id === analysisId);
       if (!analysis) return;
 
-      // Snapshot para revert em caso de falha.
-      const snapshot = {
-        numeroProcesso: analysis.numeroProcesso,
-        resultado: analysis.resultado,
-      };
+      // Snapshot para revert em caso de falha. Spread completo preserva
+      // updatedAt original e quaisquer outros campos que o store sete.
+      const snapshot: Partial<SavedProvaOralAnalysis> = { ...analysis };
 
       // Construir o novo resultado mantendo todos os outros campos.
       // Apenas processo.numeroProcesso é atualizado; processo.numero (legado

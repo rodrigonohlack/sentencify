@@ -78,7 +78,6 @@ export interface UseProvaOralAPIReturn {
 export function useProvaOralAPI(): UseProvaOralAPIReturn {
   const { authFetch, isAuthenticated } = useAuthMagicLink();
   const {
-    analyses,
     setAnalyses,
     addAnalysis,
     removeAnalysis,
@@ -86,6 +85,7 @@ export function useProvaOralAPI(): UseProvaOralAPIReturn {
     setError,
     isLoading,
     error,
+    updateAnalysis: updateAnalysisInStore,
   } = useAnalysesStore();
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -271,18 +271,9 @@ export function useProvaOralAPI(): UseProvaOralAPIReturn {
           throw new Error(data.error || 'Erro ao atualizar análise');
         }
 
-        // Atualiza no store local
-        const existingAnalysis = analyses.find(a => a.id === params.id);
-        if (existingAnalysis) {
-          const updatedAnalysis: SavedProvaOralAnalysis = {
-            ...existingAnalysis,
-            resultado: params.resultado,
-            updatedAt: new Date().toISOString(),
-          };
-          // Remove e readiciona para atualizar
-          removeAnalysis(params.id);
-          addAnalysis(updatedAnalysis);
-        }
+        // Atualiza no store local (mantém posição na lista).
+        // updateAnalysis do store já seta updatedAt automaticamente.
+        updateAnalysisInStore(params.id, { resultado: params.resultado });
 
         return true;
       } catch (err) {
@@ -291,7 +282,7 @@ export function useProvaOralAPI(): UseProvaOralAPIReturn {
         return false;
       }
     },
-    [isAuthenticated, authFetch, analyses, addAnalysis, removeAnalysis, setError]
+    [isAuthenticated, authFetch, updateAnalysisInStore, setError]
   );
 
   // ═══════════════════════════════════════════════════════════════════════════
