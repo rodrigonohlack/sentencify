@@ -26,6 +26,7 @@ vi.mock('../../../hooks', () => ({
 const mockSetAnalyses = vi.fn();
 const mockAddAnalysis = vi.fn();
 const mockRemoveAnalysis = vi.fn();
+const mockUpdateAnalysis = vi.fn();
 const mockSetLoading = vi.fn();
 const mockSetError = vi.fn();
 vi.mock('../stores', () => ({
@@ -33,6 +34,7 @@ vi.mock('../stores', () => ({
     setAnalyses: mockSetAnalyses,
     addAnalysis: mockAddAnalysis,
     removeAnalysis: mockRemoveAnalysis,
+    updateAnalysis: mockUpdateAnalysis,
     setLoading: mockSetLoading,
     setError: mockSetError,
     isLoading: false,
