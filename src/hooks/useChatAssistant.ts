@@ -88,7 +88,15 @@ export function useChatAssistant(
   // v1.37.92: Carregar histórico do cache quando tópico muda
   // v1.37.93: Fix - salvar histórico do tópico anterior antes de limpar
   // v1.37.95: Também recarrega quando modal abre (isOpen muda para true)
+  // v1.50.3: Fix race condition que vazava histórico entre tópicos. Ao trocar
+  // de tópico, o effect de save (logo abaixo) disparava ANTES do load assíncrono
+  // ressetar lastTopicTitleRef/cacheLoadedRef, então salvava o history antigo
+  // sob a chave do tópico novo. Marcar cacheLoadedRef=false SÍNCRONO aqui
+  // bloqueia o effect de save até o load completar.
   useEffect(() => {
+    if (cacheOptions?.topicTitle !== lastTopicTitleRef.current) {
+      cacheLoadedRef.current = false;
+    }
     const loadFromCache = async () => {
       const topicTitle = cacheOptions?.topicTitle;
       const previousTitle = lastTopicTitleRef.current;
@@ -139,11 +147,21 @@ export function useChatAssistant(
   }, [cacheOptions?.topicTitle, cacheOptions?.isOpen, cacheOptions?.getChat, cacheOptions?.saveChat]);
 
   // v1.37.92: Salvar no cache quando histórico muda
+  // v1.50.3: Defesa em profundidade — só salvar se topicTitle dos cacheOptions
+  // corresponder ao último tópico que foi carregado em memória. Junto com o
+  // reset síncrono de cacheLoadedRef no effect acima, isso elimina a race que
+  // contaminava o cache do tópico novo com o histórico do anterior.
   useEffect(() => {
     const saveToCache = async () => {
-      if (cacheOptions?.topicTitle && cacheOptions?.saveChat && history.length > 0) {
+      const topicTitle = cacheOptions?.topicTitle;
+      if (
+        topicTitle &&
+        topicTitle === lastTopicTitleRef.current &&
+        cacheOptions?.saveChat &&
+        history.length > 0
+      ) {
         try {
-          await cacheOptions.saveChat(cacheOptions.topicTitle, history);
+          await cacheOptions.saveChat(topicTitle, history);
         } catch (e) {
           console.warn('[useChatAssistant] Erro ao salvar cache:', e);
         }

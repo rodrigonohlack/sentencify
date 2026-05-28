@@ -685,6 +685,79 @@ describe('useChatAssistant', () => {
         expect(getChat).toHaveBeenCalled();
       });
     });
+
+    // v1.50.3: Regressão — cada tópico deve ter histórico isolado.
+    // Bug original: ao trocar de tópico A → B, o effect de save disparava com
+    // history ainda do tópico A e topicTitle já = B, contaminando o cache de B.
+    it('should NOT leak history of previous topic into the new topic cache', async () => {
+      const mockAI = createMockAIIntegration('Response from A');
+
+      // Cache fake em memória, espelhando o comportamento do useChatHistoryCache
+      const store = new Map<string, ReadonlyArray<unknown>>();
+      const saveChat = vi.fn(async (title: string, msgs: ReadonlyArray<unknown>) => {
+        store.set(title, [...msgs]);
+      });
+      const getChat = vi.fn(async (title: string) => {
+        return (store.get(title) as Array<{ role: 'user' | 'assistant'; content: string; ts: number }>) || [];
+      });
+
+      const { result, rerender } = renderHook(
+        (props) => useChatAssistant(mockAI, props),
+        { initialProps: { topicTitle: 'A', isOpen: true, saveChat, getChat } }
+      );
+
+      // Carregamento inicial do tópico A (vazio)
+      await waitFor(() => {
+        expect(getChat).toHaveBeenCalledWith('A');
+      });
+
+      // Envia uma mensagem no tópico A → histórico de A é salvo
+      await act(async () => {
+        await result.current.send('Pergunta em A', () => 'Contexto A');
+      });
+
+      await waitFor(() => {
+        expect(store.get('A')).toBeDefined();
+        expect((store.get('A') as unknown[]).length).toBeGreaterThan(0);
+      });
+
+      // Snapshot das chamadas a saveChat ANTES da troca de tópico
+      const callsBeforeSwitch = saveChat.mock.calls.length;
+
+      // Troca para o tópico B
+      rerender({ topicTitle: 'B', isOpen: true, saveChat, getChat });
+
+      // Aguarda load do tópico B estabilizar
+      await waitFor(() => {
+        expect(getChat).toHaveBeenCalledWith('B');
+      });
+
+      // Aguarda eventuais saves pendentes propagarem
+      await new Promise((r) => setTimeout(r, 50));
+
+      // (a) Nenhuma chamada a saveChat deve ter usado ('B', <histórico de A>)
+      const novelCalls = saveChat.mock.calls.slice(callsBeforeSwitch);
+      for (const [title, msgs] of novelCalls) {
+        if (title === 'B') {
+          // Se em algum momento salvou em B, NÃO pode conter o conteúdo de A
+          const stringified = JSON.stringify(msgs);
+          expect(stringified).not.toContain('Pergunta em A');
+          expect(stringified).not.toContain('Response from A');
+        }
+      }
+
+      // (b) Cache do tópico B deve permanecer vazio (não foi contaminado)
+      expect(store.get('B') ?? []).toEqual([]);
+
+      // (c) Histórico em memória do tópico B deve estar vazio
+      expect(result.current.history).toEqual([]);
+
+      // (d) Cache do tópico A deve continuar intacto (não foi sobrescrito)
+      const cacheOfA = store.get('A') as Array<{ role: string; content: string }>;
+      expect(cacheOfA).toBeDefined();
+      expect(cacheOfA.length).toBeGreaterThan(0);
+      expect(cacheOfA.some((m) => m.content === 'Pergunta em A')).toBe(true);
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
