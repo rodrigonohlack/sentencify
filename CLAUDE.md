@@ -75,4 +75,4 @@
 
 Ver histórico completo em `src/constants/changelog.js`
 
-**Last Updated**: 2026-01-20
+**Last Updated**: 2026-05-28
