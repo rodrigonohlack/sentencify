@@ -4,3 +4,4 @@
  */
 
 export { HistoricoModal } from './HistoricoModal';
+export { EditableProcessNumber } from './EditableProcessNumber';
