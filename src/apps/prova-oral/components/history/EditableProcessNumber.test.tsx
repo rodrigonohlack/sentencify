@@ -171,6 +171,44 @@ describe('EditableProcessNumber', () => {
     });
   });
 
+  it('does NOT call onSave twice when Enter and blur fire back-to-back during pending save', async () => {
+    // onSave demora de propósito; queremos que o blur do input dispare ANTES
+    // do save concluir e checar se o guard reentrante (isSaving) impede a 2ª chamada.
+    let resolveSave: () => void = () => {};
+    const onSave = vi.fn().mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveSave = resolve;
+        })
+    );
+
+    render(
+      <EditableProcessNumber
+        value="ABC-1"
+        canEdit={true}
+        isSelected={false}
+        onSave={onSave}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /renomear/i }));
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'NEW' } });
+
+    // Enter inicia o save (que fica pendurado na Promise).
+    fireEvent.keyDown(input, { key: 'Enter' });
+    // Blur logo em seguida — guard isSaving deve bloquear segunda invocação.
+    fireEvent.blur(input);
+
+    // Libera o save e espera o componente sair do modo edição.
+    resolveSave();
+    await waitFor(() => {
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+  });
+
   it('stops propagation of pencil click', () => {
     const parentClick = vi.fn();
     render(
