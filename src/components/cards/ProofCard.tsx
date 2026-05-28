@@ -405,11 +405,16 @@ export const ProofCard = React.memo(({
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <div>
                 <span className="font-medium">
-                  {blockReason === 'deepseek' ? 'DeepSeek selecionado:' : blockReason === 'grok' ? 'Grok selecionado:' : 'Provider sem suporte:'}
+                  {blockReason === 'deepseek' ? 'DeepSeek selecionado:'
+                    : blockReason === 'grok' ? 'Grok selecionado:'
+                    : blockReason === 'codex-cli' ? 'Codex Local (CLI) selecionado:'
+                    : 'Provider sem suporte:'}
                 </span>{' '}
                 {blockReason === 'deepseek'
                   ? 'DeepSeek não suporta PDF binário (text-only). Extraia o texto primeiro.'
-                  : 'Provider atual não suporta PDF binário. Extraia o texto primeiro.'}
+                  : blockReason === 'codex-cli'
+                    ? 'Codex CLI não suporta PDF binário (text-only). Extraia o texto primeiro.'
+                    : 'Provider atual não suporta PDF binário. Extraia o texto primeiro.'}
               </div>
             </div>
           )}
@@ -439,7 +444,9 @@ export const ProofCard = React.memo(({
                       : anonymizationEnabled
                         ? 'Anonimização ativa: PDF binário bloqueado'
                         : binaryPdfBlocked
-                          ? (blockReason === 'deepseek' ? 'DeepSeek não suporta PDF binário (text-only)' : 'Grok não suporta PDF binário')
+                          ? (blockReason === 'deepseek' ? 'DeepSeek não suporta PDF binário (text-only)'
+                            : blockReason === 'codex-cli' ? 'Codex CLI não suporta PDF binário (text-only)'
+                            : 'Grok não suporta PDF binário')
                           : ''
                   }
                 >

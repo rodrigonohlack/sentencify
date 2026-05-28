@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.1',
+    date: '2026-05-28',
+    feature: 'fix(codex-cli): bloquear opção "PDF Puro (binário)" no ProcessingModeSelector quando provider é Codex Local (CLI). Codex CLI é text-only (não suporta envio de PDF binário, igual a Grok e DeepSeek). Antes do fix, ao selecionar Codex Local e adicionar uma petição inicial, a opção "PDF Puro (binário)" continuava habilitada, podendo gerar 500 do daemon quando o usuário tentasse processar. Estendido tipo blockReason para incluir "codex-cli", labels/tooltips de ProcessingModeSelector e ProofCard atualizados com mensagem específica. Bug introduzido na própria v1.50.0 (escopo do plano não cobriu UploadTab.tsx que tinha 3 sites hardcoded `provider === "grok" || provider === "deepseek"`).',
+  },
+  {
     version: '1.50.0',
     date: '2026-05-28',
     feature: 'feat(provider): Provider Codex Local (CLI) — assinatura ChatGPT, custo $0. Sétimo provider, simétrico ao Claude Local: executa Codex CLI (gpt-5.5) via daemon claude-bridge (endpoint /api/codex-cli/messages) sob OAuth ChatGPT. Reasoning effort minimal/low/medium/high. Disponível em todos os apps. Requer codex CLI instalado, codex login executado, e daemon claude-bridge rodando. feat(web-search): Web Search no Claude Local e Codex Local (com fontes) — toggle "Web" no assistente de redação agora funciona em três providers (Gemini + Claude Local + Codex Local). Daemon claude-bridge invoca WebSearch (claude) ou --search (codex) e devolve grounding metadata; footer "Fontes" exibe URLs consultadas como no Gemini.',
