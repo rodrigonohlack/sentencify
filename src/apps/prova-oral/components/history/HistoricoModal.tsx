@@ -3,7 +3,7 @@
  * @description Modal de histórico de análises de prova oral
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   History,
   Loader2,
@@ -15,10 +15,11 @@ import {
   FileText,
   Users,
 } from 'lucide-react';
-import { Modal, Button, Card, CardContent } from '../ui';
+import { Modal, Button, Card, CardContent, useToast } from '../ui';
 import { useAnalysesStore, useProvaOralStore } from '../../stores';
 import { useProvaOralAPI } from '../../hooks';
-import type { SavedProvaOralAnalysis } from '../../types';
+import { EditableProcessNumber } from './EditableProcessNumber';
+import type { SavedProvaOralAnalysis, ProvaOralResult } from '../../types';
 
 interface HistoricoModalProps {
   isOpen: boolean;
@@ -32,9 +33,18 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
   onClose,
   onLoad,
 }) => {
-  const { analyses, isLoading, error, filters, setFilters, getFilteredAnalyses } = useAnalysesStore();
+  const {
+    analyses,
+    isLoading,
+    error,
+    filters,
+    setFilters,
+    getFilteredAnalyses,
+    updateAnalysis: updateAnalysisInStore,
+  } = useAnalysesStore();
   const { loadAnalysis, setLoadedAnalysisId } = useProvaOralStore();
-  const { fetchAnalyses, deleteAnalysis } = useProvaOralAPI();
+  const { fetchAnalyses, deleteAnalysis, updateAnalysis } = useProvaOralAPI();
+  const { showToast } = useToast();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -83,6 +93,44 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
     setSelectedId(null);
     setShowDeleteConfirm(false);
   };
+
+  const handleRenameProcesso = useCallback(
+    async (analysisId: string, newNumero: string | null): Promise<void> => {
+      const analysis = analyses.find((a) => a.id === analysisId);
+      if (!analysis) return;
+
+      // Snapshot para revert em caso de falha.
+      const snapshot = {
+        numeroProcesso: analysis.numeroProcesso,
+        resultado: analysis.resultado,
+      };
+
+      // Construir o novo resultado mantendo todos os outros campos.
+      // Apenas processo.numeroProcesso é atualizado; processo.numero (legado
+      // gerado pela IA) é deixado intocado para preservar o original.
+      const novoResultado: ProvaOralResult = {
+        ...analysis.resultado,
+        processo: {
+          ...analysis.resultado.processo,
+          numeroProcesso: newNumero ?? undefined,
+        },
+      };
+
+      // Optimistic update — UI reflete imediatamente.
+      updateAnalysisInStore(analysisId, {
+        numeroProcesso: newNumero,
+        resultado: novoResultado,
+      });
+
+      const ok = await updateAnalysis({ id: analysisId, resultado: novoResultado });
+      if (!ok) {
+        // Revert + toast.
+        updateAnalysisInStore(analysisId, snapshot);
+        showToast('error', 'Não foi possível renomear o processo.');
+      }
+    },
+    [analyses, updateAnalysisInStore, updateAnalysis, showToast]
+  );
 
   const formatDate = (dateStr: string) => {
     try {
@@ -207,14 +255,13 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
                     </span>
                   )}
 
-                  {/* Número do processo */}
-                  <p className={`font-medium truncate ${
-                    selectedId === analysis.id
-                      ? 'text-indigo-700 dark:text-indigo-300'
-                      : 'text-slate-800 dark:text-slate-100'
-                  }`}>
-                    {analysis.numeroProcesso || 'Processo não identificado'}
-                  </p>
+                  {/* Número do processo — editável apenas em análises próprias */}
+                  <EditableProcessNumber
+                    value={analysis.numeroProcesso}
+                    canEdit={analysis.isOwn !== false}
+                    isSelected={selectedId === analysis.id}
+                    onSave={(newValue) => handleRenameProcesso(analysis.id, newValue)}
+                  />
 
                   {/* Partes */}
                   <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-slate-600 dark:text-slate-400 mt-1">
