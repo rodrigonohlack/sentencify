@@ -55,11 +55,15 @@ export const EditableProcessNumber: React.FC<EditableProcessNumberProps> = ({
   );
 
   const handleSave = useCallback(async () => {
+    // Guarda contra chamadas concorrentes (ex.: Enter dispara onKeyDown+handleSave,
+    // e o blur subsequente do input pode disparar outra).
+    if (isSaving) return;
+
     const trimmed = localValue.trim();
     const normalized = trimmed === '' ? null : trimmed;
 
     // Sem mudança → só sai do modo edição sem chamar onSave.
-    if (normalized === (value ?? null) || (normalized === null && value === null)) {
+    if (normalized === (value ?? null)) {
       setIsEditing(false);
       return;
     }
@@ -71,7 +75,7 @@ export const EditableProcessNumber: React.FC<EditableProcessNumberProps> = ({
       setIsSaving(false);
       setIsEditing(false);
     }
-  }, [localValue, value, onSave]);
+  }, [isSaving, localValue, value, onSave]);
 
   const handleCancel = useCallback(() => {
     setIsEditing(false);

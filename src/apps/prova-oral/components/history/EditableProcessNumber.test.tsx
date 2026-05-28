@@ -143,9 +143,32 @@ describe('EditableProcessNumber', () => {
     const input = screen.getByRole('textbox');
     fireEvent.keyDown(input, { key: 'Enter' });
 
-    // microtask flush
-    await Promise.resolve();
-    expect(onSave).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(onSave).not.toHaveBeenCalled();
+      // Confirma que saiu do modo edição (input fechou).
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
+  });
+
+  it('calls onSave with new value when input loses focus (blur)', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(
+      <EditableProcessNumber
+        value="ABC-1"
+        canEdit={true}
+        isSelected={false}
+        onSave={onSave}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /renomear/i }));
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'NEW' } });
+    fireEvent.blur(input);
+
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledWith('NEW');
+    });
   });
 
   it('stops propagation of pencil click', () => {
