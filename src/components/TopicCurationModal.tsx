@@ -168,12 +168,17 @@ const MODEL_NAMES: Record<string, string> = {
   'claude-sonnet-4-20250514': 'Claude Sonnet 4',
   'claude-opus-4-20250514': 'Claude Opus 4',
   'claude-opus-4-5-20251101': 'Claude Opus 4.5',
+  // Claude Local (CLI · assinatura)
+  'claude-sonnet-4-6': 'Claude Sonnet 4.6',
+  'claude-opus-4-7': 'Claude Opus 4.7',
   // Gemini
   'gemini-3-flash-preview': 'Gemini 3 Flash',
   'gemini-3.1-pro-preview': 'Gemini 3.1 Pro',
   // OpenAI
   'gpt-5.2': 'GPT-5.2',
   'gpt-5.2-chat-latest': 'GPT-5.2 Instant',
+  // Codex Local (CLI · assinatura)
+  'gpt-5.5': 'GPT-5.5',
   // Grok (xAI)
   'grok-4-1-fast-reasoning': 'Grok 4.1 Fast',
   'grok-4-1-fast-non-reasoning': 'Grok 4.1 Lite',
@@ -204,7 +209,7 @@ const USD_TO_BRL = 5.50;
 // ═══════════════════════════════════════════════════════════════════════════════
 
 interface EstimateOptions {
-  provider?: 'anthropic' | 'gemini' | 'openai' | 'grok' | 'deepseek';
+  provider?: 'anthropic' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli';
   thinkingBudget?: string;
   useExtendedThinking?: boolean;
   geminiThinkingLevel?: string;
@@ -226,7 +231,11 @@ const estimateCostAndTime = (
     topicsPerRequest = 1
   } = options;
 
-  const prices = MODEL_PRICES[model] || MODEL_PRICES['claude-sonnet-4-20250514'];
+  // Providers CLI locais (claude-cli e codex-cli) rodam sob assinatura — custo $0
+  const isLocalCli = provider === 'claude-cli' || provider === 'codex-cli';
+  const prices = isLocalCli
+    ? { input: 0, output: 0 }
+    : (MODEL_PRICES[model] || MODEL_PRICES['claude-sonnet-4-20250514']);
 
   // Calcular tokens de input considerando batch size
   const batchSize = topicsPerRequest === 'all'
@@ -1105,16 +1114,21 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
 
   const estimate = useMemo(() => {
     const topicsToGenerate = topics.filter(t => !isSpecialTopic(t)).length;
-    // v1.36.35: Mapear providers corretamente (claude/claude-cli -> anthropic, demais mantém)
-    const estimateProvider = (provider === 'claude' || provider === 'claude-cli') ? 'anthropic' : provider;
+    // v1.36.35: 'claude' (API) é tratado como 'anthropic' no cálculo de preços.
+    // v1.50.2: 'claude-cli' e 'codex-cli' rodam sob assinatura — passar provider
+    // real para o estimador, que zera o custo internamente quando é CLI local.
+    const estimateProvider = provider === 'claude' ? 'anthropic' : provider;
     return estimateCostAndTime(topicsToGenerate, model, parallelRequests, {
-      provider: estimateProvider as 'anthropic' | 'gemini' | 'openai' | 'grok',
+      provider: estimateProvider as 'anthropic' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli',
       thinkingBudget,
       useExtendedThinking,
       geminiThinkingLevel,
       topicsPerRequest
     });
   }, [topics, model, parallelRequests, provider, thinkingBudget, useExtendedThinking, geminiThinkingLevel, topicsPerRequest]);
+
+  // v1.50.2: Sufixo "· assinatura" no rótulo de custo quando provider CLI local
+  const isLocalCliProvider = provider === 'claude-cli' || provider === 'codex-cli';
 
   const specialTopicIds = useMemo(() => {
     return new Set(
@@ -1481,7 +1495,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
             >
               <DollarSign className="w-4 h-4 text-green-500" />
               <span className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
-                ~R$ {estimate.costBRL} ({MODEL_NAMES[model] || model}{estimate.thinkingLabel ? ` + ${estimate.thinkingLabel}` : ''})
+                ~R$ {estimate.costBRL} ({MODEL_NAMES[model] || model}{isLocalCliProvider ? ' · assinatura' : ''}{estimate.thinkingLabel ? ` + ${estimate.thinkingLabel}` : ''})
               </span>
             </div>
             <div className="flex items-center gap-2">

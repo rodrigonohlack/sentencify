@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.2',
+    date: '2026-05-28',
+    feature: 'fix(codex-cli, claude-cli): estimativa de custo no TopicCurationModal estava mostrando "~R$ X (Claude Sonnet 4)" para provider Codex Local (fallback no MODEL_PRICES) e custo de Claude API para Claude Local (mapeamento legado claude-cli→anthropic ignorava que é assinatura). Estimador agora detecta provider CLI local (claude-cli ou codex-cli) e zera o custo (assinatura, $0). MODEL_NAMES ganha gpt-5.5, claude-sonnet-4-6 e claude-opus-4-7 para exibir nome correto do modelo em uso. Label de custo recebe sufixo "· assinatura" quando provider é CLI local. Bug introduzido na v1.50.0 (codex-cli) e pré-existente na v1.45.0 para claude-cli — ambos resolvidos.',
+  },
+  {
     version: '1.50.1',
     date: '2026-05-28',
     feature: 'fix(codex-cli): bloquear opção "PDF Puro (binário)" no ProcessingModeSelector quando provider é Codex Local (CLI). Codex CLI é text-only (não suporta envio de PDF binário, igual a Grok e DeepSeek). Antes do fix, ao selecionar Codex Local e adicionar uma petição inicial, a opção "PDF Puro (binário)" continuava habilitada, podendo gerar 500 do daemon quando o usuário tentasse processar. Estendido tipo blockReason para incluir "codex-cli", labels/tooltips de ProcessingModeSelector e ProofCard atualizados com mensagem específica. Bug introduzido na própria v1.50.0 (escopo do plano não cobriu UploadTab.tsx que tinha 3 sites hardcoded `provider === "grok" || provider === "deepseek"`).',
