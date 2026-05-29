@@ -47,8 +47,8 @@ export const AI_PROVIDERS: Record<AIProvider, ProviderInfo> = {
         description: 'Mais recente — equilíbrio velocidade/qualidade'
       },
       {
-        id: 'claude-opus-4-7',
-        name: 'Claude Opus 4.7',
+        id: 'claude-opus-4-8',
+        name: 'Claude Opus 4.8',
         description: 'Máxima qualidade e raciocínio'
       }
     ]
@@ -173,7 +173,7 @@ export const MODEL_MAX_OUTPUT_TOKENS: Record<string, number> = {
   'claude-sonnet-4-20250514': 64000,
   'claude-opus-4-5-20251101': 32000,
   'claude-sonnet-4-6': 64000,
-  'claude-opus-4-7': 32000,
+  'claude-opus-4-8': 32000,
 
   // Gemini
   'gemini-3-flash-preview': 128000,

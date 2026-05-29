@@ -267,7 +267,7 @@ const useAIIntegration = () => {
       'claude-sonnet-4-20250514': 64000,
       'claude-opus-4-5-20251101': 32000,
       'claude-sonnet-4-6': 64000,
-      'claude-opus-4-7': 32000
+      'claude-opus-4-8': 32000
     };
     const modelMaxTokens = MODEL_MAX_TOKENS[modelToUse] || 64000;
 

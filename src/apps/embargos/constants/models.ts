@@ -47,8 +47,8 @@ export const AI_PROVIDERS: Record<AIProvider, ProviderInfo> = {
         description: 'Mais recente — equilíbrio velocidade/qualidade'
       },
       {
-        id: 'claude-opus-4-7',
-        name: 'Claude Opus 4.7',
+        id: 'claude-opus-4-8',
+        name: 'Claude Opus 4.8',
         description: 'Máxima qualidade e raciocínio'
       }
     ]

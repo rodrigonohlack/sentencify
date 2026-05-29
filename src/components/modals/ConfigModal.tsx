@@ -78,7 +78,7 @@ const getModelDisplayName = (modelId: string): string => {
     'claude-opus-4-5-20251101': 'Claude Opus 4.5',
     // Claude Local (CLI)
     'claude-sonnet-4-6': 'Claude Sonnet 4.6',
-    'claude-opus-4-7': 'Claude Opus 4.7',
+    'claude-opus-4-8': 'Claude Opus 4.8',
     // Gemini 3
     'gemini-3-flash-preview': 'Gemini 3 Flash',
     'gemini-3.1-pro-preview': 'Gemini 3.1 Pro',
@@ -521,7 +521,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   className="w-full px-3 py-2 theme-bg-secondary border theme-border-input rounded text-sm theme-text-secondary"
                 >
                   <option value="claude-sonnet-4-6">Sonnet 4.6 (assinatura · $0)</option>
-                  <option value="claude-opus-4-7">Opus 4.7 (assinatura · $0)</option>
+                  <option value="claude-opus-4-8">Opus 4.8 (assinatura · $0)</option>
                 </select>
               )}
               {aiSettings.provider === 'codex-cli' && (

@@ -55,8 +55,8 @@ describe('createAIStore — setters básicos', () => {
 
   it('setModel("claude-cli") grava em claudeCliModel e não em claudeModel', () => {
     const { useStore } = makeStore();
-    useStore.getState().setModel('claude-cli', 'claude-opus-4-7');
-    expect(useStore.getState().aiSettings.claudeCliModel).toBe('claude-opus-4-7');
+    useStore.getState().setModel('claude-cli', 'claude-opus-4-8');
+    expect(useStore.getState().aiSettings.claudeCliModel).toBe('claude-opus-4-8');
     expect(useStore.getState().aiSettings.claudeModel).toBe('claude-sonnet-4-20250514');
   });
 

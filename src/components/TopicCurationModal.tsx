@@ -170,7 +170,7 @@ const MODEL_NAMES: Record<string, string> = {
   'claude-opus-4-5-20251101': 'Claude Opus 4.5',
   // Claude Local (CLI · assinatura)
   'claude-sonnet-4-6': 'Claude Sonnet 4.6',
-  'claude-opus-4-7': 'Claude Opus 4.7',
+  'claude-opus-4-8': 'Claude Opus 4.8',
   // Gemini
   'gemini-3-flash-preview': 'Gemini 3 Flash',
   'gemini-3.1-pro-preview': 'Gemini 3.1 Pro',
