@@ -8,10 +8,13 @@ import { useCallback } from 'react';
 import {
   useSynthesisStore,
   useDraftStore,
+  usePromptConfigStore,
+  effectiveDraftBasePrompt,
+  effectiveStyleGuide,
   emptySection
 } from '../stores';
 import { useAIIntegration } from './useAIIntegration';
-import { DRAFT_SYSTEM_PROMPT, buildDraftPrompt } from '../prompts';
+import { composeDraftSystemPrompt, buildDraftPrompt } from '../prompts';
 import { DraftResponseSchema, extractJSON } from '../../../schemas/ai-responses';
 import type { Draft } from '../types';
 import type { AIMessage } from '../../../types/ai';
@@ -38,11 +41,17 @@ export function useDraftGeneration() {
       const userPrompt = buildDraftPrompt(synth.synthesis);
       const messages: AIMessage[] = [{ role: 'user', content: userPrompt }];
 
+      const promptConfig = usePromptConfigStore.getState();
+      const systemPrompt = composeDraftSystemPrompt(
+        effectiveDraftBasePrompt(promptConfig),
+        effectiveStyleGuide(promptConfig)
+      );
+
       draft.setProgress(40, 'Redigindo…');
 
       const response = await callAIStream(messages, {
         maxTokens: 32000,
-        systemPrompt: DRAFT_SYSTEM_PROMPT
+        systemPrompt
       });
 
       draft.setProgress(80, 'Processando minuta…');

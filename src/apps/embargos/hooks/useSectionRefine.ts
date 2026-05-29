@@ -4,9 +4,9 @@
  */
 
 import { useCallback } from 'react';
-import { useDraftStore, useSynthesisStore } from '../stores';
+import { useDraftStore, useSynthesisStore, usePromptConfigStore, effectiveStyleGuide } from '../stores';
 import { useAIIntegration } from './useAIIntegration';
-import { REFINE_SYSTEM_PROMPT, buildRefinePrompt } from '../prompts';
+import { composeRefineSystemPrompt, buildRefinePrompt } from '../prompts';
 import { RefineResponseSchema, extractJSON } from '../../../schemas/ai-responses';
 import type { DraftSectionKey } from '../types';
 import type { AIMessage } from '../../../types/ai';
@@ -46,9 +46,13 @@ export function useSectionRefine(section: DraftSectionKey) {
 
       const messages: AIMessage[] = [{ role: 'user', content: userPrompt }];
 
+      const systemPrompt = composeRefineSystemPrompt(
+        effectiveStyleGuide(usePromptConfigStore.getState())
+      );
+
       const response = await callAIStream(messages, {
         maxTokens: 16000,
-        systemPrompt: REFINE_SYSTEM_PROMPT
+        systemPrompt
       });
 
       const extracted = extractJSON(response);

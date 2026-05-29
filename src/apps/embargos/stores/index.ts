@@ -2,3 +2,8 @@ export { useAIStore, persistApiKeys, selectProvider, selectCurrentModel, selectC
 export { useDocumentStore } from './useDocumentStore';
 export { useSynthesisStore } from './useSynthesisStore';
 export { useDraftStore, emptySection } from './useDraftStore';
+export {
+  usePromptConfigStore,
+  effectiveDraftBasePrompt,
+  effectiveStyleGuide
+} from './usePromptConfigStore';

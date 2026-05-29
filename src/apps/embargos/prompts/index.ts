@@ -1,4 +1,14 @@
 export { STYLE_GUIDE } from './style-guide';
 export { SYNTHESIS_SYSTEM_PROMPT, buildSynthesisPrompt } from './synthesis';
-export { DRAFT_SYSTEM_PROMPT, buildDraftPrompt } from './draft';
-export { REFINE_SYSTEM_PROMPT, buildRefinePrompt } from './refine';
+export {
+  DEFAULT_DRAFT_BASE_PROMPT,
+  DRAFT_JSON_CONTRACT,
+  composeDraftSystemPrompt,
+  buildDraftPrompt
+} from './draft';
+export {
+  REFINE_ROLE,
+  REFINE_JSON_CONTRACT,
+  composeRefineSystemPrompt,
+  buildRefinePrompt
+} from './refine';

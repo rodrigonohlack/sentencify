@@ -8,6 +8,7 @@ import { Modal, Button } from '../ui';
 import { AIProviderSelector } from './AIProviderSelector';
 import { ModelSelector } from './ModelSelector';
 import { APIKeyInput } from './APIKeyInput';
+import { PromptConfigSection } from './PromptConfigSection';
 import { useAIStore } from '../../stores';
 import type { GeminiThinkingLevel, OpenAIReasoningLevel, TokenMetrics, ClaudeCliEffort } from '../../../../types/ai';
 
@@ -303,6 +304,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             )}
           </div>
         </div>
+
+        {/* Prompts e estilo (Embargos) */}
+        <PromptConfigSection />
 
         {/* Métricas de Tokens */}
         {tokenMetrics.requestCount > 0 && (
