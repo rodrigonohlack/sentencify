@@ -180,6 +180,32 @@ test('translateResponse: error event com 401 Unauthorized → 401', () => {
   assert.equal(out.body.error.type, 'authentication_error');
 });
 
+test('translateResponse: turn.failed (quota usage limit) → 402', () => {
+  const ERR = [
+    JSON.stringify({ type: 'thread.started', thread_id: 'x' }),
+    JSON.stringify({ type: 'turn.failed', error: { message: "You've hit your usage limit. Upgrade to Plus to continue using Codex (https://chatgpt.com/explore/plus), or try again at Jun 4th, 2026 9:53 AM." } }),
+  ].join('\n');
+  const out = translateResponse(ERR + '\n', 'gpt-5.5');
+  // 402 Payment Required: NÃO está em OPENAI_RETRY_CODES do React,
+  // então o assistente não retenta 3x à toa em erro que precisa esperar reset.
+  assert.equal(out.status, 402);
+  assert.equal(out.body.error.type, 'quota_exhausted');
+  assert.match(out.body.error.message, /Quota Codex Pro esgotada/);
+  // Preserva a data/hora do reset na msg original pro juiz saber quando volta
+  assert.match(out.body.error.message, /Jun 4th/);
+});
+
+test('translateResponse: error event com usage limit → 402', () => {
+  const ERR = [
+    JSON.stringify({ type: 'thread.started', thread_id: 'x' }),
+    JSON.stringify({ type: 'turn.started' }),
+    JSON.stringify({ type: 'error', message: "You've hit your usage limit. Upgrade to Plus to continue using Codex, or try again later." }),
+  ].join('\n');
+  const out = translateResponse(ERR + '\n', 'gpt-5.5');
+  assert.equal(out.status, 402);
+  assert.equal(out.body.error.type, 'quota_exhausted');
+});
+
 test('translateResponse: turn.failed genérico → 500', () => {
   const ERR = [
     JSON.stringify({ type: 'thread.started', thread_id: 'x' }),

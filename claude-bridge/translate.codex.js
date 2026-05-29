@@ -122,6 +122,21 @@ function isAuthError(msg) {
 }
 
 /**
+ * Detecta se a mensagem do codex indica quota/usage limit esgotada
+ * (ChatGPT Pro tem janela de uso programático que satura). Mensagem típica:
+ *   "You've hit your usage limit. Upgrade to Plus to continue using Codex
+ *    (https://chatgpt.com/explore/plus), or try again at <data> <hora>."
+ *
+ * Aplicar nas mesmas situações de isAuthError (error/turn.failed).
+ *
+ * @param {string} msg
+ * @returns {boolean}
+ */
+function isQuotaError(msg) {
+  return /hit your usage limit|usage limit.*upgrade|upgrade to plus.*continue using codex/i.test(String(msg));
+}
+
+/**
  * Parseia o JSONL emitido por `codex exec --json` e devolve {status, body}
  * no formato Chat Completions OpenAI.
  *
@@ -201,12 +216,20 @@ export function translateResponse(stdout, model) {
     if (isAuthError(turnFailedError)) {
       return { status: 401, body: { error: { type: 'authentication_error', message: 'Codex CLI não está logado. Rode `codex login` no terminal.' } } };
     }
+    if (isQuotaError(turnFailedError)) {
+      // 402 Payment Required: semantica correta + NÃO está em OPENAI_RETRY_CODES
+      // do React (evita 3x retry com backoff em erro que não vai resolver sozinho).
+      return { status: 402, body: { error: { type: 'quota_exhausted', message: `Quota Codex Pro esgotada. ${turnFailedError}` } } };
+    }
     return { status: 500, body: { error: { type: 'server_error', message: turnFailedError } } };
   }
   if (!sawAgentMessage && !sawTurnCompleted) {
     if (lastErrorMsg) {
       if (isAuthError(lastErrorMsg)) {
         return { status: 401, body: { error: { type: 'authentication_error', message: 'Codex CLI não está logado. Rode `codex login` no terminal.' } } };
+      }
+      if (isQuotaError(lastErrorMsg)) {
+        return { status: 402, body: { error: { type: 'quota_exhausted', message: `Quota Codex Pro esgotada. ${lastErrorMsg}` } } };
       }
       return { status: 500, body: { error: { type: 'server_error', message: lastErrorMsg } } };
     }
