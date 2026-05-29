@@ -194,6 +194,23 @@ test('buildClaudeArgs: sem web_search mantém --tools "" (default seguro)', () =
   assert.equal(args.indexOf('--permission-mode'), -1);
 });
 
+test('buildClaudeArgs: hardening anti-leak (MCPs/skills/Skill-tool)', () => {
+  // Aplicado em AMBOS os modos (com e sem web_search). Smoke test (2026-05-28,
+  // claude-cli 2.1.154) provou que sem essas flags, MCPs user-level (Gmail)
+  // vazam pro array `tools` mesmo com --tools 'WebSearch'.
+  for (const body of [{ model: 'sonnet' }, { model: 'sonnet', web_search: true }]) {
+    const args = buildClaudeArgs(body);
+    assert.ok(args.includes('--strict-mcp-config'),
+      'falta --strict-mcp-config (bloqueia MCPs user-level)');
+    assert.ok(args.includes('--disable-slash-commands'),
+      'falta --disable-slash-commands (zera skills)');
+    const denyIdx = args.indexOf('--disallowed-tools');
+    assert.notEqual(denyIdx, -1, 'falta --disallowed-tools');
+    assert.equal(args[denyIdx + 1], 'Skill',
+      '--disallowed-tools deveria negar especificamente Skill');
+  }
+});
+
 test('translateResponse: extrai grounding de tool_use blocks WebSearch', () => {
   const RESULT_WITH_TOOLS = JSON.stringify({
     type: 'result',

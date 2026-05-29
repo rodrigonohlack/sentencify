@@ -42,7 +42,20 @@ export function buildClaudeArgs(body) {
     '--output-format',
     'stream-json',
     '--setting-sources',
-    ''
+    '',
+    // Hardening contra vazamento de tools/skills/MCPs no headless:
+    //   --strict-mcp-config (sem --mcp-config) → zera MCP servers user-level
+    //     (Gmail/Drive/Calendar etc. vazavam pro whitelist mesmo com --tools 'WebSearch')
+    //   --disable-slash-commands → zera skills carregadas (apesar do nome,
+    //     a flag desabilita skills + slash commands)
+    //   --disallowed-tools 'Skill' → belt-and-suspenders explícito contra a
+    //     meta-tool Skill (redundante hoje, defensivo contra regressão futura)
+    // Smoke testado contra claude-cli 2.1.154 em 2026-05-28; sem essas três flags,
+    // o init message vinha com 2 MCP tools de Gmail no array `tools`.
+    '--strict-mcp-config',
+    '--disable-slash-commands',
+    '--disallowed-tools',
+    'Skill',
   ];
 
   // Tools: por default zera; se body.web_search=true ativa WebSearch + bypassPermissions
