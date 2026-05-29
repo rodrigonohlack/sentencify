@@ -9,6 +9,8 @@ import {
   applyWebSearchTool,
   extractGrounding,
   WEB_SEARCH_REGISTRY,
+  withWebSearchHint,
+  WEB_SEARCH_CITATION_HINT,
 } from './webSearch';
 
 describe('providerSupportsWebSearch', () => {
@@ -205,5 +207,39 @@ describe('WEB_SEARCH_REGISTRY — shape', () => {
       expect(typeof a.applyToRequest).toBe('function');
       expect(typeof a.extractGrounding).toBe('function');
     }
+  });
+});
+
+describe('withWebSearchHint', () => {
+  it('enabled=false retorna o systemPrompt intacto (string)', () => {
+    expect(withWebSearchHint('SYS', false)).toBe('SYS');
+  });
+
+  it('enabled=false preserva null e undefined', () => {
+    expect(withWebSearchHint(null, false)).toBe(null);
+    expect(withWebSearchHint(undefined, false)).toBe(undefined);
+  });
+
+  it('enabled=true concatena hint ao final do system existente', () => {
+    const result = withWebSearchHint('Você é um juiz.', true);
+    expect(result?.startsWith('Você é um juiz.')).toBe(true);
+    expect(result).toContain('MÁXIMO 2 vezes');
+    expect(result).toContain('[título da fonte](url-exata)');
+  });
+
+  it('enabled=true com systemPrompt null/undefined gera só o hint', () => {
+    const result1 = withWebSearchHint(null, true);
+    const result2 = withWebSearchHint(undefined, true);
+    expect(result1).toContain('[título da fonte](url-exata)');
+    expect(result2).toContain('[título da fonte](url-exata)');
+    // Sem prefixo de system, o hint começa com a quebra/separador
+    expect(result1?.startsWith('\n\n---')).toBe(true);
+  });
+
+  it('hint contém instrução de formato markdown explícita', () => {
+    // Crítico: o regex de extração em translate.js/translate.codex.js depende
+    // do formato [título](url). Se o hint mudar e perder isso, o grounding quebra.
+    expect(WEB_SEARCH_CITATION_HINT).toContain('[título da fonte](url-exata)');
+    expect(WEB_SEARCH_CITATION_HINT).toContain('markdown');
   });
 });

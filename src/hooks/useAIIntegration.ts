@@ -15,7 +15,7 @@ import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../utils/claude
 import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../utils/codex-cli-bridge';
 import { withRetry } from '../utils/retry';
 // v1.42.02: Registry provider-agnostic para habilitar web search
-import { applyWebSearchTool, extractGrounding } from '../utils/ai-tools/webSearch';
+import { applyWebSearchTool, extractGrounding, withWebSearchHint } from '../utils/ai-tools/webSearch';
 import type {
   AIMessage,
   AIMessageContent,
@@ -421,10 +421,14 @@ const useAIIntegration = () => {
           ? { 'Content-Type': 'application/json' }
           : { ...getApiHeaders(), 'x-api-key': aiSettings.apiKeys?.claude || '' };
 
+        // Quando web search está ativo no provider local (claude-cli),
+        // injeta hint no system prompt forçando citação em [título](url) —
+        // necessário pra `translate.js` extrair grounding — e limitando buscas.
+        const effectiveSystemPrompt = withWebSearchHint(systemPrompt, localBridge && webSearch);
         const requestBody = buildApiRequest(messages, {
           maxTokens,
           useInstructions,
-          systemPrompt: systemPrompt ?? undefined,
+          systemPrompt: effectiveSystemPrompt ?? undefined,
           model: model ?? undefined,
           disableThinking
         });
@@ -1075,6 +1079,10 @@ const useAIIntegration = () => {
         ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
         : instructions;
     }
+    // Quando web search está ativo no provider local (codex-cli), injeta hint
+    // forçando citação em [título](url) — necessário pra `translate.codex.js`
+    // extrair grounding — e limitando buscas.
+    finalSystemPrompt = withWebSearchHint(finalSystemPrompt, localBridge && webSearch) ?? null;
 
     // Timeout maior para reasoning xhigh
     const reasoningLevel = aiSettings.openaiReasoningLevel || 'medium';

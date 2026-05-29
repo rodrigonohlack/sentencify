@@ -127,6 +127,42 @@ export const WEB_SEARCH_REGISTRY: Record<AIProvider, WebSearchProviderAdapter> =
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
+// SYSTEM PROMPT HINT
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Hint injetado no system prompt quando web search está ativo, com dois objetivos:
+ *   1. Garantir que o modelo cite fontes no formato `[título](url)` — pois é o
+ *      ÚNICO formato que os daemons conseguem extrair pra grounding.
+ *      Ver `claude-bridge/translate.js` (`extractMarkdownLinks` / regex em
+ *      translateResponse) e `claude-bridge/translate.codex.js` (`extractMarkdownLinks`).
+ *      Sem esse formato, o juiz não vê as fontes mesmo tendo pago pela busca.
+ *   2. Limitar buscas: controla latência hoje, e custo a partir de 15/jun/2026
+ *      quando `claude -p` deixa de ser bundled no Max e passa a ser API-priced.
+ */
+export const WEB_SEARCH_CITATION_HINT = `
+
+---
+Instruções para uso da busca web (injetadas automaticamente quando você ativou a busca):
+- Use a ferramenta de busca web no MÁXIMO 2 vezes nesta resposta, e somente quando precisar confirmar o texto literal de uma súmula, OJ, lei ou jurisprudência específica que você não conhece com certeza.
+- SEMPRE cite a fonte em formato markdown \`[título da fonte](url-exata)\` imediatamente após cada afirmação que veio da busca.
+- Não parafraseie a URL — use exatamente o que veio do resultado da busca.
+- Sem esse formato, o sistema não consegue mostrar as fontes ao juiz.
+`;
+
+/**
+ * Concatena o WEB_SEARCH_CITATION_HINT ao system prompt quando web search está ativo.
+ * Idempotente em `enabled=false` (retorna o input como está).
+ */
+export function withWebSearchHint(
+  systemPrompt: string | null | undefined,
+  enabled: boolean,
+): string | null | undefined {
+  if (!enabled) return systemPrompt;
+  return (systemPrompt || '') + WEB_SEARCH_CITATION_HINT;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // PUBLIC API
 // ═══════════════════════════════════════════════════════════════════════════
 
