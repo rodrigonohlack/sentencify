@@ -10,6 +10,16 @@
 
 export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli';
 
+/**
+ * Providers de CLI local que autenticam por login OAuth (Claude Code / ChatGPT)
+ * via daemon local e, portanto, NÃO exigem API key.
+ */
+export const KEYLESS_CLI_PROVIDERS: ReadonlyArray<AIProvider> = ['claude-cli', 'codex-cli'];
+
+/** True quando o provider exige API key (todos, exceto os CLIs locais OAuth). */
+export const providerRequiresApiKey = (provider: AIProvider): boolean =>
+  !KEYLESS_CLI_PROVIDERS.includes(provider);
+
 /** Níveis de thinking do Gemini */
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
 

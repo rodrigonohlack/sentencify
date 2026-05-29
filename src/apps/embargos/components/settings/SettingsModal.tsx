@@ -11,6 +11,7 @@ import { APIKeyInput } from './APIKeyInput';
 import { PromptConfigSection } from './PromptConfigSection';
 import { useAIStore } from '../../stores';
 import type { GeminiThinkingLevel, OpenAIReasoningLevel, TokenMetrics, ClaudeCliEffort } from '../../../../types/ai';
+import { providerRequiresApiKey } from '../../../../types/ai';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Preços por modelo (USD / 1M tokens)
@@ -249,9 +250,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         </div>
 
         {/* API Key do provedor selecionado */}
-        {provider === 'claude-cli' ? (
+        {!providerRequiresApiKey(provider) ? (
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Claude Local usa o login do Claude Code (OAuth) — nenhuma API key necessária. Rode <code>npm run claude-bridge</code> para ligar o daemon local.
+            {provider === 'codex-cli' ? 'Codex Local usa o login do ChatGPT (OAuth)' : 'Claude Local usa o login do Claude Code (OAuth)'} — nenhuma API key necessária. Rode <code>npm run claude-bridge</code> para ligar o daemon local.
           </p>
         ) : (
           <APIKeyInput

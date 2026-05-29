@@ -9,6 +9,7 @@ import { PdfSlot } from './PdfSlot';
 import { Button } from '../ui';
 import { useDocumentStore, useSynthesisStore, useAIStore, selectCurrentApiKey, selectProvider } from '../../stores';
 import { useSynthesisAnalysis } from '../../hooks';
+import { providerRequiresApiKey } from '../../../../types/ai';
 import type { DocumentSlot } from '../../types';
 
 const SLOTS: DocumentSlot[] = ['decisaoEmbargada', 'embargos', 'contrarrazoes', 'inicial', 'contestacao'];
@@ -22,7 +23,7 @@ export const UploadView: React.FC = () => {
   const provider = useAIStore(selectProvider);
 
   const { analyze } = useSynthesisAnalysis();
-  const noApiKey = !apiKey && provider !== 'claude-cli';
+  const noApiKey = !apiKey && providerRequiresApiKey(provider);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">

@@ -12,6 +12,7 @@ import { APIKeyInput } from './APIKeyInput';
 import { useAIStore } from '../../stores';
 import { AI_PROVIDERS } from '../../constants/models';
 import type { NewsSource } from '../../types';
+import { providerRequiresApiKey } from '../../../../types/ai';
 
 type SettingsTab = 'sources' | 'ai';
 
@@ -200,9 +201,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <ModelSelector />
 
             {/* API KEY DO PROVEDOR SELECIONADO */}
-            {provider === 'claude-cli' ? (
+            {!providerRequiresApiKey(provider) ? (
               <p className="text-xs theme-text-muted">
-                Claude Local usa o login do Claude Code (OAuth) — nenhuma API key necessária. Rode <code>npm run claude-bridge</code> para ligar o daemon local.
+                {provider === 'codex-cli' ? 'Codex Local usa o login do ChatGPT (OAuth)' : 'Claude Local usa o login do Claude Code (OAuth)'} — nenhuma API key necessária. Rode <code>npm run claude-bridge</code> para ligar o daemon local.
               </p>
             ) : (
               <div className="p-4 theme-bg-tertiary rounded-xl space-y-4">
