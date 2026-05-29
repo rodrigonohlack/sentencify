@@ -1,6 +1,8 @@
 // claude-bridge/server.js
 import http from 'node:http';
 import os from 'node:os';
+import fs from 'node:fs';
+import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { buildClaudeArgs, buildStdin, translateResponse } from './translate.js';
 import {
@@ -13,6 +15,44 @@ const PORT = Number(process.env.CLAUDE_BRIDGE_PORT || 8787);
 if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
   throw new Error(`CLAUDE_BRIDGE_PORT inválido: "${process.env.CLAUDE_BRIDGE_PORT}"`);
 }
+
+/**
+ * CODEX_HOME isolado anti-skill-leak.
+ *
+ * codex-cli 0.134.0 descobre e auto-ativa skills de `$CODEX_HOME/skills/`
+ * (user-level e .system/) em modo headless `exec --json`, mesmo com
+ * `--ephemeral`, `-s read-only`, `--disable plugins/apps`, `--ignore-user-config`.
+ * Smoke test (29/mai/2026) provou: canary skill em ~/.codex/skills/
+ * disparou em "quanto é 2+2?" e ainda fez `bash sed SKILL.md` (sandbox
+ * read-only permite cat/sed). Input subiu de 10K → 21K tokens.
+ *
+ * Solução: spawnar codex com CODEX_HOME apontando pra dir limpa contendo
+ * só `auth.json` symlinkado pro real. codex não acha skills, mas auth
+ * continua funcionando. Smoke confirmou: canary não dispara, input baseline.
+ *
+ * Setup é idempotente — recria symlink em cada boot do daemon pra cobrir
+ * cenário de re-login (~/.codex/auth.json muda).
+ */
+const ISOLATED_CODEX_HOME = path.join(os.tmpdir(), 'sentencify-codex-runtime');
+function setupIsolatedCodexHome() {
+  try {
+    fs.mkdirSync(ISOLATED_CODEX_HOME, { recursive: true });
+    const realAuth = path.join(os.homedir(), '.codex', 'auth.json');
+    const isolatedAuth = path.join(ISOLATED_CODEX_HOME, 'auth.json');
+    // Remove qualquer auth.json antigo (file/symlink quebrado) e recria symlink
+    try { fs.unlinkSync(isolatedAuth); } catch { /* ok se não existir */ }
+    if (fs.existsSync(realAuth)) {
+      fs.symlinkSync(realAuth, isolatedAuth);
+    } else {
+      console.warn(`[claude-bridge] aviso: ${realAuth} não existe; rode \`codex login\` antes de usar provider codex-cli.`);
+    }
+  } catch (err) {
+    console.error(`[claude-bridge] falha ao montar CODEX_HOME isolado em ${ISOLATED_CODEX_HOME}: ${err.message}`);
+    // Sem isolamento, codex spawn vai usar ~/.codex/ default e skills podem vazar.
+    // Não derruba o daemon — bridge claude continua funcional independente.
+  }
+}
+setupIsolatedCodexHome();
 const ALLOWED_ORIGINS = new Set([
   'https://sentencify.ia.br',
   'http://localhost:3000', // vite (npm run client)
@@ -109,7 +149,12 @@ const server = http.createServer(async (req, res) => {
 
     try {
       const args = buildCodexArgs(body);
-      const child = spawn('codex', args, { cwd: os.tmpdir() });
+      // CODEX_HOME isolado: codex não enxerga ~/.codex/skills/ (anti-leak).
+      // Auth continua funcionando via symlink criado em setupIsolatedCodexHome().
+      const child = spawn('codex', args, {
+        cwd: os.tmpdir(),
+        env: { ...process.env, CODEX_HOME: ISOLATED_CODEX_HOME },
+      });
       child.stdin.on('error', () => {});
       let stdout = '', stderr = '';
       child.stdout.on('data', (d) => { stdout += d.toString(); });
