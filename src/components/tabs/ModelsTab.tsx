@@ -105,7 +105,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
           ═══════════════════════════════════════════════════════════════════════════════ */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3 flex-wrap">
-          <h3 className="text-xl font-bold text-purple-400">Banco de Modelos</h3>
+          <h3 className="text-xl font-bold text-blue-400">Banco de Modelos</h3>
           {cloudSync?.isAuthenticated && (
             <div className="flex items-center gap-2">
               <SyncStatusIndicator

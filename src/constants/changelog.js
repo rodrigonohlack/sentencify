@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.25',
+    date: '2026-05-30',
+    feature: 'fix(ui): (1) título "Banco de Modelos" estava em roxo (text-purple-400) destoando dos demais títulos de seção; alinhado para text-blue-400 (igual a "Gestão de Provas"/"Gerenciar Tópicos"). (2) Campo "Minhas Conclusões" (ProofCard) não podia ser redimensionado pelo usuário (resize-none) — trocado para resize-y com min-h-[80px], permitindo arrastar a alça para expandir, facilitando a digitação de conclusões longas.',
+  },
+  {
     version: '1.50.24',
     date: '2026-05-30',
     feature: 'style(ui): sistema de botões com hierarquia (Primário/Secundário/Destrutivo) no main app. Botões de ação roxos remanescentes → azul; depois, hierarquia por PESO em vez de cor: 1 primário por grupo (azul blue-500 sólido) + secundários neutros (fundo sutil + borda + ícone), resolvendo a "parede de botões iguais". Aplicado em: toolbar de Modelos (Novo Modelo primário), TopicsTab (Gerar Dispositivo primário), linha de ações do tópico (Editar primário; Renomear/Separar secundários; select de categoria neutralizado, sem o bloco azul pesado), footer do modal Renomear, e toolbar "Sua Decisão" do editor (some o roxo do "Voz" e o rosa do "Extrair Modelo"). btnPrimary global passou a sólido blue-500. PRESERVADO: "Salvar" verde (convenção semântica), cores de resultado (procedente/improcedente), estados ativos (abas/filtros), destrutivos em vermelho. tsc limpo; suíte 6257 testes verde.',

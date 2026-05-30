@@ -877,7 +877,7 @@ export const ProofCard = React.memo(({
               onChange={handleConclusionChange}
               placeholder="Adicione suas conclusões sobre esta prova..."
               rows={3}
-              className="w-full px-3 py-2 theme-bg-secondary-50 border theme-border-input rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent theme-text-secondary text-xs resize-none"
+              className="w-full px-3 py-2 theme-bg-secondary-50 border theme-border-input rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent theme-text-secondary text-xs resize-y min-h-[80px]"
             />
           </div>
 
