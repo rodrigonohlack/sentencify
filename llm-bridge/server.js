@@ -123,6 +123,17 @@ function usageInfo(out) {
   return parts.join(' ');
 }
 
+// Quando o tradutor devolve status de erro (CLI emitiu is_error, ou sem evento
+// `result`), o usageInfo fica vazio e a linha de log sai como um `500` mudo.
+// endInfo loga a mensagem de erro real, tornando o episódio diagnosticável.
+function endInfo(out) {
+  if (out?.status >= 400) {
+    const msg = out?.body?.error?.message || '(sem mensagem)';
+    return `erro ${out.status}: ${String(msg).slice(0, 200)}`;
+  }
+  return usageInfo(out);
+}
+
 const server = http.createServer(async (req, res) => {
   applyCors(req, res);
 
@@ -176,7 +187,7 @@ const server = http.createServer(async (req, res) => {
           sendJson(res, 500, { error: { type: 'server_error', message: `Erro ao traduzir resposta: ${err.message}` } });
           return;
         }
-        logEnd(id, 'claude-cli', started, out.status, usageInfo(out));
+        logEnd(id, 'claude-cli', started, out.status, endInfo(out));
         if (VERBOSE_LOG) {
           console.log(`[llm-bridge] #${id} stdout(${stdout.length}c): ${stdout.slice(0, 6000)}`);
           if (stderr.trim()) console.log(`[llm-bridge] #${id} stderr(${stderr.length}c): ${stderr.trim().slice(0, 1500)}`);
@@ -243,7 +254,7 @@ const server = http.createServer(async (req, res) => {
           sendJson(res, 500, { error: { type: 'server_error', message: `Erro ao traduzir resposta: ${err.message}` } });
           return;
         }
-        logEnd(id, 'codex-cli', started, out.status, usageInfo(out));
+        logEnd(id, 'codex-cli', started, out.status, endInfo(out));
         if (VERBOSE_LOG) {
           console.log(`[llm-bridge] #${id} stdout(${stdout.length}c): ${stdout.slice(0, 6000)}`);
           if (stderr.trim()) console.log(`[llm-bridge] #${id} stderr(${stderr.length}c): ${stderr.trim().slice(0, 1500)}`);

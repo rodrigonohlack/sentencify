@@ -1087,11 +1087,11 @@ describe('useAIIntegration', () => {
 
     it('should throw on non-ok HTTP response', async () => {
       const mockResponse = createMockResponse(
-        { error: { message: 'Server error' } },
-        500,
+        { error: { message: 'Bad request' } },
+        400,
         false
       );
-      // Only resolve once to avoid infinite retry
+      // 400 não é retryable → lança na primeira tentativa (500 agora re-tenta)
       vi.mocked(global.fetch).mockResolvedValue(mockResponse as any);
 
       const { result } = renderHook(() => useAIIntegration());
@@ -1105,7 +1105,7 @@ describe('useAIIntegration', () => {
         }
       });
       expect(error).not.toBeNull();
-      expect(error!.message).toContain('Erro HTTP 500');
+      expect(error!.message).toContain('Erro HTTP 400');
     });
 
     it('should throw on API error in response body', async () => {
@@ -1290,6 +1290,33 @@ describe('useAIIntegration', () => {
 
       vi.mocked(global.fetch)
         .mockResolvedValueOnce(gatewayError as any)
+        .mockResolvedValueOnce(successResponse as any);
+
+      const { result } = renderHook(() => useAIIntegration());
+
+      let response: string = '';
+      await act(async () => {
+        response = await result.current.callLLM(
+          [{ role: 'user', content: 'Hi' }] as any,
+          {}
+        );
+      });
+
+      expect(response).toBe('OK');
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    }, 15000);
+
+    // v1.50.33: o bridge claude-cli mapeia erro transitório do CLI (is_error)
+    // para 500; antes 500 não estava em CLAUDE_RETRY_CODES e não re-tentava.
+    it('should retry on 500 server error', async () => {
+      const serverError = createMockResponse({ error: { message: 'Overloaded' } }, 500, false);
+      const successResponse = createMockResponse({
+        content: [{ type: 'text', text: 'OK' }],
+        usage: { input_tokens: 10, output_tokens: 5 }
+      });
+
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce(serverError as any)
         .mockResolvedValueOnce(successResponse as any);
 
       const { result } = renderHook(() => useAIIntegration());

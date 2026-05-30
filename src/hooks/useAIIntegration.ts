@@ -380,7 +380,10 @@ const useAIIntegration = () => {
 
   // Wrapper para chamadas a API Anthropic (com retry via withRetry, timeout e caching)
   // v1.39.03: Refatorado para usar withRetry centralizado
-  const CLAUDE_RETRY_CODES = [429, 529, 520, 502];
+  // v1.50.33: 500 incluído — o bridge claude-cli mapeia erro transitório do CLI
+  // (is_error) para 500; sem ele, claude-cli/Claude API não re-tentavam (os demais
+  // providers já incluíam 500). Alinhado com GEMINI/OPENAI/GROK/DEEPSEEK_RETRY_CODES.
+  const CLAUDE_RETRY_CODES = [429, 500, 502, 503, 520, 529];
 
   const callLLM = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
     const {
