@@ -3,6 +3,21 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.30',
+    date: '2026-05-30',
+    feature: 'fix: cache de revisão de sentença vazava entre processos ao importar. O cache no IndexedDB não é namespaced por processo (chave = scope apenas), e o import usava store.add cru. Dois bugs: (1) importar projeto B com cache, sobre cache de A do mesmo scope, batia no índice único (scope unique) → ConstraintError → transação abortava → cache de A permanecia e a revisão/badge serviam o processo errado; (2) importar projeto B SEM cache não limpava nada → badge "Cache" de A persistia em B. Correção: importProjectFromJson agora SEMPRE faz store.clear() do cache de revisão no import (é sempre outro processo) e, na mesma transação, grava o cache importado se houver; requestCacheRefresh dispara sempre (badge aparece/some corretamente). Zerar projeto já limpava o cache (clearProject); restaurar sessão NÃO passa por aqui (mantém o cache do mesmo projeto). 86 testes verdes; tsc limpo.',
+  },
+  {
+    version: '1.50.29',
+    date: '2026-05-30',
+    feature: 'fix: badge "Cache" da revisão de sentença não aparecia após importar um projeto (só após reload). Causa raiz: o cache É exportado e É importado para o IndexedDB corretamente, mas o badge lê o estado cachedScopes (useReviewSentence), que só recalculava no mount/gerar/limpar — nunca após import. Em produção o sintoma ficava mascarado pelo cache residual no IndexedDB do navegador (zerar projeto não limpa o DB sentencify-sentence-review); no dev server, com IndexedDB limpo, o bug aparecia. Correção: novo sinal cacheRefreshNonce em useReviewStore (action requestCacheRefresh); useReviewSentence recalcula cachedScopes quando o nonce muda; importProjectFromJson (useLocalStorage) dispara requestCacheRefresh após gravar o cache. Cobre os dois caminhos de import (arquivo local + Google Drive), pois ambos passam por importProjectFromJson. tsc limpo; 83 testes verdes (useReviewSentence + useSentenceReviewCache + useReviewStore).',
+  },
+  {
+    version: '1.50.28',
+    date: '2026-05-30',
+    feature: 'fix(ui): tooltip do badge "Cache" estava sendo cortado pela barra superior. Causa: o container dos botões (Linha 1 de TopicsTab) usa overflow-x-auto, que clipa qualquer filho posicionado em absolute que ultrapasse seus limites (CSS força clipping em ambos os eixos quando um overflow é auto) — nenhum z-index resolve. Solução: o tooltip agora é renderizado via createPortal em document.body com position:fixed, posicionado por getBoundingClientRect no onMouseEnter do badge, escapando do overflow (e de qualquer transform em ancestrais). Some no onMouseLeave.',
+  },
+  {
     version: '1.50.27',
     date: '2026-05-30',
     feature: 'feat(ui): tooltip explicativo no badge "Cache" do botão "Revisar Sentença". O badge dizia apenas "Cache" sem contexto; agora, no mouseover, abre uma janelinha explicando que já existe uma revisão salva em cache e que revisar com o mesmo escopo reaproveita o resultado anterior, sem nova chamada à IA. Implementado com named group (group/cache) para não conflitar com o tooltip de "desabilitado" do próprio botão, e usando <span> (não <div>) por estar dentro de <button>. Tooltip escuro em ambos os temas (bg-gray-900 dark:bg-gray-700) para contraste consistente.',

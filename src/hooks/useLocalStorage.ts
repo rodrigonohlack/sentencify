@@ -39,6 +39,7 @@ import type {
   ChatHistoryCacheEntry,
 } from '../types';
 import { useAIStore, migrateQuickPrompts } from '../stores/useAIStore';
+import { useReviewStore } from '../stores/useReviewStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PDF INDEXEDDB HELPERS (v1.38.52: Extracted to usePdfStorage.ts)
@@ -1577,20 +1578,33 @@ export function useLocalStorage(): UseLocalStorageReturn {
 
     // v1.36.57: Importar cache de revisão de sentença
     // v1.42.05: Aceitar chaves compostas com sufixo `:noEmpty` (toggle excluir tópicos sem resultado)
-    if (project.sentenceReviewCache && typeof project.sentenceReviewCache === 'object') {
+    // v1.50.30: O cache de revisão NÃO é namespaced por processo (chave = scope apenas).
+    //   Importar um projeto é sempre carregar OUTRO processo, então o cache antigo
+    //   precisa ser apagado SEMPRE — mesmo quando o projeto importado não traz cache —
+    //   senão o badge "Cache" e a própria revisão serviriam dados do processo anterior.
+    //   Além disso, o índice `scope` é único: sem o clear, store.add abaixo falharia
+    //   por ConstraintError quando já houvesse cache do mesmo scope, abortando a
+    //   transação e mantendo o cache errado.
+    {
       try {
         const db = await openReviewDB();
         const tx = db.transaction(REVIEW_STORE_NAME, 'readwrite');
         const store = tx.objectStore(REVIEW_STORE_NAME);
 
-        for (const [key, result] of Object.entries(project.sentenceReviewCache)) {
-          const baseScope = key.endsWith(':noEmpty') ? key.slice(0, -':noEmpty'.length) : key;
-          if (baseScope === 'decisionOnly' || baseScope === 'decisionWithDocs') {
-            store.add({
-              scope: key,
-              result,
-              createdAt: Date.now()
-            });
+        // Apaga o cache do projeto anterior antes de gravar o do projeto importado
+        store.clear();
+
+        const importedCache = project.sentenceReviewCache;
+        if (importedCache && typeof importedCache === 'object') {
+          for (const [key, result] of Object.entries(importedCache)) {
+            const baseScope = key.endsWith(':noEmpty') ? key.slice(0, -':noEmpty'.length) : key;
+            if (baseScope === 'decisionOnly' || baseScope === 'decisionWithDocs') {
+              store.add({
+                scope: key,
+                result,
+                createdAt: Date.now()
+              });
+            }
           }
         }
 
@@ -1599,6 +1613,11 @@ export function useLocalStorage(): UseLocalStorageReturn {
           tx.onerror = () => resolve();
         });
         db.close();
+
+        // v1.50.29: Sinaliza ao useReviewSentence para recalcular o badge "Cache"
+        // (cachedScopes). Sem isso, o badge só atualizaria após reload, pois o
+        // cache foi gravado direto no IndexedDB, fora do fluxo de revisão.
+        useReviewStore.getState().requestCacheRefresh();
       } catch (e) {
         console.warn('[Import] Erro ao importar sentenceReviewCache:', e);
       }

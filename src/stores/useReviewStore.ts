@@ -53,6 +53,13 @@ interface ReviewStoreState {
   /** Indica se está gerando revisão */
   generatingReview: boolean;
 
+  /**
+   * Contador de invalidação do cache de revisão. Incrementado quando o cache
+   * é alterado por fora do fluxo normal (ex.: import de projeto), sinalizando
+   * ao useReviewSentence para recalcular `cachedScopes` (badge "Cache").
+   */
+  cacheRefreshNonce: number;
+
   // ═══════════════════════════════════════════════════════════════════════════
   // ESTADO - CONFRONTO DE FATOS (INDIVIDUAL)
   // ═══════════════════════════════════════════════════════════════════════════
@@ -84,6 +91,9 @@ interface ReviewStoreState {
 
   /** Limpa o estado de revisão */
   clearReviewState: () => void;
+
+  /** Sinaliza que o cache de revisão mudou (ex.: pós-import), forçando recálculo do badge */
+  requestCacheRefresh: () => void;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ACTIONS - CONFRONTO DE FATOS
@@ -129,6 +139,7 @@ export const useReviewStore = create<ReviewStoreState>()(
       reviewResult: null,
       reviewFromCache: false,
       generatingReview: false,
+      cacheRefreshNonce: 0,
 
       // Confronto de fatos individual
       factsComparisonResultIndividual: null,
@@ -185,6 +196,15 @@ export const useReviewStore = create<ReviewStoreState>()(
           },
           false,
           'clearReviewState'
+        ),
+
+      requestCacheRefresh: () =>
+        set(
+          (state) => {
+            state.cacheRefreshNonce += 1;
+          },
+          false,
+          'requestCacheRefresh'
         ),
 
       // ═══════════════════════════════════════════════════════════════════════

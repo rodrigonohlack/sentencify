@@ -17,6 +17,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import useSentenceReviewCache from './useSentenceReviewCache';
 import { useUIStore } from '../stores/useUIStore';
+import { useReviewStore } from '../stores/useReviewStore';
 import { normalizeHTMLSpacing } from '../utils/text';
 import { AI_PROMPTS } from '../prompts';
 import type { AIMessageContent, AnalyzedDocuments, DoubleCheckReviewResult, DoubleCheckCorrection } from '../types';
@@ -159,10 +160,15 @@ export function useReviewSentence({
     setCachedScopes(scopes);
   }, [sentenceReviewCache]);
 
-  // Verificar cache no mount
+  // v1.50.29: Sinal de invalidação disparado quando o cache muda fora do fluxo
+  // normal (ex.: import de projeto grava direto no IndexedDB). Sem isso, o badge
+  // "Cache" só atualizaria após reload.
+  const cacheRefreshNonce = useReviewStore((s) => s.cacheRefreshNonce);
+
+  // Verificar cache no mount e sempre que o cache for invalidado (import)
   useEffect(() => {
     checkCachedScopes();
-  }, [checkCachedScopes]);
+  }, [checkCachedScopes, cacheRefreshNonce]);
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // FUNÇÃO DE REVISÃO
