@@ -6,9 +6,10 @@
  */
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { FileText, Clock, ChevronDown, Target, Highlighter, Check, Loader2 } from 'lucide-react';
+import { FileText, ChevronDown, Target, Highlighter, Check, Loader2 } from 'lucide-react';
 import { Card, CardContent, Badge } from '../ui';
 import { HighlightedText } from '../highlights';
+import { TimestampBadge } from './TimestampBadge';
 import { getQualificacaoStyle, getQualificacaoLabel } from '../../constants';
 import { useProvaOralStore } from '../../stores/useProvaOralStore';
 import { useProvaOralAPI } from '../../hooks/useProvaOralAPI';
@@ -21,13 +22,6 @@ interface SintesesTabProps {
   sintesesPorTema?: SintesePorTema[];
   depoentes?: Depoente[];
 }
-
-/** Badge de timestamp */
-const TimestampBadge: React.FC<{ timestamp: string }> = ({ timestamp }) => (
-  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-full font-mono flex-shrink-0">
-    <Clock className="w-3 h-3" />{timestamp}
-  </span>
-);
 
 /** Botão de modo de visualização */
 const ViewModeButton: React.FC<{

@@ -13,6 +13,8 @@ import {
   extractUniqueTemas,
   validateFundamentacao,
   checkConsistency,
+  parseTimestampToSeconds,
+  buildTimestampIndex,
 } from './analysis-helpers';
 import type {
   SintesePorTema,
@@ -20,6 +22,8 @@ import type {
   Contradicao,
   AnaliseTemaPedido,
   DeclaracaoPorTema,
+  Sintese,
+  Depoente,
 } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -352,5 +356,82 @@ Diante do exposto, a prova é favorável ao autor quanto à jornada estendida, h
 
     expect(result.isConsistent).toBe(false);
     expect(result.warnings.some(w => w.includes('Horas Extras'))).toBe(true);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TESTES: parseTimestampToSeconds
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('parseTimestampToSeconds', () => {
+  it('converte "Xm Ys" em segundos', () => {
+    expect(parseTimestampToSeconds('0m 31s')).toBe(31);
+    expect(parseTimestampToSeconds('7m 06s')).toBe(426);
+  });
+
+  it('é robusto a zero-padding ("7m 6s" == "7m 06s")', () => {
+    expect(parseTimestampToSeconds('7m 6s')).toBe(parseTimestampToSeconds('7m 06s'));
+  });
+
+  it('suporta horas ("1h 02m 03s")', () => {
+    expect(parseTimestampToSeconds('1h 02m 03s')).toBe(3723);
+  });
+
+  it('aceita só minutos ou só segundos', () => {
+    expect(parseTimestampToSeconds('5m')).toBe(300);
+    expect(parseTimestampToSeconds('45s')).toBe(45);
+  });
+
+  it('devolve null para formato inválido', () => {
+    expect(parseTimestampToSeconds('abc')).toBeNull();
+    expect(parseTimestampToSeconds('')).toBeNull();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TESTES: buildTimestampIndex
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('buildTimestampIndex', () => {
+  const depoentes: Depoente[] = [
+    { id: 'dep-1', nome: 'JUCILENE VIEIRA SILVA', qualificacao: 'autor' },
+    { id: 'dep-2', nome: 'TIAGO FONSECA DE MELLO', qualificacao: 'preposto' },
+  ];
+  const sinteses: Sintese[] = [
+    {
+      deponenteId: 'dep-1',
+      conteudo: [
+        { texto: 'Confirmou que trabalhou para Peixes e Crustáceos', timestamp: '0m 31s' },
+        { texto: 'Explicou que Bom Pescado era a marca', timestamp: '7m 06s' },
+      ],
+    },
+    {
+      deponenteId: 'dep-2',
+      conteudo: [{ texto: 'Negou prestação à Peixes e Crustáceos', timestamp: '17m 33s' }],
+    },
+  ];
+
+  it('resolve depoente (via depoentes[]) e fala por timestamp', () => {
+    const idx = buildTimestampIndex(sinteses, depoentes);
+    const fala = idx.get(parseTimestampToSeconds('0m 31s')!);
+    expect(fala?.deponente).toBe('JUCILENE VIEIRA SILVA');
+    expect(fala?.texto).toContain('Peixes e Crustáceos');
+  });
+
+  it('casa pill "7m 06s" com conteúdo "7m 6s" (mesmos segundos)', () => {
+    const sintVar: Sintese[] = [
+      { deponenteId: 'dep-1', conteudo: [{ texto: 'fala X', timestamp: '7m 6s' }] },
+    ];
+    const idx = buildTimestampIndex(sintVar, depoentes);
+    expect(idx.get(parseTimestampToSeconds('7m 06s')!)?.texto).toBe('fala X');
+  });
+
+  it('timestamp inexistente → undefined', () => {
+    const idx = buildTimestampIndex(sinteses, depoentes);
+    expect(idx.get(parseTimestampToSeconds('99m 99s')!)).toBeUndefined();
+  });
+
+  it('sem sinteses → mapa vazio', () => {
+    expect(buildTimestampIndex(undefined, depoentes).size).toBe(0);
   });
 });

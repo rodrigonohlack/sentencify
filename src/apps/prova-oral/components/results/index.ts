@@ -11,3 +11,4 @@ export { ConfissoesTab } from './ConfissoesTab';
 export { CredibilidadeTab } from './CredibilidadeTab';
 export { AnalisesTab } from './AnalisesTab';
 export { ComparativoTab } from './ComparativoTab';
+export { TimestampBadge } from './TimestampBadge';

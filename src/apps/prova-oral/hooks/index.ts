@@ -7,3 +7,4 @@ export { useAIIntegration } from './useAIIntegration';
 export { useProvaOralAnalysis } from './useProvaOralAnalysis';
 export { useProvaOralAPI } from './useProvaOralAPI';
 export { useAnalisadorIntegration, convertAnalysisToSintese } from './useAnalisadorIntegration';
+export { useTimestampFala } from './useTimestampFala';

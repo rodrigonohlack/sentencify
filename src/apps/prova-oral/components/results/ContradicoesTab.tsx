@@ -5,21 +5,15 @@
  */
 
 import React from 'react';
-import { AlertTriangle, Users, Clock } from 'lucide-react';
+import { AlertTriangle, Users } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, Badge } from '../ui';
+import { TimestampBadge } from './TimestampBadge';
 import { getRelevanciaStyle, getRelevanciaLabel } from '../../constants';
 import type { Contradicao } from '../../types';
 
 interface ContradicoesTabProps {
   contradicoes: Contradicao[];
 }
-
-/** Badge de timestamp */
-const TimestampBadge: React.FC<{ timestamp: string }> = ({ timestamp }) => (
-  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-full font-mono flex-shrink-0">
-    <Clock className="w-3 h-3" />{timestamp}
-  </span>
-);
 
 export const ContradicoesTab: React.FC<ContradicoesTabProps> = ({ contradicoes }) => {
   if (!contradicoes || contradicoes.length === 0) {

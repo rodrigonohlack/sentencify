@@ -10,7 +10,65 @@ import type {
   AnaliseTemaPedido,
   DeclaracaoPorTema,
   ProvaOralItem,
+  Sintese,
+  Depoente,
 } from '../types';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ÍNDICE TIMESTAMP → FALA (para tooltip de hover nos pills de timestamp)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Converte um timestamp ("7m 06s", "7m 6s", "1h 02m 03s", "0m 31s") em segundos
+ * totais. Robusto a zero-padding. Devolve null se não casar o padrão.
+ */
+export function parseTimestampToSeconds(ts: string): number | null {
+  if (typeof ts !== 'string') return null;
+  const m = ts.trim().match(/^(?:(\d+)\s*h)?\s*(?:(\d+)\s*m)?\s*(?:(\d+)\s*s)?$/i);
+  if (!m || (m[1] === undefined && m[2] === undefined && m[3] === undefined)) return null;
+  const h = parseInt(m[1] ?? '0', 10);
+  const min = parseInt(m[2] ?? '0', 10);
+  const sec = parseInt(m[3] ?? '0', 10);
+  return h * 3600 + min * 60 + sec;
+}
+
+/** Entrada do índice timestamp → fala. */
+export interface FalaPorTimestamp {
+  deponente: string;
+  texto: string;
+}
+
+/**
+ * Constrói um índice `segundos → { deponente, texto }` a partir das sínteses
+ * detalhadas (Fase 1). A chave em segundos torna o casamento robusto a variações
+ * de formatação ("7m 6s" vs "7m 06s"). Em colisão (um instante = uma fala), o
+ * primeiro item vence. O nome do depoente é resolvido via `depoentes[]` (por
+ * deponenteId), com fallback para `deponenteNome`/`deponenteId`.
+ */
+export function buildTimestampIndex(
+  sinteses: Sintese[] | undefined,
+  depoentes: Depoente[] | undefined
+): Map<number, FalaPorTimestamp> {
+  const index = new Map<number, FalaPorTimestamp>();
+  if (!Array.isArray(sinteses)) return index;
+
+  const nomePorId = new Map<string, string>();
+  for (const d of depoentes ?? []) {
+    if (d?.id) nomePorId.set(d.id, d.nome || d.id);
+  }
+
+  for (const sintese of sinteses) {
+    const deponente =
+      nomePorId.get(sintese.deponenteId) || sintese.deponenteNome || sintese.deponenteId || '';
+    for (const item of sintese.conteudo ?? []) {
+      const secs = parseTimestampToSeconds(item.timestamp);
+      if (secs === null) continue;
+      if (!index.has(secs)) index.set(secs, { deponente, texto: item.texto });
+    }
+  }
+
+  return index;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // VALIDAÇÃO DE COMPLETUDE
