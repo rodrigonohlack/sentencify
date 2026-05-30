@@ -1,0 +1,23 @@
+{
+  "name": "SentencifyAI",
+  "short_name": "Sentencify",
+  "description": "Assistente de elaboração de sentenças trabalhistas",
+  "lang": "pt-BR",
+  "display": "standalone",
+  "background_color": "#F6F3EC",
+  "theme_color": "#0F2143",
+  "icons": [
+    {
+      "src": "/brand/icon-512-navy.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/icon-512-blue.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

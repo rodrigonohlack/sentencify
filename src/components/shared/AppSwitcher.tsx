@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Scale, FileSearch, Mic, Newspaper, Calculator, Wallet, ChevronDown, Gavel } from 'lucide-react';
+import { FileSearch, Mic, Newspaper, Calculator, Wallet, ChevronDown, Gavel } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -43,7 +43,7 @@ const APPS: AppDefinition[] = [
     id: 'sentencify',
     label: 'Sentencify',
     href: '/',
-    icon: <Scale className="w-4 h-4" />,
+    icon: <img src="/brand/sentencify-icon.svg" alt="" className="w-4 h-4 rounded-[3px]" />,
     colors: {
       bg: 'bg-indigo-500/10 dark:bg-indigo-500/15',
       text: 'text-indigo-600 dark:text-indigo-400',

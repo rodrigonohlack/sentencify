@@ -92,10 +92,10 @@ describe('AppHeader', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Basic Rendering', () => {
-    it('should render SENTENCIFY.AI title', () => {
+    it('should render Sentencify lockup logo', () => {
       render(<AppHeader {...createDefaultProps()} />);
 
-      expect(screen.getByText('SENTENCIFY.AI')).toBeInTheDocument();
+      expect(screen.getAllByAltText('Sentencify').length).toBeGreaterThan(0);
     });
 
     it('should render version number', () => {

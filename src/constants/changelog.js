@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.31',
+    date: '2026-05-30',
+    feature: 'feat(ui): nova identidade visual do Sentencify (ícone fachada de tribunal + paleta navy/azul/marfim). Substituído o favicon emoji ⚖️ por um conjunto completo de ícones (SVG vetorial + favicons 16/32 + apple-touch-180) servidos de /brand/, com manifest.webmanifest para PWA (icons 512 navy/blue, theme_color #0F2143). No AppHeader o título-texto "SENTENCIFY.AI" foi substituído pelo lockup completo (símbolo + wordmark "Sentencify"); como os lockups vinham com fundo sólido (marfim/navy), foram gerados em versão transparente (lockup-light-transp/lockup-dark-transp) e alternam por tema via dark: (light no claro, dark no escuro). Na LoginScreen o quadrado azul com o ícone Scale do lucide foi trocado pelo ícone-tile (navy com fachada marfim). Tipografia do app mantida em Outfit (o wordmark Spectral entra apenas como imagem no lockup).',
+  },
+  {
     version: '1.50.30',
     date: '2026-05-30',
     feature: 'fix: cache de revisão de sentença vazava entre processos ao importar. O cache no IndexedDB não é namespaced por processo (chave = scope apenas), e o import usava store.add cru. Dois bugs: (1) importar projeto B com cache, sobre cache de A do mesmo scope, batia no índice único (scope unique) → ConstraintError → transação abortava → cache de A permanecia e a revisão/badge serviam o processo errado; (2) importar projeto B SEM cache não limpava nada → badge "Cache" de A persistia em B. Correção: importProjectFromJson agora SEMPRE faz store.clear() do cache de revisão no import (é sempre outro processo) e, na mesma transação, grava o cache importado se houver; requestCacheRefresh dispara sempre (badge aparece/some corretamente). Zerar projeto já limpava o cache (clearProject); restaurar sessão NÃO passa por aqui (mantém o cache do mesmo projeto). 86 testes verdes; tsc limpo.',

@@ -68,10 +68,17 @@ export function AppHeader({
       <div className="flex items-center justify-between">
         {/* Left side - Title and Process Number */}
         <div>
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">
-              SENTENCIFY.AI
-            </h1>
+          <div className="flex items-center gap-3">
+            <img
+              src="/brand/lockup-light-transp.png"
+              alt="Sentencify"
+              className="h-9 w-auto block dark:hidden"
+            />
+            <img
+              src="/brand/lockup-dark-transp.png"
+              alt="Sentencify"
+              className="h-9 w-auto hidden dark:block"
+            />
             <AppSwitcher
               currentApp="sentencify"
               className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20 hover:bg-slate-500/20 hover:border-slate-500/40 transition-all"
