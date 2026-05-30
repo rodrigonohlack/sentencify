@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.23',
+    date: '2026-05-30',
+    feature: 'fix(ui): ícone do Toast invisível no tema claro. A cor semântica fixa (text-green-500/red/blue/amber) coincidia com o fundo colorido sólido do toast no tema claro (ex: ícone verde sobre fundo verde) — sumia. Agora os 4 ícones usam theme-text-primary (mesma cor da mensagem), ficando visíveis nos 8 cenários (4 tipos × claro/escuro); o tipo segue comunicado pelo fundo colorido + formato do ícone. Regressão introduzida na v1.50.21 (emoji→ícone).',
+  },
+  {
     version: '1.50.22',
     date: '2026-05-30',
     feature: 'style(ui): emojis do ConfigModal trocados por ícones lucide-react (59 ocorrências, sub-commit isolado por ser arquivo grande/sensível). Avisos/dicas (AlertTriangle/Lightbulb), labels de seção (Brain, Mic, Lock, Settings, BookOpen, ScrollText, Package, Bot), métricas de token (Download/Upload/BadgePlus/BarChart3/Save) e linhas comparativas de OCR (CheckCircle2/Timer/DollarSign) — todos com aria-label/aria-hidden. PRESERVADO o campo de dado do usuário (placeholder/ícone de QuickPrompt = emoji editável). ConfigModal.test 31/31 verde; tsc limpo. Conclui o refinamento visual do main app (paleta + tipografia + ícones).',

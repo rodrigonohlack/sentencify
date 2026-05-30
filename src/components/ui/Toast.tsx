@@ -33,10 +33,10 @@ export const Toast: React.FC = () => {
       `}>
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
-            {toast.type === 'success' && <CheckCircle2 className="w-6 h-6 text-green-500" aria-label="sucesso" />}
-            {toast.type === 'error' && <XCircle className="w-6 h-6 text-red-500" aria-label="erro" />}
-            {toast.type === 'info' && <Info className="w-6 h-6 text-blue-500" aria-label="informação" />}
-            {toast.type === 'warning' && <AlertTriangle className="w-6 h-6 text-amber-500" aria-label="aviso" />}
+            {toast.type === 'success' && <CheckCircle2 className="w-6 h-6 theme-text-primary" aria-label="sucesso" />}
+            {toast.type === 'error' && <XCircle className="w-6 h-6 theme-text-primary" aria-label="erro" />}
+            {toast.type === 'info' && <Info className="w-6 h-6 theme-text-primary" aria-label="informação" />}
+            {toast.type === 'warning' && <AlertTriangle className="w-6 h-6 theme-text-primary" aria-label="aviso" />}
           </div>
           <div className="flex-1">
             <p className="text-sm theme-text-primary whitespace-pre-line">{toast.message}</p>
