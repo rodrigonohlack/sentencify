@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { X, Copy } from 'lucide-react';
+import { X, Copy, Star } from 'lucide-react';
 import { CSS } from './BaseModal';
 import { VoiceButton } from '../VoiceButton';
 import { QuillEditorBase, getQuillToolbarConfig } from '../editors';
@@ -94,10 +94,10 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
 
     navigator.clipboard.writeText(plainText)
       .then(() => {
-        showToast?.('✅ Modelo copiado para área de transferência', 'success');
+        showToast?.('Modelo copiado para área de transferência', 'success');
       })
       .catch(_err => {
-        showToast?.('❌ Erro ao copiar modelo', 'error');
+        showToast?.('Erro ao copiar modelo', 'error');
       });
   }, [model?.content, showToast]);
 
@@ -190,10 +190,15 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
                 {onToggleFavorite && (
                   <button
                     onClick={() => onToggleFavorite(model.id)}
-                    className="text-xl hover:scale-110 transition-transform"
+                    className="hover:scale-110 transition-transform text-yellow-400"
+                    aria-label={model.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
                     title={model.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
                   >
-                    {model.favorite ? '⭐' : '☆'}
+                    <Star
+                      className="w-5 h-5"
+                      fill={model.favorite ? 'currentColor' : 'none'}
+                      aria-hidden="true"
+                    />
                   </button>
                 )}
               </div>

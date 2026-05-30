@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Save, Sparkles, Scale, BookOpen } from 'lucide-react';
+import { Save, Sparkles, Scale, BookOpen, Clock, XCircle, Pencil, Lightbulb } from 'lucide-react';
 import { CSS } from '../modals/BaseModal';
 import { VoiceButton } from '../VoiceButton';
 import { SpacingDropdown, FontSizeDropdown, EditorWidthDropdown } from '../ui';
@@ -329,8 +329,8 @@ export const QuillEditorBase = React.forwardRef<QuillInstance, QuillEditorBasePr
   if (!quillReady) {
     return (
       <div className={`theme-bg-primary border theme-border-input rounded-lg p-4 ${className}`}>
-        <p className="theme-text-muted text-center">
-          ⏳ Carregando editor Quill.js...
+        <p className="theme-text-muted text-center flex items-center justify-center gap-2">
+          <Clock className="w-4 h-4" aria-hidden="true" /> Carregando editor Quill.js...
         </p>
       </div>
     );
@@ -339,8 +339,9 @@ export const QuillEditorBase = React.forwardRef<QuillInstance, QuillEditorBasePr
   if (quillError) {
     return (
       <div className={`bg-red-900/20 border border-red-600 rounded-lg p-4 ${className}`}>
-        <p className="text-red-400 text-sm">
-          ❌ {quillError instanceof Error ? quillError.message : quillError}
+        <p className="text-red-400 text-sm flex items-center gap-2">
+          <XCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+          {quillError instanceof Error ? quillError.message : quillError}
         </p>
         <p className="theme-text-muted text-xs mt-2">
           Usando editor alternativo. Verifique sua conexão com a internet.
@@ -574,8 +575,9 @@ export const AIRegenerationSection = React.memo(({
 
   return (
     <div className="mt-4 pt-4 border-t theme-border-input">
-      <p className="text-xs theme-text-muted mb-2">
-        ✨ <strong>Regenerar com IA:</strong> Adicione uma instrução opcional abaixo e clique em "Gerar" para que a IA recrie este {contextLabel}
+      <p className="text-xs theme-text-muted mb-2 flex items-start gap-1">
+        <Sparkles className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <span><strong>Regenerar com IA:</strong> Adicione uma instrução opcional abaixo e clique em "Gerar" para que a IA recrie este {contextLabel}</span>
       </p>
 
       <div className="flex gap-2">
@@ -836,8 +838,9 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
       >
         {isFullscreen ? (
           <div className="flex items-center gap-2 mb-2 flex-shrink-0">
-            <span className="theme-text-primary font-semibold text-lg">
-              📝 {topicTitle}
+            <span className="theme-text-primary font-semibold text-lg flex items-center gap-2">
+              <Pencil className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+              {topicTitle}
             </span>
             {topicCategory && (
               <span className="px-2 py-1 text-xs rounded theme-bg-purple-accent theme-text-purple">
@@ -1159,10 +1162,12 @@ export const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstanc
         />
       </div>
 
-      <p className="text-xs theme-text-disabled mt-2">
-        💡 Formato sugerido: "O reclamante narra que... Sustenta que... Postula... A primeira reclamada, em defesa, alega que..."
-        <br />
-        ⌨️ <strong>Ctrl+S</strong> = Salvar sem fechar
+      <p className="text-xs theme-text-disabled mt-2 flex items-start gap-1">
+        <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <span>Formato sugerido: "O reclamante narra que... Sustenta que... Postula... A primeira reclamada, em defesa, alega que..."
+          <br />
+          ⌨️ <strong>Ctrl+S</strong> = Salvar sem fechar
+        </span>
       </p>
 
       {showRegenerateSection && onRegenerate && (

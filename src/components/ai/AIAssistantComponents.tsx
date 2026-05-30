@@ -12,7 +12,7 @@
  */
 
 import React from 'react';
-import { Sparkles, X } from 'lucide-react';
+import { Sparkles, X, AlertTriangle, Lightbulb, Check, FileText, Zap } from 'lucide-react';
 import { CSS } from '../modals/BaseModal';
 import { ChatHistoryArea, ChatInput, InsertDropdown } from '../chat';
 import { VoiceButton } from '../VoiceButton';
@@ -220,7 +220,7 @@ export const AIAssistantBaseLegacy = React.memo(({
         {/* Aviso CNJ */}
         <div className="mx-6 mt-4 p-3 bg-amber-500/10 border border-amber-500/40 rounded-lg">
           <div className="flex items-start gap-2">
-            <span className="text-amber-500">⚠️</span>
+            <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="text-xs text-amber-900 dark:text-amber-200">
               <span className="font-semibold">Lembre-se:</span> A IA pode gerar conteúdo impreciso ou incompleto. Revise e valide todas as informações geradas.
               <span className="block mt-1 text-amber-800 dark:text-amber-300/80">Sua revisão é fundamental, na forma estabelecida pela <span className="font-semibold">Resolução 615/2025 do CNJ</span>.</span>
@@ -260,7 +260,10 @@ export const AIAssistantBaseLegacy = React.memo(({
 
           {/* Exemplos */}
           <div className="theme-bg-app-50 p-4 rounded-lg border theme-border-input">
-            <p className="text-xs theme-text-muted mb-2">💡 Exemplos de instruções:</p>
+            <p className="text-xs theme-text-muted mb-2 flex items-center gap-1">
+              <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+              Exemplos de instruções:
+            </p>
             {customExamples || defaultExamples}
           </div>
 
@@ -286,8 +289,8 @@ export const AIAssistantBaseLegacy = React.memo(({
           {/* Texto Gerado + Botões de Ação */}
           {aiGeneratedText && (
             <div className="space-y-3">
-              <label className="block text-sm font-medium text-green-600 dark:text-green-400">
-                ✓ Texto Gerado pela IA:
+              <label className="flex items-center gap-1 text-sm font-medium text-green-600 dark:text-green-400">
+                <Check className="w-4 h-4" aria-hidden="true" /> Texto Gerado pela IA:
               </label>
               <div
                 className="theme-bg-app border border-green-600/30 rounded-lg p-4 max-h-64 overflow-auto theme-text-secondary leading-relaxed"
@@ -322,7 +325,10 @@ export const AIAssistantBaseLegacy = React.memo(({
                     disabled={copied}
                     className={`py-2 rounded-lg text-sm ${copied ? 'bg-green-600' : 'theme-bg-tertiary hover-slate-500'}`}
                   >
-                    {copied ? '✓ Copiado' : '📋 Copiar'}
+                    {copied
+                      ? <><Check className="w-3.5 h-3.5 inline" aria-hidden="true" /> Copiado</>
+                      : <><FileText className="w-3.5 h-3.5 inline" aria-hidden="true" /> Copiar</>
+                    }
                   </button>
                 )}
               </div>
@@ -423,7 +429,7 @@ export const AIAssistantBase = React.memo(({
           {/* Aviso CNJ */}
           <div className="p-3 bg-amber-500/10 border border-amber-500/40 rounded-lg">
             <div className="flex items-start gap-2">
-              <span className="text-amber-500">⚠️</span>
+              <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="text-xs text-amber-900 dark:text-amber-200">
                 <span className="font-semibold">Lembre-se:</span> A IA pode gerar conteúdo impreciso. Revise todas as informações.
                 <span className="block mt-1 text-amber-800 dark:text-amber-300/80">
@@ -457,7 +463,9 @@ export const AIAssistantBase = React.memo(({
           {/* v1.20.0: Prompts Rápidos */}
           {quickPrompts?.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              <span className="text-xs theme-text-muted w-full mb-1">⚡ Prompts rápidos:</span>
+              <span className="text-xs theme-text-muted w-full mb-1 flex items-center gap-1">
+                <Zap className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" /> Prompts rápidos:
+              </span>
               {quickPrompts.map((qp: QuickPrompt) => {
                 const resolvedPrompt = qp.prompt.replace(/\{TOPICO\}/g, topicTitle || 'tópico atual');
                 const isError = qpError?.id === qp.id;
@@ -496,7 +504,7 @@ export const AIAssistantBase = React.memo(({
                     }`}
                     title={isError ? qpError.message : resolvedPrompt}
                   >
-                    {isError ? <>⚠️ {qpError.message}</> : <>{qp.icon} {qp.label}</>}
+                    {isError ? <><AlertTriangle className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />{qpError.message}</> : <>{qp.icon} {qp.label}</>}
                   </button>
                 );
               })}
@@ -509,7 +517,9 @@ export const AIAssistantBase = React.memo(({
           {/* Exemplos (apenas se chat vazio) */}
           {chatHistory.length === 0 && (
             <div className="theme-bg-app-50 p-4 rounded-lg border theme-border-input">
-              <p className="text-xs theme-text-muted mb-2">💡 Exemplos:</p>
+              <p className="text-xs theme-text-muted mb-2 flex items-center gap-1">
+                <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" /> Exemplos:
+              </p>
               <ul className="text-xs theme-text-disabled space-y-1">
                 <li>• "Escreva a fundamentação sobre horas extras"</li>
                 <li>• "Argumente pelo reconhecimento do vínculo"</li>

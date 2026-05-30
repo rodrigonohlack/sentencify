@@ -40,12 +40,12 @@ export const ProcessingModeSelector = React.memo(({
 
   // Labels com motivo do bloqueio
   const getPdfPuroLabel = () => {
-    if (anonymizationEnabled) return '🔒 PDF Binário (anonimização)';
+    if (anonymizationEnabled) return 'PDF Binário (anonimização)';
     if (binaryPdfBlocked) {
-      if (blockReason === 'deepseek') return '🔒 PDF Binário (DeepSeek)';
-      if (blockReason === 'grok') return '🔒 PDF Binário (Grok)';
-      if (blockReason === 'codex-cli') return '🔒 PDF Binário (Codex CLI)';
-      return '🔒 PDF Binário (provider sem suporte)';
+      if (blockReason === 'deepseek') return 'PDF Binário (DeepSeek)';
+      if (blockReason === 'grok') return 'PDF Binário (Grok)';
+      if (blockReason === 'codex-cli') return 'PDF Binário (Codex CLI)';
+      return 'PDF Binário (provider sem suporte)';
     }
     return 'PDF Puro (binário)';
   };
@@ -71,8 +71,8 @@ export const ProcessingModeSelector = React.memo(({
       onClick={(e) => e.stopPropagation()}
     >
       <option value="pdfjs" className="theme-bg-secondary theme-text-primary">PDF.js (Texto)</option>
-      <option value="gemini-vision" className="theme-bg-secondary theme-text-primary" disabled={isVisionBlocked}>{isVisionBlocked ? '🔒 Gemini Vision' : 'Gemini Vision (API)'}</option>
-      <option value="claude-vision" className="theme-bg-secondary theme-text-primary" disabled={isVisionBlocked}>{isVisionBlocked ? '🔒 Claude Vision' : 'Claude Vision (API)'}</option>
+      <option value="gemini-vision" className="theme-bg-secondary theme-text-primary" disabled={isVisionBlocked}>{isVisionBlocked ? 'Gemini Vision (bloqueado)' : 'Gemini Vision (API)'}</option>
+      <option value="claude-vision" className="theme-bg-secondary theme-text-primary" disabled={isVisionBlocked}>{isVisionBlocked ? 'Claude Vision (bloqueado)' : 'Claude Vision (API)'}</option>
       <option value="tesseract" className="theme-bg-secondary theme-text-primary">Tesseract OCR (Offline)</option>
       <option value="pdf-puro" className="theme-bg-secondary theme-text-primary" disabled={isPdfPuroBlocked}>{getPdfPuroLabel()}</option>
     </select>

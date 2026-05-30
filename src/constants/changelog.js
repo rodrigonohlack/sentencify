@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.21',
+    date: '2026-05-30',
+    feature: 'style(ui): emojis de UI do main app (exceto ConfigModal) trocados por ícones lucide-react com acessibilidade. Toast usa ícone por tipo; ~30 arquivos migrados (chat, cards, modais, editores, ai, tabs, header, ui). Ícones interativos ganharam aria-label (favoritar/copiar/etc.) — ganho de a11y. <option> (TopicsTab, ProcessingModeSelector) teve emoji REMOVIDO (SVG não renderiza em option). Strings de showToast tiveram emoji removido (Toast já põe ícone por tipo); testes de hook/componente acoplados reescritos (getByText emoji → getByText/getByLabelText/getByRole). PRESERVADOS: CORRECTION_ICONS (double-check, data-driven — rodada futura), emojis em texto gerado (sentenceGeneration), prompts/changelog/dados. Suíte completa 6257 testes verde; tsc limpo. Fase 3a/3 do refinamento visual.',
+  },
+  {
     version: '1.50.20',
     date: '2026-05-30',
     feature: 'style(ui): hierarquia tipográfica híbrida no main app (escala 14/16/18). Título do BaseModal elevado a text-lg (≈18 modais ganham título 18px acima do corpo); subcabeçalhos estruturais text-sm→text-base em FactsComparisonModal (Fatos Incontroversos, Pontos-chave, Resumo, Tabela Comparativa — cor categórica preservada), FullscreenModelPanel, ModelSearchPanel e GlobalEditorModal. Novas constantes CSS.sectionTitle/cardHeading. Corpo (text-sm) mantido denso de propósito; tags/labels não inflados (tag de versão do ChangelogModal preservada). 281 testes passam; tsc limpo. Fase 2/3 do refinamento visual.',

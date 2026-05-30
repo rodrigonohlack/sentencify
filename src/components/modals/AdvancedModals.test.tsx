@@ -357,7 +357,7 @@ describe('DispositivoModal', () => {
 
   it('should show copy success state', () => {
     render(<DispositivoModal {...defaultProps} copySuccess={true} />);
-    expect(screen.getAllByText('✓ Copiado!').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Copiado!').length).toBeGreaterThan(0);
   });
 
   it('should close on ESC key', () => {
@@ -373,8 +373,8 @@ describe('DispositivoModal', () => {
 
   it('should show revision checklist items', () => {
     render(<DispositivoModal {...defaultProps} />);
-    expect(screen.getByText('✓ Nomes corretos das partes')).toBeInTheDocument();
-    expect(screen.getByText('✓ Pedidos e valores mencionados')).toBeInTheDocument();
+    expect(screen.getByText('Nomes corretos das partes')).toBeInTheDocument();
+    expect(screen.getByText('Pedidos e valores mencionados')).toBeInTheDocument();
   });
 
   it('should update existing dispositivo in extractedTopics', () => {

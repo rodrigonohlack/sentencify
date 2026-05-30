@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { Zap, X, Edit, Save, AlertTriangle } from 'lucide-react';
+import { Zap, X, Edit, Save, AlertTriangle, XCircle, Sparkles, FolderOpen, Tag } from 'lucide-react';
 import { CSS } from './BaseModal';
 import type { ExtractModelConfirmModalProps, ExtractedModelPreviewModalProps, SimilarityWarningModalProps } from '../../types';
 
@@ -72,7 +72,7 @@ export const ExtractModelConfirmModal = React.memo(({
           {/* v1.9.37: Cores corrigidas para tema claro */}
           <div className="bg-amber-500/10 border border-amber-500/40 rounded-lg p-3 mb-4">
             <div className="flex items-start gap-2">
-              <span className="text-amber-500 text-lg">⚠️</span>
+              <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div>
                 <p className="text-xs text-amber-700 dark:text-amber-200 font-semibold mb-1">Atenção:</p>
                 <p className="text-xs text-amber-600 dark:text-amber-100">
@@ -96,15 +96,15 @@ export const ExtractModelConfirmModal = React.memo(({
         <div className={CSS.modalFooter}>
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 rounded-lg font-medium hover-slate-700-from-600"
+            className="flex-1 px-4 py-3 rounded-lg font-medium hover-slate-700-from-600 flex items-center justify-center gap-1.5"
           >
-            ❌ Cancelar
+            <XCircle className="w-4 h-4" aria-hidden="true" /> Cancelar
           </button>
           <button
             onClick={onConfirmExtract}
-            className="flex-1 px-4 py-3 rounded-lg font-medium shadow-lg hover-gradient-purple-pink bg-gradient-to-r from-blue-600 to-blue-700 text-white transition-all duration-300"
+            className="flex-1 px-4 py-3 rounded-lg font-medium shadow-lg hover-gradient-purple-pink bg-gradient-to-r from-blue-600 to-blue-700 text-white transition-all duration-300 flex items-center justify-center gap-1.5"
           >
-            ✨ Criar Modelo
+            <Sparkles className="w-4 h-4" aria-hidden="true" /> Criar Modelo
           </button>
         </div>
       </div>
@@ -176,8 +176,8 @@ export const ExtractedModelPreviewModal = React.memo(({
 
           {/* Categoria */}
           <div>
-            <label className="block text-sm font-semibold theme-text-tertiary mb-2">
-              📂 Categoria
+            <label className="flex items-center gap-1 text-sm font-semibold theme-text-tertiary mb-2">
+              <FolderOpen className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" /> Categoria
             </label>
             <select
               value={extractedModel.category || ''}
@@ -193,8 +193,8 @@ export const ExtractedModelPreviewModal = React.memo(({
 
           {/* Palavras-chave */}
           <div>
-            <label className="block text-sm font-semibold theme-text-tertiary mb-2">
-              🏷️ Palavras-chave
+            <label className="flex items-center gap-1 text-sm font-semibold theme-text-tertiary mb-2">
+              <Tag className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" /> Palavras-chave
             </label>
             <input
               type="text"
@@ -227,7 +227,7 @@ export const ExtractedModelPreviewModal = React.memo(({
             onClick={onCancel}
             className="flex-1 px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 hover-slate-700-from-600"
           >
-            <span>❌</span>
+            <XCircle className="w-4 h-4" aria-hidden="true" />
             Cancelar
           </button>
           <button

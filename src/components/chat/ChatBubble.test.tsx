@@ -30,7 +30,7 @@ describe('ChatBubble', () => {
       };
       render(<ChatBubble msg={msg} onUse={mockOnUse} showUse={false} />);
 
-      expect(screen.getByText(/👤 Você/)).toBeInTheDocument();
+      expect(screen.getByText(/Você/)).toBeInTheDocument();
       expect(screen.getByText('Hello world')).toBeInTheDocument();
     });
 
@@ -83,7 +83,7 @@ describe('ChatBubble', () => {
       };
       render(<ChatBubble msg={msg} onUse={mockOnUse} showUse={false} />);
 
-      expect(screen.getByText(/🤖 Assistente/)).toBeInTheDocument();
+      expect(screen.getByText(/Assistente/)).toBeInTheDocument();
     });
 
     it('should align assistant message to the left', () => {
@@ -188,7 +188,7 @@ describe('ChatBubble', () => {
       };
       render(<ChatBubble msg={msg as any} onUse={mockOnUse} showUse={true} />);
 
-      expect(screen.getByText(/⚠️ Erro: Network error/)).toBeInTheDocument();
+      expect(screen.getByText(/Erro: Network error/)).toBeInTheDocument();
     });
 
     it('should NOT show "Usar" button when there is an error', () => {

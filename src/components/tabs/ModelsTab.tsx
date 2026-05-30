@@ -16,7 +16,7 @@
 
 import React from 'react';
 import {
-  Search, X, Plus, Upload, Download, Save, Share2, Users, Sparkles, RefreshCw
+  Search, X, Plus, Upload, Download, Save, Share2, Users, Sparkles, RefreshCw, Star, FileText as FileTextIcon
 } from 'lucide-react';
 import { CSS } from '../../constants/styles';
 import { SyncStatusIndicator, ModelFormModal, ModelCard, VirtualList } from '../';
@@ -330,7 +330,11 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
               }`}
               title="Mostrar apenas favoritos"
             >
-              <span className="text-lg">{modelLibrary.showFavoritesOnly ? '⭐' : '☆'}</span>
+              <Star
+                className="w-4 h-4"
+                fill={modelLibrary.showFavoritesOnly ? 'currentColor' : 'none'}
+                aria-label={modelLibrary.showFavoritesOnly ? 'Favoritos selecionado' : 'Mostrar todos'}
+              />
               <span className="text-sm">
                 {modelLibrary.showFavoritesOnly ? 'Favoritos' : 'Todos'}
                 {modelLibrary.showFavoritesOnly && ` (${categoryCounts.favorites})`}
@@ -401,7 +405,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
               }`}
               title="Visualização em lista"
             >
-              📋 Lista
+              <FileTextIcon className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Lista
             </button>
           </div>
         </div>

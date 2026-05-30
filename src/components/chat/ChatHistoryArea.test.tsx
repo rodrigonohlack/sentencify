@@ -130,7 +130,7 @@ describe('ChatHistoryArea', () => {
 
     it('should show assistant label when generating', () => {
       render(<ChatHistoryArea {...defaultProps} generating={true} />);
-      expect(screen.getByText('🤖 Assistente')).toBeInTheDocument();
+      expect(screen.getByText('Assistente')).toBeInTheDocument();
     });
 
     it('should show spinner animation when generating', () => {

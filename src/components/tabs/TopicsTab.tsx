@@ -21,7 +21,8 @@ import {
   Scale,
   Sparkles,
   Download,
-  Trash2
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import { DndContext } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -168,7 +169,7 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                         {!canGenerateDispositivo.enabled && !generatingReview && (
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 theme-bg-primary text-white text-xs rounded-lg shadow-lg border border-amber-500/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 max-w-xs">
                             <div className="flex items-start gap-2">
-                              <span className="text-xl flex-shrink-0">⚠️</span>
+                              <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
                               <span>{canGenerateDispositivo.reason}</span>
                             </div>
                             <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-amber-500/50"></div>
@@ -207,7 +208,7 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                         {!canGenerateDispositivo.enabled && !generatingDispositivo && (
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 theme-bg-primary text-white text-xs rounded-lg shadow-lg border border-amber-500/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 max-w-xs">
                             <div className="flex items-start gap-2">
-                              <span className="text-xl flex-shrink-0">⚠️</span>
+                              <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
                               <span>{canGenerateDispositivo.reason}</span>
                             </div>
                             <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-amber-500/50"></div>
@@ -323,10 +324,10 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                               className="text-xs px-2 py-1 rounded cursor-pointer font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 border-2 theme-border theme-text-secondary hover-category-select"
                               title="Clique para alterar a categoria"
                             >
-                              <option value="PRELIMINAR">📋 Preliminar</option>
-                              <option value="PREJUDICIAL">⚠️ Prejudicial</option>
-                              <option value="MÉRITO">⚖️ Mérito</option>
-                              <option value="PROCESSUAL">📝 Processual</option>
+                              <option value="PRELIMINAR">Preliminar</option>
+                              <option value="PREJUDICIAL">Prejudicial</option>
+                              <option value="MÉRITO">Mérito</option>
+                              <option value="PROCESSUAL">Processual</option>
                             </select>
                           )}
 

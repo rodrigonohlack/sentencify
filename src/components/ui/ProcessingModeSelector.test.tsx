@@ -111,7 +111,7 @@ describe('ProcessingModeSelector', () => {
         <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} anonymizationEnabled={true} />
       );
 
-      expect(screen.getByText('🔒 PDF Binário (anonimização)')).toBeInTheDocument();
+      expect(screen.getByText('PDF Binário (anonimização)')).toBeInTheDocument();
     });
 
     it('should block claude-vision when anonymization is enabled', () => {
@@ -119,7 +119,7 @@ describe('ProcessingModeSelector', () => {
         <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} anonymizationEnabled={true} />
       );
 
-      expect(screen.getByText('🔒 Claude Vision')).toBeInTheDocument();
+      expect(screen.getByText('Claude Vision (bloqueado)')).toBeInTheDocument();
     });
 
     it('should block gemini-vision when anonymization is enabled', () => {
@@ -127,7 +127,7 @@ describe('ProcessingModeSelector', () => {
         <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} anonymizationEnabled={true} />
       );
 
-      expect(screen.getByText('🔒 Gemini Vision')).toBeInTheDocument();
+      expect(screen.getByText('Gemini Vision (bloqueado)')).toBeInTheDocument();
     });
 
     it('should fallback to pdfjs when gemini-vision is blocked by anonymization', () => {
@@ -168,7 +168,7 @@ describe('ProcessingModeSelector', () => {
         <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} binaryPdfBlocked={true} blockReason="grok" />
       );
 
-      expect(screen.getByText('🔒 PDF Binário (Grok)')).toBeInTheDocument();
+      expect(screen.getByText('PDF Binário (Grok)')).toBeInTheDocument();
     });
 
     it('should NOT block claude-vision when only binary is blocked', () => {
@@ -225,7 +225,7 @@ describe('ProcessingModeSelector', () => {
         <ProcessingModeSelector value="pdfjs" onChange={mockOnChange} binaryPdfBlocked={true} blockReason="deepseek" />
       );
 
-      expect(screen.getByText('🔒 PDF Binário (DeepSeek)')).toBeInTheDocument();
+      expect(screen.getByText('PDF Binário (DeepSeek)')).toBeInTheDocument();
     });
 
     it('should fallback to pdfjs when pdf-puro is blocked by DeepSeek', () => {
@@ -264,7 +264,7 @@ describe('ProcessingModeSelector', () => {
       );
 
       // Should show anonymization label (it takes priority)
-      expect(screen.getByText('🔒 PDF Binário (anonimização)')).toBeInTheDocument();
+      expect(screen.getByText('PDF Binário (anonimização)')).toBeInTheDocument();
     });
 
     it('should fallback to pdfjs when value is blocked', () => {

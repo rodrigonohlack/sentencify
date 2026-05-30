@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Users, Edit, Trash2 } from 'lucide-react';
+import { Users, Edit, Trash2, Star, FileText } from 'lucide-react';
 import type { ModelCardProps } from '../../types';
 
 export const ModelCard = React.memo(({
@@ -41,10 +41,11 @@ export const ModelCard = React.memo(({
             <div className="flex items-center gap-2 mb-2">
               <button
                 onClick={() => onToggleFavorite(model.id)}
-                className={`text-xl hover:scale-125 transition-all duration-200 ${model.favorite ? 'text-yellow-400' : 'text-slate-400 hover:text-yellow-300'}`}
+                className={`hover:scale-125 transition-all duration-200 ${model.favorite ? 'text-yellow-400' : 'text-slate-400 hover:text-yellow-300'}`}
                 title={model.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                aria-label={model.favorite ? 'Desfavoritar' : 'Favoritar'}
               >
-                {model.favorite ? '★' : '☆'}
+                <Star className="w-5 h-5" fill={model.favorite ? 'currentColor' : 'none'} aria-hidden="true" />
               </button>
               <h4 className="font-semibold text-lg theme-text-primary">{model.title}</h4>
             </div>
@@ -125,8 +126,9 @@ export const ModelCard = React.memo(({
               transform: 'scale(1)'
             }}
             title="Duplicar para sua biblioteca"
+            aria-label="Copiar"
           >
-            📋
+            <FileText className="w-4 h-4" aria-hidden="true" />
           </button>
           {/* Mostrar excluir para modelos proprios OU compartilhados com permissao edit */}
           {(!isShared || sharedPermission === 'edit') && (
@@ -156,10 +158,11 @@ export const ModelCard = React.memo(({
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <button
             onClick={() => onToggleFavorite(model.id)}
-            className={`text-lg flex-shrink-0 hover:scale-125 transition-all duration-200 ${model.favorite ? 'text-yellow-400' : 'text-slate-400 hover:text-yellow-300'}`}
+            className={`flex-shrink-0 hover:scale-125 transition-all duration-200 ${model.favorite ? 'text-yellow-400' : 'text-slate-400 hover:text-yellow-300'}`}
             title={model.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+            aria-label={model.favorite ? 'Desfavoritar' : 'Favoritar'}
           >
-            {model.favorite ? '★' : '☆'}
+            <Star className="w-5 h-5" fill={model.favorite ? 'currentColor' : 'none'} aria-hidden="true" />
           </button>
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold theme-text-primary truncate">{model.title}</h4>
@@ -223,8 +226,9 @@ export const ModelCard = React.memo(({
               transform: 'scale(1)'
             }}
             title="Duplicar para sua biblioteca"
+            aria-label="Copiar"
           >
-            📋
+            <FileText className="w-4 h-4" aria-hidden="true" />
           </button>
           {/* Mostrar excluir para modelos proprios OU compartilhados com permissao edit */}
           {(!isShared || sharedPermission === 'edit') && (

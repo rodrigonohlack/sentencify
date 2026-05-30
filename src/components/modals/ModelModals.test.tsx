@@ -88,7 +88,7 @@ describe('DeleteModelModal', () => {
     it('should show favorite star when model is favorite', () => {
       const favoriteModel = { ...mockModel, favorite: true };
       render(<DeleteModelModal {...defaultProps} modelToDelete={favoriteModel} />);
-      expect(screen.getByText('⭐')).toBeInTheDocument();
+      expect(screen.getByLabelText('favorito')).toBeInTheDocument();
     });
 
     it('should display warning message', () => {

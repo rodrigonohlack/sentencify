@@ -10,6 +10,7 @@
  */
 
 import React from 'react';
+import { Lock } from 'lucide-react';
 import type { LockedTabOverlayProps } from '../../types';
 
 /**
@@ -191,7 +192,7 @@ const LockedTabOverlay = React.memo(({ isPrimaryTab, activeTab, setActiveTab }: 
             e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
           }}
         >
-          🔒 Assumir Controle
+          <Lock className="w-4 h-4 inline mr-1.5" aria-hidden="true" />Assumir Controle
         </button>
 
         {/* v1.9.6: Botão para acessar Modelos sem assumir controle */}

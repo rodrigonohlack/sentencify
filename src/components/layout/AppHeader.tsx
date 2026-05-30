@@ -7,7 +7,7 @@
  * Contém: título, número do processo, botões de ação, aviso de responsabilidade.
  */
 
-import { LogOut, Sun, Moon, BookOpen, Settings, LayoutGrid } from 'lucide-react';
+import { LogOut, Sun, Moon, BookOpen, Settings, LayoutGrid, AlertTriangle } from 'lucide-react';
 import { GoogleDriveButton } from '../GoogleDriveButton';
 import { AppSwitcher } from '../shared/AppSwitcher';
 import { CSS } from '../../constants/styles';
@@ -180,7 +180,7 @@ export function AppHeader({
       {/* Responsibility Warning */}
       <div className="mt-4 p-3 theme-bg-amber-accent border border-amber-500/30 rounded-lg">
         <div className="flex items-start gap-2">
-          <span className="theme-text-amber text-lg flex-shrink-0">⚠️</span>
+          <AlertTriangle className="w-4 h-4 theme-text-amber flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div className="text-xs theme-text-amber-muted">
             <span className="font-semibold">Aviso Importante:</span> Esta ferramenta utiliza
             Inteligência Artificial para auxiliar na redação de sentenças. A IA pode cometer erros,

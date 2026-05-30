@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, AlertTriangle } from 'lucide-react';
 import type { QuickPrompt, QuickPromptSubOption } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -92,7 +92,7 @@ export const QuickPromptWithOptions = React.memo(({
       >
         {isError ? (
           <>
-            <span>⚠️</span>
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
             <span>{errorMessage}</span>
           </>
         ) : (

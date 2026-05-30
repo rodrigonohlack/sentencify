@@ -150,7 +150,7 @@ describe('SuggestionCard', () => {
         />
       );
 
-      expect(screen.getByText('⭐⭐⭐⭐⭐')).toBeInTheDocument();
+      expect(screen.getByLabelText('5 de 5 estrelas')).toBeInTheDocument();
       expect(screen.getByText('(Mais relevante)')).toBeInTheDocument();
     });
 
@@ -168,7 +168,7 @@ describe('SuggestionCard', () => {
         />
       );
 
-      expect(screen.getByText('⭐⭐⭐⭐')).toBeInTheDocument();
+      expect(screen.getByLabelText('4 de 5 estrelas')).toBeInTheDocument();
       expect(screen.getByText('(2º lugar)')).toBeInTheDocument();
     });
 
@@ -186,7 +186,7 @@ describe('SuggestionCard', () => {
         />
       );
 
-      expect(screen.getByText('⭐⭐⭐')).toBeInTheDocument();
+      expect(screen.getByLabelText('3 de 5 estrelas')).toBeInTheDocument();
       expect(screen.getByText('(3º lugar)')).toBeInTheDocument();
     });
 
@@ -204,7 +204,7 @@ describe('SuggestionCard', () => {
         />
       );
 
-      expect(screen.queryByText(/⭐/)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/estrelas/)).not.toBeInTheDocument();
       expect(screen.queryByText('(Mais relevante)')).not.toBeInTheDocument();
     });
   });

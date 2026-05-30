@@ -326,7 +326,7 @@ export function useModelEditing(props: UseModelEditingProps): UseModelEditingRet
    */
   const duplicateModel = useCallback(async (model: Model) => {
     try {
-      showToast('⏳ Duplicando modelo...', 'info');
+      showToast('Duplicando modelo...', 'info');
       await new Promise(resolve => setTimeout(resolve, 50)); // yield for UI
 
       const modelId = generateModelId();
@@ -360,7 +360,7 @@ export function useModelEditing(props: UseModelEditingProps): UseModelEditingRet
       if (cloudSync?.trackChange) cloudSync.trackChange('create', duplicatedModel);
       modelLibrary.setHasUnsavedChanges(true);
 
-      showToast('✅ Modelo duplicado com sucesso!', 'success');
+      showToast('Modelo duplicado com sucesso!', 'success');
     } catch (err) {
       setError('Erro ao duplicar modelo: ' + (err as Error).message);
     }

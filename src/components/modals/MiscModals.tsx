@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Loader2, Download, AlertCircle, RefreshCw, Wand2, Scale, FileText, X, Sparkles, Edit } from 'lucide-react';
+import { Loader2, Download, AlertCircle, RefreshCw, Wand2, Scale, FileText, X, Sparkles, Edit, Lightbulb, Check } from 'lucide-react';
 import { BaseModal, ModalFooter, ModalInfoBox, CSS } from './BaseModal';
 import type {
   AnalysisModalProps,
@@ -112,8 +112,9 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             </div>
 
             {/* Dica */}
-            <div className="text-xs text-center theme-text-disabled max-w-sm">
-              💡 A análise pode levar de 30 segundos a 2 minutos dependendo do tamanho dos documentos e da complexidade do processo.
+            <div className="text-xs text-center theme-text-disabled max-w-sm flex items-start justify-center gap-1.5">
+              <Lightbulb className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <span>A análise pode levar de 30 segundos a 2 minutos dependendo do tamanho dos documentos e da complexidade do processo.</span>
             </div>
           </div>
         </div>
@@ -156,11 +157,11 @@ export const ExportModal = React.memo(({ isOpen, onClose, exportedText, exported
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title="Minuta Exportada" icon={<Download />} iconColor="blue" size="xl"
       footer={<>
-        <button onClick={handleCopy} className="flex-1 py-3 rounded-lg font-medium bg-blue-600 text-white hover-blue-700-from-600">📋 Copiar com Formatação</button>
+        <button onClick={handleCopy} className="flex-1 py-3 rounded-lg font-medium bg-blue-600 text-white hover-blue-700-from-600 flex items-center justify-center gap-1.5"><FileText className="w-4 h-4" aria-hidden="true" /> Copiar com Formatação</button>
         <button onClick={onClose} className="px-6 py-3 rounded-lg theme-bg-tertiary hover-slate-500">Fechar</button>
       </>}>
       <div className="space-y-4">
-        {copySuccess && <p className="text-green-400 text-sm">✓ Copiado para área de transferência!</p>}
+        {copySuccess && <p className="text-green-400 text-sm flex items-center gap-1.5"><Check className="w-4 h-4" aria-hidden="true" /> Copiado para área de transferência!</p>}
         <ModalInfoBox>
           <strong>Formatação Preservada</strong> - O conteúdo foi copiado com toda a formatação. Cole diretamente no Google Docs ou Word usando Ctrl+V.
         </ModalInfoBox>
@@ -230,7 +231,7 @@ export const AnonymizationNamesModal = React.memo(({ isOpen, onClose, onConfirm,
           <textarea value={nomesTexto} onChange={(e) => setNomesTexto(e.target.value)}
             className="w-full h-48 theme-bg-app border theme-border-primary rounded-lg p-3 theme-text-secondary font-mono text-sm"
             placeholder="JOÃO DA SILVA&#10;MARIA SANTOS&#10;EMPRESA XYZ LTDA&#10;..." />
-          <p className="text-xs theme-text-tertiary mt-2">💡 CPF, CNPJ, telefone, e-mail serão anonimizados automaticamente.</p>
+          <p className="text-xs theme-text-tertiary mt-2 flex items-start gap-1.5"><Lightbulb className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" /><span>CPF, CNPJ, telefone, e-mail serão anonimizados automaticamente.</span></p>
         </div>
       </div>
     </BaseModal>

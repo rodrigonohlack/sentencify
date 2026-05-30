@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
 import { BaseModal, ModalFooter, ModalInfoBox, CSS } from './BaseModal';
 import type {
   BulkDiscardConfirmModalProps,
@@ -32,7 +32,7 @@ export const ConfirmBulkCancelModal = React.memo(({ isOpen, onClose, filesInProg
     footer={<><button onClick={onClose} className={CSS.btnSecondary}>Continuar</button><button onClick={onConfirm} className="flex-1 px-4 py-3 rounded-lg font-medium bg-amber-600 text-white hover-amber-700-from-600">Sim, Cancelar</button></>}>
     <div className="space-y-4">
       <p className="theme-text-tertiary">Cancelar processamento de <strong className="theme-text-primary">{filesInProgress} arquivo(s)</strong>?</p>
-      <ModalInfoBox>ℹ️ Os modelos já gerados serão preservados.</ModalInfoBox>
+      <ModalInfoBox><span className="flex items-center gap-1.5"><Info className="w-4 h-4 text-blue-400 flex-shrink-0" aria-hidden="true" /><span>Os modelos já gerados serão preservados.</span></span></ModalInfoBox>
     </div>
   </BaseModal>
 ));

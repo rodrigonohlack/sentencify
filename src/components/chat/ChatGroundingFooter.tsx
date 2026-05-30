@@ -49,7 +49,7 @@ export const ChatGroundingFooter: React.FC<ChatGroundingFooterProps> = ({ metada
         className="inline-flex items-center gap-1.5 text-xs theme-text-muted hover:theme-text-secondary transition-colors"
       >
         <LinkIcon className="w-3 h-3" aria-hidden="true" />
-        <span>🔗 {label}</span>
+        <span>{label}</span>
         {expanded ? (
           <ChevronDown className="w-3 h-3" aria-hidden="true" />
         ) : (

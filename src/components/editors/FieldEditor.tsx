@@ -7,6 +7,7 @@
  */
 
 import React from 'react';
+import { Clock, XCircle } from 'lucide-react';
 import { VoiceButton } from '../VoiceButton';
 import { useAIStore } from '../../stores/useAIStore';
 import { useAIIntegration } from '../../hooks';
@@ -219,8 +220,8 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
     return (
       <div className="field-editor">
         <label className="block text-xs font-semibold theme-text-muted mb-1">{label}</label>
-        <div className="theme-bg-primary border theme-border-input rounded p-3 text-sm theme-text-muted">
-          ⏳ Carregando editor...
+        <div className="theme-bg-primary border theme-border-input rounded p-3 text-sm theme-text-muted flex items-center gap-2">
+          <Clock className="w-4 h-4 flex-shrink-0" aria-hidden="true" /> Carregando editor...
         </div>
       </div>
     );
@@ -230,8 +231,9 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
     return (
       <div className="field-editor">
         <label className="block text-xs font-semibold theme-text-muted mb-1">{label}</label>
-        <div className="bg-red-900/20 border border-red-600 rounded p-3 text-sm text-red-400">
-          ❌ {quillError instanceof Error ? quillError.message : quillError}
+        <div className="bg-red-900/20 border border-red-600 rounded p-3 text-sm text-red-400 flex items-center gap-2">
+          <XCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+          {quillError instanceof Error ? quillError.message : quillError}
         </div>
       </div>
     );
