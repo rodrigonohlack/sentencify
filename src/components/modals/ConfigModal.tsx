@@ -26,7 +26,9 @@
 import React from 'react';
 import {
   X, Zap, Download, Upload, Check, RefreshCw, Trash2, Plus,
-  AlertCircle, FileText, Scale, BookOpen, Sparkles, Wand2
+  AlertCircle, FileText, Scale, BookOpen, Sparkles, Wand2,
+  AlertTriangle, Lightbulb, Bot, Package, CheckCircle2, Timer, DollarSign, BarChart3, Save,
+  Brain, Mic, Lock, ScrollText, BadgePlus, Settings
 } from 'lucide-react';
 import { ProviderIcon } from '../ui/ProviderIcon';
 import { CSS } from '../../constants/styles';
@@ -878,8 +880,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       )}
                     </select>
                     {parseInt(aiSettings.thinkingBudget || '10000') >= 40000 && (
-                      <p className="text-xs text-amber-400 mt-1">
-                        ⚠️ Respostas podem demorar mais com budgets altos
+                      <p className="text-xs text-amber-400 mt-1 inline-flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5" aria-hidden />
+                        Respostas podem demorar mais com budgets altos
                       </p>
                     )}
                   </div>
@@ -933,7 +936,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             {aiSettings.provider === 'gemini' && (
               <div className="p-4 rounded-lg border-2 border-amber-500/50 bg-amber-500/10">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-amber-400">⚠️</span>
+                  <AlertTriangle className="w-4 h-4 text-amber-400" aria-hidden />
                   <span className="font-semibold theme-text-primary">Gemini 3 sempre usa Thinking</span>
                 </div>
                 <p className="text-xs theme-text-muted mb-3">
@@ -953,10 +956,11 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   )}
                   <option value="high">High (mais lento, mais preciso)</option>
                 </select>
-                <p className="text-xs theme-text-muted mt-2">
+                <p className="text-xs theme-text-muted mt-2 inline-flex items-center gap-1.5">
+                  <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />
                   {aiSettings.geminiModel?.includes('pro')
-                    ? '💡 Gemini 3 Pro suporta apenas Low e High'
-                    : '💡 Gemini 3 Flash suporta todos os níveis'
+                    ? 'Gemini 3 Pro suporta apenas Low e High'
+                    : 'Gemini 3 Flash suporta todos os níveis'
                   }
                 </p>
               </div>
@@ -966,7 +970,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             {aiSettings.provider === 'openai' && aiSettings.openaiModel === 'gpt-5.2' && (
               <div className="p-4 rounded-lg border-2 border-emerald-500/50 bg-emerald-500/10">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-emerald-400">🧠</span>
+                  <Brain className="w-4 h-4 text-emerald-400" aria-hidden />
                   <span className="font-semibold theme-text-primary">GPT-5.2 Reasoning</span>
                 </div>
                 <p className="text-xs theme-text-muted mb-3">
@@ -983,8 +987,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   <option value="xhigh">Extra High - Máxima qualidade (lento)</option>
                 </select>
                 {aiSettings.openaiReasoningLevel === 'xhigh' && (
-                  <p className="text-xs text-amber-400 mt-2">
-                    ⚠️ Nível xhigh pode demorar vários minutos. Timeout aumentado para 5 min.
+                  <p className="text-xs text-amber-400 mt-2 inline-flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5" aria-hidden />
+                    Nível xhigh pode demorar vários minutos. Timeout aumentado para 5 min.
                   </p>
                 )}
               </div>
@@ -994,7 +999,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             {aiSettings.provider === 'openai' && aiSettings.openaiModel === 'gpt-5.2-chat-latest' && (
               <div className="p-4 rounded-lg border-2 border-emerald-500/30 bg-emerald-500/5">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-emerald-400">⚡</span>
+                  <Zap className="w-4 h-4 text-emerald-400" aria-hidden />
                   <span className="font-semibold theme-text-primary">GPT-5.2 Instant</span>
                 </div>
                 <p className="text-xs theme-text-muted">
@@ -1008,15 +1013,16 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             {aiSettings.provider === 'grok' && aiSettings.grokModel === 'grok-4-1-fast-reasoning' && (
               <div className="p-4 rounded-lg border-2 border-purple-500/50 bg-purple-500/10">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-purple-400">🧠</span>
+                  <Brain className="w-4 h-4 text-purple-400" aria-hidden />
                   <span className="font-semibold theme-text-primary">Grok 4.1 Fast Thinking</span>
                   <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded">Thinking Embutido</span>
                 </div>
                 <p className="text-xs theme-text-muted">
                   Modelo da xAI com 2M de contexto e raciocínio integrado. O thinking é automático e não configurável.
                 </p>
-                <p className="text-xs text-emerald-400 mt-2">
-                  💰 $0.20/1M input + $0.50/1M output = ~$0.35/1M total (96% mais barato que Claude)
+                <p className="text-xs text-emerald-400 mt-2 inline-flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5" aria-hidden />
+                  $0.20/1M input + $0.50/1M output = ~$0.35/1M total (96% mais barato que Claude)
                 </p>
               </div>
             )}
@@ -1025,15 +1031,16 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             {aiSettings.provider === 'grok' && aiSettings.grokModel === 'grok-4-1-fast-non-reasoning' && (
               <div className="p-4 rounded-lg border-2 border-amber-500/50 bg-amber-500/10">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-amber-400">⚡</span>
+                  <Zap className="w-4 h-4 text-amber-400" aria-hidden />
                   <span className="font-semibold theme-text-primary">Grok 4.1 Fast Instant</span>
                   <span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded">Sem Thinking</span>
                 </div>
                 <p className="text-xs theme-text-muted">
                   Modelo da xAI com 2M de contexto, modo instant para respostas rápidas. Este modelo não suporta pensamento prolongado.
                 </p>
-                <p className="text-xs text-emerald-400 mt-2">
-                  💰 $0.20/1M input + $0.50/1M output = ~$0.35/1M total (96% mais barato que Claude)
+                <p className="text-xs text-emerald-400 mt-2 inline-flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5" aria-hidden />
+                  $0.20/1M input + $0.50/1M output = ~$0.35/1M total (96% mais barato que Claude)
                 </p>
               </div>
             )}
@@ -1042,15 +1049,16 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             {aiSettings.provider === 'grok' && aiSettings.grokModel === 'grok-4.20-0309-reasoning' && (
               <div className="p-4 rounded-lg border-2 border-purple-500/50 bg-purple-500/10">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-purple-400">🧠</span>
+                  <Brain className="w-4 h-4 text-purple-400" aria-hidden />
                   <span className="font-semibold theme-text-primary">Grok 4.20 Fast</span>
                   <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded">Thinking Embutido</span>
                 </div>
                 <p className="text-xs theme-text-muted">
                   Modelo da xAI com 2M de contexto e raciocínio integrado. O thinking é automático e não configurável.
                 </p>
-                <p className="text-xs text-emerald-400 mt-2">
-                  💰 $2.00/1M input + $6.00/1M output = ~$4.00/1M total
+                <p className="text-xs text-emerald-400 mt-2 inline-flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5" aria-hidden />
+                  $2.00/1M input + $6.00/1M output = ~$4.00/1M total
                 </p>
               </div>
             )}
@@ -1059,15 +1067,16 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             {aiSettings.provider === 'grok' && aiSettings.grokModel === 'grok-4.20-0309-non-reasoning' && (
               <div className="p-4 rounded-lg border-2 border-amber-500/50 bg-amber-500/10">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-amber-400">⚡</span>
+                  <Zap className="w-4 h-4 text-amber-400" aria-hidden />
                   <span className="font-semibold theme-text-primary">Grok 4.20 Instant</span>
                   <span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded">Sem Thinking</span>
                 </div>
                 <p className="text-xs theme-text-muted">
                   Modelo da xAI com 2M de contexto, modo instant para respostas rápidas. Este modelo não suporta pensamento prolongado.
                 </p>
-                <p className="text-xs text-emerald-400 mt-2">
-                  💰 $2.00/1M input + $6.00/1M output = ~$4.00/1M total
+                <p className="text-xs text-emerald-400 mt-2 inline-flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5" aria-hidden />
+                  $2.00/1M input + $6.00/1M output = ~$4.00/1M total
                 </p>
               </div>
             )}
@@ -1123,8 +1132,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       <option value="high">High (Padrão) — raciocínio profundo, balanceado</option>
                       <option value="max">Max — raciocínio máximo (para tarefas agênticas complexas)</option>
                     </select>
-                    <p className="text-xs theme-text-muted mt-2">
-                      💡 DeepSeek V4 liga thinking por padrão na API. Se você notar respostas truncadas ou vazias (ex: topic ordering), tente desligar thinking pra tarefas triviais.
+                    <p className="text-xs theme-text-muted mt-2 inline-flex items-start gap-1.5">
+                      <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" aria-hidden />
+                      DeepSeek V4 liga thinking por padrão na API. Se você notar respostas truncadas ou vazias (ex: topic ordering), tente desligar thinking pra tarefas triviais.
                     </p>
                   </div>
                 )}
@@ -1179,8 +1189,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               SEÇÃO 4: Double Check de Respostas
               ═══════════════════════════════════════════════════════════════════════════════ */}
           <div>
-            <label className="block text-sm font-medium theme-text-tertiary mb-3">
-              🔄 Double Check de Respostas
+            <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
+              <RefreshCw className="w-4 h-4" aria-hidden />
+              Double Check de Respostas
             </label>
 
             {/* Toggle principal */}
@@ -1362,8 +1373,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       )}
                     </select>
                     {(aiSettings.doubleCheck?.claudeThinkingBudget || 0) >= 40000 && (
-                      <p className="text-xs text-amber-400 mt-1">
-                        ⚠️ Verificação pode demorar mais com budgets altos
+                      <p className="text-xs text-amber-400 mt-1 inline-flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5" aria-hidden />
+                        Verificação pode demorar mais com budgets altos
                       </p>
                     )}
                   </div>
@@ -1399,10 +1411,11 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       )}
                       <option value="high">High (mais preciso)</option>
                     </select>
-                    <p className="text-xs theme-text-muted mt-1">
+                    <p className="text-xs theme-text-muted mt-1 inline-flex items-center gap-1.5">
+                      <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />
                       {aiSettings.doubleCheck?.model?.includes('pro')
-                        ? '💡 Gemini 3 Pro suporta apenas Low e High'
-                        : '💡 Gemini 3 Flash suporta todos os níveis'}
+                        ? 'Gemini 3 Pro suporta apenas Low e High'
+                        : 'Gemini 3 Flash suporta todos os níveis'}
                     </p>
                   </div>
                 )}
@@ -1432,8 +1445,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       <option value="xhigh">Extra High - Máxima qualidade (lento)</option>
                     </select>
                     {aiSettings.doubleCheck?.openaiReasoningLevel === 'xhigh' && (
-                      <p className="text-xs text-amber-400 mt-1">
-                        ⚠️ Nível xhigh pode demorar vários minutos
+                      <p className="text-xs text-amber-400 mt-1 inline-flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5" aria-hidden />
+                        Nível xhigh pode demorar vários minutos
                       </p>
                     )}
                   </div>
@@ -1441,8 +1455,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
 
                 {aiSettings.doubleCheck?.provider === 'openai' &&
                  aiSettings.doubleCheck?.model === 'gpt-5.2-chat-latest' && (
-                  <p className="text-xs theme-text-muted p-2 rounded bg-gray-500/10">
-                    ⚡ GPT-5.2 Instant não suporta thinking/reasoning
+                  <p className="text-xs theme-text-muted p-2 rounded bg-gray-500/10 inline-flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5" aria-hidden />
+                    GPT-5.2 Instant não suporta thinking/reasoning
                   </p>
                 )}
 
@@ -1451,7 +1466,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                  !aiSettings.doubleCheck?.model?.includes('non-reasoning') && (
                   <div className="p-3 rounded-lg border border-purple-500/30 bg-purple-500/10">
                     <div className="flex items-center gap-2">
-                      <span className="text-purple-400">🧠</span>
+                      <Brain className="w-4 h-4 text-purple-400" aria-hidden />
                       <span className="text-sm theme-text-primary">
                         {aiSettings.doubleCheck?.model?.startsWith('grok-4.20') ? 'Grok 4.20 Fast' : 'Grok 4.1 Fast Thinking'}
                       </span>
@@ -1464,8 +1479,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
 
                 {aiSettings.doubleCheck?.provider === 'grok' &&
                  aiSettings.doubleCheck?.model?.includes('non-reasoning') && (
-                  <p className="text-xs theme-text-muted p-2 rounded bg-gray-500/10">
-                    ⚡ {aiSettings.doubleCheck?.model?.startsWith('grok-4.20') ? 'Grok 4.20 Instant' : 'Grok 4.1 Fast Instant'} não suporta thinking
+                  <p className="text-xs theme-text-muted p-2 rounded bg-gray-500/10 inline-flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5" aria-hidden />
+                    {aiSettings.doubleCheck?.model?.startsWith('grok-4.20') ? 'Grok 4.20 Instant' : 'Grok 4.1 Fast Instant'} não suporta thinking
                   </p>
                 )}
 
@@ -1705,7 +1721,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 {/* Aviso de custo */}
                 <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
                   <div className="flex items-start gap-2">
-                    <span className="text-amber-400">⚠️</span>
+                    <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" aria-hidden />
                     <p className="text-xs text-amber-700 dark:text-amber-200">
                       Double Check <strong>dobra o custo e tempo</strong> de cada operação selecionada.
                       Use apenas quando a precisão for crítica.
@@ -1720,8 +1736,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               SEÇÃO 4.5: Melhoria de Voz por IA (v1.37.88)
               ═══════════════════════════════════════════════════════════════════════════════ */}
           <div>
-            <label className="block text-sm font-medium theme-text-tertiary mb-3">
-              🎤 Melhoria de Voz por IA
+            <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
+              <Mic className="w-4 h-4" aria-hidden />
+              Melhoria de Voz por IA
             </label>
 
             {/* Toggle habilitar/desabilitar */}
@@ -1816,7 +1833,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 {/* Aviso de custo */}
                 <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
                   <div className="flex items-start gap-2">
-                    <span className="text-amber-400">⚠️</span>
+                    <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" aria-hidden />
                     <p className="text-xs text-amber-700 dark:text-amber-200">
                       Cada ditado fará uma chamada extra à API do modelo selecionado.
                       Modelos rápidos como Haiku/Flash são baratos (~0.001 por chamada).
@@ -1831,8 +1848,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               SEÇÃO 4.6: Auto Complete com IA (v1.40.31)
               ═══════════════════════════════════════════════════════════════════════════════ */}
           <div>
-            <label className="block text-sm font-medium theme-text-tertiary mb-3">
-              ✨ Auto Complete (IA)
+            <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
+              <Sparkles className="w-4 h-4" aria-hidden />
+              Auto Complete (IA)
             </label>
 
             {/* Toggle habilitar/desabilitar */}
@@ -1910,7 +1928,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
 
                 <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
                   <div className="flex items-start gap-2">
-                    <span className="text-emerald-400">💡</span>
+                    <Lightbulb className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" aria-hidden />
                     <p className="text-xs text-emerald-700 dark:text-emerald-200">
                       Funciona nos editores de decisão (modo individual e global).
                       Usa o provider de IA configurado acima. Cada sugestão consome tokens.
@@ -2048,7 +2066,10 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   </ul>
                 </div>
               </div>
-              <p className="mt-2 text-orange-600 dark:text-orange-300 font-medium">⚠️ Erro 429 = limite excedido. Reduza o valor.</p>
+              <p className="mt-2 text-orange-600 dark:text-orange-300 font-medium inline-flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5" aria-hidden />
+                Erro 429 = limite excedido. Reduza o valor.
+              </p>
             </div>
           </div>
 
@@ -2148,8 +2169,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                           <span className="font-semibold theme-text-primary text-sm">PDF.js - Padrão</span>
                           <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded">Gratuito</span>
                         </div>
-                        <p className="text-xs theme-text-muted mt-1">
-                          ✅ Rápido e gratuito | ⚠️ Não funciona com PDFs escaneados (imagens)
+                        <p className="text-xs theme-text-muted mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden /> Rápido e gratuito | <AlertTriangle className="w-3.5 h-3.5 text-amber-400" aria-hidden /> Não funciona com PDFs escaneados (imagens)
                         </p>
                       </div>
                     </div>
@@ -2175,8 +2196,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                           <span className="font-semibold theme-text-primary text-sm">Tesseract OCR - Offline</span>
                           <span className="text-xs bg-cyan-500 text-white px-2 py-0.5 rounded">Gratuito</span>
                         </div>
-                        <p className="text-xs theme-text-muted mt-1">
-                          ✅ 100% offline e gratuito | ✅ Funciona com PDFs escaneados | ⏱️ ~15-30s por página
+                        <p className="text-xs theme-text-muted mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden /> 100% offline e gratuito | <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden /> Funciona com PDFs escaneados | <Timer className="w-3.5 h-3.5 text-blue-400" aria-hidden /> ~15-30s por página
                         </p>
                       </div>
                     </div>
@@ -2203,8 +2224,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                           <span className="text-xs bg-yellow-500 text-stone-900 px-2 py-0.5 rounded">API</span>
                           <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded">Recomendado</span>
                         </div>
-                        <p className="text-xs theme-text-muted mt-1">
-                          💰 ~$0.01/10 páginas (6× mais barato que Claude) | ✅ Excelente em PT-BR | ⏱️ ~2-5s por página
+                        <p className="text-xs theme-text-muted mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                          <DollarSign className="w-3.5 h-3.5 text-green-500" aria-hidden /> ~$0.01/10 páginas (6× mais barato que Claude) | <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden /> Excelente em PT-BR | <Timer className="w-3.5 h-3.5 text-blue-400" aria-hidden /> ~2-5s por página
                         </p>
                       </div>
                     </div>
@@ -2230,8 +2251,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                           <span className="font-semibold theme-text-primary text-sm">Claude Vision - OCR Premium</span>
                           <span className="text-xs bg-yellow-500 text-stone-900 px-2 py-0.5 rounded">API</span>
                         </div>
-                        <p className="text-xs theme-text-muted mt-1">
-                          💰 ~$0.04/10 páginas | ✅ Layouts complexos | ⏱️ ~3-8s por página
+                        <p className="text-xs theme-text-muted mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                          <DollarSign className="w-3.5 h-3.5 text-green-500" aria-hidden /> ~$0.04/10 páginas | <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden /> Layouts complexos | <Timer className="w-3.5 h-3.5 text-blue-400" aria-hidden /> ~3-8s por página
                         </p>
                       </div>
                     </div>
@@ -2274,7 +2295,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             {!['pdfjs', 'tesseract'].includes(aiSettings.ocrEngine) ? (
               <div className="p-4 rounded-lg bg-stone-700/30 border border-stone-600/50">
                 <div className="flex items-start gap-3">
-                  <span className="text-xl">🔒</span>
+                  <Lock className="w-5 h-5 theme-text-muted mt-0.5 shrink-0" aria-hidden />
                   <div>
                     <p className="text-sm font-medium theme-text-muted">Indisponível com o método atual</p>
                     <p className="text-xs theme-text-muted mt-1">
@@ -2299,7 +2320,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className={CSS.flexGap2}>
-                        <span className="text-xl">🔒</span>
+                        <Lock className="w-5 h-5 theme-text-primary" aria-hidden />
                         <span className="font-semibold theme-text-primary">
                           {aiSettings.anonymization?.enabled ? '✓ Ativada' : 'Desativada'}
                         </span>
@@ -2359,7 +2380,10 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     <div className="border-t theme-border-secondary pt-4 mt-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium theme-text-primary">🧠 Detecção Automática de Nomes</span>
+                          <span className="inline-flex items-center gap-1.5 text-sm font-medium theme-text-primary">
+                            <Brain className="w-4 h-4" aria-hidden />
+                            Detecção Automática de Nomes
+                          </span>
                           <span className="text-xs bg-purple-500/20 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded">IA Local</span>
                         </div>
                         <div
@@ -2460,7 +2484,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           <div className="theme-bg-secondary-50 rounded-lg p-4 border theme-border-input">
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm font-medium theme-text-tertiary">
-                📚 Base de Dados
+                <BookOpen className="w-4 h-4" aria-hidden />
+                Base de Dados
                 <span className="text-xs theme-text-muted">
                   ({legislacaoCount} artigos, {jurisprudenciaCount} precedentes)
                 </span>
@@ -2491,7 +2516,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             <div className="theme-bg-secondary-50 rounded-lg p-4 border theme-border-input">
               <div className="flex items-center justify-between mb-3">
                 <label className="flex items-center gap-2 text-sm font-medium theme-text-tertiary">
-                  🧠 IA Local (Busca Semântica)
+                  <Brain className="w-4 h-4" aria-hidden />
+                  IA Local (Busca Semântica)
                   <span className="text-xs bg-blue-500/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">E5-base</span>
                 </label>
                 <div
@@ -2559,7 +2585,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 <div className="theme-bg-secondary-50 rounded-lg p-4 border theme-border-input">
                   <div className="flex items-center justify-between mb-2">
                     <label className="flex items-center gap-2 text-sm font-medium theme-text-tertiary">
-                      📜 Legislação
+                      <ScrollText className="w-4 h-4" aria-hidden />
+                      Legislação
                       <span className="text-xs theme-text-muted">({embeddingsCount} embeddings)</span>
                     </label>
                     <div className={`toggle-switch ${aiSettings.semanticSearchEnabled ? 'active' : ''}`} onClick={() => handleLegislacaoToggle(!aiSettings.semanticSearchEnabled)}>
@@ -2593,7 +2620,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 <div className="theme-bg-secondary-50 rounded-lg p-4 border theme-border-input">
                   <div className="flex items-center justify-between mb-2">
                     <label className="flex items-center gap-2 text-sm font-medium theme-text-tertiary">
-                      📚 Jurisprudência
+                      <BookOpen className="w-4 h-4" aria-hidden />
+                      Jurisprudência
                       <span className="text-xs theme-text-muted">({jurisEmbeddingsCount} embeddings)</span>
                     </label>
                     <div className={`toggle-switch ${aiSettings.jurisSemanticEnabled ? 'active' : ''}`} onClick={() => handleJurisToggle(!aiSettings.jurisSemanticEnabled)}>
@@ -2621,7 +2649,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       </div>
                       {jurisEmbeddingsCount > 0 && searchModelReady && (
                         <div className="flex items-center justify-between mt-3 pt-3 border-t theme-border-subtle">
-                          <label className="text-xs theme-text-muted">🤖 Jurisprudência via IA Local<span className="block opacity-70">Busca semântica nos editores</span></label>
+                          <label className="text-xs theme-text-muted flex items-center gap-1.5"><Bot className="w-3.5 h-3.5" aria-hidden /> Jurisprudência via IA Local<span className="block opacity-70">Busca semântica nos editores</span></label>
                           <div className={`toggle-switch ${aiSettings.useLocalAIForJuris ? 'active' : ''}`}
                                onClick={() => setAiSettings({ ...aiSettings, useLocalAIForJuris: !aiSettings.useLocalAIForJuris })}>
                             <div className="toggle-knob"></div>
@@ -2636,7 +2664,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 <div className="theme-bg-secondary-50 rounded-lg p-4 border theme-border-input">
                   <div className="flex items-center justify-between mb-2">
                     <label className="flex items-center gap-2 text-sm font-medium theme-text-tertiary">
-                      📦 Modelos
+                      <Package className="w-4 h-4" aria-hidden /> Modelos
                       <span className="text-xs theme-text-muted">({modelEmbeddingsCount}/{modelsCount})</span>
                     </label>
                     <div className={`toggle-switch ${aiSettings.modelSemanticEnabled ? 'active' : ''}`} onClick={() => handleModelToggle(!aiSettings.modelSemanticEnabled)}>
@@ -2665,7 +2693,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       </div>
                       {modelEmbeddingsCount > 0 && searchModelReady && (
                         <div className="flex items-center justify-between mt-3 pt-3 border-t theme-border-subtle">
-                          <label className="text-xs theme-text-muted">🤖 Sugestões via IA Local<span className="block opacity-70">Busca semântica instantânea</span></label>
+                          <label className="text-xs theme-text-muted flex items-center gap-1.5"><Bot className="w-3.5 h-3.5" aria-hidden /> Sugestões via IA Local<span className="block opacity-70">Busca semântica instantânea</span></label>
                           <div className={`toggle-switch ${aiSettings.useLocalAIForSuggestions ? 'active' : ''}`}
                                onClick={() => setAiSettings({ ...aiSettings, useLocalAIForSuggestions: !aiSettings.useLocalAIForSuggestions })}>
                             <div className="toggle-knob"></div>
@@ -2858,8 +2886,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               SEÇÃO 16: Prompts Rápidos
               ═══════════════════════════════════════════════════════════════════════════════ */}
           <div className="mt-6">
-            <label className="block text-sm font-medium theme-text-tertiary mb-3">
-              ⚡ Prompts Rápidos
+            <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
+              <Zap className="w-4 h-4" aria-hidden />
+              Prompts Rápidos
             </label>
             <p className="text-xs theme-text-muted mb-3">
               Atalhos para perguntas frequentes ao assistente IA. Clique para enviar instantaneamente.
@@ -2891,8 +2920,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     placeholder="Nome"
                   />
                   {qp.specialHandler ? (
-                    <div className="flex-1 theme-bg-app border theme-border-input rounded p-2 text-xs theme-text-muted italic flex items-center">
-                      ⚙️ Prompt com lógica especial (sub-opções)
+                    <div className="flex-1 theme-bg-app border theme-border-input rounded p-2 text-xs theme-text-muted italic flex items-center gap-1.5">
+                      <Settings className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                      Prompt com lógica especial (sub-opções)
                     </div>
                   ) : (
                     <textarea
@@ -2909,8 +2939,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     />
                   )}
                   {qp.isDefault ? (
-                    <span className="p-1 text-xs theme-text-muted" title="Prompt padrão do sistema (protegido)">
-                      🔒
+                    <span className="p-1 theme-text-muted" title="Prompt padrão do sistema (protegido)">
+                      <Lock className="w-4 h-4" aria-label="Prompt padrão do sistema (protegido)" />
                     </span>
                   ) : (
                     <button
@@ -2990,8 +3020,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
 
             return (
               <div className="border-t theme-border-secondary pt-4 mt-4">
-                <label className="block text-sm font-medium theme-text-tertiary mb-3">
-                  📊 Uso de Tokens (Projeto Atual)
+                <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
+                  <BarChart3 className="w-4 h-4" aria-hidden />
+                  Uso de Tokens (Projeto Atual)
                 </label>
 
                 {(metrics.requestCount ?? 0) > 0 ? (
@@ -3011,25 +3042,25 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
 
                     <div className="border-t theme-border-secondary pt-3 mt-3 space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="theme-text-muted">📥 Input:</span>
+                        <span className="theme-text-muted inline-flex items-center gap-1"><Download className="w-3.5 h-3.5" aria-hidden /> Input:</span>
                         <span className="font-mono theme-text-secondary">{formatNumber(metrics.totalInput ?? 0)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="theme-text-muted">📤 Output:</span>
+                        <span className="theme-text-muted inline-flex items-center gap-1"><Upload className="w-3.5 h-3.5" aria-hidden /> Output:</span>
                         <span className="font-mono theme-text-secondary">{formatNumber(metrics.totalOutput ?? 0)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-green-400">💾 Cache Read:</span>
+                        <span className="text-green-400 inline-flex items-center gap-1"><Save className="w-3.5 h-3.5" aria-hidden /> Cache Read:</span>
                         <span className="font-mono text-green-400">{formatNumber(metrics.totalCacheRead ?? 0)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-yellow-400">🆕 Cache Write:</span>
+                        <span className="text-yellow-400 inline-flex items-center gap-1"><BadgePlus className="w-3.5 h-3.5" aria-hidden /> Cache Write:</span>
                         <span className="font-mono text-yellow-400">{formatNumber(metrics.totalCacheCreation ?? 0)}</span>
                       </div>
                     </div>
 
                     <div className="border-t theme-border-secondary pt-3 mt-3 space-y-2">
-                      <span className="theme-text-secondary text-sm block mb-2">💰 Custo Estimado:</span>
+                      <span className="theme-text-secondary text-sm flex items-center gap-1.5 mb-2"><DollarSign className="w-3.5 h-3.5" aria-hidden /> Custo Estimado:</span>
                       <div className="flex justify-between items-center">
                         <span className="text-xs theme-text-muted">Sonnet 4/4.5:</span>
                         <span className="font-mono text-sm text-blue-400">${calculateCost(metrics, sonnetPrices).toFixed(4)}</span>
@@ -3059,7 +3090,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     {/* v1.37.91: Breakdown por modelo */}
                     {metrics.byModel && Object.keys(metrics.byModel).length > 0 && (
                       <div className="border-t theme-border-secondary pt-3 mt-3">
-                        <span className="theme-text-secondary text-sm block mb-2">📋 Detalhes por Modelo:</span>
+                        <span className="theme-text-secondary text-sm flex items-center gap-1.5 mb-2"><FileText className="w-3.5 h-3.5" aria-hidden /> Detalhes por Modelo:</span>
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                           {Object.entries(metrics.byModel)
                             .sort((a, b) => (b[1].input + b[1].output) - (a[1].input + a[1].output))
@@ -3098,7 +3129,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                                     <span className="font-mono text-yellow-400">${modelCost.toFixed(4)}</span>
                                   </div>
                                   <div className="flex justify-between text-xs theme-text-muted">
-                                    <span>📥 {formatNumber(modelMetrics.input)} | 📤 {formatNumber(modelMetrics.output)}</span>
+                                    <span className="inline-flex items-center gap-1"><Download className="w-3 h-3" aria-hidden /> {formatNumber(modelMetrics.input)} | <Upload className="w-3 h-3" aria-hidden /> {formatNumber(modelMetrics.output)}</span>
                                     <span>{modelMetrics.requestCount} req</span>
                                   </div>
                                 </div>
@@ -3107,7 +3138,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                         </div>
                         {/* Custo Total Real */}
                         <div className="flex justify-between items-center mt-3 pt-2 border-t theme-border-secondary">
-                          <span className="font-medium theme-text-primary text-sm">💵 Custo Total Real:</span>
+                          <span className="font-medium theme-text-primary text-sm inline-flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" aria-hidden /> Custo Total Real:</span>
                           <span className="font-mono font-bold text-yellow-400">
                             ${Object.entries(metrics.byModel).reduce((acc, [mId, m]) => {
                               const prices = m.provider === 'grok'
@@ -3142,14 +3173,15 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               SEÇÃO 18: Tópicos Complementares Automáticos
               ═══════════════════════════════════════════════════════════════════════════════ */}
           <div>
-            <label className="block text-sm font-medium theme-text-tertiary mb-3">
-              📋 Tópicos Complementares Automáticos
+            <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
+              <FileText className="w-4 h-4" aria-hidden />
+              Tópicos Complementares Automáticos
             </label>
             <div className="theme-bg-secondary-30 rounded-lg p-4 border theme-border-input">
               <p className="text-xs theme-text-muted mb-3">
                 Tópicos que serão adicionados automaticamente ao final da análise de documentos (não selecionados por padrão).
                 <br />
-                <span className="text-blue-400">💡 Dica: Arraste os tópicos para reordená-los</span>
+                <span className="text-blue-400 inline-flex items-center gap-1"><Lightbulb className="w-3.5 h-3.5" aria-hidden /> Dica: Arraste os tópicos para reordená-los</span>
               </p>
 
               <div className="space-y-2 max-h-64 overflow-y-auto">

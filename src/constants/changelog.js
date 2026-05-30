@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.22',
+    date: '2026-05-30',
+    feature: 'style(ui): emojis do ConfigModal trocados por ícones lucide-react (59 ocorrências, sub-commit isolado por ser arquivo grande/sensível). Avisos/dicas (AlertTriangle/Lightbulb), labels de seção (Brain, Mic, Lock, Settings, BookOpen, ScrollText, Package, Bot), métricas de token (Download/Upload/BadgePlus/BarChart3/Save) e linhas comparativas de OCR (CheckCircle2/Timer/DollarSign) — todos com aria-label/aria-hidden. PRESERVADO o campo de dado do usuário (placeholder/ícone de QuickPrompt = emoji editável). ConfigModal.test 31/31 verde; tsc limpo. Conclui o refinamento visual do main app (paleta + tipografia + ícones).',
+  },
+  {
     version: '1.50.21',
     date: '2026-05-30',
     feature: 'style(ui): emojis de UI do main app (exceto ConfigModal) trocados por ícones lucide-react com acessibilidade. Toast usa ícone por tipo; ~30 arquivos migrados (chat, cards, modais, editores, ai, tabs, header, ui). Ícones interativos ganharam aria-label (favoritar/copiar/etc.) — ganho de a11y. <option> (TopicsTab, ProcessingModeSelector) teve emoji REMOVIDO (SVG não renderiza em option). Strings de showToast tiveram emoji removido (Toast já põe ícone por tipo); testes de hook/componente acoplados reescritos (getByText emoji → getByText/getByLabelText/getByRole). PRESERVADOS: CORRECTION_ICONS (double-check, data-driven — rodada futura), emojis em texto gerado (sentenceGeneration), prompts/changelog/dados. Suíte completa 6257 testes verde; tsc limpo. Fase 3a/3 do refinamento visual.',
