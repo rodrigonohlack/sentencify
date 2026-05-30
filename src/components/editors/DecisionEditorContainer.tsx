@@ -328,7 +328,7 @@ const DecisionEditorContainer = React.memo(React.forwardRef<HTMLDivElement, Comb
         <button
           onClick={callbacks.onSave}
           disabled={savingTopic}
-          className="flex-1 py-3 rounded-lg font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover-gradient-blue-purple transition-all duration-300"
+          className="flex-1 py-3 rounded-lg font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 transition-all duration-300"
         >
           {savingTopic ? (
             <>

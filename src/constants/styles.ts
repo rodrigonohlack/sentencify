@@ -40,7 +40,7 @@ export const CSS = {
   flexCenterJustify: "flex items-center justify-center gap-2",
   // Buttons - v1.33.43: cores que funcionam em ambos os temas
   btnBase: "rounded-xl font-medium transition-all",
-  btnPrimary: "px-4 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 shadow-lg shadow-blue-500/25",
+  btnPrimary: "px-4 py-2.5 rounded-xl font-medium text-white bg-blue-500 hover:bg-blue-600 shadow-lg shadow-blue-500/25",
   btnSecondary: "px-4 py-2.5 rounded-xl font-medium theme-bg-secondary theme-hover-bg border theme-border-modal theme-text-primary transition-all",
   btnDanger: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-lg shadow-red-500/25",
   btnSuccess: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25",

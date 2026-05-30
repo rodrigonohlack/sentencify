@@ -189,7 +189,7 @@ export const JurisprudenciaTab = React.memo(({
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={jurisprudencia.isLoading || isReadOnly}
-          className={`px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover-purple-700 ${isReadOnly ? 'cursor-not-allowed' : ''}`}
+          className={`px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover-blue-700 ${isReadOnly ? 'cursor-not-allowed' : ''}`}
           title={isReadOnly ? 'Importação desabilitada no modo somente leitura' : 'Importar precedentes de arquivo JSON'}
         >
           <Upload className="w-4 h-4 inline mr-2" />

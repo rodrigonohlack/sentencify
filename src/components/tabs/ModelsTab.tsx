@@ -136,10 +136,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => openModal('bulkModal')}
-            className="hover-gradient-blue-purple flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg text-white"
-            style={{
-              backgroundImage: 'linear-gradient(to right, #2563eb, #9333ea)'
-            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
             title="Criar multiplos modelos automaticamente a partir de arquivos usando IA"
           >
             <Sparkles className="w-4 h-4" />
@@ -148,7 +145,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg hover-green-700-from-600 bg-emerald-600 text-white transition-colors duration-300"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
             title="Carregar modelos de um arquivo JSON previamente exportado"
           >
             <Upload className="w-4 h-4" />
@@ -163,7 +160,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
           />
           <button
             onClick={exportModels}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg hover-purple-700-from-600 bg-purple-600 text-white transition-colors duration-300"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
             title="Salvar todos os modelos em um arquivo JSON (necessario para backup)"
           >
             <Download className="w-4 h-4" />
@@ -196,7 +193,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
                 }, 50);
               }
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg hover-blue-700-from-600 bg-blue-600 text-white transition-colors duration-300"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/25 transition-colors duration-300"
           >
             <Plus className="w-4 h-4" />
             Novo Modelo
@@ -205,7 +202,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
           {cloudSync.isAuthenticated && (
             <button
               onClick={() => openModal('shareLibrary')}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors duration-300"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
               title="Compartilhar biblioteca de modelos"
             >
               <Share2 className="w-4 h-4" />

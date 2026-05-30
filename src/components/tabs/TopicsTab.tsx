@@ -108,7 +108,7 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                     <button
                       onClick={() => openModal('merge')}
                       disabled={regenerating}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm disabled:opacity-50 hover-amber-700-from-600 bg-amber-600 text-white transition-colors duration-300"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm disabled:opacity-50 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
                     >
                       <Merge className="w-4 h-4" />
                       Unir {topicsToMerge.length} Selecionados
@@ -116,7 +116,7 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                   )}
                   <button
                     onClick={() => openModal('newTopic')}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover-green-700-from-600 bg-emerald-600 text-white transition-colors duration-300"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
                   >
                     <PlusCircle className="w-4 h-4" />
                     Novo Tópico
@@ -125,7 +125,7 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                   {selectedTopics.length > 0 && (
                     <button
                       onClick={() => openModal('globalEditor')}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover-cyan-700-from-600 bg-cyan-600 text-white transition-colors duration-300"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
                     >
                       <Edit className="w-4 h-4" />
                       Edição Global
@@ -138,19 +138,15 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                         <button
                           onClick={() => openModal('sentenceReview')}
                           disabled={!canGenerateDispositivo.enabled || generatingReview}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white transition-all ${
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm border theme-border-input theme-text-primary transition-colors ${
                             !canGenerateDispositivo.enabled || generatingReview
-                              ? 'opacity-50 cursor-not-allowed'
-                              : 'hover-amber-700-from-600'
+                              ? 'opacity-50 cursor-not-allowed theme-bg-secondary'
+                              : 'theme-bg-secondary theme-hover-bg'
                           }`}
-                          style={{
-                            backgroundColor: canGenerateDispositivo.enabled && !generatingReview ? '#d97706' : '#6b7280',
-                            transition: 'background-color 0.3s ease'
-                          }}
                         >
                           {generatingReview ? (
                             <>
-                              <div className={CSS.spinner}></div>
+                              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                               <span>Revisando...</span>
                             </>
                           ) : (
@@ -181,15 +177,11 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                         <button
                           onClick={generateDispositivo}
                           disabled={!canGenerateDispositivo.enabled || generatingDispositivo}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white transition-all ${
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white transition-all shadow-lg shadow-blue-500/25 ${
                             !canGenerateDispositivo.enabled || generatingDispositivo
-                              ? 'opacity-50 cursor-not-allowed'
-                              : 'hover-purple-700-from-600'
+                              ? 'opacity-50 cursor-not-allowed bg-gray-500'
+                              : 'bg-blue-500 hover:bg-blue-600'
                           }`}
-                          style={{
-                            backgroundColor: canGenerateDispositivo.enabled && !generatingDispositivo ? '#9333ea' : '#6b7280',
-                            transition: 'background-color 0.3s ease'
-                          }}
                         >
                           {generatingDispositivo ? (
                             <>
@@ -217,7 +209,7 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                       </div>
                       <button
                         onClick={exportDecision}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm hover-blue-700-from-600 bg-blue-600 text-white transition-colors duration-300"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
                       >
                         <Download className="w-4 h-4" />
                         Exportar Minuta Completa

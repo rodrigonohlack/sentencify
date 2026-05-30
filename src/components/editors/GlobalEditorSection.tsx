@@ -191,7 +191,7 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
                     {onOpenAIAssistant && (
                       <button
                         onClick={() => onOpenAIAssistant(topicIndex)}
-                        className="hover-purple-700 px-2 py-1 text-white text-xs rounded flex items-center gap-1 bg-purple-600"
+                        className="hover-blue-700 px-2 py-1 text-white text-xs rounded flex items-center gap-1 bg-blue-600"
                         title="Assistente de Redação IA"
                       >
                         <Sparkles className="w-3 h-3" />
