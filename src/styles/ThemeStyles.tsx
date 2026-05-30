@@ -40,7 +40,7 @@ const ThemeStyles = () => (
       --overlay-bg: rgba(0, 0, 0, 0.8);
       --modal-bg: #1e293b;
       --modal-border: #334155;
-      --modal-glow: 0 0 40px rgba(139, 92, 246, 0.15), 0 0 80px rgba(59, 130, 246, 0.1);
+      --modal-glow: 0 0 40px rgba(59, 130, 246, 0.15), 0 0 80px rgba(59, 130, 246, 0.1);
 
       /* Gradients */
       --gradient-app-from: #0f172a;

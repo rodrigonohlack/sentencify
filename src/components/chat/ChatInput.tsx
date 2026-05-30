@@ -50,7 +50,7 @@ export const ChatInput = React.memo(({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         disabled={disabled}
-        className="flex-1 min-h-[5rem] max-h-[200px] overflow-y-auto theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary resize-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
+        className="flex-1 min-h-[5rem] max-h-[200px] overflow-y-auto theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
         placeholder={placeholder}
       />
       {/* v1.35.59: VoiceButton para ditado */}
@@ -67,7 +67,7 @@ export const ChatInput = React.memo(({
       <button
         onClick={handleSend}
         disabled={!value.trim() || disabled}
-        className="px-4 rounded-lg font-medium disabled:opacity-50 text-white bg-gradient-to-r from-purple-600 to-blue-600 hover-purple-700"
+        className="px-4 rounded-lg font-medium disabled:opacity-50 text-white bg-gradient-to-r from-blue-600 to-blue-700 hover-blue-700"
       >
         {disabled ? (
           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

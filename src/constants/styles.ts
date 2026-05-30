@@ -20,9 +20,9 @@ export const CSS = {
   modalHeader: "p-5 border-b theme-border-modal",
   modalFooter: "flex gap-3 p-4 border-t theme-border-modal",
   // Input
-  inputField: "w-full px-4 py-3 theme-input border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
-  inputBase: "w-full theme-bg-secondary border theme-border-input rounded-lg theme-text-primary theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
-  input: "w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text-primary theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
+  inputField: "w-full px-4 py-3 theme-input border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
+  inputBase: "w-full theme-bg-secondary border theme-border-input rounded-lg theme-text-primary theme-placeholder focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
+  input: "w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text-primary theme-placeholder focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all",
   // Info boxes
   infoBox: "theme-info-box",
   spinner: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin",
@@ -38,7 +38,7 @@ export const CSS = {
   flexCenterJustify: "flex items-center justify-center gap-2",
   // Buttons - v1.33.43: cores que funcionam em ambos os temas
   btnBase: "rounded-xl font-medium transition-all",
-  btnPrimary: "px-4 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-lg shadow-purple-500/25",
+  btnPrimary: "px-4 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 shadow-lg shadow-blue-500/25",
   btnSecondary: "px-4 py-2.5 rounded-xl font-medium theme-bg-secondary theme-hover-bg border theme-border-modal theme-text-primary transition-all",
   btnDanger: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-lg shadow-red-500/25",
   btnSuccess: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25",

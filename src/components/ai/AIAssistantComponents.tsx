@@ -196,11 +196,11 @@ export const AIAssistantBaseLegacy = React.memo(({
         {/* Header */}
         <div className={`${CSS.modalHeader} flex items-center justify-between`}>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg">
+            <div className="p-2 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
+              <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
                 {title}
               </h3>
               {subtitle && (
@@ -253,7 +253,7 @@ export const AIAssistantBaseLegacy = React.memo(({
             <textarea
               value={aiInstruction}
               onChange={(e) => setAiInstruction(e.target.value)}
-              className="w-full h-24 theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary resize-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+              className="w-full h-24 theme-bg-app border theme-border-input rounded-lg p-3 theme-text-primary resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               placeholder={placeholder}
             />
           </div>
@@ -268,7 +268,7 @@ export const AIAssistantBaseLegacy = React.memo(({
           <button
             onClick={onGenerateText}
             disabled={generatingAi || !(aiInstruction || '').trim()}
-            className="w-full py-3 rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2 text-white bg-gradient-to-r from-purple-600 to-blue-600 hover-gradient-purple-blue-darker transition-all duration-300"
+            className="w-full py-3 rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2 text-white bg-gradient-to-r from-blue-600 to-blue-700 hover-gradient-purple-blue-darker transition-all duration-300"
           >
             {generatingAi ? (
               <>

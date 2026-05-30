@@ -69,7 +69,7 @@ export function AppHeader({
         {/* Left side - Title and Process Number */}
         <div>
           <div className="flex items-baseline gap-3">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">
               SENTENCIFY.AI
             </h1>
             <AppSwitcher

@@ -73,7 +73,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
               {/* Barra de progresso animada */}
               <div className="w-full theme-bg-secondary rounded-full h-2 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 animate-pulse"
+                <div className="h-full bg-gradient-to-r from-blue-500 to-blue-600 animate-pulse"
                      style={{
                        width: '100%',
                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'

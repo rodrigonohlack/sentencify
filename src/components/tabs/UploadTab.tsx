@@ -694,7 +694,7 @@ export const UploadTab: React.FC<UploadTabProps> = ({
       <button
         onClick={handleAnalyzeDocuments}
         disabled={analyzing || (peticaoFiles.length === 0 && pastedPeticaoTexts.length === 0)}
-        className="w-full py-4 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white hover-gradient-blue-purple"
+        className="w-full py-4 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white hover-gradient-blue-purple"
       >
         {analyzing ? 'Analisando documentos...' : 'Analisar Documentos'}
       </button>

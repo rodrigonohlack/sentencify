@@ -36,7 +36,7 @@ export const ChatBubble = React.memo(({
         </div>
         <div className={`rounded-lg p-3 ${
           isUser
-            ? 'bg-purple-600/20 border border-purple-500/30'
+            ? 'bg-blue-600/20 border border-blue-500/30'
             : 'theme-bg-secondary border theme-border-input'
         }`}>
           {isUser ? (

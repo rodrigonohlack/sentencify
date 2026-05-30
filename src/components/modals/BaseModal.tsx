@@ -82,7 +82,7 @@ export const BaseModal = React.memo(({
     red: 'from-red-500 to-orange-500 shadow-red-500/30',
     green: 'from-green-500 to-emerald-500 shadow-green-500/30',
     yellow: 'from-yellow-500 to-orange-500 shadow-yellow-500/30',
-    purple: 'from-purple-500 to-blue-500 shadow-purple-500/30',
+    purple: 'from-blue-500 to-blue-600 shadow-blue-500/30',
     orange: 'from-orange-500 to-red-500 shadow-orange-500/30'
   };
 

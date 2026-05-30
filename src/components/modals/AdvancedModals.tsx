@@ -795,7 +795,7 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
 
           <button
             onClick={handleCopyFormattedDispositivo}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium shadow-lg hover-gradient-purple-blue bg-gradient-to-r from-purple-600 to-blue-600 text-white transition-all duration-300"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium shadow-lg hover-gradient-purple-blue bg-gradient-to-r from-blue-600 to-blue-700 text-white transition-all duration-300"
             title="Copiar com formatação (negrito, parágrafos) para Word/Google Docs"
           >
             <Download className="w-5 h-5" />
@@ -1156,7 +1156,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
             <button
               onClick={onProcess}
               disabled={bulkFiles.length === 0}
-              className="flex-1 px-6 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover-gradient-blue-purple transition-all duration-300 text-white"
+              className="flex-1 px-6 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover-gradient-blue-purple transition-all duration-300 text-white"
             >
               <Zap className="w-5 h-5" />
               Processar {bulkFiles.length} Arquivo{bulkFiles.length !== 1 ? 's' : ''}
@@ -1174,8 +1174,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
         <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-2xl w-full flex flex-col`} style={{ maxHeight: '90vh' }}>
           <div className={CSS.modalHeader}>
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-purple-500/20">
-                <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+              <div className="p-3 rounded-xl bg-blue-500/20">
+                <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold theme-text-primary">Processando Arquivos...</h3>

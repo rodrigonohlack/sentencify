@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.18',
+    date: '2026-05-30',
+    feature: 'style(ui): paleta DECORATIVA do main app desaturada para azul institucional. Logo tri-cor (azul→roxo→rosa) → gradiente mono azul (blue-500→blue-700) em AppHeader e App.tsx; btnPrimary, 3 focus-rings de input, --modal-glow, spinner neon (index.css) e ~14 defs de hover-gradient em GlobalHoverStyles migrados de roxo/rosa/indigo para blue mono; ~10 botões/painéis inline (AdvancedModals, ModelExtractionModals, StreamingModal, MiscModals, ChatInput, DecisionEditorContainer, UploadTab, AIAssistantComponents) e o iconGradient "purple" do BaseModal → azul; bolha de chat do usuário roxa→azul. Roxo CATEGÓRICO preservado (badges de categoria/tipo, AppSwitcher identidade de subapp, estado de seleção, --accent-purple). Subapps, AdminPanel e ConfigModal fora desta fase. tsc limpo. Verificação visual limitada (app atrás de login magic-link). Spec/plano em docs/superpowers/. Fase 1/3 do refinamento visual.',
+  },
+  {
     version: '1.50.17',
     date: '2026-05-30',
     feature: 'fix(prova-oral): tooltip de timestamp não aparecia quando um pill continha VÁRIOS timestamps. Na aba Confissões o campo confissao.timestamp é uma string única, e o modelo às vezes junta vários ("2m 44s; 2m 51s; 2m 59s") nela — isso virava um único pill com a string inteira, e parseTimestampToSeconds (que espera um só) retornava null → sem tooltip. Pills de um timestamp só ("9m 40s") funcionavam; os múltiplos não. (Contradições já manda array, por isso lá não tinha o bug.) Fix universal: novo util extractTimestamps(str) separa por ";"/"," e mantém só tokens válidos; o componente TimestampBadge agora renderiza UM pill por timestamp extraído (cada um com seu próprio tooltip), via SingleTimestampPill interno. Sem token válido → renderiza a string original como pill simples. Corrige Confissões e blinda qualquer outro campo de timestamp string com múltiplos. 4 testes novos. tsc limpo; testes do prova-oral OK. Arquivos: utils/analysis-helpers.ts, components/results/TimestampBadge.tsx, utils/analysis-helpers.test.ts.',

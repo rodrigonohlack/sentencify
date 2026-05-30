@@ -102,7 +102,7 @@ export const ExtractModelConfirmModal = React.memo(({
           </button>
           <button
             onClick={onConfirmExtract}
-            className="flex-1 px-4 py-3 rounded-lg font-medium shadow-lg hover-gradient-purple-pink bg-gradient-to-r from-purple-600 to-pink-500 text-white transition-all duration-300"
+            className="flex-1 px-4 py-3 rounded-lg font-medium shadow-lg hover-gradient-purple-pink bg-gradient-to-r from-blue-600 to-blue-700 text-white transition-all duration-300"
           >
             ✨ Criar Modelo
           </button>
@@ -169,7 +169,7 @@ export const ExtractedModelPreviewModal = React.memo(({
               type="text"
               value={extractedModel.title}
               onChange={(e) => setExtractedModel({ ...extractedModel, title: e.target.value })}
-              className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
+              className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
               placeholder="Ex: Adicional de Periculosidade - Modelo"
             />
           </div>
@@ -182,7 +182,7 @@ export const ExtractedModelPreviewModal = React.memo(({
             <select
               value={extractedModel.category || ''}
               onChange={(e) => setExtractedModel({ ...extractedModel, category: e.target.value })}
-              className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
+              className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
             >
               <option value="Preliminar">Preliminar</option>
               <option value="Mérito">Mérito</option>
@@ -200,7 +200,7 @@ export const ExtractedModelPreviewModal = React.memo(({
               type="text"
               value={extractedModel.keywords || ''}
               onChange={(e) => setExtractedModel({ ...extractedModel, keywords: e.target.value })}
-              className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
+              className="w-full px-4 py-3 theme-bg-secondary border theme-border-input rounded-lg theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
               placeholder="palavras, separadas, por vírgulas"
             />
             <p className="text-xs theme-text-muted mt-1">Separe as palavras-chave com vírgulas</p>

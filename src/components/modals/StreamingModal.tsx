@@ -145,7 +145,7 @@ export const StreamingModal: React.FC<StreamingModalProps> = ({
         <div className="mt-4 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl font-medium bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm shadow-lg shadow-purple-500/25 transition-all"
+            className="px-4 py-2 rounded-xl font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white text-sm shadow-lg shadow-blue-500/25 transition-all"
           >
             Fechar e Ver Resultado
           </button>
