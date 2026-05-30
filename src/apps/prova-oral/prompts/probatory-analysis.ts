@@ -45,7 +45,7 @@ Para cada tema, consulte:
 - contradicoes[] → Há contradição relevante para este tema?
 - credibilidade[] → Qual a avaliação de cada depoente?
 
-⚠️ COPIE o conteúdo de sintesesPorTema para provaOral - não resuma!
+⚠️ O campo provaOral[] é preenchido AUTOMATICAMENTE pelo sistema a partir de sintesesPorTema — você NÃO precisa reproduzi-lo. Mas LEIA todas as declarações de sintesesPorTema do tema, pois a fundamentacao DEVE analisar cada uma delas.
 
 ⚠️ REGRA CRÍTICA - ANÁLISE EXAUSTIVA DE TODAS AS DECLARAÇÕES:
 Na fundamentacao, você DEVE analisar CADA depoente que fez declaração sobre o tema:
@@ -295,7 +295,7 @@ Sem markdown, sem backticks, sem explicações - apenas o JSON:
 - **titulo**: Nome do tema (igual ao de sintesesPorTema)
 - **alegacaoAutor**: Tese do autor extraída da síntese do processo
 - **defesaRe**: Defesa da ré extraída da síntese do processo
-- **provaOral[]**: COPIAR declarações de sintesesPorTema (mesmo conteúdo!)
+- **provaOral[]**: OPCIONAL — preenchido automaticamente pelo sistema a partir de sintesesPorTema; pode omitir
 - **fundamentacao**: Análise DETALHADA em markdown (use ## para seções)
 - **conclusao**: Resumo da conclusão probatória (1-3 frases)
 - **status**: "favoravel-autor" | "favoravel-re" | "parcial" | "inconclusivo"
@@ -317,7 +317,7 @@ Antes de responder, verifique:
 
 ☐ analises[] tem EXATAMENTE o mesmo número de itens que sintesesPorTema[]?
 ☐ Cada titulo corresponde a um tema de sintesesPorTema?
-☐ provaOral[] tem os mesmos depoentes que aparecem em sintesesPorTema para o tema?
+☐ a fundamentacao analisa TODOS os depoentes de sintesesPorTema do tema (inclusive testemunhas)?
 ☐ fundamentacao tem mais de 500 caracteres para temas complexos?
 ☐ fundamentacao cita timestamps no formato (Xm Ys)?
 ☐ Se há confissão no tema (verificar confissoes[]), ela aparece na fundamentacao?

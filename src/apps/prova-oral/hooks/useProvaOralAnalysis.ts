@@ -13,7 +13,8 @@ import {
   PROVA_ORAL_PROBATORY_ANALYSIS_PROMPT,
 } from '../prompts';
 import { getMaxOutputTokens } from '../constants';
-import type { ProvaOralResult, SintesePorTema, Confissao, Contradicao, AvaliacaoCredibilidade } from '../types';
+import { normalizeThemeName } from '../utils/analysis-helpers';
+import type { ProvaOralResult, SintesePorTema, Confissao, Contradicao, AvaliacaoCredibilidade, AnaliseTemaPedido, ProvaOralItem } from '../types';
 import type { PhaseState } from '../stores/useProvaOralStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -45,6 +46,42 @@ interface SinteseCondensada {
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Opção B: preenche o provaOral[] de cada análise (Fase 3) de forma determinística
+ * a partir do sintesesPorTema (Fase 2), casando pelo título do tema.
+ *
+ * Motivação: a Fase 3 (probatória) pedia ao modelo para RECOPIAR as declarações
+ * em provaOral[], e modelos mais fracos (ex.: codex/gpt-5.5) economizavam e dropavam
+ * depoentes — sobretudo testemunhas. Como o sintesesPorTema da Fase 2 já contém a
+ * listagem correta e completa, a recópia vira responsabilidade do código, garantindo
+ * que a listagem de depoentes por tema nunca perca ninguém. A fundamentação continua
+ * a cargo do modelo. Se algum tema não casar, mantém o provaOral do modelo (fallback).
+ */
+function fillProvaOralFromFase2(
+  analises: AnaliseTemaPedido[],
+  sintesesPorTema: SintesePorTema[]
+): AnaliseTemaPedido[] {
+  if (!Array.isArray(analises) || analises.length === 0) return analises;
+
+  const byTema = new Map<string, SintesePorTema>();
+  for (const s of sintesesPorTema) {
+    if (s?.tema) byTema.set(normalizeThemeName(s.tema), s);
+  }
+
+  return analises.map((analise) => {
+    const key = normalizeThemeName(analise.titulo || analise.tema || '');
+    const sintese = byTema.get(key);
+    if (!sintese || !Array.isArray(sintese.declaracoes) || sintese.declaracoes.length === 0) {
+      return analise; // sem tema casável → mantém o provaOral do modelo (fallback)
+    }
+    const provaOral: ProvaOralItem[] = sintese.declaracoes.map((d) => ({
+      deponente: d.deponente,
+      textoCorrente: d.textoCorrente,
+    }));
+    return { ...analise, provaOral };
+  });
+}
 
 /**
  * Gera sintesesCondensadas programaticamente a partir de sinteses
@@ -410,15 +447,15 @@ Produza o array "analises[]" com análise probatória EXAUSTIVA para cada tema.
 
 ⚠️ REGRAS CRÍTICAS:
 1. Gere EXATAMENTE ${totalTemas} análises (uma para cada tema em sintesesPorTema)
-2. COPIE as declarações de sintesesPorTema para provaOral[] - não resuma!
+2. NÃO precisa preencher provaOral[] — o sistema o preenche automaticamente a partir da Fase 2. Concentre seu esforço na fundamentacao, que DEVE analisar CADA depoente presente em sintesesPorTema do tema (autor, preposto E TODAS as testemunhas que falaram sobre ele).
 3. Se há confissão sobre o tema, ela DEVE ser o elemento central da fundamentação
 4. Se há contradição sobre o tema, ela DEVE ser analisada
 5. fundamentacao deve ter no mínimo 500 caracteres para temas com provas relevantes
 
 CHECKLIST OBRIGATÓRIO:
 □ analises[] tem ${totalTemas} itens (mesmo número que sintesesPorTema)?
-□ Cada titulo corresponde a um tema de sintesesPorTema?
-□ provaOral[] tem os mesmos depoentes que aparecem em sintesesPorTema?
+□ Cada titulo corresponde EXATAMENTE a um tema de sintesesPorTema (mesmo texto)?
+□ a fundamentacao analisa TODOS os depoentes de sintesesPorTema do tema, INCLUSIVE as testemunhas?
 □ fundamentacao cita timestamps no formato (Xm Ys)?
 □ Se há confissão, foi citado "art. 391 do CPC" na fundamentacao?
 □ status é coerente com conclusao?`;
@@ -467,10 +504,19 @@ CHECKLIST OBRIGATÓRIO:
           (phase1Result.depoentes as Depoente[]) || []
         );
 
+        // Opção B: provaOral[] de cada análise vem deterministicamente da Fase 2
+        // (não da recópia do modelo na Fase 3), garantindo listagem completa de
+        // depoentes por tema mesmo com modelos que economizam (ex.: codex/gpt-5.5).
+        const analisesComProvaOral = fillProvaOralFromFase2(
+          (phase3Result.analises as AnaliseTemaPedido[]) || [],
+          sintesesPorTemaPhase2
+        );
+
         const mergedResult = {
           ...phase1Result,    // depoentes, sinteses
           ...phase2Result,    // sintesesPorTema, contradicoes, confissoes, credibilidade
           ...phase3Result,    // analises (sobrescreve qualquer análise da Fase 2)
+          analises: analisesComProvaOral, // provaOral[] preenchido a partir da Fase 2
           sintesesCondensadas // Gerado programaticamente
         };
 
