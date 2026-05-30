@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.14',
+    date: '2026-05-30',
+    feature: 'chore(bridge): modo verbose do daemon claude-bridge (BRIDGE_LOG=verbose) passa a despejar o stdout cru do CLI (até 6000 chars) além do stderr, em ambas as rotas (claude-cli e codex-cli). Antes só logava stderr; ver o stdout cru foi o que permitiu diagnosticar por que a Fase 2 do prova-oral às vezes voltava com ~92 caracteres (variância do codex/gpt-5.5, que num run entrega 69k chars e noutro aborta a geração devolvendo quase nada — não era bug de código nem do token de auth). Sem efeito quando BRIDGE_LOG não está setado (modo normal só loga as linhas →/← com tempo e tokens). Mudança apenas do daemon local; não afeta o deploy do app. Arquivo: claude-bridge/server.js.',
+  },
+  {
     version: '1.50.13',
     date: '2026-05-29',
     feature: 'fix(prova-oral): análise probatória (Fase 3) perdia depoentes na listagem por tema com modelos mais fracos (ex.: codex/gpt-5.5). Diagnóstico: a Fase 2 (sintesesPorTema) distribuía corretamente TODAS as falas (autor, preposto, testemunhas) nos temas, mas a Fase 3 pedia ao modelo para RECOPIAR essas declarações em analises[].provaOral[] — e o codex economizava, copiando só autor+preposto e ignorando testemunhas (na listagem e na fundamentação). Claude seguia a instrução; codex não. Não era cap de tokens nosso (codex ignora max_tokens — buildCodexArgs não passa). Fix (opção B): provaOral[] de cada tema passa a ser preenchido DETERMINISTICAMENTE no código a partir do sintesesPorTema da Fase 2 (novo helper fillProvaOralFromFase2 em useProvaOralAnalysis.ts, casando tema↔titulo via normalizeThemeName; fallback mantém provaOral do modelo se o tema não casar). Assim a listagem de depoentes por tema nunca perde ninguém, independ. do modelo. Prompts da Fase 3 (probatory-analysis.ts + user prompt no hook) ajustados: modelo NÃO precisa mais recopiar provaOral (sistema preenche) e deve focar a fundamentacao em CADA depoente do tema, inclusive testemunhas — o que também alivia a carga de saída da fase. Limitação conhecida: a profundidade da fundamentação ainda depende do modelo; a opção B garante a listagem e melhora as chances da fundamentação por aliviar a recópia. Arquivos: src/apps/prova-oral/hooks/useProvaOralAnalysis.ts, src/apps/prova-oral/prompts/probatory-analysis.ts.',

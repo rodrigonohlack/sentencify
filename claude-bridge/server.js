@@ -175,7 +175,10 @@ const server = http.createServer(async (req, res) => {
           return;
         }
         logEnd(id, 'claude-cli', started, out.status, usageInfo(out));
-        if (VERBOSE_LOG && stderr.trim()) console.log(`[claude-bridge] #${id} stderr: ${stderr.trim().slice(0, 500)}`);
+        if (VERBOSE_LOG) {
+          console.log(`[claude-bridge] #${id} stdout(${stdout.length}c): ${stdout.slice(0, 6000)}`);
+          if (stderr.trim()) console.log(`[claude-bridge] #${id} stderr(${stderr.length}c): ${stderr.trim().slice(0, 1500)}`);
+        }
         sendJson(res, out.status, out.body);
       });
       child.stdin.write(buildStdin(body));
@@ -239,7 +242,10 @@ const server = http.createServer(async (req, res) => {
           return;
         }
         logEnd(id, 'codex-cli', started, out.status, usageInfo(out));
-        if (VERBOSE_LOG && stderr.trim()) console.log(`[claude-bridge] #${id} stderr: ${stderr.trim().slice(0, 500)}`);
+        if (VERBOSE_LOG) {
+          console.log(`[claude-bridge] #${id} stdout(${stdout.length}c): ${stdout.slice(0, 6000)}`);
+          if (stderr.trim()) console.log(`[claude-bridge] #${id} stderr(${stderr.length}c): ${stderr.trim().slice(0, 1500)}`);
+        }
         sendJson(res, out.status, out.body);
       });
       child.stdin.write(buildCodexStdin(body));
