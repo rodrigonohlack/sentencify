@@ -195,6 +195,7 @@ IMPORTANTE: Siga as instruções acima ao realizar a análise.
         const currentModel =
           aiSettings.provider === 'claude' ? aiSettings.claudeModel :
           aiSettings.provider === 'claude-cli' ? (aiSettings.claudeCliModel ?? 'claude-sonnet-4-6') :
+          aiSettings.provider === 'codex-cli' ? (aiSettings.codexCliModel ?? 'gpt-5.5') :
           aiSettings.provider === 'gemini' ? aiSettings.geminiModel :
           aiSettings.provider === 'openai' ? aiSettings.openaiModel :
           aiSettings.grokModel;

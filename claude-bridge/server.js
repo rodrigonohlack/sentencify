@@ -104,13 +104,20 @@ function logEnd(id, provider, started, status, info) {
 }
 
 function usageInfo(out) {
-  const u = out?.body?.usage;
-  const text = Array.isArray(out?.body?.content)
-    ? (out.body.content.find((c) => c?.type === 'text')?.text || '')
-    : '';
+  const b = out?.body || {};
+  // texto: formato Anthropic (content[].text) OU OpenAI/codex (choices[].message.content)
+  let text = '';
+  if (Array.isArray(b.content)) {
+    text = b.content.find((c) => c?.type === 'text')?.text || '';
+  } else if (Array.isArray(b.choices)) {
+    text = b.choices[0]?.message?.content || '';
+  }
+  const u = b.usage || {};
+  const inTok = u.input_tokens ?? u.prompt_tokens;
+  const outTok = u.output_tokens ?? u.completion_tokens;
   const parts = [];
   if (text) parts.push(`out=${text.length}c`);
-  if (u) parts.push(`tok in=${u.input_tokens ?? '?'}/out=${u.output_tokens ?? '?'}`);
+  if (inTok != null || outTok != null) parts.push(`tok in=${inTok ?? '?'}/out=${outTok ?? '?'}`);
   return parts.join(' ');
 }
 
