@@ -400,8 +400,8 @@ export const AIAssistantBase = React.memo(({
         <div className={CSS.modalHeader}>
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-purple-500/20">
-                <Sparkles className="w-6 h-6 text-purple-400" />
+              <div className="p-3 rounded-xl bg-blue-500/20">
+                <Sparkles className="w-6 h-6 text-blue-400" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold theme-text-primary">{title}</h3>

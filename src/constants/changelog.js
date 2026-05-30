@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.19',
+    date: '2026-05-30',
+    feature: 'style(ui): varre o roxo DECORATIVO remanescente do main app para azul (complemento da fase de paleta). Convertidos: cursor piscante/spinner/rodapé do StreamingModal, ícones de header de modais (AIAssistant, DispositivoModal, Criar Modelos), botões de ação genérica (Detectar Nomes, Confirmar texto, Enviar/Aceitar convite), containers de lista (complementares, PDFs importados) e loaders de progresso no AdvancedModals. PRESERVADO o roxo de ESTADO/CATEGORIA: aba ativa e radio de permissão selecionado (AdvancedModals), label de tópico ativo (AIAssistant), ponto de status "Complementares" (MiscModals), badge de categoria de modelo, e classes --accent-purple/theme-text-purple. Teste StreamingModal atualizado (.bg-purple-500→.bg-blue-500); 35 testes passam. tsc limpo.',
+  },
+  {
     version: '1.50.18',
     date: '2026-05-30',
     feature: 'style(ui): paleta DECORATIVA do main app desaturada para azul institucional. Logo tri-cor (azul→roxo→rosa) → gradiente mono azul (blue-500→blue-700) em AppHeader e App.tsx; btnPrimary, 3 focus-rings de input, --modal-glow, spinner neon (index.css) e ~14 defs de hover-gradient em GlobalHoverStyles migrados de roxo/rosa/indigo para blue mono; ~10 botões/painéis inline (AdvancedModals, ModelExtractionModals, StreamingModal, MiscModals, ChatInput, DecisionEditorContainer, UploadTab, AIAssistantComponents) e o iconGradient "purple" do BaseModal → azul; bolha de chat do usuário roxa→azul. Roxo CATEGÓRICO preservado (badges de categoria/tipo, AppSwitcher identidade de subapp, estado de seleção, --accent-purple). Subapps, AdminPanel e ConfigModal fora desta fase. tsc limpo. Verificação visual limitada (app atrás de login magic-link). Spec/plano em docs/superpowers/. Fase 1/3 do refinamento visual.',

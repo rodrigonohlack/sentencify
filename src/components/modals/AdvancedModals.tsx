@@ -240,7 +240,7 @@ export const ShareLibraryModal = React.memo(({ isOpen, onClose, user: _user, onR
             <button
               onClick={handleSendInvite}
               disabled={loading || !recipientEmail}
-              className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
             >
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
               {loading ? 'Enviando...' : 'Enviar Convite'}
@@ -474,7 +474,7 @@ export const AcceptSharePage = React.memo(({ token, onAccepted, onLogin }: Accep
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Compartilhamento Aceito!</h2>
           <p className="text-slate-400 mb-4">
-            Os modelos de <span className="text-purple-400 font-medium">{typeof shareInfo?.owner === 'object' ? shareInfo?.owner?.email : shareInfo?.owner}</span> agora aparecem na sua biblioteca.
+            Os modelos de <span className="text-blue-400 font-medium">{typeof shareInfo?.owner === 'object' ? shareInfo?.owner?.email : shareInfo?.owner}</span> agora aparecem na sua biblioteca.
           </p>
           <p className="text-slate-500 text-sm">Redirecionando...</p>
         </div>
@@ -486,12 +486,12 @@ export const AcceptSharePage = React.memo(({ token, onAccepted, onLogin }: Accep
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-slate-800 rounded-2xl p-8 shadow-2xl border border-slate-700">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 mx-auto bg-purple-500/20 rounded-full flex items-center justify-center mb-4">
-            <Users className="w-8 h-8 text-purple-400" />
+          <div className="w-16 h-16 mx-auto bg-blue-500/20 rounded-full flex items-center justify-center mb-4">
+            <Users className="w-8 h-8 text-blue-400" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Convite de Compartilhamento</h2>
           <p className="text-slate-400">
-            <span className="text-purple-400 font-medium">{typeof shareInfo?.owner === 'object' ? shareInfo?.owner?.email : shareInfo?.owner}</span> quer compartilhar sua biblioteca de modelos com você.
+            <span className="text-blue-400 font-medium">{typeof shareInfo?.owner === 'object' ? shareInfo?.owner?.email : shareInfo?.owner}</span> quer compartilhar sua biblioteca de modelos com você.
           </p>
         </div>
 
@@ -517,7 +517,7 @@ export const AcceptSharePage = React.memo(({ token, onAccepted, onLogin }: Accep
         <button
           onClick={handleAccept}
           disabled={accepting}
-          className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+          className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
         >
           {accepting ? (
             <>
@@ -667,8 +667,8 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
         <div className={`${CSS.modalHeader} flex-shrink-0`}>
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-purple-500/20">
-                <Sparkles className="w-6 h-6 text-purple-400" />
+              <div className="p-3 rounded-xl bg-blue-500/20">
+                <Sparkles className="w-6 h-6 text-blue-400" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold theme-text-primary">Dispositivo Gerado com IA</h3>
@@ -758,8 +758,8 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
 
           {/* Dicas - fixas, compactas */}
           <div className="px-6 pb-6 space-y-3">
-            <div className="p-3 bg-purple-900/20 border border-purple-500/30 rounded-lg flex items-start gap-2">
-              <span className="text-purple-400 text-lg">📋</span>
+            <div className="p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg flex items-start gap-2">
+              <span className="text-blue-400 text-lg">📋</span>
               <div className="flex-1 text-xs theme-text-tertiary">
                 <p className="font-medium theme-text-purple mb-1">Opções de Cópia:</p>
                 <p className="text-xs">
@@ -1022,8 +1022,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
           <div className={CSS.modalHeader}>
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-purple-500/20">
-                  <Sparkles className="w-6 h-6 text-purple-400" />
+                <div className="p-3 rounded-xl bg-blue-500/20">
+                  <Sparkles className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold theme-text-primary">Criar Modelos de Arquivos com IA</h3>
@@ -1250,7 +1250,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                   )}
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-purple-400">
+                  <p className="text-2xl font-bold text-blue-400">
                     {Math.round((processedFiles.length / bulkFiles.length) * 100)}%
                   </p>
                 </div>

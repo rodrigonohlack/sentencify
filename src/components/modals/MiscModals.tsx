@@ -200,7 +200,7 @@ export const AnonymizationNamesModal = React.memo(({ isOpen, onClose, onConfirm,
                 title={!nerEnabled ? 'Ative o NER em Configurações IA' : 'Detectar nomes automaticamente'}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   nerEnabled && !detectingNames
-                    ? 'bg-purple-600 text-white hover-purple-700'
+                    ? 'bg-blue-600 text-white hover-blue-700'
                     : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                 }`}
               >

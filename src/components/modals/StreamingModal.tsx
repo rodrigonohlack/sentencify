@@ -99,13 +99,13 @@ export const StreamingModal: React.FC<StreamingModalProps> = ({
             {text}
             {/* Cursor pulsante enquanto streaming */}
             {!isComplete && (
-              <span className="inline-block w-2 h-4 ml-0.5 bg-purple-500 animate-pulse rounded-sm" />
+              <span className="inline-block w-2 h-4 ml-0.5 bg-blue-500 animate-pulse rounded-sm" />
             )}
           </pre>
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <Loader2 className="w-8 h-8 text-purple-500 animate-spin mx-auto mb-3" />
+              <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-3" />
               <p className="text-sm theme-text-muted">Iniciando conexão...</p>
             </div>
           </div>
@@ -120,7 +120,7 @@ export const StreamingModal: React.FC<StreamingModalProps> = ({
         </div>
 
         {!isComplete ? (
-          <div className="flex items-center gap-2 text-xs text-purple-500 dark:text-purple-400">
+          <div className="flex items-center gap-2 text-xs text-blue-500 dark:text-blue-400">
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
             <span>Recebendo resposta...</span>
           </div>

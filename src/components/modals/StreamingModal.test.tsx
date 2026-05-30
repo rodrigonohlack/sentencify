@@ -95,7 +95,7 @@ describe('StreamingModal', () => {
       );
 
       // Cursor pulsante tem classe animate-pulse
-      const cursor = container.querySelector('.animate-pulse.bg-purple-500');
+      const cursor = container.querySelector('.animate-pulse.bg-blue-500');
       expect(cursor).toBeInTheDocument();
     });
 
@@ -110,7 +110,7 @@ describe('StreamingModal', () => {
       );
 
       // Não deve ter cursor pulsante
-      const cursor = container.querySelector('.animate-pulse.bg-purple-500');
+      const cursor = container.querySelector('.animate-pulse.bg-blue-500');
       expect(cursor).not.toBeInTheDocument();
     });
 
