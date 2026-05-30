@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   EXPERIMENTO Spectral — branch experimento/spectral-titulos
+   Aplica a serif institucional da marca aos títulos (h1–h4), incluindo o
+   título do BaseModal e os títulos de tópico (h4). Para reverter, remova este bloco
+   (+ o <link> no index.html e o fontFamily no tailwind.config.js).
+   ═══════════════════════════════════════════════════════════════════════════ */
+h1, h2, h3, h4 {
+  font-family: 'Spectral', Georgia, serif;
+}
+
+/* Editor de sentença em serif — individual (QuillDecisionEditor + relatório,
+   via .sentence-serif) e global (FieldEditor, via .field-editor-content).
+   NÃO afeta o editor de modelos (QuillModelEditor / .quick-edit-wrapper). */
+.sentence-serif .ql-editor,
+.field-editor-content .ql-editor {
+  font-family: 'Spectral', Georgia, serif;
+}
+
 /* Modal Styles - v1.33.43: usa variável de tema para glow adaptativo */
 @keyframes modalFadeIn {
   from {

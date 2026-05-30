@@ -6,7 +6,13 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      // EXPERIMENTO Spectral (branch experimento/spectral-titulos)
+      fontFamily: {
+        serif: ['Spectral', 'Georgia', 'serif'],
+        'serif-sc': ['"Spectral SC"', 'Georgia', 'serif'],
+      },
+    },
   },
   plugins: [],
   // Safelist para classes dinâmicas que podem ser geradas em runtime

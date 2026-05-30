@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.32',
+    date: '2026-05-30',
+    feature: 'feat(ui): tipografia Spectral (serif institucional da marca) nos títulos e no conteúdo dos editores de sentença. Spectral (+ Spectral SC) carregada via Google Fonts e registrada como fontFamily.serif no Tailwind. Aplicada via CSS a: (1) títulos h1–h4 — inclui o título do BaseModal e os títulos de tópico (h4 em TopicCard); (2) conteúdo dos editores de sentença — individual (QuillDecisionEditor + mini-relatório, marcados com a classe .sentence-serif) e global (FieldEditor, via .field-editor-content). O resto da UI (botões, labels, badges, corpo) e o editor de modelos (QuillModelEditor/.quick-edit-wrapper) permanecem em Outfit — a classe dedicada evita que a serif vaze pelos wrappers fullscreen compartilhados. Reversível removendo o <link> no index.html, o fontFamily no tailwind.config.js e o bloco no src/index.css.',
+  },
+  {
     version: '1.50.31',
     date: '2026-05-30',
     feature: 'feat(ui): nova identidade visual do Sentencify (ícone fachada de tribunal + paleta navy/azul/marfim). Substituído o favicon emoji ⚖️ por um conjunto completo de ícones (SVG vetorial + favicons 16/32 + apple-touch-180) servidos de /brand/, com manifest.webmanifest para PWA (icons 512 navy/blue, theme_color #0F2143). No AppHeader o título-texto "SENTENCIFY.AI" foi substituído pelo lockup completo (símbolo + wordmark "Sentencify"); como os lockups vinham com fundo sólido (marfim/navy), foram gerados em versão transparente (lockup-light-transp/lockup-dark-transp) e alternam por tema via dark: (light no claro, dark no escuro). Na LoginScreen o quadrado azul com o ícone Scale do lucide foi trocado pelo ícone-tile (navy com fachada marfim). Tipografia do app mantida em Outfit (o wordmark Spectral entra apenas como imagem no lockup).',

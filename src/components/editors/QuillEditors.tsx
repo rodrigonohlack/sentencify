@@ -1018,7 +1018,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
 
         <div
           key={isFullscreen ? 'fullscreen-wrapper' : 'normal-wrapper'}
-          className={`fontsize-${fontSize} spacing-${spacing} ${editorTheme === 'light' ? 'quill-light-theme bg-white' : 'theme-bg-primary'} border theme-border-input rounded-lg ${isFullscreen ? 'fullscreen-editor-wrapper' : ''}`}
+          className={`sentence-serif fontsize-${fontSize} spacing-${spacing} ${editorTheme === 'light' ? 'quill-light-theme bg-white' : 'theme-bg-primary'} border theme-border-input rounded-lg ${isFullscreen ? 'fullscreen-editor-wrapper' : ''}`}
         >
           <QuillEditorBase
             content={content}
@@ -1147,7 +1147,7 @@ export const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstanc
     <div className="theme-bg-secondary-30 p-4 rounded-lg border theme-border-input">
       <p className="text-blue-400 font-medium mb-2">{label}</p>
 
-      <div className={`fontsize-${fontSize} spacing-${spacing} ${editorTheme === 'light' ? 'quill-light-theme bg-white' : 'theme-bg-primary-50'} border theme-border-input rounded`}>
+      <div className={`sentence-serif fontsize-${fontSize} spacing-${spacing} ${editorTheme === 'light' ? 'quill-light-theme bg-white' : 'theme-bg-primary-50'} border theme-border-input rounded`}>
         <QuillEditorBase
           content={content}
           onChange={onChange}
