@@ -1473,7 +1473,7 @@ const useAIIntegration = () => {
       });
     }
 
-    // Provider local: roteia para o daemon claude-bridge (assinatura, custo $0)
+    // Provider local: roteia para o daemon llm-bridge (assinatura, custo $0)
     if (provider === 'claude-cli') {
       return await callLLM(messages, {
         ...options,
@@ -1482,7 +1482,7 @@ const useAIIntegration = () => {
       });
     }
 
-    // Provider codex-cli: roteia para o daemon claude-bridge (assinatura ChatGPT)
+    // Provider codex-cli: roteia para o daemon llm-bridge (assinatura ChatGPT)
     if (provider === 'codex-cli') {
       return await callOpenAIAPI(messages, {
         ...options,

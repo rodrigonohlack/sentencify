@@ -105,7 +105,7 @@ app.use((req, res, next) => {
     // como data:application/octet-stream;base64,... (inline). Sem isso, primeiro worker carrega
     // mas os 7 paralelos ficam travados em "Refused to connect".
     // v1.45.x: localhost:* liberado para o provider "Claude Local (CLI)" — o frontend
-    // (inclusive em produção) chama o daemon claude-bridge local (http://localhost:8787).
+    // (inclusive em produção) chama o daemon llm-bridge local (http://localhost:8787).
     "connect-src 'self' data: https://api.anthropic.com https://generativelanguage.googleapis.com https://api.openai.com https://api.x.ai https://api.deepseek.com https://www.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://github.com https://raw.githubusercontent.com https://cdn-lfs.huggingface.co https://huggingface.co https://cas-bridge.xethub.hf.co https://o4510650008076288.ingest.us.sentry.io https://cdn.quilljs.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com http://localhost:* http://127.0.0.1:*",
 
     // Frames: popup do Google OAuth

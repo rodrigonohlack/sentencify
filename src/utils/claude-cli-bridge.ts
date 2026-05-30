@@ -1,6 +1,6 @@
 /**
  * @file claude-cli-bridge.ts
- * @description URL e path do daemon local claude-bridge (provider "Claude Local (CLI)").
+ * @description URL e path do daemon local llm-bridge (provider "Claude Local (CLI)").
  */
 
 const DEFAULT_BRIDGE_URL = 'http://localhost:8787';

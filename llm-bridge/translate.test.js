@@ -1,4 +1,4 @@
-// claude-bridge/translate.test.js
+// llm-bridge/translate.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mapModel, extractSystem, buildClaudeArgs, buildStdin, translateResponse } from './translate.js';

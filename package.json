@@ -1,6 +1,6 @@
 {
   "name": "sentencify-standalone",
-  "version": "1.50.14",
+  "version": "1.50.15",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "start": "node server/index.js",
-    "claude-bridge": "node claude-bridge/server.js",
+    "llm-bridge": "node llm-bridge/server.js",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui",

@@ -1,4 +1,4 @@
-// claude-bridge/translate.codex.js
+// llm-bridge/translate.codex.js
 //
 // Tradução entre formato Chat Completions (in/out) e `codex exec --json`.
 // Espelha translate.js (claude-cli) na estrutura, mas para Codex CLI.
@@ -38,7 +38,7 @@ export function buildCodexArgs(body) {
   let effectiveReasoning = reasoning;
   if (body?.web_search === true && reasoning === 'minimal') {
     effectiveReasoning = 'low';
-    console.warn('[claude-bridge] reasoning_effort=minimal incompatível com web_search; usando low.');
+    console.warn('[llm-bridge] reasoning_effort=minimal incompatível com web_search; usando low.');
   }
   const args = [];
   // Top-level flags ANTES do subcomando `exec`:

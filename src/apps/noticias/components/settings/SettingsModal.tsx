@@ -203,7 +203,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* API KEY DO PROVEDOR SELECIONADO */}
             {!providerRequiresApiKey(provider) ? (
               <p className="text-xs theme-text-muted">
-                {provider === 'codex-cli' ? 'Codex Local usa o login do ChatGPT (OAuth)' : 'Claude Local usa o login do Claude Code (OAuth)'} — nenhuma API key necessária. Rode <code>npm run claude-bridge</code> para ligar o daemon local.
+                {provider === 'codex-cli' ? 'Codex Local usa o login do ChatGPT (OAuth)' : 'Claude Local usa o login do Claude Code (OAuth)'} — nenhuma API key necessária. Rode <code>npm run llm-bridge</code> para ligar o daemon local.
               </p>
             ) : (
               <div className="p-4 theme-bg-tertiary rounded-xl space-y-4">

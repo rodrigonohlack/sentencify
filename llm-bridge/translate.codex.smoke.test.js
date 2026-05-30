@@ -1,4 +1,4 @@
-// claude-bridge/translate.codex.smoke.test.js
+// llm-bridge/translate.codex.smoke.test.js
 //
 // Smoke test REAL contra o `codex` CLI instalado. Roda só com SMOKE=1.
 // Confirma que o pipeline daemon ↔ codex funciona ponta-a-ponta.

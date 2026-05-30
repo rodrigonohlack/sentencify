@@ -1,7 +1,7 @@
 /**
  * @file codex-cli-bridge.ts
  * @description URL e path do daemon local (provider "Codex Local (CLI)").
- *              Default aponta para o mesmo daemon claude-bridge (porta 8787),
+ *              Default aponta para o mesmo daemon llm-bridge (porta 8787),
  *              mas override próprio permite separar se necessário.
  */
 

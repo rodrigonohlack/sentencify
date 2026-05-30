@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.15',
+    date: '2026-05-30',
+    feature: 'refactor: daemon renomeado de `claude-bridge` para `llm-bridge` (reflete que serve Claude E Codex via CLI). Rename puro, sem mudança de lógica nem de roteamento — o app fala com o daemon pela porta 8787, não pelo nome. Mudanças: (1) diretório claude-bridge/ → llm-bridge/ (git mv, histórico preservado); (2) script npm `claude-bridge` → `llm-bridge` em package.json; (3) prefixo de log `[claude-bridge]` → `[llm-bridge]` no server.js; (4) env var CLAUDE_BRIDGE_PORT → LLM_BRIDGE_PORT, com fallback retrocompatível (LLM_BRIDGE_PORT || CLAUDE_BRIDGE_PORT); (5) mensagem ao usuário "Rode npm run claude-bridge" → "llm-bridge" nos 4 SettingsModals (embargos/analisador/prova-oral/noticias); (6) comentários/JSDoc em src/ (ai.ts, types/index.ts, utils/claude-cli-bridge.ts, utils/codex-cli-bridge.ts, utils/ai-tools/webSearch.ts, hooks/useAIIntegration.ts) e CSP comment em server/index.js; (7) README do daemon reescrito refletindo claude-cli + codex-cli. Os arquivos client-side src/utils/claude-cli-bridge.ts e codex-cli-bridge.ts mantêm o nome (são helpers POR PROVIDER, não do daemon). Changelog e docs/superpowers/ históricos preservados. tsc limpo; 49 testes node:test do daemon passando; daemon reiniciado do novo caminho (log agora em /tmp/llm-bridge.log). Rodar com `npm run llm-bridge`.',
+  },
+  {
     version: '1.50.14',
     date: '2026-05-30',
     feature: 'chore(bridge): modo verbose do daemon claude-bridge (BRIDGE_LOG=verbose) passa a despejar o stdout cru do CLI (até 6000 chars) além do stderr, em ambas as rotas (claude-cli e codex-cli). Antes só logava stderr; ver o stdout cru foi o que permitiu diagnosticar por que a Fase 2 do prova-oral às vezes voltava com ~92 caracteres (variância do codex/gpt-5.5, que num run entrega 69k chars e noutro aborta a geração devolvendo quase nada — não era bug de código nem do token de auth). Sem efeito quando BRIDGE_LOG não está setado (modo normal só loga as linhas →/← com tempo e tokens). Mudança apenas do daemon local; não afeta o deploy do app. Arquivo: claude-bridge/server.js.',

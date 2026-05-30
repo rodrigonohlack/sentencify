@@ -882,7 +882,7 @@ export interface AICallOptions {
    * na mensagem do assistente.
    */
   onGrounding?: (metadata: GroundingMetadata) => void;
-  /** Quando true, roteia a chamada Claude para o daemon local (claude-bridge) em vez da API. */
+  /** Quando true, roteia a chamada Claude para o daemon local (llm-bridge) em vez da API. */
   localBridge?: boolean;
 }
 

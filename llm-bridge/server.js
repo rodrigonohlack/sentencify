@@ -1,4 +1,4 @@
-// claude-bridge/server.js
+// llm-bridge/server.js
 import http from 'node:http';
 import os from 'node:os';
 import fs from 'node:fs';
@@ -11,9 +11,11 @@ import {
   translateResponse as translateCodexResponse,
 } from './translate.codex.js';
 
-const PORT = Number(process.env.CLAUDE_BRIDGE_PORT || 8787);
+// LLM_BRIDGE_PORT é o nome atual; CLAUDE_BRIDGE_PORT mantido como fallback retrocompatível.
+const PORT_ENV = process.env.LLM_BRIDGE_PORT || process.env.CLAUDE_BRIDGE_PORT;
+const PORT = Number(PORT_ENV || 8787);
 if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
-  throw new Error(`CLAUDE_BRIDGE_PORT inválido: "${process.env.CLAUDE_BRIDGE_PORT}"`);
+  throw new Error(`LLM_BRIDGE_PORT inválido: "${PORT_ENV}"`);
 }
 
 /**
@@ -44,10 +46,10 @@ function setupIsolatedCodexHome() {
     if (fs.existsSync(realAuth)) {
       fs.symlinkSync(realAuth, isolatedAuth);
     } else {
-      console.warn(`[claude-bridge] aviso: ${realAuth} não existe; rode \`codex login\` antes de usar provider codex-cli.`);
+      console.warn(`[llm-bridge] aviso: ${realAuth} não existe; rode \`codex login\` antes de usar provider codex-cli.`);
     }
   } catch (err) {
-    console.error(`[claude-bridge] falha ao montar CODEX_HOME isolado em ${ISOLATED_CODEX_HOME}: ${err.message}`);
+    console.error(`[llm-bridge] falha ao montar CODEX_HOME isolado em ${ISOLATED_CODEX_HOME}: ${err.message}`);
     // Sem isolamento, codex spawn vai usar ~/.codex/ default e skills podem vazar.
     // Não derruba o daemon — bridge claude continua funcional independente.
   }
@@ -95,12 +97,12 @@ function logStart(id, provider, body) {
   const effort = body.effort || body.reasoning_effort || '-';
   const msgs = Array.isArray(body.messages) ? body.messages.length : 0;
   const inChars = JSON.stringify(body.messages ?? '').length;
-  console.log(`[claude-bridge] #${id} → ${provider} model=${model} effort=${effort} msgs=${msgs} in=${inChars}c`);
+  console.log(`[llm-bridge] #${id} → ${provider} model=${model} effort=${effort} msgs=${msgs} in=${inChars}c`);
 }
 
 function logEnd(id, provider, started, status, info) {
   const secs = ((Date.now() - started) / 1000).toFixed(1);
-  console.log(`[claude-bridge] #${id} ← ${status} ${provider} (${secs}s)${info ? ' ' + info : ''}`);
+  console.log(`[llm-bridge] #${id} ← ${status} ${provider} (${secs}s)${info ? ' ' + info : ''}`);
 }
 
 function usageInfo(out) {
@@ -176,8 +178,8 @@ const server = http.createServer(async (req, res) => {
         }
         logEnd(id, 'claude-cli', started, out.status, usageInfo(out));
         if (VERBOSE_LOG) {
-          console.log(`[claude-bridge] #${id} stdout(${stdout.length}c): ${stdout.slice(0, 6000)}`);
-          if (stderr.trim()) console.log(`[claude-bridge] #${id} stderr(${stderr.length}c): ${stderr.trim().slice(0, 1500)}`);
+          console.log(`[llm-bridge] #${id} stdout(${stdout.length}c): ${stdout.slice(0, 6000)}`);
+          if (stderr.trim()) console.log(`[llm-bridge] #${id} stderr(${stderr.length}c): ${stderr.trim().slice(0, 1500)}`);
         }
         sendJson(res, out.status, out.body);
       });
@@ -243,8 +245,8 @@ const server = http.createServer(async (req, res) => {
         }
         logEnd(id, 'codex-cli', started, out.status, usageInfo(out));
         if (VERBOSE_LOG) {
-          console.log(`[claude-bridge] #${id} stdout(${stdout.length}c): ${stdout.slice(0, 6000)}`);
-          if (stderr.trim()) console.log(`[claude-bridge] #${id} stderr(${stderr.length}c): ${stderr.trim().slice(0, 1500)}`);
+          console.log(`[llm-bridge] #${id} stdout(${stdout.length}c): ${stdout.slice(0, 6000)}`);
+          if (stderr.trim()) console.log(`[llm-bridge] #${id} stderr(${stderr.length}c): ${stderr.trim().slice(0, 1500)}`);
         }
         sendJson(res, out.status, out.body);
       });
@@ -263,15 +265,15 @@ const server = http.createServer(async (req, res) => {
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.error(`[claude-bridge] porta ${PORT} já está em uso. ` +
-      `Outro daemon já está rodando, ou defina CLAUDE_BRIDGE_PORT=<outra porta>.`);
+    console.error(`[llm-bridge] porta ${PORT} já está em uso. ` +
+      `Outro daemon já está rodando, ou defina LLM_BRIDGE_PORT=<outra porta>.`);
   } else {
-    console.error(`[claude-bridge] erro no servidor: ${err.message}`);
+    console.error(`[llm-bridge] erro no servidor: ${err.message}`);
   }
   process.exit(1);
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`[claude-bridge] ouvindo em http://127.0.0.1:${PORT}`);
-  console.log('[claude-bridge] requer `claude` logado (rode `claude` e /login se necessário).');
+  console.log(`[llm-bridge] ouvindo em http://127.0.0.1:${PORT}`);
+  console.log('[llm-bridge] requer `claude` logado (rode `claude` e /login se necessário).');
 });

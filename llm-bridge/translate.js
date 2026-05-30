@@ -1,4 +1,4 @@
-// claude-bridge/translate.js
+// llm-bridge/translate.js
 
 /**
  * Mapeia um model id (datado ou alias) para o alias aceito pelo CLI.

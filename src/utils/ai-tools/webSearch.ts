@@ -134,8 +134,8 @@ export const WEB_SEARCH_REGISTRY: Record<AIProvider, WebSearchProviderAdapter> =
  * Hint injetado no system prompt quando web search está ativo, com dois objetivos:
  *   1. Garantir que o modelo cite fontes no formato `[título](url)` — pois é o
  *      ÚNICO formato que os daemons conseguem extrair pra grounding.
- *      Ver `claude-bridge/translate.js` (`extractMarkdownLinks` / regex em
- *      translateResponse) e `claude-bridge/translate.codex.js` (`extractMarkdownLinks`).
+ *      Ver `llm-bridge/translate.js` (`extractMarkdownLinks` / regex em
+ *      translateResponse) e `llm-bridge/translate.codex.js` (`extractMarkdownLinks`).
  *      Sem esse formato, o juiz não vê as fontes mesmo tendo pago pela busca.
  *   2. Limitar buscas: controla latência hoje, e custo a partir de 15/jun/2026
  *      quando `claude -p` deixa de ser bundled no Max e passa a ser API-priced.
