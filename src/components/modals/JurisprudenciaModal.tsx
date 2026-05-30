@@ -260,7 +260,7 @@ export const JurisprudenciaModal = React.memo(({
                 <p className="text-sm theme-text-secondary mb-3 line-clamp-4">{p.tese || p.enunciado || p.fullText || p.text}</p>
                 <button
                   onClick={() => handleCopy(p)}
-                  className={`text-xs px-3 py-1.5 text-white rounded flex items-center gap-1 ${copiedId === p.id ? 'bg-green-600' : 'bg-purple-600 hover-purple-700'}`}
+                  className={`text-xs px-3 py-1.5 text-white rounded flex items-center gap-1 ${copiedId === p.id ? 'bg-green-600' : 'bg-blue-600 hover-blue-700'}`}
                 >
                   {copiedId === p.id ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                   {copiedId === p.id ? 'Copiado!' : 'Copiar'}

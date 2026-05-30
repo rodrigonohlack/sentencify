@@ -167,8 +167,8 @@ describe('JurisprudenciaCard', () => {
       const precedente = createMockPrecedente({ status: undefined });
       render(<JurisprudenciaCard {...defaultProps} precedente={precedente} />);
       // No status badge should be rendered
-      expect(screen.queryByText('✓')).not.toBeInTheDocument();
-      expect(screen.queryByText('✗')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('válido')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('inválido')).not.toBeInTheDocument();
     });
 
     it('should replace underscores with spaces in status', () => {

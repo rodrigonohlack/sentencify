@@ -3,6 +3,46 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.25',
+    date: '2026-05-30',
+    feature: 'fix(ui): (1) título "Banco de Modelos" estava em roxo (text-purple-400) destoando dos demais títulos de seção; alinhado para text-blue-400 (igual a "Gestão de Provas"/"Gerenciar Tópicos"). (2) Campo "Minhas Conclusões" (ProofCard) não podia ser redimensionado pelo usuário (resize-none) — trocado para resize-y com min-h-[80px], permitindo arrastar a alça para expandir, facilitando a digitação de conclusões longas.',
+  },
+  {
+    version: '1.50.24',
+    date: '2026-05-30',
+    feature: 'style(ui): sistema de botões com hierarquia (Primário/Secundário/Destrutivo) no main app. Botões de ação roxos remanescentes → azul; depois, hierarquia por PESO em vez de cor: 1 primário por grupo (azul blue-500 sólido) + secundários neutros (fundo sutil + borda + ícone), resolvendo a "parede de botões iguais". Aplicado em: toolbar de Modelos (Novo Modelo primário), TopicsTab (Gerar Dispositivo primário), linha de ações do tópico (Editar primário; Renomear/Separar secundários; select de categoria neutralizado, sem o bloco azul pesado), footer do modal Renomear, e toolbar "Sua Decisão" do editor (some o roxo do "Voz" e o rosa do "Extrair Modelo"). btnPrimary global passou a sólido blue-500. PRESERVADO: "Salvar" verde (convenção semântica), cores de resultado (procedente/improcedente), estados ativos (abas/filtros), destrutivos em vermelho. tsc limpo; suíte 6257 testes verde.',
+  },
+  {
+    version: '1.50.23',
+    date: '2026-05-30',
+    feature: 'fix(ui): ícone do Toast invisível no tema claro. A cor semântica fixa (text-green-500/red/blue/amber) coincidia com o fundo colorido sólido do toast no tema claro (ex: ícone verde sobre fundo verde) — sumia. Agora os 4 ícones usam theme-text-primary (mesma cor da mensagem), ficando visíveis nos 8 cenários (4 tipos × claro/escuro); o tipo segue comunicado pelo fundo colorido + formato do ícone. Regressão introduzida na v1.50.21 (emoji→ícone).',
+  },
+  {
+    version: '1.50.22',
+    date: '2026-05-30',
+    feature: 'style(ui): emojis do ConfigModal trocados por ícones lucide-react (59 ocorrências, sub-commit isolado por ser arquivo grande/sensível). Avisos/dicas (AlertTriangle/Lightbulb), labels de seção (Brain, Mic, Lock, Settings, BookOpen, ScrollText, Package, Bot), métricas de token (Download/Upload/BadgePlus/BarChart3/Save) e linhas comparativas de OCR (CheckCircle2/Timer/DollarSign) — todos com aria-label/aria-hidden. PRESERVADO o campo de dado do usuário (placeholder/ícone de QuickPrompt = emoji editável). ConfigModal.test 31/31 verde; tsc limpo. Conclui o refinamento visual do main app (paleta + tipografia + ícones).',
+  },
+  {
+    version: '1.50.21',
+    date: '2026-05-30',
+    feature: 'style(ui): emojis de UI do main app (exceto ConfigModal) trocados por ícones lucide-react com acessibilidade. Toast usa ícone por tipo; ~30 arquivos migrados (chat, cards, modais, editores, ai, tabs, header, ui). Ícones interativos ganharam aria-label (favoritar/copiar/etc.) — ganho de a11y. <option> (TopicsTab, ProcessingModeSelector) teve emoji REMOVIDO (SVG não renderiza em option). Strings de showToast tiveram emoji removido (Toast já põe ícone por tipo); testes de hook/componente acoplados reescritos (getByText emoji → getByText/getByLabelText/getByRole). PRESERVADOS: CORRECTION_ICONS (double-check, data-driven — rodada futura), emojis em texto gerado (sentenceGeneration), prompts/changelog/dados. Suíte completa 6257 testes verde; tsc limpo. Fase 3a/3 do refinamento visual.',
+  },
+  {
+    version: '1.50.20',
+    date: '2026-05-30',
+    feature: 'style(ui): hierarquia tipográfica híbrida no main app (escala 14/16/18). Título do BaseModal elevado a text-lg (≈18 modais ganham título 18px acima do corpo); subcabeçalhos estruturais text-sm→text-base em FactsComparisonModal (Fatos Incontroversos, Pontos-chave, Resumo, Tabela Comparativa — cor categórica preservada), FullscreenModelPanel, ModelSearchPanel e GlobalEditorModal. Novas constantes CSS.sectionTitle/cardHeading. Corpo (text-sm) mantido denso de propósito; tags/labels não inflados (tag de versão do ChangelogModal preservada). 281 testes passam; tsc limpo. Fase 2/3 do refinamento visual.',
+  },
+  {
+    version: '1.50.19',
+    date: '2026-05-30',
+    feature: 'style(ui): varre o roxo DECORATIVO remanescente do main app para azul (complemento da fase de paleta). Convertidos: cursor piscante/spinner/rodapé do StreamingModal, ícones de header de modais (AIAssistant, DispositivoModal, Criar Modelos), botões de ação genérica (Detectar Nomes, Confirmar texto, Enviar/Aceitar convite), containers de lista (complementares, PDFs importados) e loaders de progresso no AdvancedModals. PRESERVADO o roxo de ESTADO/CATEGORIA: aba ativa e radio de permissão selecionado (AdvancedModals), label de tópico ativo (AIAssistant), ponto de status "Complementares" (MiscModals), badge de categoria de modelo, e classes --accent-purple/theme-text-purple. Teste StreamingModal atualizado (.bg-purple-500→.bg-blue-500); 35 testes passam. tsc limpo.',
+  },
+  {
+    version: '1.50.18',
+    date: '2026-05-30',
+    feature: 'style(ui): paleta DECORATIVA do main app desaturada para azul institucional. Logo tri-cor (azul→roxo→rosa) → gradiente mono azul (blue-500→blue-700) em AppHeader e App.tsx; btnPrimary, 3 focus-rings de input, --modal-glow, spinner neon (index.css) e ~14 defs de hover-gradient em GlobalHoverStyles migrados de roxo/rosa/indigo para blue mono; ~10 botões/painéis inline (AdvancedModals, ModelExtractionModals, StreamingModal, MiscModals, ChatInput, DecisionEditorContainer, UploadTab, AIAssistantComponents) e o iconGradient "purple" do BaseModal → azul; bolha de chat do usuário roxa→azul. Roxo CATEGÓRICO preservado (badges de categoria/tipo, AppSwitcher identidade de subapp, estado de seleção, --accent-purple). Subapps, AdminPanel e ConfigModal fora desta fase. tsc limpo. Verificação visual limitada (app atrás de login magic-link). Spec/plano em docs/superpowers/. Fase 1/3 do refinamento visual.',
+  },
+  {
     version: '1.50.17',
     date: '2026-05-30',
     feature: 'fix(prova-oral): tooltip de timestamp não aparecia quando um pill continha VÁRIOS timestamps. Na aba Confissões o campo confissao.timestamp é uma string única, e o modelo às vezes junta vários ("2m 44s; 2m 51s; 2m 59s") nela — isso virava um único pill com a string inteira, e parseTimestampToSeconds (que espera um só) retornava null → sem tooltip. Pills de um timestamp só ("9m 40s") funcionavam; os múltiplos não. (Contradições já manda array, por isso lá não tinha o bug.) Fix universal: novo util extractTimestamps(str) separa por ";"/"," e mantém só tokens válidos; o componente TimestampBadge agora renderiza UM pill por timestamp extraído (cada um com seu próprio tooltip), via SingleTimestampPill interno. Sem token válido → renderiza a string original como pill simples. Corrige Confissões e blinda qualquer outro campo de timestamp string com múltiplos. 4 testes novos. tsc limpo; testes do prova-oral OK. Arquivos: utils/analysis-helpers.ts, components/results/TimestampBadge.tsx, utils/analysis-helpers.test.ts.',

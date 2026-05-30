@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { X, Copy } from 'lucide-react';
+import { X, Copy, Star } from 'lucide-react';
 import { CSS } from './BaseModal';
 import { VoiceButton } from '../VoiceButton';
 import { QuillEditorBase, getQuillToolbarConfig } from '../editors';
@@ -94,10 +94,10 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
 
     navigator.clipboard.writeText(plainText)
       .then(() => {
-        showToast?.('✅ Modelo copiado para área de transferência', 'success');
+        showToast?.('Modelo copiado para área de transferência', 'success');
       })
       .catch(_err => {
-        showToast?.('❌ Erro ao copiar modelo', 'error');
+        showToast?.('Erro ao copiar modelo', 'error');
       });
   }, [model?.content, showToast]);
 
@@ -190,10 +190,15 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
                 {onToggleFavorite && (
                   <button
                     onClick={() => onToggleFavorite(model.id)}
-                    className="text-xl hover:scale-110 transition-transform"
+                    className="hover:scale-110 transition-transform text-yellow-400"
+                    aria-label={model.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
                     title={model.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
                   >
-                    {model.favorite ? '⭐' : '☆'}
+                    <Star
+                      className="w-5 h-5"
+                      fill={model.favorite ? 'currentColor' : 'none'}
+                      aria-hidden="true"
+                    />
                   </button>
                 )}
               </div>
@@ -307,7 +312,7 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
                     const content = quickEditRef.current?.root?.innerHTML || editedContent;
                     onOpenSaveAsNew(content, model);
                   }}
-                  className="hover-purple-700 px-4 py-2 text-white rounded-lg font-semibold flex items-center gap-2 bg-purple-600"
+                  className="hover-blue-700 px-4 py-2 text-white rounded-lg font-semibold flex items-center gap-2 bg-blue-600"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />

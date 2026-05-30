@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { Star, Tag } from 'lucide-react';
 import type { SuggestionCardProps } from '../../types';
 
 // Labels de Ranking
@@ -56,8 +57,14 @@ export const SuggestionCard = React.memo(({
           {/* Ranking com Estrelas */}
           {showRanking && stars > 0 && (
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-yellow-400 text-xs">
-                {'⭐'.repeat(stars)}
+              <span
+                className="flex items-center gap-0.5 text-yellow-400"
+                role="img"
+                aria-label={`${stars} de 5 estrelas`}
+              >
+                {Array.from({ length: stars }).map((_, i) => (
+                  <Star key={i} className="w-3.5 h-3.5" fill="currentColor" aria-hidden="true" />
+                ))}
               </span>
               <span className="text-yellow-400/80 text-xs">
                 ({rankingLabels[stars]})
@@ -81,14 +88,17 @@ export const SuggestionCard = React.memo(({
 
         {/* Ícone de Favorito */}
         {model.favorite && (
-          <span className="text-yellow-400 ml-1" title="Modelo favorito">★</span>
+          <span className="text-yellow-400 ml-1" title="Modelo favorito">
+            <Star className="w-4 h-4 inline" fill="currentColor" aria-label="favorito" />
+          </span>
         )}
       </div>
 
       {/* ─── Keywords ────────────────────────────────────────────────────────  */}
       {model.keywords && (
-        <div className="theme-text-muted text-xs mb-2">
-          🏷️ {model.keywords}
+        <div className="theme-text-muted text-xs mb-2 flex items-center gap-1">
+          <Tag className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+          {model.keywords}
         </div>
       )}
 

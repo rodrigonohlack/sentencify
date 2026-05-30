@@ -369,14 +369,14 @@ describe('useModelEditing', () => {
         await result.current.duplicateModel(model);
       });
 
-      expect(mockShowToast).toHaveBeenCalledWith('⏳ Duplicando modelo...', 'info');
+      expect(mockShowToast).toHaveBeenCalledWith('Duplicando modelo...', 'info');
       expect(mockSetModels).toHaveBeenCalled();
       expect(mockTrackChange).toHaveBeenCalledWith('create', expect.objectContaining({
         id: 'mock-model-id-123',
         title: 'Original Model (Cópia)',
       }));
       expect(mockSetHasUnsavedChanges).toHaveBeenCalledWith(true);
-      expect(mockShowToast).toHaveBeenCalledWith('✅ Modelo duplicado com sucesso!', 'success');
+      expect(mockShowToast).toHaveBeenCalledWith('Modelo duplicado com sucesso!', 'success');
     });
 
     it('should not preserve shared status on duplicate', async () => {

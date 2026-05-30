@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Bot } from 'lucide-react';
 import type { ChatHistoryAreaProps } from '../../types';
 import { ChatBubble } from './ChatBubble';
 
@@ -46,7 +46,7 @@ export const ChatHistoryArea = React.memo(({
       {generating && (
         <div className="flex justify-start">
           <div className="max-w-[85%]">
-            <div className="text-xs mb-1 theme-text-muted">🤖 Assistente</div>
+            <div className="text-xs mb-1 theme-text-muted flex items-center gap-1"><Bot className="w-3.5 h-3.5 inline" aria-hidden="true" /> Assistente</div>
             <div className="rounded-lg p-3 theme-bg-secondary border theme-border-input flex items-center gap-2">
               <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
               <span className="text-sm theme-text-muted">Gerando...</span>

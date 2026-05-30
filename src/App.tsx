@@ -2830,7 +2830,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         <div className="mt-6 text-center">
           <div className="inline-block theme-bg-primary/90 rounded-lg px-6 py-3 border theme-border-secondary">
             <p className="text-sm theme-text-muted">
-              <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold">SENTENCIFY.AI</span>
+              <span className="bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent font-semibold">SENTENCIFY.AI</span>
               {' '}- Versão {APP_VERSION} - <span className="text-amber-500 font-semibold">PROTÓTIPO</span>
             </p>
             <p className="text-xs theme-text-disabled mt-1">

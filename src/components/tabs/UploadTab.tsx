@@ -554,7 +554,7 @@ export const UploadTab: React.FC<UploadTabProps> = ({
             <div className="theme-bg-secondary-30 rounded-lg p-4">
               <p className="text-xs theme-text-muted mb-2">Cole o texto do documento complementar abaixo:</p>
               <textarea
-                className="w-full h-32 theme-bg-primary border theme-border-input rounded p-2 text-sm theme-text-secondary resize-none focus:border-purple-500 focus:outline-none"
+                className="w-full h-32 theme-bg-primary border theme-border-input rounded p-2 text-sm theme-text-secondary resize-none focus:border-blue-500 focus:outline-none"
                 placeholder="Cole o texto aqui (Ctrl+V)..."
                 onPaste={(e) => {
                   const text = e.clipboardData.getData('text');
@@ -573,7 +573,7 @@ export const UploadTab: React.FC<UploadTabProps> = ({
                     const textarea = (e.target as Element).closest('.theme-bg-secondary\\/30')?.querySelector('textarea');
                     if (textarea) handlePastedText(textarea.value, 'complementary');
                   }}
-                  className="hover-purple-700 flex-1 py-2 rounded text-sm bg-purple-600 text-white"
+                  className="hover-blue-700 flex-1 py-2 rounded text-sm bg-blue-600 text-white"
                 >
                   Confirmar
                 </button>
@@ -589,7 +589,7 @@ export const UploadTab: React.FC<UploadTabProps> = ({
         </div>
 
         {(complementaryFiles.length > 0 || pastedComplementaryTexts.length > 0 || analyzedDocuments.complementares?.length > 0 || analyzedDocuments.complementaresText?.length > 0) && (
-          <div className="mt-3 bg-purple-900/20 border border-purple-500/30 rounded-lg p-4 space-y-2">
+          <div className="mt-3 bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 space-y-2">
             <p className="text-xs theme-text-purple font-medium flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Documentos complementares anexados:
@@ -598,7 +598,7 @@ export const UploadTab: React.FC<UploadTabProps> = ({
             {complementaryFiles.map((fileObj, idx) => (
               <div key={`file-${fileObj.id || idx}`} className="flex items-center justify-between text-sm theme-bg-primary-50 rounded p-2">
                 <span className="theme-text-tertiary truncate flex-1 flex items-center gap-2">
-                  <FileText className="w-3 h-3 text-purple-400" />
+                  <FileText className="w-3 h-3 text-blue-400" />
                   {idx + 1}. {fileObj.file?.name || fileObj.name}
                 </span>
                 <ProcessingModeSelector
@@ -629,9 +629,9 @@ export const UploadTab: React.FC<UploadTabProps> = ({
             ))}
             {/* PDFs importados */}
             {complementaryFiles.length === 0 && analyzedDocuments.complementares?.map((_, idx) => (
-              <div key={`imported-pdf-${idx}`} className="flex items-center justify-between text-sm bg-purple-900/20 rounded p-2 border border-purple-500/30">
+              <div key={`imported-pdf-${idx}`} className="flex items-center justify-between text-sm bg-blue-900/20 rounded p-2 border border-blue-500/30">
                 <span className="theme-text-purple truncate flex-1 flex items-center gap-2">
-                  <FileText className="w-3 h-3 text-purple-400" />
+                  <FileText className="w-3 h-3 text-blue-400" />
                   {idx + 1}. Documento complementar {idx + 1} (PDF importado)
                 </span>
                 <button
@@ -694,7 +694,7 @@ export const UploadTab: React.FC<UploadTabProps> = ({
       <button
         onClick={handleAnalyzeDocuments}
         disabled={analyzing || (peticaoFiles.length === 0 && pastedPeticaoTexts.length === 0)}
-        className="w-full py-4 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white hover-gradient-blue-purple"
+        className="w-full py-4 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white hover-gradient-blue-purple"
       >
         {analyzing ? 'Analisando documentos...' : 'Analisar Documentos'}
       </button>

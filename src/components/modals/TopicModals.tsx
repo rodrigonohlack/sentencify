@@ -25,13 +25,13 @@ export const RenameTopicModal = React.memo(({ isOpen, onClose, topicToRename, se
   return (
     <BaseModal isOpen={isOpen} onClose={handleClose} title="Renomear Tópico" icon={<Edit2 />} iconColor="purple" size="lg"
       footer={<>
-        <button onClick={() => handleRenameTopic(true)} disabled={isRegenerating || !newTopicName.trim()} className="flex-1 py-3 rounded-lg font-medium disabled:opacity-50 bg-purple-600 text-white hover-purple-700-from-600">
+        <button onClick={() => handleRenameTopic(true)} disabled={isRegenerating || !newTopicName.trim()} className="flex-1 py-3 rounded-lg font-medium disabled:opacity-50 bg-blue-500 hover:bg-blue-600 text-white transition-colors">
           {isRegenerating ? <span className="flex items-center justify-center gap-2"><div className={CSS.spinner}></div>Regenerando...</span> : <span className="flex items-center justify-center gap-2"><Sparkles className="w-4 h-4" />Renomear e Regenerar</span>}
         </button>
-        <button onClick={() => handleRenameTopic(false)} disabled={isRegenerating || !newTopicName.trim()} className="flex-1 py-3 rounded-lg font-medium disabled:opacity-50 bg-blue-600 text-white hover-blue-700-from-600">
-          {isRegenerating ? <span className="flex items-center justify-center gap-2"><div className={CSS.spinner}></div>Renomeando...</span> : <span className="flex items-center justify-center gap-2"><Edit className="w-4 h-4" />Apenas Renomear</span>}
+        <button onClick={() => handleRenameTopic(false)} disabled={isRegenerating || !newTopicName.trim()} className="flex-1 py-3 rounded-lg font-medium disabled:opacity-50 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors">
+          {isRegenerating ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>Renomeando...</span> : <span className="flex items-center justify-center gap-2"><Edit className="w-4 h-4" />Apenas Renomear</span>}
         </button>
-        <button onClick={handleClose} disabled={isRegenerating} className="px-6 py-3 rounded-lg disabled:opacity-50 theme-bg-tertiary hover-slate-500">Cancelar</button>
+        <button onClick={handleClose} disabled={isRegenerating} className="px-6 py-3 rounded-lg disabled:opacity-50 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors">Cancelar</button>
       </>}>
       <div className="space-y-4">
         <div><label className={CSS.label}>Título Atual</label><p className="theme-text-muted theme-bg-app p-3 rounded">{topicToRename?.title}</p></div>

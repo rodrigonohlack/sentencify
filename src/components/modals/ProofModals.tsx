@@ -216,7 +216,7 @@ export const LinkProofModal = React.memo(({
       footer={
         <button
           onClick={onClose}
-          className="px-6 py-2 rounded-lg font-medium bg-purple-600 text-white hover-purple-700-from-600"
+          className="px-6 py-2 rounded-lg font-medium bg-blue-600 text-white hover-blue-700-from-600"
         >
           Concluir
         </button>

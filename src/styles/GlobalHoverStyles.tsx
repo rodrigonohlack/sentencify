@@ -51,7 +51,7 @@ const GlobalHoverStyles = () => (
     /* Accent colors (cores fixas) */
     .hover-blue-700:hover:not(:disabled) { background-color: #1d4ed8 !important; }
     .hover-blue-500:hover:not(:disabled) { background-color: #3b82f6 !important; }
-    .hover-purple-700:hover:not(:disabled) { background-color: #7e22ce !important; }
+    .hover-purple-700:hover:not(:disabled) { background-color: #1d4ed8 !important; }
     .hover-green-700:hover:not(:disabled) { background-color: #15803d !important; }
     .hover-red-700:hover:not(:disabled) { background-color: #b91c1c !important; }
     .hover-amber-700:hover:not(:disabled) { background-color: #b45309 !important; }
@@ -101,7 +101,7 @@ const GlobalHoverStyles = () => (
     /* BORDER HOVERS */
     .hover-theme-border:hover { border-color: var(--hover-slate-500) !important; }
     .hover-border-blue-500:hover { border-color: #3b82f6 !important; }
-    .hover-border-purple-alpha-30:hover { border-color: rgba(168, 85, 247, 0.3) !important; }
+    .hover-border-purple-alpha-30:hover { border-color: rgba(59, 130, 246, 0.3) !important; }
 
     /* Input com hover - theme-aware */
     .hover-input-slate:hover {
@@ -130,7 +130,7 @@ const GlobalHoverStyles = () => (
       background-color: #b45309 !important;
     }
     .hover-purple-700-from-600:hover {
-      background-color: #7e22ce !important;
+      background-color: #1d4ed8 !important;
     }
     .hover-blue-alpha-3-from-2:hover:not(:disabled) {
       background-color: rgba(37, 99, 235, 0.3) !important;
@@ -146,30 +146,30 @@ const GlobalHoverStyles = () => (
     }
 
     /* BACKGROUND COLORS - Cores Solidas Adicionais */
-    .hover-pink-700:hover:not(:disabled) { background-color: #be185d !important; }
+    .hover-pink-700:hover:not(:disabled) { background-color: #1d4ed8 !important; }
     .hover-blue-alpha-10:hover:not(:disabled) { background-color: rgba(59, 130, 246, 0.1) !important; }
     .hover-slate-alpha-30:hover:not(:disabled) { background-color: rgba(71, 85, 105, 0.3) !important; }
-    .hover-purple-400:hover:not(:disabled) { color: #c084fc !important; }
+    .hover-purple-400:hover:not(:disabled) { color: #60a5fa !important; }
     .hover-yellow-alpha:hover:not(:disabled) { background-color: rgba(234, 179, 8, 0.15) !important; }
     .hover-green-500:hover:not(:disabled) { background-color: #22c55e !important; }
 
     /* GRADIENTS - Linear Gradient Hovers */
     .hover-gradient-purple-pink:hover:not(:disabled) {
-      background-image: linear-gradient(to right, #7e22ce, #db2777) !important;
+      background-image: linear-gradient(to right, #1d4ed8, #2563eb) !important;
     }
     .hover-gradient-purple-blue:hover:not(:disabled) {
-      background-image: linear-gradient(to right, #7e22ce, #1d4ed8) !important;
+      background-image: linear-gradient(to right, #1d4ed8, #2563eb) !important;
     }
     .hover-gradient-blue-purple:hover:not(:disabled) {
-      background-image: linear-gradient(to right, #1d4ed8, #7e22ce) !important;
+      background-image: linear-gradient(to right, #1d4ed8, #2563eb) !important;
     }
     .hover-gradient-green:hover:not(:disabled) {
       background-image: linear-gradient(to right, #15803d, #047857) !important;
     }
 
     /* BORDERS - Additional Border Colors */
-    .hover-border-purple-500:hover { border-color: #a855f7 !important; }
-    .hover-border-purple-alpha-50:hover { border-color: rgba(168, 85, 247, 0.5) !important; }
+    .hover-border-purple-500:hover { border-color: #3b82f6 !important; }
+    .hover-border-purple-alpha-50:hover { border-color: rgba(59, 130, 246, 0.5) !important; }
 
     /* TRANSFORMS - Scale Effects */
     .hover-scale-125:hover:not(:disabled) {
@@ -187,11 +187,11 @@ const GlobalHoverStyles = () => (
       transition: all 0.3s ease;
     }
     .hover-button-contextual:hover {
-      background-color: rgba(147, 51, 234, 0.2) !important;
-      border-color: #a855f7 !important;
+      background-color: rgba(37, 99, 235, 0.2) !important;
+      border-color: #3b82f6 !important;
     }
     .hover-button-contextual:hover .icon-wrapper {
-      background-color: rgba(147, 51, 234, 0.3) !important;
+      background-color: rgba(37, 99, 235, 0.3) !important;
     }
 
     /* v1.10.9: Botão Análise Livre */
@@ -210,16 +210,16 @@ const GlobalHoverStyles = () => (
 
     /* v1.21.16: Tema claro - Botão Análise Contextual */
     .hover-button-contextual-light {
-      background-color: rgba(147, 51, 234, 0.08);
-      border: 1px solid rgba(147, 51, 234, 0.2);
+      background-color: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.2);
       transition: all 0.3s ease;
     }
     .hover-button-contextual-light:hover {
-      background-color: rgba(147, 51, 234, 0.15) !important;
-      border-color: #a855f7 !important;
+      background-color: rgba(37, 99, 235, 0.15) !important;
+      border-color: #3b82f6 !important;
     }
     .hover-button-contextual-light:hover .icon-wrapper {
-      background-color: rgba(147, 51, 234, 0.25) !important;
+      background-color: rgba(37, 99, 235, 0.25) !important;
     }
 
     /* v1.21.16: Tema claro - Botão Análise Livre */
@@ -238,7 +238,7 @@ const GlobalHoverStyles = () => (
 
     /* v1.10.9: Label hover para checkbox purple */
     .hover-label-text-purple:hover span {
-      color: #a855f7 !important;
+      color: #3b82f6 !important;
     }
 
     /* v1.10.10: Label hover para checkbox green */
@@ -308,7 +308,7 @@ const GlobalHoverStyles = () => (
       color: #93c5fd !important;
     }
     .hover-text-purple-400:hover:not(:disabled) {
-      color: #c084fc !important;
+      color: #60a5fa !important;
     }
 
     /* COMPLEX NESTED - Specific Components */
@@ -355,11 +355,11 @@ const GlobalHoverStyles = () => (
     }
 
     .hover-text-purple-400-from-400 {
-      color: #c084fc;
+      color: #60a5fa;
       transition: color 0.3s ease;
     }
     .hover-text-purple-400-from-400:hover:not(:disabled) {
-      color: #e9d5ff !important;
+      color: #93c5fd !important;
     }
 
     .hover-text-white-from-slate {
@@ -480,7 +480,7 @@ const GlobalHoverStyles = () => (
       transition: all 0.3s ease;
     }
     .hover-bulk-upload-area:hover {
-      border-color: #a855f7 !important;
+      border-color: #3b82f6 !important;
       background-color: rgba(51, 65, 85, 0.3) !important;
     }
 
@@ -525,28 +525,28 @@ const GlobalHoverStyles = () => (
 
     /* FASE 4-5: Classes para gradientes com hover mais escuro */
     .hover-gradient-purple-pink-darker {
-      background-image: linear-gradient(to right, #9333ea, #ec4899);
+      background-image: linear-gradient(to right, #2563eb, #1d4ed8);
       transition: background-image 0.3s ease;
     }
     .hover-gradient-purple-pink-darker:hover:not(:disabled) {
-      background-image: linear-gradient(to right, #7e22ce, #db2777) !important;
+      background-image: linear-gradient(to right, #1d4ed8, #1e40af) !important;
     }
 
     .hover-gradient-purple-blue-darker {
-      background-image: linear-gradient(to right, #9333ea, #2563eb);
+      background-image: linear-gradient(to right, #2563eb, #1d4ed8);
       transition: background-image 0.3s ease;
     }
     .hover-gradient-purple-blue-darker:hover:not(:disabled) {
-      background-image: linear-gradient(to right, #7e22ce, #1d4ed8) !important;
+      background-image: linear-gradient(to right, #1d4ed8, #1e40af) !important;
     }
 
     /* FASE 6: Classes para botoes condicionais */
     .hover-extract-model {
-      background-color: #db2777;
+      background-color: #2563eb;
       transition: background-color 0.3s ease;
     }
     .hover-extract-model:hover:not(:disabled) {
-      background-color: #be185d !important;
+      background-color: #1d4ed8 !important;
     }
     .hover-extract-model.disabled {
       background-color: #9ca3af !important;
@@ -554,11 +554,11 @@ const GlobalHoverStyles = () => (
     }
 
     .hover-regenerate-btn {
-      background-color: #9333ea;
+      background-color: #2563eb;
       transition: background-color 0.3s ease;
     }
     .hover-regenerate-btn:hover:not(:disabled) {
-      background-color: #7e22ce !important;
+      background-color: #1d4ed8 !important;
     }
     .hover-regenerate-btn.disabled {
       background-color: #6b7280 !important;

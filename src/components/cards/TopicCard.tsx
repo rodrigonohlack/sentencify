@@ -181,7 +181,7 @@ export const TopicCard = React.memo(({
                     }
                   }}
                   onClick={(e) => e.stopPropagation()}
-                  className="text-xs px-2 py-1 rounded cursor-pointer font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 border-2 border-blue-500 hover-blue-700 bg-blue-600 text-white transition-colors duration-200"
+                  className="text-xs px-2 py-1 rounded cursor-pointer font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 border theme-border-input theme-bg-secondary theme-hover-bg theme-text-primary transition-colors duration-200"
                   title="Clique para alterar a categoria"
                 >
                   <option value="PRELIMINAR">Preliminar</option>
@@ -268,7 +268,7 @@ export const TopicCard = React.memo(({
           <div className="flex flex-wrap gap-2 mt-3">
             <button
               onClick={() => startEditing(topic)}
-              className="px-4 py-2 rounded text-sm hover-blue-700 bg-blue-600 text-white transition-colors duration-300"
+              className="px-4 py-2 rounded text-sm bg-blue-500 hover:bg-blue-600 text-white transition-colors duration-300"
             >
               Editar
             </button>
@@ -282,7 +282,7 @@ export const TopicCard = React.memo(({
                     setNewTopicName(topic.title);
                     openModal('rename');
                   }}
-                  className="px-3 py-2 rounded text-sm flex items-center gap-1 hover-purple-700 bg-purple-600 text-white transition-colors duration-300"
+                  className="px-3 py-2 rounded text-sm flex items-center gap-1 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
                 >
                   <Edit2 className="w-3 h-3" />
                   Renomear
@@ -292,7 +292,7 @@ export const TopicCard = React.memo(({
                     setTopicToSplit(topic);
                     openModal('split');
                   }}
-                  className="px-3 py-2 rounded text-sm flex items-center gap-1 hover-orange-700 bg-orange-600 text-white transition-colors duration-300"
+                  className="px-3 py-2 rounded text-sm flex items-center gap-1 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
                 >
                   <Split className="w-3 h-3" />
                   Separar

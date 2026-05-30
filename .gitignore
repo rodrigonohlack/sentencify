@@ -62,3 +62,4 @@ ssh/
 # Tool caches
 .claire/
 .playwright-mcp/
+.antigravitycli/

@@ -55,7 +55,7 @@ const IncontroversosSection: React.FC<{ fatos: string[] }> = ({ fatos }) => {
 
   return (
     <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-      <h4 className="flex items-center gap-2 text-sm font-semibold text-green-400 mb-2">
+      <h4 className="flex items-center gap-2 text-base font-semibold text-green-400 mb-2">
         <CheckCircle className="w-4 h-4" />
         FATOS INCONTROVERSOS
       </h4>
@@ -77,7 +77,7 @@ const PontosChaveSection: React.FC<{ pontos: string[] }> = ({ pontos }) => {
 
   return (
     <div className="mt-4 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-      <h4 className="flex items-center gap-2 text-sm font-semibold text-purple-400 mb-2">
+      <h4 className="flex items-center gap-2 text-base font-semibold text-purple-400 mb-2">
         <HelpCircle className="w-4 h-4" />
         PONTOS-CHAVE A DECIDIR
       </h4>
@@ -323,7 +323,7 @@ export const FactsComparisonModalContent: React.FC<Omit<FactsComparisonModalProp
           {/* Resumo */}
           {cachedResult.resumo && (
             <div className="p-3 theme-bg-secondary rounded-lg">
-              <h4 className="text-sm font-semibold theme-text-primary mb-1">Resumo</h4>
+              <h4 className="text-base font-semibold theme-text-primary mb-1">Resumo</h4>
               <p className="text-sm theme-text-secondary">{cachedResult.resumo}</p>
             </div>
           )}
@@ -333,7 +333,7 @@ export const FactsComparisonModalContent: React.FC<Omit<FactsComparisonModalProp
 
           {/* Tabela */}
           <div>
-            <h4 className="text-sm font-semibold theme-text-primary mb-2">Tabela Comparativa</h4>
+            <h4 className="text-base font-semibold theme-text-primary mb-2">Tabela Comparativa</h4>
             <ComparisonTable rows={cachedResult.tabela} />
           </div>
 

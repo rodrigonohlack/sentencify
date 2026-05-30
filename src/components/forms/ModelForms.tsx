@@ -49,7 +49,7 @@ export const ModelFormFields = React.memo(({
           <button
             onClick={onGenerateTitle}
             disabled={generatingTitle || !formData.content}
-            className="flex items-center gap-1 px-3 py-1 text-xs text-white bg-purple-600 disabled:theme-bg-tertiary disabled:cursor-not-allowed rounded hover-purple-700-from-600 transition-colors"
+            className="flex items-center gap-1 px-3 py-1 text-xs text-white bg-blue-600 disabled:theme-bg-tertiary disabled:cursor-not-allowed rounded hover-blue-700-from-600 transition-colors"
             title="Gerar titulo com IA baseado no conteudo"
           >
             {generatingTitle ? (
@@ -104,7 +104,7 @@ export const ModelFormFields = React.memo(({
           <button
             onClick={onGenerateKeywords}
             disabled={generatingKeywords || (!formData.title && !formData.content)}
-            className="flex items-center gap-1 px-3 py-1 text-xs text-white bg-purple-600 disabled:theme-bg-tertiary disabled:cursor-not-allowed rounded hover-purple-700-from-600 transition-colors"
+            className="flex items-center gap-1 px-3 py-1 text-xs text-white bg-blue-600 disabled:theme-bg-tertiary disabled:cursor-not-allowed rounded hover-blue-700-from-600 transition-colors"
             title="Gerar palavras-chave com IA"
           >
             {generatingKeywords ? (
@@ -279,7 +279,7 @@ export const ModelFormModal = React.forwardRef<HTMLDivElement, ModelFormModalPro
           onClick={handleSave}
           disabled={modelSaved || savingModel}
           style={{
-            backgroundImage: (modelSaved || savingModel) ? 'none' : 'linear-gradient(to right, #2563eb, #9333ea)',
+            backgroundImage: (modelSaved || savingModel) ? 'none' : 'linear-gradient(to right, #2563eb, #1d4ed8)',
             backgroundColor: modelSaved ? '#16a34a' : (savingModel ? '#6b7280' : 'transparent'),
             transition: 'all 0.3s ease'
           }}

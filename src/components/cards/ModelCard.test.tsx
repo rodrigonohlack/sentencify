@@ -109,14 +109,14 @@ describe('ModelCard', () => {
       const props = createDefaultProps({ model: createMockModel({ favorite: false }) });
       render(<ModelCard {...props} />);
 
-      expect(screen.getByText('☆')).toBeInTheDocument();
+      expect(screen.getByLabelText('Favoritar')).toBeInTheDocument();
     });
 
     it('should render favorite star (favorited)', () => {
       const props = createDefaultProps({ model: createMockModel({ favorite: true }) });
       render(<ModelCard {...props} />);
 
-      expect(screen.getByText('★')).toBeInTheDocument();
+      expect(screen.getByLabelText('Desfavoritar')).toBeInTheDocument();
     });
 
     it('should render edit button', () => {
@@ -130,7 +130,7 @@ describe('ModelCard', () => {
       const props = createDefaultProps();
       render(<ModelCard {...props} />);
 
-      expect(screen.getByText('📋')).toBeInTheDocument();
+      expect(screen.getByLabelText('Copiar')).toBeInTheDocument();
     });
 
     it('should render delete button for own models', () => {
@@ -172,7 +172,7 @@ describe('ModelCard', () => {
       const props = createDefaultProps({ viewMode: 'list' });
       render(<ModelCard {...props} />);
 
-      expect(screen.getByText('☆')).toBeInTheDocument();
+      expect(screen.getByLabelText('Favoritar')).toBeInTheDocument();
     });
 
     it('should default to cards mode for invalid viewMode', () => {
@@ -330,7 +330,7 @@ describe('ModelCard', () => {
       const props = createDefaultProps({ onToggleFavorite });
       render(<ModelCard {...props} />);
 
-      fireEvent.click(screen.getByText('☆'));
+      fireEvent.click(screen.getByLabelText('Favoritar'));
 
       expect(onToggleFavorite).toHaveBeenCalledWith('model-1');
     });
@@ -350,7 +350,7 @@ describe('ModelCard', () => {
       const props = createDefaultProps({ onDuplicate });
       render(<ModelCard {...props} />);
 
-      fireEvent.click(screen.getByText('📋'));
+      fireEvent.click(screen.getByLabelText('Copiar'));
 
       expect(onDuplicate).toHaveBeenCalledWith(props.model);
     });
@@ -386,7 +386,7 @@ describe('ModelCard', () => {
       const props = createDefaultProps({ viewMode: 'list', onToggleFavorite });
       render(<ModelCard {...props} />);
 
-      fireEvent.click(screen.getByText('☆'));
+      fireEvent.click(screen.getByLabelText('Favoritar'));
 
       expect(onToggleFavorite).toHaveBeenCalledWith('model-1');
     });

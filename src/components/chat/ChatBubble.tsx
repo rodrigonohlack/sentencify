@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { User, Bot, AlertTriangle } from 'lucide-react';
 import type { ChatBubbleProps } from '../../types';
 import { ChatGroundingFooter } from './ChatGroundingFooter';
 
@@ -31,12 +32,17 @@ export const ChatBubble = React.memo(({
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div className="max-w-[85%]">
-        <div className={`text-xs mb-1 theme-text-muted ${isUser ? 'text-right' : ''}`}>
-          {isUser ? '👤 Você' : '🤖 Assistente'} <span className="ml-1">{time}</span>
+        <div className={`text-xs mb-1 theme-text-muted flex items-center gap-1 ${isUser ? 'justify-end' : ''}`}>
+          {isUser ? (
+            <><User className="w-3.5 h-3.5 inline" aria-hidden="true" /> Você</>
+          ) : (
+            <><Bot className="w-3.5 h-3.5 inline" aria-hidden="true" /> Assistente</>
+          )}
+          <span className="ml-1">{time}</span>
         </div>
         <div className={`rounded-lg p-3 ${
           isUser
-            ? 'bg-purple-600/20 border border-purple-500/30'
+            ? 'bg-blue-600/20 border border-blue-500/30'
             : 'theme-bg-secondary border theme-border-input'
         }`}>
           {isUser ? (
@@ -53,7 +59,9 @@ export const ChatBubble = React.memo(({
           <ChatGroundingFooter metadata={msg.groundingMetadata} />
         )}
         {msg.error && (
-          <div className="text-xs text-red-400 mt-1">⚠️ Erro: {msg.error}</div>
+          <div className="text-xs text-red-400 mt-1 flex items-center gap-1">
+            <AlertTriangle className="w-3.5 h-3.5 inline" aria-hidden="true" /> Erro: {msg.error}
+          </div>
         )}
         {!isUser && showUse && !msg.error && (
           <div className="flex justify-end mt-1">

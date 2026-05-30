@@ -99,13 +99,13 @@ export const StreamingModal: React.FC<StreamingModalProps> = ({
             {text}
             {/* Cursor pulsante enquanto streaming */}
             {!isComplete && (
-              <span className="inline-block w-2 h-4 ml-0.5 bg-purple-500 animate-pulse rounded-sm" />
+              <span className="inline-block w-2 h-4 ml-0.5 bg-blue-500 animate-pulse rounded-sm" />
             )}
           </pre>
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <Loader2 className="w-8 h-8 text-purple-500 animate-spin mx-auto mb-3" />
+              <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-3" />
               <p className="text-sm theme-text-muted">Iniciando conexão...</p>
             </div>
           </div>
@@ -120,7 +120,7 @@ export const StreamingModal: React.FC<StreamingModalProps> = ({
         </div>
 
         {!isComplete ? (
-          <div className="flex items-center gap-2 text-xs text-purple-500 dark:text-purple-400">
+          <div className="flex items-center gap-2 text-xs text-blue-500 dark:text-blue-400">
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
             <span>Recebendo resposta...</span>
           </div>
@@ -145,7 +145,7 @@ export const StreamingModal: React.FC<StreamingModalProps> = ({
         <div className="mt-4 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl font-medium bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm shadow-lg shadow-purple-500/25 transition-all"
+            className="px-4 py-2 rounded-xl font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white text-sm shadow-lg shadow-blue-500/25 transition-all"
           >
             Fechar e Ver Resultado
           </button>

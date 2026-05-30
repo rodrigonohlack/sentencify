@@ -12,7 +12,7 @@
 
 import React from 'react';
 import {
-  FileText, Scale, ChevronUp, ChevronDown, Edit, Sparkles
+  FileText, Scale, ChevronUp, ChevronDown, Edit, Sparkles, Lightbulb, Search
 } from 'lucide-react';
 import { CSS } from '../../constants/styles';
 import { DecisionEditorContainer } from '../';
@@ -377,12 +377,14 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
               </div>
             )}
 
-            <h4 className="font-bold text-purple-400">💡 Sugestões de Modelos</h4>
+            <h4 className="font-bold text-purple-400 flex items-center gap-2">
+              <Lightbulb className="w-4 h-4" aria-hidden="true" /> Sugestões de Modelos
+            </h4>
 
             {/* Campo de busca manual */}
             <div className="theme-bg-secondary-30 rounded-lg p-3 border theme-border-input">
-              <label className={CSS.label}>
-                🔍 Busca Manual
+              <label className={`${CSS.label} flex items-center gap-1`}>
+                <Search className="w-3.5 h-3.5" aria-hidden="true" /> Busca Manual
               </label>
               <div className="flex gap-2">
                 <input

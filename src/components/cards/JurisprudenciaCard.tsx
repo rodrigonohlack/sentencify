@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy, X } from 'lucide-react';
 import type { JurisprudenciaCardProps } from '../../types';
 import { isStatusValido } from '../../utils/jurisprudencia';
 
@@ -50,7 +50,10 @@ export const JurisprudenciaCard = React.memo(({
                 ? 'theme-badge-success'
                 : 'theme-badge-error'
             }`}>
-              {isStatusValido(precedente.status) ? '✓' : '✗'} {precedente.status.replace(/_/g, ' ')}
+              {isStatusValido(precedente.status)
+                ? <><Check className="w-3 h-3 inline" aria-label="válido" /> {precedente.status.replace(/_/g, ' ')}</>
+                : <><X className="w-3 h-3 inline" aria-label="inválido" /> {precedente.status.replace(/_/g, ' ')}</>
+              }
             </span>
           )}
           {precedente.orgao && (

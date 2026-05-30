@@ -10,7 +10,8 @@
 import React from 'react';
 import {
   Share2, Eye, Edit3, RefreshCw, Mail, Check, AlertCircle, X, Users,
-  Sparkles, Download, Trash2, Save, Upload, FileText, Zap, Loader2, Clock
+  Sparkles, Download, Trash2, Save, Upload, FileText, Zap, Loader2, Clock,
+  AlertTriangle, CheckCircle2, FolderOpen, Lightbulb, TrendingUp, Tag, Settings
 } from 'lucide-react';
 import { BaseModal, ModalInfoBox, CSS } from './BaseModal';
 import { API_BASE } from '../../constants/api';
@@ -196,7 +197,7 @@ export const ShareLibraryModal = React.memo(({ isOpen, onClose, user: _user, onR
         {/* Tab: Compartilhar */}
         {activeTab === 'share' && (
           <div className="space-y-4">
-            <ModalInfoBox>📧 Digite o email do destinatário para enviar um convite de compartilhamento da sua biblioteca de modelos.</ModalInfoBox>
+            <ModalInfoBox><span className="flex items-start gap-1"><Mail className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" aria-hidden="true" /><span>Digite o email do destinatário para enviar um convite de compartilhamento da sua biblioteca de modelos.</span></span></ModalInfoBox>
 
             {/* Campo de email */}
             <div>
@@ -240,7 +241,7 @@ export const ShareLibraryModal = React.memo(({ isOpen, onClose, user: _user, onR
             <button
               onClick={handleSendInvite}
               disabled={loading || !recipientEmail}
-              className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
             >
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
               {loading ? 'Enviando...' : 'Enviar Convite'}
@@ -474,7 +475,7 @@ export const AcceptSharePage = React.memo(({ token, onAccepted, onLogin }: Accep
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Compartilhamento Aceito!</h2>
           <p className="text-slate-400 mb-4">
-            Os modelos de <span className="text-purple-400 font-medium">{typeof shareInfo?.owner === 'object' ? shareInfo?.owner?.email : shareInfo?.owner}</span> agora aparecem na sua biblioteca.
+            Os modelos de <span className="text-blue-400 font-medium">{typeof shareInfo?.owner === 'object' ? shareInfo?.owner?.email : shareInfo?.owner}</span> agora aparecem na sua biblioteca.
           </p>
           <p className="text-slate-500 text-sm">Redirecionando...</p>
         </div>
@@ -486,12 +487,12 @@ export const AcceptSharePage = React.memo(({ token, onAccepted, onLogin }: Accep
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-slate-800 rounded-2xl p-8 shadow-2xl border border-slate-700">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 mx-auto bg-purple-500/20 rounded-full flex items-center justify-center mb-4">
-            <Users className="w-8 h-8 text-purple-400" />
+          <div className="w-16 h-16 mx-auto bg-blue-500/20 rounded-full flex items-center justify-center mb-4">
+            <Users className="w-8 h-8 text-blue-400" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Convite de Compartilhamento</h2>
           <p className="text-slate-400">
-            <span className="text-purple-400 font-medium">{typeof shareInfo?.owner === 'object' ? shareInfo?.owner?.email : shareInfo?.owner}</span> quer compartilhar sua biblioteca de modelos com você.
+            <span className="text-blue-400 font-medium">{typeof shareInfo?.owner === 'object' ? shareInfo?.owner?.email : shareInfo?.owner}</span> quer compartilhar sua biblioteca de modelos com você.
           </p>
         </div>
 
@@ -517,7 +518,7 @@ export const AcceptSharePage = React.memo(({ token, onAccepted, onLogin }: Accep
         <button
           onClick={handleAccept}
           disabled={accepting}
-          className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+          className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
         >
           {accepting ? (
             <>
@@ -667,8 +668,8 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
         <div className={`${CSS.modalHeader} flex-shrink-0`}>
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-purple-500/20">
-                <Sparkles className="w-6 h-6 text-purple-400" />
+              <div className="p-3 rounded-xl bg-blue-500/20">
+                <Sparkles className="w-6 h-6 text-blue-400" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold theme-text-primary">Dispositivo Gerado com IA</h3>
@@ -690,7 +691,7 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
           {/* Aviso crítico sobre revisão */}
           <div className="m-6 p-4 bg-amber-500/15 border-2 border-amber-500/50 rounded-lg flex-shrink-0">
             <div className="flex items-start gap-3">
-              <span className="text-amber-500 text-2xl flex-shrink-0">⚠️</span>
+              <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="text-sm text-amber-700 dark:text-amber-100">
                 <p className="font-bold text-amber-600 dark:text-amber-400 mb-2">ATENÇÃO: REVISÃO OBRIGATÓRIA</p>
                 <p className="text-xs leading-relaxed">
@@ -698,11 +699,11 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
                   <span className="font-semibold text-amber-700 dark:text-amber-200"> É OBRIGATÓRIO que você revise minuciosamente:</span>
                 </p>
                 <ul className="text-xs mt-2 space-y-1 ml-4">
-                  <li>✓ Nomes corretos das partes</li>
-                  <li>✓ Pedidos e valores mencionados</li>
-                  <li>✓ Fundamentação legal adequada</li>
-                  <li>✓ Coerência com a fundamentação da sentença</li>
-                  <li>✓ Ortografia e gramática</li>
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 flex-shrink-0" aria-hidden="true" /> Nomes corretos das partes</li>
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 flex-shrink-0" aria-hidden="true" /> Pedidos e valores mencionados</li>
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 flex-shrink-0" aria-hidden="true" /> Fundamentação legal adequada</li>
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 flex-shrink-0" aria-hidden="true" /> Coerência com a fundamentação da sentença</li>
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 flex-shrink-0" aria-hidden="true" /> Ortografia e gramática</li>
                 </ul>
                 <p className="text-xs mt-3 text-amber-600 dark:text-amber-300/80 font-semibold border-t border-amber-500/30 pt-2">
                   Sua revisão é fundamental, na forma estabelecida pela Resolução 615/2025 do CNJ.
@@ -758,8 +759,8 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
 
           {/* Dicas - fixas, compactas */}
           <div className="px-6 pb-6 space-y-3">
-            <div className="p-3 bg-purple-900/20 border border-purple-500/30 rounded-lg flex items-start gap-2">
-              <span className="text-purple-400 text-lg">📋</span>
+            <div className="p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg flex items-start gap-2">
+              <FileText className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="flex-1 text-xs theme-text-tertiary">
                 <p className="font-medium theme-text-purple mb-1">Opções de Cópia:</p>
                 <p className="text-xs">
@@ -771,7 +772,7 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
             </div>
 
             <div className="theme-info-box flex items-start gap-2">
-              <span className="text-blue-400 text-lg">💡</span>
+              <Lightbulb className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="flex-1 text-xs theme-text-tertiary">
                 <p className="font-medium theme-text-blue mb-1">Dicas rápidas:</p>
                 <p className="text-xs">
@@ -789,17 +790,15 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium theme-bg-tertiary hover-slate-500"
             title="Copiar como texto puro (sem formatação)"
           >
-            <Download className="w-5 h-5" />
-            {copySuccess ? '✓ Copiado!' : 'Copiar Texto Puro'}
+            {copySuccess ? <><Check className="w-5 h-5" aria-hidden="true" /> Copiado!</> : <><Download className="w-5 h-5" aria-hidden="true" /> Copiar Texto Puro</>}
           </button>
 
           <button
             onClick={handleCopyFormattedDispositivo}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium shadow-lg hover-gradient-purple-blue bg-gradient-to-r from-purple-600 to-blue-600 text-white transition-all duration-300"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium shadow-lg hover-gradient-purple-blue bg-gradient-to-r from-blue-600 to-blue-700 text-white transition-all duration-300"
             title="Copiar com formatação (negrito, parágrafos) para Word/Google Docs"
           >
-            <Download className="w-5 h-5" />
-            {copySuccess ? '✓ Copiado!' : 'Copiar Formatado'}
+            {copySuccess ? <><Check className="w-5 h-5" aria-hidden="true" /> Copiado!</> : <><Download className="w-5 h-5" aria-hidden="true" /> Copiar Formatado</>}
           </button>
 
           <button
@@ -849,7 +848,7 @@ export const BulkReviewModal: React.FC<BulkReviewModalProps> = ({
         <div className={`${CSS.modalHeader} flex-shrink-0`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">✅</span>
+              <CheckCircle2 className="w-8 h-8 text-green-400" aria-hidden="true" />
               <div>
                 <h3 className="text-2xl font-bold text-green-400">Revisão de Modelos Gerados</h3>
                 <p className="text-sm theme-text-muted mt-1">
@@ -864,7 +863,7 @@ export const BulkReviewModal: React.FC<BulkReviewModalProps> = ({
           {/* Resumo */}
           <div className="theme-info-box p-4 mb-6">
             <div className="flex items-start gap-3">
-              <span className="text-2xl">📈</span>
+              <TrendingUp className="w-6 h-6 theme-text-blue flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="flex-1">
                 <p className="font-semibold theme-text-secondary mb-2">Resumo do Processamento:</p>
                 <div className="grid grid-cols-3 gap-4 text-sm">
@@ -888,7 +887,7 @@ export const BulkReviewModal: React.FC<BulkReviewModalProps> = ({
           {/* Erros (se houver) */}
           {bulkErrors.length > 0 && (
             <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
-              <p className="font-semibold theme-text-red mb-2">⚠️ Arquivos com erro:</p>
+              <p className="font-semibold theme-text-red mb-2 flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 flex-shrink-0" aria-hidden="true" /> Arquivos com erro:</p>
               <div className="space-y-1 text-sm">
                 {bulkErrors.map((err: BulkError, idx: number) => (
                   <div key={idx} className="theme-text-secondary">
@@ -917,12 +916,13 @@ export const BulkReviewModal: React.FC<BulkReviewModalProps> = ({
                       <span className="text-xs px-2 py-0.5 rounded theme-bg-purple-accent theme-text-purple border border-purple-500/30">
                         {model.category}
                       </span>
-                      <span className="text-xs px-2 py-0.5 rounded theme-bg-blue-accent theme-text-blue border border-blue-500/30">
-                        📁 {model.sourceFile}
+                      <span className="text-xs px-2 py-0.5 rounded theme-bg-blue-accent theme-text-blue border border-blue-500/30 inline-flex items-center gap-1">
+                        <FolderOpen className="w-3 h-3" aria-hidden="true" /> {model.sourceFile}
                       </span>
                       {model.keywords && (
-                        <span className={CSS.textMuted}>
-                          🏷️ {(Array.isArray(model.keywords) ? model.keywords : String(model.keywords).split(',')).slice(0, 3).join(', ')}
+                        <span className={`${CSS.textMuted} flex items-center gap-1`}>
+                          <Tag className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+                          {(Array.isArray(model.keywords) ? model.keywords : String(model.keywords).split(',')).slice(0, 3).join(', ')}
                         </span>
                       )}
                       {model.similarityInfo && (
@@ -931,7 +931,7 @@ export const BulkReviewModal: React.FC<BulkReviewModalProps> = ({
                             ? 'bg-red-500/20 text-red-300 border border-red-500/30'
                             : 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
                         }`}>
-                          ⚠️ {Math.round(model.similarityInfo.similarity * 100)}% similar a "{model.similarityInfo.similarModel.title}"
+                          <AlertTriangle className="w-3 h-3 inline-block mr-0.5" aria-hidden="true" />{Math.round(model.similarityInfo.similarity * 100)}% similar a "{model.similarityInfo.similarModel.title}"
                         </span>
                       )}
                     </div>
@@ -1022,8 +1022,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
           <div className={CSS.modalHeader}>
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-purple-500/20">
-                  <Sparkles className="w-6 h-6 text-purple-400" />
+                <div className="p-3 rounded-xl bg-blue-500/20">
+                  <Sparkles className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold theme-text-primary">Criar Modelos de Arquivos com IA</h3>
@@ -1045,8 +1045,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
           <div className="p-6 space-y-6">
             {/* Área de Upload */}
             <div>
-              <label className="block text-sm font-medium theme-text-tertiary mb-3">
-                📤 Selecione os arquivos (PDF, DOCX, DOC ou TXT)
+              <label className="flex items-center gap-1 text-sm font-medium theme-text-tertiary mb-3">
+                <Upload className="w-4 h-4 flex-shrink-0" aria-hidden="true" /> Selecione os arquivos (PDF, DOCX, DOC ou TXT)
               </label>
               <div
                 onClick={() => bulkFileInputRef.current?.click()}
@@ -1059,8 +1059,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                 <p className="text-sm theme-text-disabled">
                   PDF, DOCX, DOC, TXT - Máximo: 20 arquivos
                 </p>
-                <p className="text-xs theme-text-disabled mt-2">
-                  ⚡ Extração de texto 100% local e rápida
+                <p className="text-xs theme-text-disabled mt-2 flex items-center justify-center gap-1">
+                  <Zap className="w-3.5 h-3.5" aria-hidden="true" /> Extração de texto 100% local e rápida
                 </p>
               </div>
               <input
@@ -1076,8 +1076,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
             {/* Lista de Arquivos Selecionados */}
             {bulkFiles.length > 0 && (
               <div>
-                <label className="block text-sm font-medium theme-text-tertiary mb-3">
-                  📋 Arquivos Selecionados ({bulkFiles.length}/20)
+                <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
+                  <FileText className="w-4 h-4 flex-shrink-0" aria-hidden="true" /> Arquivos Selecionados ({bulkFiles.length}/20)
                 </label>
                 <div className="theme-bg-secondary-30 rounded-lg border theme-border-input max-h-64 overflow-y-auto">
                   {bulkFiles.map((bulkFile: BulkFile, idx: number) => (
@@ -1110,7 +1110,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
             {/* Informações */}
             <div className="theme-info-box p-4">
               <div className="flex items-start gap-3">
-                <span className="text-blue-400 text-2xl">💡</span>
+                <Lightbulb className="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <div className="text-sm theme-text-secondary">
                   <p className="font-semibold mb-2">Como funciona:</p>
                   <ul className="space-y-1 list-disc list-inside">
@@ -1127,8 +1127,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
           {/* v1.5.15: Configuração de delay entre arquivos (staggered start) */}
           <div className="px-6 pb-4">
             <div className="theme-bg-secondary-50 rounded-lg border theme-border-input p-4">
-              <label className={CSS.label}>
-                ⚙️ Delay entre iniciar arquivos (Rate Limiting)
+              <label className={`${CSS.label} flex items-center gap-1`}>
+                <Settings className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" /> Delay entre iniciar arquivos (Rate Limiting)
               </label>
               <select
                 value={bulkStaggerDelay}
@@ -1140,8 +1140,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                 <option value={500}>500ms - Conservador (delay dentro do lote)</option>
                 <option value={1000}>1s - Muito conservador (delay dentro do lote)</option>
               </select>
-              <p className="text-xs theme-text-muted mt-2">
-                💡 Sistema de lotes ativo ({bulkBatchSize} arquivos/lote + 1s entre lotes). Delay adicional entre iniciar os {bulkBatchSize} arquivos do lote.
+              <p className="text-xs theme-text-muted mt-2 flex items-start gap-1.5">
+                <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" aria-hidden="true" /> Sistema de lotes ativo ({bulkBatchSize} arquivos/lote + 1s entre lotes). Delay adicional entre iniciar os {bulkBatchSize} arquivos do lote.
               </p>
             </div>
           </div>
@@ -1156,7 +1156,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
             <button
               onClick={onProcess}
               disabled={bulkFiles.length === 0}
-              className="flex-1 px-6 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover-gradient-blue-purple transition-all duration-300 text-white"
+              className="flex-1 px-6 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover-gradient-blue-purple transition-all duration-300 text-white"
             >
               <Zap className="w-5 h-5" />
               Processar {bulkFiles.length} Arquivo{bulkFiles.length !== 1 ? 's' : ''}
@@ -1174,8 +1174,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
         <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-2xl w-full flex flex-col`} style={{ maxHeight: '90vh' }}>
           <div className={CSS.modalHeader}>
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-purple-500/20">
-                <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+              <div className="p-3 rounded-xl bg-blue-500/20">
+                <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold theme-text-primary">Processando Arquivos...</h3>
@@ -1224,12 +1224,12 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
                     {/* Info do arquivo */}
                     <div className="flex-grow min-w-0">
                       <p className="text-sm theme-text-secondary truncate font-medium">{bulkFile.name}</p>
-                      <p className="text-xs theme-text-muted mt-1">
-                        {isComplete && `✅ ${result.modelsCount} modelo${result.modelsCount !== 1 ? 's' : ''} gerado${result.modelsCount !== 1 ? 's' : ''} em ${result.duration}s`}
-                        {isError && `❌ Erro: ${result.error}`}
-                        {isProcessingFile && `🔄 Processando agora... (Batch ${bulkCurrentBatch}/${Math.ceil(bulkFiles.length / bulkBatchSize)})`}
-                        {isWaiting && `⏳ Aguardando na fila (Batch ${fileBatch}/${Math.ceil(bulkFiles.length / bulkBatchSize)})`}
-                      </p>
+                      <div className="text-xs theme-text-muted mt-1 flex items-center gap-1">
+                        {isComplete && <><CheckCircle2 className="w-3.5 h-3.5 text-green-400 flex-shrink-0" aria-hidden="true" /><span>{result.modelsCount} modelo{result.modelsCount !== 1 ? 's' : ''} gerado{result.modelsCount !== 1 ? 's' : ''} em {result.duration}s</span></>}
+                        {isError && <><AlertTriangle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" aria-hidden="true" /><span>Erro: {result.error}</span></>}
+                        {isProcessingFile && <><RefreshCw className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 animate-spin" aria-hidden="true" /><span>Processando agora... (Batch {bulkCurrentBatch}/{Math.ceil(bulkFiles.length / bulkBatchSize)})</span></>}
+                        {isWaiting && <><Clock className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" /><span>Aguardando na fila (Batch {fileBatch}/{Math.ceil(bulkFiles.length / bulkBatchSize)})</span></>}
+                      </div>
                     </div>
                   </div>
                 );
@@ -1240,17 +1240,17 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
             <div className="theme-bg-secondary-30 border theme-border-input rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium theme-text-tertiary">
-                    📊 Progresso: {processedFiles.length} de {bulkFiles.length} arquivos
+                  <p className="text-sm font-medium theme-text-tertiary flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" /> Progresso: {processedFiles.length} de {bulkFiles.length} arquivos
                   </p>
                   {generatedModels.length > 0 && (
-                    <p className="text-xs theme-text-muted mt-1">
-                      ✨ {generatedModels.length} modelo{generatedModels.length !== 1 ? 's' : ''} gerado{generatedModels.length !== 1 ? 's' : ''} no total
+                    <p className="text-xs theme-text-muted mt-1 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" /> {generatedModels.length} modelo{generatedModels.length !== 1 ? 's' : ''} gerado{generatedModels.length !== 1 ? 's' : ''} no total
                     </p>
                   )}
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-purple-400">
+                  <p className="text-2xl font-bold text-blue-400">
                     {Math.round((processedFiles.length / bulkFiles.length) * 100)}%
                   </p>
                 </div>
@@ -1267,8 +1267,8 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
               <X className="w-5 h-5" />
               Cancelar Processamento
             </button>
-            <p className="text-center text-xs theme-text-disabled mt-3">
-              💡 Processamento em lotes: {bulkBatchSize} arquivos por vez (evita rate limits)
+            <p className="text-center text-xs theme-text-disabled mt-3 flex items-center justify-center gap-1.5">
+              <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" /> Processamento em lotes: {bulkBatchSize} arquivos por vez (evita rate limits)
             </p>
           </div>
         </div>

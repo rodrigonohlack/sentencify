@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Save, Sparkles, Scale, BookOpen } from 'lucide-react';
+import { Save, Sparkles, Scale, BookOpen, Clock, XCircle, Pencil, Lightbulb } from 'lucide-react';
 import { CSS } from '../modals/BaseModal';
 import { VoiceButton } from '../VoiceButton';
 import { SpacingDropdown, FontSizeDropdown, EditorWidthDropdown } from '../ui';
@@ -329,8 +329,8 @@ export const QuillEditorBase = React.forwardRef<QuillInstance, QuillEditorBasePr
   if (!quillReady) {
     return (
       <div className={`theme-bg-primary border theme-border-input rounded-lg p-4 ${className}`}>
-        <p className="theme-text-muted text-center">
-          ⏳ Carregando editor Quill.js...
+        <p className="theme-text-muted text-center flex items-center justify-center gap-2">
+          <Clock className="w-4 h-4" aria-hidden="true" /> Carregando editor Quill.js...
         </p>
       </div>
     );
@@ -339,8 +339,9 @@ export const QuillEditorBase = React.forwardRef<QuillInstance, QuillEditorBasePr
   if (quillError) {
     return (
       <div className={`bg-red-900/20 border border-red-600 rounded-lg p-4 ${className}`}>
-        <p className="text-red-400 text-sm">
-          ❌ {quillError instanceof Error ? quillError.message : quillError}
+        <p className="text-red-400 text-sm flex items-center gap-2">
+          <XCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+          {quillError instanceof Error ? quillError.message : quillError}
         </p>
         <p className="theme-text-muted text-xs mt-2">
           Usando editor alternativo. Verifique sua conexão com a internet.
@@ -440,7 +441,7 @@ export const QuillModelEditor = React.forwardRef<QuillInstance, QuillModelEditor
           {onOpenAIAssistant && (
             <button
               onClick={onOpenAIAssistant}
-              className="hover-purple-700 px-3 py-1.5 text-white text-xs rounded flex items-center gap-1 bg-purple-600"
+              className="hover-blue-700 px-3 py-1.5 text-white text-xs rounded flex items-center gap-1 bg-blue-600"
               title="Assistente de IA"
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -553,12 +554,12 @@ export const AIRegenerationSection = React.memo(({
 
   const handleMouseEnterButton = React.useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (!regenerating) {
-      e.currentTarget.style.backgroundColor = '#7e22ce';
+      e.currentTarget.style.backgroundColor = '#1d4ed8';
     }
   }, [regenerating]);
 
   const handleMouseLeaveButton = React.useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.backgroundColor = regenerating ? '#6b7280' : '#9333ea';
+    e.currentTarget.style.backgroundColor = regenerating ? '#6b7280' : '#2563eb';
   }, [regenerating]);
 
   const handleRegenerate = React.useCallback(() => {
@@ -574,8 +575,9 @@ export const AIRegenerationSection = React.memo(({
 
   return (
     <div className="mt-4 pt-4 border-t theme-border-input">
-      <p className="text-xs theme-text-muted mb-2">
-        ✨ <strong>Regenerar com IA:</strong> Adicione uma instrução opcional abaixo e clique em "Gerar" para que a IA recrie este {contextLabel}
+      <p className="text-xs theme-text-muted mb-2 flex items-start gap-1">
+        <Sparkles className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <span><strong>Regenerar com IA:</strong> Adicione uma instrução opcional abaixo e clique em "Gerar" para que a IA recrie este {contextLabel}</span>
       </p>
 
       <div className="flex gap-2">
@@ -602,7 +604,7 @@ export const AIRegenerationSection = React.memo(({
         onMouseEnter={handleMouseEnterButton}
         onMouseLeave={handleMouseLeaveButton}
         style={{
-          backgroundColor: regenerating ? '#6b7280' : '#9333ea',
+          backgroundColor: regenerating ? '#6b7280' : '#2563eb',
           transition: 'background-color 0.3s ease',
           cursor: regenerating ? 'not-allowed' : 'pointer'
         }}
@@ -836,8 +838,9 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
       >
         {isFullscreen ? (
           <div className="flex items-center gap-2 mb-2 flex-shrink-0">
-            <span className="theme-text-primary font-semibold text-lg">
-              📝 {topicTitle}
+            <span className="theme-text-primary font-semibold text-lg flex items-center gap-2">
+              <Pencil className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+              {topicTitle}
             </span>
             {topicCategory && (
               <span className="px-2 py-1 text-xs rounded theme-bg-purple-accent theme-text-purple">
@@ -854,7 +857,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
         <div className="flex flex-wrap gap-2 mb-2 flex-shrink-0">
           <button
             onClick={onSaveWithoutClosing}
-            className="px-3 py-1.5 text-white text-xs rounded flex items-center gap-1 bg-green-600 hover-green-700-from-600"
+            className="px-3 py-1.5 text-white text-xs rounded flex items-center gap-1 bg-green-600 hover:bg-green-700 transition-colors"
             title="Salvar (Ctrl+S)"
           >
             <Save className="w-3.5 h-3.5" />
@@ -875,7 +878,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
           {onOpenAIAssistant && (
             <button
               onClick={onOpenAIAssistant}
-              className="hover-purple-700 px-3 py-1.5 text-white text-xs rounded flex items-center gap-1 bg-purple-600"
+              className="px-3 py-1.5 text-xs rounded flex items-center gap-1 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
               title="Assistente de IA"
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -886,7 +889,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
           {onOpenJurisModal && (
             <button
               onClick={onOpenJurisModal}
-              className="px-3 py-1.5 text-white text-xs rounded flex items-center gap-1 bg-blue-600 hover-blue-700-from-600"
+              className="px-3 py-1.5 text-xs rounded flex items-center gap-1 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
               title="Buscar jurisprudência relevante"
             >
               <Scale className="w-3.5 h-3.5" />
@@ -897,7 +900,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
           {onOpenFactsComparison && (
             <button
               onClick={onOpenFactsComparison}
-              className="px-3 py-1.5 text-white text-xs rounded flex items-center gap-1 bg-amber-600 hover-amber-700"
+              className="px-3 py-1.5 text-xs rounded flex items-center gap-1 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
               title="Confronto de Fatos (Inicial vs Contestação)"
             >
               <Scale className="w-3.5 h-3.5" />
@@ -909,12 +912,12 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
             <button
               onClick={onExtractModel}
               disabled={extractingModel}
-              className="px-3 py-1.5 text-white text-xs rounded flex items-center gap-1 bg-pink-600 hover-pink-700 disabled:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
+              className="px-3 py-1.5 text-xs rounded flex items-center gap-1 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               title="Extrair como modelo reutilizável (usa IA)"
             >
               {extractingModel ? (
                 <>
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                   Extraindo...
                 </>
               ) : (
@@ -929,7 +932,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
           {showExtractButton && onSaveAsModel && (
             <button
               onClick={onSaveAsModel}
-              className="px-3 py-1.5 text-white text-xs rounded flex items-center gap-1 bg-blue-600 hover-blue-700-from-600"
+              className="px-3 py-1.5 text-xs rounded flex items-center gap-1 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
               title="Salvar texto atual como modelo (preserva 100%)"
             >
               <Save className="w-3.5 h-3.5" />
@@ -1159,10 +1162,12 @@ export const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstanc
         />
       </div>
 
-      <p className="text-xs theme-text-disabled mt-2">
-        💡 Formato sugerido: "O reclamante narra que... Sustenta que... Postula... A primeira reclamada, em defesa, alega que..."
-        <br />
-        ⌨️ <strong>Ctrl+S</strong> = Salvar sem fechar
+      <p className="text-xs theme-text-disabled mt-2 flex items-start gap-1">
+        <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <span>Formato sugerido: "O reclamante narra que... Sustenta que... Postula... A primeira reclamada, em defesa, alega que..."
+          <br />
+          ⌨️ <strong>Ctrl+S</strong> = Salvar sem fechar
+        </span>
       </p>
 
       {showRegenerateSection && onRegenerate && (
