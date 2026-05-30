@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.20',
+    date: '2026-05-30',
+    feature: 'style(ui): hierarquia tipográfica híbrida no main app (escala 14/16/18). Título do BaseModal elevado a text-lg (≈18 modais ganham título 18px acima do corpo); subcabeçalhos estruturais text-sm→text-base em FactsComparisonModal (Fatos Incontroversos, Pontos-chave, Resumo, Tabela Comparativa — cor categórica preservada), FullscreenModelPanel, ModelSearchPanel e GlobalEditorModal. Novas constantes CSS.sectionTitle/cardHeading. Corpo (text-sm) mantido denso de propósito; tags/labels não inflados (tag de versão do ChangelogModal preservada). 281 testes passam; tsc limpo. Fase 2/3 do refinamento visual.',
+  },
+  {
     version: '1.50.19',
     date: '2026-05-30',
     feature: 'style(ui): varre o roxo DECORATIVO remanescente do main app para azul (complemento da fase de paleta). Convertidos: cursor piscante/spinner/rodapé do StreamingModal, ícones de header de modais (AIAssistant, DispositivoModal, Criar Modelos), botões de ação genérica (Detectar Nomes, Confirmar texto, Enviar/Aceitar convite), containers de lista (complementares, PDFs importados) e loaders de progresso no AdvancedModals. PRESERVADO o roxo de ESTADO/CATEGORIA: aba ativa e radio de permissão selecionado (AdvancedModals), label de tópico ativo (AIAssistant), ponto de status "Complementares" (MiscModals), badge de categoria de modelo, e classes --accent-purple/theme-text-purple. Teste StreamingModal atualizado (.bg-purple-500→.bg-blue-500); 35 testes passam. tsc limpo.',

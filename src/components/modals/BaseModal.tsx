@@ -102,7 +102,7 @@ export const BaseModal = React.memo(({
               </div>
             )}
             <div>
-              <h2 className="font-semibold theme-text-primary">{title}</h2>
+              <h2 className="text-lg font-semibold theme-text-primary">{title}</h2>
               {subtitle && <p className="text-xs theme-text-secondary">{subtitle}</p>}
             </div>
           </div>

@@ -28,6 +28,8 @@ export const CSS = {
   spinner: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin",
   // Text
   label: "block text-sm font-medium theme-text-tertiary mb-2",
+  sectionTitle: "text-lg font-semibold theme-text-primary",
+  cardHeading: "text-base font-semibold theme-text-primary",
   textMuted: "text-xs theme-text-muted",
   // Flex
   flexCenter: "flex items-center",

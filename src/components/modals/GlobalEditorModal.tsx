@@ -1149,7 +1149,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
           >
             {/* Panel Header - v1.12.1: Sugestões automáticas */}
             <div className="p-4 border-b theme-border-secondary flex-shrink-0">
-              <h3 className="text-sm font-semibold theme-text-primary mb-2 flex items-center gap-2">Sugestões de Modelos{suggestionsSource === 'local' && <span className="bg-purple-600 text-white px-1.5 py-0.5 rounded text-[10px]">IA Local</span>}</h3>
+              <h3 className="text-base font-semibold theme-text-primary mb-2 flex items-center gap-2">Sugestões de Modelos{suggestionsSource === 'local' && <span className="bg-purple-600 text-white px-1.5 py-0.5 rounded text-[10px]">IA Local</span>}</h3>
 
               {currentFocusedTopic ? (
                 <p className="text-xs theme-text-muted flex items-center gap-1.5">
