@@ -32,6 +32,20 @@ export function parseTimestampToSeconds(ts: string): number | null {
   return h * 3600 + min * 60 + sec;
 }
 
+/**
+ * Extrai timestamps individuais de uma string que pode conter vários separados
+ * por ";" ou "," (ex.: "2m 44s; 2m 51s; 2m 59s" → ["2m 44s","2m 51s","2m 59s"]).
+ * Mantém só os tokens que casam um timestamp válido. Para uma string com um único
+ * timestamp, devolve um array de 1 elemento.
+ */
+export function extractTimestamps(str: string): string[] {
+  if (typeof str !== 'string') return [];
+  return str
+    .split(/[;,]/)
+    .map((s) => s.trim())
+    .filter((s) => parseTimestampToSeconds(s) !== null);
+}
+
 /** Entrada do índice timestamp → fala. */
 export interface FalaPorTimestamp {
   deponente: string;

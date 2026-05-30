@@ -15,6 +15,7 @@ import {
   checkConsistency,
   parseTimestampToSeconds,
   buildTimestampIndex,
+  extractTimestamps,
 } from './analysis-helpers';
 import type {
   SintesePorTema,
@@ -433,5 +434,28 @@ describe('buildTimestampIndex', () => {
 
   it('sem sinteses → mapa vazio', () => {
     expect(buildTimestampIndex(undefined, depoentes).size).toBe(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TESTES: extractTimestamps
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('extractTimestamps', () => {
+  it('separa múltiplos timestamps com ";"', () => {
+    expect(extractTimestamps('2m 44s; 2m 51s; 2m 59s')).toEqual(['2m 44s', '2m 51s', '2m 59s']);
+  });
+
+  it('um único timestamp vira array de 1', () => {
+    expect(extractTimestamps('9m 40s')).toEqual(['9m 40s']);
+  });
+
+  it('também separa por vírgula', () => {
+    expect(extractTimestamps('1m 10s, 2m 20s')).toEqual(['1m 10s', '2m 20s']);
+  });
+
+  it('descarta tokens inválidos', () => {
+    expect(extractTimestamps('2m 44s; lixo; 2m 59s')).toEqual(['2m 44s', '2m 59s']);
+    expect(extractTimestamps('abc')).toEqual([]);
   });
 });

@@ -13,7 +13,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Clock } from 'lucide-react';
 import { useTimestampFala } from '../../hooks/useTimestampFala';
-import type { FalaPorTimestamp } from '../../utils/analysis-helpers';
+import { extractTimestamps, type FalaPorTimestamp } from '../../utils/analysis-helpers';
 
 interface TimestampBadgeProps {
   timestamp: string;
@@ -55,7 +55,8 @@ const FalaTooltip: React.FC<{ fala: FalaPorTimestamp; anchor: { x: number; y: nu
   );
 };
 
-export const TimestampBadge: React.FC<TimestampBadgeProps> = ({ timestamp }) => {
+/** Um único pill de timestamp (já normalizado para conter um só "Xm Ys"). */
+const SingleTimestampPill: React.FC<TimestampBadgeProps> = ({ timestamp }) => {
   const lookup = useTimestampFala();
   const fala = lookup(timestamp);
   const badgeRef = useRef<HTMLSpanElement>(null);
@@ -82,6 +83,24 @@ export const TimestampBadge: React.FC<TimestampBadgeProps> = ({ timestamp }) => 
       {timestamp}
       {hover && fala && <FalaTooltip fala={fala} anchor={anchor} />}
     </span>
+  );
+};
+
+/**
+ * Pill(s) de timestamp. Aceita uma string com um ou VÁRIOS timestamps separados
+ * por ";"/"," (ex.: "2m 44s; 2m 51s; 2m 59s") e renderiza um pill por timestamp,
+ * cada um com seu próprio tooltip. Se nada casar, renderiza a string original
+ * como pill simples (sem tooltip).
+ */
+export const TimestampBadge: React.FC<TimestampBadgeProps> = ({ timestamp }) => {
+  const tokens = extractTimestamps(timestamp);
+  const list = tokens.length > 0 ? tokens : [timestamp];
+  return (
+    <>
+      {list.map((t, i) => (
+        <SingleTimestampPill key={i} timestamp={t} />
+      ))}
+    </>
   );
 };
 
