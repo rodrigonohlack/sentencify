@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.26',
+    date: '2026-05-30',
+    feature: 'fix(ui): badge "Cache" com contraste fraco no tema claro. O texto usava text-green-300/400 sobre fundo bg-green-500/20 — quase invisível no tema claro (verde-claro sobre verde-claro). Agora separado por tema: text-green-700 no claro + dark:text-green-300/400 no escuro, com fundo bg-green-500/15 dark:bg-green-500/20. Aplicado nos 4 badges "Cache": botão "Revisar Sentença" (TopicsTab) e os 3 do fluxo de revisão (SentenceReviewModals: 2 opções de escopo + subtítulo do resultado).',
+  },
+  {
     version: '1.50.25',
     date: '2026-05-30',
     feature: 'fix(ui): (1) título "Banco de Modelos" estava em roxo (text-purple-400) destoando dos demais títulos de seção; alinhado para text-blue-400 (igual a "Gestão de Provas"/"Gerenciar Tópicos"). (2) Campo "Minhas Conclusões" (ProofCard) não podia ser redimensionado pelo usuário (resize-none) — trocado para resize-y com min-h-[80px], permitindo arrastar a alça para expandir, facilitando a digitação de conclusões longas.',

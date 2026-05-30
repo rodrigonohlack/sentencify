@@ -127,7 +127,7 @@ export const SentenceReviewOptionsModal: React.FC<SentenceReviewOptionsModalProp
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium theme-text-primary">Apenas a decisão completa</span>
               {hasCacheFor('decisionOnly') && (
-                <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-medium">Cache</span>
+                <span className="text-[10px] bg-green-500/15 text-green-700 dark:bg-green-500/20 dark:text-green-400 px-1.5 py-0.5 rounded font-medium">Cache</span>
               )}
             </div>
             <p className="text-xs theme-text-muted mt-1">RELATÓRIO + todos os tópicos (mini-relatórios + decisões) + DISPOSITIVO</p>
@@ -149,7 +149,7 @@ export const SentenceReviewOptionsModal: React.FC<SentenceReviewOptionsModalProp
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium theme-text-primary">Decisão + peças processuais</span>
               {hasCacheFor('decisionWithDocs') && (
-                <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-medium">Cache</span>
+                <span className="text-[10px] bg-green-500/15 text-green-700 dark:bg-green-500/20 dark:text-green-400 px-1.5 py-0.5 rounded font-medium">Cache</span>
               )}
             </div>
             <p className="text-xs theme-text-muted mt-1">Inclui petição inicial, contestações e documentos complementares</p>
@@ -249,7 +249,7 @@ export const SentenceReviewResultModal: React.FC<SentenceReviewResultModalProps>
         <div className="flex items-center gap-2">
           <span>Análise detalhada por IA - revise os apontamentos abaixo</span>
           {reviewFromCache && (
-            <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">
+            <span className="text-xs bg-green-500/15 text-green-700 dark:bg-green-500/20 dark:text-green-400 px-2 py-0.5 rounded">
               Cache
             </span>
           )}

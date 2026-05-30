@@ -154,7 +154,7 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                               <Scale className="w-4 h-4" />
                               Revisar Sentença
                               {hasReviewCache && (
-                                <span className="text-[10px] bg-green-500/20 text-green-300 px-1.5 py-0.5 rounded font-medium">
+                                <span className="text-[10px] bg-green-500/15 text-green-700 dark:bg-green-500/20 dark:text-green-300 px-1.5 py-0.5 rounded font-medium">
                                   Cache
                                 </span>
                               )}
