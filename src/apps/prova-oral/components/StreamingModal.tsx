@@ -76,6 +76,13 @@ const STATUS_CONFIG: Record<PhaseStatus, {
     bgClass: 'bg-indigo-50 dark:bg-indigo-900/20',
     borderClass: 'border-indigo-200 dark:border-indigo-800',
   },
+  processing: {
+    text: 'Processando… (modelo local não transmite ao vivo)',
+    colorClass: 'text-indigo-600 dark:text-indigo-400',
+    iconColorClass: 'text-indigo-500 dark:text-indigo-400',
+    bgClass: 'bg-indigo-50 dark:bg-indigo-900/20',
+    borderClass: 'border-indigo-200 dark:border-indigo-800',
+  },
   completed: {
     text: 'Concluído',
     colorClass: 'text-emerald-600 dark:text-emerald-400',
@@ -107,6 +114,7 @@ const PhaseIcon: React.FC<{ status: PhaseStatus; className?: string }> = ({ stat
       return <Circle className={baseClass} />;
     case 'connecting':
     case 'streaming':
+    case 'processing':
       return <Loader2 className={`${baseClass} animate-spin`} />;
     case 'completed':
       return <CheckCircle className={baseClass} />;
@@ -178,7 +186,7 @@ const PhaseCard: React.FC<{
           </p>
         </div>
       </div>
-      {status === 'streaming' && <StreamingProgressBar />}
+      {(status === 'streaming' || status === 'processing') && <StreamingProgressBar />}
     </div>
   );
 };
@@ -210,8 +218,8 @@ function calculateTotalProgress(phases: StreamingModalProps['phases']): number {
     const weight = phaseWeights[key as keyof typeof phaseWeights];
     if (phase.status === 'completed') {
       total += weight;
-    } else if (phase.status === 'streaming') {
-      total += weight * 0.5; // 50% quando em streaming
+    } else if (phase.status === 'streaming' || phase.status === 'processing') {
+      total += weight * 0.5; // 50% quando em streaming/processando
     } else if (phase.status === 'connecting') {
       total += weight * 0.1; // 10% quando conectando
     }

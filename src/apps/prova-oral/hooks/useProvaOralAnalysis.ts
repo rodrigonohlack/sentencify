@@ -200,13 +200,17 @@ IMPORTANTE: Siga as instruções acima ao realizar a análise.
           aiSettings.grokModel;
 
         const maxTokens = getMaxOutputTokens(currentModel);
+        // CLIs locais (claude-cli/codex-cli) não transmitem ao vivo: onChunk nunca
+        // dispara, então cada fase mostra 'processing' (atividade) em vez de ficar
+        // travada em 'connecting' até a resposta chegar inteira no fim.
+        const isNonStreaming = aiSettings.provider === 'claude-cli' || aiSettings.provider === 'codex-cli';
         console.log('[ProvaOralAnalysis] Iniciando análise em três fases:', { provider: aiSettings.provider, model: currentModel, maxTokens });
 
         // ═══════════════════════════════════════════════════════════════
         // FASE 1: TRANSCRIÇÃO EXAUSTIVA
         // ═══════════════════════════════════════════════════════════════
         setProgress(10, 'Fase 1: Transcrevendo depoimentos...');
-        setPhaseStatus('phase1', 'connecting');
+        setPhaseStatus('phase1', isNonStreaming ? 'processing' : 'connecting');
         console.log('[ProvaOralAnalysis] Iniciando Fase 1 (Transcrição)');
 
         const userPromptPhase1 = `## TRANSCRIÇÃO DA AUDIÊNCIA
@@ -269,7 +273,7 @@ Se algum item acima não foi cumprido, REFAÇA antes de responder.`;
         // FASE 2: CLASSIFICAÇÃO JURÍDICA
         // ═══════════════════════════════════════════════════════════════
         setProgress(40, 'Fase 2: Classificando juridicamente...');
-        setPhaseStatus('phase2', 'connecting');
+        setPhaseStatus('phase2', isNonStreaming ? 'processing' : 'connecting');
         console.log('[ProvaOralAnalysis] Iniciando Fase 2 (Análise Jurídica)');
 
         // Limpar texto de streaming para mostrar resposta da Fase 2
@@ -352,7 +356,7 @@ CHECKLIST OBRIGATÓRIO:
         // FASE 3: ANÁLISE PROBATÓRIA
         // ═══════════════════════════════════════════════════════════════
         setProgress(70, 'Fase 3: Iniciando análise probatória...');
-        setPhaseStatus('phase3', 'connecting');
+        setPhaseStatus('phase3', isNonStreaming ? 'processing' : 'connecting');
         console.log('[ProvaOralAnalysis] Iniciando Fase 3 (Análise Probatória)');
 
         // Limpar texto de streaming para mostrar resposta da Fase 3

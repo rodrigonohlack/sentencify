@@ -83,6 +83,37 @@ async function readBody(req) {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 
+// ── Logging de requisições ──────────────────────────────────────────────
+// Sempre loga uma linha de início (→) e uma de fim (←) por chamada, com id
+// correlacionável (#N). BRIDGE_LOG=verbose também despeja o stderr do CLI em
+// chamadas bem-sucedidas (útil pra ver progresso/avisos do claude/codex).
+const VERBOSE_LOG = /^(1|true|verbose|debug)$/i.test(process.env.BRIDGE_LOG || '');
+let reqCounter = 0;
+
+function logStart(id, provider, body) {
+  const model = body.model || (provider === 'codex-cli' ? 'gpt-5.5' : 'default');
+  const effort = body.effort || body.reasoning_effort || '-';
+  const msgs = Array.isArray(body.messages) ? body.messages.length : 0;
+  const inChars = JSON.stringify(body.messages ?? '').length;
+  console.log(`[claude-bridge] #${id} → ${provider} model=${model} effort=${effort} msgs=${msgs} in=${inChars}c`);
+}
+
+function logEnd(id, provider, started, status, info) {
+  const secs = ((Date.now() - started) / 1000).toFixed(1);
+  console.log(`[claude-bridge] #${id} ← ${status} ${provider} (${secs}s)${info ? ' ' + info : ''}`);
+}
+
+function usageInfo(out) {
+  const u = out?.body?.usage;
+  const text = Array.isArray(out?.body?.content)
+    ? (out.body.content.find((c) => c?.type === 'text')?.text || '')
+    : '';
+  const parts = [];
+  if (text) parts.push(`out=${text.length}c`);
+  if (u) parts.push(`tok in=${u.input_tokens ?? '?'}/out=${u.output_tokens ?? '?'}`);
+  return parts.join(' ');
+}
+
 const server = http.createServer(async (req, res) => {
   applyCors(req, res);
 
@@ -100,6 +131,10 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    const id = ++reqCounter;
+    const started = Date.now();
+    logStart(id, 'claude-cli', body);
+
     try {
       const args = buildClaudeArgs(body);
       const child = spawn('claude', args, { cwd: os.tmpdir() });
@@ -108,14 +143,19 @@ const server = http.createServer(async (req, res) => {
       child.stdout.on('data', (d) => { stdout += d.toString(); });
       child.stderr.on('data', (d) => { stderr += d.toString(); });
       // Cliente desistiu → mata o processo filho (evita gerações órfãs)
-      req.on('close', () => { if (!child.killed) child.kill(); });
+      req.on('close', () => {
+        if (!child.killed) child.kill();
+        if (!res.writableEnded) logEnd(id, 'claude-cli', started, 'abort', 'cliente desconectou');
+      });
       child.on('error', (err) => {
         if (res.writableEnded) return;
+        logEnd(id, 'claude-cli', started, 500, `erro spawn: ${err.message}`);
         sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao executar 'claude': ${err.message}. O binário está no PATH?` } });
       });
       child.on('close', () => {
         if (res.writableEnded) return;
         if (!stdout.trim()) {
+          logEnd(id, 'claude-cli', started, 500, `sem saída; stderr=${stderr.trim().slice(0, 200) || '(vazio)'}`);
           sendJson(res, 500, { error: { type: 'server_error', message: `claude CLI sem saída. stderr: ${stderr.slice(0, 500)}` } });
           return;
         }
@@ -123,14 +163,18 @@ const server = http.createServer(async (req, res) => {
         try {
           out = translateResponse(stdout, body.model);
         } catch (err) {
+          logEnd(id, 'claude-cli', started, 500, `erro tradução: ${err.message}`);
           sendJson(res, 500, { error: { type: 'server_error', message: `Erro ao traduzir resposta: ${err.message}` } });
           return;
         }
+        logEnd(id, 'claude-cli', started, out.status, usageInfo(out));
+        if (VERBOSE_LOG && stderr.trim()) console.log(`[claude-bridge] #${id} stderr: ${stderr.trim().slice(0, 500)}`);
         sendJson(res, out.status, out.body);
       });
       child.stdin.write(buildStdin(body));
       child.stdin.end();
     } catch (err) {
+      logEnd(id, 'claude-cli', started, 500, `falha init: ${err.message}`);
       if (!res.writableEnded) sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao iniciar geração: ${err.message}` } });
       return;
     }
@@ -147,6 +191,10 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    const id = ++reqCounter;
+    const started = Date.now();
+    logStart(id, 'codex-cli', body);
+
     try {
       const args = buildCodexArgs(body);
       // CODEX_HOME isolado: codex não enxerga ~/.codex/skills/ (anti-leak).
@@ -159,14 +207,19 @@ const server = http.createServer(async (req, res) => {
       let stdout = '', stderr = '';
       child.stdout.on('data', (d) => { stdout += d.toString(); });
       child.stderr.on('data', (d) => { stderr += d.toString(); });
-      req.on('close', () => { if (!child.killed) child.kill(); });
+      req.on('close', () => {
+        if (!child.killed) child.kill();
+        if (!res.writableEnded) logEnd(id, 'codex-cli', started, 'abort', 'cliente desconectou');
+      });
       child.on('error', (err) => {
         if (res.writableEnded) return;
+        logEnd(id, 'codex-cli', started, 500, `erro spawn: ${err.message}`);
         sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao executar 'codex': ${err.message}. O binário está no PATH?` } });
       });
       child.on('close', () => {
         if (res.writableEnded) return;
         if (!stdout.trim()) {
+          logEnd(id, 'codex-cli', started, 500, `sem saída; stderr=${stderr.trim().slice(0, 200) || '(vazio)'}`);
           sendJson(res, 500, { error: { type: 'server_error', message: `codex CLI sem saída. stderr: ${stderr.slice(0, 500)}` } });
           return;
         }
@@ -174,14 +227,18 @@ const server = http.createServer(async (req, res) => {
         try {
           out = translateCodexResponse(stdout, body.model || 'gpt-5.5');
         } catch (err) {
+          logEnd(id, 'codex-cli', started, 500, `erro tradução: ${err.message}`);
           sendJson(res, 500, { error: { type: 'server_error', message: `Erro ao traduzir resposta: ${err.message}` } });
           return;
         }
+        logEnd(id, 'codex-cli', started, out.status, usageInfo(out));
+        if (VERBOSE_LOG && stderr.trim()) console.log(`[claude-bridge] #${id} stderr: ${stderr.trim().slice(0, 500)}`);
         sendJson(res, out.status, out.body);
       });
       child.stdin.write(buildCodexStdin(body));
       child.stdin.end();
     } catch (err) {
+      logEnd(id, 'codex-cli', started, 500, `falha init: ${err.message}`);
       if (!res.writableEnded) sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao iniciar geração: ${err.message}` } });
       return;
     }

@@ -10,7 +10,9 @@ import type { ProvaOralResult, ResultTabId, TextHighlight } from '../types';
 // TYPES - Estado de cada fase da análise
 // ═══════════════════════════════════════════════════════════════════════════
 
-export type PhaseStatus = 'pending' | 'connecting' | 'streaming' | 'completed' | 'error';
+// 'processing': providers sem streaming ao vivo (CLIs locais claude-cli/codex-cli)
+// — a resposta vem inteira no fim; mostramos atividade sem contagem de caracteres.
+export type PhaseStatus = 'pending' | 'connecting' | 'streaming' | 'processing' | 'completed' | 'error';
 
 export interface PhaseState {
   status: PhaseStatus;
