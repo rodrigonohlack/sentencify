@@ -154,8 +154,14 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                               <Scale className="w-4 h-4" />
                               Revisar Sentença
                               {hasReviewCache && (
-                                <span className="text-[10px] bg-green-500/15 text-green-700 dark:bg-green-500/20 dark:text-green-300 px-1.5 py-0.5 rounded font-medium">
-                                  Cache
+                                <span className="group/cache relative inline-flex">
+                                  <span className="text-[10px] bg-green-500/15 text-green-700 dark:bg-green-500/20 dark:text-green-300 px-1.5 py-0.5 rounded font-medium">
+                                    Cache
+                                  </span>
+                                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-[11px] font-normal normal-case text-left leading-snug rounded-lg shadow-lg border border-gray-700 opacity-0 group-hover/cache:opacity-100 transition-opacity pointer-events-none z-[60]">
+                                    Já existe uma revisão salva em cache. Ao revisar com o mesmo escopo, o resultado anterior é reaproveitado — sem nova chamada à IA (mais rápido e sem custo).
+                                    <span className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></span>
+                                  </span>
                                 </span>
                               )}
                             </>

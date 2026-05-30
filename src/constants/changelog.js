@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.27',
+    date: '2026-05-30',
+    feature: 'feat(ui): tooltip explicativo no badge "Cache" do botão "Revisar Sentença". O badge dizia apenas "Cache" sem contexto; agora, no mouseover, abre uma janelinha explicando que já existe uma revisão salva em cache e que revisar com o mesmo escopo reaproveita o resultado anterior, sem nova chamada à IA. Implementado com named group (group/cache) para não conflitar com o tooltip de "desabilitado" do próprio botão, e usando <span> (não <div>) por estar dentro de <button>. Tooltip escuro em ambos os temas (bg-gray-900 dark:bg-gray-700) para contraste consistente.',
+  },
+  {
     version: '1.50.26',
     date: '2026-05-30',
     feature: 'fix(ui): badge "Cache" com contraste fraco no tema claro. O texto usava text-green-300/400 sobre fundo bg-green-500/20 — quase invisível no tema claro (verde-claro sobre verde-claro). Agora separado por tema: text-green-700 no claro + dark:text-green-300/400 no escuro, com fundo bg-green-500/15 dark:bg-green-500/20. Aplicado nos 4 badges "Cache": botão "Revisar Sentença" (TopicsTab) e os 3 do fluxo de revisão (SentenceReviewModals: 2 opções de escopo + subtítulo do resultado).',
