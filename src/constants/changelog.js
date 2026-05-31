@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.35',
+    date: '2026-05-31',
+    feature: 'fix(ui): rótulo de modelo no rodapé de custo da Revisão de Tópicos mostrava "Claude Sonnet 4" mesmo com Opus 4.8 selecionado. O App passava ao TopicCurationModal o campo legado aiSettings.model (backwards-compat, normalmente vazio) no branch claude/claude-cli, caindo no fallback Sonnet; agora passa aiSettings.claudeModel (campo canônico, igual ao padrão geminiModel/openaiModel). O custo/assinatura já estavam corretos — só o nome exibido estava errado.',
+  },
+  {
     version: '1.50.34',
     date: '2026-05-31',
     feature: 'feat(ai): rastreabilidade de fontes do mini-relatório — botão "Rastrear fontes" gera, por parágrafo, os trechos literais das peças que o embasaram, verificados localmente (✓ verificado / ⚠ não localizado), multi-provedor e persistidos no tópico.',
