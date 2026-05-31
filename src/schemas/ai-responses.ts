@@ -211,6 +211,10 @@ export const RastreabilidadeTrechoSchema = z.object({
   trecho: z.string().nullable().default('').transform(v => v ?? ''),
 }).passthrough();
 
+// Tolerância intencional: `blocoIndex` aceita number ou string numérica (LLMs às vezes
+// serializam índices como string). Um valor não-numérico vira NaN e NÃO derruba o parse —
+// é ignorado a jusante por mapTracingResponse (NaN nunca casa com o índice do parágrafo),
+// o que é preferível a rejeitar a resposta inteira por causa de um único bloco malformado.
 export const RastreabilidadeBlocoSchema = z.object({
   blocoIndex: z.number().or(z.string().transform(Number)),
   trechos: z.array(RastreabilidadeTrechoSchema).default([]),
