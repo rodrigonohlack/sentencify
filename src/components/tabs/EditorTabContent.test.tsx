@@ -539,8 +539,12 @@ describe('EditorTabContent', () => {
         editingTopic: {
           ...createMockTopic('Horas Extras'),
           relatorio: 'Relatório do tópico',
-          relatorioFontes: [{ paragrafo: 'p1', fontes: [] }],
-        } as unknown as Topic,
+          relatorioFontes: {
+            geradoEm: '2026-05-31T10:00:00.000Z',
+            baseSnapshot: 'Relatório do tópico',
+            blocos: [],
+          },
+        } as Topic,
       });
       render(<EditorTabContent {...props} />);
 
