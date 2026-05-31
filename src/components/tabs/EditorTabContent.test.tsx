@@ -19,7 +19,12 @@ vi.mock('../../constants/styles', () => ({
     modalHeader: 'modal-header-class',
     flexGap2: 'flex gap-2',
     label: 'label-class',
+    btnSecondary: 'btn-secondary-class',
   },
+}));
+
+vi.mock('../modals/RastreabilidadeModal', () => ({
+  RastreabilidadeModal: vi.fn(() => null),
 }));
 
 vi.mock('../', () => ({
@@ -95,6 +100,7 @@ const mockSetSuggestions = vi.fn();
 const mockSetShowProofPanel = vi.fn();
 const mockSetRelatorioInstruction = vi.fn();
 const mockSetDispositivoInstruction = vi.fn();
+const mockOnTraceReportSources = vi.fn();
 
 const createMockTopic = (title = 'Horas Extras') => ({
   title,
@@ -194,6 +200,8 @@ const createDefaultProps = (overrides: Partial<EditorTabContentProps> = {}): Edi
   setUseSemanticManualSearch: mockSetUseSemanticManualSearch,
   semanticManualSearching: false,
   setSemanticManualSearchResults: mockSetSemanticManualSearchResults,
+  onTraceReportSources: mockOnTraceReportSources,
+  tracingFontes: false,
   ...overrides,
 });
 
