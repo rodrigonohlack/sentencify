@@ -83,8 +83,8 @@ export const RastreabilidadeModal: React.FC<RastreabilidadeModalProps> = ({
           <div className="space-y-3">
             {(rast.blocos || []).map(bloco => (
               <div key={bloco.blocoIndex} className="rounded-lg border theme-border-secondary theme-bg-app p-3">
-                <p className="text-sm font-medium theme-text-primary mb-2">
-                  <span className="theme-text-muted mr-1">¶{bloco.blocoIndex + 1}</span>
+                <p className="text-sm font-medium theme-text-primary mb-2 font-serif">
+                  <span className="theme-text-muted mr-1 font-sans">¶{bloco.blocoIndex + 1}</span>
                   {bloco.blocoResumo.replace(/[.…]+$/, '')}…
                 </p>
                 {bloco.trechos.length === 0 ? (
@@ -100,7 +100,7 @@ export const RastreabilidadeModal: React.FC<RastreabilidadeModalProps> = ({
                           <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
                         )}
                         <div className="flex-1">
-                          <span className="theme-text-primary">"{t.trecho}"</span>
+                          <span className="theme-text-primary font-serif">"{t.trecho}"</span>
                           <span className="theme-text-muted ml-1">— {t.peca}</span>
                           {t.status === 'nao_localizado' && (
                             <span className="ml-1 text-amber-600 dark:text-amber-400">(não localizado na peça)</span>

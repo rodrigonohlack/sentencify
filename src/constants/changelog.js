@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.36',
+    date: '2026-05-31',
+    feature: 'feat(ui): tipografia Spectral (serif institucional) no conteúdo jurídico do modal de Rastreabilidade do mini-relatório — resumo de cada parágrafo e trechos-fonte citados em serif (via font-serif), mantendo a UI/chrome (contadores, rótulos de peça, botões e o marcador ¶N) na fonte sans. O título já herdava Spectral da regra global h1–h4.',
+  },
+  {
     version: '1.50.35',
     date: '2026-05-31',
     feature: 'fix(ui): rótulo de modelo no rodapé de custo da Revisão de Tópicos mostrava "Claude Sonnet 4" mesmo com Opus 4.8 selecionado. O App passava ao TopicCurationModal o campo legado aiSettings.model (backwards-compat, normalmente vazio) no branch claude/claude-cli, caindo no fallback Sonnet; agora passa aiSettings.claudeModel (campo canônico, igual ao padrão geminiModel/openaiModel). O custo/assinatura já estavam corretos — só o nome exibido estava errado.',
