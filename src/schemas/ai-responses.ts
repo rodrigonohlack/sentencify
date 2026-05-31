@@ -203,6 +203,24 @@ export function parseAIResponse<T>(
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// SCHEMA: Rastreabilidade de fontes do mini-relatório
+// ═══════════════════════════════════════════════════════════════════
+
+export const RastreabilidadeTrechoSchema = z.object({
+  peca: z.string().nullable().default('').transform(v => v ?? ''),
+  trecho: z.string().nullable().default('').transform(v => v ?? ''),
+}).passthrough();
+
+export const RastreabilidadeBlocoSchema = z.object({
+  blocoIndex: z.number().or(z.string().transform(Number)),
+  trechos: z.array(RastreabilidadeTrechoSchema).default([]),
+}).passthrough();
+
+export const RastreabilidadeResponseSchema = z.object({
+  blocos: z.array(RastreabilidadeBlocoSchema).default([]),
+}).passthrough();
+
+// ═══════════════════════════════════════════════════════════════════
 // SCHEMA: Embargos de Declaração (subapp Embargos)
 // ═══════════════════════════════════════════════════════════════════
 
