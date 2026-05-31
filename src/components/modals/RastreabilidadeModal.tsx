@@ -9,7 +9,7 @@ import { Search, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { BaseModal, CSS } from './BaseModal';
 import type { Topic } from '../../types';
 
-interface RastreabilidadeModalProps {
+export interface RastreabilidadeModalProps {
   isOpen: boolean;
   onClose: () => void;
   topic: Topic | null;
@@ -20,6 +20,7 @@ interface RastreabilidadeModalProps {
 export const RastreabilidadeModal: React.FC<RastreabilidadeModalProps> = ({
   isOpen, onClose, topic, tracing, onRunTrace
 }) => {
+  // currentText espelha a derivação usada quando baseSnapshot foi gravado (editedRelatorio || relatorio).
   const currentText = topic?.editedRelatorio || topic?.relatorio || '';
   const rast = topic?.relatorioFontes;
   const stale = !!rast && rast.baseSnapshot !== currentText;
@@ -40,7 +41,7 @@ export const RastreabilidadeModal: React.FC<RastreabilidadeModalProps> = ({
     >
       {tracing ? (
         <div className="flex flex-col items-center justify-center py-12 theme-text-secondary">
-          <div className={CSS.spinner + ' !w-8 !h-8 !border-blue-500 !border-t-transparent'} />
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" role="status" aria-label="Rastreando fontes" />
           <p className="mt-4 text-sm">Rastreando fontes nas peças…</p>
         </div>
       ) : !rast ? (
@@ -67,7 +68,7 @@ export const RastreabilidadeModal: React.FC<RastreabilidadeModalProps> = ({
 
           {/* Staleness */}
           {stale && (
-            <div className="flex items-center justify-between gap-3 theme-warning-box p-3 rounded-lg">
+            <div className="flex items-center justify-between gap-3 theme-warning-box">
               <div className="flex items-center gap-2 text-xs theme-text-primary">
                 <RefreshCw className="w-4 h-4 flex-shrink-0" />
                 <span>Fontes desatualizadas — o relatório foi editado desde a última rastreabilidade.</span>
@@ -84,12 +85,13 @@ export const RastreabilidadeModal: React.FC<RastreabilidadeModalProps> = ({
               <div key={bloco.blocoIndex} className="rounded-lg border theme-border-secondary theme-bg-app p-3">
                 <p className="text-sm font-medium theme-text-primary mb-2">
                   <span className="theme-text-muted mr-1">¶{bloco.blocoIndex + 1}</span>
-                  {bloco.blocoResumo}…
+                  {bloco.blocoResumo.replace(/[.…]+$/, '')}…
                 </p>
                 {bloco.trechos.length === 0 ? (
                   <p className="text-xs theme-text-muted italic">Sem trechos identificados para este parágrafo.</p>
                 ) : (
                   <ul className="space-y-2">
+                    {/* trechos não têm id estável; índice posicional é seguro (lista somente-leitura) */}
                     {bloco.trechos.map((t, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs">
                         {t.status === 'verificado' ? (

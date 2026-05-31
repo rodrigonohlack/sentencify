@@ -69,3 +69,4 @@ export type { StreamingModalProps, StreamingOperationType } from './StreamingMod
 
 // Rastreabilidade Modal (feat/rastreabilidade-fontes)
 export { RastreabilidadeModal } from './RastreabilidadeModal';
+export type { RastreabilidadeModalProps } from './RastreabilidadeModal';
