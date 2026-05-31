@@ -38,6 +38,8 @@ export interface Topic {
   dispositivo?: string;
   editedRelatorio?: string;
   editedFundamentacao?: string;
+  /** Rastreabilidade de fontes do mini-relatório (sob demanda). */
+  relatorioFontes?: RelatorioRastreabilidade;
   resultado?: TopicResultado;
   proofLinks?: string[];
   createdAt?: string;
@@ -57,6 +59,46 @@ export interface Topic {
   isInitialGeneration?: boolean;
   documentsOverride?: unknown;
   isComplementar?: boolean;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RASTREABILIDADE DE FONTES DO MINI-RELATÓRIO
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Um trecho-fonte de uma peça que embasa um parágrafo do mini-relatório. */
+export interface RelatorioFonteTrecho {
+  /** Citação devolvida pela IA (deve ser cópia literal da peça). */
+  trecho: string;
+  /** Rótulo da peça de origem (caso C). Definido pela verificação local quando encontrado. */
+  peca: string;
+  /** Resultado do match local determinístico (caso A — anti-alucinação). */
+  status: 'verificado' | 'nao_localizado';
+  /** Similaridade 0–1 do match fuzzy (ausente quando match exato). */
+  matchScore?: number;
+  /** Reservado para o caso B (navegação ao PDF). NÃO populado na v1. */
+  offsetInicio?: number;
+  /** Reservado para o caso B (navegação ao PDF). NÃO populado na v1. */
+  offsetFim?: number;
+}
+
+/** Trechos-fonte agrupados por parágrafo do mini-relatório (granularidade B). */
+export interface RelatorioBlocoFonte {
+  /** Índice do parágrafo do relatório (alinhamento determinístico). */
+  blocoIndex: number;
+  /** Início do parágrafo, para identificação na UI. */
+  blocoResumo: string;
+  trechos: RelatorioFonteTrecho[];
+}
+
+/** Resultado completo da rastreabilidade, persistido no tópico. */
+export interface RelatorioRastreabilidade {
+  /** ISO timestamp da geração. */
+  geradoEm: string;
+  /** Texto do relatório auditado (detecção de staleness). */
+  baseSnapshot: string;
+  /** Provedor/modelo usado. */
+  modelo?: string;
+  blocos: RelatorioBlocoFonte[];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
