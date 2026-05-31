@@ -3,11 +3,14 @@ import { renderHook } from '@testing-library/react';
 import { useReportGeneration } from './useReportGeneration';
 import type { Topic } from '../types';
 
+const MODEL_NAMES: Record<string, string> = { 'claude-opus-4-8': 'Claude Opus 4.8' };
+
 const makeHook = (callAI: ReturnType<typeof vi.fn>) => {
   const aiIntegration = {
     callAI,
     extractResponseText: vi.fn(),
-    aiSettings: { provider: 'claude' },
+    getModelDisplayName: (id: string) => MODEL_NAMES[id] || id,
+    aiSettings: { provider: 'claude-cli', claudeModel: 'claude-opus-4-8' },
     setRegeneratingRelatorio: vi.fn(),
   } as never;
   const analyzedDocuments = {
@@ -35,6 +38,8 @@ describe('traceReportSources (integração com callAI mockado)', () => {
     expect(r.baseSnapshot).toBe('<p>O reclamante alega horas extras habituais.</p>');
     expect(r.blocos[0].trechos[0].status).toBe('verificado');
     expect(r.blocos[0].trechos[0].peca).toBe('Petição inicial');
+    // modelo resolve o nome amigável do modelo ativo (não o id do provider)
+    expect(r.modelo).toBe('Claude Opus 4.8');
   });
 
   it('trecho inventado pela IA → nao_localizado', async () => {

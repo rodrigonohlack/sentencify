@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.37',
+    date: '2026-05-31',
+    feature: 'fix(ui): rodapé do modal de Rastreabilidade mostrava o id do provider ("claude-cli") em vez do modelo. Agora resolve o modelo ativo por provider (claudeModel/geminiModel/openaiModel/grokModel/deepseekModel) e exibe o nome amigável via getModelDisplayName (ex.: "Claude Opus 4.8"). O mapa de getModelDisplayName foi completado com os modelos locais/CLI (claude-opus-4-8, claude-sonnet-4-6, gpt-5.5).',
+  },
+  {
     version: '1.50.36',
     date: '2026-05-31',
     feature: 'feat(ui): tipografia Spectral (serif institucional) no conteúdo jurídico do modal de Rastreabilidade do mini-relatório — resumo de cada parágrafo e trechos-fonte citados em serif (via font-serif), mantendo a UI/chrome (contadores, rótulos de peça, botões e o marcador ¶N) na fonte sans. O título já herdava Spectral da regra global h1–h4.',

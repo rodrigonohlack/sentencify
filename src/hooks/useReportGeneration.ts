@@ -99,6 +99,7 @@ export interface AIIntegrationForReports {
     onChunk?: StreamChunkCallback;
   }) => Promise<string>;
   extractResponseText: (data: Record<string, unknown>, provider: AIProvider) => string;
+  getModelDisplayName: (model: string) => string;
   aiSettings: AISettings;
   relatorioInstruction?: string;
   setRegeneratingRelatorio: (value: boolean) => void;
@@ -495,10 +496,24 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
 
     const blocos = mapTracingResponse(parsed.data.blocos, paragraphs, sources);
 
+    // Resolve o nome amigável do modelo ativo (por provider), p.ex. "Claude Opus 4.8"
+    // em vez do id cru do provider ("claude-cli").
+    const settings = aiIntegration.aiSettings;
+    const activeProvider = settings?.provider;
+    const activeModelId =
+      activeProvider === 'gemini' ? settings?.geminiModel
+        : activeProvider === 'openai' ? settings?.openaiModel
+          : activeProvider === 'grok' ? settings?.grokModel
+            : activeProvider === 'deepseek' ? settings?.deepseekModel
+              : settings?.claudeModel;
+    const modelo = activeModelId
+      ? aiIntegration.getModelDisplayName(activeModelId)
+      : activeProvider;
+
     return {
       geradoEm: new Date().toISOString(),
       baseSnapshot: reportText,
-      modelo: aiIntegration.aiSettings?.provider,
+      modelo,
       blocos
     };
   }, [docs, partesProcesso, buildDocumentContentArray, aiIntegration]);

@@ -1510,6 +1510,11 @@ const useAIIntegration = () => {
       // Claude
       'claude-sonnet-4-20250514': 'Claude Sonnet 4.5',
       'claude-opus-4-5-20251101': 'Claude Opus 4.5',
+      // Claude Local (CLI · assinatura)
+      'claude-sonnet-4-6': 'Claude Sonnet 4.6',
+      'claude-opus-4-8': 'Claude Opus 4.8',
+      // Codex Local (CLI · assinatura)
+      'gpt-5.5': 'GPT-5.5',
       // Gemini 3 (v1.32.36: removido 2.5)
       'gemini-3-flash-preview': 'Gemini 3 Flash',
       'gemini-3.1-pro-preview': 'Gemini 3.1 Pro',
