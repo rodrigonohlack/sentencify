@@ -100,7 +100,7 @@ const mockSetSuggestions = vi.fn();
 const mockSetShowProofPanel = vi.fn();
 const mockSetRelatorioInstruction = vi.fn();
 const mockSetDispositivoInstruction = vi.fn();
-const mockOnTraceReportSources = vi.fn();
+const mockOnTraceReportSources = vi.fn().mockResolvedValue(undefined);
 
 const createMockTopic = (title = 'Horas Extras') => ({
   title,
@@ -512,6 +512,51 @@ describe('EditorTabContent', () => {
         fireEvent.click(headerButton);
         expect(mockSetShowProofPanel).toHaveBeenCalled();
       }
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FONTES DO MINI-RELATÓRIO PANEL
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Painel Fontes do mini-relatório', () => {
+    it('(a) mostra painel e botão "Rastrear fontes" quando relatorio não-vazio e título != DISPOSITIVO e sem relatorioFontes', () => {
+      const props = createDefaultProps({
+        editingTopic: {
+          ...createMockTopic('Horas Extras'),
+          relatorio: 'Relatório do tópico',
+          relatorioFontes: undefined,
+        } as Topic,
+      });
+      render(<EditorTabContent {...props} />);
+
+      expect(screen.getByText('Fontes do mini-relatório')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Rastrear fontes/i })).toBeInTheDocument();
+    });
+
+    it('(b) mostra botão "Ver rastreabilidade" quando relatorioFontes está presente', () => {
+      const props = createDefaultProps({
+        editingTopic: {
+          ...createMockTopic('Horas Extras'),
+          relatorio: 'Relatório do tópico',
+          relatorioFontes: [{ paragrafo: 'p1', fontes: [] }],
+        } as unknown as Topic,
+      });
+      render(<EditorTabContent {...props} />);
+
+      expect(screen.getByRole('button', { name: /Ver rastreabilidade/i })).toBeInTheDocument();
+    });
+
+    it('(c) NÃO mostra o painel quando título é DISPOSITIVO', () => {
+      const props = createDefaultProps({
+        editingTopic: {
+          ...createMockTopic('DISPOSITIVO'),
+          relatorio: 'Relatório do tópico',
+        } as Topic,
+      });
+      render(<EditorTabContent {...props} />);
+
+      expect(screen.queryByText('Fontes do mini-relatório')).not.toBeInTheDocument();
     });
   });
 

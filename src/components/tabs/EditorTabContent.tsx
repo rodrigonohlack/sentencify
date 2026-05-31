@@ -104,7 +104,7 @@ export interface EditorTabContentProps {
   regenerateRelatorioWithInstruction: () => Promise<void>;
   regenerateRelatorioProcessual: () => Promise<void>;
   regenerateDispositivoWithInstruction: () => Promise<void>;
-  onTraceReportSources: () => void;
+  onTraceReportSources: () => Promise<void>;
   tracingFontes: boolean;
 
   // Model callbacks
@@ -389,6 +389,8 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
             )}
 
             {/* Painel: Fontes do mini-relatório */}
+            {/* Inclui o tópico RELATÓRIO de propósito: traceReportSources trata esse caso
+                (ativa documentos complementares). Só DISPOSITIVO fica de fora (não tem relatório). */}
             {(editingTopic.editedRelatorio || editingTopic.relatorio) &&
              editingTopic.title?.toUpperCase() !== 'DISPOSITIVO' && (
               <div className="theme-bg-secondary rounded-lg border theme-border-secondary p-4">
