@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.34',
+    date: '2026-05-31',
+    feature: 'feat(ai): rastreabilidade de fontes do mini-relatório — botão "Rastrear fontes" gera, por parágrafo, os trechos literais das peças que o embasaram, verificados localmente (✓ verificado / ⚠ não localizado), multi-provedor e persistidos no tópico.',
+  },
+  {
     version: '1.50.33',
     date: '2026-05-30',
     feature: 'fix(ai): provider claude-cli (e Claude API) não re-tentava em erro transitório HTTP 500. O daemon llm-bridge mapeia todo erro do CLI (is_error no stream-json) para 500, mas CLAUDE_RETRY_CODES (useAIIntegration.callLLM) era [429,529,520,502] — sem o 500 — enquanto Gemini/OpenAI/Grok/DeepSeek já incluíam 500. Resultado: overload/rate-limit/timeout do claude CLI caía como erro seco e o usuário tinha de re-tentar na mão. Correção: CLAUDE_RETRY_CODES agora é [429,500,502,503,520,529], alinhado aos demais providers (retry com backoff exponencial 3x: 5s/10s/20s). codex-cli já cobria 500 (usa callOpenAIAPI). Observabilidade: o llm-bridge passou a logar a mensagem de erro real quando o tradutor devolve status >= 400 (antes saía um "500" mudo no /tmp/llm-bridge.log, pois usageInfo de um corpo de erro é vazio) — vale para claude-cli e codex-cli. Testes: novo caso de retry em 500 para Claude; o teste de "non-ok HTTP response" passou a usar 400 (não-retryable). tsc limpo.',
