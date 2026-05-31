@@ -87,6 +87,7 @@ export interface RelatorioBlocoFonte {
   blocoIndex: number;
   /** Início do parágrafo, para identificação na UI. */
   blocoResumo: string;
+  /** Trechos de origem que embasam este parágrafo. */
   trechos: RelatorioFonteTrecho[];
 }
 
