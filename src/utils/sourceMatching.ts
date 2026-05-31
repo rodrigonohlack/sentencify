@@ -4,11 +4,11 @@
  * das peças (anti-alucinação). Funções puras, sem dependências de React/API.
  */
 
-/** Normaliza texto para comparacao: sem acento, sem pontuacao, minusculo, espacos colapsados. */
+/** Normaliza texto para comparação: sem acento, sem pontuação, minúsculo, espaços colapsados. */
 export function normalizeForMatch(s: string): string {
   return (s || '')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/\p{Mn}/gu, '')
     .toLowerCase()
     .replace(/[“”„‘’]/g, ' ')
     .replace(/[‐-―]/g, '-')
@@ -17,7 +17,7 @@ export function normalizeForMatch(s: string): string {
     .trim();
 }
 
-/** Fonte ja normalizada (normaliza-se uma vez, reusa por trecho). */
+/** Fonte já normalizada (normaliza-se uma vez, reusa por trecho). */
 export interface NormalizedSource {
   peca: string;
   normalized: string;
@@ -50,9 +50,9 @@ function diceCoefficient(a: string[], b: string[]): number {
 
 /**
  * Verifica se `trecho` aparece em alguma das `sources`.
- * 1) substring exata normalizada -> verificado (peca onde foi achado);
+ * 1) substring exata normalizada -> verificado (peça onde foi achado);
  * 2) fuzzy por janela deslizante de tokens >= threshold -> verificado;
- * 3) senao -> nao_localizado (mantem a etiqueta da IA).
+ * 3) senão -> nao_localizado (mantém a etiqueta da IA).
  */
 export function verifyTrechoInSources(
   trecho: string,
