@@ -466,11 +466,13 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
     }
 
     const paragraphs = splitReportIntoParagraphs(reportText);
+    // Defence-in-depth: reportText já é não-vazio aqui, mas garantimos parágrafos antes de chamar a IA.
     if (paragraphs.length === 0) {
       throw new Error('Não foi possível identificar parágrafos no mini-relatório.');
     }
 
-    const includeComplementares = topic.title.toUpperCase().includes('RELATÓRIO');
+    // Respeita a escolha explícita do tópico; senão, infere pelo título (tópico RELATÓRIO).
+    const includeComplementares = topic.includeComplementares ?? topic.title.toUpperCase().includes('RELATÓRIO');
     const sources = buildTracingSources(docs, partesProcesso);
 
     const contentArray = buildDocumentContentArray({
