@@ -15,6 +15,11 @@ describe('buildTracingSources', () => {
       { peca: 'Contestação 1 — ACME LTDA', text: 'defesa da acme' },
     ]);
   });
+
+  it('rotula documentos complementares por índice', () => {
+    const sources = buildTracingSources({ complementaresText: [{ text: 'ata de audiência' }] }, null);
+    expect(sources).toEqual([{ peca: 'Documento complementar 1', text: 'ata de audiência' }]);
+  });
 });
 
 describe('buildSourceTracingPrompt', () => {

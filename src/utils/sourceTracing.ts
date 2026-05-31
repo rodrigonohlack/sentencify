@@ -9,7 +9,14 @@ import { normalizeForMatch, verifyTrechoInSources, type NormalizedSource } from 
 import type { ReportParagraph } from './reportParagraphs';
 import type { RelatorioBlocoFonte } from '../types';
 
-/** Subconjunto estrutural de AnalyzedDocuments usado aqui. */
+/** Tamanho máximo do resumo do parágrafo exibido na UI de rastreabilidade. */
+const BLOCO_RESUMO_MAX_LEN = 120;
+
+/**
+ * Subconjunto estrutural de AnalyzedDocuments usado aqui. Propositalmente mais
+ * frouxo (campos opcionais) para facilitar testes; compatível estruturalmente
+ * com o `docs` real do hook de geração.
+ */
 export interface TracingDocs {
   peticoesText?: { name?: string; text: string }[];
   contestacoesText?: { text: string }[];
@@ -41,6 +48,8 @@ export function buildTracingSources(
     out.push({ peca: d.name || (i === 0 ? 'Petição inicial' : `Petição ${i + 1}`), text: d.text || '' });
   });
 
+  // Contestações e complementares são rotuladas por índice (+ reclamada quando houver),
+  // não por d.name — diferente das petições, onde o nome do arquivo é um rótulo útil.
   (docs.contestacoesText || []).forEach((d, i) => {
     const reclamada = partes?.reclamadas?.[i];
     out.push({ peca: `Contestação ${i + 1}${reclamada ? ` — ${reclamada}` : ''}`, text: d.text || '' });
@@ -91,6 +100,6 @@ export function mapTracingResponse(
       const res = verifyTrechoInSources(t.trecho, normSources, t.peca || '');
       return { trecho: t.trecho, peca: res.peca, status: res.status, matchScore: res.matchScore };
     });
-    return { blocoIndex: p.index, blocoResumo: p.text.slice(0, 120), trechos };
+    return { blocoIndex: p.index, blocoResumo: p.text.slice(0, BLOCO_RESUMO_MAX_LEN), trechos };
   });
 }
