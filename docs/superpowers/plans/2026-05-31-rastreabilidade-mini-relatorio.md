@@ -26,7 +26,7 @@
 | `src/utils/reportParagraphs.ts` | Split de HTML do relatório em parágrafos — puro | Criar |
 | `src/utils/sourceTracing.ts` | Montagem de fontes rotuladas, prompt e mapeamento da resposta — puro | Criar |
 | `src/schemas/ai-responses.ts` | Schema Zod da resposta de rastreabilidade | Modificar (+schema) |
-| `src/hooks/useReportGeneration.ts` | Orquestração `traceReportSources` | Modificar |
+| `src/hooks/useReportGeneration.ts` (+`.trace.test.tsx`) | Orquestração `traceReportSources` + teste de integração (callAI mockado) | Modificar/Criar |
 | `src/components/modals/RastreabilidadeModal.tsx` | Modal de exibição (BaseModal) | Criar |
 | `src/components/index.ts` | Barrel de componentes | Modificar (+export) |
 | `src/components/tabs/EditorTabContent.tsx` | Botão no painel lateral + render do modal | Modificar |
@@ -649,22 +649,101 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ---
 
-## Task 6: Orquestração `traceReportSources` no hook
+## Task 6: Orquestração `traceReportSources` no hook (com teste de integração)
 
 **Files:**
 - Modify: `src/hooks/useReportGeneration.ts`
+- Test: `src/hooks/useReportGeneration.trace.test.tsx`
 
-- [ ] **Step 1: Adicionar imports (após a linha 18, junto aos imports de utils/prompts)**
+> **TDD do glue:** este é o ponto onde split → fontes → `callAI` → parse → mapeamento se juntam. O único limite mockado é `callAI` (a rede); todo o resto roda código de produção real.
+
+- [ ] **Step 1: Escrever o teste de integração falho**
+
+```tsx
+// src/hooks/useReportGeneration.trace.test.tsx
+import { describe, it, expect, vi } from 'vitest';
+import { renderHook } from '@testing-library/react';
+import { useReportGeneration } from './useReportGeneration';
+import type { Topic } from '../types';
+
+// Hedge: se `renderHook` não estiver em '@testing-library/react' nesta versão,
+// importe de '@testing-library/react-hooks'. Confirme com:
+//   grep -rn "renderHook" node_modules/@testing-library/react/dist/index.d.ts
+
+const makeHook = (callAI: ReturnType<typeof vi.fn>) => {
+  const aiIntegration = {
+    callAI,
+    extractResponseText: vi.fn(),
+    aiSettings: { provider: 'claude' },
+    setRegeneratingRelatorio: vi.fn(),
+  } as never;
+  const analyzedDocuments = {
+    peticoes: [], peticoesText: [{ text: 'O reclamante alega horas extras habituais e reflexos.' }],
+    contestacoes: [], contestacoesText: [{ text: 'A ré nega a jornada alegada na inicial.' }],
+    complementares: [], complementaresText: [],
+  } as never;
+  const partesProcesso = { reclamante: 'Fulano', reclamadas: ['ACME'] } as never;
+  return renderHook(() => useReportGeneration({ aiIntegration, analyzedDocuments, partesProcesso }));
+};
+
+const topic: Topic = {
+  title: 'HORAS EXTRAS', category: 'MÉRITO',
+  relatorio: '<p>O reclamante alega horas extras habituais.</p>',
+};
+
+describe('traceReportSources (integração com callAI mockado)', () => {
+  it('chama a IA uma vez, verifica trecho real e devolve baseSnapshot', async () => {
+    const callAI = vi.fn().mockResolvedValue(
+      '{"blocos":[{"blocoIndex":0,"trechos":[{"peca":"Petição inicial","trecho":"horas extras habituais"}]}]}'
+    );
+    const { result } = makeHook(callAI);
+    const r = await result.current.traceReportSources(topic);
+    expect(callAI).toHaveBeenCalledOnce();
+    expect(r.baseSnapshot).toBe('<p>O reclamante alega horas extras habituais.</p>');
+    expect(r.blocos[0].trechos[0].status).toBe('verificado');
+    expect(r.blocos[0].trechos[0].peca).toBe('Petição inicial');
+  });
+
+  it('trecho inventado pela IA → nao_localizado', async () => {
+    const callAI = vi.fn().mockResolvedValue(
+      '{"blocos":[{"blocoIndex":0,"trechos":[{"peca":"Petição inicial","trecho":"o autor viajou para marte"}]}]}'
+    );
+    const { result } = makeHook(callAI);
+    const r = await result.current.traceReportSources(topic);
+    expect(r.blocos[0].trechos[0].status).toBe('nao_localizado');
+  });
+
+  it('relatório vazio → erro antes de chamar a IA', async () => {
+    const callAI = vi.fn();
+    const { result } = makeHook(callAI);
+    await expect(
+      result.current.traceReportSources({ ...topic, relatorio: '', editedRelatorio: '' })
+    ).rejects.toThrow(/Gere o mini-relatório/);
+    expect(callAI).not.toHaveBeenCalled();
+  });
+
+  it('JSON irreparável da IA → erro de rastreabilidade inválida', async () => {
+    const callAI = vi.fn().mockResolvedValue('isso não é json');
+    const { result } = makeHook(callAI);
+    await expect(result.current.traceReportSources(topic)).rejects.toThrow(/rastreabilidade inválida/);
+  });
+});
+```
+
+- [ ] **Step 2: Rodar o teste e confirmar que falha**
+
+Run: `npx vitest run src/hooks/useReportGeneration.trace.test.tsx`
+Expected: FAIL ("result.current.traceReportSources is not a function")
+
+- [ ] **Step 3: Adicionar imports (após a linha 18, junto aos imports de utils/prompts)**
 
 ```ts
-import { extractJSON, parseAIResponse, RastreabilidadeResponseSchema } from '../schemas/ai-responses';
+import { parseAIResponse, RastreabilidadeResponseSchema } from '../schemas/ai-responses';
 import { splitReportIntoParagraphs } from '../utils/reportParagraphs';
 import { buildTracingSources, buildSourceTracingPrompt, mapTracingResponse } from '../utils/sourceTracing';
 ```
 
-> `extractJSON` pode não ser usado diretamente; remova-o do import se o `tsc`/lint reclamar de import não usado. `parseAIResponse` e o schema são os necessários.
-
-- [ ] **Step 2: Adicionar `RelatorioRastreabilidade` ao import de tipos (no bloco `import type { ... } from '../types'`, linhas 19-29)**
+- [ ] **Step 4: Adicionar `RelatorioRastreabilidade` ao import de tipos (no bloco `import type { ... } from '../types'`, linhas 19-29)**
 
 ```ts
   AIProvider,
@@ -673,13 +752,13 @@ import { buildTracingSources, buildSourceTracingPrompt, mapTracingResponse } fro
 
 (adicione `RelatorioRastreabilidade` como último item da lista de tipos importados)
 
-- [ ] **Step 3: Declarar o retorno na interface `UseReportGenerationReturn` (após `generateRelatorioProcessual`, linha 123)**
+- [ ] **Step 5: Declarar o retorno na interface `UseReportGenerationReturn` (após `generateRelatorioProcessual`, linha 123)**
 
 ```ts
   traceReportSources: (topic: Topic) => Promise<RelatorioRastreabilidade>;
 ```
 
-- [ ] **Step 4: Implementar a função dentro do hook (logo após `generateMiniReport`, depois da linha 451)**
+- [ ] **Step 6: Implementar a função dentro do hook (logo após `generateMiniReport`, depois da linha 451)**
 
 ```ts
   /**
@@ -729,7 +808,7 @@ import { buildTracingSources, buildSourceTracingPrompt, mapTracingResponse } fro
   }, [docs, partesProcesso, buildDocumentContentArray, aiIntegration]);
 ```
 
-- [ ] **Step 5: Expor no objeto de retorno do hook**
+- [ ] **Step 7: Expor no objeto de retorno do hook**
 
 Localize o `return { ... }` final do hook (que já expõe `generateMiniReport`, `generateMultipleMiniReports`, etc.) e adicione:
 
@@ -737,16 +816,21 @@ Localize o `return { ... }` final do hook (que já expõe `generateMiniReport`, 
     traceReportSources,
 ```
 
-- [ ] **Step 6: Type-check**
+- [ ] **Step 8: Rodar o teste e confirmar que passa**
+
+Run: `npx vitest run src/hooks/useReportGeneration.trace.test.tsx`
+Expected: PASS (4 testes)
+
+- [ ] **Step 9: Type-check**
 
 Run: `npx tsc --noEmit`
 Expected: PASS (sem erros novos)
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
-git add src/hooks/useReportGeneration.ts
-git commit -m "feat(hook): traceReportSources — segundo passe de rastreabilidade
+git add src/hooks/useReportGeneration.ts src/hooks/useReportGeneration.trace.test.tsx
+git commit -m "feat(hook): traceReportSources — segundo passe de rastreabilidade (+ teste integração)
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -972,10 +1056,15 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ---
 
-## Task 8: Botão no painel lateral + render do modal (EditorTabContent)
+## Task 8: Fiação completa — botão + modal (EditorTabContent) e handler (App.tsx)
+
+> **Commit único e verde:** EditorTabContent passa a depender de props que só o App.tsx fornece. As duas pontas são feitas juntas e commitadas num só passo, para nenhum commit intermediário ficar com `tsc` quebrado.
 
 **Files:**
 - Modify: `src/components/tabs/EditorTabContent.tsx`
+- Modify: `src/App.tsx`
+
+### Parte A — `EditorTabContent.tsx`
 
 - [ ] **Step 1: Importar o modal e o ícone**
 
@@ -1045,44 +1134,23 @@ import { RastreabilidadeModal } from '../modals/RastreabilidadeModal';
       />
 ```
 
-- [ ] **Step 7: Type-check**
+### Parte B — `App.tsx`
 
-Run: `npx tsc --noEmit`
-Expected: FAIL — App.tsx ainda não passa `onTraceReportSources`/`tracingFontes` (será corrigido na Task 9). Erros restritos a essas props em App.tsx são esperados aqui.
+- [ ] **Step 7: Destructurar `traceReportSources` do hook**
 
-- [ ] **Step 8: Commit**
-
-```bash
-git add src/components/tabs/EditorTabContent.tsx
-git commit -m "feat(ui): painel 'Fontes do mini-relatório' + modal no editor
-
-Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
-```
-
----
-
-## Task 9: Handler e fiação no App.tsx
-
-**Files:**
-- Modify: `src/App.tsx`
-
-- [ ] **Step 1: Destructurar `traceReportSources` do hook**
-
-Localize onde `reportGeneration` é consumido. O App já chama `generateMiniReport(...)` diretamente (linha 1854), logo essas funções são desestruturadas do retorno de `useReportGeneration`. Adicione `traceReportSources` à desestruturação correspondente (junto a `generateMiniReport`, `generateMiniReportsBatch`, etc.).
-
-Confirme o ponto exato com:
+O App já chama `generateMiniReport(...)` diretamente (linha 1854), logo essas funções são desestruturadas do retorno de `useReportGeneration`. Confirme o ponto exato com:
 ```bash
 grep -n "generateMiniReport," src/App.tsx
 ```
 e adicione `traceReportSources,` na mesma lista de desestruturação.
 
-- [ ] **Step 2: Adicionar estado de loading (junto aos demais `useState` de UI do App)**
+- [ ] **Step 8: Adicionar estado de loading (junto aos demais `useState` de UI do App)**
 
 ```ts
   const [tracingFontes, setTracingFontes] = React.useState(false);
 ```
 
-- [ ] **Step 3: Adicionar o handler (logo após `regenerateRelatorioWithInstruction`, ~linha 1874)**
+- [ ] **Step 9: Adicionar o handler (logo após `regenerateRelatorioWithInstruction`, ~linha 1874)**
 
 ```ts
   const handleTraceReportSources = async () => {
@@ -1108,9 +1176,9 @@ e adicione `traceReportSources,` na mesma lista de desestruturação.
 
 > Os símbolos `editingTopic`, `setEditingTopic`, `selectedTopics`, `setSelectedTopics`, `extractedTopics`, `setExtractedTopics` e `setError` já estão em escopo nesse trecho (usados por `regenerateRelatorioWithInstruction` logo acima).
 
-- [ ] **Step 4: Passar as props ao `EditorTabContent`**
+- [ ] **Step 10: Passar as props ao `EditorTabContent`**
 
-Localize onde `<EditorTabContent ... />` é renderizado em App.tsx (procure `regenerateRelatorioWithInstruction={` ou `<EditorTabContent`):
+Localize onde `<EditorTabContent ... />` é renderizado:
 ```bash
 grep -n "regenerateRelatorioWithInstruction={\|<EditorTabContent" src/App.tsx
 ```
@@ -1121,21 +1189,63 @@ Adicione ao JSX, junto às demais props:
         tracingFontes={tracingFontes}
 ```
 
-- [ ] **Step 5: Type-check**
+### Verificação e commit
+
+- [ ] **Step 11: Type-check (agora deve passar — as duas pontas estão completas)**
 
 Run: `npx tsc --noEmit`
 Expected: PASS (sem erros)
 
-- [ ] **Step 6: Rodar todos os testes**
+- [ ] **Step 12: Rodar toda a suíte**
 
 Run: `npm run test:run`
 Expected: PASS (incluindo os novos testes das Tasks 2–7; nenhum teste existente quebrado)
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 13: Commit único (ambos os arquivos)**
 
 ```bash
-git add src/App.tsx
-git commit -m "feat(app): fiação do handler de rastreabilidade de fontes
+git add src/components/tabs/EditorTabContent.tsx src/App.tsx
+git commit -m "feat(ui): rastreabilidade de fontes — painel, modal e fiação no editor
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 9: Verificação no app real (comportamento observado)
+
+> Testes verdes ≠ recurso funcionando. Antes do release, rodar o app e observar o fluxo de ponta a ponta. Opcional: usar o skill `run` para subir o app e o `verify` para conduzir a checagem.
+>
+> **Quota:** sua memória registra que smoke tests queimam quota rápido — limite a **1–2 execuções reais** do "Rastrear fontes", com um processo de teste.
+
+**Files:** nenhum (verificação manual)
+
+- [ ] **Step 1: Subir o app em dev**
+
+Run: `npm run dev` (confirme o script de dev em `package.json`; Vite normalmente expõe em `http://localhost:5173`)
+Expected: build sem erros, app carrega.
+
+- [ ] **Step 2: Checklist de comportamento (marcar cada item)**
+
+- [ ] Com um processo carregado e um tópico aberto no editor (com mini-relatório gerado), o painel lateral mostra **"Fontes do mini-relatório"** com o botão **"Rastrear fontes"**.
+- [ ] Clicar abre o modal; aparece o spinner "Rastreando fontes…"; ao concluir, lista os parágrafos (¶1, ¶2, …) com trechos e selos **✓ verificado** / **⚠ não localizado**, e o resumo de contagem no topo.
+- [ ] Conferir manualmente: pelo menos um trecho **✓ verificado** realmente consta na peça citada; e ao menos um caso em que a peça atribuída (caso C) está correta (ex.: trecho de defesa marcado como "Contestação 1", não como "Petição inicial").
+- [ ] Fechar e reabrir o modal → o resultado aparece **em cache, sem nova chamada** (botão agora diz "Ver rastreabilidade").
+- [ ] Editar uma frase do mini-relatório, salvar, reabrir o modal → faixa **"Fontes desatualizadas…"** com botão **Regerar**; clicar em Regerar atualiza o resultado.
+- [ ] Alternar **tema claro/escuro** com o modal aberto → legível e com contraste em ambos.
+- [ ] (Se prático e barato) trocar o provedor de IA e rodar **uma vez** → funciona multi-provedor.
+
+- [ ] **Step 3: Registrar o resultado**
+
+Anote no PR/commit de release quais itens passaram e o limiar fuzzy observado (ver Step abaixo). Se algum trecho legítimo cair como "não localizado" por excesso de rigor, ajustar `FUZZY_THRESHOLD` em `src/utils/sourceMatching.ts` (ex.: 0.80) e re-rodar os testes da Task 2.
+
+- [ ] **Step 4: Calibração rápida do limiar (se necessário)**
+
+Se a verificação real mostrar falsos "não localizado" (trecho existe mas o fuzzy não bate) ou falsos "verificado", ajuste `FUZZY_THRESHOLD` e atualize/expanda os casos em `src/utils/sourceMatching.test.ts` para fixar o novo comportamento. Commit:
+
+```bash
+git add src/utils/sourceMatching.ts src/utils/sourceMatching.test.ts
+git commit -m "fix(utils): calibra limiar fuzzy da verificação de fontes
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -1194,7 +1304,8 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - **Risco:** `CSS.btnSecondary`/`theme-warning-box` inexistentes no módulo esperado → quebra visual. **Mitigação:** Steps 5/6 da Task 8 incluem verificação por `grep`; `theme-warning-box` já é usado por `ModalAmberBox` em BaseModal.
 - **Risco:** desestruturação de `traceReportSources` no ponto errado do App. **Mitigação:** Task 9 Step 1 usa `grep` para achar a lista exata onde `generateMiniReport` é desestruturado.
 - **Risco:** fuzzy lento em peças muito grandes. **Mitigação:** janela de tokens é curta (tamanho do trecho) e roda só sob demanda; aceitável. Se necessário, limitar busca aos N primeiros caracteres por fonte numa iteração futura.
-- **Rollback:** cada task é um commit isolado; `git revert` do range reverte sem efeitos colaterais (campo `relatorioFontes` é opcional e ignorado por código antigo).
+- **Rollback:** cada task é um commit isolado e verde (a fiação UI+App é um único commit — não há commit intermediário com `tsc` quebrado); `git revert` do range reverte sem efeitos colaterais (campo `relatorioFontes` é opcional e ignorado por código antigo).
+- **Limiar fuzzy / performance:** tratados como calibração na execução (Task 9, Steps 3–4), com medição em texto real, e não cravados no papel.
 
 ---
 
@@ -1202,12 +1313,13 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 **Cobertura do spec:**
 - §3.1 modelo de dados → Task 1 ✓
-- §3.2 segundo passe → Tasks 5 (prompt/fontes) + 6 (orquestração) ✓
+- §3.2 segundo passe → Tasks 5 (prompt/fontes) + 6 (orquestração, com teste de integração de callAI mockado) ✓
 - §3.3 verificação local (exato/fuzzy/limiar 0.85) → Task 2 ✓
 - §3.4 UI (botão + modal BaseModal + staleness + temas) → Tasks 7 e 8 ✓
 - Persistência no Topic → Task 9 (grava `relatorioFontes`) ✓
 - §6 tratamento de erros (relatório vazio, JSON inválido, bloco órfão, peça ausente) → Tasks 6 (vazio/JSON), 5 (bloco órfão/peças filtradas), testes em 5 ✓
-- §7 testes (todos importam código de produção real) → Tasks 2,3,4,5,7 ✓
+- §7 testes (todos importam código de produção real) → Tasks 2,3,4,5,6 (integração),7 ✓
+- Verificação no app real (comportamento observado, não só testes verdes) → Task 9 ✓
 - §8 fora de escopo (offsets não populados; só mini-relatório; sem subapps) → respeitado ✓
 
 **Placeholder scan:** nenhum TBD/TODO; todo passo de código traz o código completo.
