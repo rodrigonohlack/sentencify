@@ -1,7 +1,7 @@
 /**
  * @file sourceMatching.ts
- * @description Verificacao local deterministica de trechos-fonte contra o texto
- * das pecas (anti-alucinacao). Funcoes puras, sem dependencias de React/API.
+ * @description Verificação local determinística de trechos-fonte contra o texto
+ * das peças (anti-alucinação). Funções puras, sem dependências de React/API.
  */
 
 /** Normaliza texto para comparacao: sem acento, sem pontuacao, minusculo, espacos colapsados. */
@@ -10,6 +10,8 @@ export function normalizeForMatch(s: string): string {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
+    .replace(/[“”„‘’]/g, ' ')
+    .replace(/[‐-―]/g, '-')
     .replace(/[.,;:!?()\[\]{}"]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -72,7 +74,7 @@ export function verifyTrechoInSources(
   const tt = tokenize(nt);
   let best = 0;
   let bestPeca = aiLabel;
-  for (const src of sources) {
+  outer: for (const src of sources) {
     const st = tokenize(src.normalized);
     const w = tt.length;
     if (st.length < w) {
@@ -83,7 +85,7 @@ export function verifyTrechoInSources(
     for (let i = 0; i + w <= st.length; i++) {
       const score = diceCoefficient(tt, st.slice(i, i + w));
       if (score > best) { best = score; bestPeca = src.peca; }
-      if (best >= 1) break;
+      if (best >= 1) break outer;
     }
   }
 
