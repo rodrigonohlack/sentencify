@@ -20,4 +20,20 @@ describe('splitReportIntoParagraphs', () => {
   it('retorna [] para html vazio', () => {
     expect(splitReportIntoParagraphs('')).toEqual([]);
   });
+
+  it('trata <p> com atributos (saída real do Quill) e numera índices', () => {
+    const html = '<p class="ql-align-justify">Primeiro.</p><p style="color:red">Segundo.</p>';
+    const r = splitReportIntoParagraphs(html);
+    expect(r).toEqual([
+      { index: 0, text: 'Primeiro.' },
+      { index: 1, text: 'Segundo.' },
+    ]);
+  });
+
+  it('mantém índices contíguos (0,1,2) após descartar parágrafo vazio', () => {
+    const html = '<p>Um.</p><p></p><p>Dois.</p><p>Três.</p>';
+    const r = splitReportIntoParagraphs(html);
+    expect(r.map(p => p.index)).toEqual([0, 1, 2]);
+    expect(r.map(p => p.text)).toEqual(['Um.', 'Dois.', 'Três.']);
+  });
 });
