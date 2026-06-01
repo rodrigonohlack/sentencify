@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.40',
+    date: '2026-05-31',
+    feature: 'fix(ui): rótulo de modelo errado para o provider claude-cli (mostrava "Claude Sonnet 4.5" mesmo com Opus 4.8 selecionado). O claude-cli guarda o modelo em aiSettings.claudeCliModel (campo próprio), não em claudeModel (que é o modelo da API Claude). Tanto o rodapé do modal de Rastreabilidade quanto o do TopicCurationModal liam claudeModel; agora ambos resolvem claudeCliModel quando provider === claude-cli, alinhados à lógica que o ConfigModal já usava.',
+  },
+  {
     version: '1.50.39',
     date: '2026-05-31',
     feature: 'feat(rastreabilidade): juízo de FIDELIDADE do mini-relatório, no mesmo passe de "Rastrear fontes" (uma única chamada). Além de verificar se as citações existem, a IA agora confere se cada parágrafo DISTORCE as peças — datas, valores, nomes, prazos, qualificações — e devolve, por parágrafo, veredito (fiel/divergente/indeterminado) + lista de divergências no formato "campo — relatório: X · peça: Y". O modal mostra selo de fidelidade por parágrafo, contagem de parágrafos divergentes e a lista de divergências. Pega casos como relatório dizendo 01/04/2024 quando a peça diz 01/03/2024 (a verificação de citações sozinha não pegava, pois só confirma que a citação existe, não que o relatório é fiel a ela).',

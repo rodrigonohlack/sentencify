@@ -10,7 +10,7 @@ const makeHook = (callAI: ReturnType<typeof vi.fn>) => {
     callAI,
     extractResponseText: vi.fn(),
     getModelDisplayName: (id: string) => MODEL_NAMES[id] || id,
-    aiSettings: { provider: 'claude-cli', claudeModel: 'claude-opus-4-8' },
+    aiSettings: { provider: 'claude-cli', claudeCliModel: 'claude-opus-4-8' },
     setRegeneratingRelatorio: vi.fn(),
   } as never;
   const analyzedDocuments = {

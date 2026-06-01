@@ -3023,7 +3023,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
                 ? (aiIntegration.aiSettings?.grokModel || 'grok-4-1-fast-reasoning')
                 : aiIntegration.aiSettings?.provider === 'deepseek'
                   ? (aiIntegration.aiSettings?.deepseekModel || 'deepseek-v4-flash')
-                  : (aiIntegration.aiSettings?.claudeModel || 'claude-sonnet-4-20250514')
+                  : aiIntegration.aiSettings?.provider === 'claude-cli'
+                    ? (aiIntegration.aiSettings?.claudeCliModel || 'claude-sonnet-4-6')
+                    : (aiIntegration.aiSettings?.claudeModel || 'claude-sonnet-4-20250514')
         }
         parallelRequests={aiIntegration.aiSettings?.parallelRequests || 5}
         isDarkMode={appTheme === 'dark'}

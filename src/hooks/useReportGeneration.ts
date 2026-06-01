@@ -507,7 +507,8 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
         : activeProvider === 'openai' ? settings?.openaiModel
           : activeProvider === 'grok' ? settings?.grokModel
             : activeProvider === 'deepseek' ? settings?.deepseekModel
-              : settings?.claudeModel;
+              : activeProvider === 'claude-cli' ? (settings?.claudeCliModel || 'claude-sonnet-4-6')
+                : settings?.claudeModel;
     const modelo = activeModelId
       ? aiIntegration.getModelDisplayName(activeModelId)
       : activeProvider;
