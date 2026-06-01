@@ -7,9 +7,10 @@ export default {
   ],
   theme: {
     extend: {
-      // EXPERIMENTO Spectral (branch experimento/spectral-titulos)
+      // Fonte da aplicação selecionável (v1.50.46): a classe font-serif segue a
+      // variável --app-font (Configurações › Aparência), com fallback Spectral.
       fontFamily: {
-        serif: ['Spectral', 'Georgia', 'serif'],
+        serif: ['var(--app-font)', 'Spectral', 'Georgia', 'serif'],
         'serif-sc': ['"Spectral SC"', 'Georgia', 'serif'],
       },
     },

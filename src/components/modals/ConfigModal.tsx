@@ -28,7 +28,7 @@ import {
   X, Zap, Download, Upload, Check, RefreshCw, Trash2, Plus,
   AlertCircle, FileText, Scale, BookOpen, Sparkles, Wand2,
   AlertTriangle, Lightbulb, Bot, Package, CheckCircle2, Timer, DollarSign, BarChart3, Save,
-  Brain, Mic, Lock, ScrollText, BadgePlus, Settings
+  Brain, Mic, Lock, ScrollText, BadgePlus, Settings, Type
 } from 'lucide-react';
 import { ProviderIcon } from '../ui/ProviderIcon';
 import { CSS } from '../../constants/styles';
@@ -47,6 +47,7 @@ import {
   useDragDropTopics,
   useExportImport,
   useIndexedDB,
+  useFontPreference,
   VOICE_MODEL_CONFIG
 } from '../../hooks';
 import type {
@@ -131,6 +132,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
 
   // NER Management
   const nerManagement = useNERManagement();
+  // Aparência: fonte da aplicação selecionável (v1.50.46)
+  const { fontId, setFontId, fonts } = useFontPreference();
   const {
     nerEnabled,
     setNerEnabled,
@@ -377,6 +380,46 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
         </div>
 
         <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+          {/* ═══════════════════════════════════════════════════════════════════════════════
+              SEÇÃO 0: Aparência — fonte da aplicação (v1.50.46)
+              ═══════════════════════════════════════════════════════════════════════════════ */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium theme-text-tertiary mb-3">
+              <Type className="w-4 h-4" />
+              Aparência · Fonte da aplicação
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {fonts.map((font) => (
+                <button
+                  key={font.id}
+                  onClick={() => setFontId(font.id)}
+                  className={`p-3 rounded-lg border-2 transition-all text-left ${
+                    fontId === font.id
+                      ? 'bg-blue-500/10 border-blue-500'
+                      : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+                  }`}
+                  title={font.label}
+                >
+                  <div
+                    className="text-base theme-text-primary truncate"
+                    style={{ fontFamily: font.stack }}
+                  >
+                    {font.label}
+                  </div>
+                  <div
+                    className="text-xs theme-text-muted truncate"
+                    style={{ fontFamily: font.stack }}
+                  >
+                    Sentença · Acórdão · Despacho
+                  </div>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs theme-text-muted mt-2">
+              Aplica-se aos títulos e ao texto do editor, em todo o aplicativo.
+            </p>
+          </div>
+
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 1: Provedor de IA
               ═══════════════════════════════════════════════════════════════════════════════ */}

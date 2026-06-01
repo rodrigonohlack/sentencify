@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.46',
+    date: '2026-06-01',
+    feature: 'feat(aparência): fonte da aplicação agora é selecionável em Configurações › Aparência. Antes a serif Spectral era hard-coded em index.html, src/index.css e tailwind.config.js (marcada como "experimento"). Agora há um catálogo de 7 famílias do Google Fonts — Spectral (padrão), Lora, Source Serif 4, Merriweather, EB Garamond, Carlito (≡ Calibri) e Inter — com a escolha persistida no localStorage (chave sentencify-app-font). A família ativa é aplicada via a variável CSS --app-font no document.documentElement, consumida pelos títulos (h1–h4, BaseModal, tópicos) e pelo editor de sentença (.sentence-serif, .field-editor-content), valendo em TODO o app (inclusive subapps). Carregamento dinâmico: a Spectral continua no <link> estático do index.html (sem FOUT no boot) e as demais só baixam quando selecionadas. Novo hook useFontPreference (espelho de useThemeManagement) + catálogo em src/constants/fonts.ts. Fallback do var() é a Spectral, então o visual é idêntico ao histórico até o usuário escolher outra fonte.',
+  },
+  {
     version: '1.50.45',
     date: '2026-06-01',
     feature: 'fix(segurança): rotas de proxy de IA (/api/claude, /api/gemini, /api/openai, /api/grok, /api/deepseek) deixam de usar a API key do ambiente do servidor (process.env.*_API_KEY) como fallback quando o cliente não envia x-api-key. Antes, uma chamada anônima sem header de key caía na key de env do servidor — vetor de roubo de cota/billing, já que essas rotas não têm authMiddleware. Agora a key vem exclusivamente do cliente (header x-api-key, ou query apiKey no GET /api/openai/models); sem key → 401. Tráfego legítimo é inalterado: o frontend de todos os apps já envia x-api-key (aiSettings.apiKeys.*). Não há keys de provider configuradas no env de produção, então é correção preventiva.',

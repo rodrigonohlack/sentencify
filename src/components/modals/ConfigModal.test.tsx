@@ -178,6 +178,14 @@ vi.mock('../../hooks', () => ({
   useIndexedDB: () => ({
     saveModels: vi.fn(),
   }),
+  useFontPreference: () => ({
+    fontId: 'spectral',
+    setFontId: vi.fn(),
+    fonts: [
+      { id: 'spectral', label: 'Spectral', stack: "'Spectral', Georgia, serif", googleFontsHref: null },
+      { id: 'inter', label: 'Inter', stack: "'Inter', system-ui, sans-serif", googleFontsHref: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' },
+    ],
+  }),
   VOICE_MODEL_CONFIG: {
     'haiku': { provider: 'claude', model: 'claude-haiku-4-5-20251001', displayName: 'Claude Haiku 4.5' },
     'flash': { provider: 'gemini', model: 'gemini-3-flash-preview', displayName: 'Gemini 3 Flash' },

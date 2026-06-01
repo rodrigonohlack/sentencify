@@ -13,6 +13,9 @@ export type { UseSpacingControlReturn } from './useSpacingControl';
 export { useFontSizeControl } from './useFontSizeControl';
 export type { UseFontSizeControlReturn } from './useFontSizeControl';
 
+export { useFontPreference } from './useFontPreference';
+export type { UseFontPreferenceReturn } from './useFontPreference';
+
 export { useEditorWidthControl } from './useEditorWidthControl';
 export type { UseEditorWidthControlReturn } from './useEditorWidthControl';
 
