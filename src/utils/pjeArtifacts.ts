@@ -26,3 +26,33 @@ export function cleanPjeArtifacts(text: string): string {
     .replace(PJE_ASSINATURA, ' ')
     .replace(/[ \t]{2,}/g, ' ');
 }
+
+/**
+ * Captura o ID do documento no PJe — o hash que fecha o rodapé de assinatura
+ * (ex.: "...às 11:15:27 - 85cb794" → "85cb794"). O mesmo ID costuma se repetir em
+ * toda página, então o resultado é deduplicado.
+ */
+const PJE_DOC_ID = /(?:documento\s+)?assinado eletronicamente por[\s\S]*?\d{1,2}:\d{2}:\d{2}\s*[-–—]\s*(\w+)/gi;
+
+export function getPjeDocIds(text: string): string[] {
+  const ids = new Set<string>();
+  for (const m of (text || '').matchAll(PJE_DOC_ID)) {
+    if (m[1]) ids.add(m[1]);
+  }
+  return [...ids];
+}
+
+/**
+ * Versão para a EXTRAÇÃO: remove o rodapé (cleanPjeArtifacts) mas PRESERVA o ID do
+ * documento, prefixando um marcador limpo no topo — para a LLM poder referenciar o
+ * ID nos textos. Não usar no match (o marcador poluiria a comparação).
+ */
+export function cleanPjeForExtraction(text: string): string {
+  const cleaned = cleanPjeArtifacts(text);
+  const ids = getPjeDocIds(text);
+  if (ids.length === 0) return cleaned;
+  const label = ids.length === 1
+    ? `[ID deste documento no PJe: ${ids[0]}]`
+    : `[IDs dos documentos neste arquivo no PJe: ${ids.join(', ')}]`;
+  return `${label}\n\n${cleaned}`;
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cleanPjeArtifacts } from './pjeArtifacts';
+import { cleanPjeArtifacts, getPjeDocIds, cleanPjeForExtraction } from './pjeArtifacts';
 
 describe('cleanPjeArtifacts', () => {
   it('remove o rodapé do PJe injetado no meio da frase, juntando as duas metades', () => {
@@ -32,5 +32,35 @@ describe('cleanPjeArtifacts', () => {
   it('tolera string vazia/nula', () => {
     expect(cleanPjeArtifacts('')).toBe('');
     expect(cleanPjeArtifacts(undefined as unknown as string)).toBe('');
+  });
+});
+
+describe('getPjeDocIds', () => {
+  it('extrai o ID (hash) do rodapé de assinatura', () => {
+    const t = 'texto Documento assinado eletronicamente por FULANO, em 18/03/2026, às 11:15:27 - 85cb794 mais texto';
+    expect(getPjeDocIds(t)).toEqual(['85cb794']);
+  });
+
+  it('deduplica o mesmo ID repetido em várias páginas', () => {
+    const t = 'pg1 assinado eletronicamente por X, em 01/01/2026, às 09:00:00 - abc123 pg2 assinado eletronicamente por X, em 01/01/2026, às 09:00:00 - abc123';
+    expect(getPjeDocIds(t)).toEqual(['abc123']);
+  });
+
+  it('retorna [] quando não há rodapé', () => {
+    expect(getPjeDocIds('texto sem rodapé')).toEqual([]);
+  });
+});
+
+describe('cleanPjeForExtraction', () => {
+  it('remove o rodapé E prefixa o ID do documento', () => {
+    const t = 'A reclamante foi admitida em Documento assinado eletronicamente por FULANO, em 18/03/2026, às 11:15:27 - 85cb794 01/03/2024.';
+    const r = cleanPjeForExtraction(t);
+    expect(r).toMatch(/^\[ID deste documento no PJe: 85cb794\]/);
+    expect(r).not.toMatch(/assinado eletronicamente/i);
+    expect(r).toContain('admitida em 01/03/2024.');
+  });
+
+  it('sem rodapé/ID → não prefixa nada (texto inalterado)', () => {
+    expect(cleanPjeForExtraction('Texto sem rodapé.')).toBe('Texto sem rodapé.');
   });
 });
