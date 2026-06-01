@@ -7,7 +7,7 @@
 
 import { normalizeForMatch, verifyTrechoInSources, type NormalizedSource } from './sourceMatching';
 import type { ReportParagraph } from './reportParagraphs';
-import type { RelatorioBlocoFonte } from '../types';
+import type { RelatorioBlocoFonte, RelatorioBlocoFidelidade } from '../types';
 
 /** Tamanho máximo do resumo do parágrafo exibido na UI de rastreabilidade. */
 const BLOCO_RESUMO_MAX_LEN = 120;
@@ -32,6 +32,15 @@ export interface TracingSource {
 export interface ParsedTracingBloco {
   blocoIndex: number;
   trechos: { peca: string; trecho: string }[];
+  fidelidade?: { veredito?: string | null; divergencias?: string[] };
+}
+
+/** Normaliza o veredito de fidelidade devolvido pela IA para a union estrita. */
+function normalizeVeredito(v: string | null | undefined): RelatorioBlocoFidelidade['veredito'] {
+  const s = (v || '').toLowerCase();
+  if (s.includes('diverg')) return 'divergente';
+  if (s.includes('fiel') || s.includes('fidedign') || s.includes('confere')) return 'fiel';
+  return 'indeterminado';
 }
 
 /**
@@ -65,22 +74,27 @@ export function buildTracingSources(
 /** Constrói o prompt do segundo passe (instruções positivas, exige JSON). */
 export function buildSourceTracingPrompt(paragraphs: ReportParagraph[]): string {
   const numbered = paragraphs.map(p => `[${p.index}] ${p.text}`).join('\n\n');
-  return `Sua tarefa é RASTREAR FONTES. Os documentos processuais (petição inicial e contestações) estão acima.
+  return `Sua tarefa tem DUAS partes para cada parágrafo do mini-relatório. Os documentos processuais (petição inicial e contestações) estão acima.
 
 Abaixo estão os parágrafos de um mini-relatório, cada um com seu índice entre colchetes.
-Para CADA parágrafo, identifique os trechos das peças acima que embasam o que ele afirma.
 
-REGRAS:
+PARTE 1 — RASTREAR FONTES: identifique os trechos das peças que embasam o que o parágrafo afirma.
 - Copie cada trecho de forma LITERAL e exata, como aparece na peça (mesmas palavras, sem reescrever, resumir ou parafrasear).
 - Cada trecho deve ser curto (uma a três frases) e suficiente para comprovar a afirmação.
 - Indique em "peca" de qual peça o trecho veio (ex.: "Petição inicial", "Contestação 1").
-- Se um parágrafo não tiver respaldo em nenhuma peça, devolva "trechos": [] para ele.
+- Se um parágrafo não tiver respaldo em nenhuma peça, devolva "trechos": [].
+
+PARTE 2 — CONFERIR FIDELIDADE: você está AUDITANDO se o parágrafo DISTORCE as peças.
+- Compare cada afirmação factual do parágrafo (datas, valores monetários, nomes, prazos, funções, qualificações jurídicas) com o que as peças efetivamente dizem.
+- Liste em "divergencias" TODA divergência encontrada, no formato "campo — relatório: X · peça: Y" (ex.: "Admissão — relatório: 01/04/2024 · peça: 01/03/2024").
+- "veredito" = "divergente" se houver QUALQUER divergência factual; "fiel" se tudo confere com as peças; "indeterminado" se não há base nas peças para conferir aquele parágrafo.
+- Seja rigoroso com números e datas: uma data ou valor diferente da peça é divergência, ainda que pareça pequena.
 
 PARÁGRAFOS DO MINI-RELATÓRIO:
 ${numbered}
 
 Responda APENAS com JSON válido neste formato, sem markdown e sem texto antes ou depois:
-{"blocos":[{"blocoIndex":0,"trechos":[{"peca":"Petição inicial","trecho":"..."}]}]}`;
+{"blocos":[{"blocoIndex":0,"trechos":[{"peca":"Petição inicial","trecho":"..."}],"fidelidade":{"veredito":"fiel","divergencias":[]}}]}`;
 }
 
 /**
@@ -100,6 +114,10 @@ export function mapTracingResponse(
       const res = verifyTrechoInSources(t.trecho, normSources, t.peca || '');
       return { trecho: t.trecho, peca: res.peca, status: res.status, matchScore: res.matchScore };
     });
-    return { blocoIndex: p.index, blocoResumo: p.text.slice(0, BLOCO_RESUMO_MAX_LEN), trechos };
+    const fidelidade: RelatorioBlocoFidelidade = {
+      veredito: normalizeVeredito(aiBloco?.fidelidade?.veredito),
+      divergencias: aiBloco?.fidelidade?.divergencias ?? []
+    };
+    return { blocoIndex: p.index, blocoResumo: p.text.slice(0, BLOCO_RESUMO_MAX_LEN), trechos, fidelidade };
   });
 }

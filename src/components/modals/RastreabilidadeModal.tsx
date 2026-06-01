@@ -1,13 +1,14 @@
 /**
  * @file RastreabilidadeModal.tsx
- * @description Exibe a rastreabilidade de fontes do mini-relatório por parágrafo,
- * com selo de verificação por trecho. Sob demanda; resultado persiste no tópico.
+ * @description Exibe a rastreabilidade de fontes do mini-relatório por parágrafo:
+ * verificação de citações (✓/⚠) E juízo de fidelidade do parágrafo às peças
+ * (fiel/divergente). Sob demanda; resultado persiste no tópico.
  */
 
 import React from 'react';
-import { Search, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Search, CheckCircle2, AlertTriangle, RefreshCw, XCircle } from 'lucide-react';
 import { BaseModal, CSS } from './BaseModal';
-import type { Topic } from '../../types';
+import type { RelatorioBlocoFidelidade, Topic } from '../../types';
 
 export interface RastreabilidadeModalProps {
   isOpen: boolean;
@@ -16,6 +17,30 @@ export interface RastreabilidadeModalProps {
   tracing: boolean;
   onRunTrace: () => void;
 }
+
+/** Selo de fidelidade do parágrafo (fiel / divergente / indeterminado). */
+const FidelidadeBadge: React.FC<{ fidelidade?: RelatorioBlocoFidelidade }> = ({ fidelidade }) => {
+  if (!fidelidade) return null;
+  if (fidelidade.veredito === 'fiel') {
+    return (
+      <span className="inline-flex items-center gap-1 text-[11px] font-sans text-green-600 dark:text-green-400 flex-shrink-0">
+        <CheckCircle2 className="w-3.5 h-3.5" /> Fiel
+      </span>
+    );
+  }
+  if (fidelidade.veredito === 'divergente') {
+    return (
+      <span className="inline-flex items-center gap-1 text-[11px] font-sans text-red-600 dark:text-red-400 flex-shrink-0">
+        <XCircle className="w-3.5 h-3.5" /> Divergência
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-[11px] font-sans theme-text-muted flex-shrink-0">
+      — Indeterminado
+    </span>
+  );
+};
 
 export const RastreabilidadeModal: React.FC<RastreabilidadeModalProps> = ({
   isOpen, onClose, topic, tracing, onRunTrace
@@ -28,6 +53,7 @@ export const RastreabilidadeModal: React.FC<RastreabilidadeModalProps> = ({
   const allTrechos = (rast?.blocos || []).flatMap(b => b.trechos);
   const verificados = allTrechos.filter(t => t.status === 'verificado').length;
   const naoLocalizados = allTrechos.length - verificados;
+  const divergentes = (rast?.blocos || []).filter(b => b.fidelidade?.veredito === 'divergente').length;
 
   return (
     <BaseModal
@@ -64,6 +90,11 @@ export const RastreabilidadeModal: React.FC<RastreabilidadeModalProps> = ({
             <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
               <AlertTriangle className="w-4 h-4" /> {naoLocalizados} não localizado(s)
             </span>
+            {divergentes > 0 && (
+              <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400 font-medium">
+                <XCircle className="w-4 h-4" /> {divergentes} parágrafo(s) divergente(s)
+              </span>
+            )}
           </div>
 
           {/* Staleness */}
@@ -83,10 +114,25 @@ export const RastreabilidadeModal: React.FC<RastreabilidadeModalProps> = ({
           <div className="space-y-3">
             {(rast.blocos || []).map(bloco => (
               <div key={bloco.blocoIndex} className="rounded-lg border theme-border-secondary theme-bg-app p-3">
-                <p className="text-sm font-medium theme-text-primary mb-2 font-serif">
-                  <span className="theme-text-muted mr-1 font-sans">¶{bloco.blocoIndex + 1}</span>
-                  {bloco.blocoResumo.replace(/[.…]+$/, '')}…
-                </p>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <p className="text-sm font-medium theme-text-primary font-serif">
+                    <span className="theme-text-muted mr-1 font-sans">¶{bloco.blocoIndex + 1}</span>
+                    {bloco.blocoResumo.replace(/[.…]+$/, '')}…
+                  </p>
+                  <FidelidadeBadge fidelidade={bloco.fidelidade} />
+                </div>
+                {bloco.fidelidade?.veredito === 'divergente' && bloco.fidelidade.divergencias.length > 0 && (
+                  <div className="rounded-lg border border-red-500/30 bg-red-50 dark:bg-red-900/15 p-3 mb-2">
+                    <p className="text-[11px] font-semibold text-red-700 dark:text-red-300 mb-1 inline-flex items-center gap-1 font-sans">
+                      <XCircle className="w-3.5 h-3.5" /> Divergências em relação às peças
+                    </p>
+                    <ul className="space-y-1">
+                      {bloco.fidelidade.divergencias.map((d, i) => (
+                        <li key={i} className="text-xs text-red-800 dark:text-red-200 font-serif">• {d}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 {bloco.trechos.length === 0 ? (
                   <p className="text-xs theme-text-muted italic">Sem trechos identificados para este parágrafo.</p>
                 ) : (

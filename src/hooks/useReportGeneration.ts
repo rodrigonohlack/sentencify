@@ -484,7 +484,9 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
     contentArray.push({ type: 'text', text: buildSourceTracingPrompt(paragraphs) });
 
     const raw = await aiIntegration.callAI([{ role: 'user', content: contentArray }], {
-      maxTokens: 4000,
+      // v1.50.39: 6000 (era 4000) — além dos trechos, a resposta agora traz o
+      // juízo de fidelidade por parágrafo (veredito + divergências).
+      maxTokens: 6000,
       useInstructions: false,
       temperature: 0.1
     });

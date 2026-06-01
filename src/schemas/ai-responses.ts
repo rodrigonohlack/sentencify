@@ -211,6 +211,13 @@ export const RastreabilidadeTrechoSchema = z.object({
   trecho: z.string().nullable().default('').transform(v => v ?? ''),
 }).passthrough();
 
+// Fidelidade tolerante: `veredito` aceita qualquer string (normalizada a jusante em
+// mapTracingResponse para 'fiel'|'divergente'|'indeterminado'); `divergencias` default [].
+export const RastreabilidadeFidelidadeSchema = z.object({
+  veredito: z.string().nullable().optional(),
+  divergencias: z.array(z.string()).default([]),
+}).passthrough();
+
 // Tolerância intencional: `blocoIndex` aceita number ou string numérica (LLMs às vezes
 // serializam índices como string). Um valor não-numérico vira NaN e NÃO derruba o parse —
 // é ignorado a jusante por mapTracingResponse (NaN nunca casa com o índice do parágrafo),
@@ -218,6 +225,7 @@ export const RastreabilidadeTrechoSchema = z.object({
 export const RastreabilidadeBlocoSchema = z.object({
   blocoIndex: z.number().or(z.string().transform(Number)),
   trechos: z.array(RastreabilidadeTrechoSchema).default([]),
+  fidelidade: RastreabilidadeFidelidadeSchema.optional(),
 }).passthrough();
 
 export const RastreabilidadeResponseSchema = z.object({

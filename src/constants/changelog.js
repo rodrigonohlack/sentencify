@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.39',
+    date: '2026-05-31',
+    feature: 'feat(rastreabilidade): juízo de FIDELIDADE do mini-relatório, no mesmo passe de "Rastrear fontes" (uma única chamada). Além de verificar se as citações existem, a IA agora confere se cada parágrafo DISTORCE as peças — datas, valores, nomes, prazos, qualificações — e devolve, por parágrafo, veredito (fiel/divergente/indeterminado) + lista de divergências no formato "campo — relatório: X · peça: Y". O modal mostra selo de fidelidade por parágrafo, contagem de parágrafos divergentes e a lista de divergências. Pega casos como relatório dizendo 01/04/2024 quando a peça diz 01/03/2024 (a verificação de citações sozinha não pegava, pois só confirma que a citação existe, não que o relatório é fiel a ela).',
+  },
+  {
     version: '1.50.38',
     date: '2026-05-31',
     feature: 'fix(rastreabilidade): falso positivo na verificação de fontes quando o extrator de PDF injeta o rodapé de assinatura do PJe ("Documento assinado eletronicamente por ... às HH:MM:SS - hash") no MEIO de uma frase, partindo o trecho e fazendo o match (exato e fuzzy) falhar. normalizeForMatch passou a remover esse rodapé antes de comparar — melhora o recall sem afrouxar o limiar (sem risco de falso positivo inverso). Trecho citado corretamente pela IA agora verifica como esperado.',

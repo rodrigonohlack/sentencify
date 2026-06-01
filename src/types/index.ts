@@ -81,6 +81,16 @@ export interface RelatorioFonteTrecho {
   offsetFim?: number;
 }
 
+/**
+ * Juízo de fidelidade do parágrafo às peças: avalia se o relatório DISTORCE a
+ * fonte (datas, valores, nomes, prazos, qualificações), além de checar citações.
+ */
+export interface RelatorioBlocoFidelidade {
+  veredito: 'fiel' | 'divergente' | 'indeterminado';
+  /** Cada divergência factual, ex.: "Admissão — relatório: 01/04/2024 · peça: 01/03/2024". */
+  divergencias: string[];
+}
+
 /** Trechos-fonte agrupados por parágrafo do mini-relatório (granularidade B). */
 export interface RelatorioBlocoFonte {
   /** Índice do parágrafo do relatório (alinhamento determinístico). */
@@ -89,6 +99,8 @@ export interface RelatorioBlocoFonte {
   blocoResumo: string;
   /** Trechos de origem que embasam este parágrafo. */
   trechos: RelatorioFonteTrecho[];
+  /** Juízo de fidelidade do parágrafo às peças (mesmo passe da rastreabilidade). */
+  fidelidade?: RelatorioBlocoFidelidade;
 }
 
 /** Resultado completo da rastreabilidade, persistido no tópico. */

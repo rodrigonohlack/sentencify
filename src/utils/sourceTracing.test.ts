@@ -33,6 +33,14 @@ describe('buildSourceTracingPrompt', () => {
     expect(prompt).toContain('blocoIndex');
     expect(prompt).toContain('JSON');
   });
+
+  it('pede a conferência de fidelidade (veredito + divergencias)', () => {
+    const prompt = buildSourceTracingPrompt([{ index: 0, text: 'Parágrafo A.' }]);
+    expect(prompt).toContain('fidelidade');
+    expect(prompt).toContain('veredito');
+    expect(prompt).toContain('divergencias');
+    expect(prompt.toLowerCase()).toContain('distorce');
+  });
 });
 
 describe('mapTracingResponse', () => {
@@ -69,5 +77,27 @@ describe('mapTracingResponse', () => {
     expect(blocos).toHaveLength(2);
     expect(blocos[0].trechos).toEqual([]);
     expect(blocos[1].trechos).toEqual([]);
+  });
+
+  it('anexa fidelidade: normaliza veredito e mantém divergências', () => {
+    const parsed = [
+      { blocoIndex: 0, trechos: [], fidelidade: { veredito: 'DIVERGENTE', divergencias: ['Admissão — relatório: 01/04/2024 · peça: 01/03/2024'] } },
+      { blocoIndex: 1, trechos: [], fidelidade: { veredito: 'fiel', divergencias: [] } },
+    ];
+    const blocos = mapTracingResponse(parsed, paragraphs, sources);
+    expect(blocos[0].fidelidade?.veredito).toBe('divergente');
+    expect(blocos[0].fidelidade?.divergencias).toHaveLength(1);
+    expect(blocos[1].fidelidade?.veredito).toBe('fiel');
+  });
+
+  it('fidelidade ausente ou veredito desconhecido → indeterminado', () => {
+    const parsed = [
+      { blocoIndex: 0, trechos: [] }, // sem fidelidade
+      { blocoIndex: 1, trechos: [], fidelidade: { veredito: 'sei lá', divergencias: [] } },
+    ];
+    const blocos = mapTracingResponse(parsed, paragraphs, sources);
+    expect(blocos[0].fidelidade?.veredito).toBe('indeterminado');
+    expect(blocos[0].fidelidade?.divergencias).toEqual([]);
+    expect(blocos[1].fidelidade?.veredito).toBe('indeterminado');
   });
 });
