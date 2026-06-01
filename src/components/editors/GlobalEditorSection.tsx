@@ -181,7 +181,7 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
                     {onOpenJurisModal && (
                       <button
                         onClick={() => onOpenJurisModal(topicIndex)}
-                        className="hover-blue-700 px-2 py-1 text-white text-xs rounded flex items-center gap-1 bg-blue-600"
+                        className="px-2 py-1 text-xs rounded flex items-center gap-1 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
                         title="Buscar Jurisprudência"
                       >
                         <Scale className="w-3 h-3" />
@@ -191,7 +191,7 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
                     {onOpenAIAssistant && (
                       <button
                         onClick={() => onOpenAIAssistant(topicIndex)}
-                        className="hover-blue-700 px-2 py-1 text-white text-xs rounded flex items-center gap-1 bg-blue-600"
+                        className="px-2 py-1 text-xs rounded flex items-center gap-1 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
                         title="Assistente de Redação IA"
                       >
                         <Sparkles className="w-3 h-3" />
@@ -202,7 +202,7 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
                     {onOpenFactsComparison && (
                       <button
                         onClick={() => onOpenFactsComparison(topicIndex)}
-                        className="hover:bg-amber-700 px-2 py-1 text-white text-xs rounded flex items-center gap-1 bg-amber-600"
+                        className="px-2 py-1 text-xs rounded flex items-center gap-1 theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
                         title="Confronto de Fatos (Inicial vs Contestação)"
                       >
                         <Scale className="w-3 h-3" />
