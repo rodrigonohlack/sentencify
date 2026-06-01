@@ -326,34 +326,19 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
         <div className="space-y-6">
           {sintesesPorTema && sintesesPorTema.length > 0 ? (
             sintesesPorTema.map((tema, i) => {
-              // Identificar depoentes que NÃO falaram sobre este tema
-              // Normaliza nome: remove acentos, hífens, converte para uppercase, tokeniza em palavras
-              const normalizeToTokens = (name: string): string[] => {
-                return name
-                  .toUpperCase()
-                  .normalize('NFD')
-                  .replace(/[\u0300-\u036f]/g, '') // remove acentos
-                  .replace(/[-_]/g, ' ')           // converte hífens/underscores em espaços
-                  .replace(/[()]/g, ' ')           // remove parênteses
-                  .split(/\s+/)                    // tokeniza por espaços
-                  .filter(t => t.length > 1);      // remove tokens de 1 caractere
-              };
-
-              // Verifica se dois conjuntos de tokens têm pelo menos 2 palavras em comum
-              const hasNameMatch = (tokens1: string[], tokens2: string[]): boolean => {
-                const matches = tokens1.filter(t1 => tokens2.some(t2 => t1 === t2 || t1.includes(t2) || t2.includes(t1)));
-                return matches.length >= 2 || (matches.length === 1 && (tokens1.length === 1 || tokens2.length === 1));
-              };
-
-              const deponentesSemDeclaracao = depoentes.filter(dep => {
-                const depTokens = normalizeToTokens(dep.nome);
-                // Verifica se alguma declaração do tema corresponde a este depoente
-                const encontrado = tema.declaracoes?.some(dec => {
-                  const decTokens = normalizeToTokens(dec.deponente);
-                  return hasNameMatch(depTokens, decTokens);
-                }) || false;
-                return !encontrado;
-              });
+              // Depoentes que NÃO falaram sobre este tema: casamento por deponenteId
+              // (igual às abas Detalhada/Por Depoente). Só anota "não falou" quando
+              // TODAS as declarações trazem um deponenteId resolvível — análises antigas
+              // (sem id) apenas omitem o bloco, evitando a duplicação de depoentes.
+              const declaracoesTema = tema.declaracoes ?? [];
+              const idsRoster = new Set(depoentes.map(d => d.id));
+              const mapeamentoConfiavel =
+                declaracoesTema.length > 0 &&
+                declaracoesTema.every(d => d.deponenteId && idsRoster.has(d.deponenteId));
+              const idsQueFalaram = new Set(declaracoesTema.map(d => d.deponenteId));
+              const deponentesSemDeclaracao = mapeamentoConfiavel
+                ? depoentes.filter(dep => !idsQueFalaram.has(dep.id))
+                : [];
 
               return (
                 <div key={i}>

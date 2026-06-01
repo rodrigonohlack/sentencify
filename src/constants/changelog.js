@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.43',
+    date: '2026-05-31',
+    feature: 'fix(prova-oral): corrige duplicação de depoentes na aba "Por Tema" — cada depoente aparecia também como "Não falou sobre o tema". Causa-raiz: a aba reconstruía o roster por tema casando o nome canônico (depoentes[].nome, ex.: "Nildes Maria Dias Fernandes") contra o rótulo de texto livre gerado pela LLM (declaracoes[].deponente, ex.: "NILDES (autor)") por sobreposição de tokens; a palavra de qualificação entre parênteses inflava a contagem de tokens e quebrava o fallback de nome único, marcando TODOS os depoentes como "não falou" em todos os temas. Correção na FONTE: DeclaracaoPorTema passa a carregar deponenteId (opcional, retrocompatível); o prompt da Fase 2 (juridical-analysis) agora exige o deponenteId copiado de depoentes[].id em cada declaração; e a aba "Por Tema" casa por ID (igual às abas Detalhada/Por Depoente), eliminando todo o matching fuzzy por nome. Análises antigas (sem deponenteId) apenas omitem o bloco "não falou", sem duplicar depoentes.',
+  },
+  {
     version: '1.50.42',
     date: '2026-05-31',
     feature: 'feat(extração): remove o rodapé de assinatura do PJe já na extração de texto (pdf.js e Tesseract), para a LLM receber texto limpo — antes só era removido na hora do match da rastreabilidade. PRESERVA o ID do documento: o hash do rodapé é capturado e reinserido como marcador no topo ([ID deste documento no PJe: XXXXXXX]), para a LLM poder referenciar o ID nos textos. Regex centralizada em util compartilhado src/utils/pjeArtifacts.ts (cleanPjeArtifacts / getPjeDocIds / cleanPjeForExtraction), reusado por useDocumentServices (extração, via cleanPjeForExtraction) e sourceMatching.normalizeForMatch (defesa em profundidade, via cleanPjeArtifacts). NÃO aplicado a Vision (Claude/Gemini, que entendem layout) nem ao envio de PDF binário (sem texto extraído). Preserva o texto legível (maiúsculas/acentos/pontuação), diferente do normalizeForMatch que é destrutivo.',

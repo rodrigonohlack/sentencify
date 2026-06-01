@@ -76,8 +76,9 @@ Se sinteses[] tem 50 declarações, sintesesPorTema DEVE ter no mínimo 50 decla
 
 ### 🔴 REGRA CRÍTICA DE IDENTIFICAÇÃO DE DEPOENTES:
 
-1. **USE EXATAMENTE o mesmo nome/identificador** que aparece em depoentes[] do JSON de entrada
-   - Se depoentes[] tem { id: "autor-1", nome: "SAMUEL" }, use "AUTOR SAMUEL" ou o deponenteId
+1. **SEMPRE inclua o campo "deponenteId"** em CADA declaração, copiando EXATAMENTE o "id" do depoente em depoentes[] (ex.: "autor-1", "testemunha-autor-1"). É esse id que vincula a declaração ao depoente — é OBRIGATÓRIO, não pode ser omitido nem inventado.
+   - Use também o campo "deponente" com o rótulo legível (ex.: "AUTOR SAMUEL")
+   - Se depoentes[] tem { id: "autor-1", nome: "SAMUEL" }, gere { "deponenteId": "autor-1", "deponente": "AUTOR SAMUEL" }
    - NÃO invente variações como "RECLAMANTE (Samuel de Souza Amanajas)"
    - NÃO misture qualificação no nome: use "AUTOR SAMUEL", não "RECLAMANTE Samuel"
 
@@ -764,16 +765,19 @@ Sem markdown, sem backticks, sem explicações - apenas o JSON:
       "tema": "Vínculo empregatício e registro em CTPS",
       "declaracoes": [
         {
+          "deponenteId": "autor-1",
           "deponente": "AUTOR FULANO",
           "qualificacao": "autor",
           "textoCorrente": "⚠️ TODAS as declarações deste depoente sobre ESTE tema: afirmou início em 17/07/2024 (1m 10s); disse trabalhar sem carteira até dez/2024 (2m 29s); relatou carteira assinada em fev/2025 com baixa um mês depois mas continuou trabalhando (3m 57s); negou trabalhar em outro local entre 11/03 e 30/04/2025 (16m 36s)"
         },
         {
+          "deponenteId": "testemunha-autor-1",
           "deponente": "TESTEMUNHA ALFRE (testemunha do autor)",
           "qualificacao": "testemunha-autor",
           "textoCorrente": "⚠️ INCLUIR TUDO QUE CARACTERIZA VÍNCULO: informou trabalho como chapeiro de maio/2024 a julho/2025 (32m 14s); confirmou que autor trabalhava de terça a domingo (33m 43s); relatou que autor se afastou apenas 4-5 dias e retornou (35m 10s); confirmou que autor trabalhou em outro local durante breve afastamento (37m 40s)"
         },
         {
+          "deponenteId": "preposto-1",
           "deponente": "PREPOSTO SICRANO",
           "qualificacao": "preposto",
           "textoCorrente": "declarou que autor fazia diárias desde março/2024 (19m 59s); afirmou que só começou efetivamente quando carteira foi assinada (20m 40s); disse que autor abandonou para trabalhar em outro lugar (21m 13s); negou trabalho no período entre baixa e nova assinatura (21m 59s)"
@@ -784,16 +788,19 @@ Sem markdown, sem backticks, sem explicações - apenas o JSON:
       "tema": "Dano Moral e Assédio",
       "declaracoes": [
         {
+          "deponenteId": "autor-1",
           "deponente": "AUTOR FULANO",
           "qualificacao": "autor",
           "textoCorrente": "denunciou xingamentos homofóbicos (9m 11s); relatou envio de vídeo pornográfico (9m 57s)"
         },
         {
+          "deponenteId": "testemunha-autor-2",
           "deponente": "TESTEMUNHA MARIA (testemunha do autor)",
           "qualificacao": "testemunha-autor",
           "textoCorrente": "confirmou ter ouvido xingamentos (35m 55s)"
         },
         {
+          "deponenteId": "testemunha-re-1",
           "deponente": "TESTEMUNHA JOSÉ (testemunha da ré)",
           "qualificacao": "testemunha-re",
           "textoCorrente": "⚠️ NEGAÇÕES TAMBÉM DEVEM APARECER: negou xingamentos (1h 11m 47s); afirmou que patrão não bebia no trabalho (1h 12m 00s)"

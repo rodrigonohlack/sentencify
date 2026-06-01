@@ -125,6 +125,13 @@ export interface SinteseCondensada {
 /** Declaração de um depoente sobre um tema específico */
 export interface DeclaracaoPorTema {
   deponente: string;
+  /**
+   * ID do depoente em depoentes[] (ex.: "autor-1"). Permite casar a declaração
+   * com o roster canônico por ID na aba "Por Tema" (como as abas Detalhada/Por
+   * Depoente), em vez de por nome. Opcional para retrocompatibilidade: análises
+   * salvas antes desta versão não possuem o campo.
+   */
+  deponenteId?: string;
   qualificacao: Qualificacao;
   textoCorrente: string;
 }
