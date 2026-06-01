@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.41',
+    date: '2026-05-31',
+    feature: 'fix(ui): botões do editor global (GlobalEditorSection) não tinham acompanhado o novo padrão de hierarquia — Jurisprudência e Assistente IA estavam azuis e Confronto laranja, enquanto no editor individual já eram secundários neutros. Padronizados para o mesmo estilo neutro (theme-bg-secondary + borda + theme-text-primary), eliminando a divergência entre editor individual e global.',
+  },
+  {
     version: '1.50.40',
     date: '2026-05-31',
     feature: 'fix(ui): rótulo de modelo errado para o provider claude-cli (mostrava "Claude Sonnet 4.5" mesmo com Opus 4.8 selecionado). O claude-cli guarda o modelo em aiSettings.claudeCliModel (campo próprio), não em claudeModel (que é o modelo da API Claude). Tanto o rodapé do modal de Rastreabilidade quanto o do TopicCurationModal liam claudeModel; agora ambos resolvem claudeCliModel quando provider === claude-cli, alinhados à lógica que o ConfigModal já usava.',
