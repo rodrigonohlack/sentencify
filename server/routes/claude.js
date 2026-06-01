@@ -9,7 +9,7 @@ const router = Router();
 router.post('/messages', async (req, res) => {
   try {
     // API key do header ou variável de ambiente
-    const apiKey = req.headers['x-api-key'] || process.env.ANTHROPIC_API_KEY;
+    const apiKey = req.headers['x-api-key'];
 
     if (!apiKey) {
       return res.status(401).json({
@@ -59,7 +59,7 @@ router.post('/messages', async (req, res) => {
 router.post('/stream', async (req, res) => {
   let keepAlive = null;
   try {
-    const apiKey = req.headers['x-api-key'] || process.env.ANTHROPIC_API_KEY;
+    const apiKey = req.headers['x-api-key'];
 
     if (!apiKey) {
       return res.status(401).json({

@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.45',
+    date: '2026-06-01',
+    feature: 'fix(segurança): rotas de proxy de IA (/api/claude, /api/gemini, /api/openai, /api/grok, /api/deepseek) deixam de usar a API key do ambiente do servidor (process.env.*_API_KEY) como fallback quando o cliente não envia x-api-key. Antes, uma chamada anônima sem header de key caía na key de env do servidor — vetor de roubo de cota/billing, já que essas rotas não têm authMiddleware. Agora a key vem exclusivamente do cliente (header x-api-key, ou query apiKey no GET /api/openai/models); sem key → 401. Tráfego legítimo é inalterado: o frontend de todos os apps já envia x-api-key (aiSettings.apiKeys.*). Não há keys de provider configuradas no env de produção, então é correção preventiva.',
+  },
+  {
     version: '1.50.44',
     date: '2026-05-31',
     feature: 'fix(prova-oral): aba "Por Tema" passa a exibir o nome canônico do depoente (via deponenteId) na lista de quem falou — antes mostrava o rótulo de texto livre da LLM (ex.: "AUTORA NILDES"), divergindo da aba Detalhada e das próprias linhas "Não falou" da aba (ex.: "RECLAMANTE (Nildes Maria Dias Fernandes)"). Agora o rótulo é resolvido por depoentes[].id (getDepoente), com a qualificação/borda também derivadas do depoente canônico; fallback ao rótulo original (dec.deponente) em análises antigas sem deponenteId. Complementa o v1.50.43.',

@@ -14,7 +14,7 @@ const router = Router();
 router.post('/generate', async (req, res) => {
   try {
     const { model, request } = req.body;
-    const key = req.headers['x-api-key'] || process.env.GOOGLE_API_KEY;
+    const key = req.headers['x-api-key'];
 
     if (!key) {
       return res.status(401).json({
@@ -101,7 +101,7 @@ router.post('/generate', async (req, res) => {
  */
 router.get('/models', async (req, res) => {
   try {
-    const apiKey = req.headers['x-api-key'] || process.env.GOOGLE_API_KEY;
+    const apiKey = req.headers['x-api-key'];
 
     if (!apiKey) {
       return res.status(401).json({
@@ -132,7 +132,7 @@ router.post('/stream', async (req, res) => {
   let keepAlive = null;
   try {
     const { model, request } = req.body;
-    const key = req.headers['x-api-key'] || process.env.GOOGLE_API_KEY;
+    const key = req.headers['x-api-key'];
 
     if (!key) {
       return res.status(401).json({

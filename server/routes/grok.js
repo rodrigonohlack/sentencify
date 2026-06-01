@@ -15,7 +15,7 @@ const router = Router();
  */
 router.post('/chat', async (req, res) => {
   try {
-    const apiKey = req.headers['x-api-key'] || process.env.XAI_API_KEY;
+    const apiKey = req.headers['x-api-key'];
 
     if (!apiKey) {
       return res.status(401).json({
@@ -79,7 +79,7 @@ router.post('/chat', async (req, res) => {
 router.post('/stream', async (req, res) => {
   let keepAlive = null;
   try {
-    const apiKey = req.headers['x-api-key'] || process.env.XAI_API_KEY;
+    const apiKey = req.headers['x-api-key'];
 
     if (!apiKey) {
       return res.status(401).json({
