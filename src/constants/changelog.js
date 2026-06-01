@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.38',
+    date: '2026-05-31',
+    feature: 'fix(rastreabilidade): falso positivo na verificação de fontes quando o extrator de PDF injeta o rodapé de assinatura do PJe ("Documento assinado eletronicamente por ... às HH:MM:SS - hash") no MEIO de uma frase, partindo o trecho e fazendo o match (exato e fuzzy) falhar. normalizeForMatch passou a remover esse rodapé antes de comparar — melhora o recall sem afrouxar o limiar (sem risco de falso positivo inverso). Trecho citado corretamente pela IA agora verifica como esperado.',
+  },
+  {
     version: '1.50.37',
     date: '2026-05-31',
     feature: 'fix(ui): rodapé do modal de Rastreabilidade mostrava o id do provider ("claude-cli") em vez do modelo. Agora resolve o modelo ativo por provider (claudeModel/geminiModel/openaiModel/grokModel/deepseekModel) e exibe o nome amigável via getModelDisplayName (ex.: "Claude Opus 4.8"). O mapa de getModelDisplayName foi completado com os modelos locais/CLI (claude-opus-4-8, claude-sonnet-4-6, gpt-5.5).',

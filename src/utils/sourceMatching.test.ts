@@ -44,4 +44,15 @@ describe('verifyTrechoInSources', () => {
     expect(r.status).toBe('nao_localizado');
     expect(r.peca).toBe('Contestação 1');
   });
+
+  it('ignora rodapé de assinatura do PJe injetado no meio da frase (evita falso positivo)', () => {
+    const sourceComRodape = norm(
+      'Petição inicial',
+      'Ocorre que, no seu último mês de prestação de serviços, especificamente no mês da rescisão ocorrida em Documento assinado eletronicamente por JEAN CARLOS MAGALHAES CONCEICAO, em 18/03/2026, às 11:15:27 - 85cb794\n\n31/10/2025 , a Reclamada, de forma arbitrária e injustificada, não efetuou o pagamento da referida parcela.'
+    );
+    const trechoLimpo = 'Ocorre que, no seu último mês de prestação de serviços, especificamente no mês da rescisão ocorrida em 31/10/2025, a Reclamada, de forma arbitrária e injustificada, não efetuou o pagamento da referida parcela.';
+    const r = verifyTrechoInSources(trechoLimpo, [sourceComRodape], 'Petição inicial');
+    expect(r.status).toBe('verificado');
+    expect(r.peca).toBe('Petição inicial');
+  });
 });
