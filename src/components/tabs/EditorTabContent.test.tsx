@@ -19,7 +19,12 @@ vi.mock('../../constants/styles', () => ({
     modalHeader: 'modal-header-class',
     flexGap2: 'flex gap-2',
     label: 'label-class',
+    btnSecondary: 'btn-secondary-class',
   },
+}));
+
+vi.mock('../modals/RastreabilidadeModal', () => ({
+  RastreabilidadeModal: vi.fn(() => null),
 }));
 
 vi.mock('../', () => ({
@@ -95,6 +100,7 @@ const mockSetSuggestions = vi.fn();
 const mockSetShowProofPanel = vi.fn();
 const mockSetRelatorioInstruction = vi.fn();
 const mockSetDispositivoInstruction = vi.fn();
+const mockOnTraceReportSources = vi.fn().mockResolvedValue(undefined);
 
 const createMockTopic = (title = 'Horas Extras') => ({
   title,
@@ -194,6 +200,8 @@ const createDefaultProps = (overrides: Partial<EditorTabContentProps> = {}): Edi
   setUseSemanticManualSearch: mockSetUseSemanticManualSearch,
   semanticManualSearching: false,
   setSemanticManualSearchResults: mockSetSemanticManualSearchResults,
+  onTraceReportSources: mockOnTraceReportSources,
+  tracingFontes: false,
   ...overrides,
 });
 
@@ -504,6 +512,55 @@ describe('EditorTabContent', () => {
         fireEvent.click(headerButton);
         expect(mockSetShowProofPanel).toHaveBeenCalled();
       }
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FONTES DO MINI-RELATÓRIO PANEL
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Painel Fontes do mini-relatório', () => {
+    it('(a) mostra painel e botão "Rastrear fontes" quando relatorio não-vazio e título != DISPOSITIVO e sem relatorioFontes', () => {
+      const props = createDefaultProps({
+        editingTopic: {
+          ...createMockTopic('Horas Extras'),
+          relatorio: 'Relatório do tópico',
+          relatorioFontes: undefined,
+        } as Topic,
+      });
+      render(<EditorTabContent {...props} />);
+
+      expect(screen.getByText('Fontes do mini-relatório')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Rastrear fontes/i })).toBeInTheDocument();
+    });
+
+    it('(b) mostra botão "Ver rastreabilidade" quando relatorioFontes está presente', () => {
+      const props = createDefaultProps({
+        editingTopic: {
+          ...createMockTopic('Horas Extras'),
+          relatorio: 'Relatório do tópico',
+          relatorioFontes: {
+            geradoEm: '2026-05-31T10:00:00.000Z',
+            baseSnapshot: 'Relatório do tópico',
+            blocos: [],
+          },
+        } as Topic,
+      });
+      render(<EditorTabContent {...props} />);
+
+      expect(screen.getByRole('button', { name: /Ver rastreabilidade/i })).toBeInTheDocument();
+    });
+
+    it('(c) NÃO mostra o painel quando título é DISPOSITIVO', () => {
+      const props = createDefaultProps({
+        editingTopic: {
+          ...createMockTopic('DISPOSITIVO'),
+          relatorio: 'Relatório do tópico',
+        } as Topic,
+      });
+      render(<EditorTabContent {...props} />);
+
+      expect(screen.queryByText('Fontes do mini-relatório')).not.toBeInTheDocument();
     });
   });
 

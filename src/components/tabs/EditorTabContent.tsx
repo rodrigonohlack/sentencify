@@ -17,6 +17,7 @@ import {
 import { CSS } from '../../constants/styles';
 import { DecisionEditorContainer } from '../';
 import { SuggestionCard } from '../';
+import { RastreabilidadeModal } from '../modals/RastreabilidadeModal';
 import { useModelsStore } from '../../stores/useModelsStore';
 import { isRelatorio } from '../../utils/text';
 import type { Topic, Model, Proof, QuillInstance } from '../../types';
@@ -103,6 +104,8 @@ export interface EditorTabContentProps {
   regenerateRelatorioWithInstruction: () => Promise<void>;
   regenerateRelatorioProcessual: () => Promise<void>;
   regenerateDispositivoWithInstruction: () => Promise<void>;
+  onTraceReportSources: () => Promise<void>;
+  tracingFontes: boolean;
 
   // Model callbacks
   confirmExtractModel: () => void;
@@ -171,6 +174,8 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
   regenerateRelatorioWithInstruction,
   regenerateRelatorioProcessual,
   regenerateDispositivoWithInstruction,
+  onTraceReportSources,
+  tracingFontes,
   confirmExtractModel,
   saveAsModel,
   insertModelContent,
@@ -192,6 +197,12 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
   semanticManualSearching,
   setSemanticManualSearchResults,
 }) => {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STATE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const [showFontesModal, setShowFontesModal] = React.useState(false);
+
   // ═══════════════════════════════════════════════════════════════════════════
   // HANDLERS
   // ═══════════════════════════════════════════════════════════════════════════
@@ -377,6 +388,28 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
               </div>
             )}
 
+            {/* Painel: Fontes do mini-relatório */}
+            {/* Inclui o tópico RELATÓRIO de propósito: traceReportSources trata esse caso
+                (ativa documentos complementares). Só DISPOSITIVO fica de fora (não tem relatório). */}
+            {(editingTopic.editedRelatorio || editingTopic.relatorio) &&
+             editingTopic.title?.toUpperCase() !== 'DISPOSITIVO' && (
+              <div className="theme-bg-secondary rounded-lg border theme-border-secondary p-4">
+                <div className={CSS.flexGap2}>
+                  <Search className="w-5 h-5 theme-text-blue" />
+                  <h4 className="font-bold theme-text-primary">Fontes do mini-relatório</h4>
+                </div>
+                <p className="text-xs theme-text-muted mt-1 mb-3">
+                  Audite de quais trechos das peças a IA extraiu cada parágrafo.
+                </p>
+                <button
+                  onClick={() => setShowFontesModal(true)}
+                  className={CSS.btnSecondary + ' w-full'}
+                >
+                  {editingTopic.relatorioFontes ? 'Ver rastreabilidade' : 'Rastrear fontes'}
+                </button>
+              </div>
+            )}
+
             <h4 className="font-bold text-purple-400 flex items-center gap-2">
               <Lightbulb className="w-4 h-4" aria-hidden="true" /> Sugestões de Modelos
             </h4>
@@ -492,6 +525,16 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
             )}
           </div>
         </div>
+      )}
+
+      {editingTopic && (
+        <RastreabilidadeModal
+          isOpen={showFontesModal}
+          onClose={() => setShowFontesModal(false)}
+          topic={editingTopic}
+          tracing={tracingFontes}
+          onRunTrace={onTraceReportSources}
+        />
       )}
     </div>
   );

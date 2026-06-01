@@ -66,3 +66,7 @@ export type { ImportProvaOralListModalProps, ImportProvaOralSectionsModalProps }
 // Streaming Modal (v1.39.09)
 export { StreamingModal } from './StreamingModal';
 export type { StreamingModalProps, StreamingOperationType } from './StreamingModal';
+
+// Rastreabilidade Modal (feat/rastreabilidade-fontes)
+export { RastreabilidadeModal } from './RastreabilidadeModal';
+export type { RastreabilidadeModalProps } from './RastreabilidadeModal';

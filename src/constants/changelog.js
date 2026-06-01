@@ -3,6 +3,41 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.40',
+    date: '2026-05-31',
+    feature: 'fix(ui): rótulo de modelo errado para o provider claude-cli (mostrava "Claude Sonnet 4.5" mesmo com Opus 4.8 selecionado). O claude-cli guarda o modelo em aiSettings.claudeCliModel (campo próprio), não em claudeModel (que é o modelo da API Claude). Tanto o rodapé do modal de Rastreabilidade quanto o do TopicCurationModal liam claudeModel; agora ambos resolvem claudeCliModel quando provider === claude-cli, alinhados à lógica que o ConfigModal já usava.',
+  },
+  {
+    version: '1.50.39',
+    date: '2026-05-31',
+    feature: 'feat(rastreabilidade): juízo de FIDELIDADE do mini-relatório, no mesmo passe de "Rastrear fontes" (uma única chamada). Além de verificar se as citações existem, a IA agora confere se cada parágrafo DISTORCE as peças — datas, valores, nomes, prazos, qualificações — e devolve, por parágrafo, veredito (fiel/divergente/indeterminado) + lista de divergências no formato "campo — relatório: X · peça: Y". O modal mostra selo de fidelidade por parágrafo, contagem de parágrafos divergentes e a lista de divergências. Pega casos como relatório dizendo 01/04/2024 quando a peça diz 01/03/2024 (a verificação de citações sozinha não pegava, pois só confirma que a citação existe, não que o relatório é fiel a ela).',
+  },
+  {
+    version: '1.50.38',
+    date: '2026-05-31',
+    feature: 'fix(rastreabilidade): falso positivo na verificação de fontes quando o extrator de PDF injeta o rodapé de assinatura do PJe ("Documento assinado eletronicamente por ... às HH:MM:SS - hash") no MEIO de uma frase, partindo o trecho e fazendo o match (exato e fuzzy) falhar. normalizeForMatch passou a remover esse rodapé antes de comparar — melhora o recall sem afrouxar o limiar (sem risco de falso positivo inverso). Trecho citado corretamente pela IA agora verifica como esperado.',
+  },
+  {
+    version: '1.50.37',
+    date: '2026-05-31',
+    feature: 'fix(ui): rodapé do modal de Rastreabilidade mostrava o id do provider ("claude-cli") em vez do modelo. Agora resolve o modelo ativo por provider (claudeModel/geminiModel/openaiModel/grokModel/deepseekModel) e exibe o nome amigável via getModelDisplayName (ex.: "Claude Opus 4.8"). O mapa de getModelDisplayName foi completado com os modelos locais/CLI (claude-opus-4-8, claude-sonnet-4-6, gpt-5.5).',
+  },
+  {
+    version: '1.50.36',
+    date: '2026-05-31',
+    feature: 'feat(ui): tipografia Spectral (serif institucional) no conteúdo jurídico do modal de Rastreabilidade do mini-relatório — resumo de cada parágrafo e trechos-fonte citados em serif (via font-serif), mantendo a UI/chrome (contadores, rótulos de peça, botões e o marcador ¶N) na fonte sans. O título já herdava Spectral da regra global h1–h4.',
+  },
+  {
+    version: '1.50.35',
+    date: '2026-05-31',
+    feature: 'fix(ui): rótulo de modelo no rodapé de custo da Revisão de Tópicos mostrava "Claude Sonnet 4" mesmo com Opus 4.8 selecionado. O App passava ao TopicCurationModal o campo legado aiSettings.model (backwards-compat, normalmente vazio) no branch claude/claude-cli, caindo no fallback Sonnet; agora passa aiSettings.claudeModel (campo canônico, igual ao padrão geminiModel/openaiModel). O custo/assinatura já estavam corretos — só o nome exibido estava errado.',
+  },
+  {
+    version: '1.50.34',
+    date: '2026-05-31',
+    feature: 'feat(ai): rastreabilidade de fontes do mini-relatório — botão "Rastrear fontes" gera, por parágrafo, os trechos literais das peças que o embasaram, verificados localmente (✓ verificado / ⚠ não localizado), multi-provedor e persistidos no tópico.',
+  },
+  {
     version: '1.50.33',
     date: '2026-05-30',
     feature: 'fix(ai): provider claude-cli (e Claude API) não re-tentava em erro transitório HTTP 500. O daemon llm-bridge mapeia todo erro do CLI (is_error no stream-json) para 500, mas CLAUDE_RETRY_CODES (useAIIntegration.callLLM) era [429,529,520,502] — sem o 500 — enquanto Gemini/OpenAI/Grok/DeepSeek já incluíam 500. Resultado: overload/rate-limit/timeout do claude CLI caía como erro seco e o usuário tinha de re-tentar na mão. Correção: CLAUDE_RETRY_CODES agora é [429,500,502,503,520,529], alinhado aos demais providers (retry com backoff exponencial 3x: 5s/10s/20s). codex-cli já cobria 500 (usa callOpenAIAPI). Observabilidade: o llm-bridge passou a logar a mensagem de erro real quando o tradutor devolve status >= 400 (antes saía um "500" mudo no /tmp/llm-bridge.log, pois usageInfo de um corpo de erro é vazio) — vale para claude-cli e codex-cli. Testes: novo caso de retry em 500 para Claude; o teste de "non-ok HTTP response" passou a usar 400 (não-retryable). tsc limpo.',

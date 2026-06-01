@@ -458,6 +458,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const [provaOralAnalyses, setProvaOralAnalyses] = React.useState<SavedProvaOralAnalysis[]>([]);
   const [selectedProvaOralAnalysis, setSelectedProvaOralAnalysis] = React.useState<SavedProvaOralAnalysis | null>(null);
   const [isImportingProvaOral, setIsImportingProvaOral] = React.useState(false);
+  const [tracingFontes, setTracingFontes] = React.useState(false);
 
   // 🤖 v1.19.0: Chat interativo do assistente IA (Editor Individual)
   // v1.37.94: Adicionado cache para persistência do histórico
@@ -1008,6 +1009,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     generateMiniReport,
     generateMiniReportsBatch,
     generateRelatorioProcessual,
+    traceReportSources,
   } = reportGeneration;
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -1907,6 +1909,26 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     }
   };
 
+  const handleTraceReportSources = async () => {
+    if (!editingTopic) {
+      setError('Nenhum tópico selecionado para rastrear fontes');
+      return;
+    }
+    setTracingFontes(true);
+    setError('');
+    try {
+      const rastreabilidade = await traceReportSources(editingTopic);
+      const updatedTopic = { ...editingTopic, relatorioFontes: rastreabilidade };
+      setEditingTopic(updatedTopic);
+      setSelectedTopics(selectedTopics.map(t => t.title === editingTopic.title ? updatedTopic : t));
+      setExtractedTopics(extractedTopics.map(t => t.title === editingTopic.title ? updatedTopic : t));
+    } catch (err) {
+      setError('Erro ao rastrear fontes: ' + (err as Error).message);
+    } finally {
+      setTracingFontes(false);
+    }
+  };
+
   // 📋 v1.37.7: Funções de Gerenciamento de Tópicos extraídas para useTopicOperations hook
   // (handleRenameTopic, handleMergeTopics, handleSplitTopic, handleCreateNewTopic)
 
@@ -2735,6 +2757,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
                 handleRelatorioChange={handleRelatorioChange}
                 regenerateRelatorioWithInstruction={regenerateRelatorioWithInstruction}
                 regenerateRelatorioProcessual={regenerateRelatorioProcessual}
+                onTraceReportSources={handleTraceReportSources}
+                tracingFontes={tracingFontes}
                 regenerateDispositivoWithInstruction={regenerateDispositivoWithInstruction}
                 confirmExtractModel={confirmExtractModel}
                 saveAsModel={saveAsModel}
@@ -2999,7 +3023,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
                 ? (aiIntegration.aiSettings?.grokModel || 'grok-4-1-fast-reasoning')
                 : aiIntegration.aiSettings?.provider === 'deepseek'
                   ? (aiIntegration.aiSettings?.deepseekModel || 'deepseek-v4-flash')
-                  : (aiIntegration.aiSettings?.model || 'claude-sonnet-4-20250514')
+                  : aiIntegration.aiSettings?.provider === 'claude-cli'
+                    ? (aiIntegration.aiSettings?.claudeCliModel || 'claude-sonnet-4-6')
+                    : (aiIntegration.aiSettings?.claudeModel || 'claude-sonnet-4-20250514')
         }
         parallelRequests={aiIntegration.aiSettings?.parallelRequests || 5}
         isDarkMode={appTheme === 'dark'}

@@ -16,6 +16,9 @@ import React from 'react';
 import { normalizeHTMLSpacing, removeMetaComments } from '../utils/text';
 import { withRetry, AI_RETRY_DEFAULTS } from '../utils/retry';
 import { AI_PROMPTS } from '../prompts';
+import { parseAIResponse, RastreabilidadeResponseSchema } from '../schemas/ai-responses';
+import { splitReportIntoParagraphs } from '../utils/reportParagraphs';
+import { buildTracingSources, buildSourceTracingPrompt, mapTracingResponse } from '../utils/sourceTracing';
 import type {
   Topic,
   AnalyzedDocuments,
@@ -25,7 +28,8 @@ import type {
   AIMessageContent,
   AIMessage,
   AISettings,
-  AIProvider
+  AIProvider,
+  RelatorioRastreabilidade
 } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -95,6 +99,7 @@ export interface AIIntegrationForReports {
     onChunk?: StreamChunkCallback;
   }) => Promise<string>;
   extractResponseText: (data: Record<string, unknown>, provider: AIProvider) => string;
+  getModelDisplayName: (model: string) => string;
   aiSettings: AISettings;
   relatorioInstruction?: string;
   setRegeneratingRelatorio: (value: boolean) => void;
@@ -121,6 +126,7 @@ export interface UseReportGenerationReturn {
   generateMultipleMiniReports: (topics: Topic[], options?: MultipleReportsOptions) => Promise<Array<{ title: string; relatorio: string }>>;
   generateMiniReportsBatch: (topics: Topic[], options?: BatchOptions) => Promise<BatchResult>;
   generateRelatorioProcessual: (contentArray: AIMessageContent[]) => Promise<string>;
+  traceReportSources: (topic: Topic) => Promise<RelatorioRastreabilidade>;
   isGeneratingReport: boolean;
 }
 
@@ -451,6 +457,71 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
   }, [aiIntegration, buildDocumentContentArray, buildMiniReportPrompt]);
 
   /**
+   * Segundo passe sob demanda: rastreia de quais trechos das peças cada parágrafo
+   * do mini-relatório foi extraído. Verifica cada trecho localmente (anti-alucinação).
+   */
+  const traceReportSources = React.useCallback(async (topic: Topic): Promise<RelatorioRastreabilidade> => {
+    const reportText = topic.editedRelatorio || topic.relatorio || '';
+    if (!reportText.trim()) {
+      throw new Error('Gere o mini-relatório antes de rastrear as fontes.');
+    }
+
+    const paragraphs = splitReportIntoParagraphs(reportText);
+    // Defence-in-depth: reportText já é não-vazio aqui, mas garantimos parágrafos antes de chamar a IA.
+    if (paragraphs.length === 0) {
+      throw new Error('Não foi possível identificar parágrafos no mini-relatório.');
+    }
+
+    // Respeita a escolha explícita do tópico; senão, infere pelo título (tópico RELATÓRIO).
+    const includeComplementares = topic.includeComplementares ?? topic.title.toUpperCase().includes('RELATÓRIO');
+    const sources = buildTracingSources(docs, partesProcesso);
+
+    const contentArray = buildDocumentContentArray({
+      includePeticao: true,
+      includeContestacoes: true,
+      includeComplementares
+    });
+    contentArray.push({ type: 'text', text: buildSourceTracingPrompt(paragraphs) });
+
+    const raw = await aiIntegration.callAI([{ role: 'user', content: contentArray }], {
+      // v1.50.39: 6000 (era 4000) — além dos trechos, a resposta agora traz o
+      // juízo de fidelidade por parágrafo (veredito + divergências).
+      maxTokens: 6000,
+      useInstructions: false,
+      temperature: 0.1
+    });
+
+    const parsed = parseAIResponse(raw, RastreabilidadeResponseSchema);
+    if (!parsed.success) {
+      throw new Error('Resposta de rastreabilidade inválida: ' + parsed.error);
+    }
+
+    const blocos = mapTracingResponse(parsed.data.blocos, paragraphs, sources);
+
+    // Resolve o nome amigável do modelo ativo (por provider), p.ex. "Claude Opus 4.8"
+    // em vez do id cru do provider ("claude-cli").
+    const settings = aiIntegration.aiSettings;
+    const activeProvider = settings?.provider;
+    const activeModelId =
+      activeProvider === 'gemini' ? settings?.geminiModel
+        : activeProvider === 'openai' ? settings?.openaiModel
+          : activeProvider === 'grok' ? settings?.grokModel
+            : activeProvider === 'deepseek' ? settings?.deepseekModel
+              : activeProvider === 'claude-cli' ? (settings?.claudeCliModel || 'claude-sonnet-4-6')
+                : settings?.claudeModel;
+    const modelo = activeModelId
+      ? aiIntegration.getModelDisplayName(activeModelId)
+      : activeProvider;
+
+    return {
+      geradoEm: new Date().toISOString(),
+      baseSnapshot: reportText,
+      modelo,
+      blocos
+    };
+  }, [docs, partesProcesso, buildDocumentContentArray, aiIntegration]);
+
+  /**
    * Gera múltiplos mini-relatórios em UMA requisição
    * v1.39.09: Suporte a streaming para evitar timeout no Render
    */
@@ -768,6 +839,7 @@ DECIDE-SE.`;
     generateMultipleMiniReports,
     generateMiniReportsBatch,
     generateRelatorioProcessual,
+    traceReportSources,
     isGeneratingReport
   };
 };

@@ -203,6 +203,36 @@ export function parseAIResponse<T>(
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// SCHEMA: Rastreabilidade de fontes do mini-relatório
+// ═══════════════════════════════════════════════════════════════════
+
+export const RastreabilidadeTrechoSchema = z.object({
+  peca: z.string().nullable().default('').transform(v => v ?? ''),
+  trecho: z.string().nullable().default('').transform(v => v ?? ''),
+}).passthrough();
+
+// Fidelidade tolerante: `veredito` aceita qualquer string (normalizada a jusante em
+// mapTracingResponse para 'fiel'|'divergente'|'indeterminado'); `divergencias` default [].
+export const RastreabilidadeFidelidadeSchema = z.object({
+  veredito: z.string().nullable().optional(),
+  divergencias: z.array(z.string()).default([]),
+}).passthrough();
+
+// Tolerância intencional: `blocoIndex` aceita number ou string numérica (LLMs às vezes
+// serializam índices como string). Um valor não-numérico vira NaN e NÃO derruba o parse —
+// é ignorado a jusante por mapTracingResponse (NaN nunca casa com o índice do parágrafo),
+// o que é preferível a rejeitar a resposta inteira por causa de um único bloco malformado.
+export const RastreabilidadeBlocoSchema = z.object({
+  blocoIndex: z.number().or(z.string().transform(Number)),
+  trechos: z.array(RastreabilidadeTrechoSchema).default([]),
+  fidelidade: RastreabilidadeFidelidadeSchema.optional(),
+}).passthrough();
+
+export const RastreabilidadeResponseSchema = z.object({
+  blocos: z.array(RastreabilidadeBlocoSchema).default([]),
+}).passthrough();
+
+// ═══════════════════════════════════════════════════════════════════
 // SCHEMA: Embargos de Declaração (subapp Embargos)
 // ═══════════════════════════════════════════════════════════════════
 
