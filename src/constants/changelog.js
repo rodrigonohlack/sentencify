@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.42',
+    date: '2026-05-31',
+    feature: 'feat(extração): remove o rodapé de assinatura do PJe já na extração de texto (pdf.js e Tesseract), para a LLM receber texto limpo — antes só era removido na hora do match da rastreabilidade. Regex centralizada em util compartilhado src/utils/pjeArtifacts.ts (cleanPjeArtifacts), reusado por useDocumentServices (extração) e sourceMatching.normalizeForMatch (defesa em profundidade). NÃO aplicado a Vision (Claude/Gemini, que entendem layout) nem ao envio de PDF binário (sem texto extraído). cleanPjeArtifacts preserva o texto legível (maiúsculas/acentos/pontuação), diferente do normalizeForMatch que é destrutivo.',
+  },
+  {
     version: '1.50.41',
     date: '2026-05-31',
     feature: 'fix(ui): botões do editor global (GlobalEditorSection) não tinham acompanhado o novo padrão de hierarquia — Jurisprudência e Assistente IA estavam azuis e Confronto laranja, enquanto no editor individual já eram secundários neutros. Padronizados para o mesmo estilo neutro (theme-bg-secondary + borda + theme-text-primary), eliminando a divergência entre editor individual e global.',
