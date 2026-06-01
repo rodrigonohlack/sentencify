@@ -218,6 +218,33 @@ export function useCloudSync({ onModelsReceived, modelsLoaded = false }: UseClou
       }
     }
 
+    // Auto-login de DESENVOLVIMENTO (nunca presente em produção).
+    // import.meta.env.DEV é false no `vite build` → todo este bloco é
+    // dead-code-eliminated do bundle. Dupla trava com VITE_DEV_AUTH_BYPASS.
+    const devBypass = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH_BYPASS === 'true';
+    if (devBypass && !localStorage.getItem(AUTH_KEY) && !storedUser) {
+      void (async (): Promise<void> => {
+        try {
+          const res = await fetch('/api/auth/magic/dev-login', { method: 'POST' });
+          if (res.ok) {
+            const data = (await res.json()) as VerifyApiResponse;
+            localStorage.setItem(AUTH_KEY, data.accessToken);
+            localStorage.setItem(REFRESH_KEY, data.refreshToken);
+            localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            setUser(data.user);
+            console.log('[CloudSync] Auto-login de dev ativo:', data.user.email);
+          } else {
+            console.warn('[CloudSync] Dev-login retornou', res.status);
+          }
+        } catch (err) {
+          console.warn('[CloudSync] Dev-login falhou:', err instanceof Error ? err.message : err);
+        } finally {
+          setAuthLoading(false);
+        }
+      })();
+      return; // setAuthLoading é resolvido no finally acima
+    }
+
     setAuthLoading(false);
   }, []);
 

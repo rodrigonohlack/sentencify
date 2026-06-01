@@ -137,6 +137,64 @@ router.get('/verify/:token', (req, res) => {
   }
 });
 
+// POST /api/auth/magic/dev-login
+// Auto-login de DESENVOLVIMENTO. Emite JWT + refresh para um usuário de dev
+// local, sem magic link, para permitir testes (ex.: Playwright) sem o gate.
+//
+// DUPLA TRAVA: só responde se NODE_ENV !== 'production' E DEV_AUTH_BYPASS === 'true'.
+// Em produção (NODE_ENV=production no Render) retorna 404 sempre.
+router.post('/dev-login', (req, res) => {
+  if (process.env.NODE_ENV === 'production' || process.env.DEV_AUTH_BYPASS !== 'true') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  try {
+    const jwtSecret = getJwtSecret();
+    if (!jwtSecret) {
+      return res.status(500).json({ error: 'JWT_SECRET não configurado no .env de dev' });
+    }
+
+    const email = (process.env.DEV_USER_EMAIL || 'dev@localhost').toLowerCase().trim();
+    const db = getDb();
+
+    // Criar ou buscar o usuário de dev no SQLite local
+    let user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    if (!user) {
+      const userId = uuidv4();
+      db.prepare('INSERT INTO users (id, email) VALUES (?, ?)').run(userId, email);
+      user = { id: userId, email };
+      console.log(`[Auth] Dev user criado: ${email}`);
+    }
+
+    db.prepare(`UPDATE users SET last_login_at = datetime('now') WHERE id = ?`).run(user.id);
+
+    // Emitir tokens (mesma lógica do /verify)
+    const accessToken = jwt.sign(
+      { userId: user.id, email: user.email },
+      jwtSecret,
+      { expiresIn: JWT_ACCESS_EXPIRES }
+    );
+
+    const refreshToken = crypto.randomBytes(32).toString('hex');
+    const refreshExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    db.prepare(`
+      INSERT INTO refresh_tokens (id, user_id, token, expires_at)
+      VALUES (?, ?, ?, ?)
+    `).run(uuidv4(), user.id, refreshToken, refreshExpiresAt);
+
+    console.log(`[Auth] Dev-login: ${email}`);
+
+    res.json({
+      accessToken,
+      refreshToken,
+      user: { id: user.id, email: user.email },
+    });
+  } catch (error) {
+    console.error('[Auth] Dev-login error:', error);
+    res.status(500).json({ error: 'Erro no dev-login' });
+  }
+});
+
 // POST /api/auth/refresh
 // Renova o access token usando o refresh token
 router.post('/refresh', (req, res) => {

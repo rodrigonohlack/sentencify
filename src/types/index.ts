@@ -3016,6 +3016,7 @@ declare global {
       BASE_URL: string;
       VITE_GOOGLE_CLIENT_ID?: string;
       VITE_API_KEY?: string;
+      VITE_DEV_AUTH_BYPASS?: string;
     };
   }
 }
