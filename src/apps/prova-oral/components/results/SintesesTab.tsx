@@ -351,15 +351,23 @@ export const SintesesTab: React.FC<SintesesTabProps> = ({
                   <div className="space-y-3 pl-10">
                     {/* Depoentes que falaram sobre o tema */}
                     {tema.declaracoes?.map((dec, j) => {
-                      const style = getQualificacaoStyle(dec.qualificacao);
+                      // Rótulo canônico via deponenteId (igual à aba Detalhada e às
+                      // linhas "Não falou"); fallback ao rótulo da LLM em análises
+                      // antigas, que não têm deponenteId.
+                      const depCanonico = dec.deponenteId ? getDepoente(dec.deponenteId) : undefined;
+                      const qual = depCanonico?.qualificacao ?? dec.qualificacao;
+                      const style = getQualificacaoStyle(qual);
+                      const rotulo = depCanonico
+                        ? `${getQualificacaoLabel(depCanonico.qualificacao).toUpperCase()} (${depCanonico.nome})`
+                        : dec.deponente;
                       // Gera um deponenteId consistente para a síntese por tema
                       const deponenteId = `tema-${dec.deponente.replace(/\s+/g, '-').toLowerCase()}`;
                       return (
-                        <Card key={j} className={`border-l-4 ${getQualBorderColor(dec.qualificacao)}`}>
+                        <Card key={j} className={`border-l-4 ${getQualBorderColor(qual)}`}>
                           <CardContent>
                             <div className="flex items-center gap-2 mb-2">
                               <Badge className={`${style.bg} ${style.text} font-bold`}>
-                                {dec.deponente}
+                                {rotulo}
                               </Badge>
                             </div>
                             <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">

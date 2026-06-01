@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.44',
+    date: '2026-05-31',
+    feature: 'fix(prova-oral): aba "Por Tema" passa a exibir o nome canônico do depoente (via deponenteId) na lista de quem falou — antes mostrava o rótulo de texto livre da LLM (ex.: "AUTORA NILDES"), divergindo da aba Detalhada e das próprias linhas "Não falou" da aba (ex.: "RECLAMANTE (Nildes Maria Dias Fernandes)"). Agora o rótulo é resolvido por depoentes[].id (getDepoente), com a qualificação/borda também derivadas do depoente canônico; fallback ao rótulo original (dec.deponente) em análises antigas sem deponenteId. Complementa o v1.50.43.',
+  },
+  {
     version: '1.50.43',
     date: '2026-05-31',
     feature: 'fix(prova-oral): corrige duplicação de depoentes na aba "Por Tema" — cada depoente aparecia também como "Não falou sobre o tema". Causa-raiz: a aba reconstruía o roster por tema casando o nome canônico (depoentes[].nome, ex.: "Nildes Maria Dias Fernandes") contra o rótulo de texto livre gerado pela LLM (declaracoes[].deponente, ex.: "NILDES (autor)") por sobreposição de tokens; a palavra de qualificação entre parênteses inflava a contagem de tokens e quebrava o fallback de nome único, marcando TODOS os depoentes como "não falou" em todos os temas. Correção na FONTE: DeclaracaoPorTema passa a carregar deponenteId (opcional, retrocompatível); o prompt da Fase 2 (juridical-analysis) agora exige o deponenteId copiado de depoentes[].id em cada declaração; e a aba "Por Tema" casa por ID (igual às abas Detalhada/Por Depoente), eliminando todo o matching fuzzy por nome. Análises antigas (sem deponenteId) apenas omitem o bloco "não falou", sem duplicar depoentes.',
