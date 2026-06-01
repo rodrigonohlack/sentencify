@@ -6,6 +6,7 @@ import {
   buildCodexArgs,
   buildStdin,
   translateResponse,
+  extractCodexImages,
 } from './translate.codex.js';
 
 test('mapModel: sempre gpt-5.5 (único modelo suportado nesta versão)', () => {
@@ -86,6 +87,74 @@ test('buildCodexArgs: "-" continua sendo o último mesmo com --search', () => {
   const args = buildCodexArgs({ model: 'gpt-5.5', web_search: true });
   assert.equal(args[args.length - 1], '-');
   assert.ok(args.includes('--search'));
+});
+
+// ─── PDF Puro: imagens via -i (v1.50.47) ──────────────────────────────────────
+
+test('buildCodexArgs: adiciona um -i por imagem, antes do "-" final', () => {
+  const args = buildCodexArgs({ model: 'gpt-5.5' }, ['/tmp/x/page-1.jpg', '/tmp/x/page-2.jpg']);
+  // Dois pares -i <path>
+  const iIdxs = args.reduce((acc, a, i) => (a === '-i' ? [...acc, i] : acc), []);
+  assert.equal(iIdxs.length, 2);
+  assert.equal(args[iIdxs[0] + 1], '/tmp/x/page-1.jpg');
+  assert.equal(args[iIdxs[1] + 1], '/tmp/x/page-2.jpg');
+  // "-" continua sendo o último argumento (prompt via stdin)
+  assert.equal(args[args.length - 1], '-');
+  // todos os -i vêm antes do "-"
+  assert.ok(iIdxs.every((i) => i < args.length - 1));
+});
+
+test('buildCodexArgs: sem imagens não adiciona -i', () => {
+  const args = buildCodexArgs({ model: 'gpt-5.5' });
+  assert.ok(!args.includes('-i'));
+  assert.equal(args[args.length - 1], '-');
+});
+
+test('extractCodexImages: extrai blocos image_url (data URI base64) na ordem', () => {
+  const b64a = Buffer.from('imagem-1').toString('base64');
+  const b64b = Buffer.from('imagem-2').toString('base64');
+  const images = extractCodexImages({
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'analise' },
+          { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${b64a}` } },
+          { type: 'image_url', image_url: { url: `data:image/png;base64,${b64b}` } },
+        ],
+      },
+    ],
+  });
+  assert.equal(images.length, 2);
+  assert.equal(images[0].ext, 'jpg');
+  assert.equal(images[0].buffer.toString(), 'imagem-1');
+  assert.equal(images[1].ext, 'png');
+  assert.equal(images[1].buffer.toString(), 'imagem-2');
+});
+
+test('extractCodexImages: ignora content string e blocos não-imagem', () => {
+  const images = extractCodexImages({
+    messages: [
+      { role: 'system', content: 'instruções' },
+      { role: 'user', content: [{ type: 'text', text: 'oi' }] },
+    ],
+  });
+  assert.equal(images.length, 0);
+});
+
+test('extractCodexImages: ignora image_url que não seja data URI base64 de imagem', () => {
+  const images = extractCodexImages({
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: 'https://exemplo.com/foto.jpg' } },
+          { type: 'image_url', image_url: { url: 'data:text/plain;base64,QUJD' } },
+        ],
+      },
+    ],
+  });
+  assert.equal(images.length, 0);
 });
 
 test('buildStdin: turno único concatena role label', () => {

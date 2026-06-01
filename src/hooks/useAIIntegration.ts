@@ -14,6 +14,7 @@ import { API_BASE } from '../constants/api';
 import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../utils/claude-cli-bridge';
 import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../utils/codex-cli-bridge';
 import { withRetry } from '../utils/retry';
+import { rasterizePdfDocumentBlocks } from '../utils/pdfRasterize';
 // v1.42.02: Registry provider-agnostic para habilitar web search
 import { applyWebSearchTool, extractGrounding, withWebSearchHint } from '../utils/ai-tools/webSearch';
 import type {
@@ -1099,10 +1100,18 @@ const useAIIntegration = () => {
     const timeoutId = effectiveTimeout ? setTimeout(() => internalController?.abort(), effectiveTimeout) : null;
     const signal = abortSignal || internalController?.signal;
 
+    // PDF Puro no Codex (localBridge): o Codex não aceita PDF, mas aceita imagens via
+    // `-i`. Rasterizamos cada PDF em imagens de página (uma vez, fora do retry);
+    // convertToOpenAIFormat já emite image_url para blocos image. OpenAI cloud segue
+    // recebendo o PDF como bloco file (sem rasterização).
+    const effectiveMessages = localBridge
+      ? await rasterizePdfDocumentBlocks(messages)
+      : messages;
+
     // Funcao de requisicao que sera retentada
     const makeRequest = async () => {
       try {
-        const openaiMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
+        const openaiMessages = convertToOpenAIFormat(effectiveMessages, finalSystemPrompt);
 
         const requestBody: Record<string, unknown> = {
           model,

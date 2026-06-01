@@ -140,8 +140,8 @@ export const UploadTab: React.FC<UploadTabProps> = ({
                     value={documentProcessingModes.peticoes?.[idx] || 'pdfjs'}
                     onChange={(mode: ProcessingMode) => setPeticaoMode(idx, mode)}
                     anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
-                    binaryPdfBlocked={aiIntegration.aiSettings?.provider === 'grok' || aiIntegration.aiSettings?.provider === 'deepseek' || aiIntegration.aiSettings?.provider === 'codex-cli'}
-                    blockReason={aiIntegration.aiSettings?.provider === 'deepseek' ? 'deepseek' : aiIntegration.aiSettings?.provider === 'grok' ? 'grok' : aiIntegration.aiSettings?.provider === 'codex-cli' ? 'codex-cli' : undefined}
+                    binaryPdfBlocked={aiIntegration.aiSettings?.provider === 'grok' || aiIntegration.aiSettings?.provider === 'deepseek'}
+                    blockReason={aiIntegration.aiSettings?.provider === 'deepseek' ? 'deepseek' : aiIntegration.aiSettings?.provider === 'grok' ? 'grok' : undefined}
                   />
                   <button
                     onClick={() => removePeticaoFile(idx)}
@@ -391,8 +391,8 @@ export const UploadTab: React.FC<UploadTabProps> = ({
                     onChange={(mode: ProcessingMode) => setContestacaoMode(idx, mode)}
                     className="mx-2"
                     anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
-                    binaryPdfBlocked={aiIntegration.aiSettings?.provider === 'grok' || aiIntegration.aiSettings?.provider === 'deepseek' || aiIntegration.aiSettings?.provider === 'codex-cli'}
-                    blockReason={aiIntegration.aiSettings?.provider === 'deepseek' ? 'deepseek' : aiIntegration.aiSettings?.provider === 'grok' ? 'grok' : aiIntegration.aiSettings?.provider === 'codex-cli' ? 'codex-cli' : undefined}
+                    binaryPdfBlocked={aiIntegration.aiSettings?.provider === 'grok' || aiIntegration.aiSettings?.provider === 'deepseek'}
+                    blockReason={aiIntegration.aiSettings?.provider === 'deepseek' ? 'deepseek' : aiIntegration.aiSettings?.provider === 'grok' ? 'grok' : undefined}
                   />
                   <button
                     onClick={async () => {
@@ -606,8 +606,8 @@ export const UploadTab: React.FC<UploadTabProps> = ({
                   onChange={(mode: ProcessingMode) => setComplementarMode(idx, mode)}
                   className="mx-2"
                   anonymizationEnabled={aiIntegration.aiSettings?.anonymization?.enabled}
-                  binaryPdfBlocked={aiIntegration.aiSettings?.provider === 'grok' || aiIntegration.aiSettings?.provider === 'deepseek' || aiIntegration.aiSettings?.provider === 'codex-cli'}
-                  blockReason={aiIntegration.aiSettings?.provider === 'deepseek' ? 'deepseek' : aiIntegration.aiSettings?.provider === 'grok' ? 'grok' : aiIntegration.aiSettings?.provider === 'codex-cli' ? 'codex-cli' : undefined}
+                  binaryPdfBlocked={aiIntegration.aiSettings?.provider === 'grok' || aiIntegration.aiSettings?.provider === 'deepseek'}
+                  blockReason={aiIntegration.aiSettings?.provider === 'deepseek' ? 'deepseek' : aiIntegration.aiSettings?.provider === 'grok' ? 'grok' : undefined}
                 />
                 <button
                   onClick={async () => {

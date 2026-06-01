@@ -26,10 +26,15 @@ export function mapModel(model) {
  *     via `-c approval_policy="never"` quando necessário. Com `-s read-only`,
  *     o sandbox já bloqueia escritas/shell sem precisar de approval explícito.
  *
+ * Imagens (PDF Puro do provider Codex): o codex exec aceita `-i <arquivo>` repetível.
+ * Os paths são gravados pelo server.js (decodificados de blocos image_url) e passados
+ * aqui via `imagePaths`. Vão no bloco de flags do `exec`, antes do `-` de stdin.
+ *
  * @param {{model?: string, reasoning_effort?: string, web_search?: boolean}} body
+ * @param {string[]} [imagePaths] - Caminhos de imagens a anexar via `-i` (uma por página).
  * @returns {string[]}
  */
-export function buildCodexArgs(body) {
+export function buildCodexArgs(body, imagePaths = []) {
   const reasoning = VALID_REASONING.has(body?.reasoning_effort)
     ? body.reasoning_effort
     : DEFAULT_REASONING;
@@ -55,10 +60,56 @@ export function buildCodexArgs(body) {
     '-c', `model_reasoning_effort=${effectiveReasoning}`,
     '-c', 'approval_policy="never"',
   );
+  // Imagens (PDF Puro): um `-i <arquivo>` por página, antes do `-` de stdin.
+  for (const p of imagePaths) {
+    args.push('-i', p);
+  }
   // `-` é o sinal explícito para o codex ler o prompt do stdin
   // (ver `codex exec --help`: "If not provided as an argument (or if `-` is used)...").
   args.push('-');
   return args;
+}
+
+/**
+ * Extrai imagens (blocos `image_url` com data URI base64) das messages do body.
+ * O frontend rasteriza o PDF em páginas e as envia como `image_url` (formato que o
+ * `convertToOpenAIFormat` já produz para blocos de imagem). O server.js grava cada
+ * uma em arquivo temporário e passa via `-i` a `buildCodexArgs`.
+ *
+ * @param {{messages?: Array<{content?: any}>}} body
+ * @returns {Array<{ext: string, buffer: Buffer}>} imagens na ordem de aparição.
+ */
+export function extractCodexImages(body) {
+  const messages = Array.isArray(body?.messages) ? body.messages : [];
+  const images = [];
+  for (const msg of messages) {
+    const content = msg?.content;
+    if (!Array.isArray(content)) continue;
+    for (const block of content) {
+      if (block?.type === 'image_url' && block.image_url?.url) {
+        const parsed = parseImageDataUri(block.image_url.url);
+        if (parsed) images.push(parsed);
+      }
+    }
+  }
+  return images;
+}
+
+/**
+ * Parseia um data URI `data:image/<tipo>;base64,<dados>` em {ext, buffer}.
+ * Retorna null se não for um data URI de imagem base64 válido.
+ * @param {string} url
+ * @returns {{ext: string, buffer: Buffer}|null}
+ */
+function parseImageDataUri(url) {
+  const m = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/s.exec(String(url));
+  if (!m || !m[2]) return null;
+  const mime = m[1].toLowerCase();
+  const ext =
+    mime === 'image/png' ? 'png' :
+    mime === 'image/webp' ? 'webp' :
+    mime === 'image/gif' ? 'gif' : 'jpg';
+  return { ext, buffer: Buffer.from(m[2], 'base64') };
 }
 
 /**

@@ -75,7 +75,8 @@ export interface AIMessage {
 }
 
 export interface AIMessageContent {
-  type: 'text' | 'document';
+  // 'image' (v1.50.47): páginas de PDF rasterizadas para o provider Codex (PDF Puro).
+  type: 'text' | 'document' | 'image';
   text?: string;
   source?: {
     type: 'base64';
@@ -126,7 +127,8 @@ export interface ClaudeContentBlock {
 /** OpenAI/Grok API message format */
 export interface OpenAIMessage {
   role: 'system' | 'user' | 'assistant';
-  content: string | Array<{ type: string; text?: string }>;
+  // image_url (v1.50.47): páginas de PDF rasterizadas no caminho do Codex (PDF Puro).
+  content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
 }
 
 /** Grok API message format (simplified content) */

@@ -8,6 +8,7 @@ import { useAIStore } from '../stores';
 import { API_BASE } from '../constants';
 import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../../../utils/claude-cli-bridge';
 import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../../../utils/codex-cli-bridge';
+import { rasterizePdfDocumentBlocks } from '../../../utils/pdfRasterize';
 import type { AIMessage, AICallOptions, ClaudeContentBlock, OpenAIMessage, GrokMessage, GeminiMessage } from '../types';
 
 const RETRY_MAX_ATTEMPTS = 3;
@@ -217,13 +218,23 @@ export const useAIIntegration = () => {
       openaiMessages.push({ role: 'system', content: systemPrompt });
     }
 
-    for (const msg of messages) {
+    // PDF Puro no Codex (localBridge): rasteriza cada PDF em imagens de página, que
+    // viram blocos image_url abaixo. O Codex não aceita PDF binário, mas aceita
+    // imagens via `-i`. Demais providers seguem omitindo o PDF (text-only).
+    const effectiveMessages = localBridge
+      ? await rasterizePdfDocumentBlocks(messages)
+      : messages;
+
+    for (const msg of effectiveMessages) {
       openaiMessages.push({
         role: msg.role,
         content: Array.isArray(msg.content)
           ? msg.content.map(c => {
               if (typeof c === 'string') return { type: 'text', text: c };
               if (c.type === 'text') return { type: 'text', text: c.text };
+              if (c.type === 'image' && c.source) {
+                return { type: 'image_url', image_url: { url: `data:${c.source.media_type};base64,${c.source.data}` } };
+              }
               if (c.type === 'document') return { type: 'text', text: '[PDF anexo omitido — provider não suporta envio binário]' };
               return { type: 'text', text: '' };
             })

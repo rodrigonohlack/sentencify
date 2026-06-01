@@ -9,6 +9,7 @@ import {
   buildCodexArgs,
   buildStdin as buildCodexStdin,
   translateResponse as translateCodexResponse,
+  extractCodexImages,
 } from './translate.codex.js';
 
 // LLM_BRIDGE_PORT é o nome atual; CLAUDE_BRIDGE_PORT mantido como fallback retrocompatível.
@@ -218,8 +219,29 @@ const server = http.createServer(async (req, res) => {
     const started = Date.now();
     logStart(id, 'codex-cli', body);
 
+    // PDF Puro no Codex: as páginas chegam como imagens (blocos image_url). Gravamos
+    // cada uma num dir temporário e passamos `-i <arquivo>` por página; o dir é
+    // removido ao final (close/erro/abort). cleanupImages é idempotente.
+    let imageDir = null;
+    const cleanupImages = () => {
+      if (!imageDir) return;
+      try { fs.rmSync(imageDir, { recursive: true, force: true }); } catch { /* best-effort */ }
+      imageDir = null;
+    };
+
     try {
-      const args = buildCodexArgs(body);
+      const images = extractCodexImages(body);
+      const imagePaths = [];
+      if (images.length) {
+        imageDir = path.join(os.tmpdir(), `sentencify-codex-img-${id}`);
+        fs.mkdirSync(imageDir, { recursive: true });
+        images.forEach((img, idx) => {
+          const p = path.join(imageDir, `page-${idx + 1}.${img.ext}`);
+          fs.writeFileSync(p, img.buffer);
+          imagePaths.push(p);
+        });
+      }
+      const args = buildCodexArgs(body, imagePaths);
       // CODEX_HOME isolado: codex não enxerga ~/.codex/skills/ (anti-leak).
       // Auth continua funcionando via symlink criado em setupIsolatedCodexHome().
       const child = spawn('codex', args, {
@@ -231,15 +253,20 @@ const server = http.createServer(async (req, res) => {
       child.stdout.on('data', (d) => { stdout += d.toString(); });
       child.stderr.on('data', (d) => { stderr += d.toString(); });
       req.on('close', () => {
+        // Só mata o processo; a limpeza das imagens fica no child.on('close')/'error',
+        // que dispara após o codex terminar — evita remover arquivos que o codex
+        // ainda esteja lendo.
         if (!child.killed) child.kill();
         if (!res.writableEnded) logEnd(id, 'codex-cli', started, 'abort', 'cliente desconectou');
       });
       child.on('error', (err) => {
+        cleanupImages();
         if (res.writableEnded) return;
         logEnd(id, 'codex-cli', started, 500, `erro spawn: ${err.message}`);
         sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao executar 'codex': ${err.message}. O binário está no PATH?` } });
       });
       child.on('close', () => {
+        cleanupImages();
         if (res.writableEnded) return;
         if (!stdout.trim()) {
           logEnd(id, 'codex-cli', started, 500, `sem saída; stderr=${stderr.trim().slice(0, 200) || '(vazio)'}`);
@@ -264,6 +291,7 @@ const server = http.createServer(async (req, res) => {
       child.stdin.write(buildCodexStdin(body));
       child.stdin.end();
     } catch (err) {
+      cleanupImages();
       logEnd(id, 'codex-cli', started, 500, `falha init: ${err.message}`);
       if (!res.writableEnded) sendJson(res, 500, { error: { type: 'server_error', message: `Falha ao iniciar geração: ${err.message}` } });
       return;
