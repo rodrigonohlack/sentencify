@@ -4,18 +4,11 @@
  * das peças (anti-alucinação). Funções puras, sem dependências de React/API.
  */
 
-/**
- * Rodapé de assinatura do PJe que o extrator de PDF frequentemente injeta no
- * MEIO de frases (ex.: "...ocorrida em Documento assinado eletronicamente por
- * FULANO, em 18/03/2026, às 11:15:27 - 85cb794 31/10/2025..."). Como nunca faz
- * parte de uma citação real, é removido antes do match para evitar falso negativo.
- */
-const PJE_ASSINATURA = /(?:documento\s+)?assinado eletronicamente por[\s\S]*?\d{1,2}:\d{2}:\d{2}(?:\s*[-–—]\s*\w+)?/gi;
+import { cleanPjeArtifacts } from './pjeArtifacts';
 
 /** Normaliza texto para comparação: sem rodapé PJe, sem acento, sem pontuação, minúsculo, espaços colapsados. */
 export function normalizeForMatch(s: string): string {
-  return (s || '')
-    .replace(PJE_ASSINATURA, ' ')
+  return cleanPjeArtifacts(s)
     .normalize('NFD')
     .replace(/\p{Mn}/gu, '')
     .toLowerCase()

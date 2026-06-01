@@ -10,6 +10,7 @@
 import React from 'react';
 import type { PdfjsLib, MammothLib, TesseractLib, PdfDocument, TesseractScheduler, AISettings, AIMessage, AICallOptions } from '../types';
 import { API_BASE } from '../constants/api';
+import { cleanPjeForExtraction } from '../utils/pjeArtifacts';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -166,7 +167,10 @@ const useDocumentServices = (aiIntegration: AIIntegrationForDocuments | null) =>
       }
 
       // v1.16.7: Anonimização movida para analyzeDocuments (evita duplicação)
-      return fullText.trim();
+      // v1.50.42: Remove rodapé de assinatura do PJe que a extração de texto do
+      // pdf.js injeta no meio de frases (Vision não precisa — entende layout),
+      // preservando o ID do documento num marcador no topo.
+      return cleanPjeForExtraction(fullText.trim());
     } catch (err) {
       return null;
     } finally {
@@ -841,7 +845,9 @@ REGRAS:
 
       // 3. Ordenar e juntar
       allResults.sort((a, b) => a.pageNum - b.pageNum);
-      return allResults.map(r => r.text).join('\n\n').trim();
+      // v1.50.42: mesmo tratamento do pdf.js — Tesseract também capta o rodapé do
+      // PJe no rodapé de página, que cai no meio quando a frase cruza a quebra.
+      return cleanPjeForExtraction(allResults.map(r => r.text).join('\n\n').trim());
 
     } catch (err) {
       console.error('[Tesseract OCR] Erro:', err);
