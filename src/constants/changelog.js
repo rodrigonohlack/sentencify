@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.57',
+    date: '2026-06-02',
+    feature: 'perf(bridge/claude): desliga de fato o thinking do Claude CLI quando effort=off (Voz / Auto Complete). Diagnóstico via stream-json: mesmo com effort=off (que só OMITE --effort), o Haiku CLI ainda gerava um bloco `thinking` antes da resposta — medido ~520 tokens de saída e ~5,5s para um rewrite trivial de voz (texto final de ~100 chars). Correção: o server.js do bridge passa MAX_THINKING_TOKENS=0 no ambiente do spawn do `claude` quando effort=off. Medido após o fix: ~34 tokens de saída e ~1,1s, com texto final idêntico (queda de ~94% em tokens e ~80% em latência). De quebra, o hardening do bridge (--setting-sources \'\') já elimina os hooks de SessionStart e o cache de ~54k tokens que rodariam senão. Vale para Haiku/Sonnet/Opus via CLI com disableThinking. Requer restart do daemon llm-bridge.',
+  },
+  {
     version: '1.50.56',
     date: '2026-06-02',
     feature: 'fix(bridge/codex): corrigido erro 500 "tools cannot be used with reasoning.effort \'minimal\': image_gen, web_search" no Codex Local. Causa: o codex CLI (GPT-5.5 via Responses API) mantém as tools image_gen/web_search sempre disponíveis, e a API rejeita reasoning_effort=minimal com QUALQUER tool ativa. O auto-bump minimal→low do bridge (translate.codex.js) só ocorria quando web_search=true era pedido explicitamente, deixando escapar a Melhoria de Voz e o Auto Complete (que mandam minimal via disableThinking, sem web_search) — e também o caso do usuário escolher "Minimal" no seletor de reasoning do Codex. Agora o bump é INCONDICIONAL: qualquer reasoning_effort=minimal vira low (o piso real aceito nesse caminho). Teste do bridge atualizado (antes assumia, erradamente, que minimal sem web_search permanecia minimal). Requer restart do daemon llm-bridge.',

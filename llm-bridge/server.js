@@ -158,7 +158,14 @@ const server = http.createServer(async (req, res) => {
 
     try {
       const args = buildClaudeArgs(body);
-      const child = spawn('claude', args, { cwd: os.tmpdir() });
+      // effort='off' (Voz / Auto Complete com disableThinking) → desliga também o
+      // thinking do modelo. Omitir --effort NÃO basta: o Haiku CLI ainda gera um bloco
+      // `thinking` por default (medido: ~520 tok de saída / 5.5s para um rewrite trivial).
+      // MAX_THINKING_TOKENS=0 zera o thinking (medido: ~34 tok / 1.1s, mesmo texto final).
+      const claudeEnv = body?.effort === 'off'
+        ? { ...process.env, MAX_THINKING_TOKENS: '0' }
+        : process.env;
+      const child = spawn('claude', args, { cwd: os.tmpdir(), env: claudeEnv });
       child.stdin.on('error', () => {});
       let stdout = '', stderr = '';
       child.stdout.on('data', (d) => { stdout += d.toString(); });
