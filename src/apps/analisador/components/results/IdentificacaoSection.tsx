@@ -54,7 +54,19 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
 
   // Estado para síntese
   const [copiedSintese, setCopiedSintese] = useState(false);
+  // Estado para cópia dos campos de identificação (processo, vara, partes)
+  const [copiedText, setCopiedText] = useState<string | null>(null);
   const { sintese, isGenerating, error, generateSynthesis } = useSynthesis();
+
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedText(text);
+      setTimeout(() => setCopiedText(null), 2000);
+    } catch (err) {
+      console.error('Falha ao copiar:', err);
+    }
+  };
 
   const handleGenerateSynthesis = () => {
     if (pedidos && pedidos.length > 0) {
@@ -130,6 +142,24 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
   const ritoBadgeVariant = ritoCalculado.rito === 'sumarissimo' ? 'warning' :
                           ritoCalculado.rito === 'sumario' ? 'success' : 'info';
 
+  /**
+   * Botão inline para copiar um texto para a área de transferência.
+   * Replica o padrão visual usado no HistoricoModal.
+   */
+  const CopyButton: React.FC<{ text: string; label?: string }> = ({ text, label = 'Copiar' }) => (
+    <button
+      onClick={() => handleCopy(text)}
+      className="p-0.5 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+      title={label}
+    >
+      {copiedText === text ? (
+        <Check className="w-3.5 h-3.5 text-green-500" />
+      ) : (
+        <Copy className="w-3.5 h-3.5" />
+      )}
+    </button>
+  );
+
   return (
     <div className="bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-900/20 dark:to-violet-900/20 rounded-xl p-5 border border-indigo-100 dark:border-indigo-800/40">
       <div className="flex items-center justify-between mb-4">
@@ -163,7 +193,10 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
             <FileText className="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5" />
             <div>
               <p className="text-sm text-slate-500 dark:text-slate-400">Processo</p>
-              <p className="font-medium text-slate-800 dark:text-slate-200">{safeRender(numeroProcesso)}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="font-medium text-slate-800 dark:text-slate-200">{safeRender(numeroProcesso)}</p>
+                <CopyButton text={numeroProcesso} label="Copiar número" />
+              </div>
             </div>
           </div>
         )}
@@ -190,7 +223,10 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
             <Building2 className="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5" />
             <div>
               <p className="text-sm text-slate-500 dark:text-slate-400">Vara</p>
-              <p className="font-medium text-slate-800 dark:text-slate-200">{safeRender(data.vara)}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="font-medium text-slate-800 dark:text-slate-200">{safeRender(data.vara)}</p>
+                <CopyButton text={String(data.vara)} label="Copiar vara" />
+              </div>
             </div>
           </div>
         )}
@@ -226,7 +262,10 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
           <div>
             <p className="text-sm text-slate-500 dark:text-slate-400">Reclamante(s)</p>
             {data.reclamantes.map((nome, idx) => (
-              <p key={idx} className="font-medium text-slate-800 dark:text-slate-200">{safeRender(nome)}</p>
+              <div key={idx} className="flex items-center gap-1.5">
+                <p className="font-medium text-slate-800 dark:text-slate-200">{safeRender(nome)}</p>
+                <CopyButton text={String(nome)} label="Copiar reclamante" />
+              </div>
             ))}
           </div>
         </div>
@@ -237,7 +276,10 @@ export const IdentificacaoSection: React.FC<IdentificacaoSectionProps> = ({ data
           <div>
             <p className="text-sm text-slate-500 dark:text-slate-400">Reclamada(s)</p>
             {data.reclamadas.map((nome, idx) => (
-              <p key={idx} className="font-medium text-slate-800 dark:text-slate-200">{safeRender(nome)}</p>
+              <div key={idx} className="flex items-center gap-1.5">
+                <p className="font-medium text-slate-800 dark:text-slate-200">{safeRender(nome)}</p>
+                <CopyButton text={String(nome)} label="Copiar reclamada" />
+              </div>
             ))}
           </div>
         </div>

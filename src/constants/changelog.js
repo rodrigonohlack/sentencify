@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.51',
+    date: '2026-06-02',
+    feature: 'feat(analisador): botões de copiar para a área de transferência nos campos da Identificação do Processo (Análise Completa). Agora Processo, Vara, Reclamante(s) e Reclamada(s) têm um ícone de copiar ao lado do valor — mesmo padrão visual já usado no modal Histórico de Análises (ícone lucide Copy que vira Check verde por 2s ao copiar). Para partes com mais de um nome, cada nome tem seu próprio botão.',
+  },
+  {
     version: '1.50.50',
     date: '2026-06-01',
     feature: 'fix(testes): suíte unitária volta a 100% verde (6314/6314). Duas regressões de ambiente de teste, ambas pré-existentes e não relacionadas ao código de produção: (1) useCloudSync.test.ts não restaurava timers reais — blocos com vi.useFakeTimers() que falhavam antes do seu vi.useRealTimers() deixavam os fake timers vazar para os testes seguintes, travando os setTimeout reais até o timeout de 5s (16 testes). Corrigido com vi.useRealTimers() no afterEach. (2) O .env define VITE_DEV_AUTH_BYPASS=true (auto-login de dev p/ Playwright); no Vitest import.meta.env.DEV é true e o .env é carregado, então o useCloudSync disparava /api/auth/magic/dev-login nos testes unitários, quebrando asserções de estado inicial e de "não autenticado" (4 testes). Corrigido desligando o bypass globalmente no src/test/setup.js via vi.stubEnv. Sem mudança em código de produção.',
