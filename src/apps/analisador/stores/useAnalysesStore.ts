@@ -144,6 +144,7 @@ interface AnalysesActions {
   removeBatchFile: (id: string) => void;
   clearBatchFiles: () => void;
   setBatchProcessing: (processing: boolean) => void;
+  startBatch: (total: number) => void;
   setBatchProgress: (current: number, total: number, processed: number, errors: number) => void;
   resetBatch: () => void;
 
@@ -334,6 +335,24 @@ export const useAnalysesStore = create<AnalysesState & AnalysesActions>((set, ge
   setBatchProcessing: (processing) =>
     set((state) => ({
       batch: { ...state.batch, isProcessing: processing },
+    })),
+
+  /**
+   * Inicia um novo lote: ativa o processamento E zera os contadores de progresso.
+   * Indispensável porque processedCount/errorCount/currentIndex persistem do lote
+   * anterior — sem o reset, a barra mostra a contagem da run anterior sobre o
+   * total da run atual (ex.: "2 de 1 processo... 200%") até o primeiro par concluir.
+   */
+  startBatch: (total) =>
+    set((state) => ({
+      batch: {
+        ...state.batch,
+        isProcessing: true,
+        currentIndex: 0,
+        totalFiles: total,
+        processedCount: 0,
+        errorCount: 0,
+      },
     })),
 
   setBatchProgress: (current, total, processed, errors) =>

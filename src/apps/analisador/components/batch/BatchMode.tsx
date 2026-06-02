@@ -323,6 +323,7 @@ export const BatchMode: React.FC = () => {
     removeBatchFile,
     clearBatchFiles,
     setBatchProcessing,
+    startBatch,
     setBatchProgress,
     settings,
   } = useAnalysesStore();
@@ -508,7 +509,9 @@ export const BatchMode: React.FC = () => {
   const handleProcess = useCallback(async () => {
     if (pairs.length === 0) return;
 
-    setBatchProcessing(true);
+    // Zera contadores de progresso ANTES do loop — senão a barra herda
+    // processedCount/errorCount do lote anterior (bug "2 de 1... 200%").
+    startBatch(pairs.length);
     let processed = 0;
     let errors = 0;
     const concurrencyLimit = settings.concurrencyLimit;
@@ -628,6 +631,7 @@ export const BatchMode: React.FC = () => {
     pairs,
     settings.concurrencyLimit,
     setBatchProcessing,
+    startBatch,
     setBatchProgress,
     updateBatchFile,
     analyzeWithAI,

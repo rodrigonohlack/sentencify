@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.49',
+    date: '2026-06-01',
+    feature: 'fix(analisador): corrigido o contador de progresso do processamento em lote que herdava a contagem do lote anterior (ex.: "Processando 2 de 1 processo... 200%"). Causa: o numerador da barra usa o estado do store (batch.processedCount + batch.errorCount), mas handleProcess só chamava setBatchProcessing(true) — sem zerar os contadores — e o primeiro setBatchProgress só ocorre DEPOIS da IA responder (segundos). Nessa janela a barra mostrava a contagem da run anterior sobre o pairs.length da run nova. Correção: nova action startBatch(total) no useAnalysesStore que ativa isProcessing E zera currentIndex/processedCount/errorCount atomicamente, chamada no início do loop em BatchMode. Teste de regressão em useAnalysesStore.test.ts.',
+  },
+  {
     version: '1.50.48',
     date: '2026-06-01',
     feature: 'feat(analisador): novo botão "Amanhã" na barra de Pauta do modal Histórico de Análises, ao lado de "Hoje". Preenche o campo de data com o dia seguinte (D+1), no mesmo formato YYYY-MM-DD montado a partir do fuso local (evita o off-by-one do toISOString em UTC). Atalho para pautar análises selecionadas para o próximo dia útil/sessão sem abrir o seletor de data.',
