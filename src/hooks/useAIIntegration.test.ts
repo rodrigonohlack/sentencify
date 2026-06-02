@@ -2387,6 +2387,95 @@ describe('useAIIntegration', () => {
       const opts = fetchCalls[0][1] as RequestInit;
       expect((opts.headers as Record<string, string>)['x-api-key']).toBeUndefined();
     });
+
+    // v1.50.55: disableThinking deve desligar o effort do CLI (Voz / Auto Complete)
+    it('claude-cli com disableThinking envia effort=off', async () => {
+      const mockResponse = {
+        ok: true, status: 200,
+        json: async () => ({ content: [{ type: 'text', text: 'OK' }], usage: { input_tokens: 1, output_tokens: 1 } }),
+        text: async () => '',
+      };
+      vi.mocked(global.fetch).mockResolvedValue(mockResponse as any);
+
+      const { result } = renderHook(() => useAIIntegration());
+      await act(async () => {
+        await result.current.callAI(
+          [{ role: 'user', content: [{ type: 'text', text: 'oi' }] }] as any,
+          { provider: 'claude-cli', disableThinking: true }
+        );
+      });
+
+      const fetchCalls = vi.mocked(global.fetch).mock.calls;
+      const body = JSON.parse((fetchCalls[0][1] as RequestInit).body as string);
+      expect(body.effort).toBe('off');
+    });
+
+    it('claude-cli sem disableThinking mantém effort de raciocínio', async () => {
+      const mockResponse = {
+        ok: true, status: 200,
+        json: async () => ({ content: [{ type: 'text', text: 'OK' }], usage: { input_tokens: 1, output_tokens: 1 } }),
+        text: async () => '',
+      };
+      vi.mocked(global.fetch).mockResolvedValue(mockResponse as any);
+
+      const { result } = renderHook(() => useAIIntegration());
+      await act(async () => {
+        await result.current.callAI(
+          [{ role: 'user', content: [{ type: 'text', text: 'oi' }] }] as any,
+          { provider: 'claude-cli' }
+        );
+      });
+
+      const fetchCalls = vi.mocked(global.fetch).mock.calls;
+      const body = JSON.parse((fetchCalls[0][1] as RequestInit).body as string);
+      expect(body.effort).not.toBe('off');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // callAI - provider codex-cli (local bridge)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('callAI - provider codex-cli', () => {
+    const mockCodexResponse = {
+      ok: true, status: 200,
+      json: async () => ({ choices: [{ message: { content: 'OK' } }], usage: { prompt_tokens: 1, completion_tokens: 1 } }),
+      text: async () => '',
+    };
+
+    // v1.50.55: disableThinking deve reduzir o reasoning do Codex ao mínimo (GPT-5.5 não
+    // tem 'off' — 'minimal' é o piso aceito pelo bridge).
+    it('codex-cli com disableThinking envia reasoning_effort=minimal', async () => {
+      vi.mocked(global.fetch).mockResolvedValue(mockCodexResponse as any);
+
+      const { result } = renderHook(() => useAIIntegration());
+      await act(async () => {
+        await result.current.callAI(
+          [{ role: 'user', content: [{ type: 'text', text: 'oi' }] }] as any,
+          { provider: 'codex-cli', disableThinking: true }
+        );
+      });
+
+      const fetchCalls = vi.mocked(global.fetch).mock.calls;
+      const body = JSON.parse((fetchCalls[0][1] as RequestInit).body as string);
+      expect(body.reasoning_effort).toBe('minimal');
+    });
+
+    it('codex-cli sem disableThinking mantém reasoning configurado (não minimal)', async () => {
+      vi.mocked(global.fetch).mockResolvedValue(mockCodexResponse as any);
+
+      const { result } = renderHook(() => useAIIntegration());
+      await act(async () => {
+        await result.current.callAI(
+          [{ role: 'user', content: [{ type: 'text', text: 'oi' }] }] as any,
+          { provider: 'codex-cli' }
+        );
+      });
+
+      const fetchCalls = vi.mocked(global.fetch).mock.calls;
+      const body = JSON.parse((fetchCalls[0][1] as RequestInit).body as string);
+      expect(body.reasoning_effort).not.toBe('minimal');
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

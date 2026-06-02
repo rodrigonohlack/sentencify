@@ -437,7 +437,13 @@ const useAIIntegration = () => {
           disableThinking
         });
         if (localBridge) {
-          (requestBody as Record<string, unknown>).effort = aiSettings.claudeCliEffort || 'high';
+          // v1.50.55: disableThinking (Voz / Auto Complete) → 'off' desliga o raciocínio
+          // do CLI (translate.js não adiciona --effort). Antes, effort=high fazia o Haiku
+          // "pensar" pesado mesmo em tarefas leves (ex.: rewrite de voz levava 30-40s e
+          // queimava ~5k tokens de reasoning). Sem disableThinking, respeita o effort global.
+          (requestBody as Record<string, unknown>).effort = disableThinking
+            ? 'off'
+            : (aiSettings.claudeCliEffort || 'high');
         }
         if (localBridge && webSearch) {
           (requestBody as Record<string, unknown>).web_search = true;
@@ -1125,7 +1131,12 @@ const useAIIntegration = () => {
         }
 
         if (localBridge) {
-          requestBody.reasoning_effort = aiSettings.codexCliReasoning || 'medium';
+          // v1.50.55: disableThinking (Voz / Auto Complete) → 'minimal', o menor reasoning
+          // que o GPT-5.5 aceita (não há 'off' como no Claude CLI; mesma estratégia do
+          // Gemini). Sem disableThinking, respeita o reasoning global configurado.
+          requestBody.reasoning_effort = disableThinking
+            ? 'minimal'
+            : (aiSettings.codexCliReasoning || 'medium');
           if (webSearch) requestBody.web_search = true;
         }
 

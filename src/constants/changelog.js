@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.55',
+    date: '2026-06-02',
+    feature: 'fix(cli): disableThinking agora desliga (ou minimiza) o raciocínio nos providers CLI locais, honrando o acordo de que Voz e Auto Complete rodam sem thinking quando possível. Sintoma observado no log do llm-bridge: chamadas de Melhoria de Voz com Haiku Local levavam 30-40s e queimavam ~5000 tokens de saída para devolver ~200 caracteres — o Haiku estava "pensando" pesado mesmo num rewrite trivial. Causa: tanto o callLLM (Claude CLI) quanto o callOpenAIAPI (Codex CLI) injetavam o effort/reasoning global INCONDICIONALMENTE no request ao bridge, ignorando o disableThinking:true que a Voz e o Auto Complete passam. Correção: (1) Claude CLI → quando disableThinking, envia effort=\'off\' (translate.js não adiciona --effort, CLI roda sem raciocínio estendido); vale para Haiku/Sonnet/Opus. (2) Codex CLI (GPT-5.5) → quando disableThinking, envia reasoning_effort=\'minimal\' (o GPT-5.5 não tem \'off\'; \'minimal\' é o piso aceito pelo bridge, mesma estratégia já usada no Gemini). Sem disableThinking, ambos respeitam o effort/reasoning global configurado. 4 testes de regressão.',
+  },
+  {
     version: '1.50.54',
     date: '2026-06-02',
     feature: 'feat(autocomplete+voz): nova opção "Claude Local (Haiku 4.5 · assinatura)" na lista de modelos rápidos, disponível tanto no Auto Complete quanto na Melhoria de Voz por IA. Roda Haiku pela assinatura ($0) via daemon llm-bridge — o bridge (translate.js:mapModel) já resolve qualquer id contendo "haiku" para `--model haiku`. É o modelo mais leve/rápido sem custo, ideal para essas duas funções (antes o caminho CLI só oferecia Sonnet 4.6/Opus 4.8). Default do Auto Complete passa a ser claude-local-haiku, e a entrada aparece antes da Sonnet Local na lista (o auto-reset escolhe Haiku Local primeiro entre as opções de assinatura).',
