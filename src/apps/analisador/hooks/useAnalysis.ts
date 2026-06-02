@@ -10,7 +10,7 @@ import { useAIIntegration } from './useAIIntegration';
 import { ANALYSIS_SYSTEM_PROMPT, buildAnalysisPrompt } from '../prompts';
 import { providerSupportsPdfBinary } from '../constants';
 import type { AnalysisResult, AIMessage, AIMessageContent, DocumentFile, PedidoAnalise } from '../types';
-import { parseAIResponse, extractJSON, AnalysisResponseSchema } from '../../../schemas/ai-responses';
+import { parseAIResponse, extractJSON, sanitizeJsonControlChars, AnalysisResponseSchema } from '../../../schemas/ai-responses';
 import { generateTabelaSintetica } from '../utils/tabela';
 
 // Re-export para consumidores que importavam de useAnalysis (compat).
@@ -89,7 +89,7 @@ export const useAnalysis = () => {
 
       // Fallback: parse direto se Zod falhar (compatibilidade)
       console.warn('[Analisador] Validação Zod falhou, usando fallback:', validated.error);
-      const parsed = JSON.parse(extractJSON(jsonStr) || jsonStr);
+      const parsed = JSON.parse(sanitizeJsonControlChars(extractJSON(jsonStr) || jsonStr));
 
       // Validate required fields
       if (!parsed.identificacao) {

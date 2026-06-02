@@ -246,7 +246,8 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
                   autoCompleteContext={{
                     relatorio: topic.editedRelatorio || topic.relatorio || '',
                     enabled: autoComplete.enabled,
-                    delayMs: autoComplete.delayMs
+                    delayMs: autoComplete.delayMs,
+                    model: autoComplete.model
                   }}
                 />
               </div>

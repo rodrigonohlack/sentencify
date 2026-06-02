@@ -3,6 +3,16 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.53',
+    date: '2026-06-02',
+    feature: 'fix(analisador): corrigido erro "Bad control character in string literal in JSON" que quebrava o parse da resposta da IA e disparava retry caro (re-chamada com 32K tokens + documentos inteiros). Causa: a IA às vezes emite quebras de linha / tabs LITERAIS dentro de valores string (ex.: ao citar trechos de documentos), o que viola a gramática JSON. Nova função sanitizeJsonControlChars (src/schemas/ai-responses.ts) faz um scan caractere a caractere — rastreando se está dentro de uma string e respeitando o escape \\ — e converte cada control char cru (U+0000–U+001F) em sua forma escapada (\\n, \\t, \\r, \\uXXXX). É no-op em JSON válido e preserva o whitespace de formatação fora de strings. Aplicada no parseAIResponse (caminho Zod, usado por todo o app) e no fallback de parse direto do useAnalysis. 6 testes de regressão. Obs.: os warnings "TT: undefined function" e "getPathGenerator" do pdf.worker são ruído benigno do pdf.js com fontes embutidas e não afetam a extração.',
+  },
+  {
+    version: '1.50.52',
+    date: '2026-06-02',
+    feature: 'feat(autocomplete): Auto Complete (IA) reformulado para sugestões consistentes. (1) Modelo dedicado: o autocomplete deixa de herdar o provider principal (que podia estar em Extended Thinking — o budget de raciocínio espremia a saída de 150 tokens, gerando sugestões curtas/vazias) e passa a usar a mesma lista curada de modelos rápidos/non-thinking da Melhoria de Voz, agora configurável na config (Haiku 4.5, Gemini 3 Flash, GPT-4o-mini, Grok Instant, DeepSeek V4 Flash + os novos Claude Local e Codex Local via daemon llm-bridge, gratuitos por assinatura). (2) Fill-in-the-middle: envia o texto ANTES e DEPOIS do cursor (antes mandava o documento inteiro e completava o fim, não o ponto de edição). (3) Inferência ajustada: disableThinking, temperature 0.3, maxTokens 300. (4) Pós-processamento da resposta (remove aspas/prefácios e normaliza o espaço de junção). (5) delay padrão 3s → 1,5s. Os providers CLI locais também foram adicionados à Melhoria de Voz por IA.',
+  },
+  {
     version: '1.50.51',
     date: '2026-06-02',
     feature: 'feat(analisador): botões de copiar para a área de transferência nos campos da Identificação do Processo (Análise Completa). Agora Processo, Vara, Reclamante(s) e Reclamada(s) têm um ícone de copiar ao lado do valor — mesmo padrão visual já usado no modal Histórico de Análises (ícone lucide Copy que vira Check verde por 2s ao copiar). Para partes com mais de um nome, cada nome tem seu próprio botão.',

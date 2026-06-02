@@ -18,6 +18,7 @@ import {
   BulkExtractionSchema,
   extractJSON,
   parseAIResponse,
+  sanitizeJsonControlChars,
 } from './ai-responses';
 
 describe('ai-responses schemas', () => {
@@ -889,6 +890,54 @@ describe('ai-responses schemas', () => {
       if (result.success) {
         expect(result.data.corrections).toEqual([]);
         expect(result.data.confidence).toBe(0.85);
+      }
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // sanitizeJsonControlChars (v1.50.53) — control chars crus dentro de strings
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('sanitizeJsonControlChars', () => {
+    it('escapa quebra de linha literal dentro de string (caso do bug do Analisador)', () => {
+      const broken = '{"trecho": "linha 1\nlinha 2"}';
+      // JSON.parse cru falha
+      expect(() => JSON.parse(broken)).toThrow();
+      // após sanitizar, parseia e preserva a quebra
+      const parsed = JSON.parse(sanitizeJsonControlChars(broken));
+      expect(parsed.trecho).toBe('linha 1\nlinha 2');
+    });
+
+    it('escapa tab e carriage return literais', () => {
+      const broken = '{"a": "x\ty", "b": "p\rq"}';
+      const parsed = JSON.parse(sanitizeJsonControlChars(broken));
+      expect(parsed.a).toBe('x\ty');
+      expect(parsed.b).toBe('p\rq');
+    });
+
+    it('é no-op em JSON válido (control chars já escapados)', () => {
+      const valid = '{"trecho": "linha 1\\nlinha 2", "n": 5}';
+      expect(sanitizeJsonControlChars(valid)).toBe(valid);
+      expect(JSON.parse(sanitizeJsonControlChars(valid)).trecho).toBe('linha 1\nlinha 2');
+    });
+
+    it('preserva whitespace de formatação FORA de strings', () => {
+      const pretty = '{\n  "a": 1,\n  "b": 2\n}';
+      expect(sanitizeJsonControlChars(pretty)).toBe(pretty);
+    });
+
+    it('não confunde aspas escapadas dentro de string', () => {
+      const broken = '{"frase": "ele disse \\"oi\\"\nfim"}';
+      const parsed = JSON.parse(sanitizeJsonControlChars(broken));
+      expect(parsed.frase).toBe('ele disse "oi"\nfim');
+    });
+
+    it('parseAIResponse recupera resposta com newline literal via sanitização', () => {
+      const response = '{"corrections": [{"type": "modify", "description": "antes\ndepois"}], "confidence": 0.7}';
+      const result = parseAIResponse(response, DoubleCheckResponseSchema);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.corrections[0].description).toBe('antes\ndepois');
       }
     });
   });

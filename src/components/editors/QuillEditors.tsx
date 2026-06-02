@@ -751,6 +751,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
     relatorio: topicRelatorio || '',
     enabled: autoCompleteSettings.enabled,
     delayMs: autoCompleteSettings.delayMs,
+    model: autoCompleteSettings.model,
     editorTheme,
     quillReady
   });

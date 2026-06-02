@@ -386,8 +386,18 @@ export interface AISettings {
 // VOICE IMPROVEMENT TYPES (v1.37.88)
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** Modelos disponíveis para melhoria de voz (rápidos/baratos) */
-export type VoiceImprovementModel = 'haiku' | 'flash' | 'gpt-4o-mini' | 'grok-instant' | 'deepseek-flash';
+/**
+ * Modelos rápidos/baratos compartilhados por Melhoria de Voz e Auto Complete.
+ * v1.50.52: 'claude-local' e 'codex-local' rodam via daemon llm-bridge (assinatura, sem API key).
+ */
+export type VoiceImprovementModel =
+  | 'haiku'
+  | 'flash'
+  | 'gpt-4o-mini'
+  | 'grok-instant'
+  | 'deepseek-flash'
+  | 'claude-local'
+  | 'codex-local';
 
 /** Configurações de melhoria de texto ditado por voz */
 export interface VoiceImprovementSettings {
@@ -402,8 +412,10 @@ export interface VoiceImprovementSettings {
 /** Configurações de Auto Complete com IA no editor */
 export interface AutoCompleteSettings {
   enabled: boolean;
-  /** Tempo de pausa em ms antes de sugerir (default: 3000) */
+  /** Tempo de pausa em ms antes de sugerir (default: 1500) */
   delayMs: number;
+  /** v1.50.52: Modelo rápido dedicado (mesma lista da Melhoria de Voz). Default: 'haiku' */
+  model?: VoiceImprovementModel;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1198,7 +1210,7 @@ export interface QuillDelta {
 
 /** Interface do Quill Editor */
 export interface QuillInstance {
-  getText: () => string;
+  getText: (index?: number, length?: number) => string;
   getContents: () => unknown;
   setContents: (delta: unknown) => void;
   setText: (text: string) => void;
@@ -1853,7 +1865,7 @@ export interface FieldEditorProps {
   editorTheme?: 'dark' | 'light' | string;
   hideVoiceButton?: boolean;
   /** v1.40.31: Contexto para Auto Complete com IA (somente campo decisão) */
-  autoCompleteContext?: Pick<AutoCompleteSettings, 'enabled' | 'delayMs'> & { relatorio: string };
+  autoCompleteContext?: Pick<AutoCompleteSettings, 'enabled' | 'delayMs' | 'model'> & { relatorio: string };
 }
 
 /** Ref exposta pelo FieldEditor - v1.35.93 */

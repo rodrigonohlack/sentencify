@@ -144,7 +144,7 @@ export { useCloudSync } from './useCloudSync';
 
 // Voice/Cache hooks
 export { useVoiceToText } from './useVoiceToText';
-export { useVoiceImprovement, VOICE_MODEL_CONFIG } from './useVoiceImprovement';
+export { useVoiceImprovement, VOICE_MODEL_CONFIG, isFastModelAvailable } from './useVoiceImprovement';
 export { useAutoComplete } from './useAutoComplete';
 export { default as useFactsComparisonCache } from './useFactsComparisonCache';
 export { default as useSentenceReviewCache } from './useSentenceReviewCache';

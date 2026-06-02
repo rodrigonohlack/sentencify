@@ -14,7 +14,8 @@
 
 import React from 'react';
 import { useAIIntegration } from './useAIIntegration';
-import type { QuillInstance } from '../types';
+import { VOICE_MODEL_CONFIG } from './useVoiceImprovement';
+import type { QuillInstance, VoiceImprovementModel } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -27,6 +28,8 @@ export interface AutoCompleteOptions {
   enabled: boolean;
   /** Delay em ms antes de chamar a IA */
   delayMs: number;
+  /** v1.50.52: Modelo rápido dedicado (mesma lista da Melhoria de Voz). Default: 'haiku' */
+  model?: VoiceImprovementModel;
   /** Tema do editor para cor do ghost text */
   editorTheme: 'dark' | 'light' | string;
   /** Se o Quill já foi inicializado */
@@ -41,24 +44,53 @@ const GHOST_CLASS = 'ac-ghost-overlay';
 const BADGE_CLASS = 'ac-ghost-badge';
 const MIN_TEXT_LENGTH = 20;
 
+/** v1.50.52: Limites de contexto enviados à IA (evita payloads enormes em decisões longas) */
+const PREFIX_MAX_CHARS = 6000;
+const SUFFIX_MAX_CHARS = 1500;
+
 const SYSTEM_PROMPT = `Você é um assistente de completamento de texto para decisões trabalhistas brasileiras.
-Complete APENAS a próxima frase do texto, de forma jurídica, objetiva e natural.
-Retorne SOMENTE o trecho que completa o texto, sem repetir o que já foi escrito.
-Não inclua explicações, prefácios ou pontuação de abertura.
-Seja conciso: no máximo uma ou duas frases.`;
+Continue o texto a partir do ponto do cursor, de forma jurídica, objetiva e natural.
+Retorne SOMENTE a continuação — não repita o que já foi escrito antes nem depois do cursor.
+Não inclua explicações, prefácios, comentários nem aspas ao redor da continuação.
+Você pode completar até o fim da frase ou do parágrafo corrente, conforme fizer sentido.`;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
-function stripHTML(html: string): string {
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
-}
-
 function isModifierOnlyKey(e: KeyboardEvent): boolean {
   return ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key);
+}
+
+/**
+ * v1.50.52: Limpa a resposta da IA — remove prefácios/aspas e normaliza o espaço de
+ * junção com o texto que já existe antes do cursor.
+ *
+ * @param raw - Texto bruto retornado pela IA
+ * @param prefix - Texto imediatamente antes do cursor (para decidir o espaço de junção)
+ */
+function cleanSuggestion(raw: string, prefix: string): string {
+  let s = (raw || '').trim();
+  if (!s) return '';
+
+  // Remove aspas que envolvam toda a sugestão (ex.: "texto" ou “texto”)
+  const wrappedQuotes = /^["“'«](.*)["”'»]$/s;
+  const m = s.match(wrappedQuotes);
+  if (m) s = m[1].trim();
+
+  // Remove aspas/pontuação de abertura órfã no início
+  s = s.replace(/^["“'«:\-–—\s]+/, '');
+  if (!s) return '';
+
+  // Espaço de junção: se o texto anterior termina em caractere não-branco e a
+  // sugestão começa com letra/número/parêntese, insere um espaço para não grudar.
+  const charBefore = prefix.slice(-1);
+  const startsAttached = /^[.,;:!?)\]}»”']/.test(s); // pontuação que cola à palavra anterior
+  if (charBefore && !/\s/.test(charBefore) && !startsAttached) {
+    s = ' ' + s;
+  }
+
+  return s;
 }
 
 function getGhostColors(editorTheme: string): { text: string; bg: string; border: string } {
@@ -82,7 +114,7 @@ export function useAutoComplete(
   quillRef: React.MutableRefObject<QuillInstance | null>,
   options: AutoCompleteOptions
 ): void {
-  const { enabled, relatorio, delayMs, editorTheme, quillReady } = options;
+  const { enabled, relatorio, delayMs, model, editorTheme, quillReady } = options;
 
   const { callAI } = useAIIntegration();
 
@@ -99,12 +131,14 @@ export function useAutoComplete(
   const enabledRef = React.useRef(enabled);
   const relatorioRef = React.useRef(relatorio);
   const delayMsRef = React.useRef(delayMs);
+  const modelRef = React.useRef(model);
   const editorThemeRef = React.useRef(editorTheme);
   const callAIRef = React.useRef(callAI);
 
   React.useEffect(() => { enabledRef.current = enabled; }, [enabled]);
   React.useEffect(() => { relatorioRef.current = relatorio; }, [relatorio]);
   React.useEffect(() => { delayMsRef.current = delayMs; }, [delayMs]);
+  React.useEffect(() => { modelRef.current = model; }, [model]);
   React.useEffect(() => { editorThemeRef.current = editorTheme; }, [editorTheme]);
   React.useEffect(() => { callAIRef.current = callAI; }, [callAI]);
 
@@ -191,7 +225,7 @@ export function useAutoComplete(
   // Chamada à API
   // ─────────────────────────────────────────────────────────────────────────
 
-  const callAutoCompleteAPI = React.useCallback(async (currentText: string, quill: QuillInstance) => {
+  const callAutoCompleteAPI = React.useCallback(async (quill: QuillInstance) => {
     if (abortRef.current) {
       abortRef.current.abort();
     }
@@ -199,30 +233,56 @@ export function useAutoComplete(
 
     isLoadingRef.current = true;
 
-    const userPrompt = `MINI-RELATÓRIO:\n${relatorioRef.current || '(sem relatório)'}\n\nDECISÃO ATÉ AGORA:\n${currentText}\n\nComplete a próxima frase:`;
+    // ── Fill-in-the-middle: contexto antes E depois do cursor (v1.50.52) ──
+    // Antes (até v1.50.51) usava-se o documento inteiro e a sugestão era exibida
+    // no cursor — completava o FIM do texto, não o ponto de edição.
+    const range = quill.getSelection();
+    const idx = range ? range.index : Math.max(0, quill.getLength() - 1);
+    const fullPrefix = quill.getText(0, idx);
+    const fullSuffix = quill.getText(idx);
+    const prefix = fullPrefix.slice(-PREFIX_MAX_CHARS);
+    const suffix = fullSuffix.slice(0, SUFFIX_MAX_CHARS).trim();
+
+    if (prefix.trim().length < MIN_TEXT_LENGTH) {
+      isLoadingRef.current = false;
+      return;
+    }
+
+    // Snapshot para descartar a sugestão se o usuário editar/movar antes da resposta
+    const prefixSnapshot = fullPrefix;
+
+    // Modelo rápido dedicado (mesma infra da Melhoria de Voz) — sempre non-thinking.
+    const cfg = VOICE_MODEL_CONFIG[modelRef.current ?? 'haiku'] ?? VOICE_MODEL_CONFIG['haiku'];
+
+    const userPrompt = `MINI-RELATÓRIO:\n${relatorioRef.current || '(sem relatório)'}\n\nTEXTO ANTES DO CURSOR:\n${prefix}\n\nTEXTO DEPOIS DO CURSOR:\n${suffix || '(fim do texto)'}\n\nEscreva a continuação a partir do cursor:`;
 
     try {
-      const suggestion = ((await callAIRef.current(
+      const raw = ((await callAIRef.current(
         [{ role: 'user', content: [{ type: 'text', text: userPrompt }] }],
         {
+          provider: cfg.provider,
+          model: cfg.model,
           systemPrompt: SYSTEM_PROMPT,
-          maxTokens: 150,
+          maxTokens: 300,
+          temperature: 0.3,
+          disableThinking: cfg.provider !== 'gemini',
+          geminiThinkingLevel: cfg.provider === 'gemini' ? 'minimal' : undefined,
           useInstructions: false,
           abortSignal: abortRef.current.signal,
           logMetrics: true
         }
-      )) as string | null)?.trim() ?? '';
+      )) as string | null) ?? '';
 
-      // Verificar se quill ainda existe e texto não mudou
+      // Verificar se quill ainda existe e o texto antes do cursor não mudou
       if (!quill || !quillRef.current || !enabledRef.current) return;
-      const currentHTML = quill.root?.innerHTML || '';
-      const textNow = stripHTML(currentHTML);
-      if (!textNow.startsWith(currentText.substring(0, 30))) return; // texto mudou, ignorar
+      const rangeNow = quill.getSelection();
+      const idxNow = rangeNow ? rangeNow.index : Math.max(0, quill.getLength() - 1);
+      const prefixNow = quill.getText(0, idxNow);
+      if (prefixNow !== prefixSnapshot) return; // texto/cursor mudou, ignorar
 
+      const suggestion = cleanSuggestion(raw, prefixNow);
       if (suggestion) {
-        const cursorRange = quill.getSelection();
-        const idx = cursorRange ? cursorRange.index : quill.getLength() - 1;
-        showGhostOverlay(quill, suggestion, idx);
+        showGhostOverlay(quill, suggestion, idxNow);
       }
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
@@ -252,12 +312,14 @@ export function useAutoComplete(
       if (debounceRef.current) clearTimeout(debounceRef.current);
       if (abortRef.current) abortRef.current.abort();
 
-      const currentText = stripHTML(quill.root?.innerHTML || '');
-      if (currentText.length < MIN_TEXT_LENGTH) return;
+      // Gate rápido: precisa de contexto suficiente ANTES do cursor
+      const range = quill.getSelection();
+      const idx = range ? range.index : quill.getLength();
+      if (idx < MIN_TEXT_LENGTH) return;
 
       debounceRef.current = setTimeout(() => {
         if (!quillRef.current || !enabledRef.current) return;
-        void callAutoCompleteAPI(currentText, quillRef.current);
+        void callAutoCompleteAPI(quillRef.current);
       }, delayMsRef.current);
     }) as (...args: unknown[]) => void;
 

@@ -21,7 +21,7 @@ import { buildVoiceImprovementPrompt } from '../prompts/voice-improvement-prompt
 
 /** Configuração de modelo por provider */
 interface ModelConfig {
-  provider: 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
+  provider: 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli';
   model: string;
   displayName: string;
 }
@@ -55,8 +55,34 @@ export const VOICE_MODEL_CONFIG: Record<VoiceImprovementModel, ModelConfig> = {
     provider: 'deepseek',
     model: 'deepseek-v4-flash',
     displayName: 'DeepSeek V4 Flash'
+  },
+  // v1.50.52: Providers CLI locais (daemon llm-bridge · assinatura · sem API key).
+  // disableThinking: true é aplicado pelo callAI (provider !== 'gemini'), então rodam non-thinking.
+  'claude-local': {
+    provider: 'claude-cli',
+    model: 'claude-sonnet-4-6',
+    displayName: 'Claude Local (Sonnet 4.6 · assinatura)'
+  },
+  'codex-local': {
+    provider: 'codex-cli',
+    model: 'gpt-5.5',
+    displayName: 'Codex Local (GPT-5.5 · assinatura)'
   }
 };
+
+/**
+ * v1.50.52: Decide se um modelo rápido está disponível para uso.
+ * Providers CLI locais (claude-cli/codex-cli) não usam API key — dependem do daemon
+ * llm-bridge — então estão sempre listados. Os demais exigem API key configurada.
+ */
+export function isFastModelAvailable(
+  config: ModelConfig,
+  apiKeys: Partial<Record<string, string>> | undefined
+): boolean {
+  if (config.provider === 'claude-cli' || config.provider === 'codex-cli') return true;
+  const key = apiKeys?.[config.provider];
+  return !!(key && key.trim().length > 0);
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INTERFACES

@@ -159,6 +159,58 @@ export const BulkExtractionSchema = z.object({
 // ═══════════════════════════════════════════════════════════════════
 
 /**
+ * Escapa caracteres de controle crus (U+0000–U+001F) que apareçam DENTRO de strings JSON.
+ *
+ * LLMs às vezes emitem quebras de linha / tabs literais dentro de valores string (ex.: ao
+ * citar trechos de documentos), o que viola a gramática JSON e quebra o JSON.parse com
+ * "Bad control character in string literal". Esta função faz um scan caractere a caractere,
+ * rastreando se está dentro de uma string (respeitando o escape `\`), e converte cada
+ * control char cru em sua forma escapada. Caracteres FORA de strings (whitespace de
+ * formatação) são preservados; JSON válido nunca tem control chars crus em strings, então
+ * em entradas bem-formadas a função é um no-op.
+ */
+export function sanitizeJsonControlChars(jsonStr: string): string {
+  let result = '';
+  let inString = false;
+  let escaped = false;
+
+  for (let i = 0; i < jsonStr.length; i++) {
+    const ch = jsonStr[i];
+
+    if (escaped) {
+      result += ch;
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      result += ch;
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      result += ch;
+      continue;
+    }
+
+    const code = jsonStr.charCodeAt(i);
+    if (inString && code < 0x20) {
+      if (ch === '\n') result += '\\n';
+      else if (ch === '\t') result += '\\t';
+      else if (ch === '\r') result += '\\r';
+      else if (ch === '\b') result += '\\b';
+      else if (ch === '\f') result += '\\f';
+      else result += '\\u' + code.toString(16).padStart(4, '0');
+      continue;
+    }
+
+    result += ch;
+  }
+
+  return result;
+}
+
+/**
  * Extrai JSON de uma resposta da IA (suporta markdown code blocks e JSON direto)
  */
 export function extractJSON(response: string): string | null {
@@ -188,7 +240,7 @@ export function parseAIResponse<T>(
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(jsonStr);
+    parsed = JSON.parse(sanitizeJsonControlChars(jsonStr));
   } catch (e) {
     return { success: false, error: `JSON inválido: ${(e as Error).message}` };
   }

@@ -60,7 +60,8 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
   useAutoComplete(quillInstanceRef, {
     relatorio: autoCompleteContext?.relatorio ?? '',
     enabled: autoCompleteContext?.enabled ?? false,
-    delayMs: autoCompleteContext?.delayMs ?? 3000,
+    delayMs: autoCompleteContext?.delayMs ?? 1500,
+    model: autoCompleteContext?.model,
     editorTheme,
     quillReady: quillReady ?? false
   });

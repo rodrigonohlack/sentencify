@@ -48,7 +48,8 @@ import {
   useExportImport,
   useIndexedDB,
   useFontPreference,
-  VOICE_MODEL_CONFIG
+  VOICE_MODEL_CONFIG,
+  isFastModelAvailable
 } from '../../hooks';
 import type {
   AIProvider,
@@ -329,21 +330,37 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
     const selectedConfig = VOICE_MODEL_CONFIG[selectedModel];
     if (!selectedConfig) return;
 
-    const selectedKey = aiSettings.apiKeys?.[selectedConfig.provider];
-    const isSelectedAvailable = selectedKey && selectedKey.trim().length > 0;
-
-    if (!isSelectedAvailable) {
+    // v1.50.52: CLIs locais (claude-cli/codex-cli) não dependem de API key
+    if (!isFastModelAvailable(selectedConfig, aiSettings.apiKeys)) {
       // Encontrar primeiro modelo disponível
       const firstAvailable = (Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
-        .find(([, config]) => {
-          const apiKey = aiSettings.apiKeys?.[config.provider];
-          return apiKey && apiKey.trim().length > 0;
-        });
+        .find(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys));
 
       if (firstAvailable) {
         setAiSettings({
           ...aiSettings,
           voiceImprovement: { ...aiSettings.voiceImprovement, enabled: true, model: firstAvailable[0] }
+        });
+      }
+    }
+  }, [aiSettings, setAiSettings]);
+
+  // v1.50.52: Auto-reset modelo do Auto Complete quando a key do provider é removida
+  React.useEffect(() => {
+    if (!aiSettings.autoComplete?.enabled) return;
+
+    const selectedModel = aiSettings.autoComplete?.model || 'haiku';
+    const selectedConfig = VOICE_MODEL_CONFIG[selectedModel];
+    if (!selectedConfig) return;
+
+    if (!isFastModelAvailable(selectedConfig, aiSettings.apiKeys)) {
+      const firstAvailable = (Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
+        .find(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys));
+
+      if (firstAvailable) {
+        setAiSettings({
+          ...aiSettings,
+          autoComplete: { ...aiSettings.autoComplete, enabled: true, model: firstAvailable[0] }
         });
       }
     }
@@ -1848,12 +1865,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     })}
                     className="w-full px-3 py-2 rounded-lg theme-bg-primary theme-text-primary theme-border-input border text-sm"
                   >
-                    {/* Só mostra modelos cujo provider tem API key configurada */}
+                    {/* Modelos com API key OU CLIs locais (sem key, via daemon) */}
                     {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
-                      .filter(([, config]) => {
-                        const apiKey = aiSettings.apiKeys?.[config.provider];
-                        return apiKey && apiKey.trim().length > 0;
-                      })
+                      .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys))
                       .map(([key, config]) => (
                         <option key={key} value={key}>
                           {config.displayName}
@@ -1863,10 +1877,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   </select>
                   {/* Aviso se nenhum modelo disponível */}
                   {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
-                    .filter(([, config]) => {
-                      const apiKey = aiSettings.apiKeys?.[config.provider];
-                      return apiKey && apiKey.trim().length > 0;
-                    }).length === 0 && (
+                    .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys)).length === 0 && (
                     <p className="text-xs text-red-400 mt-2">
                       Configure pelo menos uma API key acima para usar este recurso.
                     </p>
@@ -1901,8 +1912,10 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               onClick={() => setAiSettings({
                 ...aiSettings,
                 autoComplete: {
+                  ...aiSettings.autoComplete,
                   enabled: !aiSettings.autoComplete?.enabled,
-                  delayMs: aiSettings.autoComplete?.delayMs ?? 3000
+                  delayMs: aiSettings.autoComplete?.delayMs ?? 1500,
+                  model: aiSettings.autoComplete?.model ?? 'haiku'
                 }
               })}
               className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
@@ -1945,7 +1958,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   <label className="block text-xs font-medium theme-text-muted mb-2">
                     Tempo de pausa antes de sugerir:{' '}
                     <span className="theme-text-primary font-semibold">
-                      {((aiSettings.autoComplete?.delayMs ?? 3000) / 1000).toFixed(1)}s
+                      {((aiSettings.autoComplete?.delayMs ?? 1500) / 1000).toFixed(1)}s
                     </span>
                   </label>
                   <input
@@ -1953,10 +1966,11 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     min={1000}
                     max={10000}
                     step={500}
-                    value={aiSettings.autoComplete?.delayMs ?? 3000}
+                    value={aiSettings.autoComplete?.delayMs ?? 1500}
                     onChange={(e) => setAiSettings({
                       ...aiSettings,
                       autoComplete: {
+                        ...aiSettings.autoComplete,
                         enabled: true,
                         delayMs: Number(e.target.value)
                       }
@@ -1969,12 +1983,50 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   </div>
                 </div>
 
+                {/* v1.50.52: Modelo dedicado (rápido/non-thinking) */}
+                <div>
+                  <label className="block text-xs font-medium theme-text-muted mb-2">
+                    Modelo do Auto Complete
+                  </label>
+                  <select
+                    value={aiSettings.autoComplete?.model || 'haiku'}
+                    onChange={(e) => setAiSettings({
+                      ...aiSettings,
+                      autoComplete: {
+                        ...aiSettings.autoComplete,
+                        enabled: true,
+                        delayMs: aiSettings.autoComplete?.delayMs ?? 1500,
+                        model: e.target.value as VoiceImprovementModel
+                      }
+                    })}
+                    className="w-full px-3 py-2 rounded-lg theme-bg-primary theme-text-primary theme-border-input border text-sm"
+                  >
+                    {/* Modelos com API key OU CLIs locais (sem key, via daemon) */}
+                    {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
+                      .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys))
+                      .map(([key, config]) => (
+                        <option key={key} value={key}>
+                          {config.displayName}
+                        </option>
+                      ))
+                    }
+                  </select>
+                  {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
+                    .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys)).length === 0 && (
+                    <p className="text-xs text-red-400 mt-2">
+                      Configure pelo menos uma API key acima para usar este recurso.
+                    </p>
+                  )}
+                </div>
+
                 <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
                   <div className="flex items-start gap-2">
                     <Lightbulb className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" aria-hidden />
                     <p className="text-xs text-emerald-700 dark:text-emerald-200">
-                      Funciona nos editores de decisão (modo individual e global).
-                      Usa o provider de IA configurado acima. Cada sugestão consome tokens.
+                      Funciona nos editores de decisão (modo individual e global). Usa um modelo
+                      rápido dedicado (independente do provider principal). Modelos Local (CLI)
+                      são gratuitos via assinatura, mas têm latência maior; modelos de reasoning
+                      como GPT-5.5 podem responder menos no completamento.
                     </p>
                   </div>
                 </div>
