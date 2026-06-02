@@ -560,6 +560,13 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
     setDataPautaSelecionada(today);
   }, []);
 
+  const handleSetPautaAmanha = useCallback(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const date = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+    setDataPautaSelecionada(date);
+  }, []);
+
   const handleAplicarPauta = useCallback(async () => {
     if (selectedIds.size === 0 || !dataPautaSelecionada) return;
     await updateBatchDataPauta(Array.from(selectedIds), dataPautaSelecionada);
@@ -720,6 +727,12 @@ export const HistoricoModal: React.FC<HistoricoModalProps> = ({
                 className="px-2.5 py-1 text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-md text-slate-600 dark:text-slate-300 hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
               >
                 Hoje
+              </button>
+              <button
+                onClick={handleSetPautaAmanha}
+                className="px-2.5 py-1 text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-md text-slate-600 dark:text-slate-300 hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
+              >
+                Amanhã
               </button>
               <input
                 type="date"

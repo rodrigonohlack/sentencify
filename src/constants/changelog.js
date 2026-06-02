@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.48',
+    date: '2026-06-01',
+    feature: 'feat(analisador): novo botão "Amanhã" na barra de Pauta do modal Histórico de Análises, ao lado de "Hoje". Preenche o campo de data com o dia seguinte (D+1), no mesmo formato YYYY-MM-DD montado a partir do fuso local (evita o off-by-one do toISOString em UTC). Atalho para pautar análises selecionadas para o próximo dia útil/sessão sem abrir o seletor de data.',
+  },
+  {
     version: '1.50.47',
     date: '2026-06-01',
     feature: 'feat(codex): PDF Puro agora funciona no provider Codex Local (CLI). O codex exec não aceita PDF (binário/Files API), mas aceita imagens via `-i <arquivo>` (repetível). Quando o provider é codex-cli e o usuário escolhe PDF Puro, cada PDF é rasterizado em imagens de página (pdf.js, scale 1.5 / JPEG 0.85 — o mesmo do pipeline de visão) e enviado como uma imagem por página. Mecanismo: no ramo localBridge dos hooks de integração, blocos {type:document} viram N blocos {type:image} (novo util src/utils/pdfRasterize.ts, genérico/imutável) ANTES da conversão para o formato do bridge (que já emite image_url); o bridge (llm-bridge/translate.codex.js extractCodexImages + buildCodexArgs com -i; server.js grava as páginas em dir temporário por request e limpa em close/erro/abort via try/finally idempotente). Capability: codex-cli entra em PROVIDERS_WITH_PDF_BINARY (analisador/embargos) e sai do bloqueio em UploadTab (app principal), valendo nos 3 apps. SEM teto de páginas (decisão consciente: custo de tokens por página é da mesma ordem do PDF nativo, então um PDF grande pode estourar o context window do Codex — o erro do CLI é propagado). SEM regressão: Claude/Gemini seguem com PDF binário nativo e OpenAI cloud segue recebendo document→file (rasterização guardada por localBridge); anonimização continua caindo para texto extraído.',
