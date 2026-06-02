@@ -41,7 +41,9 @@ test('buildCodexArgs: NÃO inclui -a / --ask-for-approval (não suportado por co
 });
 
 test('buildCodexArgs: reasoning_effort válido aceito', () => {
-  for (const level of ['minimal', 'low', 'medium', 'high']) {
+  // 'minimal' é inutilizável no codex CLI (tools sempre ativas) e vira 'low' — coberto
+  // pelos testes de auto-bump abaixo. Aqui validamos os níveis que passam inalterados.
+  for (const level of ['low', 'medium', 'high']) {
     const args = buildCodexArgs({ model: 'gpt-5.5', reasoning_effort: level });
     assert.ok(args.includes(`model_reasoning_effort=${level}`));
   }
@@ -57,9 +59,12 @@ test('buildCodexArgs: minimal + web_search vira low (auto-bump)', () => {
   assert.equal(args[args.indexOf('-c') + 1], 'model_reasoning_effort=low');
 });
 
-test('buildCodexArgs: minimal SEM web_search permanece minimal', () => {
+test('buildCodexArgs: minimal SEM web_search também vira low (codex CLI mantém tools ativas)', () => {
+  // O codex CLI mantém image_gen/web_search sempre disponíveis, e a Responses API
+  // rejeita reasoning=minimal com qualquer tool ativa (erro 500). Por isso o bump é
+  // incondicional, não só quando web_search=true.
   const args = buildCodexArgs({ model: 'gpt-5.5', reasoning_effort: 'minimal' });
-  assert.equal(args[args.indexOf('-c') + 1], 'model_reasoning_effort=minimal');
+  assert.equal(args[args.indexOf('-c') + 1], 'model_reasoning_effort=low');
 });
 
 test('buildCodexArgs: web_search=true adiciona --search ANTES de exec (top-level flag)', () => {

@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.56',
+    date: '2026-06-02',
+    feature: 'fix(bridge/codex): corrigido erro 500 "tools cannot be used with reasoning.effort \'minimal\': image_gen, web_search" no Codex Local. Causa: o codex CLI (GPT-5.5 via Responses API) mantém as tools image_gen/web_search sempre disponíveis, e a API rejeita reasoning_effort=minimal com QUALQUER tool ativa. O auto-bump minimal→low do bridge (translate.codex.js) só ocorria quando web_search=true era pedido explicitamente, deixando escapar a Melhoria de Voz e o Auto Complete (que mandam minimal via disableThinking, sem web_search) — e também o caso do usuário escolher "Minimal" no seletor de reasoning do Codex. Agora o bump é INCONDICIONAL: qualquer reasoning_effort=minimal vira low (o piso real aceito nesse caminho). Teste do bridge atualizado (antes assumia, erradamente, que minimal sem web_search permanecia minimal). Requer restart do daemon llm-bridge.',
+  },
+  {
     version: '1.50.55',
     date: '2026-06-02',
     feature: 'fix(cli): disableThinking agora desliga (ou minimiza) o raciocínio nos providers CLI locais, honrando o acordo de que Voz e Auto Complete rodam sem thinking quando possível. Sintoma observado no log do llm-bridge: chamadas de Melhoria de Voz com Haiku Local levavam 30-40s e queimavam ~5000 tokens de saída para devolver ~200 caracteres — o Haiku estava "pensando" pesado mesmo num rewrite trivial. Causa: tanto o callLLM (Claude CLI) quanto o callOpenAIAPI (Codex CLI) injetavam o effort/reasoning global INCONDICIONALMENTE no request ao bridge, ignorando o disableThinking:true que a Voz e o Auto Complete passam. Correção: (1) Claude CLI → quando disableThinking, envia effort=\'off\' (translate.js não adiciona --effort, CLI roda sem raciocínio estendido); vale para Haiku/Sonnet/Opus. (2) Codex CLI (GPT-5.5) → quando disableThinking, envia reasoning_effort=\'minimal\' (o GPT-5.5 não tem \'off\'; \'minimal\' é o piso aceito pelo bridge, mesma estratégia já usada no Gemini). Sem disableThinking, ambos respeitam o effort/reasoning global configurado. 4 testes de regressão.',

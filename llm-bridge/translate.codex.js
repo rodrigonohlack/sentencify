@@ -38,12 +38,16 @@ export function buildCodexArgs(body, imagePaths = []) {
   const reasoning = VALID_REASONING.has(body?.reasoning_effort)
     ? body.reasoning_effort
     : DEFAULT_REASONING;
-  // codex Responses API rejeita reasoning='minimal' quando há web_search tool ativa.
-  // Auto-bump para 'low' nesse caso (mantém UX e evita 500 do CLI).
+  // codex Responses API rejeita reasoning='minimal' quando há QUALQUER tool ativa, e o
+  // codex CLI mantém image_gen/web_search sempre disponíveis (o erro do CLI é explícito:
+  // "tools cannot be used with reasoning.effort 'minimal': image_gen, web_search").
+  // Logo, 'minimal' é inutilizável neste caminho — auto-bump incondicional para 'low'
+  // (o piso real aceito), evitando o 500. Antes o bump só ocorria com web_search=true,
+  // o que deixava escapar Voz / Auto Complete (que não pedem web_search).
   let effectiveReasoning = reasoning;
-  if (body?.web_search === true && reasoning === 'minimal') {
+  if (reasoning === 'minimal') {
     effectiveReasoning = 'low';
-    console.warn('[llm-bridge] reasoning_effort=minimal incompatível com web_search; usando low.');
+    console.warn('[llm-bridge] reasoning_effort=minimal incompatível com as tools do codex CLI; usando low.');
   }
   const args = [];
   // Top-level flags ANTES do subcomando `exec`:
