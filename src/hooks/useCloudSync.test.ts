@@ -132,6 +132,10 @@ describe('useCloudSync', () => {
   afterEach(() => {
     global.fetch = originalFetch;
     vi.restoreAllMocks();
+    // Restaura timers reais SEMPRE: blocos que usam vi.useFakeTimers() e falham
+    // antes do seu vi.useRealTimers() deixariam os fake timers vazar para os
+    // testes seguintes, travando os setTimeout reais até o timeout de 5s.
+    vi.useRealTimers();
   });
 
   // ═══════════════════════════════════════════════════════════════════════

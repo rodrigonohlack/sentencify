@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.50',
+    date: '2026-06-01',
+    feature: 'fix(testes): suíte unitária volta a 100% verde (6314/6314). Duas regressões de ambiente de teste, ambas pré-existentes e não relacionadas ao código de produção: (1) useCloudSync.test.ts não restaurava timers reais — blocos com vi.useFakeTimers() que falhavam antes do seu vi.useRealTimers() deixavam os fake timers vazar para os testes seguintes, travando os setTimeout reais até o timeout de 5s (16 testes). Corrigido com vi.useRealTimers() no afterEach. (2) O .env define VITE_DEV_AUTH_BYPASS=true (auto-login de dev p/ Playwright); no Vitest import.meta.env.DEV é true e o .env é carregado, então o useCloudSync disparava /api/auth/magic/dev-login nos testes unitários, quebrando asserções de estado inicial e de "não autenticado" (4 testes). Corrigido desligando o bypass globalmente no src/test/setup.js via vi.stubEnv. Sem mudança em código de produção.',
+  },
+  {
     version: '1.50.49',
     date: '2026-06-01',
     feature: 'fix(analisador): corrigido o contador de progresso do processamento em lote que herdava a contagem do lote anterior (ex.: "Processando 2 de 1 processo... 200%"). Causa: o numerador da barra usa o estado do store (batch.processedCount + batch.errorCount), mas handleProcess só chamava setBatchProcessing(true) — sem zerar os contadores — e o primeiro setBatchProgress só ocorre DEPOIS da IA responder (segundos). Nessa janela a barra mostrava a contagem da run anterior sobre o pairs.length da run nova. Correção: nova action startBatch(total) no useAnalysesStore que ativa isProcessing E zera currentIndex/processedCount/errorCount atomicamente, chamada no início do loop em BatchMode. Teste de regressão em useAnalysesStore.test.ts.',
