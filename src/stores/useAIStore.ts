@@ -279,7 +279,7 @@ const initialAISettings: AISettings = {
   logThinking: false,
   doubleCheck: DEFAULT_DOUBLE_CHECK,
   voiceImprovement: DEFAULT_VOICE_IMPROVEMENT,
-  autoComplete: { enabled: false, delayMs: 1500, model: 'haiku' }
+  autoComplete: { enabled: false, delayMs: 1500, model: 'claude-local-haiku' }
 };
 
 /** Estado inicial do TokenMetrics */
@@ -955,7 +955,7 @@ export const selectStreamingState = (state: AIStoreState): StreamingState =>
   state.streamingState;
 
 /** Fallback estável para evitar loop infinito quando autoComplete é undefined no estado persistido */
-const AUTO_COMPLETE_FALLBACK: AutoCompleteSettings = { enabled: false, delayMs: 1500, model: 'haiku' };
+const AUTO_COMPLETE_FALLBACK: AutoCompleteSettings = { enabled: false, delayMs: 1500, model: 'claude-local-haiku' };
 
 /** Selector: Retorna configurações de Auto Complete (v1.40.31) */
 export const selectAutoComplete = (state: AIStoreState): AutoCompleteSettings =>

@@ -1915,7 +1915,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   ...aiSettings.autoComplete,
                   enabled: !aiSettings.autoComplete?.enabled,
                   delayMs: aiSettings.autoComplete?.delayMs ?? 1500,
-                  model: aiSettings.autoComplete?.model ?? 'haiku'
+                  model: aiSettings.autoComplete?.model ?? 'claude-local-haiku'
                 }
               })}
               className={`w-full p-4 rounded-lg border-2 transition-all text-left ${

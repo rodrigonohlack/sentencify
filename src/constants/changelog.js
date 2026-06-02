@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.50.54',
+    date: '2026-06-02',
+    feature: 'feat(autocomplete+voz): nova opção "Claude Local (Haiku 4.5 · assinatura)" na lista de modelos rápidos, disponível tanto no Auto Complete quanto na Melhoria de Voz por IA. Roda Haiku pela assinatura ($0) via daemon llm-bridge — o bridge (translate.js:mapModel) já resolve qualquer id contendo "haiku" para `--model haiku`. É o modelo mais leve/rápido sem custo, ideal para essas duas funções (antes o caminho CLI só oferecia Sonnet 4.6/Opus 4.8). Default do Auto Complete passa a ser claude-local-haiku, e a entrada aparece antes da Sonnet Local na lista (o auto-reset escolhe Haiku Local primeiro entre as opções de assinatura).',
+  },
+  {
     version: '1.50.53',
     date: '2026-06-02',
     feature: 'fix(analisador): corrigido erro "Bad control character in string literal in JSON" que quebrava o parse da resposta da IA e disparava retry caro (re-chamada com 32K tokens + documentos inteiros). Causa: a IA às vezes emite quebras de linha / tabs LITERAIS dentro de valores string (ex.: ao citar trechos de documentos), o que viola a gramática JSON. Nova função sanitizeJsonControlChars (src/schemas/ai-responses.ts) faz um scan caractere a caractere — rastreando se está dentro de uma string e respeitando o escape \\ — e converte cada control char cru (U+0000–U+001F) em sua forma escapada (\\n, \\t, \\r, \\uXXXX). É no-op em JSON válido e preserva o whitespace de formatação fora de strings. Aplicada no parseAIResponse (caminho Zod, usado por todo o app) e no fallback de parse direto do useAnalysis. 6 testes de regressão. Obs.: os warnings "TT: undefined function" e "getPathGenerator" do pdf.worker são ruído benigno do pdf.js com fontes embutidas e não afetam a extração.',

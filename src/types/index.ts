@@ -396,6 +396,7 @@ export type VoiceImprovementModel =
   | 'gpt-4o-mini'
   | 'grok-instant'
   | 'deepseek-flash'
+  | 'claude-local-haiku'
   | 'claude-local'
   | 'codex-local';
 

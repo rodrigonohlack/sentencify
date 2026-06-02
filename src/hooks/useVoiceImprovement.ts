@@ -58,6 +58,14 @@ export const VOICE_MODEL_CONFIG: Record<VoiceImprovementModel, ModelConfig> = {
   },
   // v1.50.52: Providers CLI locais (daemon llm-bridge · assinatura · sem API key).
   // disableThinking: true é aplicado pelo callAI (provider !== 'gemini'), então rodam non-thinking.
+  // v1.50.54: Haiku via CLI — o bridge (translate.js:mapModel) resolve qualquer id com
+  // "haiku" para `--model haiku`. É o modelo mais rápido/leve pela assinatura ($0),
+  // ideal para Auto Complete e Melhoria de Voz.
+  'claude-local-haiku': {
+    provider: 'claude-cli',
+    model: 'claude-haiku-4-5',
+    displayName: 'Claude Local (Haiku 4.5 · assinatura)'
+  },
   'claude-local': {
     provider: 'claude-cli',
     model: 'claude-sonnet-4-6',
