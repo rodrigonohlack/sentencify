@@ -13,7 +13,7 @@
 
 import React from 'react';
 import type { VoiceImprovementModel, CallAIFunction } from '../types';
-import { buildVoiceImprovementPrompt } from '../prompts/voice-improvement-prompt';
+import { buildVoiceImprovementPrompt, buildVoiceInstructionPrompt } from '../prompts/voice-improvement-prompt';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS E CONSTANTES
@@ -103,6 +103,8 @@ interface UseVoiceImprovementProps {
 
 interface UseVoiceImprovementReturn {
   improveText: (rawText: string, model: VoiceImprovementModel) => Promise<string>;
+  /** v1.51.4: limpa uma INSTRUÇÃO ditada (comando do Ctrl+K) sem executá-la */
+  improveInstruction: (rawText: string, model: VoiceImprovementModel) => Promise<string>;
   isImproving: boolean;
 }
 
@@ -174,7 +176,43 @@ export function useVoiceImprovement({ callAI }: UseVoiceImprovementProps): UseVo
     }
   }, [callAI]);
 
-  return { improveText, isImproving };
+  /**
+   * v1.51.4: Limpa uma INSTRUÇÃO ditada (comando do Ctrl+K) — corrige pontuação/vícios de
+   * fala SEM executar a instrução nem gerar o texto pedido. Usa um prompt dedicado.
+   */
+  const improveInstruction = React.useCallback(async (
+    rawText: string,
+    model: VoiceImprovementModel
+  ): Promise<string> => {
+    if (rawText.trim().length < 10) return rawText;
+
+    let config = VOICE_MODEL_CONFIG[model];
+    if (!config) config = VOICE_MODEL_CONFIG['haiku'];
+
+    setIsImproving(true);
+    try {
+      const improved = await callAI(
+        [{ role: 'user', content: buildVoiceInstructionPrompt(rawText) }],
+        {
+          provider: config.provider,
+          model: config.model,
+          maxTokens: 500,
+          temperature: 0.2,
+          disableThinking: config.provider !== 'gemini',
+          geminiThinkingLevel: config.provider === 'gemini' ? 'minimal' : undefined,
+          logMetrics: true
+        }
+      );
+      return improved.trim() || rawText;
+    } catch (error) {
+      console.error('[VoiceImprovement] Erro ao limpar instrução ditada:', error);
+      return rawText;
+    } finally {
+      setIsImproving(false);
+    }
+  }, [callAI]);
+
+  return { improveText, improveInstruction, isImproving };
 }
 
 export default useVoiceImprovement;

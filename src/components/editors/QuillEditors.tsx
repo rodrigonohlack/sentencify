@@ -744,7 +744,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
   // v1.38.5: Voice improvement com IA
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
-  const { improveText } = useVoiceImprovement({ callAI });
+  const { improveText, improveInstruction } = useVoiceImprovement({ callAI });
 
   // v1.51.0: Geração inline com IA via Ctrl+K (substitui o Auto Complete automático)
   // v1.51.2: ditado por voz da instrução respeita a flag de Melhoria de Voz
@@ -755,7 +755,8 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
     editorTheme,
     quillReady,
     voiceImproveEnabled: aiSettings.voiceImprovement?.enabled,
-    onImproveVoice: (text: string) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
+    // v1.51.4: ditado da INSTRUÇÃO usa limpeza de comando (não o prompt de texto jurídico)
+    onImproveVoice: (text: string) => improveInstruction(text, aiSettings.voiceImprovement?.model || 'haiku')
   });
 
   const [isDragging, setIsDragging] = React.useState(false);

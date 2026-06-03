@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.51.4',
+    date: '2026-06-03',
+    feature: 'fix(voz): a Melhoria de Voz por IA EXECUTAVA o ditado em vez de poli-lo, em QUALQUER lugar que usa ditado+melhoria. Causa: o ditado era colocado no prompt e, se soasse como comando ("redija um texto sobre dano moral...", "escreva...", "responda..."), o modelo OBEDECIA — uma injeção de instrução. Correção principal: VOICE_IMPROVEMENT_PROMPT (usado por improveText em todo o app — ditado de texto da decisão, mini-relatório, etc.) foi BLINDADO: o ditado vai entre marcas «««/»»» com regra de segurança explícita de que aquilo é DADO a corrigir, NUNCA comando a executar; mesmo contendo ordens/perguntas, o modelo só corrige a forma e devolve o próprio texto. Correção específica do Ctrl+K (v1.51.3 havia ligado a melhoria reusando improveText, que ainda assim tentava "corrigir um texto jurídico" e pedia o texto): novo prompt dedicado buildVoiceInstructionPrompt + método improveInstruction (useVoiceImprovement) que trata a entrada como INSTRUÇÃO ditada — limpa pontuação/vícios de fala (né, é, tipo), mantém como comando conciso e não executa; FieldEditor e QuillDecisionEditor usam improveInstruction na inline e improveText (agora blindado) no ditado de texto. De quebra: buildVoice*Prompt usa replace com função, evitando interpretação de $&/$1 em ditados com "R$".',
+  },
+  {
     version: '1.51.3',
     date: '2026-06-03',
     feature: 'fix(inline/voz): dois ajustes no ditado por voz da caixa Ctrl+K. (1) O preview flutuante do que está sendo ditado (a "caixinha" interim do VoiceButton, posicionada abaixo do botão) era cortado pelo overflow-hidden do popover — removido o overflow-hidden do container (corner rounding preservado com rounded-t-xl no cabeçalho), então o preview aparece inteiro. (2) A melhoria do ditado por IA não era aplicada mesmo com a flag de Voz ativa, porque o VoiceButton foi integrado sem improveWithAI/onImproveText — agora a inline repassa voiceImproveEnabled (aiSettings.voiceImprovement.enabled) e onImproveVoice (improveText com o modelo de Voz) via useInlineGenerate, nos dois editores (individual e global). Resultado: ao parar de falar, o texto ditado passa pela melhoria por IA antes de entrar na instrução, como no resto do app.',
