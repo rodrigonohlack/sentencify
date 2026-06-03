@@ -157,3 +157,22 @@ ${AI_INSTRUCTIONS_SAFETY_BASE}${anon}
 
 ${INLINE_OUTPUT_RULE}`;
 }
+
+/**
+ * v1.51.2: Bloco de "fill-in-the-middle" para a geração inline (Ctrl+K).
+ * Anexado à instrução do usuário SOMENTE quando há texto ABAIXO do cursor, para a IA
+ * saber que está escrevendo um trecho INTERMEDIÁRIO que deve conectar com o que segue.
+ * Enquadramento positivo (não cita frase a evitar).
+ */
+export function buildInlineFimBlock(suffixText?: string): string {
+  const suffix = (suffixText || '').trim();
+  if (!suffix) return '';
+  return `
+
+──────── CONTEXTO DE EDIÇÃO (texto intermediário) ────────
+ATENÇÃO: sua resposta será inserida ENTRE o conteúdo já escrito (acima) e o texto a seguir, que JÁ EXISTE imediatamente APÓS o ponto de inserção. Portanto, escreva um trecho que dê sequência natural ao que já foi escrito e, ao final, conecte de forma fluida e coerente com o texto abaixo — formando uma transição harmônica, sem reescrever nem reproduzir o que já consta abaixo:
+
+«««
+${suffix}
+»»»`;
+}

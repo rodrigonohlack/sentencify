@@ -121,6 +121,7 @@ export function useInlineGenerate(
 
     const idx = cursorIdxRef.current;
     const prefix = quill.getText(0, idx);
+    const suffix = quill.getText(idx);  // v1.51.2: texto ABAIXO do cursor (fill-in-the-middle)
 
     setPreview('');
     previewRef.current = '';
@@ -141,6 +142,7 @@ export function useInlineGenerate(
           setPreview(full);
         },
         signal: controller.signal,
+        suffixText: suffix,
       });
 
       if (controller.signal.aborted) return;

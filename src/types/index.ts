@@ -1877,6 +1877,8 @@ export interface InlineGenerateOptions {
   onChunk?: (fullText: string) => void;
   /** Sinal para abortar a geração em voo */
   signal?: AbortSignal;
+  /** v1.51.2: Texto ABAIXO do cursor (fill-in-the-middle). Quando presente, a IA gera um trecho intermediário que conecta com ele. */
+  suffixText?: string;
 }
 
 /** v1.51.0: Gera redação inline a partir de uma instrução + texto acima do cursor */

@@ -26,7 +26,7 @@ import type {
 } from '../types';
 import type { QuillInstance } from '../types';
 import { AI_PROMPTS } from '../prompts/ai-prompts';
-import { buildInlineGenerateSystemPrompt } from '../prompts/system';
+import { buildInlineGenerateSystemPrompt, buildInlineFimBlock } from '../prompts/system';
 import { stripInlineColors } from '../utils/color-stripper';
 import { prepareDocumentsContext, prepareProofsContext } from '../utils/context-helpers';
 import { normalizeHTMLSpacing } from '../utils/text';
@@ -197,8 +197,8 @@ export interface UseDecisionTextGenerationReturn {
   handleSendChatMessage: (message: string, options?: ChatContextOptions) => Promise<void>;
   generateAiTextForModel: () => Promise<void>;
   insertAiTextModel: (mode: InsertMode) => void;
-  /** v1.51.0: Geração inline (Ctrl+K) — instrução + texto acima do cursor → redação com streaming */
-  generateInline: (instruction: string, prefixText: string, opts?: { onChunk?: (fullText: string) => void; signal?: AbortSignal }) => Promise<string>;
+  /** v1.51.0: Geração inline (Ctrl+K) — instrução + texto acima (e abaixo, v1.51.2) do cursor → redação com streaming */
+  generateInline: (instruction: string, prefixText: string, opts?: { onChunk?: (fullText: string) => void; signal?: AbortSignal; suffixText?: string }) => Promise<string>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -461,7 +461,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
   const generateInline = React.useCallback(async (
     instruction: string,
     prefixText: string,
-    opts?: { onChunk?: (fullText: string) => void; signal?: AbortSignal }
+    opts?: { onChunk?: (fullText: string) => void; signal?: AbortSignal; suffixText?: string }
   ): Promise<string> => {
     if (!editingTopic) return '';
 
@@ -476,7 +476,8 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
     ]);
 
     const content = await buildChatContext({
-      userMessage: instruction,
+      // v1.51.2: fill-in-the-middle — anexa o texto ABAIXO do cursor quando existir
+      userMessage: instruction + buildInlineFimBlock(opts?.suffixText),
       options: { includeMainDocs, includeComplementaryDocs, selectedContextTopics },
       currentTopic: editingTopic,
       currentContent: prefixText,

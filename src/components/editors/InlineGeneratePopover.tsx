@@ -17,6 +17,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { Sparkles, X, Check, Loader2 } from 'lucide-react';
 import { sanitizeHTML } from '../../utils/sanitizeHTML';
+import { VoiceButton } from '../VoiceButton';
 
 export type InlineGenerateMode = 'input' | 'generating' | 'preview';
 
@@ -161,6 +162,14 @@ export const InlineGeneratePopover: React.FC<InlineGeneratePopoverProps> = ({
     window.addEventListener('mouseup', onUp);
   };
 
+  // v1.51.2: ditado por voz — anexa o texto transcrito à instrução e refoca a caixa
+  const handleVoiceTranscript = (text: string) => {
+    const t = (text || '').trim();
+    if (!t) return;
+    setInstruction((prev) => (prev.trim() ? prev.trimEnd() + ' ' : '') + t);
+    textareaRef.current?.focus();
+  };
+
   const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -235,16 +244,25 @@ export const InlineGeneratePopover: React.FC<InlineGeneratePopoverProps> = ({
               <span className="text-[11px] theme-text-muted">
                 <kbd className="font-mono">Enter</kbd> gerar · <kbd className="font-mono">Shift+Enter</kbd> nova linha · <kbd className="font-mono">Esc</kbd> cancelar
               </span>
-              <button
-                onClick={() => {
-                  const trimmed = instruction.trim();
-                  if (trimmed) onSubmit(trimmed);
-                }}
-                disabled={!instruction.trim()}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
-              >
-                <Sparkles className="w-3.5 h-3.5" /> Gerar
-              </button>
+              <div className="flex items-center gap-2">
+                {/* v1.51.2: ditado por voz da instrução */}
+                <VoiceButton
+                  size="sm"
+                  idleText="Ditar"
+                  onTranscript={handleVoiceTranscript}
+                  onError={(err) => console.warn('[InlineGenerate][Voz]', err)}
+                />
+                <button
+                  onClick={() => {
+                    const trimmed = instruction.trim();
+                    if (trimmed) onSubmit(trimmed);
+                  }}
+                  disabled={!instruction.trim()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Gerar
+                </button>
+              </div>
             </div>
           </>
         )}

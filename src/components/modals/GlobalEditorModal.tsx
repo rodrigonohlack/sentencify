@@ -59,7 +59,7 @@ import {
   buildDocumentosComparisonPrompt,
   buildPdfComparisonPrompt
 } from '../../prompts/facts-comparison-prompts';
-import { buildInlineGenerateSystemPrompt } from '../../prompts/system';
+import { buildInlineGenerateSystemPrompt, buildInlineFimBlock } from '../../prompts/system';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -903,7 +903,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     topicIndex: number,
     instruction: string,
     prefixText: string,
-    opts?: { onChunk?: (fullText: string) => void; signal?: AbortSignal }
+    opts?: { onChunk?: (fullText: string) => void; signal?: AbortSignal; suffixText?: string }
   ): Promise<string> => {
     const topic = localTopics[topicIndex];
     if (!topic || !aiIntegration) return '';
@@ -918,7 +918,8 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     ]);
 
     const content = await buildChatContext({
-      userMessage: instruction,
+      // v1.51.2: fill-in-the-middle — anexa o texto ABAIXO do cursor quando existir
+      userMessage: instruction + buildInlineFimBlock(opts?.suffixText),
       options: { includeMainDocs, includeComplementaryDocs, selectedContextTopics },
       currentTopic: topic,
       currentContent: prefixText,
