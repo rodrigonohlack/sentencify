@@ -33,6 +33,10 @@ export interface UseInlineGenerateOptions {
   editorTheme: 'dark' | 'light' | string;
   /** Se o Quill já foi inicializado */
   quillReady: boolean;
+  /** v1.51.2: se o ditado por voz deve passar pela melhoria por IA (flag de Voz) */
+  voiceImproveEnabled?: boolean;
+  /** v1.51.2: função de melhoria do texto ditado */
+  onImproveVoice?: (text: string) => Promise<string>;
 }
 
 type PopoverState = 'closed' | InlineGenerateMode;
@@ -48,7 +52,7 @@ export function useInlineGenerate(
   quillRef: React.MutableRefObject<QuillInstance | null>,
   options: UseInlineGenerateOptions
 ): { overlay: React.ReactNode } {
-  const { enabled, generate, editorTheme, quillReady } = options;
+  const { enabled, generate, editorTheme, quillReady, voiceImproveEnabled, onImproveVoice } = options;
 
   const [mode, setMode] = React.useState<PopoverState>('closed');
   const [anchor, setAnchor] = React.useState<{ top: number; left: number; lineTop: number }>({ top: 0, left: 0, lineTop: 0 });
@@ -241,6 +245,8 @@ export function useInlineGenerate(
       onSubmit={handleSubmit}
       onAccept={accept}
       onCancel={close}
+      voiceImproveEnabled={voiceImproveEnabled}
+      onImproveVoice={onImproveVoice}
     />
   );
 

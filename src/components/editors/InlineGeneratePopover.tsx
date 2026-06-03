@@ -32,6 +32,10 @@ export interface InlineGeneratePopoverProps {
   onSubmit: (instruction: string) => void;
   onAccept: () => void;
   onCancel: () => void;
+  /** v1.51.2: se o ditado deve passar pela melhoria por IA (flag de Voz) */
+  voiceImproveEnabled?: boolean;
+  /** v1.51.2: função de melhoria do texto ditado (recebe cru, retorna melhorado) */
+  onImproveVoice?: (text: string) => Promise<string>;
 }
 
 interface Geometry {
@@ -105,6 +109,8 @@ export const InlineGeneratePopover: React.FC<InlineGeneratePopoverProps> = ({
   onSubmit,
   onAccept,
   onCancel,
+  voiceImproveEnabled = false,
+  onImproveVoice,
 }) => {
   const [instruction, setInstruction] = React.useState('');
   // Geometria: usa a última salva; senão, ancora no cursor
@@ -203,7 +209,7 @@ export const InlineGeneratePopover: React.FC<InlineGeneratePopoverProps> = ({
       ref={containerRef}
       tabIndex={-1}
       onKeyDown={handleContainerKeyDown}
-      className="fixed z-[120] flex flex-col rounded-xl border theme-border-secondary theme-bg-secondary shadow-2xl outline-none overflow-hidden"
+      className="fixed z-[120] flex flex-col rounded-xl border theme-border-secondary theme-bg-secondary shadow-2xl outline-none"
       style={{ left: geometry.left, top: geometry.top, width: geometry.width, height: geometry.height }}
       role="dialog"
       aria-label="Gerar redação com IA"
@@ -211,7 +217,7 @@ export const InlineGeneratePopover: React.FC<InlineGeneratePopoverProps> = ({
       {/* Cabeçalho (alça de arrasto) */}
       <div
         onMouseDown={startDrag}
-        className="flex items-center gap-2 px-3 py-2 border-b theme-border-secondary theme-bg-tertiary shrink-0 cursor-move select-none"
+        className="flex items-center gap-2 px-3 py-2 border-b theme-border-secondary theme-bg-tertiary shrink-0 cursor-move select-none rounded-t-xl"
       >
         <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />
         <span className="text-sm font-semibold theme-text-primary flex-1">
@@ -245,11 +251,13 @@ export const InlineGeneratePopover: React.FC<InlineGeneratePopoverProps> = ({
                 <kbd className="font-mono">Enter</kbd> gerar · <kbd className="font-mono">Shift+Enter</kbd> nova linha · <kbd className="font-mono">Esc</kbd> cancelar
               </span>
               <div className="flex items-center gap-2">
-                {/* v1.51.2: ditado por voz da instrução */}
+                {/* v1.51.2: ditado por voz da instrução (com melhoria por IA se a flag estiver ativa) */}
                 <VoiceButton
                   size="sm"
                   idleText="Ditar"
                   onTranscript={handleVoiceTranscript}
+                  improveWithAI={voiceImproveEnabled}
+                  onImproveText={onImproveVoice}
                   onError={(err) => console.warn('[InlineGenerate][Voz]', err)}
                 />
                 <button

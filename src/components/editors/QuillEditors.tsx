@@ -747,12 +747,15 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
   const { improveText } = useVoiceImprovement({ callAI });
 
   // v1.51.0: Geração inline com IA via Ctrl+K (substitui o Auto Complete automático)
+  // v1.51.2: ditado por voz da instrução respeita a flag de Melhoria de Voz
   const autoCompleteSettings = useAIStore(selectAutoComplete);
   const { overlay: inlineGenerateOverlay } = useInlineGenerate(quillInstanceRef, {
     enabled: autoCompleteSettings.enabled && !!generateInline,
     generate: generateInline ?? undefined,
     editorTheme,
-    quillReady
+    quillReady,
+    voiceImproveEnabled: aiSettings.voiceImprovement?.enabled,
+    onImproveVoice: (text: string) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
   });
 
   const [isDragging, setIsDragging] = React.useState(false);

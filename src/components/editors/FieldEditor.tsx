@@ -57,11 +57,14 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
   const { improveText } = useVoiceImprovement({ callAI });
 
   // v1.51.0: Geração inline com IA via Ctrl+K (apenas campo fundamentacao)
+  // v1.51.2: ditado por voz da instrução respeita a flag de Melhoria de Voz
   const { overlay: inlineGenerateOverlay } = useInlineGenerate(quillInstanceRef, {
     enabled: inlineGenerate?.enabled ?? false,
     generate: inlineGenerate?.generate,
     editorTheme,
-    quillReady: quillReady ?? false
+    quillReady: quillReady ?? false,
+    voiceImproveEnabled: aiSettings.voiceImprovement?.enabled,
+    onImproveVoice: (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
   });
 
   // v1.20.4: Expor métodos de formatação para componente pai
