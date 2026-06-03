@@ -411,4 +411,71 @@ describe('useChatHistoryCache', () => {
       expect(complementaryDocs).toBe(true);
     });
   });
+
+  // v1.51.0: novas configs de contexto por tópico
+  describe('contextScope', () => {
+    it("should return 'current' by default (no entry)", async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+      let value: string = 'all';
+      await act(async () => { value = await result.current.getContextScope('New Topic'); });
+      expect(value).toBe('current');
+    });
+
+    it('should set and get contextScope', async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+      await act(async () => { await result.current.setContextScope('My Topic', 'all'); });
+      let value: string = 'current';
+      await act(async () => { value = await result.current.getContextScope('My Topic'); });
+      expect(value).toBe('all');
+    });
+  });
+
+  describe('selectedContextTopics', () => {
+    it('should return [] by default (no entry)', async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+      let value: string[] = ['x'];
+      await act(async () => { value = await result.current.getSelectedContextTopics('New Topic'); });
+      expect(value).toEqual([]);
+    });
+
+    it('should set and get selectedContextTopics', async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+      await act(async () => { await result.current.setSelectedContextTopics('My Topic', ['A', 'B']); });
+      let value: string[] = [];
+      await act(async () => { value = await result.current.getSelectedContextTopics('My Topic'); });
+      expect(value).toEqual(['A', 'B']);
+    });
+  });
+
+  // v1.51.0: writers preservam todos os campos (corrige bug do includeComplementaryDocs apagado)
+  describe('field preservation across setters', () => {
+    it('setIncludeMainDocs should NOT wipe includeComplementaryDocs', async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+      await act(async () => {
+        await result.current.setIncludeComplementaryDocs('T', true);
+        await result.current.setIncludeMainDocs('T', true);
+      });
+      let comp = false;
+      await act(async () => { comp = await result.current.getIncludeComplementaryDocs('T'); });
+      expect(comp).toBe(true);
+    });
+
+    it('setContextScope preserves includeMainDocs and selectedContextTopics', async () => {
+      const { result } = renderHook(() => useChatHistoryCache());
+      await act(async () => {
+        await result.current.setIncludeMainDocs('T', true);
+        await result.current.setSelectedContextTopics('T', ['X']);
+        await result.current.setContextScope('T', 'selected');
+      });
+      let main = false; let sel: string[] = []; let scope = 'current';
+      await act(async () => {
+        main = await result.current.getIncludeMainDocs('T');
+        sel = await result.current.getSelectedContextTopics('T');
+        scope = await result.current.getContextScope('T');
+      });
+      expect(main).toBe(true);
+      expect(sel).toEqual(['X']);
+      expect(scope).toBe('selected');
+    });
+  });
 });

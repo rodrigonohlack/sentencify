@@ -139,6 +139,8 @@ const DecisionEditorContainer = React.memo(React.forwardRef<HTMLDivElement, Comb
   const extractingModel = isNewProps(props) ? props.extractingModel : props.extractingModel;
   const showExtractButton = isNewProps(props) ? props.showExtractButton : props.showExtractButton;
   const findSuggestions = isNewProps(props) ? props.findSuggestions : props.findSuggestions;
+  // v1.51.0: Geração inline (Ctrl+K) — disponível em ambos os modos de props
+  const generateInline = props.generateInline ?? null;
 
   // Valores das stores (com fallback para props legadas)
   const quillReady = isNewProps(props)
@@ -312,6 +314,7 @@ const DecisionEditorContainer = React.memo(React.forwardRef<HTMLDivElement, Comb
           versioning={versioning}
           onBlur={(html: string) => versioning?.saveVersion(topic.title, html)}
           onOpenFactsComparison={topic.title.toUpperCase() !== 'DISPOSITIVO' ? callbacks.onOpenFactsComparison : null}
+          generateInline={topic.title.toUpperCase() !== 'DISPOSITIVO' ? generateInline : null}
           {...editorConfig.editorConfig}
         />
       )}

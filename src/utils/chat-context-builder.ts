@@ -79,6 +79,9 @@ export interface BuildChatContextParams {
     instructions: string;
     files: { name: string; content: string }[];
   } | null;
+  /** v1.51.0: Geração inline (Ctrl+K) — omite o modo socrático e o INSTRUCAO_NAO_PRESUMIR
+   *  (que fazem a IA "narrar" a avaliação de pendências antes de redigir). */
+  inlineMode?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -103,6 +106,7 @@ export async function buildChatContext(params: BuildChatContextParams): Promise<
     fileToBase64,
     anonymizationEnabled,
     anonymizationSettings,
+    inlineMode = false,
   } = params;
 
   const { proofFilter, includeMainDocs = true, includeComplementaryDocs = false, selectedContextTopics } = options;
@@ -226,9 +230,9 @@ ${hasProofs ? '- Analise as provas vinculadas e suas respectivas análises/concl
 ` : ''}
 ${proofsContext}
 
-${INSTRUCAO_NAO_PRESUMIR}
+${inlineMode ? '' : INSTRUCAO_NAO_PRESUMIR}
 
-${SOCRATIC_INTERN_LOGIC}
+${inlineMode ? '' : SOCRATIC_INTERN_LOGIC}
 
 ${AI_PROMPTS.estiloRedacao}
 ${AI_PROMPTS.numeracaoReclamadas}
@@ -258,9 +262,14 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
   }
 
   // 9. Instrução do usuário por ÚLTIMO (maior peso — pode refinar ou sobrepor o pacote)
+  // v1.51.0: no modo inline (Ctrl+K) o texto vai direto pra decisão — sem o andaime de
+  // "confirme antes / Nenhuma informação pendente" (que gerava o preâmbulo meta).
   contentArray.push({
     type: 'text',
-    text: `🎯 INSTRUÇÃO DO USUÁRIO:
+    text: inlineMode
+      ? `🎯 INSTRUÇÃO DO USUÁRIO:
+${userMessage}`
+      : `🎯 INSTRUÇÃO DO USUÁRIO:
 ${userMessage}
 
 Quando faltar informação expressa necessária à redação, PERGUNTE ao usuário antes de redigir. Prefira perguntar a presumir.

@@ -26,6 +26,7 @@ import type {
 } from '../types';
 import type { QuillInstance } from '../types';
 import { AI_PROMPTS } from '../prompts/ai-prompts';
+import { buildInlineGenerateSystemPrompt } from '../prompts/system';
 import { stripInlineColors } from '../utils/color-stripper';
 import { prepareDocumentsContext, prepareProofsContext } from '../utils/context-helpers';
 import { normalizeHTMLSpacing } from '../utils/text';
@@ -47,6 +48,8 @@ export interface AIIntegrationForDecisionText {
     anonymization?: {
       enabled?: boolean;
     };
+    // v1.51.0: estilo personalizado do magistrado (usado pelo system prompt da geração inline)
+    customPrompt?: string;
     // v1.37.65: Double Check settings
     doubleCheck?: {
       enabled: boolean;
@@ -66,10 +69,26 @@ export interface AIIntegrationForDecisionText {
     options?: {
       maxTokens?: number;
       useInstructions?: boolean;
+      systemPrompt?: string | null;
       logMetrics?: boolean;
       temperature?: number;
       topP?: number;
       topK?: number;
+    }
+  ) => Promise<string>;
+  // v1.51.0: Geração com streaming (usado pela geração inline Ctrl+K)
+  callAIStream?: (
+    messages: Array<{ role: string; content: AIMessageContent[] | string }>,
+    options?: {
+      maxTokens?: number;
+      useInstructions?: boolean;
+      systemPrompt?: string | null;
+      logMetrics?: boolean;
+      temperature?: number;
+      topP?: number;
+      topK?: number;
+      abortSignal?: AbortSignal;
+      onChunk?: (fullText: string) => void;
     }
   ) => Promise<string>;
   // v1.37.65: Double Check para quick prompts
@@ -146,6 +165,13 @@ export interface UseDecisionTextGenerationProps {
   setError: (error: string) => void;
   sanitizeHTML: (html: string) => string;
   showToast?: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void;
+  /** v1.51.0: leitura per-tópico dos toggles de contexto do Assistente IA (geração inline) */
+  chatHistoryCache?: {
+    getIncludeMainDocs: (topicTitle: string) => Promise<boolean>;
+    getIncludeComplementaryDocs: (topicTitle: string) => Promise<boolean>;
+    getContextScope: (topicTitle: string) => Promise<'current' | 'selected' | 'all'>;
+    getSelectedContextTopics: (topicTitle: string) => Promise<string[]>;
+  };
 }
 
 /** v1.38.12: Opções para construção de contexto do chat */
@@ -171,6 +197,8 @@ export interface UseDecisionTextGenerationReturn {
   handleSendChatMessage: (message: string, options?: ChatContextOptions) => Promise<void>;
   generateAiTextForModel: () => Promise<void>;
   insertAiTextModel: (mode: InsertMode) => void;
+  /** v1.51.0: Geração inline (Ctrl+K) — instrução + texto acima do cursor → redação com streaming */
+  generateInline: (instruction: string, prefixText: string, opts?: { onChunk?: (fullText: string) => void; signal?: AbortSignal }) => Promise<string>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -195,6 +223,7 @@ export function useDecisionTextGeneration(props: UseDecisionTextGenerationProps)
     setError,
     sanitizeHTML,
     showToast,
+    chatHistoryCache,
   } = props;
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -421,6 +450,71 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
       knowledgePackage: options.knowledgePackage,
     });
   }, [editingTopic, selectedTopics, topicContextScope, analyzedDocuments, proofManager, storage.fileToBase64, aiIntegration?.aiSettings?.anonymization, editorRef]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // v1.51.0: GERAÇÃO INLINE (Ctrl+K)
+  // Mesmo contexto do Assistente IA (mini-relatório + provas), mas com o texto ACIMA
+  // do cursor (prefixText) no lugar do conteúdo completo. Usa o modelo principal via
+  // callAIStream (streaming nos providers de API; resultado único nos providers CLI).
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const generateInline = React.useCallback(async (
+    instruction: string,
+    prefixText: string,
+    opts?: { onChunk?: (fullText: string) => void; signal?: AbortSignal }
+  ): Promise<string> => {
+    if (!editingTopic) return '';
+
+    // v1.51.0: herda a config de contexto do Assistente IA daquele tópico, toda persistida
+    // POR TÓPICO no chatHistoryCache (peças/complementares/escopo/tópicos selecionados).
+    const title = editingTopic.title;
+    const [includeMainDocs, includeComplementaryDocs, scope, selectedContextTopics] = await Promise.all([
+      chatHistoryCache?.getIncludeMainDocs(title) ?? Promise.resolve(false),
+      chatHistoryCache?.getIncludeComplementaryDocs(title) ?? Promise.resolve(false),
+      chatHistoryCache?.getContextScope(title) ?? Promise.resolve(topicContextScope),
+      chatHistoryCache?.getSelectedContextTopics(title) ?? Promise.resolve([] as string[]),
+    ]);
+
+    const content = await buildChatContext({
+      userMessage: instruction,
+      options: { includeMainDocs, includeComplementaryDocs, selectedContextTopics },
+      currentTopic: editingTopic,
+      currentContent: prefixText,
+      allTopics: selectedTopics,
+      contextScope: scope,
+      analyzedDocuments,
+      proofManager: proofManager as Parameters<typeof buildChatContext>[0]['proofManager'],
+      fileToBase64: storage.fileToBase64,
+      anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
+      anonymizationSettings: aiIntegration?.aiSettings?.anonymization as AnonymizationSettings | undefined,
+      inlineMode: true,
+    });
+
+    // System prompt dedicado: sem auto-revisão final e sem o "raciocínio em voz alta"
+    const baseOptions = {
+      maxTokens: 4000,
+      useInstructions: false,
+      systemPrompt: buildInlineGenerateSystemPrompt({
+        customPrompt: aiIntegration?.aiSettings?.customPrompt,
+        anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
+      }),
+      logMetrics: true,
+      temperature: 0.5,
+      topP: 0.9,
+      topK: 80,
+    } as const;
+
+    // Streaming quando exposto; senão cai no callAI síncrono (mesmo resultado, sem chunks)
+    if (aiIntegration.callAIStream) {
+      const result = await aiIntegration.callAIStream(
+        [{ role: 'user', content }],
+        { ...baseOptions, abortSignal: opts?.signal, onChunk: opts?.onChunk }
+      );
+      return (result || '').trim();
+    }
+    const result = await aiIntegration.callAI([{ role: 'user', content }], baseOptions);
+    return (result || '').trim();
+  }, [editingTopic, selectedTopics, topicContextScope, analyzedDocuments, proofManager, storage.fileToBase64, aiIntegration, chatHistoryCache]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // HANDLE INSERT CHAT RESPONSE
@@ -694,5 +788,6 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
     handleSendChatMessage,
     generateAiTextForModel,
     insertAiTextModel,
+    generateInline,
   };
 }

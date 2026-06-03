@@ -12,7 +12,7 @@ import { VoiceButton } from '../VoiceButton';
 import { useAIStore } from '../../stores/useAIStore';
 import { useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
-import { useAutoComplete } from '../../hooks/useAutoComplete';
+import { useInlineGenerate } from '../../hooks/useInlineGenerate';
 import type {
   QuillInstance,
   QuillDelta,
@@ -45,7 +45,7 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
   minHeight = '120px',
   editorTheme = 'dark',
   hideVoiceButton = false,
-  autoCompleteContext
+  inlineGenerate
 }, ref) => {
   const editorRef = React.useRef<HTMLDivElement | null>(null);
   const quillInstanceRef = React.useRef<QuillInstance | null>(null);
@@ -56,12 +56,10 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
   const { callAI } = useAIIntegration();
   const { improveText } = useVoiceImprovement({ callAI });
 
-  // v1.40.31: Auto Complete com IA (apenas campo fundamentacao)
-  useAutoComplete(quillInstanceRef, {
-    relatorio: autoCompleteContext?.relatorio ?? '',
-    enabled: autoCompleteContext?.enabled ?? false,
-    delayMs: autoCompleteContext?.delayMs ?? 1500,
-    model: autoCompleteContext?.model,
+  // v1.51.0: Geração inline com IA via Ctrl+K (apenas campo fundamentacao)
+  const { overlay: inlineGenerateOverlay } = useInlineGenerate(quillInstanceRef, {
+    enabled: inlineGenerate?.enabled ?? false,
+    generate: inlineGenerate?.generate,
     editorTheme,
     quillReady: quillReady ?? false
   });
@@ -265,6 +263,8 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
           overflow: 'hidden'
         }}
       />
+      {/* v1.51.0: Popover de geração inline (Ctrl+K) — renderizado via portal */}
+      {inlineGenerateOverlay}
     </div>
   );
 }));

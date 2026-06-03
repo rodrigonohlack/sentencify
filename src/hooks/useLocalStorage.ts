@@ -1065,7 +1065,10 @@ export function useLocalStorage(): UseLocalStorageReturn {
       for (const entry of entries) {
         chatHistoryExport[entry.topicTitle] = {
           messages: entry.messages,
-          includeMainDocs: entry.includeMainDocs
+          includeMainDocs: entry.includeMainDocs,
+          includeComplementaryDocs: entry.includeComplementaryDocs,  // v1.51.0
+          contextScope: entry.contextScope,  // v1.51.0
+          selectedContextTopics: entry.selectedContextTopics  // v1.51.0
         };
       }
     } catch (e) {
@@ -1636,15 +1639,26 @@ export function useLocalStorage(): UseLocalStorageReturn {
 
           // v1.38.16: Detectar formato (novo vs legado)
           const isNewFormat = value && typeof value === 'object' && !Array.isArray(value) && 'messages' in value;
-          const messages = isNewFormat ? (value as ChatExportEntry).messages : (value as ChatMessage[]);
-          const includeMainDocs = isNewFormat ? (value as ChatExportEntry).includeMainDocs : undefined;
+          const exp = isNewFormat ? (value as ChatExportEntry) : null;
+          const messages = isNewFormat ? exp!.messages : (value as ChatMessage[]);
+          const includeMainDocs = exp?.includeMainDocs;
+          const includeComplementaryDocs = exp?.includeComplementaryDocs;  // v1.51.0
+          const contextScope = exp?.contextScope;  // v1.51.0
+          const selectedContextTopics = exp?.selectedContextTopics;  // v1.51.0
 
-          if (Array.isArray(messages) && messages.length > 0) {
+          const safeMessages = Array.isArray(messages) ? messages : [];
+          const hasConfig = includeMainDocs !== undefined || includeComplementaryDocs !== undefined ||
+            contextScope !== undefined || (selectedContextTopics && selectedContextTopics.length > 0);
+          // v1.51.0: grava se tem mensagens OU config (antes descartava tópicos só-config)
+          if (safeMessages.length > 0 || hasConfig) {
             const now = Date.now();
             store.add({
               topicTitle,
-              messages,
+              messages: safeMessages,
               includeMainDocs,
+              includeComplementaryDocs,  // v1.51.0
+              contextScope,  // v1.51.0
+              selectedContextTopics,  // v1.51.0
               createdAt: now,
               updatedAt: now
             });

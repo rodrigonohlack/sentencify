@@ -15,7 +15,7 @@ import { SpacingDropdown, FontSizeDropdown, EditorWidthDropdown } from '../ui';
 import { useQuillEditor, sanitizeQuillHTML } from '../../hooks/useQuillEditor';
 import { useSpacingControl, useFontSizeControl, useFullscreen, useAIIntegration, useEditorWidthControl } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
-import { useAutoComplete } from '../../hooks/useAutoComplete';
+import { useInlineGenerate } from '../../hooks/useInlineGenerate';
 import { useAIStore, selectAutoComplete } from '../../stores/useAIStore';
 import { useEditorStore } from '../../stores/useEditorStore';
 import { useRegenerationStore } from '../../stores/useRegenerationStore';
@@ -691,7 +691,8 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
   isDirty: propsIsDirty,
   versioning = null,
   onBlur = null,
-  onOpenFactsComparison = null
+  onOpenFactsComparison = null,
+  generateInline = null
 }, ref) => {
   const { quillInstanceRef, customModules, handleQuillReady } = useQuillEditor({
     ref,
@@ -745,13 +746,11 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
   const { callAI } = useAIIntegration();
   const { improveText } = useVoiceImprovement({ callAI });
 
-  // v1.40.31: Auto Complete com IA
+  // v1.51.0: Geração inline com IA via Ctrl+K (substitui o Auto Complete automático)
   const autoCompleteSettings = useAIStore(selectAutoComplete);
-  useAutoComplete(quillInstanceRef, {
-    relatorio: topicRelatorio || '',
-    enabled: autoCompleteSettings.enabled,
-    delayMs: autoCompleteSettings.delayMs,
-    model: autoCompleteSettings.model,
+  const { overlay: inlineGenerateOverlay } = useInlineGenerate(quillInstanceRef, {
+    enabled: autoCompleteSettings.enabled && !!generateInline,
+    generate: generateInline ?? undefined,
     editorTheme,
     quillReady
   });
@@ -831,6 +830,8 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
 
   return (
     <div ref={containerRef} className={`${isFullscreen ? 'editor-fullscreen' : ''} ${isSplitMode ? 'editor-fullscreen-split' : ''}`}>
+      {/* v1.51.0: Popover de geração inline (Ctrl+K) — renderizado via portal */}
+      {inlineGenerateOverlay}
       <div
         className={`flex flex-col flex-1 min-h-0 ${isSplitMode ? 'split-editor-pane' : ''}`}
         style={isFullscreen && !isSplitMode

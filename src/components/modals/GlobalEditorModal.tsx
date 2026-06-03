@@ -59,6 +59,7 @@ import {
   buildDocumentosComparisonPrompt,
   buildPdfComparisonPrompt
 } from '../../prompts/facts-comparison-prompts';
+import { buildInlineGenerateSystemPrompt } from '../../prompts/system';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -164,6 +165,8 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
   const [globalIncludeMainDocs, setGlobalIncludeMainDocsState] = React.useState(true);
   // v1.39.06: Toggle de documentos complementares persistido por tópico
   const [globalIncludeComplementaryDocs, setGlobalIncludeComplementaryDocsState] = React.useState(false);
+  // v1.51.0: Tópicos selecionados para contexto, persistidos por tópico
+  const [globalSelectedContextTopics, setGlobalSelectedContextTopicsState] = React.useState<string[]>([]);
 
   // v1.37.92: Cache de histórico de chat por tópico
   const chatHistoryCache = useChatHistoryCache();
@@ -612,17 +615,40 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     }
   }, [aiAssistantTopicIndex, localTopics, chatHistoryCache]);
 
+  // v1.51.0: Wrapper para contextScope que persiste no cache por tópico
+  const setGlobalContextScopePersisted = React.useCallback((scope: ContextScope) => {
+    setGlobalContextScope(scope);
+    if (aiAssistantTopicIndex !== null && localTopics[aiAssistantTopicIndex]) {
+      chatHistoryCache.setContextScope(localTopics[aiAssistantTopicIndex].title, scope);
+    }
+  }, [aiAssistantTopicIndex, localTopics, chatHistoryCache]);
+
+  // v1.51.0: Wrapper para selectedContextTopics que persiste no cache por tópico
+  const setGlobalSelectedContextTopics = React.useCallback((topics: string[]) => {
+    setGlobalSelectedContextTopicsState(topics);
+    if (aiAssistantTopicIndex !== null && localTopics[aiAssistantTopicIndex]) {
+      chatHistoryCache.setSelectedContextTopics(localTopics[aiAssistantTopicIndex].title, topics);
+    }
+  }, [aiAssistantTopicIndex, localTopics, chatHistoryCache]);
+
   // v1.38.16: Carrega includeMainDocs do cache ao abrir assistente
   // v1.39.06: Carrega includeComplementaryDocs também
+  // v1.51.0: Carrega contextScope + selectedContextTopics também
   const handleOpenAIAssistant = React.useCallback(async (topicIndex: number) => {
     setAiAssistantTopicIndex(topicIndex);
     // Carregar config do cache
     const topicTitle = localTopics[topicIndex]?.title;
     if (topicTitle) {
-      const savedInclude = await chatHistoryCache.getIncludeMainDocs(topicTitle);
+      const [savedInclude, savedComplementary, savedScope, savedSelected] = await Promise.all([
+        chatHistoryCache.getIncludeMainDocs(topicTitle),
+        chatHistoryCache.getIncludeComplementaryDocs(topicTitle),
+        chatHistoryCache.getContextScope(topicTitle),
+        chatHistoryCache.getSelectedContextTopics(topicTitle),
+      ]);
       setGlobalIncludeMainDocsState(savedInclude);
-      const savedComplementary = await chatHistoryCache.getIncludeComplementaryDocs(topicTitle);
       setGlobalIncludeComplementaryDocsState(savedComplementary);
+      setGlobalContextScope(savedScope);
+      setGlobalSelectedContextTopicsState(savedSelected);
     }
     setShowAIAssistant(true);
   }, [localTopics, chatHistoryCache]);
@@ -865,6 +891,75 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
       anonymizationSettings: aiIntegration?.aiSettings?.anonymization,
     });
   }, [localTopics, aiAssistantTopicIndex, globalContextScope, analyzedDocuments, proofManager, fileToBase64, aiIntegration?.aiSettings?.anonymization]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // v1.51.0: Geração inline (Ctrl+K) — mesmo contexto do Assistente IA, mas com o
+  // texto ACIMA do cursor (prefixText) no lugar do conteúdo completo do tópico.
+  // Usa o modelo principal de redação via callAIStream (streaming nos providers de
+  // API; resultado de uma vez nos providers CLI, que não emitem chunks).
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const generateInlineForTopic = React.useCallback(async (
+    topicIndex: number,
+    instruction: string,
+    prefixText: string,
+    opts?: { onChunk?: (fullText: string) => void; signal?: AbortSignal }
+  ): Promise<string> => {
+    const topic = localTopics[topicIndex];
+    if (!topic || !aiIntegration) return '';
+
+    // v1.51.0: herda a config de contexto persistida POR TÓPICO no chatHistoryCache
+    const title = topic.title;
+    const [includeMainDocs, includeComplementaryDocs, scope, selectedContextTopics] = await Promise.all([
+      chatHistoryCache.getIncludeMainDocs(title),
+      chatHistoryCache.getIncludeComplementaryDocs(title),
+      chatHistoryCache.getContextScope(title),
+      chatHistoryCache.getSelectedContextTopics(title),
+    ]);
+
+    const content = await buildChatContext({
+      userMessage: instruction,
+      options: { includeMainDocs, includeComplementaryDocs, selectedContextTopics },
+      currentTopic: topic,
+      currentContent: prefixText,
+      allTopics: localTopics,
+      contextScope: scope,
+      analyzedDocuments,
+      proofManager: proofManager as Parameters<typeof buildChatContext>[0]['proofManager'],
+      fileToBase64: fileToBase64 || (async () => ''),
+      anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
+      anonymizationSettings: aiIntegration?.aiSettings?.anonymization,
+      inlineMode: true,
+    });
+
+    // System prompt dedicado da geração inline: usa o provider/modelo principal, mas sem a
+    // auto-revisão final nem o "raciocínio em voz alta" (preâmbulo de pendências).
+    const baseOptions = {
+      maxTokens: 4000,
+      useInstructions: false,
+      systemPrompt: buildInlineGenerateSystemPrompt({
+        customPrompt: aiIntegration?.aiSettings?.customPrompt,
+        anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
+      }),
+      logMetrics: true,
+      temperature: 0.5,
+      topP: 0.9,
+      topK: 80,
+    };
+
+    const callStream = aiIntegration.callAIStream;
+    if (!callStream) {
+      // Fallback de segurança: sem streaming exposto, usa callAI síncrono
+      return (await aiIntegration.callAI([{ role: 'user', content }], baseOptions)).trim();
+    }
+
+    const result = await callStream([{ role: 'user', content }], {
+      ...baseOptions,
+      abortSignal: opts?.signal,
+      onChunk: opts?.onChunk,
+    });
+    return (result || '').trim();
+  }, [localTopics, analyzedDocuments, proofManager, fileToBase64, aiIntegration, chatHistoryCache]);
 
   // v1.19.0: Handler para inserir resposta do chat no editor global
   const handleInsertGlobalChatResponse = React.useCallback((mode: InsertMode) => {
@@ -1120,6 +1215,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
                   isCollapsed={collapsedSections[index] ?? false}
                   onToggleCollapse={(idx: number) => setCollapsedSections(prev => ({ ...prev, [idx]: !prev[idx] }))}
                   versioning={fieldVersioning}
+                  inlineGenerate={generateInlineForTopic}
                 />
               ))
             ) : (
@@ -1347,11 +1443,13 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
           onClear={chatAssistantGlobal.clear}
           lastResponse={chatAssistantGlobal.lastResponse}
           contextScope={globalContextScope}
-          setContextScope={setGlobalContextScope}
+          setContextScope={setGlobalContextScopePersisted}
           includeMainDocs={globalIncludeMainDocs}
           setIncludeMainDocs={setGlobalIncludeMainDocs}
           includeComplementaryDocs={globalIncludeComplementaryDocs}
           setIncludeComplementaryDocs={setGlobalIncludeComplementaryDocs}
+          selectedContextTopics={globalSelectedContextTopics}
+          setSelectedContextTopics={setGlobalSelectedContextTopics}
           sanitizeHTML={sanitizeHTML}
           quickPrompts={aiIntegration?.aiSettings?.quickPrompts}
           proofManager={proofManager}

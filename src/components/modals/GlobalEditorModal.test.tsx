@@ -47,6 +47,10 @@ vi.mock('../../hooks/useChatHistoryCache', () => ({
     setIncludeMainDocs: vi.fn(),
     getIncludeComplementaryDocs: vi.fn().mockResolvedValue(false),  // v1.39.06
     setIncludeComplementaryDocs: vi.fn(),  // v1.39.06
+    getContextScope: vi.fn().mockResolvedValue('current'),  // v1.51.0
+    setContextScope: vi.fn(),  // v1.51.0
+    getSelectedContextTopics: vi.fn().mockResolvedValue([]),  // v1.51.0
+    setSelectedContextTopics: vi.fn(),  // v1.51.0
   })),
 }));
 

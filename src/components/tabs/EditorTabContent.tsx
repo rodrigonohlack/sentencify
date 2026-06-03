@@ -20,7 +20,7 @@ import { SuggestionCard } from '../';
 import { RastreabilidadeModal } from '../modals/RastreabilidadeModal';
 import { useModelsStore } from '../../stores/useModelsStore';
 import { isRelatorio } from '../../utils/text';
-import type { Topic, Model, Proof, QuillInstance } from '../../types';
+import type { Topic, Model, Proof, QuillInstance, InlineGenerateFn } from '../../types';
 import type { UseFieldVersioningReturn, TopicEditorConfig } from '../../hooks';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -136,6 +136,9 @@ export interface EditorTabContentProps {
   // Sanitization
   sanitizeHTML: (html: string) => string;
 
+  // v1.51.0: Geração inline (Ctrl+K)
+  generateInline?: InlineGenerateFn | null;
+
   // Semantic search
   searchModelReady: boolean;
   useSemanticManualSearch: boolean;
@@ -191,6 +194,7 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
   openSlashMenu,
   openModal,
   sanitizeHTML,
+  generateInline,
   searchModelReady,
   useSemanticManualSearch,
   setUseSemanticManualSearch,
@@ -304,6 +308,7 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
                   ? handleOpenFactsComparisonIndividual
                   : null
               }
+              generateInline={generateInline}
             />
           </div>
 

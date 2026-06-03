@@ -94,15 +94,22 @@ A redação de TODOS os textos gerados deve ser de EXCELENTE QUALIDADE, seguindo
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // SAFETY: Proibições (IMUTÁVEL — sempre presente)
 // ═══════════════════════════════════════════════════════════════════════════════════════════
-export const AI_INSTRUCTIONS_SAFETY = `Importante: Não criar ou inventar jurisprudência, dados ou informações. Utilizar apenas o material fornecido ou conhecimento consolidado da área trabalhista.
+// v1.51.0: SAFETY dividido — BASE (proibições de invenção) + REVISÃO FINAL (instrução de
+// auto-revisão que gera o bloco "Revisão:..." ao fim da resposta). A geração inline (Ctrl+K)
+// usa apenas a BASE, pois o texto vai direto para a decisão (sem nota de revisão).
+export const AI_INSTRUCTIONS_SAFETY_BASE = `Importante: Não criar ou inventar jurisprudência, dados ou informações. Utilizar apenas o material fornecido ou conhecimento consolidado da área trabalhista.
 
 PROIBIÇÕES ABSOLUTAS: É totalmente e absolutamente proibido que você invente dados em caso de algum documento estiver faltante. Por exemplo, caso eu peça no prompt para você relatar algo sobre uma petição inicial e sobre uma contestação, mas o arquivo da contestação estiver ausente, JAMAIS invente informações. Nesses casos, analise o documento presente e o que faltar deve ser indicado com algo do tipo "documento TAL inexistente".
 
 JURISPRUDÊNCIA E DOUTRINA: NUNCA cite súmulas, OJs, jurisprudência, doutrina ou precedentes que NÃO constem EXPLICITAMENTE nos documentos fornecidos pelo usuário. Se precisar de fundamentação adicional, INDIQUE que o usuário deve pesquisar o tema, mas JAMAIS invente ou presuma citações jurídicas. Apenas reproduza fielmente as referências que constam nos documentos de entrada.
 
-Por favor, forneça uma análise completa e detalhada em uma única mensagem contínua, mantendo a mesma profundidade de análise e atenção aos detalhes. Evite quebrar a resposta em múltiplas mensagens, mas mantenha a organização lógica do texto usando parágrafos bem estruturados.
+Por favor, forneça uma análise completa e detalhada em uma única mensagem contínua, mantendo a mesma profundidade de análise e atenção aos detalhes. Evite quebrar a resposta em múltiplas mensagens, mas mantenha a organização lógica do texto usando parágrafos bem estruturados.`;
 
-Ao final de cada resposta, revise-a e identifique se houve alucinação ao citar dados.`;
+export const AI_INSTRUCTIONS_REVISAO_FINAL = `Ao final de cada resposta, revise-a e identifique se houve alucinação ao citar dados.`;
+
+export const AI_INSTRUCTIONS_SAFETY = `${AI_INSTRUCTIONS_SAFETY_BASE}
+
+${AI_INSTRUCTIONS_REVISAO_FINAL}`;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // ANONYMIZATION: Preservação de placeholders (CONDICIONAL — só quando anonimização ativa)
@@ -124,3 +131,29 @@ export const AI_INSTRUCTIONS = `${AI_INSTRUCTIONS_CORE}
 ${AI_INSTRUCTIONS_STYLE}
 
 ${AI_INSTRUCTIONS_SAFETY}`;
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// SYSTEM PROMPT DEDICADO PARA GERAÇÃO INLINE (Ctrl+K) — v1.51.0
+// O texto gerado é inserido DIRETAMENTE na decisão. Por isso este prompt:
+//  - mantém CORE + STYLE (ou estilo personalizado) + SAFETY_BASE (proibições de invenção);
+//  - OMITE a auto-revisão final (sem bloco "Revisão:...");
+//  - adiciona uma regra de saída (só a redação, começando pela fundamentação).
+// O preâmbulo "Nenhuma informação pendente..." é evitado na origem omitindo o modo socrático
+// e o INSTRUCAO_NAO_PRESUMIR do CONTEXTO (ver chat-context-builder `inlineMode`).
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+const INLINE_OUTPUT_RULE = `FORMATO DA RESPOSTA (geração inline no editor): sua resposta será inserida DIRETAMENTE na decisão, no ponto do cursor. Escreva EXCLUSIVAMENTE o texto da redação solicitada, em HTML, começando imediatamente pela fundamentação e terminando no último parágrafo do texto jurídico. Entregue apenas a redação final, pronta para ser inserida.`;
+
+export function buildInlineGenerateSystemPrompt(opts: { customPrompt?: string; anonymizationEnabled?: boolean }): string {
+  const custom = opts.customPrompt?.trim();
+  const style = custom
+    ? `📝 ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO:\n${custom}`
+    : AI_INSTRUCTIONS_STYLE;
+  const anon = opts.anonymizationEnabled ? `\n\n${AI_INSTRUCTIONS_ANONYMIZATION}` : '';
+  return `${AI_INSTRUCTIONS_CORE}
+
+${style}
+
+${AI_INSTRUCTIONS_SAFETY_BASE}${anon}
+
+${INLINE_OUTPUT_RULE}`;
+}

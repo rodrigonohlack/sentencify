@@ -1899,12 +1899,12 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           </div>
 
           {/* ═══════════════════════════════════════════════════════════════════════════════
-              SEÇÃO 4.6: Auto Complete com IA (v1.40.31)
+              SEÇÃO 4.6: Geração inline com IA — Ctrl+K (v1.51.0)
               ═══════════════════════════════════════════════════════════════════════════════ */}
           <div>
             <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
               <Sparkles className="w-4 h-4" aria-hidden />
-              Auto Complete (IA)
+              Gerar com IA inline (Ctrl+K)
             </label>
 
             {/* Toggle habilitar/desabilitar */}
@@ -1914,8 +1914,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 autoComplete: {
                   ...aiSettings.autoComplete,
                   enabled: !aiSettings.autoComplete?.enabled,
-                  delayMs: aiSettings.autoComplete?.delayMs ?? 1500,
-                  model: aiSettings.autoComplete?.model ?? 'claude-local-haiku'
+                  delayMs: aiSettings.autoComplete?.delayMs ?? 1500
                 }
               })}
               className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
@@ -1931,13 +1930,13 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       {aiSettings.autoComplete?.enabled ? '✓ Ativado' : 'Desativado'}
                     </span>
                     {aiSettings.autoComplete?.enabled && (
-                      <span className="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded">Auto Complete</span>
+                      <span className="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded font-mono">Ctrl+K</span>
                     )}
                   </div>
                   <p className="text-xs theme-text-muted mt-1">
                     {aiSettings.autoComplete?.enabled
-                      ? 'Sugestões de texto aparecem em cinza no editor. Pressione TAB para aceitar.'
-                      : 'Sugestão automática de texto enquanto você redige a decisão.'
+                      ? 'No editor da decisão, pressione Ctrl+K, descreva a redação e a IA gera no ponto do cursor.'
+                      : 'Atalho Ctrl+K para gerar redação no editor da decisão a partir de uma instrução.'
                     }
                   </p>
                 </div>
@@ -1951,84 +1950,18 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               </div>
             </button>
 
-            {/* Configuração de delay (só quando habilitado) */}
             {aiSettings.autoComplete?.enabled && (
-              <div className="mt-4 p-4 rounded-lg theme-bg-secondary-30 border theme-border-input space-y-4">
-                <div>
-                  <label className="block text-xs font-medium theme-text-muted mb-2">
-                    Tempo de pausa antes de sugerir:{' '}
-                    <span className="theme-text-primary font-semibold">
-                      {((aiSettings.autoComplete?.delayMs ?? 1500) / 1000).toFixed(1)}s
-                    </span>
-                  </label>
-                  <input
-                    type="range"
-                    min={1000}
-                    max={10000}
-                    step={500}
-                    value={aiSettings.autoComplete?.delayMs ?? 1500}
-                    onChange={(e) => setAiSettings({
-                      ...aiSettings,
-                      autoComplete: {
-                        ...aiSettings.autoComplete,
-                        enabled: true,
-                        delayMs: Number(e.target.value)
-                      }
-                    })}
-                    className="w-full accent-emerald-500"
-                  />
-                  <div className="flex justify-between text-xs theme-text-muted mt-1">
-                    <span>1s</span>
-                    <span>10s</span>
-                  </div>
-                </div>
-
-                {/* v1.50.52: Modelo dedicado (rápido/non-thinking) */}
-                <div>
-                  <label className="block text-xs font-medium theme-text-muted mb-2">
-                    Modelo do Auto Complete
-                  </label>
-                  <select
-                    value={aiSettings.autoComplete?.model || 'haiku'}
-                    onChange={(e) => setAiSettings({
-                      ...aiSettings,
-                      autoComplete: {
-                        ...aiSettings.autoComplete,
-                        enabled: true,
-                        delayMs: aiSettings.autoComplete?.delayMs ?? 1500,
-                        model: e.target.value as VoiceImprovementModel
-                      }
-                    })}
-                    className="w-full px-3 py-2 rounded-lg theme-bg-primary theme-text-primary theme-border-input border text-sm"
-                  >
-                    {/* Modelos com API key OU CLIs locais (sem key, via daemon) */}
-                    {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
-                      .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys))
-                      .map(([key, config]) => (
-                        <option key={key} value={key}>
-                          {config.displayName}
-                        </option>
-                      ))
-                    }
-                  </select>
-                  {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
-                    .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys)).length === 0 && (
-                    <p className="text-xs text-red-400 mt-2">
-                      Configure pelo menos uma API key acima para usar este recurso.
-                    </p>
-                  )}
-                </div>
-
-                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
-                  <div className="flex items-start gap-2">
-                    <Lightbulb className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" aria-hidden />
-                    <p className="text-xs text-emerald-700 dark:text-emerald-200">
-                      Funciona nos editores de decisão (modo individual e global). Usa um modelo
-                      rápido dedicado (independente do provider principal). Modelos Local (CLI)
-                      são gratuitos via assinatura, mas têm latência maior; modelos de reasoning
-                      como GPT-5.5 podem responder menos no completamento.
-                    </p>
-                  </div>
+              <div className="mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                <div className="flex items-start gap-2">
+                  <Lightbulb className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" aria-hidden />
+                  <p className="text-xs text-emerald-700 dark:text-emerald-200">
+                    Pressione <kbd className="font-mono">Ctrl+K</kbd> no editor da decisão. A IA recebe
+                    o mini-relatório, todo o texto acima do cursor e as provas vinculadas (respeitando
+                    "Enviar conteúdo completo à IA") e gera a redação usando o <strong>modelo principal</strong>.
+                    O texto aparece em preview: <kbd className="font-mono">Tab/Enter</kbd> insere,
+                    <kbd className="font-mono">Esc</kbd> descarta. Nos providers de API o texto surge em
+                    streaming; nos providers Local (CLI) aparece de uma vez ao final.
+                  </p>
                 </div>
               </div>
             )}

@@ -1067,6 +1067,8 @@ export interface ChatHistoryCacheEntry {
   messages: ChatMessage[];
   includeMainDocs?: boolean;  // v1.38.16: Persistir toggle "Incluir petições e contestações" por tópico
   includeComplementaryDocs?: boolean;  // v1.39.06: Toggle "Incluir documentos complementares" no chat
+  contextScope?: ContextScope;  // v1.51.0: Escopo do contexto (current/selected/all) por tópico
+  selectedContextTopics?: string[];  // v1.51.0: Tópicos selecionados para contexto, por tópico
   createdAt: number;
   updatedAt: number;
 }
@@ -1865,8 +1867,31 @@ export interface FieldEditorProps {
   minHeight?: string;
   editorTheme?: 'dark' | 'light' | string;
   hideVoiceButton?: boolean;
-  /** v1.40.31: Contexto para Auto Complete com IA (somente campo decisão) */
-  autoCompleteContext?: Pick<AutoCompleteSettings, 'enabled' | 'delayMs' | 'model'> & { relatorio: string };
+  /** v1.51.0: Contexto para geração inline com IA via Ctrl+K (somente campo decisão) */
+  inlineGenerate?: InlineGenerateContext;
+}
+
+/** v1.51.0: Opções para geração inline com streaming (Ctrl+K) */
+export interface InlineGenerateOptions {
+  /** Callback de streaming — recebe o texto acumulado a cada chunk (não dispara em providers CLI) */
+  onChunk?: (fullText: string) => void;
+  /** Sinal para abortar a geração em voo */
+  signal?: AbortSignal;
+}
+
+/** v1.51.0: Gera redação inline a partir de uma instrução + texto acima do cursor */
+export type InlineGenerateFn = (
+  instruction: string,
+  prefixText: string,
+  opts?: InlineGenerateOptions
+) => Promise<string>;
+
+/** v1.51.0: Contexto passado ao FieldEditor para geração inline (Ctrl+K) */
+export interface InlineGenerateContext {
+  /** Se a geração inline está habilitada */
+  enabled: boolean;
+  /** Função que monta o contexto (relatório + texto acima + provas) e chama a IA com streaming */
+  generate: InlineGenerateFn;
 }
 
 /** Ref exposta pelo FieldEditor - v1.35.93 */
@@ -1894,6 +1919,9 @@ export interface GlobalEditorSectionProps {
   isCollapsed?: boolean;
   onToggleCollapse?: ((index: number) => void) | null;
   versioning?: { saveVersion: (title: string, content: string) => void; getVersions: (title: string) => Promise<FieldVersion[]> } | null;
+  /** v1.51.0: Geração inline (Ctrl+K) — recebe o índice do tópico para montar o contexto.
+   *  O `enabled` é suprido pela própria seção (selectAutoComplete); aqui vai só a função. */
+  inlineGenerate?: ((topicIndex: number, instruction: string, prefixText: string, opts?: InlineGenerateOptions) => Promise<string>) | null;
 }
 
 /** Props para QuillEditorBase - v1.35.94 */
@@ -1961,6 +1989,8 @@ export interface QuillDecisionEditorProps {
   versioning?: { saveVersion: (title: string, content: string) => void; getVersions: (title: string) => Promise<FieldVersion[]> } | null;
   onBlur?: ((html: string) => void) | null;
   onOpenFactsComparison?: (() => void) | null; // v1.36.21: Confronto de Fatos
+  /** v1.51.0: Geração inline (Ctrl+K) — monta contexto (relatório + texto acima + provas) e chama a IA */
+  generateInline?: InlineGenerateFn | null;
 }
 
 /** Props para QuillMiniRelatorioEditor - v1.35.94 */
@@ -2058,6 +2088,8 @@ export interface DecisionEditorContainerProps {
   extractingModel?: boolean;
   /** Mostrar botão de extração */
   showExtractButton?: boolean;
+  /** v1.51.0: Geração inline (Ctrl+K) — repassada ao QuillDecisionEditor */
+  generateInline?: InlineGenerateFn | null;
 }
 
 /** Props legadas para DecisionEditorContainer (compatibilidade backwards) - v1.35.94 */
@@ -2114,6 +2146,8 @@ export interface DecisionEditorContainerPropsLegacy {
   isDirty?: boolean;
   versioning?: { saveVersion: (title: string, content: string) => void; getVersions: (title: string) => Promise<FieldVersion[]> } | null;
   onOpenFactsComparison?: (() => void) | null; // v1.36.21: Confronto de Fatos
+  /** v1.51.0: Geração inline (Ctrl+K) — repassada ao QuillDecisionEditor */
+  generateInline?: InlineGenerateFn | null;
 }
 
 /** Props para GlobalEditorModal - v1.35.95 */
@@ -2156,8 +2190,11 @@ export interface GlobalEditorModalProps {
   aiIntegration?: {
     aiSettings: AISettings;
     callAI: (messages: AIMessage[], options?: AICallOptions) => Promise<string>;
+    /** v1.51.0: Geração com streaming (usado pela geração inline Ctrl+K) */
+    callAIStream?: (messages: AIMessage[], options?: AICallOptions & { onChunk?: (fullText: string) => void }) => Promise<string>;
     performDoubleCheck?: PerformDoubleCheckFunction;
   } | null;
+  // Nota: AICallOptions já inclui systemPrompt — usado pela geração inline (Ctrl+K).
   detectResultadoAutomatico?: ((topicTitle: string, fundamentacao: string, category: TopicCategory) => Promise<string | null>) | null;
   onSlashCommand?: OnSlashCommandCallback | null;
   fileToBase64?: ((file: File) => Promise<string>) | null;

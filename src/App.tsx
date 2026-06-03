@@ -520,6 +520,43 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     loadIncludeComplementaryDocs();
   }, [modals.aiAssistant, topicManager.editingTopic?.title, chatHistoryCache]);
 
+  // v1.51.0: Tópicos selecionados para contexto, persistidos POR TÓPICO no chatHistoryCache
+  const [topicSelectedContextTopics, setTopicSelectedContextTopicsState] = React.useState<string[]>([]);
+  const setTopicSelectedContextTopics = React.useCallback((value: string[]) => {
+    setTopicSelectedContextTopicsState(value);
+    const topicTitle = topicManager.editingTopic?.title;
+    if (topicTitle) chatHistoryCache.setSelectedContextTopics(topicTitle, value);
+  }, [topicManager.editingTopic?.title, chatHistoryCache]);
+
+  React.useEffect(() => {
+    const loadSelected = async () => {
+      const topicTitle = topicManager.editingTopic?.title;
+      if (modals.aiAssistant && topicTitle) {
+        setTopicSelectedContextTopicsState(await chatHistoryCache.getSelectedContextTopics(topicTitle));
+      }
+    };
+    loadSelected();
+  }, [modals.aiAssistant, topicManager.editingTopic?.title, chatHistoryCache]);
+
+  // v1.51.0: contextScope agora persistido POR TÓPICO. O store (topicContextScope) é o espelho
+  // em memória do tópico atual; aqui um wrapper grava no cache e um effect carrega ao abrir.
+  const setTopicContextScopePersisted = React.useCallback((scope: import('./types').ContextScope) => {
+    topicManager.setTopicContextScope(scope);
+    const topicTitle = topicManager.editingTopic?.title;
+    if (topicTitle) chatHistoryCache.setContextScope(topicTitle, scope);
+  }, [topicManager, chatHistoryCache]);
+
+  React.useEffect(() => {
+    const loadScope = async () => {
+      const topicTitle = topicManager.editingTopic?.title;
+      if (modals.aiAssistant && topicTitle) {
+        topicManager.setTopicContextScope(await chatHistoryCache.getContextScope(topicTitle));
+      }
+    };
+    loadScope();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modals.aiAssistant, topicManager.editingTopic?.title, chatHistoryCache]);
+
   // v1.13.9: Ref para auto-save debounced no Editor Individual
   const individualAutoSaveTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -895,7 +932,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     savingTopic,
     // Tópicos - Setters
     setExtractedTopics, setSelectedTopics,
-    setEditingTopic, setLastEditedTopicTitle, setTopicContextScope,
+    setEditingTopic, setLastEditedTopicTitle,
+    // v1.51.0: setTopicContextScope é usado via topicManager.* nos wrappers persistentes
     // ⚠️ NOTA: setSavingTopic, setTopicToDelete movidos para useTopicEditing
     // Handlers de tópicos (prepareDeleteTopic, confirmDeleteTopic, etc.)
     // permanecem no componente principal pois dependem de modals e lógica complexa
@@ -2420,6 +2458,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     setError,
     sanitizeHTML,
     showToast,
+    chatHistoryCache,
   });
   const {
     handleInsertChatResponse,
@@ -2775,6 +2814,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
                 openSlashMenu={openSlashMenu}
                 openModal={openModal as (modal: string) => void}
                 sanitizeHTML={sanitizeHTML}
+                generateInline={decisionTextGeneration.generateInline}
                 searchModelReady={searchModelReady}
                 useSemanticManualSearch={useSemanticManualSearch}
                 setUseSemanticManualSearch={setUseSemanticManualSearch}
@@ -2921,7 +2961,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         isOpen={modals.aiAssistant}
         onClose={() => closeModal('aiAssistant')}
         contextScope={topicContextScope}
-        setContextScope={setTopicContextScope}
+        setContextScope={setTopicContextScopePersisted}
         topicTitle={editingTopic?.title}
         chatHistory={chatAssistant.history}
         onSendMessage={handleSendChatMessage}
@@ -2933,6 +2973,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
         setIncludeMainDocs={setTopicIncludeMainDocs}
         includeComplementaryDocs={topicIncludeComplementaryDocs}
         setIncludeComplementaryDocs={setTopicIncludeComplementaryDocs}
+        selectedContextTopics={topicSelectedContextTopics}
+        setSelectedContextTopics={setTopicSelectedContextTopics}
         sanitizeHTML={sanitizeHTML}
         quickPrompts={aiIntegration.aiSettings.quickPrompts}
         proofManager={proofManager}

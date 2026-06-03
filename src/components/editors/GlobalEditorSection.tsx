@@ -56,7 +56,8 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
   linkedProofsCount = 0,
   isCollapsed = false,
   onToggleCollapse = null,
-  versioning = null
+  versioning = null,
+  inlineGenerate = null
 }) => {
   const titleUpper = topic.title.toUpperCase();
   const isRelatorio = titleUpper === 'RELATÓRIO';
@@ -243,12 +244,10 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
                   minHeight="150px"
                   editorTheme={editorTheme}
                   hideVoiceButton={true}
-                  autoCompleteContext={{
-                    relatorio: topic.editedRelatorio || topic.relatorio || '',
+                  inlineGenerate={inlineGenerate ? {
                     enabled: autoComplete.enabled,
-                    delayMs: autoComplete.delayMs,
-                    model: autoComplete.model
-                  }}
+                    generate: (instruction, prefix, opts) => inlineGenerate(topicIndex, instruction, prefix, opts)
+                  } : undefined}
                 />
               </div>
             </>

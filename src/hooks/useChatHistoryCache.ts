@@ -6,7 +6,7 @@
  * @version 1.38.16 - Adiciona persistência de includeMainDocs por tópico
  */
 import { useCallback, useMemo } from 'react';
-import type { ChatMessage, ChatHistoryCacheEntry } from '../types';
+import type { ChatMessage, ChatHistoryCacheEntry, ContextScope } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -20,11 +20,13 @@ export const CHAT_DB_VERSION = 1;
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** Dados exportados de um tópico (v1.38.16, v1.39.06) */
+/** Dados exportados de um tópico (v1.38.16, v1.39.06, v1.51.0) */
 export interface ChatExportEntry {
   messages: ChatMessage[];
   includeMainDocs?: boolean;
   includeComplementaryDocs?: boolean;  // v1.39.06: Toggle "Incluir documentos complementares" no chat
+  contextScope?: ContextScope;  // v1.51.0: Escopo do contexto por tópico
+  selectedContextTopics?: string[];  // v1.51.0: Tópicos selecionados para contexto, por tópico
 }
 
 /** Retorno do hook useChatHistoryCache */
@@ -41,6 +43,11 @@ export interface UseChatHistoryCacheReturn {
   // v1.39.06: Funções para includeComplementaryDocs
   getIncludeComplementaryDocs: (topicTitle: string) => Promise<boolean>;
   setIncludeComplementaryDocs: (topicTitle: string, value: boolean) => Promise<void>;
+  // v1.51.0: Escopo do contexto e tópicos selecionados, por tópico
+  getContextScope: (topicTitle: string) => Promise<ContextScope>;
+  setContextScope: (topicTitle: string, value: ContextScope) => Promise<void>;
+  getSelectedContextTopics: (topicTitle: string) => Promise<string[]>;
+  setSelectedContextTopics: (topicTitle: string, value: string[]) => Promise<void>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -88,11 +95,11 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
       });
 
       const now = Date.now();
+      // v1.51.0: spread de existing preserva TODAS as configs (main/complementary/scope/selected)
       const entry: ChatHistoryCacheEntry = {
+        ...existing,
         topicTitle,
         messages,
-        includeMainDocs: existing?.includeMainDocs,  // v1.38.16: Preservar configuração existente
-        includeComplementaryDocs: existing?.includeComplementaryDocs,  // v1.39.06: Preservar configuração existente
         createdAt: existing?.createdAt || now,
         updatedAt: now
       };
@@ -219,7 +226,9 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
         result[entry.topicTitle] = {
           messages: entry.messages,
           includeMainDocs: entry.includeMainDocs,
-          includeComplementaryDocs: entry.includeComplementaryDocs  // v1.39.06
+          includeComplementaryDocs: entry.includeComplementaryDocs,  // v1.39.06
+          contextScope: entry.contextScope,  // v1.51.0
+          selectedContextTopics: entry.selectedContextTopics  // v1.51.0
         };
       }
 
@@ -248,10 +257,17 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
         // v1.39.06: Inclui includeComplementaryDocs
         const isNewFormat = value && typeof value === 'object' && !Array.isArray(value) && 'messages' in value;
         const messages = isNewFormat ? (value as ChatExportEntry).messages : (value as ChatMessage[]);
-        const includeMainDocs = isNewFormat ? (value as ChatExportEntry).includeMainDocs : undefined;
-        const includeComplementaryDocs = isNewFormat ? (value as ChatExportEntry).includeComplementaryDocs : undefined;
+        const exp = isNewFormat ? (value as ChatExportEntry) : null;
+        const includeMainDocs = exp?.includeMainDocs;
+        const includeComplementaryDocs = exp?.includeComplementaryDocs;
+        const contextScope = exp?.contextScope;  // v1.51.0
+        const selectedContextTopics = exp?.selectedContextTopics;  // v1.51.0
 
-        if (!Array.isArray(messages) || messages.length === 0) continue;
+        const safeMessages = Array.isArray(messages) ? messages : [];
+        const hasConfig = includeMainDocs !== undefined || includeComplementaryDocs !== undefined ||
+          contextScope !== undefined || (selectedContextTopics && selectedContextTopics.length > 0);
+        // v1.51.0: grava se tem mensagens OU config (antes descartava tópicos só-config)
+        if (safeMessages.length === 0 && !hasConfig) continue;
 
         const tx = db.transaction(CHAT_STORE_NAME, 'readwrite');
         const store = tx.objectStore(CHAT_STORE_NAME);
@@ -266,10 +282,13 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
 
         const now = Date.now();
         const entry: ChatHistoryCacheEntry = {
+          ...existing,
           topicTitle,
-          messages,
+          messages: safeMessages,
           includeMainDocs,
           includeComplementaryDocs,  // v1.39.06
+          contextScope,  // v1.51.0
+          selectedContextTopics,  // v1.51.0
           createdAt: existing?.createdAt || now,
           updatedAt: now
         };
@@ -343,7 +362,9 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
       });
 
       const now = Date.now();
+      // v1.51.0: spread preserva os demais campos (antes este setter apagava includeComplementaryDocs)
       const entry: ChatHistoryCacheEntry = {
+        ...existing,
         topicTitle,
         messages: existing?.messages || [],
         includeMainDocs: value,
@@ -419,10 +440,11 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
       });
 
       const now = Date.now();
+      // v1.51.0: spread preserva os demais campos (scope/selected/main)
       const entry: ChatHistoryCacheEntry = {
+        ...existing,
         topicTitle,
         messages: existing?.messages || [],
-        includeMainDocs: existing?.includeMainDocs,
         includeComplementaryDocs: value,
         createdAt: existing?.createdAt || now,
         updatedAt: now
@@ -446,6 +468,114 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
     }
   }, []);
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // v1.51.0: Escopo do contexto (current/selected/all) por tópico
+  // ─────────────────────────────────────────────────────────────────────────
+  const getContextScope = useCallback(async (topicTitle: string): Promise<ContextScope> => {
+    if (!topicTitle) return 'current';
+    try {
+      const db = await openChatDB();
+      const store = db.transaction(CHAT_STORE_NAME).objectStore(CHAT_STORE_NAME);
+      const index = store.index('topicTitle');
+      const entry = await new Promise<ChatHistoryCacheEntry | undefined>((resolve) => {
+        const req = index.get(topicTitle);
+        req.onsuccess = () => resolve(req.result as ChatHistoryCacheEntry | undefined);
+        req.onerror = () => resolve(undefined);
+      });
+      db.close();
+      return entry?.contextScope ?? 'current';  // Default: 'current'
+    } catch (e) {
+      console.warn('[ChatHistoryCache] Erro ao obter contextScope:', e);
+      return 'current';
+    }
+  }, []);
+
+  const setContextScope = useCallback(async (topicTitle: string, value: ContextScope): Promise<void> => {
+    if (!topicTitle) return;
+    try {
+      const db = await openChatDB();
+      const tx = db.transaction(CHAT_STORE_NAME, 'readwrite');
+      const store = tx.objectStore(CHAT_STORE_NAME);
+      const index = store.index('topicTitle');
+      const existing = await new Promise<ChatHistoryCacheEntry | undefined>((resolve) => {
+        const req = index.get(topicTitle);
+        req.onsuccess = () => resolve(req.result as ChatHistoryCacheEntry | undefined);
+        req.onerror = () => resolve(undefined);
+      });
+      const now = Date.now();
+      const entry: ChatHistoryCacheEntry = {
+        ...existing,
+        topicTitle,
+        messages: existing?.messages || [],
+        contextScope: value,
+        createdAt: existing?.createdAt || now,
+        updatedAt: now
+      };
+      if (existing?.id) { entry.id = existing.id; store.put(entry); } else { store.add(entry); }
+      await new Promise<void>((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+      db.close();
+    } catch (e) {
+      console.warn('[ChatHistoryCache] Erro ao salvar contextScope:', e);
+    }
+  }, []);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // v1.51.0: Tópicos selecionados para contexto, por tópico
+  // ─────────────────────────────────────────────────────────────────────────
+  const getSelectedContextTopics = useCallback(async (topicTitle: string): Promise<string[]> => {
+    if (!topicTitle) return [];
+    try {
+      const db = await openChatDB();
+      const store = db.transaction(CHAT_STORE_NAME).objectStore(CHAT_STORE_NAME);
+      const index = store.index('topicTitle');
+      const entry = await new Promise<ChatHistoryCacheEntry | undefined>((resolve) => {
+        const req = index.get(topicTitle);
+        req.onsuccess = () => resolve(req.result as ChatHistoryCacheEntry | undefined);
+        req.onerror = () => resolve(undefined);
+      });
+      db.close();
+      return entry?.selectedContextTopics ?? [];  // Default: []
+    } catch (e) {
+      console.warn('[ChatHistoryCache] Erro ao obter selectedContextTopics:', e);
+      return [];
+    }
+  }, []);
+
+  const setSelectedContextTopics = useCallback(async (topicTitle: string, value: string[]): Promise<void> => {
+    if (!topicTitle) return;
+    try {
+      const db = await openChatDB();
+      const tx = db.transaction(CHAT_STORE_NAME, 'readwrite');
+      const store = tx.objectStore(CHAT_STORE_NAME);
+      const index = store.index('topicTitle');
+      const existing = await new Promise<ChatHistoryCacheEntry | undefined>((resolve) => {
+        const req = index.get(topicTitle);
+        req.onsuccess = () => resolve(req.result as ChatHistoryCacheEntry | undefined);
+        req.onerror = () => resolve(undefined);
+      });
+      const now = Date.now();
+      const entry: ChatHistoryCacheEntry = {
+        ...existing,
+        topicTitle,
+        messages: existing?.messages || [],
+        selectedContextTopics: value,
+        createdAt: existing?.createdAt || now,
+        updatedAt: now
+      };
+      if (existing?.id) { entry.id = existing.id; store.put(entry); } else { store.add(entry); }
+      await new Promise<void>((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+      db.close();
+    } catch (e) {
+      console.warn('[ChatHistoryCache] Erro ao salvar selectedContextTopics:', e);
+    }
+  }, []);
+
   return useMemo(() => ({
     saveChat,
     getChat,
@@ -456,8 +586,12 @@ const useChatHistoryCache = (): UseChatHistoryCacheReturn => {
     getIncludeMainDocs,
     setIncludeMainDocs,
     getIncludeComplementaryDocs,
-    setIncludeComplementaryDocs
-  }), [saveChat, getChat, deleteChat, clearAllChats, exportAll, importAll, getIncludeMainDocs, setIncludeMainDocs, getIncludeComplementaryDocs, setIncludeComplementaryDocs]);
+    setIncludeComplementaryDocs,
+    getContextScope,
+    setContextScope,
+    getSelectedContextTopics,
+    setSelectedContextTopics
+  }), [saveChat, getChat, deleteChat, clearAllChats, exportAll, importAll, getIncludeMainDocs, setIncludeMainDocs, getIncludeComplementaryDocs, setIncludeComplementaryDocs, getContextScope, setContextScope, getSelectedContextTopics, setSelectedContextTopics]);
 };
 
 export default useChatHistoryCache;
