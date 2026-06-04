@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.13',
+    date: '2026-06-03',
+    feature: 'refactor(ui): filtros da Jurisprudência agrupados com rótulos (refresh de UI, parte 14). Os chips de filtro (IRR/IAC/IRDR/Súmula/OJ/RG/ADI-ADC-ADPF/Informativo à esquerda; TST/STF/STJ/TRT8 à direita) não tinham rótulo de grupo — a única distinção entre "tipos" e "tribunais" era a cor (que foi unificada em azul na parte 4). Adicionados os rótulos "Tipo:" e "Tribunal:" antes de cada grupo, deixando a organização explícita. 62 testes passando.',
+  },
+  {
     version: '1.52.12',
     date: '2026-06-03',
     feature: 'refactor(ui): mais respiração entre os cards de tópico (refresh de UI, parte 13). A lista de tópicos (selecionados e não selecionados) usava space-y-2 (8px) entre cards densos, com border-2 e múltiplos controles inline — sensação comprimida. Aumentado para space-y-3 (12px), dando respiração vertical sem inchar cada card (padding interno preservado). 27 testes passando.',

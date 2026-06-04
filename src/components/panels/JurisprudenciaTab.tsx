@@ -214,7 +214,8 @@ export const JurisprudenciaTab = React.memo(({
       )}
 
       <div className="flex flex-wrap justify-between gap-y-2 mb-4">
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-medium theme-text-muted mr-1">Tipo:</span>
           {tiposDisponiveis.map(tipo => (
             <button
               key={tipo}
@@ -234,7 +235,8 @@ export const JurisprudenciaTab = React.memo(({
             </button>
           ))}
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-medium theme-text-muted mr-1">Tribunal:</span>
           {tribunaisDisponiveis.map(trib => (
             <button
               key={trib}
