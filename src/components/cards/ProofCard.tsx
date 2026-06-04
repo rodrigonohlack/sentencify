@@ -459,7 +459,7 @@ export const ProofCard = React.memo(({
                     extractionProgress
                       ? 'theme-bg-tertiary-30 theme-text-disabled cursor-not-allowed'
                       : proofManager.proofUsePdfMode[proof.id] && !proof.isPlaceholder
-                      ? 'bg-green-600 text-white shadow-lg hover-green-700-from-600'
+                      ? 'bg-blue-500 text-white hover:bg-blue-600'
                       : 'theme-bg-tertiary-50 theme-text-muted hover-slate-600'
                   }`}
                 >

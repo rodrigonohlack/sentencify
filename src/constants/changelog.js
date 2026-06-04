@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.7',
+    date: '2026-06-03',
+    feature: 'refactor(ui): aba Provas sem roxo de IA (refresh de UI, parte 8, encerra a padronização de botões). Botão "Extrair Texto" (ação de processar PDF) deixou de ficar verde no modo PDF e passou a azul-500. Modal "Análise Contextual" de prova: ícone, wrapper e checkboxes roxos -> azul. Preservados: as caixas de aviso contextuais (anonimização roxa, provider bloqueado laranja — são avisos de estado), o botão "Adicionar Anexo" verde (ação de criar) e os indicadores de status. 129 testes passando. Conclui o Bloco 1 (hierarquia de botões) do refresh.',
+  },
+  {
     version: '1.52.6',
     date: '2026-06-03',
     feature: 'refactor(ui): barra de IA e editor sem roxo/arco-íris (refresh de UI, parte 7). Grupo de inserção do texto gerado (Substituir Tudo/Adicionar no Início/Adicionar no Final), que usava 3 cores diferentes (âmbar/azul/verde), agora são três botões neutros — sem incentivar a substituição e sem arco-íris. Botão "Gerar Texto" deixou de ter hover azul-roxo e glow, virando azul-500 sólido. Roxo da busca/assistente eliminado: focus-rings dos inputs de instrução e do seletor de Pacote de Conhecimento, ícone do pacote, e o nome do tópico no cabeçalho do assistente passaram a azul. Toggle da Biblioteca de Modelos (fullscreen) de âmbar para azul. Preservados: avisos CNJ (âmbar), badge "Não salvo" (âmbar de status) e badges de categoria de tópico (roxos, são categóricos). 98 testes passando.',

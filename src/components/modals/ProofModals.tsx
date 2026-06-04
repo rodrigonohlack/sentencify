@@ -121,8 +121,8 @@ export const ProofAnalysisModal = React.memo(({
             className="w-full p-4 text-left"
           >
             <div className="flex items-start gap-3">
-              <div className="icon-wrapper p-2 bg-purple-600/20 rounded-lg transition-colors">
-                <Scale className="w-5 h-5 text-purple-400" />
+              <div className="icon-wrapper p-2 bg-blue-600/20 rounded-lg transition-colors">
+                <Scale className="w-5 h-5 text-blue-400" />
               </div>
               <div className="flex-1">
                 <h4 className="font-semibold theme-text-secondary mb-1">Análise Contextual</h4>
@@ -142,7 +142,7 @@ export const ProofAnalysisModal = React.memo(({
                   type="checkbox"
                   checked={useOnlyMiniRelatorios}
                   onChange={(e) => setUseOnlyMiniRelatorios(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded border-purple-600 theme-bg-secondary text-purple-500 focus:ring-1 focus:ring-purple-500 cursor-pointer"
+                  className="w-3.5 h-3.5 rounded border-blue-600 theme-bg-secondary text-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 />
                 <span>Usar apenas mini-relatórios dos {linkedTopicsCount} tópico(s) vinculado(s)</span>
               </label>
@@ -262,7 +262,7 @@ export const LinkProofModal = React.memo(({
                         }));
                       }
                     }}
-                    className="mt-1 w-4 h-4 rounded theme-border text-purple-600 focus:ring-2 focus:ring-purple-500 focus:ring-offset-0 theme-bg-secondary"
+                    className="mt-1 w-4 h-4 rounded theme-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 theme-bg-secondary"
                   />
                   <div className="flex-1">
                     <div className={CSS.flexGap2}>
