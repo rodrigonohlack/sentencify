@@ -276,7 +276,7 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {/* DndContext com collision detection customizado (ignora RELATÓRIO/DISPOSITIVO) */}
               <DndContext
                 sensors={dndSensors}
