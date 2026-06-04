@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.14',
+    date: '2026-06-03',
+    feature: 'refactor(ui): hierarquia do editor sem roxo (refresh de UI, parte 15, encerra o Bloco 3 — refinos). No painel "Sugestões de Modelos" do editor, o roxo da busca semântica foi eliminado: título, focus-ring do campo de busca manual, toggle 🧠, spinner e textos "(semântica)" e badge "🤖 IA Local" passaram a azul (o título usa o token theme-text-blue). Botão "Ver Provas Vinculadas" (navegação) deixou de ser verde e virou azul, já que verde fica reservado a Salvar/Criar. Preservado o badge de categoria de tópico (roxo categórico). 59 testes passando. Conclui as 14 iterações do refresh de UI do main app.',
+  },
+  {
     version: '1.52.13',
     date: '2026-06-03',
     feature: 'refactor(ui): filtros da Jurisprudência agrupados com rótulos (refresh de UI, parte 14). Os chips de filtro (IRR/IAC/IRDR/Súmula/OJ/RG/ADI-ADC-ADPF/Informativo à esquerda; TST/STF/STJ/TRT8 à direita) não tinham rótulo de grupo — a única distinção entre "tipos" e "tribunais" era a cor (que foi unificada em azul na parte 4). Adicionados os rótulos "Tipo:" e "Tribunal:" antes de cada grupo, deixando a organização explícita. 62 testes passando.',

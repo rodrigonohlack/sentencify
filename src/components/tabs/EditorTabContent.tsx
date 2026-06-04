@@ -415,7 +415,7 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
               </div>
             )}
 
-            <h4 className="font-bold text-purple-400 flex items-center gap-2">
+            <h4 className="font-bold theme-text-blue flex items-center gap-2">
               <Lightbulb className="w-4 h-4" aria-hidden="true" /> Sugestões de Modelos
             </h4>
 
@@ -430,7 +430,7 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
                   value={modelLibrary.manualSearchTerm}
                   onChange={handleSearchChange}
                   placeholder={useSemanticManualSearch ? "Busca por significado..." : "Digite para buscar modelos por título, palavras-chave ou conteúdo..."}
-                  className="flex-1 px-3 py-2 theme-bg-primary border theme-border-input rounded-lg theme-text-primary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
+                  className="flex-1 px-3 py-2 theme-bg-primary border theme-border-input rounded-lg theme-text-primary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
                 />
                 {modelLibrary.manualSearchTerm && (
                   <button
@@ -446,7 +446,7 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
                     onClick={handleToggleSemanticSearch}
                     className={`px-2 py-1 rounded text-sm transition-colors ${
                       useSemanticManualSearch
-                        ? 'bg-purple-600 text-white hover:bg-purple-700'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'theme-bg-tertiary theme-text-secondary hover:bg-slate-600'
                     }`}
                     title={useSemanticManualSearch ? 'Busca semântica (por significado)' : 'Busca textual (por palavras)'}
@@ -456,15 +456,15 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
                 )}
               </div>
               {semanticManualSearching && (
-                <p className="text-xs text-purple-400 mt-2 flex items-center gap-1">
-                  <span className="animate-spin inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full"></span>
+                <p className="text-xs text-blue-400 mt-2 flex items-center gap-1">
+                  <span className="animate-spin inline-block w-3 h-3 border border-blue-400 border-t-transparent rounded-full"></span>
                   Buscando por significado...
                 </p>
               )}
               {!semanticManualSearching && modelLibrary.manualSearchTerm && modelLibrary.manualSearchResults.length > 0 && (
                 <p className="text-xs theme-text-muted mt-2">
                   {modelLibrary.manualSearchResults.length} modelo{modelLibrary.manualSearchResults.length > 1 ? 's' : ''} encontrado{modelLibrary.manualSearchResults.length > 1 ? 's' : ''}
-                  {useSemanticManualSearch && <span className="ml-1 text-purple-400">(semântica)</span>}
+                  {useSemanticManualSearch && <span className="ml-1 text-blue-400">(semântica)</span>}
                 </p>
               )}
             </div>
@@ -496,7 +496,7 @@ export const EditorTabContent: React.FC<EditorTabContentProps> = ({
                   <p className="text-sm theme-text-muted font-medium mb-3 flex items-center gap-2">
                     Sugestões Automáticas:
                     {modelLibrary.suggestionsSource === 'local' && (
-                      <span className="bg-purple-600 text-white px-1.5 py-0.5 rounded text-[10px]">🤖 IA Local</span>
+                      <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px]">🤖 IA Local</span>
                     )}
                   </p>
                   {modelLibrary.loadingSuggestions ? (

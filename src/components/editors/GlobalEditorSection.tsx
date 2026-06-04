@@ -105,7 +105,7 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
         {!isRelatorio && !isDispositivo && linkedProofsCount > 0 && onOpenProofsModal && (
           <button
             onClick={(e) => { e.stopPropagation(); onOpenProofsModal(topicIndex); }}
-            className="ml-auto hover-green-700 px-2 py-1 text-white text-xs rounded flex items-center gap-1 bg-green-600"
+            className="ml-auto hover:bg-blue-700 px-2 py-1 text-white text-xs rounded flex items-center gap-1 bg-blue-600 transition-colors"
             title="Ver Provas Vinculadas"
           >
             <Scale className="w-3 h-3" />
