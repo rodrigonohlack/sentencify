@@ -231,6 +231,25 @@ describe('document-analysis-prompts', () => {
         const prompt = buildAnalysisPrompt(1, 0, baseAISettings);
         expect(prompt).toMatch(/"divergencias"/);
       });
+
+      it('preserva a salvaguarda de que preliminares/prejudiciais/processuais continuam da contestação', () => {
+        const prompt = buildAnalysisPrompt(1, 0, baseAISettings);
+        expect(prompt).toContain(
+          'PRELIMINARES, PREJUDICIAIS e QUESTÕES PROCESSUAIS continuam sendo extraídas da contestação normalmente'
+        );
+      });
+
+      it('documenta os três campos do objeto divergencias (parcela, documento, descricao)', () => {
+        const prompt = buildAnalysisPrompt(1, 0, baseAISettings);
+        expect(prompt).toContain('"parcela"');
+        expect(prompt).toContain('"documento"');
+        expect(prompt).toContain('"descricao"');
+      });
+
+      it('instrui explicitamente a não criar tópico para parcelas registradas em divergencias', () => {
+        const prompt = buildAnalysisPrompt(1, 0, baseAISettings);
+        expect(prompt).toContain('NÃO crie tópico para essas parcelas');
+      });
     });
   });
 });
