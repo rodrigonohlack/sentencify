@@ -3340,7 +3340,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           <div className="flex gap-3">
             <button
               onClick={exportAiSettings}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover-green-700 transition-colors text-sm font-medium"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors text-sm font-medium"
             >
               <Download className="w-4 h-4" />
               Exportar Configurações
@@ -3352,7 +3352,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 onChange={importAiSettings}
                 className="hidden"
               />
-              <div className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 rounded-lg hover-amber-700 transition-colors text-sm font-medium cursor-pointer">
+              <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors text-sm font-medium cursor-pointer">
                 <Upload className="w-4 h-4" />
                 Importar Configurações
               </div>
@@ -3391,7 +3391,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             </div>
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover-blue-700 transition-colors font-medium"
+              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium"
             >
               Fechar
             </button>

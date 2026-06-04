@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.1',
+    date: '2026-06-03',
+    feature: 'refactor(ui): footers de modais sóbrios e com hierarquia (refresh de UI, parte 2). Os CSS.btn* do BaseModal (btnBlue/btnRed/btnGreen/btnSuccess/btnSecondary) deixaram de usar gradiente+glow e passaram a cor sólida alinhada ao componente Button (px-4 py-2, rounded-lg, shadow-sm) — propaga para todos os footers via ModalFooter. Modal "Sessão Anterior": "Continuar Sessão" deixou de ser verde e virou azul primário (é o caminho feliz, não um Salvar); "Começar do Zero" segue vermelho (destrutivo) — fim do verde+vermelho competindo. Footer do ConfigModal: "Exportar"/"Importar Configurações" deixaram de ser verde/âmbar e viraram botões neutros (ação utilitária); "Fechar" padronizado em azul-500. Seleção de provedor de IA preservada (usa cor de marca por provedor — Claude=laranja, Gemini=azul, etc., sistema coerente, não arco-íris). Verificado nos dois temas; 94 testes de modais passando.',
+  },
+  {
     version: '1.52.0',
     date: '2026-06-03',
     feature: 'feat(ui): início do refresh de UI do main app — fundação da hierarquia de botões. Novo componente central src/components/ui/Button.tsx (exportado pelo barrel ui/index.ts) com 5 variantes sólidas: primary (azul-500), secondary (neutro com borda), ghost, success (verde, Salvar/Criar) e danger (vermelho, destrutivo). Sem "arco-íris" de ação — roxo/âmbar deixam de ser cor de botão. Consome os tokens de tema (theme-*) e funciona nos dois temas. NÃO usa o gradiente indigo-violeta dos subapps (o main app é azul sólido). Esta é a base para padronizar os ~300 botões inline nas próximas iterações; ainda não migra telas. Smoke tests cobrindo as 5 variantes, default primary/md, type=button, encaminhamento de props e estado loading/disabled.',

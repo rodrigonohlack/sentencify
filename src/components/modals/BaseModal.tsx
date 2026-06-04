@@ -21,11 +21,12 @@ export const CSS = {
   spinner: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin",
   label: "block text-sm font-medium theme-text-tertiary mb-2",
   textMuted: "text-xs theme-text-muted",
-  btnSecondary: "px-4 py-2.5 rounded-xl font-medium theme-bg-secondary theme-hover-bg border theme-border-modal theme-text-primary transition-all",
-  btnBlue: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-lg shadow-blue-500/25",
-  btnRed: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-lg shadow-red-500/25",
-  btnGreen: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25",
-  btnSuccess: "px-4 py-2.5 rounded-xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25",
+  // v1.52.1: botões sólidos e sóbrios (alinhados ao componente ui/Button), sem gradiente/glow
+  btnSecondary: "px-4 py-2 rounded-lg font-medium theme-bg-secondary theme-hover-bg border theme-border-modal theme-text-primary transition-colors",
+  btnBlue: "px-4 py-2 rounded-lg font-medium bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-colors",
+  btnRed: "px-4 py-2 rounded-lg font-medium bg-red-600 hover:bg-red-700 text-white shadow-sm transition-colors",
+  btnGreen: "px-4 py-2 rounded-lg font-medium bg-green-600 hover:bg-green-700 text-white shadow-sm transition-colors",
+  btnSuccess: "px-4 py-2 rounded-lg font-medium bg-green-600 hover:bg-green-700 text-white shadow-sm transition-colors",
   flexGap2: "flex items-center gap-2",
   input: "w-full px-4 py-2.5 rounded-xl theme-bg-secondary border theme-border-modal theme-text-primary placeholder:theme-text-disabled focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500",
 };
