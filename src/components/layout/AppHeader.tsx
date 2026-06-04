@@ -7,7 +7,8 @@
  * Contém: título, número do processo, botões de ação, aviso de responsabilidade.
  */
 
-import { LogOut, Sun, Moon, BookOpen, Settings, LayoutGrid, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+import { LogOut, Sun, Moon, BookOpen, Settings, LayoutGrid, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { GoogleDriveButton } from '../GoogleDriveButton';
 import { AppSwitcher } from '../shared/AppSwitcher';
 import { CSS } from '../../constants/styles';
@@ -63,6 +64,22 @@ export function AppHeader({
   googleDriveActions,
   cloudSync,
 }: AppHeaderProps) {
+  // v1.52.10: aviso CNJ colapsável, com a escolha persistida em localStorage
+  const [avisoCnjCollapsed, setAvisoCnjCollapsed] = useState(
+    () => typeof localStorage !== 'undefined' && localStorage.getItem('sentencify-aviso-cnj-collapsed') === 'true'
+  );
+  const toggleAvisoCnj = () => {
+    setAvisoCnjCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('sentencify-aviso-cnj-collapsed', String(next));
+      } catch {
+        /* localStorage indisponível — ignora */
+      }
+      return next;
+    });
+  };
+
   return (
     <div className={CSS.modalHeader}>
       <div className="flex items-center justify-between">
@@ -182,20 +199,36 @@ export function AppHeader({
         </div>
       </div>
 
-      {/* Responsibility Warning */}
-      <div className="mt-4 p-3 theme-bg-amber-accent border border-amber-500/30 rounded-lg">
-        <div className="flex items-start gap-2">
+      {/* Responsibility Warning (colapsável, escolha persistida) */}
+      <div className="mt-4 theme-bg-amber-accent border border-amber-500/30 rounded-lg">
+        <div className="flex items-start gap-2 p-3">
           <AlertTriangle className="w-4 h-4 theme-text-amber flex-shrink-0 mt-0.5" aria-hidden="true" />
-          <div className="text-xs theme-text-amber-muted">
-            <span className="font-semibold">Aviso Importante:</span> Esta ferramenta utiliza
-            Inteligência Artificial para auxiliar na redação de sentenças. A IA pode cometer erros,
-            omitir informações relevantes ou gerar conteúdo impreciso.
-            <span className="block mt-1 theme-text-amber">
-              <span className="font-semibold">É responsabilidade do usuário revisar, verificar e validar todas as informações geradas antes de utilizá-las.</span>
-              {' '}Sua revisão é fundamental, na forma estabelecida pela{' '}
-              <span className="font-semibold">Resolução 615/2025 do CNJ</span>.
-            </span>
+          <div className="flex-1 text-xs theme-text-amber-muted">
+            {avisoCnjCollapsed ? (
+              <span>
+                <span className="font-semibold">Aviso:</span> a IA pode errar — revisar e validar todas as informações geradas é responsabilidade sua (Resolução 615/2025 do CNJ).
+              </span>
+            ) : (
+              <>
+                <span className="font-semibold">Aviso Importante:</span> Esta ferramenta utiliza
+                Inteligência Artificial para auxiliar na redação de sentenças. A IA pode cometer erros,
+                omitir informações relevantes ou gerar conteúdo impreciso.
+                <span className="block mt-1 theme-text-amber">
+                  <span className="font-semibold">É responsabilidade do usuário revisar, verificar e validar todas as informações geradas antes de utilizá-las.</span>
+                  {' '}Sua revisão é fundamental, na forma estabelecida pela{' '}
+                  <span className="font-semibold">Resolução 615/2025 do CNJ</span>.
+                </span>
+              </>
+            )}
           </div>
+          <button
+            onClick={toggleAvisoCnj}
+            className="flex-shrink-0 p-1 rounded theme-text-amber hover:opacity-70 transition-opacity"
+            title={avisoCnjCollapsed ? 'Expandir aviso' : 'Recolher aviso'}
+            aria-label={avisoCnjCollapsed ? 'Expandir aviso' : 'Recolher aviso'}
+          >
+            {avisoCnjCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+          </button>
         </div>
       </div>
     </div>

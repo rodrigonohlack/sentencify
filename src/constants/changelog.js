@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.10',
+    date: '2026-06-03',
+    feature: 'feat(ui): aviso CNJ colapsável (refresh de UI, parte 11, encerra o Bloco 2 — shell). O banner amarelo de responsabilidade, fixo e denso em todas as abas, ganhou um botão de recolher/expandir (chevron) com a escolha persistida em localStorage (sentencify-aviso-cnj-collapsed). Expandido mostra o texto completo; recolhido vira uma linha única "Aviso: a IA pode errar — revisar e validar é responsabilidade sua (Resolução 615/2025 do CNJ)", preservando a referência à Resolução. Default permanece expandido. Verificado nos dois temas; 23 testes do AppHeader passando.',
+  },
+  {
     version: '1.52.9',
     date: '2026-06-03',
     feature: 'refactor(ui): rodapé sem duplicação do header (refresh de UI, parte 10). O rodapé reproduzia logo grande dentro de um box, "Versão X - PROTÓTIPO" e "Desenvolvido por Rodrigo Nohlack..., Juiz do Trabalho no TRT8" — tudo já presente no header. Reduzido a uma única linha discreta: logo pequeno + "· vX · PROTÓTIPO", sem o box e sem repetir o crédito do autor. Verificado no tema claro e escuro.',
