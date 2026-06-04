@@ -99,6 +99,17 @@ export const PromptInjectionDetectionSchema = z.object({
   gravidade: z.enum(['baixa', 'media', 'alta']).nullable().default('media').transform(v => v ?? 'media'),
 }).passthrough();
 
+/**
+ * v1.52.16: Divergência de pedido — a defesa impugna uma parcela de mérito que
+ * não consta da petição inicial e não é pedido contraposto/reconvenção. Não gera
+ * tópico; é sinalizada ao magistrado no fluxo de curadoria.
+ */
+export const DivergenciaPedidoSchema = z.object({
+  parcela: z.string().nullable().default('').transform(v => v ?? ''),
+  documento: z.string().nullable().default('').transform(v => v ?? ''),
+  descricao: z.string().nullable().default('').transform(v => v ?? ''),
+}).passthrough();
+
 export const TopicExtractionSchema = z.object({
   partes: z.object({
     reclamante: z.string().nullable().default('').transform(v => v ?? ''),
@@ -107,9 +118,12 @@ export const TopicExtractionSchema = z.object({
   topics: z.array(TopicSchema).default([]),
   /** v1.42.07: Tentativas de prompt injection identificadas pela IA. Default vazio. */
   promptInjections: z.array(PromptInjectionDetectionSchema).optional().default([]),
+  /** v1.52.16: Parcelas impugnadas na defesa sem pedido correspondente na inicial. Default vazio. */
+  divergencias: z.array(DivergenciaPedidoSchema).optional().default([]),
 }).passthrough();
 
 export type PromptInjectionDetection = z.infer<typeof PromptInjectionDetectionSchema>;
+export type DivergenciaPedido = z.infer<typeof DivergenciaPedidoSchema>;
 
 // ═══════════════════════════════════════════════════════════════════
 // SCHEMA: Confronto de Fatos

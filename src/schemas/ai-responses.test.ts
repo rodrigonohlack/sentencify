@@ -539,6 +539,48 @@ describe('ai-responses schemas', () => {
         }
       });
     });
+
+    // v1.52.16: divergencias (parcela impugnada na defesa sem pedido na inicial)
+    describe('divergencias (v1.52.16)', () => {
+      it('default vazio quando ausente', () => {
+        const result = TopicExtractionSchema.safeParse({ topics: [] });
+        expect(result.success).toBe(true);
+        if (result.success) expect(result.data.divergencias).toEqual([]);
+      });
+
+      it('aceita array vazio explícito', () => {
+        const result = TopicExtractionSchema.safeParse({ topics: [], divergencias: [] });
+        expect(result.success).toBe(true);
+        if (result.success) expect(result.data.divergencias).toEqual([]);
+      });
+
+      it('aceita lista com divergências completas', () => {
+        const data = {
+          topics: [],
+          divergencias: [
+            { parcela: 'verbas rescisórias', documento: 'contestação 1', descricao: 'impugnada na defesa, sem pedido correspondente na inicial' },
+            { parcela: 'intervalo térmico', documento: 'contestação 1', descricao: 'defesa sobre parcela não postulada pelo autor' },
+          ],
+        };
+        const result = TopicExtractionSchema.safeParse(data);
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.divergencias).toHaveLength(2);
+          expect(result.data.divergencias![0].parcela).toBe('verbas rescisórias');
+        }
+      });
+
+      it('normaliza campos nulos para string vazia', () => {
+        const data = { topics: [], divergencias: [{ parcela: null, documento: null, descricao: null }] };
+        const result = TopicExtractionSchema.safeParse(data);
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.divergencias![0].parcela).toBe('');
+          expect(result.data.divergencias![0].documento).toBe('');
+          expect(result.data.divergencias![0].descricao).toBe('');
+        }
+      });
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
