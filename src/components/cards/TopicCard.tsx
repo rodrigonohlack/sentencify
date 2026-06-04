@@ -305,19 +305,11 @@ export const TopicCard = React.memo(({
                       setTopicsToMerge([...topicsToMerge, topic]);
                     }
                   }}
-                  className="px-3 py-2 rounded text-sm flex items-center gap-1 text-white"
-                  style={{
-                    backgroundColor: topicsToMerge.find((t: Topic) => t.title === topic.title) ? '#059669' : '#475569',
-                    transition: 'background-color 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    const isSelected = topicsToMerge.find((t: Topic) => t.title === topic.title);
-                    e.currentTarget.style.backgroundColor = isSelected ? '#047857' : '#334155';
-                  }}
-                  onMouseLeave={(e) => {
-                    const isSelected = topicsToMerge.find((t: Topic) => t.title === topic.title);
-                    e.currentTarget.style.backgroundColor = isSelected ? '#059669' : '#475569';
-                  }}
+                  className={`px-3 py-2 rounded text-sm flex items-center gap-1 text-white transition-colors ${
+                    topicsToMerge.find((t: Topic) => t.title === topic.title)
+                      ? 'bg-blue-600 hover:bg-blue-700'
+                      : 'bg-slate-600 hover:bg-slate-700'
+                  }`}
                 >
                   <Merge className="w-3 h-3" />
                   {topicsToMerge.find((t: Topic) => t.title === topic.title) ? 'Selecionado' : 'Unir'}

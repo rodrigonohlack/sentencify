@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.5',
+    date: '2026-06-03',
+    feature: 'refactor(ui): botão de unir tópicos sem verde e sem style inline (refresh de UI, parte 6). O botão "Unir/Selecionado" dos cards de tópico usava cores hex inline (#059669 verde quando selecionado, #475569 quando não) com hover manipulado por onMouseEnter/onMouseLeave em JS — convertido para classes Tailwind condicionais: selecionado=azul-600 (estado de seleção, consistente com os demais toggles), não-selecionado=slate-600, hover via classe. Preservados os indicadores de status (bolinhas verde/âmbar) e o badge verde de tópico, que são semântica de estado. 71 testes passando.',
+  },
+  {
     version: '1.52.4',
     date: '2026-06-03',
     feature: 'refactor(ui): aba Upload com CTA sólido (refresh de UI, parte 5). Botão "Analisar Documentos" deixou de usar gradiente azul com hover azul-roxo (hover-gradient-blue-purple) e glow, virando azul-500 sólido com hover-600 (consistente com os demais CTAs). Os 3 botões de "processar texto colado" (petição/contestação/complementar) alinhados de blue-600 para azul-500. Preservada a cor temática roxa da seção "Documentos Complementares" (identidade de seção que a distingue dos documentos principais, não é IA nem ação). 94 testes passando.',
