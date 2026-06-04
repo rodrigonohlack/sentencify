@@ -102,7 +102,7 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
               {/* Linha 1: Título e Botões */}
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-xl font-bold text-blue-400">
+                  <h3 className="text-xl font-bold theme-text-blue">
                     Gerenciar Tópicos {selectedTopics.length > 0 && `(${selectedTopics.length} selecionados)`}
                   </h3>
                   <p className="text-xs theme-text-muted mt-1 flex items-center gap-2">

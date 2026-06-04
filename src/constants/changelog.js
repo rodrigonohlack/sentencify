@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.11',
+    date: '2026-06-03',
+    feature: 'refactor(ui): títulos de seção theme-aware (refresh de UI, parte 12, início do Bloco 3 — refinos). A escala tipográfica já era consistente (título de aba text-xl font-bold; subtítulo text-lg font-semibold; label text-sm) — não houve refatoração ampla. O ajuste pontual: os títulos das abas (Gestão de Provas, Gerenciar Tópicos, Banco de Modelos) usavam text-blue-400 fixo, com contraste fraco sobre o fundo claro do tema light; trocados para o token theme-text-blue (azul escuro no tema claro, azul claro no escuro), melhorando contraste e legibilidade nos dois temas. 133 testes passando.',
+  },
+  {
     version: '1.52.10',
     date: '2026-06-03',
     feature: 'feat(ui): aviso CNJ colapsável (refresh de UI, parte 11, encerra o Bloco 2 — shell). O banner amarelo de responsabilidade, fixo e denso em todas as abas, ganhou um botão de recolher/expandir (chevron) com a escolha persistida em localStorage (sentencify-aviso-cnj-collapsed). Expandido mostra o texto completo; recolhido vira uma linha única "Aviso: a IA pode errar — revisar e validar é responsabilidade sua (Resolução 615/2025 do CNJ)", preservando a referência à Resolução. Default permanece expandido. Verificado nos dois temas; 23 testes do AppHeader passando.',

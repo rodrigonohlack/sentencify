@@ -40,7 +40,7 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
       <div className="theme-gradient-card-50 rounded-lg p-6 border theme-border-secondary">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h3 className="text-xl font-bold text-blue-400 mb-2">Gestão de Provas</h3>
+            <h3 className="text-xl font-bold theme-text-blue mb-2">Gestão de Provas</h3>
             <p className="text-sm theme-text-muted">
               Faça upload de documentos probatórios, analise com IA e vincule aos tópicos da decisão
             </p>
