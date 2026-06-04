@@ -14,7 +14,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import { anonymizeText, normalizeHTMLSpacing } from '../utils/text';
 import { parseAIResponse, extractJSON, TopicExtractionSchema } from '../schemas/ai-responses';
-import type { PromptInjectionDetection } from '../schemas/ai-responses';
+import type { PromptInjectionDetection, DivergenciaPedido } from '../schemas/ai-responses';
 import { buildAnalysisPrompt } from '../prompts';
 import type {
   AIMessage,
@@ -134,6 +134,8 @@ export interface UseDocumentAnalysisProps {
   setPartesProcesso: (partes: PartesProcesso) => void;
   /** v1.42.07: Persistir tentativas de prompt injection detectadas pela IA */
   setDetectedInjections?: (injections: PromptInjectionDetection[]) => void;
+  /** v1.52.16: Persistir divergências de pedido detectadas pela IA */
+  setDetectedDivergencias?: (divergencias: DivergenciaPedido[]) => void;
   setExtractedTexts: (texts: ExtractedTexts) => void;
   setAnalyzedDocuments: (docs: AnalyzedDocuments) => void;
   setPeticaoFiles: (files: UploadedFile[]) => void;
@@ -199,6 +201,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
     setSelectedTopics,
     setPartesProcesso,
     setDetectedInjections,
+    setDetectedDivergencias,
     setExtractedTexts,
     setAnalyzedDocuments,
     setPeticaoFiles,
@@ -719,6 +722,20 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
             `[PromptSafety] IA detectou ${injections.length} tentativa(s) de prompt injection ` +
             `nos documentos. Detalhes no painel de curadoria de tópicos.`,
             injections
+          );
+        }
+      }
+
+      // v1.52.16: Armazenar divergências de pedido (parcela impugnada na defesa
+      // sem pedido na inicial). Banner aparece no TopicCurationModal.
+      if (setDetectedDivergencias) {
+        const divergencias = (parsed.divergencias || []) as DivergenciaPedido[];
+        setDetectedDivergencias(divergencias);
+        if (divergencias.length > 0) {
+          console.warn(
+            `[Extração] IA sinalizou ${divergencias.length} parcela(s) impugnada(s) ` +
+            `na defesa sem pedido correspondente na inicial. Detalhes na curadoria de tópicos.`,
+            divergencias
           );
         }
       }
