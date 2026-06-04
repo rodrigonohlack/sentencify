@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.0',
+    date: '2026-06-03',
+    feature: 'feat(ui): início do refresh de UI do main app — fundação da hierarquia de botões. Novo componente central src/components/ui/Button.tsx (exportado pelo barrel ui/index.ts) com 5 variantes sólidas: primary (azul-500), secondary (neutro com borda), ghost, success (verde, Salvar/Criar) e danger (vermelho, destrutivo). Sem "arco-íris" de ação — roxo/âmbar deixam de ser cor de botão. Consome os tokens de tema (theme-*) e funciona nos dois temas. NÃO usa o gradiente indigo-violeta dos subapps (o main app é azul sólido). Esta é a base para padronizar os ~300 botões inline nas próximas iterações; ainda não migra telas. Smoke tests cobrindo as 5 variantes, default primary/md, type=button, encaminhamento de props e estado loading/disabled.',
+  },
+  {
     version: '1.51.4',
     date: '2026-06-03',
     feature: 'fix(voz): a Melhoria de Voz por IA EXECUTAVA o ditado em vez de poli-lo, em QUALQUER lugar que usa ditado+melhoria. Causa: o ditado era colocado no prompt e, se soasse como comando ("redija um texto sobre dano moral...", "escreva...", "responda..."), o modelo OBEDECIA — uma injeção de instrução. Correção principal: VOICE_IMPROVEMENT_PROMPT (usado por improveText em todo o app — ditado de texto da decisão, mini-relatório, etc.) foi BLINDADO: o ditado vai entre marcas «««/»»» com regra de segurança explícita de que aquilo é DADO a corrigir, NUNCA comando a executar; mesmo contendo ordens/perguntas, o modelo só corrige a forma e devolve o próprio texto. Correção específica do Ctrl+K (v1.51.3 havia ligado a melhoria reusando improveText, que ainda assim tentava "corrigir um texto jurídico" e pedia o texto): novo prompt dedicado buildVoiceInstructionPrompt + método improveInstruction (useVoiceImprovement) que trata a entrada como INSTRUÇÃO ditada — limpa pontuação/vícios de fala (né, é, tipo), mantém como comando conciso e não executa; FieldEditor e QuillDecisionEditor usam improveInstruction na inline e improveText (agora blindado) no ditado de texto. De quebra: buildVoice*Prompt usa replace com função, evitando interpretação de $&/$1 em ditados com "R$".',

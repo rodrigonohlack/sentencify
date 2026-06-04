@@ -18,6 +18,10 @@ export type { ProcessingModeSelectorProps } from './ProcessingModeSelector';
 
 export { SlashCommandMenu } from './SlashCommandMenu';
 
+// v1.52.0: Button — fundação da hierarquia de botões do main app
+export { Button } from './Button';
+export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
+
 // v1.36.98: LockedTabOverlay
 export { LockedTabOverlay } from './LockedTabOverlay';
 
