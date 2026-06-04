@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.16',
+    date: '2026-06-04',
+    feature: 'fix(extração): tópicos de mérito agora derivam dos pedidos da petição inicial; a contestação só origina tópico de mérito via pedido contraposto/reconvenção. Antes, defesa equivocada (ex.: contestação que impugna verbas rescisórias e intervalo térmico não postulados) induzia o sistema a criar tópicos fantasma — risco de sentença extra petita (CPC arts. 141/492). Agora, parcela impugnada na defesa sem pedido na inicial NÃO vira tópico: é sinalizada num banner âmbar de divergências no fluxo de curadoria (campo "divergencias", espelhando o padrão de promptInjections), para o magistrado verificar omissão da inicial ou erro da contestação. Campo aditivo e opcional, theme-aware.',
+  },
+  {
     version: '1.52.15',
     date: '2026-06-04',
     feature: 'refactor(ui): consistência dos modais espelhos (refresh de UI, parte 16). Ao testar tudo antes do deploy, vários modais que espelham abas já tratadas ainda tinham roxo de IA/busca-semântica/seleção, criando dissonância (aba azul x modal roxo). Corrigidos: JurisprudenciaModal (badge IA Local, chip de filtro de tipo, toggle 🧠, spinner -> azul; badge de órgão preservado), GlobalEditorModal e FullscreenModelPanel (badges IA Local, spinners, toggle e divisor de busca semântica -> azul; badge de categoria preservado), ImportProvaOralModals (checkboxes/seleção de seções -> azul), AdvancedModals (seleção de permissão view/edit -> azul; "Copiar com formatação" -> azul sólido), ProofModals (seleção de tópico vinculado -> azul) e ProofsTab (botão "Importar Análise de Prova Oral" -> neutro). Preservados por serem categóricos, não arco-íris: o sistema cor-por-opção do ConfigModal (OCR engines e features cada um com sua cor, como a cor-de-marca dos provedores), avisos contextuais e o VoiceButton (indigo, identidade da feature de voz). Descoberto também que as classes hover-gradient-*purple* na verdade já renderizam azul (nome legado enganoso). 6336 testes passando.',
