@@ -15,7 +15,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { Topic, TopicCategory, ContextScope } from '../types';
-import type { PromptInjectionDetection } from '../schemas/ai-responses';
+import type { PromptInjectionDetection, DivergenciaPedido } from '../schemas/ai-responses';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -37,6 +37,12 @@ interface TopicsStoreState {
    * extração de tópicos. Vazio quando nenhuma tentativa foi identificada.
    */
   detectedInjections: PromptInjectionDetection[];
+
+  /**
+   * v1.52.16: Parcelas impugnadas na defesa sem pedido correspondente na
+   * inicial. Vazio quando nenhuma divergência foi identificada.
+   */
+  detectedDivergencias: DivergenciaPedido[];
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ESTADOS DE EDIÇÃO (3)
@@ -168,6 +174,9 @@ interface TopicsStoreState {
   /** v1.42.07: Substitui lista de tentativas de prompt injection detectadas */
   setDetectedInjections: (injections: PromptInjectionDetection[]) => void;
 
+  /** v1.52.16: Substitui lista de divergências de pedido detectadas */
+  setDetectedDivergencias: (divergencias: DivergenciaPedido[]) => void;
+
   // ═══════════════════════════════════════════════════════════════════════════
   // MÉTODOS DE PERSISTÊNCIA (3)
   // ═══════════════════════════════════════════════════════════════════════════
@@ -179,6 +188,7 @@ interface TopicsStoreState {
     editingTopic: Topic | null;
     lastEditedTopicTitle: string | null;
     detectedInjections: PromptInjectionDetection[];
+    detectedDivergencias: DivergenciaPedido[];
   };
 
   /** Restaura estado de dados persistidos */
@@ -205,6 +215,7 @@ export const useTopicsStore = create<TopicsStoreState>()(
 
       // v1.42.07: Detecção de prompt injection (1)
       detectedInjections: [],
+      detectedDivergencias: [],
 
       // Edição (3)
       editingTopic: null,
@@ -409,6 +420,11 @@ export const useTopicsStore = create<TopicsStoreState>()(
           state.detectedInjections = injections;
         }, false, 'setDetectedInjections'),
 
+      setDetectedDivergencias: (divergencias) =>
+        set((state) => {
+          state.detectedDivergencias = divergencias;
+        }, false, 'setDetectedDivergencias'),
+
       // ═══════════════════════════════════════════════════════════════════════
       // MÉTODOS DE PERSISTÊNCIA
       // ═══════════════════════════════════════════════════════════════════════
@@ -421,6 +437,7 @@ export const useTopicsStore = create<TopicsStoreState>()(
           editingTopic: state.editingTopic,
           lastEditedTopicTitle: state.lastEditedTopicTitle,
           detectedInjections: state.detectedInjections,
+          detectedDivergencias: state.detectedDivergencias,
         };
       },
 
@@ -443,6 +460,9 @@ export const useTopicsStore = create<TopicsStoreState>()(
           if (data.detectedInjections && Array.isArray(data.detectedInjections)) {
             state.detectedInjections = data.detectedInjections as PromptInjectionDetection[];
           }
+          if (data.detectedDivergencias && Array.isArray(data.detectedDivergencias)) {
+            state.detectedDivergencias = data.detectedDivergencias as DivergenciaPedido[];
+          }
         }, false, 'restoreFromPersistence'),
 
       clearAll: () =>
@@ -453,6 +473,7 @@ export const useTopicsStore = create<TopicsStoreState>()(
 
           // v1.42.07: Detecção de prompt injection
           state.detectedInjections = [];
+          state.detectedDivergencias = [];
 
           // Edição
           state.editingTopic = null;
