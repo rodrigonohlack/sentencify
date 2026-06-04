@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.9',
+    date: '2026-06-03',
+    feature: 'refactor(ui): rodapé sem duplicação do header (refresh de UI, parte 10). O rodapé reproduzia logo grande dentro de um box, "Versão X - PROTÓTIPO" e "Desenvolvido por Rodrigo Nohlack..., Juiz do Trabalho no TRT8" — tudo já presente no header. Reduzido a uma única linha discreta: logo pequeno + "· vX · PROTÓTIPO", sem o box e sem repetir o crédito do autor. Verificado no tema claro e escuro.',
+  },
+  {
     version: '1.52.8',
     date: '2026-06-03',
     feature: 'refactor(ui): header do main app reorganizado (refresh de UI, parte 9, início do Bloco 2 — shell). O canto superior direito, antes com três blocos de meta-texto competindo (Versão+PROTÓTIPO, "Made by Rodrigo..." em azul, "Juiz do Trabalho no TRT8"), foi consolidado em duas linhas discretas e coesas: "Versão X · PROTÓTIPO — não utilizar com processos reais" e o crédito "Rodrigo Nohlack Corrêa Cesar · Juiz do Trabalho no TRT8" em cinza (sem o nome em azul disputando atenção). Aviso PROTÓTIPO e link do changelog preservados. Hover dos ícones de ação uniformizado para azul (Tema e Configurações deixaram de usar âmbar/índigo); logout mantém vermelho (destrutivo). Verificado nos dois temas; 23 testes do AppHeader passando.',
