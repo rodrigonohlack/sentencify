@@ -2096,6 +2096,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     setSelectedTopics,
     setPartesProcesso,
     setDetectedInjections: useTopicsStore((s) => s.setDetectedInjections),
+    setDetectedDivergencias: useTopicsStore((s) => s.setDetectedDivergencias),
     setExtractedTexts,
     setAnalyzedDocuments,
     setPeticaoFiles,
