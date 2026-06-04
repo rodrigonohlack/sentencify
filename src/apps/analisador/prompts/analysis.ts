@@ -97,7 +97,7 @@ Retorne APENAS um JSON válido no seguinte formato (sem texto adicional antes ou
     {
       "numero": 1,
       "tema": "string (ex: HORAS EXTRAS, ADICIONAL NOTURNO)",
-      "descricao": "string DETALHADA do pedido conforme petição",
+      "descricao": "string DETALHADA do pedido conforme a PETIÇÃO INICIAL (e emendas). Os pedidos correspondem às pretensões formuladas pelo RECLAMANTE na inicial; a contestação alimenta 'defesaReclamada', não cria pedido (salvo reconvenção, ver instrução 12).",
       "tipoPedido": "principal | subsidiario | alternativo | sucessivo",
       "pedidoPrincipalNumero": "number ou null - se for subsidiário/alternativo/sucessivo, indica o número do pedido principal relacionado",
       "condicao": "string ou null - condição para aplicação do pedido (ex: 'caso não seja reconhecido o turno ininterrupto de revezamento')",
@@ -160,7 +160,7 @@ Retorne APENAS um JSON válido no seguinte formato (sem texto adicional antes ou
   },
   "alertas": [
     {
-      "tipo": "string (ex: PRAZO, NULIDADE, DOCUMENTO)",
+      "tipo": "string (ex: PRAZO, NULIDADE, DOCUMENTO, DIVERGÊNCIA - PARCELA NÃO POSTULADA)",
       "descricao": "string",
       "severidade": "alta | media | baixa",
       "recomendacao": "string ou null"
@@ -223,7 +223,8 @@ INSTRUÇÕES ADICIONAIS:
     - Em "fundamentacao": descreva os fundamentos da reconvenção
 13. NÚMERO DO PROCESSO: Se não encontrar o número do processo no texto do documento,
     verifique o NOME DO ARQUIVO (campo "Arquivo:") - frequentemente contém o número no formato CNJ
-    (ex: "0001234-56.2024.5.01.0001 - Petição.pdf")`;
+    (ex: "0001234-56.2024.5.01.0001 - Petição.pdf")
+14. FONTE DOS PEDIDOS (REGRA OBRIGATÓRIA): os 'pedidos' correspondem às pretensões do RECLAMANTE na PETIÇÃO INICIAL (e emendas). A contestação preenche 'defesaReclamada' dos pedidos existentes; ela só introduz pretensão própria via reconvenção (campo 'reconvencao', instrução 12). Se a contestação impugna ou defende uma parcela que NÃO consta da petição inicial e NÃO é reconvenção, NÃO crie um pedido para ela — isso induziria análise de pedido inexistente. Em vez disso, registre um item em 'alertas' com "tipo": "DIVERGÊNCIA - PARCELA NÃO POSTULADA", "severidade": "media", "descricao" indicando a parcela, qual contestação a trouxe e por que diverge, e "recomendacao" para verificar se houve omissão na transcrição da inicial ou erro/excesso da contestação.`;
 
 /**
  * Flags indicando quais documentos foram enviados como PDF binário (anexo) em vez de texto.
