@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.2',
+    date: '2026-06-03',
+    feature: 'refactor(ui): aba Modelos sem roxo, toggles em azul (refresh de UI, parte 3). Os toggles de estado ativo da aba Modelos deixaram de usar roxo (bg-purple-600) e passaram a azul-600, consistente com a aba ativa e os toggles de visualização: busca semântica (🧠) e filtro de propriedade (Todos/Meus/Compartilhados). Botão "Novo Modelo" perdeu o glow (shadow-lg shadow-blue-500/25 -> shadow-sm). Preservados: amarelo do filtro de Favoritos (semântica de estrela) e os botões utilitários neutros (Criar de Arquivos/Importar/Exportar/Compartilhar, que já estavam corretos). Testes de ModelsTab atualizados para a nova cor; 92 passando.',
+  },
+  {
     version: '1.52.1',
     date: '2026-06-03',
     feature: 'refactor(ui): footers de modais sóbrios e com hierarquia (refresh de UI, parte 2). Os CSS.btn* do BaseModal (btnBlue/btnRed/btnGreen/btnSuccess/btnSecondary) deixaram de usar gradiente+glow e passaram a cor sólida alinhada ao componente Button (px-4 py-2, rounded-lg, shadow-sm) — propaga para todos os footers via ModalFooter. Modal "Sessão Anterior": "Continuar Sessão" deixou de ser verde e virou azul primário (é o caminho feliz, não um Salvar); "Começar do Zero" segue vermelho (destrutivo) — fim do verde+vermelho competindo. Footer do ConfigModal: "Exportar"/"Importar Configurações" deixaram de ser verde/âmbar e viraram botões neutros (ação utilitária); "Fechar" padronizado em azul-500. Seleção de provedor de IA preservada (usa cor de marca por provedor — Claude=laranja, Gemini=azul, etc., sistema coerente, não arco-íris). Verificado nos dois temas; 94 testes de modais passando.',

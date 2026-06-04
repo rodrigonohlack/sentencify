@@ -982,7 +982,7 @@ describe('ModelsTab', () => {
       render(<ModelsTab {...props} />);
 
       const allButton = screen.getByTitle('Mostrar todos os modelos');
-      expect(allButton.className).toContain('bg-purple-600');
+      expect(allButton.className).toContain('bg-blue-600');
     });
 
     it('should highlight active ownership filter button "mine"', () => {
@@ -995,7 +995,7 @@ describe('ModelsTab', () => {
       render(<ModelsTab {...props} />);
 
       const mineButton = screen.getByTitle('Mostrar apenas meus modelos');
-      expect(mineButton.className).toContain('bg-purple-600');
+      expect(mineButton.className).toContain('bg-blue-600');
     });
 
     it('should highlight active ownership filter button "shared"', () => {
@@ -1008,7 +1008,7 @@ describe('ModelsTab', () => {
       render(<ModelsTab {...props} />);
 
       const sharedButton = screen.getByTitle('Mostrar apenas modelos compartilhados');
-      expect(sharedButton.className).toContain('bg-purple-600');
+      expect(sharedButton.className).toContain('bg-blue-600');
     });
   });
 

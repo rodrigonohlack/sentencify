@@ -193,7 +193,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
                 }, 50);
               }
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/25 transition-colors duration-300"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-colors"
           >
             <Plus className="w-4 h-4" />
             Novo Modelo
@@ -289,7 +289,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
                 }}
                 className={`px-3 py-3 rounded-lg text-lg transition-colors ${
                   useModelSemanticSearch
-                    ? 'bg-purple-600 text-white hover:bg-purple-700'
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'theme-bg-secondary theme-text-secondary hover-slate-600'
                 }`}
                 title={useModelSemanticSearch ? 'Busca semantica (por significado)' : 'Busca textual (por palavras)'}
@@ -344,7 +344,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
                 onClick={() => modelLibrary.setOwnershipFilter('all')}
                 className={`px-3 py-1.5 rounded text-sm transition-colors ${
                   modelLibrary.ownershipFilter === 'all'
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'theme-text-muted hover-theme-text-secondary'
                 }`}
                 title="Mostrar todos os modelos"
@@ -355,7 +355,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
                 onClick={() => modelLibrary.setOwnershipFilter('mine')}
                 className={`px-3 py-1.5 rounded text-sm transition-colors ${
                   modelLibrary.ownershipFilter === 'mine'
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'theme-text-muted hover-theme-text-secondary'
                 }`}
                 title="Mostrar apenas meus modelos"
@@ -366,7 +366,7 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
                 onClick={() => modelLibrary.setOwnershipFilter('shared')}
                 className={`px-3 py-1.5 rounded text-sm transition-colors flex items-center gap-1 ${
                   modelLibrary.ownershipFilter === 'shared'
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'theme-text-muted hover-theme-text-secondary'
                 }`}
                 title="Mostrar apenas modelos compartilhados"
