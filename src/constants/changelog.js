@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.19',
+    date: '2026-06-04',
+    feature: 'fix(analisador): regra reforçada anti-confabulação no prompt in-app (analysis.ts). O fix v1.52.18 ancorava os pedidos "na inicial" de forma genérica, mas o prompt do subapp gera o mesmo JSON denso (fatosReclamante por pedido) e, sob a pressão de "preencher tudo", confabulava pedidos a partir da contestação (ex.: criar "verbas rescisórias" que o autor não postulou, induzido por defesa equivocada). Portada a regra que as skills de import ganharam após o debugging: pedido = o que o AUTOR REQUER (planilha de parcelas líquidas quando há; senão rol de pedidos / causa de pedir — não depende de planilha, que frequentemente não existe); CLASSIFICAR antes de narrar (resolver pedido-vs-divergência antes de redigir); trava anti-confabulação (não escrever fatosReclamante para parcela sem lastro num requerimento do autor); e principal+reflexos (reflexo de aviso prévio/13º/multa 477 não é pedido autônomo de verbas rescisórias). Validado nas skills com e sem planilha. Só o prompt; sem mudança de schema/UI.',
+  },
+  {
     version: '1.52.18',
     date: '2026-06-04',
     feature: 'fix(analisador): pedidos ancorados na petição inicial. Mesma classe de problema do app principal, agora no subapp Analisador: contestação equivocada (que impugna parcelas não postuladas pelo autor) conduzia a LLM a tratar essas parcelas como pedidos inexistentes. Agora os pedidos derivam da inicial; a contestação alimenta a defesa dos pedidos existentes e só introduz pretensão própria via reconvenção; e impugnação a parcela não postulada vira um alerta "DIVERGÊNCIA - PARCELA NÃO POSTULADA" (severidade média/âmbar na AlertasSection), não um pedido. Reusa o mecanismo de alertas existente — sem mudança de schema ou UI. Correção só no prompt analysis.ts.',
