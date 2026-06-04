@@ -218,7 +218,7 @@ export const ShareLibraryModal = React.memo(({ isOpen, onClose, user: _user, onR
               <div className="flex gap-3 mt-2">
                 <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer border transition-colors ${
                   permission === 'view'
-                    ? 'border-purple-500 bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300'
+                    ? 'border-blue-500 bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
                     : 'theme-border-primary theme-bg-secondary theme-text-secondary'
                 }`}>
                   <input type="radio" name="permission" value="view" checked={permission === 'view'} onChange={() => setPermission('view')} className="hidden" />
@@ -227,7 +227,7 @@ export const ShareLibraryModal = React.memo(({ isOpen, onClose, user: _user, onR
                 </label>
                 <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer border transition-colors ${
                   permission === 'edit'
-                    ? 'border-purple-500 bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300'
+                    ? 'border-blue-500 bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
                     : 'theme-border-primary theme-bg-secondary theme-text-secondary'
                 }`}>
                   <input type="radio" name="permission" value="edit" checked={permission === 'edit'} onChange={() => setPermission('edit')} className="hidden" />
@@ -795,7 +795,7 @@ export const DispositivoModal: React.FC<DispositivoModalProps> = ({
 
           <button
             onClick={handleCopyFormattedDispositivo}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium shadow-lg hover-gradient-purple-blue bg-gradient-to-r from-blue-600 to-blue-700 text-white transition-all duration-300"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium shadow-sm bg-blue-500 hover:bg-blue-600 text-white transition-colors"
             title="Copiar com formatação (negrito, parágrafos) para Word/Google Docs"
           >
             {copySuccess ? <><Check className="w-5 h-5" aria-hidden="true" /> Copiado!</> : <><Download className="w-5 h-5" aria-hidden="true" /> Copiar Formatado</>}

@@ -285,12 +285,12 @@ describe('JurisprudenciaModal', () => {
       render(<JurisprudenciaModal {...defaultProps} />);
       const irrBtn = screen.getByText('IRR');
 
-      // Initially not active (no bg-purple-600 class)
-      expect(irrBtn.className).not.toContain('bg-purple-600');
+      // Initially not active (no bg-blue-600 class)
+      expect(irrBtn.className).not.toContain('bg-blue-600');
 
       fireEvent.click(irrBtn);
       // After click, should be active
-      expect(irrBtn.className).toContain('bg-purple-600');
+      expect(irrBtn.className).toContain('bg-blue-600');
     });
 
     it('should toggle tipo filter off on second click', () => {
@@ -298,10 +298,10 @@ describe('JurisprudenciaModal', () => {
       const irrBtn = screen.getByText('IRR');
 
       fireEvent.click(irrBtn); // on
-      expect(irrBtn.className).toContain('bg-purple-600');
+      expect(irrBtn.className).toContain('bg-blue-600');
 
       fireEvent.click(irrBtn); // off
-      expect(irrBtn.className).not.toContain('bg-purple-600');
+      expect(irrBtn.className).not.toContain('bg-blue-600');
     });
 
     it('should toggle tribunal filter on click', () => {
@@ -330,8 +330,8 @@ describe('JurisprudenciaModal', () => {
       fireEvent.click(screen.getByText('IRR'));
       fireEvent.click(screen.getByText('IAC'));
 
-      expect(screen.getByText('IRR').className).toContain('bg-purple-600');
-      expect(screen.getByText('IAC').className).toContain('bg-purple-600');
+      expect(screen.getByText('IRR').className).toContain('bg-blue-600');
+      expect(screen.getByText('IAC').className).toContain('bg-blue-600');
     });
 
     it('should support multiple tribunal filters simultaneously', () => {
@@ -347,14 +347,14 @@ describe('JurisprudenciaModal', () => {
       const { rerender } = render(<JurisprudenciaModal {...defaultProps} />);
 
       fireEvent.click(screen.getByText('IRR'));
-      expect(screen.getByText('IRR').className).toContain('bg-purple-600');
+      expect(screen.getByText('IRR').className).toContain('bg-blue-600');
 
       // Close
       rerender(<JurisprudenciaModal {...defaultProps} isOpen={false} />);
       // Reopen
       rerender(<JurisprudenciaModal {...defaultProps} isOpen={true} />);
 
-      expect(screen.getByText('IRR').className).not.toContain('bg-purple-600');
+      expect(screen.getByText('IRR').className).not.toContain('bg-blue-600');
     });
   });
 
@@ -684,7 +684,7 @@ describe('JurisprudenciaModal', () => {
     it('should initialize semantic mode from useLocalAI prop', () => {
       render(<JurisprudenciaModal {...defaultProps} jurisSemanticEnabled={true} useLocalAI={true} />);
       const toggleBtn = screen.getByTitle(/Busca semantica/);
-      expect(toggleBtn.className).toContain('bg-purple-600');
+      expect(toggleBtn.className).toContain('bg-blue-600');
     });
 
     it('should toggle semantic mode on click', () => {
@@ -693,7 +693,7 @@ describe('JurisprudenciaModal', () => {
 
       fireEvent.click(toggleBtn);
 
-      expect(toggleBtn.className).toContain('bg-purple-600');
+      expect(toggleBtn.className).toContain('bg-blue-600');
     });
 
     it('should use semantic search when semantic mode is enabled', async () => {
@@ -754,7 +754,7 @@ describe('JurisprudenciaModal', () => {
       rerender(<JurisprudenciaModal {...defaultProps} isOpen={true} jurisSemanticEnabled={true} useLocalAI={true} />);
 
       const toggleBtn = screen.getByTitle(/Busca semantica/);
-      expect(toggleBtn.className).toContain('bg-purple-600');
+      expect(toggleBtn.className).toContain('bg-blue-600');
     });
   });
 

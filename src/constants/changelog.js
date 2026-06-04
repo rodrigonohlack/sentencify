@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.15',
+    date: '2026-06-04',
+    feature: 'refactor(ui): consistência dos modais espelhos (refresh de UI, parte 16). Ao testar tudo antes do deploy, vários modais que espelham abas já tratadas ainda tinham roxo de IA/busca-semântica/seleção, criando dissonância (aba azul x modal roxo). Corrigidos: JurisprudenciaModal (badge IA Local, chip de filtro de tipo, toggle 🧠, spinner -> azul; badge de órgão preservado), GlobalEditorModal e FullscreenModelPanel (badges IA Local, spinners, toggle e divisor de busca semântica -> azul; badge de categoria preservado), ImportProvaOralModals (checkboxes/seleção de seções -> azul), AdvancedModals (seleção de permissão view/edit -> azul; "Copiar com formatação" -> azul sólido), ProofModals (seleção de tópico vinculado -> azul) e ProofsTab (botão "Importar Análise de Prova Oral" -> neutro). Preservados por serem categóricos, não arco-íris: o sistema cor-por-opção do ConfigModal (OCR engines e features cada um com sua cor, como a cor-de-marca dos provedores), avisos contextuais e o VoiceButton (indigo, identidade da feature de voz). Descoberto também que as classes hover-gradient-*purple* na verdade já renderizam azul (nome legado enganoso). 6336 testes passando.',
+  },
+  {
     version: '1.52.14',
     date: '2026-06-03',
     feature: 'refactor(ui): hierarquia do editor sem roxo (refresh de UI, parte 15, encerra o Bloco 3 — refinos). No painel "Sugestões de Modelos" do editor, o roxo da busca semântica foi eliminado: título, focus-ring do campo de busca manual, toggle 🧠, spinner e textos "(semântica)" e badge "🤖 IA Local" passaram a azul (o título usa o token theme-text-blue). Botão "Ver Provas Vinculadas" (navegação) deixou de ser verde e virou azul, já que verde fica reservado a Salvar/Criar. Preservado o badge de categoria de tópico (roxo categórico). 59 testes passando. Conclui as 14 iterações do refresh de UI do main app.',

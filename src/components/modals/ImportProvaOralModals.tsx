@@ -339,7 +339,7 @@ export const ImportProvaOralSectionsModal: React.FC<ImportProvaOralSectionsModal
           <label className="flex items-start gap-3 cursor-pointer">
             <div className={`w-5 h-5 mt-0.5 rounded flex items-center justify-center border transition-all flex-shrink-0 ${
               onlyHighlighted
-                ? 'bg-purple-600 border-purple-600'
+                ? 'bg-blue-600 border-blue-600'
                 : 'theme-border-input'
             }`}>
               {onlyHighlighted && <Check className="w-3 h-3 text-white" />}
@@ -366,7 +366,7 @@ export const ImportProvaOralSectionsModal: React.FC<ImportProvaOralSectionsModal
       <div className="mb-3">
         <button
           onClick={toggleAll}
-          className="text-sm theme-text-purple hover:underline"
+          className="text-sm theme-text-blue hover:underline"
         >
           {selectedSections.length === availableSections.length ? 'Desmarcar todas' : 'Selecionar todas'}
         </button>
@@ -385,8 +385,8 @@ export const ImportProvaOralSectionsModal: React.FC<ImportProvaOralSectionsModal
                 !isAvailable
                   ? 'opacity-50 cursor-not-allowed theme-bg-secondary border theme-border-input'
                   : isSelected
-                    ? 'bg-purple-600/20 border border-purple-500/50'
-                    : 'theme-bg-secondary border theme-border-input hover:border-purple-500/30'
+                    ? 'bg-blue-600/20 border border-blue-500/50'
+                    : 'theme-bg-secondary border theme-border-input hover:border-blue-500/30'
               }`}
             >
               <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${

@@ -233,7 +233,7 @@ export const FullscreenModelPanel = React.memo(({
         {/* Loading da IA */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+            <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
             <p className="text-sm theme-text-muted">Analisando modelos com IA...</p>
           </div>
         ) : suggestions.length > 0 ? (
@@ -241,7 +241,7 @@ export const FullscreenModelPanel = React.memo(({
             <h4 className="text-xs font-medium theme-text-muted mb-2 flex items-center gap-2">
               <Sparkles className="w-3 h-3" />
               Sugestoes para "{topicTitle}" ({suggestions.length})
-              {suggestionsSource === 'local' && <span className="bg-purple-600 text-white px-1.5 py-0.5 rounded text-[10px]">IA Local</span>}
+              {suggestionsSource === 'local' && <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px]">IA Local</span>}
             </h4>
             <div className="space-y-2">
               {suggestions.map((model, idx) => (

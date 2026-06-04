@@ -1233,7 +1233,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
         {/* Split Divider */}
         {isSplitMode && (
           <div
-            className="w-1 cursor-col-resize flex-shrink-0 theme-bg-tertiary hover:bg-purple-500 transition-colors"
+            className="w-1 cursor-col-resize flex-shrink-0 theme-bg-tertiary hover:bg-blue-500 transition-colors"
             onMouseDown={handleMouseDown}
           />
         )}
@@ -1246,12 +1246,12 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
           >
             {/* Panel Header - v1.12.1: Sugestões automáticas */}
             <div className="p-4 border-b theme-border-secondary flex-shrink-0">
-              <h3 className="text-base font-semibold theme-text-primary mb-2 flex items-center gap-2">Sugestões de Modelos{suggestionsSource === 'local' && <span className="bg-purple-600 text-white px-1.5 py-0.5 rounded text-[10px]">IA Local</span>}</h3>
+              <h3 className="text-base font-semibold theme-text-primary mb-2 flex items-center gap-2">Sugestões de Modelos{suggestionsSource === 'local' && <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px]">IA Local</span>}</h3>
 
               {currentFocusedTopic ? (
                 <p className="text-xs theme-text-muted flex items-center gap-1.5">
                   {loadingSuggestions && (
-                    <span className="w-3 h-3 border border-purple-500 border-t-transparent rounded-full animate-spin inline-block"></span>
+                    <span className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin inline-block"></span>
                   )}
                   <span>
                     {loadingSuggestions ? 'Buscando para:' : 'Sugestões para:'}{' '}
@@ -1307,7 +1307,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
                     }}
                     className={`px-2 py-1 rounded text-sm transition-colors ${
                       useGlobalSemanticSearch
-                        ? 'bg-purple-600 text-white hover:bg-purple-700'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'theme-bg-tertiary theme-text-secondary hover:bg-slate-600'
                     }`}
                     title={useGlobalSemanticSearch ? 'Busca semantica (por significado)' : 'Busca textual (por palavras)'}
@@ -1317,15 +1317,15 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
                 )}
               </div>
               {globalSemanticSearching && (
-                <p className="text-xs text-purple-400 mt-2 flex items-center gap-1">
-                  <span className="animate-spin inline-block w-3 h-3 border border-purple-400 border-t-transparent rounded-full"></span>
+                <p className="text-xs text-blue-400 mt-2 flex items-center gap-1">
+                  <span className="animate-spin inline-block w-3 h-3 border border-blue-400 border-t-transparent rounded-full"></span>
                   Buscando por significado...
                 </p>
               )}
               {!globalSemanticSearching && globalManualSearchTerm && globalManualSearchResults.length > 0 && (
                 <p className="text-xs theme-text-muted mt-2">
                   {globalManualSearchResults.length} modelo(s) encontrado(s)
-                  {useGlobalSemanticSearch && <span className="ml-1 text-purple-400">(semantica)</span>}
+                  {useGlobalSemanticSearch && <span className="ml-1 text-blue-400">(semantica)</span>}
                 </p>
               )}
               {!globalSemanticSearching && globalManualSearchTerm && globalManualSearchResults.length === 0 && (
@@ -1373,7 +1373,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
                 <div className="text-center py-8 theme-text-muted text-sm">
                   {loadingSuggestions ? (
                     <div className="flex flex-col items-center gap-2">
-                      <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                       <span>Buscando sugestoes...</span>
                     </div>
                   ) : currentFocusedTopic ? (

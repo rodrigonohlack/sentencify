@@ -242,7 +242,7 @@ export const LinkProofModal = React.memo(({
                   key={topic.title}
                   className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all ${
                     isLinked
-                      ? 'bg-purple-600/20 border border-purple-500/50'
+                      ? 'bg-blue-600/20 border border-blue-500/50'
                       : 'theme-bg-secondary-50 border theme-border-input hover-border-purple-alpha-30'
                   }`}
                 >

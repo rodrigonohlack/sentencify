@@ -137,7 +137,7 @@ export const JurisprudenciaModal = React.memo(({
             <Scale className="w-4 h-4" />
             Jurisprudencia: {topicTitle}
             {searchSource === 'local' && (
-              <span className="bg-purple-600 text-white px-1.5 py-0.5 rounded text-[10px]">🤖 IA Local</span>
+              <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px]">🤖 IA Local</span>
             )}
           </h3>
           <button onClick={onClose} className="p-1 rounded hover-bg-tertiary">
@@ -154,7 +154,7 @@ export const JurisprudenciaModal = React.memo(({
                   ...prev,
                   tipo: prev.tipo.includes(tipo) ? prev.tipo.filter((t: string) => t !== tipo) : [...prev.tipo, tipo]
                 }))}
-                className={`px-2 py-0.5 rounded-full text-xs transition-colors ${filtros.tipo.includes(tipo) ? 'bg-purple-600 text-white' : 'theme-bg-tertiary theme-text-tertiary hover-slate-600'}`}
+                className={`px-2 py-0.5 rounded-full text-xs transition-colors ${filtros.tipo.includes(tipo) ? 'bg-blue-600 text-white' : 'theme-bg-tertiary theme-text-tertiary hover-slate-600'}`}
               >
                 {tipo}
               </button>
@@ -211,7 +211,7 @@ export const JurisprudenciaModal = React.memo(({
                 onClick={() => setUseSemanticMode((prev: boolean) => !prev)}
                 className={`px-2 py-1 rounded text-xs transition-colors ${
                   useSemanticMode
-                    ? 'bg-purple-600 text-white hover:bg-purple-700'
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'theme-bg-tertiary theme-text-secondary hover-slate-600'
                 }`}
                 title={useSemanticMode ? 'Busca semantica (por significado)' : 'Busca textual (por palavras)'}
@@ -224,7 +224,7 @@ export const JurisprudenciaModal = React.memo(({
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {loading ? (
             <div className="text-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-purple-500" />
+              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-500" />
               <p className="text-sm theme-text-muted">Buscando precedentes relevantes...</p>
             </div>
           ) : suggestions.length === 0 ? (
