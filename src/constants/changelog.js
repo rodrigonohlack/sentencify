@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.17',
+    date: '2026-06-04',
+    feature: 'fix(prompt): prescrição reclassificada como PREJUDICIAL, não PRELIMINAR. O prompt de extração de tópicos listava "prescrição" tanto no exemplo de PRELIMINARES quanto no de PREJUDICIAIS — inconsistência pré-existente. Na Justiça do Trabalho a prescrição é prejudicial de mérito (impede o exame do mérito), então foi removida da lista de PRELIMINARES, ficando apenas em PREJUDICIAIS (prescrição bienal/quinquenal). Correção de uma palavra no texto do prompt; sem mudança de schema ou comportamento de parsing.',
+  },
+  {
     version: '1.52.16',
     date: '2026-06-04',
     feature: 'fix(extração): tópicos de mérito agora derivam dos pedidos da petição inicial; a contestação só origina tópico de mérito via pedido contraposto/reconvenção. Antes, defesa equivocada (ex.: contestação que impugna verbas rescisórias e intervalo térmico não postulados) induzia o sistema a criar tópicos fantasma — risco de sentença extra petita (CPC arts. 141/492). Agora, parcela impugnada na defesa sem pedido na inicial NÃO vira tópico: é sinalizada num banner âmbar de divergências no fluxo de curadoria (campo "divergencias", espelhando o padrão de promptInjections), para o magistrado verificar omissão da inicial ou erro da contestação. Campo aditivo e opcional, theme-aware.',

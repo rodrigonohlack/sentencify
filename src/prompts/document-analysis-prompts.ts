@@ -28,7 +28,7 @@ ${totalComplementares > 0 ? `Há ${totalComplementares} documento${totalCompleme
 Extraia e classifique todos os tópicos/pedidos em:
 
 1. QUESTÕES PROCESSUAIS (impugnação aos cálculos, regularidade de representação processual, impugnação aos documentos, gratuidade de justiça, etc.)
-2. PRELIMINARES (prescrição, inépcia, ilegitimidade, incompetência, litispendência, coisa julgada, etc.)
+2. PRELIMINARES (inépcia, ilegitimidade, incompetência, litispendência, coisa julgada, etc.)
 3. PREJUDICIAIS (questões que impedem análise do mérito - prescrição bienal, prescrição quinquenal, etc.)
 4. MÉRITO (pedidos principais - verbas rescisórias, horas extras, danos morais, vínculo empregatício, grupo econômico, etc.)
 
