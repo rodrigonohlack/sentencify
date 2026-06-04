@@ -215,5 +215,22 @@ describe('document-analysis-prompts', () => {
       expect(result).toMatch(/e as 2 contest/);
       expect(result).toContain('3 documentos complementares');
     });
+
+    // ═══════════════════════════════════════════════════════════════════
+    // TESTES DE REGRA DE FONTE POR CATEGORIA (v1.52.16)
+    // ═══════════════════════════════════════════════════════════════════
+
+    describe('regra de fonte por categoria (v1.52.16)', () => {
+      it('ancora pedidos de mérito na petição inicial e prevê contraposto/reconvenção', () => {
+        const prompt = buildAnalysisPrompt(1, 0, baseAISettings);
+        expect(prompt).toMatch(/petição inicial/i);
+        expect(prompt).toMatch(/pedido contraposto|reconvenção/i);
+      });
+
+      it('documenta o campo divergencias no formato de resposta', () => {
+        const prompt = buildAnalysisPrompt(1, 0, baseAISettings);
+        expect(prompt).toMatch(/"divergencias"/);
+      });
+    });
   });
 });
