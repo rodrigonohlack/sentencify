@@ -618,4 +618,56 @@ describe('useTopicsStore', () => {
     });
   });
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // v1.52.16: detectedDivergencias (parcelas impugnadas sem pedido na inicial)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('detectedDivergencias (v1.52.16)', () => {
+    it('inicia vazio', () => {
+      expect(useTopicsStore.getState().detectedDivergencias).toEqual([]);
+    });
+
+    it('setDetectedDivergencias substitui a lista', () => {
+      const divergencias = [
+        { parcela: 'verbas rescisórias', documento: 'contestação 1', descricao: 'impugnada na defesa, sem pedido na inicial' },
+      ];
+      useTopicsStore.getState().setDetectedDivergencias(divergencias);
+      expect(useTopicsStore.getState().detectedDivergencias).toEqual(divergencias);
+    });
+
+    it('clearAll zera detectedDivergencias', () => {
+      useTopicsStore.getState().setDetectedDivergencias([
+        { parcela: 'horas extras', documento: 'contestação 2', descricao: 'valor contestado difere do pedido' },
+      ]);
+      useTopicsStore.getState().clearAll();
+      expect(useTopicsStore.getState().detectedDivergencias).toEqual([]);
+    });
+
+    it('serializeForPersistence inclui detectedDivergencias', () => {
+      const divergencias = [
+        { parcela: 'FGTS', documento: 'inicial', descricao: 'base de cálculo divergente' },
+      ];
+      useTopicsStore.getState().setDetectedDivergencias(divergencias);
+      const serialized = useTopicsStore.getState().serializeForPersistence();
+      expect(serialized.detectedDivergencias).toEqual(divergencias);
+    });
+
+    it('restoreFromPersistence restaura detectedDivergencias', () => {
+      const divergencias = [
+        { parcela: 'aviso prévio', documento: 'contestação 3', descricao: 'modalidade divergente entre peças' },
+      ];
+      useTopicsStore.getState().restoreFromPersistence({ detectedDivergencias: divergencias });
+      expect(useTopicsStore.getState().detectedDivergencias).toEqual(divergencias);
+    });
+
+    it('restoreFromPersistence ignora campo ausente sem quebrar', () => {
+      useTopicsStore.getState().setDetectedDivergencias([
+        { parcela: 'multa 477', documento: 'contestação 1', descricao: 'impugnada genericamente' },
+      ]);
+      useTopicsStore.getState().restoreFromPersistence({ extractedTopics: [] });
+      // mantém o que estava (não foi sobrescrito)
+      expect(useTopicsStore.getState().detectedDivergencias).toHaveLength(1);
+    });
+  });
+
 });
