@@ -143,8 +143,8 @@ export const LegislacaoTab = React.memo(({
             onClick={() => setUseSemanticSearch((prev: boolean) => !prev)}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
               useSemanticSearch
-                ? 'bg-purple-600 text-white hover:bg-purple-700'
-                : 'theme-bg-tertiary theme-text-secondary hover-bg-purple-opacity'
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'theme-bg-tertiary theme-text-secondary hover-slate-600'
             }`}
             title={useSemanticSearch ? 'Busca semântica (por significado)' : 'Busca textual (por palavras)'}
           >
@@ -161,7 +161,7 @@ export const LegislacaoTab = React.memo(({
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={legislacao.isLoading || isReadOnly}
-          className={`px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover-blue-700 ${isReadOnly ? 'cursor-not-allowed' : ''}`}
+          className={`px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-blue-600 ${isReadOnly ? 'cursor-not-allowed' : ''}`}
           title={isReadOnly ? 'Importação desabilitada no modo somente leitura' : 'Importar artigos de arquivo JSON'}
         >
           <Upload className="w-4 h-4 inline mr-2" />
@@ -241,7 +241,7 @@ export const LegislacaoTab = React.memo(({
                 <div key={`${item.id}-${idx}`} className="theme-bg-secondary-50 rounded-lg p-3 border theme-border-input">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2 py-0.5 bg-purple-600/20 text-purple-400 text-xs rounded font-medium">
+                      <span className="px-2 py-0.5 bg-blue-600/20 text-blue-400 text-xs rounded font-medium">
                         {Math.round(item.similarity * 100)}% similar
                       </span>
                       <span className="text-xs theme-text-muted uppercase">{item.lei}</span>
@@ -344,7 +344,7 @@ export const LegislacaoTab = React.memo(({
         return filteredSemanticCount > 0 ? (
           <div className="flex items-center justify-center mt-3 pt-2 border-t theme-border-subtle">
             <span className="text-sm theme-text-muted flex items-center gap-2">
-              <span className="text-purple-400">🧠</span>
+              <span className="text-blue-400">🧠</span>
               {filteredSemanticCount} resultado(s) semântico(s){legislacao.leiAtiva ? ` em ${legislacao.leiAtiva.toUpperCase()}` : ''}
             </span>
           </div>

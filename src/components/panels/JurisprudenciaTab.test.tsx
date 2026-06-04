@@ -294,7 +294,7 @@ describe('JurisprudenciaTab', () => {
       mockJurisprudenciaData.filtros = { tipo: ['Súmula'], tribunal: [] };
       render(<JurisprudenciaTab {...createMockProps()} />);
       const sumulaBtn = screen.getByText('Súmula');
-      expect(sumulaBtn.className).toContain('bg-purple-600');
+      expect(sumulaBtn.className).toContain('bg-blue-600');
     });
 
     it('should apply active style to selected tribunal', () => {

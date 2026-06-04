@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.3',
+    date: '2026-06-03',
+    feature: 'refactor(ui): Jurisprudência e Legislação sem roxo (refresh de UI, parte 4). Eliminado o roxo ligado à busca semântica nos dois painéis: toggle 🧠/🔤, spinner de carregamento, emoji de contagem e badge de "% similar" passaram a azul. Chips de filtro de TIPO (IRR/IAC/Súmula/etc.) deixaram de ser roxos e ficaram azuis, iguais aos de TRIBUNAL (a distinção dos grupos será feita por rótulos em iteração futura). Botão "Importar JSON" padronizado para azul-500 (CTA) com hover consistente, igual nos dois painéis. Preservado o theme-text-purple do "§" (realce tipográfico de norma, não IA). Testes atualizados; 130 passando.',
+  },
+  {
     version: '1.52.2',
     date: '2026-06-03',
     feature: 'refactor(ui): aba Modelos sem roxo, toggles em azul (refresh de UI, parte 3). Os toggles de estado ativo da aba Modelos deixaram de usar roxo (bg-purple-600) e passaram a azul-600, consistente com a aba ativa e os toggles de visualização: busca semântica (🧠) e filtro de propriedade (Todos/Meus/Compartilhados). Botão "Novo Modelo" perdeu o glow (shadow-lg shadow-blue-500/25 -> shadow-sm). Preservados: amarelo do filtro de Favoritos (semântica de estrela) e os botões utilitários neutros (Criar de Arquivos/Importar/Exportar/Compartilhar, que já estavam corretos). Testes de ModelsTab atualizados para a nova cor; 92 passando.',

@@ -161,7 +161,7 @@ export const JurisprudenciaTab = React.memo(({
             </button>
           )}
           {searchingSemantics && (
-            <RefreshCw className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400 animate-spin" />
+            <RefreshCw className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 animate-spin" />
           )}
         </div>
         {/* v1.27.00: Toggle de busca semântica */}
@@ -171,7 +171,7 @@ export const JurisprudenciaTab = React.memo(({
             onClick={() => setUseSemanticSearch((prev: boolean) => !prev)}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
               useSemanticSearch
-                ? 'bg-purple-600 text-white hover:bg-purple-700'
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
                 : 'theme-bg-tertiary theme-text-secondary hover-slate-600'
             }`}
             title={useSemanticSearch ? 'Busca semântica (por significado)' : 'Busca textual (por palavras)'}
@@ -189,7 +189,7 @@ export const JurisprudenciaTab = React.memo(({
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={jurisprudencia.isLoading || isReadOnly}
-          className={`px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover-blue-700 ${isReadOnly ? 'cursor-not-allowed' : ''}`}
+          className={`px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-blue-600 ${isReadOnly ? 'cursor-not-allowed' : ''}`}
           title={isReadOnly ? 'Importação desabilitada no modo somente leitura' : 'Importar precedentes de arquivo JSON'}
         >
           <Upload className="w-4 h-4 inline mr-2" />
@@ -226,7 +226,7 @@ export const JurisprudenciaTab = React.memo(({
               }))}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 jurisprudencia.filtros.tipo.includes(tipo)
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-blue-600 text-white'
                   : 'theme-bg-tertiary theme-text-tertiary hover-slate-600'
               }`}
             >
