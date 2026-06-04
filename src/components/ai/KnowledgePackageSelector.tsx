@@ -29,7 +29,7 @@ export const KnowledgePackageSelector = React.memo(({
   return (
     <div className={`p-3 rounded-lg border theme-border-input theme-bg-secondary-50 ${disabled ? 'opacity-60' : ''}`}>
       <div className="flex items-center gap-2 mb-2">
-        <BookOpen className="w-4 h-4 text-purple-400 shrink-0" />
+        <BookOpen className="w-4 h-4 text-blue-400 shrink-0" />
         <span className="text-xs font-medium theme-text-secondary">Pacote de conhecimento</span>
         {disabled && (
           <span className="text-xs theme-text-disabled ml-1">(bloqueado após 1ª mensagem)</span>
@@ -40,7 +40,7 @@ export const KnowledgePackageSelector = React.memo(({
           value={selectedPackageId ?? ''}
           onChange={(e) => onSelect(e.target.value || null)}
           disabled={disabled}
-          className="flex-1 text-sm theme-bg-app border theme-border-input rounded-lg px-3 py-1.5 theme-text-primary focus:border-purple-500 focus:ring-1 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 text-sm theme-bg-app border theme-border-input rounded-lg px-3 py-1.5 theme-text-primary focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value="">Nenhum selecionado</option>
           {packages.map(pkg => (

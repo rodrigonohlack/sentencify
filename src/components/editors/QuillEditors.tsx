@@ -586,7 +586,7 @@ export const AIRegenerationSection = React.memo(({
           onChange={handleInstructionChange}
           onBlur={handleBlur}
           placeholder="Instrução opcional (ex: 'Seja mais objetivo', 'Adicione detalhes sobre...')"
-          className="flex-1 px-3 py-2 theme-bg-primary border theme-border-input rounded theme-text-tertiary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
+          className="flex-1 px-3 py-2 theme-bg-primary border theme-border-input rounded theme-text-tertiary text-sm theme-placeholder focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
           rows={2}
         />
         <VoiceButton
@@ -951,8 +951,8 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
               onClick={toggleSplitMode}
               className={`px-3 py-1.5 text-white text-xs rounded flex items-center gap-1.5 transition-all ${
                 isSplitMode
-                  ? 'bg-amber-700 ring-2 ring-amber-400'
-                  : 'bg-amber-600 hover-amber-700'
+                  ? 'bg-blue-600 ring-2 ring-blue-400'
+                  : 'bg-blue-500 hover:bg-blue-600'
               }`}
               title={isSplitMode ? 'Fechar Modelos (ESC ou Ctrl+M)' : '📚 Abrir Biblioteca de Modelos (Ctrl+M)'}
             >

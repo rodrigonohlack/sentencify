@@ -271,7 +271,7 @@ export const AIAssistantBaseLegacy = React.memo(({
           <button
             onClick={onGenerateText}
             disabled={generatingAi || !(aiInstruction || '').trim()}
-            className="w-full py-3 rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2 text-white bg-gradient-to-r from-blue-600 to-blue-700 hover-gradient-purple-blue-darker transition-all duration-300"
+            className="w-full py-3 rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2 text-white bg-blue-500 hover:bg-blue-600 transition-colors"
           >
             {generatingAi ? (
               <>
@@ -301,19 +301,19 @@ export const AIAssistantBaseLegacy = React.memo(({
                   <>
                     <button
                       onClick={() => onInsertText('replace')}
-                      className="py-2 rounded-lg text-sm bg-amber-600 hover-amber-700-from-600"
+                      className="py-2 rounded-lg text-sm theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
                     >
                       Substituir Tudo
                     </button>
                     <button
                       onClick={() => onInsertText('prepend')}
-                      className="py-2 rounded-lg text-sm bg-blue-600 text-white hover-blue-700"
+                      className="py-2 rounded-lg text-sm theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
                     >
                       Adicionar no Início
                     </button>
                     <button
                       onClick={() => onInsertText('append')}
-                      className="py-2 rounded-lg text-sm bg-green-600 text-white hover-green-700-from-600"
+                      className="py-2 rounded-lg text-sm theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"
                     >
                       Adicionar no Final
                     </button>
@@ -759,7 +759,7 @@ export const AIAssistantModal = React.memo(({
         onClear={onClear}
         lastResponse={lastResponse}
         zIndex={60}
-        subtitle={topicTitle ? <>Tópico: <span className="font-semibold text-purple-400">{topicTitle}</span></> : null}
+        subtitle={topicTitle ? <>Tópico: <span className="font-semibold text-blue-400">{topicTitle}</span></> : null}
         extraContent={extraContent}
         sanitizeHTML={sanitizeHTML}
         quickPrompts={quickPrompts}
@@ -996,7 +996,7 @@ export const AIAssistantGlobalModal = React.memo(({
         onClear={onClear}
         lastResponse={lastResponse}
         zIndex={70}
-        subtitle={<>Tópico: <span className="font-semibold text-purple-400">{topicTitle}</span></>}
+        subtitle={<>Tópico: <span className="font-semibold text-blue-400">{topicTitle}</span></>}
         extraContent={extraContent}
         sanitizeHTML={sanitizeHTML}
         quickPrompts={quickPrompts}

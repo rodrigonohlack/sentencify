@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.6',
+    date: '2026-06-03',
+    feature: 'refactor(ui): barra de IA e editor sem roxo/arco-íris (refresh de UI, parte 7). Grupo de inserção do texto gerado (Substituir Tudo/Adicionar no Início/Adicionar no Final), que usava 3 cores diferentes (âmbar/azul/verde), agora são três botões neutros — sem incentivar a substituição e sem arco-íris. Botão "Gerar Texto" deixou de ter hover azul-roxo e glow, virando azul-500 sólido. Roxo da busca/assistente eliminado: focus-rings dos inputs de instrução e do seletor de Pacote de Conhecimento, ícone do pacote, e o nome do tópico no cabeçalho do assistente passaram a azul. Toggle da Biblioteca de Modelos (fullscreen) de âmbar para azul. Preservados: avisos CNJ (âmbar), badge "Não salvo" (âmbar de status) e badges de categoria de tópico (roxos, são categóricos). 98 testes passando.',
+  },
+  {
     version: '1.52.5',
     date: '2026-06-03',
     feature: 'refactor(ui): botão de unir tópicos sem verde e sem style inline (refresh de UI, parte 6). O botão "Unir/Selecionado" dos cards de tópico usava cores hex inline (#059669 verde quando selecionado, #475569 quando não) com hover manipulado por onMouseEnter/onMouseLeave em JS — convertido para classes Tailwind condicionais: selecionado=azul-600 (estado de seleção, consistente com os demais toggles), não-selecionado=slate-600, hover via classe. Preservados os indicadores de status (bolinhas verde/âmbar) e o badge verde de tópico, que são semântica de estado. 71 testes passando.',
