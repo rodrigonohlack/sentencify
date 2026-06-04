@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.18',
+    date: '2026-06-04',
+    feature: 'fix(analisador): pedidos ancorados na petição inicial. Mesma classe de problema do app principal, agora no subapp Analisador: contestação equivocada (que impugna parcelas não postuladas pelo autor) conduzia a LLM a tratar essas parcelas como pedidos inexistentes. Agora os pedidos derivam da inicial; a contestação alimenta a defesa dos pedidos existentes e só introduz pretensão própria via reconvenção; e impugnação a parcela não postulada vira um alerta "DIVERGÊNCIA - PARCELA NÃO POSTULADA" (severidade média/âmbar na AlertasSection), não um pedido. Reusa o mecanismo de alertas existente — sem mudança de schema ou UI. Correção só no prompt analysis.ts.',
+  },
+  {
     version: '1.52.17',
     date: '2026-06-04',
     feature: 'fix(prompt): prescrição reclassificada como PREJUDICIAL, não PRELIMINAR. O prompt de extração de tópicos listava "prescrição" tanto no exemplo de PRELIMINARES quanto no de PREJUDICIAIS — inconsistência pré-existente. Na Justiça do Trabalho a prescrição é prejudicial de mérito (impede o exame do mérito), então foi removida da lista de PRELIMINARES, ficando apenas em PREJUDICIAIS (prescrição bienal/quinquenal). Correção de uma palavra no texto do prompt; sem mudança de schema ou comportamento de parsing.',
