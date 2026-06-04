@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.8',
+    date: '2026-06-03',
+    feature: 'refactor(ui): header do main app reorganizado (refresh de UI, parte 9, início do Bloco 2 — shell). O canto superior direito, antes com três blocos de meta-texto competindo (Versão+PROTÓTIPO, "Made by Rodrigo..." em azul, "Juiz do Trabalho no TRT8"), foi consolidado em duas linhas discretas e coesas: "Versão X · PROTÓTIPO — não utilizar com processos reais" e o crédito "Rodrigo Nohlack Corrêa Cesar · Juiz do Trabalho no TRT8" em cinza (sem o nome em azul disputando atenção). Aviso PROTÓTIPO e link do changelog preservados. Hover dos ícones de ação uniformizado para azul (Tema e Configurações deixaram de usar âmbar/índigo); logout mantém vermelho (destrutivo). Verificado nos dois temas; 23 testes do AppHeader passando.',
+  },
+  {
     version: '1.52.7',
     date: '2026-06-03',
     feature: 'refactor(ui): aba Provas sem roxo de IA (refresh de UI, parte 8, encerra a padronização de botões). Botão "Extrair Texto" (ação de processar PDF) deixou de ficar verde no modo PDF e passou a azul-500. Modal "Análise Contextual" de prova: ícone, wrapper e checkboxes roxos -> azul. Preservados: as caixas de aviso contextuais (anonimização roxa, provider bloqueado laranja — são avisos de estado), o botão "Adicionar Anexo" verde (ação de criar) e os indicadores de status. 129 testes passando. Conclui o Bloco 1 (hierarquia de botões) do refresh.',

@@ -113,7 +113,7 @@ describe('AppHeader', () => {
     it('should render author name', () => {
       render(<AppHeader {...createDefaultProps()} />);
 
-      expect(screen.getByText('Rodrigo Nohlack Corrêa Cesar')).toBeInTheDocument();
+      expect(screen.getByText(/Rodrigo Nohlack Corrêa Cesar/)).toBeInTheDocument();
     });
 
     it('should render responsibility warning', () => {
