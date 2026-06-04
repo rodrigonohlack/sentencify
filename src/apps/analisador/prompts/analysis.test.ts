@@ -20,3 +20,28 @@ describe('buildAnalysisPrompt — regra de fonte (v1.52.18)', () => {
     expect(prompt).toMatch(/reconvenç/i);
   });
 });
+
+describe('buildAnalysisPrompt — regra reforçada anti-confabulação (v1.52.19)', () => {
+  const prompt = buildAnalysisPrompt('petição inicial de teste', [], ['contestação de teste']);
+
+  it('define pedido como o que o AUTOR REQUER', () => {
+    expect(prompt).toMatch(/REQUER/);
+    expect(prompt).toMatch(/o AUTOR requereu isto/i);
+  });
+
+  it('cobre o caso sem planilha (rol de pedidos / causa de pedir)', () => {
+    expect(prompt).toMatch(/N[ÃA]O HAVENDO planilha/i);
+  });
+
+  it('manda classificar antes de narrar', () => {
+    expect(prompt).toContain('CLASSIFIQUE ANTES DE NARRAR');
+  });
+
+  it('tem trava anti-confabulação no fatosReclamante', () => {
+    expect(prompt).toMatch(/N[ÃA]O escreva ['"]?fatosReclamante/i);
+  });
+
+  it('distingue reflexo de pedido autônomo', () => {
+    expect(prompt).toMatch(/reflexo N[ÃA]O é pedido autônomo/i);
+  });
+});
