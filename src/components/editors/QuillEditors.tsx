@@ -694,7 +694,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
   onOpenFactsComparison = null,
   generateInline = null
 }, ref) => {
-  const { quillInstanceRef, customModules, handleQuillReady } = useQuillEditor({
+  const { quillInstanceRef, customModules, handleQuillReady, readyNonce } = useQuillEditor({
     ref,
     onSaveWithoutClosing,
     enableCtrlS: true,
@@ -756,7 +756,9 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
     quillReady,
     voiceImproveEnabled: aiSettings.voiceImprovement?.enabled,
     // v1.51.4: ditado da INSTRUÇÃO usa limpeza de comando (não o prompt de texto jurídico)
-    onImproveVoice: (text: string) => improveInstruction(text, aiSettings.voiceImprovement?.model || 'haiku')
+    onImproveVoice: (text: string) => improveInstruction(text, aiSettings.voiceImprovement?.model || 'haiku'),
+    // v1.52.20: re-subscreve o Ctrl+K quando o Quill é recriado (remount do fullscreen)
+    instanceKey: readyNonce
   });
 
   const [isDragging, setIsDragging] = React.useState(false);
@@ -798,7 +800,9 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
     };
     quillRoot.addEventListener('blur', handleBlur);
     return () => quillRoot.removeEventListener('blur', handleBlur);
-  }, [onBlur]);
+    // v1.52.20: readyNonce muda quando o Quill é recriado (remount do fullscreen):
+    // re-amarra o listener no novo quill.root, senão o versionamento por blur para.
+  }, [onBlur, readyNonce]);
 
   const toolbarConfig = React.useMemo(() => getQuillToolbarConfig('full'), []);
 

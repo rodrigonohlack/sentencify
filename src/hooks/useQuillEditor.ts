@@ -93,6 +93,11 @@ const useQuillEditor = (options: UseQuillEditorOptions = {}) => {
   const quillInstanceRef = React.useRef<QuillInstance | null>(null);
   const lastTopicTitle = React.useRef<string | null>(null);
 
+  // Incrementa a cada nova instância do Quill (ex.: remount ao alternar fullscreen).
+  // Effects que dependem de quill.root devem usar isto como dep para re-subscrever
+  // no DOM novo — a ref por si só não dispara re-execução. Ver useInlineGenerate.
+  const [readyNonce, setReadyNonce] = React.useState(0);
+
   // Keyboard bindings: Ctrl+S para salvar
   const customModules = React.useMemo(() => {
     if (!enableCtrlS) return {};
@@ -127,6 +132,9 @@ const useQuillEditor = (options: UseQuillEditorOptions = {}) => {
         ref.current = quillInstance;
       }
     }
+
+    // Sinaliza que há uma nova instância (novo quill.root) para os effects re-subscreverem
+    setReadyNonce((n) => n + 1);
   }, [ref]);
 
   // Topic change detection: Atualizar conteúdo quando trocar de tópico
@@ -155,7 +163,8 @@ const useQuillEditor = (options: UseQuillEditorOptions = {}) => {
     quillInstanceRef,
     customModules,
     handleQuillReady,
-    refreshQuill
+    refreshQuill,
+    readyNonce
   };
 };
 
