@@ -252,7 +252,7 @@ export const UploadTab: React.FC<UploadTabProps> = ({
                       const textarea = (e.target as Element).closest('.theme-bg-secondary-30')?.querySelector('textarea');
                       if (textarea) handlePastedText(textarea.value, 'peticao');
                     }}
-                    className="hover-blue-700 flex-1 py-2 rounded text-sm bg-blue-600 text-white"
+                    className="flex-1 py-2 rounded text-sm bg-blue-500 hover:bg-blue-600 text-white transition-colors"
                   >
                     Confirmar
                   </button>
@@ -361,7 +361,7 @@ export const UploadTab: React.FC<UploadTabProps> = ({
                       const textarea = (e.target as Element).closest('.theme-bg-secondary\\/30')?.querySelector('textarea');
                       if (textarea) handlePastedText(textarea.value, 'contestacao');
                     }}
-                    className="hover-blue-700 flex-1 py-2 rounded text-sm bg-blue-600 text-white"
+                    className="flex-1 py-2 rounded text-sm bg-blue-500 hover:bg-blue-600 text-white transition-colors"
                   >
                     Confirmar
                   </button>
@@ -694,7 +694,7 @@ export const UploadTab: React.FC<UploadTabProps> = ({
       <button
         onClick={handleAnalyzeDocuments}
         disabled={analyzing || (peticaoFiles.length === 0 && pastedPeticaoTexts.length === 0)}
-        className="w-full py-4 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white hover-gradient-blue-purple"
+        className="w-full py-4 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm bg-blue-500 hover:bg-blue-600 text-white"
       >
         {analyzing ? 'Analisando documentos...' : 'Analisar Documentos'}
       </button>

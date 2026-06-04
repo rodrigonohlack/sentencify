@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.4',
+    date: '2026-06-03',
+    feature: 'refactor(ui): aba Upload com CTA sólido (refresh de UI, parte 5). Botão "Analisar Documentos" deixou de usar gradiente azul com hover azul-roxo (hover-gradient-blue-purple) e glow, virando azul-500 sólido com hover-600 (consistente com os demais CTAs). Os 3 botões de "processar texto colado" (petição/contestação/complementar) alinhados de blue-600 para azul-500. Preservada a cor temática roxa da seção "Documentos Complementares" (identidade de seção que a distingue dos documentos principais, não é IA nem ação). 94 testes passando.',
+  },
+  {
     version: '1.52.3',
     date: '2026-06-03',
     feature: 'refactor(ui): Jurisprudência e Legislação sem roxo (refresh de UI, parte 4). Eliminado o roxo ligado à busca semântica nos dois painéis: toggle 🧠/🔤, spinner de carregamento, emoji de contagem e badge de "% similar" passaram a azul. Chips de filtro de TIPO (IRR/IAC/Súmula/etc.) deixaram de ser roxos e ficaram azuis, iguais aos de TRIBUNAL (a distinção dos grupos será feita por rótulos em iteração futura). Botão "Importar JSON" padronizado para azul-500 (CTA) com hover consistente, igual nos dois painéis. Preservado o theme-text-purple do "§" (realce tipográfico de norma, não IA). Testes atualizados; 130 passando.',
