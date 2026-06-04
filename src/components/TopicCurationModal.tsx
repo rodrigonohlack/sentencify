@@ -24,10 +24,11 @@ import {
   ChevronUp,
   Pin,
   ShieldAlert,
-  Copy
+  Copy,
+  AlertTriangle
 } from 'lucide-react';
 import { useTopicsStore } from '../stores/useTopicsStore';
-import type { PromptInjectionDetection } from '../schemas/ai-responses';
+import type { PromptInjectionDetection, DivergenciaPedido } from '../schemas/ai-responses';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -1029,6 +1030,72 @@ const PromptInjectionBanner: React.FC<PromptInjectionBannerProps> = ({ injection
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// v1.52.16: BANNER DE DIVERGÊNCIAS DE PEDIDO
+// Parcela impugnada na defesa sem pedido correspondente na inicial.
+// Tom âmbar/atenção (não é ameaça; é "confira"). Colapsado por default.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface DivergenciaBannerProps {
+  divergencias: DivergenciaPedido[];
+  isDarkMode: boolean;
+}
+
+const DivergenciaBanner: React.FC<DivergenciaBannerProps> = ({ divergencias, isDarkMode }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  if (divergencias.length === 0) return null;
+
+  const n = divergencias.length;
+
+  return (
+    <div className={`border-b ${isDarkMode ? 'border-slate-700/50' : 'border-slate-200'}`}>
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className={`w-full px-4 py-2.5 flex items-center justify-between gap-2 text-sm transition-colors
+          ${isDarkMode ? 'bg-amber-900/30 border-amber-500/40 text-amber-200' : 'bg-amber-50 border-amber-300 text-amber-900'}
+          hover:opacity-90`}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <span className="font-medium">
+            {n} {n === 1 ? 'parcela impugnada' : 'parcelas impugnadas'} na defesa sem pedido correspondente na inicial
+          </span>
+          <span className="text-xs opacity-75">— clique para {expanded ? 'recolher' : 'detalhes'}</span>
+        </div>
+        {expanded ? <ChevronUp className="w-4 h-4 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 flex-shrink-0" />}
+      </button>
+
+      {expanded && (
+        <div className={`px-4 py-3 space-y-2 max-h-72 overflow-y-auto ${isDarkMode ? 'bg-slate-900/40' : 'bg-slate-50'}`}>
+          {divergencias.map((divergencia, idx) => (
+            <div
+              key={idx}
+              className={`p-3 rounded border ${isDarkMode ? 'bg-amber-900/30 border-amber-500/40 text-amber-200' : 'bg-amber-50 border-amber-300 text-amber-900'}`}
+            >
+              <div className="flex items-center gap-2 text-xs font-semibold mb-1">
+                <span>⚠️</span>
+                <span className="uppercase">{divergencia.parcela || 'parcela não identificada'}</span>
+                <span className="opacity-60">·</span>
+                <span className="opacity-90">{divergencia.documento || 'documento desconhecido'}</span>
+              </div>
+              {divergencia.descricao && (
+                <p className="text-xs mt-1 opacity-80">{divergencia.descricao}</p>
+              )}
+            </div>
+          ))}
+          <p className={`text-xs italic mt-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            Essas parcelas NÃO viraram tópico, pois não constam da petição inicial nem são pedido
+            contraposto/reconvenção. Verifique se houve omissão da inicial ou erro da contestação —
+            julgar parcela não pedida configura sentença extra petita (CPC arts. 141 e 492).
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL: TopicCurationModal
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1059,6 +1126,8 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
 
   // v1.42.07: Tentativas de prompt injection identificadas pela IA
   const detectedInjections = useTopicsStore((s) => s.detectedInjections);
+  // v1.52.16: Divergências de pedido identificadas pela IA
+  const detectedDivergencias = useTopicsStore((s) => s.detectedDivergencias);
 
   useEffect(() => {
     if (isOpen && initialTopics.length > 0) {
@@ -1356,6 +1425,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
 
         {/* v1.42.07: Banner de prompt injection (colapsado por default; só renderiza se houver) */}
         <PromptInjectionBanner injections={detectedInjections} isDarkMode={isDarkMode} />
+        <DivergenciaBanner divergencias={detectedDivergencias} isDarkMode={isDarkMode} />
 
 
         <div className="flex-1 overflow-y-auto p-4 space-y-2" data-modal-scroll-container>
