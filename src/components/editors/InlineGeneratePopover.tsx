@@ -127,6 +127,24 @@ export const InlineGeneratePopover: React.FC<InlineGeneratePopoverProps> = ({
     }
   }, [mode]);
 
+  // v1.52.21: ESC deve fechar APENAS este popover. Em fullscreen, o useFullscreen
+  // mantém um listener de keydown (bubbling) no document que sai do fullscreen ao ESC.
+  // Como o popover é renderizado via portal em document.body, o ESC subiria até esse
+  // listener e fecharia o fullscreen junto. Interceptamos em fase de CAPTURA no
+  // document (roda antes de qualquer bubbling) e paramos a propagação.
+  React.useEffect(() => {
+    const onEscCapture = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        onCancel();
+      }
+    };
+    document.addEventListener('keydown', onEscCapture, true);
+    return () => document.removeEventListener('keydown', onEscCapture, true);
+  }, [onCancel]);
+
   // ── Arrastar (pela barra de título) ──────────────────────────────────────
   const startDrag = (e: React.MouseEvent) => {
     e.preventDefault();
