@@ -419,7 +419,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
 
         <div className="flex max-h-[60vh]">
           {/* Sidebar de categorias */}
-          <nav className="w-48 shrink-0 overflow-y-auto border-r theme-border-secondary p-3 space-y-1">
+          <nav className="w-64 shrink-0 overflow-y-auto border-r theme-border-secondary p-3 space-y-1">
             {SETTINGS_CATEGORIES.map((cat) => {
               const Icon = cat.icon;
               const active = activeSection === cat.id;
@@ -435,7 +435,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   }`}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
-                  <span className="truncate">{cat.label}</span>
+                  <span className="leading-tight">{cat.label}</span>
                 </button>
               );
             })}
