@@ -526,4 +526,34 @@ describe('ConfigModal', () => {
       expect(screen.getByText(/Aparência · Fonte da aplicação/).closest('.hidden')).toBeNull();
     });
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DOUBLE CHECK — MODELOS DO CLAUDE LOCAL (CLI)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Double Check — modelos do Claude Local (CLI)', () => {
+    it('lista os modelos atualizados do CLI (Sonnet 4.6 / Opus 4.8), não as versões da API', () => {
+      // provider principal = openai para isolar: as únicas opções Claude vêm do Double Check
+      mockAiSettings = createMockAiSettings({
+        provider: 'openai',
+        doubleCheck: {
+          enabled: true,
+          provider: 'claude-cli',
+          model: 'claude-sonnet-4-6',
+          operations: {
+            topicExtraction: false, dispositivo: false, sentenceReview: false,
+            factsComparison: false, proofAnalysis: false, quickPrompt: false,
+          },
+        },
+      });
+      const { container } = render(<ConfigModal isOpen={true} onClose={vi.fn()} />);
+
+      // Modelos do CLI (corretos) presentes
+      expect(container.querySelector('option[value="claude-sonnet-4-6"]')).toBeInTheDocument();
+      expect(container.querySelector('option[value="claude-opus-4-8"]')).toBeInTheDocument();
+      // Modelos da API (desatualizados) ausentes quando provider é claude-cli
+      expect(container.querySelector('option[value="claude-sonnet-4-20250514"]')).not.toBeInTheDocument();
+      expect(container.querySelector('option[value="claude-opus-4-5-20251101"]')).not.toBeInTheDocument();
+    });
+  });
 });

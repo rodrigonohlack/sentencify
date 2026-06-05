@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.25',
+    date: '2026-06-05',
+    feature: 'fix(double-check): ao escolher Claude Local (CLI) como provider de verificação, o seletor de modelo mostrava as versões desatualizadas da API (Sonnet 4.5 / Opus 4.5) em vez dos modelos do CLI. Causa-raiz: o bloco de opções agrupava claude-cli junto com claude (API), listando os IDs da API (claude-sonnet-4-20250514 / claude-opus-4-5-20251101); e o default ao trocar para claude-cli também apontava para o modelo da API. Fix: claude-cli ganhou seu próprio bloco de opções com os modelos corretos do CLI (claude-sonnet-4-6 Sonnet 4.6 / claude-opus-4-8 Opus 4.8) e o default de troca passou a claude-sonnet-4-6. Regressão em ConfigModal.test.tsx. Obs.: usuários que já tinham claude-cli selecionado com o modelo antigo devem reescolher o modelo uma vez.',
+  },
+  {
     version: '1.52.24',
     date: '2026-06-05',
     feature: 'security(config): as chaves API deixam de ir no export de Configurações de IA. Antes o exportAiSettings serializava o objeto aiSettings inteiro, gravando as chaves em texto puro no arquivo .json baixado e no clipboard. Agora o apiKeys é removido do payload antes de serializar. No import, o merge completo (v1.52.23) preserva automaticamente as chaves já configuradas no estado atual, pois o campo ausente no arquivo mantém o valor corrente. Teste de regressão em useExportImport.test.ts.',

@@ -1359,7 +1359,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       const provider = e.target.value as AIProvider;
                       const defaultModels: Record<AIProvider, string> = {
                         claude: 'claude-sonnet-4-20250514',
-                        'claude-cli': 'claude-sonnet-4-20250514',
+                        'claude-cli': 'claude-sonnet-4-6',
                         gemini: 'gemini-3-flash-preview',
                         openai: 'gpt-5.2-chat-latest',
                         grok: 'grok-4-1-fast-reasoning',
@@ -1405,10 +1405,16 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     }}
                     className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
                   >
-                    {(aiSettings.doubleCheck?.provider === 'claude' || aiSettings.doubleCheck?.provider === 'claude-cli') && (
+                    {aiSettings.doubleCheck?.provider === 'claude' && (
                       <>
                         <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
                         <option value="claude-opus-4-5-20251101">Claude Opus 4.5</option>
+                      </>
+                    )}
+                    {aiSettings.doubleCheck?.provider === 'claude-cli' && (
+                      <>
+                        <option value="claude-sonnet-4-6">Sonnet 4.6 (assinatura · $0)</option>
+                        <option value="claude-opus-4-8">Opus 4.8 (assinatura · $0)</option>
                       </>
                     )}
                     {aiSettings.doubleCheck?.provider === 'gemini' && (
