@@ -103,6 +103,22 @@ const getModelDisplayName = (modelId: string): string => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// CATEGORIAS DA SIDEBAR DE CONFIGURAÇÕES (v1.52.22)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const SETTINGS_CATEGORIES = [
+  { id: 'providers',  label: 'Provedores & Modelos', icon: Zap },
+  { id: 'assist',     label: 'Assistência de IA',    icon: Sparkles },
+  { id: 'analysis',   label: 'Análise & Relatórios', icon: FileText },
+  { id: 'docs',       label: 'Documentos',           icon: ScrollText },
+  { id: 'data',       label: 'Busca & Dados',        icon: BookOpen },
+  { id: 'prompts',    label: 'Prompts & Modelos',    icon: Wand2 },
+  { id: 'appearance', label: 'Aparência',            icon: Type },
+] as const;
+
+type SectionId = typeof SETTINGS_CATEGORIES[number]['id'];
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -365,6 +381,11 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
       }
     }
   }, [aiSettings, setAiSettings]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // NAVEGAÇÃO POR SEÇÃO (sidebar) — v1.52.22
+  // ─────────────────────────────────────────────────────────────────────────────
+  const [activeSection, setActiveSection] = React.useState<SectionId>('providers');
 
   // ─────────────────────────────────────────────────────────────────────────────
   // RENDER
