@@ -446,7 +446,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 0: Aparência — fonte da aplicação (v1.50.46)
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'appearance' ? 'mb-6' : 'hidden'}>
             <label className="flex items-center gap-2 text-sm font-medium theme-text-tertiary mb-3">
               <Type className="w-4 h-4" />
               Aparência · Fonte da aplicação
@@ -486,7 +486,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 1: Provedor de IA
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'providers' ? 'mb-6' : 'hidden'}>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">Provedor de IA</label>
             <div className="grid grid-cols-3 gap-2">
               <button
@@ -690,7 +690,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 2: Chaves API
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'providers' ? 'mb-6' : 'hidden'}>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">
               Chaves API <span className="text-xs font-normal theme-text-muted">(armazenadas localmente)</span>
             </label>
@@ -919,7 +919,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 3: Pensamento Prolongado
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'providers' ? 'mb-6' : 'hidden'}>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">
               Pensamento Prolongado (Extended Thinking)
             </label>
@@ -1294,7 +1294,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 4: Double Check de Respostas
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'assist' ? 'mb-6' : 'hidden'}>
             <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
               <RefreshCw className="w-4 h-4" aria-hidden />
               Double Check de Respostas
@@ -1841,7 +1841,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 4.5: Melhoria de Voz por IA (v1.37.88)
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'assist' ? 'mb-6' : 'hidden'}>
             <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
               <Mic className="w-4 h-4" aria-hidden />
               Melhoria de Voz por IA
@@ -1947,7 +1947,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 4.6: Geração inline com IA — Ctrl+K (v1.51.0)
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'assist' ? 'mb-6' : 'hidden'}>
             <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
               <Sparkles className="w-4 h-4" aria-hidden />
               Gerar com IA inline (Ctrl+K)
@@ -2016,7 +2016,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 5: Nível de Detalhe nos Mini-Relatórios
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'analysis' ? 'mb-6' : 'hidden'}>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">Nível de Detalhe nos Mini-Relatórios</label>
             <button
               onClick={() => setAiSettings({ ...aiSettings, detailedMiniReports: !aiSettings.detailedMiniReports })}
@@ -2057,7 +2057,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 6: Tópicos por Requisição
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'analysis' ? 'mb-6' : 'hidden'}>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">Tópicos por Requisição</label>
             <div className="flex items-center justify-between p-4 rounded-lg theme-bg-secondary-30 theme-border-input border-2">
               <div className="flex-1">
@@ -2085,7 +2085,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 7: Requisições Paralelas
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'analysis' ? 'mb-6' : 'hidden'}>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">Requisições Paralelas</label>
             <div className="flex items-center justify-between p-4 rounded-lg theme-bg-secondary-30 theme-border-input border-2">
               <div className="flex-1">
@@ -2150,7 +2150,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 8: Modo de Processamento de PDF
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'docs' ? 'mb-6' : 'hidden'}>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">
               Modo de Processamento de PDF
             </label>
@@ -2364,7 +2364,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 9: Anonimização de Documentos
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'docs' ? 'mb-6' : 'hidden'}>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">Anonimização de Documentos</label>
             {!['pdfjs', 'tesseract'].includes(aiSettings.ocrEngine) ? (
               <div className="p-4 rounded-lg bg-stone-700/30 border border-stone-600/50">
@@ -2555,7 +2555,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 10: Base de Dados
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div className="theme-bg-secondary-50 rounded-lg p-4 border theme-border-input">
+          <div className={`theme-bg-secondary-50 rounded-lg p-4 border theme-border-input ${activeSection === 'data' ? 'mb-6' : 'hidden'}`}>
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm font-medium theme-text-tertiary">
                 <BookOpen className="w-4 h-4" aria-hidden />
@@ -2585,7 +2585,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 11: Busca Semântica (E5-base)
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div className="space-y-4">
+          <div className={`space-y-4 ${activeSection === 'data' ? 'mb-6' : 'hidden'}`}>
             {/* Toggle Master - Controla carregamento do modelo E5 */}
             <div className="theme-bg-secondary-50 rounded-lg p-4 border theme-border-input">
               <div className="flex items-center justify-between mb-3">
@@ -2784,6 +2784,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 12-15: Modelos customizados
               ═══════════════════════════════════════════════════════════════════════════════ */}
+          <div className={activeSection === 'prompts' ? 'space-y-6 mb-6' : 'hidden'}>
           {/* Modelo de Mini-Relatório */}
           <div>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">
@@ -2955,11 +2956,12 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               )}
             </div>
           </div>
+          </div>
 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 16: Prompts Rápidos
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div className="mt-6">
+          <div className={activeSection === 'prompts' ? 'mb-6' : 'hidden'}>
             <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
               <Zap className="w-4 h-4" aria-hidden />
               Prompts Rápidos
@@ -3051,6 +3053,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 17: Uso de Tokens
               ═══════════════════════════════════════════════════════════════════════════════ */}
+          <div className={activeSection === 'providers' ? 'mb-6' : 'hidden'}>
           {(() => {
             const metrics = tokenMetrics || {};
             const totalTokens = (metrics.totalInput || 0) + (metrics.totalOutput || 0) +
@@ -3242,11 +3245,12 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               </div>
             );
           })()}
+          </div>
 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 18: Tópicos Complementares Automáticos
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div>
+          <div className={activeSection === 'analysis' ? 'mb-6' : 'hidden'}>
             <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
               <FileText className="w-4 h-4" aria-hidden />
               Tópicos Complementares Automáticos
