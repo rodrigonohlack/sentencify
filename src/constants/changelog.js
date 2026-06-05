@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.24',
+    date: '2026-06-05',
+    feature: 'security(config): as chaves API deixam de ir no export de Configurações de IA. Antes o exportAiSettings serializava o objeto aiSettings inteiro, gravando as chaves em texto puro no arquivo .json baixado e no clipboard. Agora o apiKeys é removido do payload antes de serializar. No import, o merge completo (v1.52.23) preserva automaticamente as chaves já configuradas no estado atual, pois o campo ausente no arquivo mantém o valor corrente. Teste de regressão em useExportImport.test.ts.',
+  },
+  {
     version: '1.52.23',
     date: '2026-06-05',
     feature: 'fix(config): o import de Configurações de IA não reaplicava a maioria das configs. Causa-raiz: o export gravava o objeto aiSettings inteiro (~45 campos), mas o import só reconstruía uma allowlist fixa de 7 campos (model, useExtendedThinking, customPrompt, modeloRelatorio, modeloDispositivo, modeloTopicoRelatorio, topicosComplementares) — provider, modelos por provider, chaves, thinking, paralelismo, anonimização, busca semântica, quickPrompts, doubleCheck, voiceImprovement, autoComplete, ocr etc. eram silenciosamente descartados (mantinham o valor atual). Pior: campos da allowlist ausentes no arquivo eram resetados para default. Fix: o import agora faz merge completo do objeto exportado sobre o estado atual (campos ausentes preservam o valor atual) e rejeita explicitamente arquivos não-objeto/array/null. Testes de regressão em useExportImport.test.ts e useSerialization.test.ts.',

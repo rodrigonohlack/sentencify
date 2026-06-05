@@ -66,7 +66,11 @@ export function useExportImport({
 
   // Export AI settings
   const exportAiSettings = React.useCallback(async () => {
-    const dataStr = JSON.stringify(aiIntegration.aiSettings, null, 2);
+    // v1.52.24: chaves API NÃO vão no export — são segredos e não devem
+    // trafegar em texto puro no arquivo/clipboard. No import, o merge completo
+    // preserva as chaves já configuradas no estado atual (campo ausente = mantém).
+    const { apiKeys: _omitApiKeys, ...settingsToExport } = aiIntegration.aiSettings;
+    const dataStr = JSON.stringify(settingsToExport, null, 2);
 
     try {
       await navigator.clipboard.writeText(dataStr);

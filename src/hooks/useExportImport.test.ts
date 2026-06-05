@@ -221,6 +221,27 @@ describe('useExportImport', () => {
       );
     });
 
+    it('omits apiKeys from the exported settings', async () => {
+      const aiSettings = createMockAISettings({
+        customPrompt: 'keep me',
+        apiKeys: { claude: 'sk-ant-SECRET', gemini: 'AIza-SECRET', openai: '', grok: '', deepseek: '' },
+      } as any);
+      const { result } = renderHook(() => useExportImport(createDefaultProps({ aiSettings })));
+
+      await act(async () => {
+        await result.current.exportAiSettings();
+      });
+
+      const exported = mockClipboardWriteText.mock.calls[0][0] as string;
+      expect(exported).not.toContain('apiKeys');
+      expect(exported).not.toContain('sk-ant-SECRET');
+      expect(exported).not.toContain('AIza-SECRET');
+      const parsed = JSON.parse(exported);
+      expect(parsed.apiKeys).toBeUndefined();
+      // demais settings continuam exportadas normalmente
+      expect(parsed.customPrompt).toBe('keep me');
+    });
+
     it('should handle export errors', async () => {
       mockClipboardWriteText.mockRejectedValueOnce(new Error('Clipboard error'));
       const { result } = renderHook(() => useExportImport(createDefaultProps()));
