@@ -417,7 +417,32 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           </div>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+        <div className="flex max-h-[60vh]">
+          {/* Sidebar de categorias */}
+          <nav className="w-48 shrink-0 overflow-y-auto border-r theme-border-secondary p-3 space-y-1">
+            {SETTINGS_CATEGORIES.map((cat) => {
+              const Icon = cat.icon;
+              const active = activeSection === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveSection(cat.id)}
+                  title={cat.label}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm font-medium transition-colors ${
+                    active
+                      ? 'bg-blue-500/10 border border-blue-500 text-blue-500 dark:text-blue-400'
+                      : 'theme-text-tertiary theme-hover-bg border border-transparent'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{cat.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Painel de conteúdo da categoria ativa */}
+          <div className="flex-1 p-6 overflow-y-auto">
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 0: Aparência — fonte da aplicação (v1.50.46)
               ═══════════════════════════════════════════════════════════════════════════════ */}
@@ -3351,6 +3376,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 </div>
               </div>
             </div>
+          </div>
           </div>
 
         </div>
