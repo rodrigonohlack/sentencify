@@ -431,7 +431,7 @@ describe('useSerialization (useExportImport)', () => {
       expect(mergedState.modeloTopicoRelatorio).toBe('');
     });
 
-    it('should provide default topicosComplementares when not in import', async () => {
+    it('preserves current topicosComplementares when absent from import', async () => {
       const importedSettings = { customPrompt: 'test' };
       const mockFile = { text: vi.fn().mockResolvedValue(JSON.stringify(importedSettings)) } as any;
       const mockEvent = { target: { files: [mockFile], value: 'file.json' } } as any;
@@ -443,10 +443,13 @@ describe('useSerialization (useExportImport)', () => {
       });
 
       const updater = mockSetAiSettings.mock.calls[0][0];
-      const mergedState = updater(createMockAISettings());
-      expect(mergedState.topicosComplementares).toHaveLength(5);
-      expect(mergedState.topicosComplementares[0].title).toBe('HONORÁRIOS ADVOCATÍCIOS');
-      expect(mergedState.topicosComplementares[4].title).toBe('COMPENSAÇÃO/DEDUÇÃO/ABATIMENTO');
+      const currentTopics = [
+        { id: 7, title: 'TÓPICO ATUAL', category: 'MÉRITO', enabled: true, ordem: 1 }
+      ];
+      const mergedState = updater(createMockAISettings({ topicosComplementares: currentTopics } as any));
+      // v1.52.22: o import só restaura campos presentes no arquivo; campos ausentes
+      // preservam o estado atual (antes injetava 5 tópicos hardcoded, sobrescrevendo os do usuário).
+      expect(mergedState.topicosComplementares).toEqual(currentTopics);
     });
 
     it('should preserve imported topicosComplementares when present', async () => {
@@ -483,10 +486,11 @@ describe('useSerialization (useExportImport)', () => {
       const updater = mockSetAiSettings.mock.calls[0][0];
       const prevState = createMockAISettings({ modeloDispositivo: 'preserved-value' });
       const mergedState = updater(prevState);
-      // The merged settings override fields in the import data
+      // Campos presentes no arquivo sobrescrevem o estado atual
       expect(mergedState.customPrompt).toBe('New prompt');
-      // Previous state fields not in the merged object are preserved via spread
-      expect(mergedState.modeloDispositivo).toBe('');
+      // v1.52.22: campos AUSENTES no arquivo preservam o valor atual via spread
+      // (antes o import zerava modeloDispositivo para '' mesmo sem estar no arquivo — era o bug).
+      expect(mergedState.modeloDispositivo).toBe('preserved-value');
     });
 
     it('should clear the file input after successful import', async () => {
@@ -867,7 +871,7 @@ describe('useSerialization (useExportImport)', () => {
     });
 
     it('should handle null value for settings import as error', async () => {
-      // JSON null passes typeof === 'object' check but crashes on property access
+      // v1.52.22: JSON null (typeof 'object') é rejeitado explicitamente pelo guard
       const mockFile = { text: vi.fn().mockResolvedValue('null') } as any;
       const mockEvent = { target: { files: [mockFile], value: 'f.json' } } as any;
 
@@ -877,12 +881,9 @@ describe('useSerialization (useExportImport)', () => {
         await result.current.importAiSettings(mockEvent);
       });
 
-      // null is typeof 'object' in JS, so it passes the object check but
-      // crashes when trying to read properties, triggering the catch block
-      expect(mockShowToast).toHaveBeenCalledWith(
-        expect.stringContaining('Erro ao importar'),
-        'error'
-      );
+      // null/array/não-objeto são rejeitados como arquivo inválido (antes dependia de um crash)
+      expect(mockShowToast).toHaveBeenCalledWith('Arquivo inválido.', 'error');
+      expect(mockSetAiSettings).not.toHaveBeenCalled();
     });
 
     it('should skip models without title', async () => {

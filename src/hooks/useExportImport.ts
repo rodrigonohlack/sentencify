@@ -96,30 +96,21 @@ export function useExportImport({
       const text = await file.text();
       const importedSettings = JSON.parse(text);
 
-      if (typeof importedSettings !== 'object') {
+      // v1.52.22: o export grava o objeto aiSettings INTEIRO; portanto o import
+      // deve restaurar TODOS os campos exportados. Antes havia uma allowlist fixa
+      // de 7 campos que foi ficando defasada conforme as settings cresceram —
+      // provider, modelos, chaves, paralelismo, anonimização, doubleCheck, etc.
+      // eram silenciosamente descartados no import. O merge completo sobre o
+      // estado atual restaura tudo e nunca mais defasa quando novas settings
+      // forem adicionadas. Campos ausentes no arquivo preservam o valor atual.
+      if (!importedSettings || typeof importedSettings !== 'object' || Array.isArray(importedSettings)) {
         showToast('Arquivo inválido.', 'error');
         return;
       }
 
-      const mergedSettings = {
-        model: importedSettings.model || 'claude-sonnet-4-20250514',
-        useExtendedThinking: importedSettings.useExtendedThinking || false,
-        customPrompt: importedSettings.customPrompt || '',
-        modeloRelatorio: importedSettings.modeloRelatorio || '',
-        modeloDispositivo: importedSettings.modeloDispositivo || '',
-        modeloTopicoRelatorio: importedSettings.modeloTopicoRelatorio || '',
-        topicosComplementares: importedSettings.topicosComplementares || [
-          { id: 1, title: 'HONORÁRIOS ADVOCATÍCIOS', category: 'MÉRITO', enabled: true, ordem: 1 },
-          { id: 2, title: 'HONORÁRIOS PERICIAIS', category: 'MÉRITO', enabled: true, ordem: 2 },
-          { id: 3, title: 'JUROS E CORREÇÃO MONETÁRIA', category: 'MÉRITO', enabled: true, ordem: 3 },
-          { id: 4, title: 'DEDUÇÕES DE NATUREZA PREVIDENCIÁRIA E FISCAL', category: 'MÉRITO', enabled: true, ordem: 4 },
-          { id: 5, title: 'COMPENSAÇÃO/DEDUÇÃO/ABATIMENTO', category: 'MÉRITO', enabled: true, ordem: 5 }
-        ]
-      };
-
       aiIntegration.setAiSettings((prev: AISettings) => ({
         ...prev,
-        ...mergedSettings
+        ...(importedSettings as Partial<AISettings>)
       }));
       showToast('Configurações importadas com sucesso!', 'success');
       event.target.value = '';

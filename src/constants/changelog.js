@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.23',
+    date: '2026-06-05',
+    feature: 'fix(config): o import de Configurações de IA não reaplicava a maioria das configs. Causa-raiz: o export gravava o objeto aiSettings inteiro (~45 campos), mas o import só reconstruía uma allowlist fixa de 7 campos (model, useExtendedThinking, customPrompt, modeloRelatorio, modeloDispositivo, modeloTopicoRelatorio, topicosComplementares) — provider, modelos por provider, chaves, thinking, paralelismo, anonimização, busca semântica, quickPrompts, doubleCheck, voiceImprovement, autoComplete, ocr etc. eram silenciosamente descartados (mantinham o valor atual). Pior: campos da allowlist ausentes no arquivo eram resetados para default. Fix: o import agora faz merge completo do objeto exportado sobre o estado atual (campos ausentes preservam o valor atual) e rejeita explicitamente arquivos não-objeto/array/null. Testes de regressão em useExportImport.test.ts e useSerialization.test.ts.',
+  },
+  {
     version: '1.52.22',
     date: '2026-06-05',
     feature: 'refactor(config): modal de Configurações de IA reorganizado em navegação por sidebar lateral. As 18 seções, antes empilhadas num único scroll, foram agrupadas em 7 categorias (Provedores & Modelos, Assistência de IA, Análise & Relatórios, Documentos, Busca & Dados, Prompts & Modelos, Aparência). Mudança puramente de layout: nenhuma lógica, hook ou conteúdo de seção foi alterado — cada seção recebeu apenas uma classe de visibilidade condicional (mb-6/hidden) e o container virou um flex de duas colunas (nav + painel), com o modal alargado para max-w-4xl. Categoria inicial: Provedores & Modelos.',

@@ -313,6 +313,61 @@ describe('useExportImport', () => {
         'error'
       );
     });
+
+    it('restores ALL exported fields, not just a 7-field subset (regression)', async () => {
+      const importedSettings = {
+        provider: 'gemini',
+        geminiModel: 'gemini-3-pro',
+        parallelRequests: 5,
+        topicsPerRequest: 7,
+        quickPrompts: [{ id: 'x', label: 'L', prompt: 'P' }],
+        anonymization: { enabled: true, nomesUsuario: ['Fulano'] },
+        doubleCheck: { enabled: true },
+      };
+      const mockFile = { text: vi.fn().mockResolvedValue(JSON.stringify(importedSettings)) };
+      const mockEvent = { target: { files: [mockFile], value: 'file.json' } } as any;
+
+      const { result } = renderHook(() => useExportImport(createDefaultProps()));
+      await act(async () => {
+        await result.current.importAiSettings(mockEvent);
+      });
+
+      expect(mockSetAiSettings).toHaveBeenCalledTimes(1);
+      const updater = mockSetAiSettings.mock.calls[0][0];
+      expect(typeof updater).toBe('function');
+
+      const prev = {
+        provider: 'claude',
+        geminiModel: 'old-model',
+        parallelRequests: 2,
+        topicsPerRequest: 3,
+        quickPrompts: [],
+        anonymization: { enabled: false, nomesUsuario: [] },
+        doubleCheck: { enabled: false },
+      } as any;
+      const merged = updater(prev);
+
+      expect(merged.provider).toBe('gemini');
+      expect(merged.geminiModel).toBe('gemini-3-pro');
+      expect(merged.parallelRequests).toBe(5);
+      expect(merged.topicsPerRequest).toBe(7);
+      expect(merged.quickPrompts).toEqual([{ id: 'x', label: 'L', prompt: 'P' }]);
+      expect(merged.anonymization).toEqual({ enabled: true, nomesUsuario: ['Fulano'] });
+      expect(merged.doubleCheck).toEqual({ enabled: true });
+    });
+
+    it('rejects array files as invalid', async () => {
+      const mockFile = { text: vi.fn().mockResolvedValue('[]') };
+      const mockEvent = { target: { files: [mockFile], value: 'file.json' } } as any;
+
+      const { result } = renderHook(() => useExportImport(createDefaultProps()));
+      await act(async () => {
+        await result.current.importAiSettings(mockEvent);
+      });
+
+      expect(mockShowToast).toHaveBeenCalledWith('Arquivo inválido.', 'error');
+      expect(mockSetAiSettings).not.toHaveBeenCalled();
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
