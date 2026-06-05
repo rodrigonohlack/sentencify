@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.22',
+    date: '2026-06-05',
+    feature: 'refactor(config): modal de Configurações de IA reorganizado em navegação por sidebar lateral. As 18 seções, antes empilhadas num único scroll, foram agrupadas em 7 categorias (Provedores & Modelos, Assistência de IA, Análise & Relatórios, Documentos, Busca & Dados, Prompts & Modelos, Aparência). Mudança puramente de layout: nenhuma lógica, hook ou conteúdo de seção foi alterado — cada seção recebeu apenas uma classe de visibilidade condicional (mb-6/hidden) e o container virou um flex de duas colunas (nav + painel), com o modal alargado para max-w-4xl. Categoria inicial: Provedores & Modelos.',
+  },
+  {
     version: '1.52.21',
     date: '2026-06-04',
     feature: 'fix(editor): no modo tela cheia, ESC dentro do popover de geração inline (Ctrl+K) fechava o fullscreen inteiro em vez de só o popover. Causa-raiz: o useFullscreen mantém um listener de keydown em bubbling no document que sai do fullscreen ao ESC; como o InlineGeneratePopover é renderizado via portal em document.body e tratava o ESC apenas com handlers React (onCancel + preventDefault, sem stopPropagation), o evento subia pela árvore DOM até o document e disparava o listener do fullscreen. Fix: o popover agora intercepta o ESC com um listener nativo em fase de CAPTURA no document (roda antes de qualquer bubbling), chamando preventDefault + stopPropagation + stopImmediatePropagation + onCancel — o ESC fecha apenas o popover e não vaza para o fullscreen. Teste de regressão em InlineGeneratePopover.test.tsx. Continuação do fix v1.52.20 (Ctrl+K no fullscreen).',

@@ -200,6 +200,17 @@ git commit -m "feat(config): config de categorias + estado activeSection"
 **Files:**
 - Modify: `src/components/modals/ConfigModal.tsx` (abertura ~linha 399; fechamento ~linha 3333-3337)
 
+- [ ] **Step 0: Alargar o modal de `max-w-2xl` para `max-w-4xl`** (linha ~398)
+
+Edit — old_string:
+```tsx
+      <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-2xl w-full my-auto`}>
+```
+new_string:
+```tsx
+      <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-4xl w-full my-auto`}>
+```
+
 - [ ] **Step 1: Abrir o flex + nav + painel**
 
 Edit — old_string:
