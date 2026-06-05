@@ -395,7 +395,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
 
   return (
     <div className={`${CSS.modalOverlay} overflow-auto`}>
-      <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-2xl w-full my-auto`}>
+      <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal max-w-4xl w-full my-auto`}>
         <div className={CSS.modalHeader}>
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
