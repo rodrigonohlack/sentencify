@@ -484,4 +484,46 @@ describe('ConfigModal', () => {
       expect(screen.getByText(/Tópicos Complementares/i)).toBeInTheDocument();
     });
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SIDEBAR NAVIGATION (v1.52.22)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Sidebar Navigation', () => {
+    const CATEGORY_LABELS = [
+      'Provedores & Modelos',
+      'Assistência de IA',
+      'Análise & Relatórios',
+      'Documentos',
+      'Busca & Dados',
+      'Prompts & Modelos',
+      'Aparência',
+    ];
+
+    it('renders all 7 category buttons in the sidebar', () => {
+      render(<ConfigModal isOpen={true} onClose={vi.fn()} />);
+      CATEGORY_LABELS.forEach((label) => {
+        expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
+      });
+    });
+
+    it('starts on Provedores: provider section visible, docs section hidden', () => {
+      render(<ConfigModal isOpen={true} onClose={vi.fn()} />);
+      expect(screen.getByText(/Chaves API/i).closest('.hidden')).toBeNull();
+      expect(screen.getByText('Anonimização de Documentos').closest('.hidden')).not.toBeNull();
+    });
+
+    it('clicking Documentos reveals docs sections and hides provider sections', () => {
+      render(<ConfigModal isOpen={true} onClose={vi.fn()} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Documentos' }));
+      expect(screen.getByText('Anonimização de Documentos').closest('.hidden')).toBeNull();
+      expect(screen.getByText(/Chaves API/i).closest('.hidden')).not.toBeNull();
+    });
+
+    it('clicking Aparência reveals the font section', () => {
+      render(<ConfigModal isOpen={true} onClose={vi.fn()} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Aparência' }));
+      expect(screen.getByText(/Aparência · Fonte da aplicação/).closest('.hidden')).toBeNull();
+    });
+  });
 });
