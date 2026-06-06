@@ -990,11 +990,17 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
             />
           )}
 
-          {isDirty && (
-            <span className="px-2 py-1 text-xs rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              Não salvo
-            </span>
-          )}
+          {/* v1.52.29: badge SEMPRE montado, alternando só opacity. Montar/desmontar
+              o badge mudava o wrap da toolbar (flex-wrap) — crítico no split view,
+              onde o painel é estreito e a toolbar quebra em várias linhas: a mudança
+              de altura redimensionava o .ql-container abaixo, causando "piscada" do
+              editor a cada alternância salvo/não-salvo. Reservar o slot fixa o layout. */}
+          <span
+            className={`px-2 py-1 text-xs rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-opacity ${isDirty ? 'opacity-100' : 'opacity-0'}`}
+            aria-hidden={!isDirty}
+          >
+            Não salvo
+          </span>
 
           <div className="ml-auto flex items-center gap-4">
             <div className="flex items-center gap-2">

@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.29',
+    date: '2026-06-06',
+    feature: 'fix(editor): no editor de tópico em tela cheia COM split view de modelos ativo, o editor "piscava" toda vez que a tag "Não salvo" aparecia/sumia. Causa-raiz: a tag era montada/desmontada dentro da toolbar (flex-wrap); no split view o painel do editor é estreito e a toolbar quebra em várias linhas, então montar/desmontar a tag mudava o wrapping e a altura da toolbar — isso redimensionava o container do Quill logo abaixo (flex:1), forçando um re-layout visível. Em tela cheia sem split (largura total) a toolbar cabia em uma linha, por isso o efeito só aparecia no split. Fix: a tag "Não salvo" agora fica sempre montada e só alterna a opacidade (com aria-hidden quando salvo), reservando o slot na toolbar e mantendo o layout estável — sem reflow, sem piscada. Não houve re-render/remontagem do painel de modelos (ele é React.memo com props estáveis); o problema era puramente de layout.',
+  },
+  {
     version: '1.52.28',
     date: '2026-06-06',
     feature: 'fix(salvar): "Erro ao salvar no Drive: undefined" (intermitente, sem nada no console, e que sumia ao dar refresh). Causa-raiz dupla. (1) Mensagem: o fileToBase64 usava `reader.onerror = reject`, mas FileReader.onerror entrega um ProgressEvent (sem `.message`), não um Error — esse valor subia até o toast `Erro ao salvar no Drive: ${err.message}` e renderizava o literal "undefined". (2) Por que falhava só às vezes e o refresh resolvia: arquivos anexados via input/drag-drop são File lastreados no arquivo do disco; se o arquivo no disco é movido/renomeado/alterado depois de anexado (ex.: baixar PDFs do PJe na mesma pasta), a leitura falha. Ao dar refresh, os arquivos são reconstruídos como Blobs em memória a partir do IndexedDB e voltam a ser legíveis. Fix em 2 camadas: (a) onerror agora rejeita com Error nomeado ("Falha ao ler o arquivo X..."); (b) o build do projeto (save no Drive, export local, autosave) ganhou fallback: se a leitura do File do disco falhar, lê a cópia estável já persistida no IndexedDB no momento do upload (upload-peticao/contestacao/complementar-{id}, proof-{id}, anexos) — o save passa a funcionar sem precisar de refresh. Função pura convertFileWithFallback coberta por testes em useLocalStorage.test.ts.',
