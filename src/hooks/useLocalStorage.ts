@@ -98,6 +98,43 @@ export {
 } from './usePdfStorage';
 
 // ═══════════════════════════════════════════════════════════════════════════
+// CONVERSÃO COM FALLBACK (v1.52.28)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Converte um File para base64 tolerando referências de disco "stale".
+ *
+ * Arquivos anexados via `<input>`/drag-drop são `File` lastreados no arquivo do
+ * disco; se o arquivo no disco for movido/renomeado/alterado depois de anexado,
+ * a leitura (FileReader) falha. Como todo PDF também é persistido no IndexedDB
+ * no momento do upload, esta função faz fallback para essa cópia estável (Blob
+ * em memória) quando a leitura do File primário falha — evitando que o save
+ * inteiro quebre e exija refresh da página.
+ *
+ * Se nem o File primário nem a cópia do IndexedDB puderem ser lidos, propaga o
+ * erro ORIGINAL (do File primário), que carrega a mensagem mais acionável.
+ *
+ * @param file File primário (potencialmente lastreado no disco)
+ * @param fetchFallback Busca a cópia persistida no IndexedDB (ou null se não houver)
+ * @param toBase64 Conversor File → base64 (normalmente `fileToBase64` do hook)
+ */
+export async function convertFileWithFallback(
+  file: File,
+  fetchFallback: () => Promise<File | null>,
+  toBase64: (f: File) => Promise<string>
+): Promise<string> {
+  try {
+    return await toBase64(file);
+  } catch (primaryErr) {
+    const fallbackFile = await fetchFallback().catch(() => null);
+    if (fallbackFile) {
+      return await toBase64(fallbackFile);
+    }
+    throw primaryErr;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -196,7 +233,16 @@ export function useLocalStorage(): UseLocalStorageReturn {
         addToPdfCache(cacheKey, base64);
         resolve(base64);
       };
-      reader.onerror = reject;
+      // v1.52.28: FileReader.onerror recebe um ProgressEvent (sem `.message`),
+      // não um Error. Rejeitar com Error nomeado para que mensagens de UI
+      // (ex.: "Erro ao salvar no Drive: ...") exibam algo útil em vez de
+      // "undefined". Causa típica: File lastreado em arquivo do disco que foi
+      // movido/renomeado/alterado após ser anexado.
+      reader.onerror = () =>
+        reject(new Error(
+          `Falha ao ler o arquivo "${file.name}". O arquivo pode ter sido movido, ` +
+          `renomeado ou alterado no disco após ser anexado. Recarregue a página (F5) ou reanexe o arquivo.`
+        ));
       reader.readAsDataURL(file);
     });
   }, []);
@@ -956,7 +1002,13 @@ export function useLocalStorage(): UseLocalStorageReturn {
       uploadPdfs.peticoes = await Promise.all(
         peticaoFiles.map(async (f: UploadedFile) => {
           const fileObj = f.file;
-          return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
+          // v1.52.28: fallback p/ cópia estável no IndexedDB se o File do disco ficou "stale"
+          const fileData = await convertFileWithFallback(
+            fileObj,
+            () => getPdfFromIndexedDB(`upload-peticao-${f.id}`),
+            fileToBase64
+          );
+          return { name: fileObj.name, id: f.id, fileData };
         })
       );
     }
@@ -965,7 +1017,12 @@ export function useLocalStorage(): UseLocalStorageReturn {
       uploadPdfs.contestacoes = await Promise.all(
         contestacaoFiles.map(async (f: UploadedFile) => {
           const fileObj = f.file;
-          return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
+          const fileData = await convertFileWithFallback(
+            fileObj,
+            () => getPdfFromIndexedDB(`upload-contestacao-${f.id}`),
+            fileToBase64
+          );
+          return { name: fileObj.name, id: f.id, fileData };
         })
       );
     }
@@ -974,28 +1031,49 @@ export function useLocalStorage(): UseLocalStorageReturn {
       uploadPdfs.complementares = await Promise.all(
         complementaryFiles.map(async (f: UploadedFile) => {
           const fileObj = f.file;
-          return { name: fileObj.name, id: f.id, fileData: await fileToBase64(fileObj) };
+          const fileData = await convertFileWithFallback(
+            fileObj,
+            () => getPdfFromIndexedDB(`upload-complementar-${f.id}`),
+            fileToBase64
+          );
+          return { name: fileObj.name, id: f.id, fileData };
         })
       );
     }
 
     const proofFilesSerializable = await Promise.all(
       (proofFiles || []).map(async (proof: Proof) => {
-        const mainFileData = proof.file ? await fileToBase64(proof.file) : null;
+        // v1.52.28: fallback p/ cópia estável no IndexedDB se o File do disco ficou "stale"
+        const mainFileData = proof.file
+          ? await convertFileWithFallback(
+              proof.file,
+              () => getPdfFromIndexedDB(`proof-${proof.id}`),
+              fileToBase64
+            )
+          : null;
 
         // v1.41.04: Exportar anexos com fileData base64
         const exportedAttachments = await Promise.all(
-          ((proof as ProofFile).attachments || []).map(async (att: ProofAttachment) => ({
-            id: att.id,
-            name: att.name,
-            type: att.type,
-            size: att.size,
-            uploadDate: att.uploadDate,
-            text: att.text,
-            extractedText: att.extractedText,
-            processingMode: att.processingMode,
-            fileData: att.type === 'pdf' && att.file ? await fileToBase64(att.file) : undefined
-          }))
+          ((proof as ProofFile).attachments || []).map(async (att: ProofAttachment) => {
+            const attFileData = att.type === 'pdf' && att.file
+              ? await convertFileWithFallback(
+                  att.file,
+                  () => getAttachmentFromIndexedDB(proof.id, att.id),
+                  fileToBase64
+                )
+              : undefined;
+            return {
+              id: att.id,
+              name: att.name,
+              type: att.type,
+              size: att.size,
+              uploadDate: att.uploadDate,
+              text: att.text,
+              extractedText: att.extractedText,
+              processingMode: att.processingMode,
+              fileData: attFileData
+            };
+          })
         );
 
         return {

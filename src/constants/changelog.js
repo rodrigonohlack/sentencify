@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.28',
+    date: '2026-06-06',
+    feature: 'fix(salvar): "Erro ao salvar no Drive: undefined" (intermitente, sem nada no console, e que sumia ao dar refresh). Causa-raiz dupla. (1) Mensagem: o fileToBase64 usava `reader.onerror = reject`, mas FileReader.onerror entrega um ProgressEvent (sem `.message`), não um Error — esse valor subia até o toast `Erro ao salvar no Drive: ${err.message}` e renderizava o literal "undefined". (2) Por que falhava só às vezes e o refresh resolvia: arquivos anexados via input/drag-drop são File lastreados no arquivo do disco; se o arquivo no disco é movido/renomeado/alterado depois de anexado (ex.: baixar PDFs do PJe na mesma pasta), a leitura falha. Ao dar refresh, os arquivos são reconstruídos como Blobs em memória a partir do IndexedDB e voltam a ser legíveis. Fix em 2 camadas: (a) onerror agora rejeita com Error nomeado ("Falha ao ler o arquivo X..."); (b) o build do projeto (save no Drive, export local, autosave) ganhou fallback: se a leitura do File do disco falhar, lê a cópia estável já persistida no IndexedDB no momento do upload (upload-peticao/contestacao/complementar-{id}, proof-{id}, anexos) — o save passa a funcionar sem precisar de refresh. Função pura convertFileWithFallback coberta por testes em useLocalStorage.test.ts.',
+  },
+  {
     version: '1.52.27',
     date: '2026-06-06',
     feature: 'ux(modais): clicar fora de um modal não o fecha mais. Antes, um clique no fundo escurecido (overlay/backdrop) fechava o modal, o que causava fechamentos acidentais — perda de formulário/contexto em aberto. Agora os modais só fecham pelas vias intencionais: tecla ESC e botão X (ou os botões Cancelar/Fechar do rodapé). Aplicado ao BaseModal central (cobre a maioria dos modais via overflow-auto + my-auto) e aos modais standalone do app principal que tinham overlay próprio: TextPreviewModal, JurisprudenciaModal, PreviewModals (erro e preview de modelo), GoogleDriveButton (lista do Drive), GlobalEditorModal (confirmação de cancelar) e ModelGeneratorModal. Os handlers órfãos de stopPropagation nos containers internos foram removidos junto. Subapps autônomos (prova-oral, embargos, analisador, financeiro, notícias) mantêm o comportamento atual nesta versão.',

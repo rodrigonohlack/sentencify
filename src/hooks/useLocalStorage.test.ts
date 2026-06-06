@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { savePdfToIndexedDB } from './useLocalStorage';
+import { savePdfToIndexedDB, convertFileWithFallback } from './useLocalStorage';
 
 // fake-indexeddb is configured in setup.js
 
@@ -84,5 +84,71 @@ describe('savePdfToIndexedDB', () => {
     // Both should resolve without throwing
     await expect(savePdfToIndexedDB('id-1', file1, 'peticao')).resolves.not.toThrow();
     await expect(savePdfToIndexedDB('id-2', file2, 'contestacao')).resolves.not.toThrow();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// convertFileWithFallback (v1.52.28)
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Regression: ao salvar no Drive, um File lastreado no disco (anexado via
+// <input>/drag-drop) cujo arquivo no disco foi movido/alterado torna a leitura
+// (FileReader) impossível. Antes, isso quebrava o save inteiro e exigia refresh.
+// Esta função tenta o File primário e, se a leitura falhar, faz fallback para a
+// cópia estável persistida no IndexedDB.
+describe('convertFileWithFallback', () => {
+  const primaryFile = createMockFile('primary', 'primary.pdf');
+  const fallbackFile = createMockFile('fallback', 'fallback.pdf');
+
+  it('usa o File primário quando a leitura funciona (sem tocar no fallback)', async () => {
+    let fallbackCalled = false;
+    const fetchFallback = async () => {
+      fallbackCalled = true;
+      return fallbackFile;
+    };
+    const toBase64 = async (f: File) => (f === primaryFile ? 'PRIMARY' : 'OTHER');
+
+    const result = await convertFileWithFallback(primaryFile, fetchFallback, toBase64);
+
+    expect(result).toBe('PRIMARY');
+    expect(fallbackCalled).toBe(false);
+  });
+
+  it('faz fallback para o IndexedDB quando a leitura do File primário falha', async () => {
+    const fetchFallback = async () => fallbackFile;
+    const toBase64 = async (f: File) => {
+      if (f === primaryFile) throw new Error('disco stale');
+      return 'FALLBACK';
+    };
+
+    const result = await convertFileWithFallback(primaryFile, fetchFallback, toBase64);
+
+    expect(result).toBe('FALLBACK');
+  });
+
+  it('propaga o erro original quando não há cópia no IndexedDB', async () => {
+    const original = new Error('Falha ao ler o arquivo "primary.pdf".');
+    const fetchFallback = async () => null;
+    const toBase64 = async () => {
+      throw original;
+    };
+
+    await expect(
+      convertFileWithFallback(primaryFile, fetchFallback, toBase64)
+    ).rejects.toBe(original);
+  });
+
+  it('propaga o erro original (não o do fallback) quando a busca no IndexedDB também falha', async () => {
+    const original = new Error('erro de leitura do disco');
+    const fetchFallback = async () => {
+      throw new Error('IndexedDB indisponível');
+    };
+    const toBase64 = async () => {
+      throw original;
+    };
+
+    await expect(
+      convertFileWithFallback(primaryFile, fetchFallback, toBase64)
+    ).rejects.toBe(original);
   });
 });
