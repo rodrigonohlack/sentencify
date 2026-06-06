@@ -457,13 +457,13 @@ describe('DriveFilesModal', () => {
       expect(defaultProps.onRefresh).toHaveBeenCalled();
     });
 
-    it('should call onClose when backdrop clicked', () => {
+    // v1.52.27: clicar fora (backdrop) NÃO fecha mais o modal — evita fechamento acidental.
+    it('should NOT call onClose when backdrop clicked', () => {
       const { container } = render(<DriveFilesModal {...defaultProps} />);
       const backdrop = container.querySelector('.bg-black\\/50');
-      if (backdrop) {
-        fireEvent.click(backdrop);
-      }
-      expect(defaultProps.onClose).toHaveBeenCalled();
+      expect(backdrop).toBeTruthy();
+      fireEvent.click(backdrop!);
+      expect(defaultProps.onClose).not.toHaveBeenCalled();
     });
   });
 

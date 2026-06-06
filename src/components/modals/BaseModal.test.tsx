@@ -108,7 +108,8 @@ describe('BaseModal', () => {
       expect(mockOnClose).toHaveBeenCalled();
     });
 
-    it('should call onClose when overlay clicked', () => {
+    // v1.52.27: clicar fora (overlay) NÃO fecha mais o modal — evita fechamento acidental.
+    it('should NOT call onClose when overlay clicked', () => {
       render(
         <BaseModal isOpen={true} onClose={mockOnClose} title="Test Modal">
           <div>Content</div>
@@ -117,10 +118,9 @@ describe('BaseModal', () => {
 
       // Click on overlay (the outermost div)
       const overlay = screen.getByText('Test Modal').closest('div[class*="fixed inset-0"]');
-      if (overlay) {
-        fireEvent.click(overlay);
-        expect(mockOnClose).toHaveBeenCalled();
-      }
+      expect(overlay).toBeTruthy();
+      fireEvent.click(overlay!);
+      expect(mockOnClose).not.toHaveBeenCalled();
     });
 
     it('should not close when modal content clicked', () => {

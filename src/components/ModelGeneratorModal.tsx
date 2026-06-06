@@ -157,7 +157,6 @@ export const ModelGeneratorModal: React.FC<ModelGeneratorModalProps> = ({
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={resetAndClose}
       />
 
       {/* Modal */}

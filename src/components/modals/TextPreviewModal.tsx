@@ -41,10 +41,9 @@ export const TextPreviewModal = React.memo(({ isOpen, onClose, title, text, read
   if (!isOpen) return null;
 
   return (
-    <div className={`${CSS.modalOverlay} overflow-y-auto`} style={{ alignItems: 'flex-start' }} onClick={onClose}>
+    <div className={`${CSS.modalOverlay} overflow-y-auto`} style={{ alignItems: 'flex-start' }}>
       <div
         className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal w-full max-w-4xl my-8`}
-        onClick={(e) => e.stopPropagation()}
       >
         <div className={`${CSS.modalHeader} flex items-start justify-between`}>
           <div className="flex items-center gap-3">

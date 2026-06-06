@@ -130,8 +130,8 @@ export const JurisprudenciaModal = React.memo(({
   };
 
   return (
-    <div className={`${CSS.modalOverlay} overflow-auto`} onClick={onClose}>
-      <div className={`${CSS.modalContainer} flex flex-col my-auto`} style={{ width: '80vw', maxHeight: '90vh' }} onClick={(e) => e.stopPropagation()}>
+    <div className={`${CSS.modalOverlay} overflow-auto`}>
+      <div className={`${CSS.modalContainer} flex flex-col my-auto`} style={{ width: '80vw', maxHeight: '90vh' }}>
         <div className="p-4 border-b theme-border flex justify-between items-center flex-shrink-0">
           <h3 className="font-semibold theme-text-primary flex items-center gap-2">
             <Scale className="w-4 h-4" />

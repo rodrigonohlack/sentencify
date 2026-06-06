@@ -87,11 +87,11 @@ export const BaseModal = React.memo(({
     orange: 'from-orange-500 to-red-500 shadow-orange-500/30'
   };
 
+  // v1.52.27: clicar fora NÃO fecha mais o modal (evita fechamento acidental). Fechar só por ESC ou X.
   return (
-    <div className={CSS.modalOverlay} onClick={preventClose ? undefined : onClose}>
+    <div className={CSS.modalOverlay}>
       <div
         className={`${CSS.modalContainer} ${sizes[size] || sizes.md} w-full animate-modal`}
-        onClick={e => e.stopPropagation()}
         style={{ animation: 'modalFadeIn 0.2s ease-out' }}
       >
         {/* Header com ícone em círculo e botão X */}

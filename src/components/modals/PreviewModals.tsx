@@ -138,8 +138,8 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
   // Error State se Modelo Inválido
   if (!model) {
     return (
-      <div className={CSS.modalOverlay} onClick={onClose}>
-        <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal p-6`} onClick={e => e.stopPropagation()}>
+      <div className={CSS.modalOverlay}>
+        <div className={`${CSS.modalContainer} theme-border-modal theme-modal-glow animate-modal p-6`}>
           <p className="text-red-400 mb-4 flex items-center gap-2">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -163,7 +163,6 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="preview-modal-title"
-      onClick={onClose}
     >
 
       {/* Modal Container */}
@@ -176,7 +175,6 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
           maxHeight: '85vh',
           contain: 'content'
         }}
-        onClick={e => e.stopPropagation()}
       >
 
         {/* Header */}

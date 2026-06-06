@@ -590,7 +590,8 @@ describe('GlobalEditorModal', () => {
       expect(onClose).toHaveBeenCalled();
     });
 
-    it('should close confirmation dialog when clicking overlay', () => {
+    // v1.52.27: clicar fora (overlay) NÃO fecha mais — o diálogo de confirmação permanece aberto.
+    it('should NOT close confirmation dialog when clicking overlay', () => {
       const { container } = render(<GlobalEditorModal {...createDefaultProps()} />);
 
       fireEvent.click(screen.getByTestId('change-field-0'));
@@ -598,11 +599,10 @@ describe('GlobalEditorModal', () => {
 
       // Click the overlay (bg-black/70 element)
       const overlay = container.querySelector('.bg-black\\/70');
-      if (overlay) {
-        fireEvent.click(overlay);
-      }
+      expect(overlay).toBeTruthy();
+      fireEvent.click(overlay!);
 
-      expect(screen.queryByText(/Descartar alter/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Descartar alter/)).toBeInTheDocument();
     });
   });
 

@@ -1395,7 +1395,6 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/70"
-            onClick={() => setShowCancelConfirm(false)}
           />
           <div className="relative theme-bg-primary rounded-lg shadow-xl border theme-border-input max-w-md w-full p-6">
             <h3 className="text-lg font-bold text-amber-400 mb-4 flex items-center gap-2">

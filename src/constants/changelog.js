@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.27',
+    date: '2026-06-06',
+    feature: 'ux(modais): clicar fora de um modal não o fecha mais. Antes, um clique no fundo escurecido (overlay/backdrop) fechava o modal, o que causava fechamentos acidentais — perda de formulário/contexto em aberto. Agora os modais só fecham pelas vias intencionais: tecla ESC e botão X (ou os botões Cancelar/Fechar do rodapé). Aplicado ao BaseModal central (cobre a maioria dos modais via overflow-auto + my-auto) e aos modais standalone do app principal que tinham overlay próprio: TextPreviewModal, JurisprudenciaModal, PreviewModals (erro e preview de modelo), GoogleDriveButton (lista do Drive), GlobalEditorModal (confirmação de cancelar) e ModelGeneratorModal. Os handlers órfãos de stopPropagation nos containers internos foram removidos junto. Subapps autônomos (prova-oral, embargos, analisador, financeiro, notícias) mantêm o comportamento atual nesta versão.',
+  },
+  {
     version: '1.52.26',
     date: '2026-06-05',
     feature: 'feat(provas): o preview da primeira frase de uma prova de TEXTO (transcrição importada da prova oral ou texto colado) agora é clicável e abre a transcrição completa em uma janela de leitura. Ao passar o mouse, o trecho ganha sublinhado e um ícone de lupa indicando que é clicável. A janela reaproveita o TextPreviewModal já existente, mas em um novo "modo leitura" (readable): em vez da fonte monoespaçada estilo log, o texto aparece em fonte normal com espaçamento confortável e cada fala separada em bloco próprio, com o timestamp (0:00) destacado em azul. Texto sem timestamps é exibido legível e corrido. A segmentação por timestamp é uma função pura testada (segmentTranscript em src/utils/transcriptSegments.ts, formatos M:SS / MM:SS / H:MM:SS). O preview de texto extraído de PDF continua usando o modo monoespaçado anterior (sem alteração).',

@@ -207,11 +207,12 @@ describe('JurisprudenciaModal', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Close Behavior', () => {
-    it('should call onClose when overlay is clicked', () => {
+    // v1.52.27: clicar fora (overlay) NÃO fecha mais o modal — evita fechamento acidental.
+    it('should NOT call onClose when overlay is clicked', () => {
       render(<JurisprudenciaModal {...defaultProps} />);
       const overlay = screen.getByText(/Jurisprudencia:/).closest('.modal-overlay');
       fireEvent.click(overlay!);
-      expect(mockOnClose).toHaveBeenCalled();
+      expect(mockOnClose).not.toHaveBeenCalled();
     });
 
     it('should NOT call onClose when modal content is clicked', () => {

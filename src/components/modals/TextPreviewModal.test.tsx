@@ -99,12 +99,13 @@ describe('TextPreviewModal', () => {
       expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
     });
 
-    it('should call onClose when backdrop is clicked', () => {
+    // v1.52.27: clicar fora (backdrop) NÃO fecha mais o modal — evita fechamento acidental.
+    it('should NOT call onClose when backdrop is clicked', () => {
       const { container } = render(<TextPreviewModal {...defaultProps} />);
       // The backdrop is the outer div with overflow-y-auto
       const backdrop = container.firstChild as HTMLElement;
       fireEvent.click(backdrop);
-      expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
+      expect(defaultProps.onClose).not.toHaveBeenCalled();
     });
 
     it('should NOT call onClose when modal content is clicked', () => {
