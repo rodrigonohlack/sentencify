@@ -74,20 +74,31 @@ export const FullscreenModelPanel = React.memo(({
     return score;
   }, [topicTitle, topicCategory, STOPWORDS]);
 
+  // v1.52.30: onFindSuggestions (e outros callbacks vindos do App) mudam de
+  // identidade a cada re-render do pai porque não são memoizados. Mantê-la como
+  // dependência deste effect fazia o refetch de sugestões disparar a cada
+  // keystroke e a cada toggle de "Não salvo" — limpando a lista (setLoading/
+  // setSuggestions) e fazendo o painel "piscar". Guardamos a referência mais
+  // recente num ref e disparamos o refetch APENAS quando os inputs reais mudam
+  // (models / topicTitle / topicCategory / topicRelatorio).
+  const onFindSuggestionsRef = React.useRef(onFindSuggestions);
+  onFindSuggestionsRef.current = onFindSuggestions;
+
   React.useEffect(() => {
     if (!models || models.length === 0 || !topicTitle) {
       setSuggestions([]);
       return;
     }
 
+    const findSuggestionsFn = onFindSuggestionsRef.current;
     // Se temos funcao de IA, usar ela
-    if (onFindSuggestions) {
+    if (findSuggestionsFn) {
       setLoading(true);
       // Yield para UI nao travar + async para aguardar
       (async () => {
         await new Promise(r => setTimeout(r, 0));
         try {
-          const result = await onFindSuggestions({
+          const result = await findSuggestionsFn({
             title: topicTitle,
             category: (topicCategory || 'MÉRITO') as TopicCategory,
             relatorio: topicRelatorio || ''
@@ -127,7 +138,7 @@ export const FullscreenModelPanel = React.memo(({
         .slice(0, 5);
       setSuggestions(scoredModels);
     }
-  }, [models, topicTitle, topicCategory, topicRelatorio, onFindSuggestions, scoreModelLocal]);
+  }, [models, topicTitle, topicCategory, topicRelatorio, scoreModelLocal]);
 
   // Busca manual com debounce
   const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);

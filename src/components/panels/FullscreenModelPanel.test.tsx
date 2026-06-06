@@ -271,6 +271,31 @@ describe('FullscreenModelPanel', () => {
       });
     });
 
+    it('NÃO re-busca sugestões quando só a identidade de onFindSuggestions muda (regressão piscada v1.52.30)', async () => {
+      // Antes da v1.52.30, onFindSuggestions era dependência do useEffect de
+      // sugestões. Como o App passa callbacks não-memoizados (identidade nova a
+      // cada keystroke e a cada toggle de "Não salvo"), o effect re-rodava e
+      // limpava/recarregava a lista — o painel "piscava". Agora a referência
+      // fica num ref e o refetch só dispara quando os inputs reais mudam.
+      vi.useRealTimers();
+      const fnA = vi.fn().mockResolvedValue({ suggestions: [], source: null });
+      const { rerender } = render(
+        <FullscreenModelPanel {...defaultProps} topicTitle="Horas" onFindSuggestions={fnA} />
+      );
+      await waitFor(() => expect(fnA).toHaveBeenCalledTimes(1));
+
+      // Re-render com NOVA referência de callback, mesmos inputs reais (models/topic).
+      const fnB = vi.fn().mockResolvedValue({ suggestions: [], source: null });
+      rerender(
+        <FullscreenModelPanel {...defaultProps} topicTitle="Horas" onFindSuggestions={fnB} />
+      );
+      // Janela para o effect rodar caso (erroneamente) re-dispare.
+      await new Promise((r) => setTimeout(r, 20));
+
+      expect(fnB).not.toHaveBeenCalled();
+      expect(fnA).toHaveBeenCalledTimes(1);
+    });
+
     it('should display AI suggestions with source info', async () => {
       vi.useRealTimers();
       const aiSuggestions: Model[] = [

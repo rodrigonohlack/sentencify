@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.30',
+    date: '2026-06-06',
+    feature: 'fix(editor): CAUSA-RAIZ da piscada do split view de modelos (o fix da v1.52.29 não resolveu — não era layout). Diagnóstico confirmado por instrumentação no browser: a prop onFindSuggestions chega ao FullscreenModelPanel com identidade NOVA a cada re-render do pai (callbacks não-memoizados no App churnam a cada keystroke e a cada toggle de "Não salvo"). Como onFindSuggestions era dependência do useEffect que busca as sugestões, o effect re-rodava a cada re-render → setLoading(true) + limpava a lista → as sugestões (com as estrelas de relevância) sumiam e reapareciam = a piscada. Não era remontagem nem reflow. Fix: a referência de onFindSuggestions passou a ser guardada num ref (atualizado a cada render) e foi removida das deps do effect, que agora só re-dispara o refetch quando os inputs reais mudam (models, topicTitle, topicCategory, topicRelatorio). Verificado: ao digitar, o painel re-renderiza mas o effect de sugestões NÃO re-roda mais (antes rodava a cada tecla). A melhoria de layout do badge "Não salvo" da v1.52.29 foi mantida (é benigna).',
+  },
+  {
     version: '1.52.29',
     date: '2026-06-06',
     feature: 'fix(editor): no editor de tópico em tela cheia COM split view de modelos ativo, o editor "piscava" toda vez que a tag "Não salvo" aparecia/sumia. Causa-raiz: a tag era montada/desmontada dentro da toolbar (flex-wrap); no split view o painel do editor é estreito e a toolbar quebra em várias linhas, então montar/desmontar a tag mudava o wrapping e a altura da toolbar — isso redimensionava o container do Quill logo abaixo (flex:1), forçando um re-layout visível. Em tela cheia sem split (largura total) a toolbar cabia em uma linha, por isso o efeito só aparecia no split. Fix: a tag "Não salvo" agora fica sempre montada e só alterna a opacidade (com aria-hidden quando salvo), reservando o slot na toolbar e mantendo o layout estável — sem reflow, sem piscada. Não houve re-render/remontagem do painel de modelos (ele é React.memo com props estáveis); o problema era puramente de layout.',
