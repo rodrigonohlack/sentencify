@@ -412,6 +412,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
   const driveFiles = useUIStore((s) => s.driveFilesList);
   const setDriveFiles = useUIStore((s) => s.setDriveFilesList);
 
+  // v1.52.35: progresso da geração de embeddings durante o import de modelos
+  const setImportProgress = useUIStore((s) => s.setImportProgress);
+
   // 🪄 v1.35.69: Gerador de Modelo a partir de Exemplos (v1.35.77: +estiloRedacao)
   // v1.37.49: modelGeneratorModal migrado para useUIStore
   const modelGeneratorModalOpen = useUIStore((s) => s.modals.modelGenerator);
@@ -1685,7 +1688,8 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     searchModelReady,
     showToast,
     setError,
-    generateModelId
+    generateModelId,
+    setImportProgress
   });
 
   // ═══════════════════════════════════════════════════════════════════════════════

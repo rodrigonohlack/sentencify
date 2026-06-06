@@ -40,6 +40,8 @@ export interface UseExportImportProps {
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
   setError: (error: string) => void;
   generateModelId: () => string;
+  /** v1.52.35: reporta o progresso da geração de embeddings durante o import */
+  setImportProgress?: (progress: { current: number; total: number } | null) => void;
 }
 
 export interface UseExportImportReturn {
@@ -61,7 +63,8 @@ export function useExportImport({
   searchModelReady,
   showToast,
   setError,
-  generateModelId
+  generateModelId,
+  setImportProgress
 }: UseExportImportProps): UseExportImportReturn {
 
   // Export AI settings
@@ -254,15 +257,22 @@ export function useExportImport({
             div.innerHTML = html || '';
             return div.textContent || div.innerText || '';
           };
+          // v1.52.35: reporta progresso — a geração roda o modelo de embedding
+          // local (E5) um por vez e pode demorar; sem isso o import parece travado.
+          const totalToEmbed = modelsWithoutEmbedding.length;
+          setImportProgress?.({ current: 0, total: totalToEmbed });
+          let embedded = 0;
           for (const model of modelsWithoutEmbedding) {
             try {
               const text = [model.title, model.keywords, stripHTML(model.content).slice(0, 2000)].filter(Boolean).join(' ');
               model.embedding = await AIModelService.getEmbedding(text, 'passage');
-              // Yield to not block UI
-              await new Promise(resolve => setTimeout(resolve, 0));
             } catch (err) {
               console.warn('[MODEL-EMBED] Erro ao gerar embedding para modelo importado:', err);
             }
+            embedded++;
+            setImportProgress?.({ current: embedded, total: totalToEmbed });
+            // Yield to not block UI
+            await new Promise(resolve => setTimeout(resolve, 0));
           }
         }
       }
@@ -295,8 +305,10 @@ export function useExportImport({
       // inválida e erro). Sem isso, selecionar o mesmo arquivo .json de novo
       // não dispara o onChange e o import parece "não fazer nada".
       input.value = '';
+      // v1.52.35: limpar o indicador de progresso ao terminar (ou falhar).
+      setImportProgress?.(null);
     }
-  }, [modelLibrary, aiIntegration.aiSettings.modelSemanticEnabled, searchModelReady, cloudSync, showToast, setError, generateModelId, checkDuplicate]);
+  }, [modelLibrary, aiIntegration.aiSettings.modelSemanticEnabled, searchModelReady, cloudSync, showToast, setError, generateModelId, checkDuplicate, setImportProgress]);
 
   return {
     exportAiSettings,

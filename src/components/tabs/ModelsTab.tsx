@@ -69,6 +69,8 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
   const modals = useUIStore((s) => s.modals);
   const openModal = useUIStore((s) => s.openModal);
   const closeModal = useUIStore((s) => s.closeModal);
+  // v1.52.35: progresso da geração de embeddings durante o import
+  const importProgress = useUIStore((s) => s.importProgress);
 
   return (
     <div className="space-y-6">
@@ -158,6 +160,17 @@ export const ModelsTab: React.FC<ModelsTabProps> = ({
             onChange={importModels}
             className="hidden"
           />
+          {importProgress && (
+            <div
+              className="flex items-center gap-2 px-4 py-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary"
+              title="Gerando os vetores de busca semântica (modelo local) dos modelos importados"
+            >
+              <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
+              <span className="text-sm">
+                Gerando embeddings… {importProgress.current}/{importProgress.total}
+              </span>
+            </div>
+          )}
           <button
             onClick={exportModels}
             className="flex items-center gap-2 px-4 py-2 rounded-lg theme-bg-secondary theme-hover-bg border theme-border-input theme-text-primary transition-colors"

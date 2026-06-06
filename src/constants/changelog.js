@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.35',
+    date: '2026-06-06',
+    feature: 'feat(modelos): indicador de progresso "Gerando embeddings… X/N" durante o import de modelos. Quando o JSON importado não traz embeddings, o app os gera rodando o modelo local (E5) um por vez — em lotes grandes isso demorava em silêncio e parecia travado. Agora um indicador com spinner aparece ao lado dos botões do Banco de Modelos e atualiza a cada modelo processado (estado importProgress no useUIStore), some ao concluir ou falhar.',
+  },
+  {
     version: '1.52.34',
     date: '2026-06-06',
     feature: 'fix(modelos): importar modelos não resetava o input de arquivo, então selecionar o MESMO .json de novo não disparava o onChange e o import parecia "não fazer nada" (sem toast, sem erro). Agora o input.value é resetado em TODOS os caminhos (sucesso, arquivo inválido e erro) via finally, espelhando o comportamento já correto do importAiSettings. Permite reimportar o mesmo arquivo sem recarregar a página.',

@@ -94,6 +94,8 @@ interface UIState {
   modals: ModalState;      // Computed: objeto para compatibilidade backwards
   textPreview: TextPreviewState;
   toast: ToastState;
+  /** v1.52.35: progresso da geração de embeddings durante import de modelos */
+  importProgress: { current: number; total: number } | null;
 
   // Estado - Drive (v1.37.49)
   driveFilesList: DriveFile[];
@@ -140,6 +142,8 @@ interface UIState {
   setToast: (toast: ToastState) => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
   clearToast: () => void;
+  /** v1.52.35: define/limpa o progresso de geração de embeddings no import */
+  setImportProgress: (progress: { current: number; total: number } | null) => void;
 
   // Actions - Drive (v1.37.49)
   setDriveFilesList: (files: DriveFile[]) => void;
@@ -201,6 +205,7 @@ export const useUIStore = create<UIState>()(
       modals: arrayToModalState([]),  // Computed para compatibilidade
       textPreview: initialTextPreviewState,
       toast: initialToastState,
+      importProgress: null,
 
       // Estado - Drive (v1.37.49)
       driveFilesList: [],
@@ -352,6 +357,15 @@ export const useUIStore = create<UIState>()(
           },
           false,
           'clearToast'
+        ),
+
+      setImportProgress: (progress: { current: number; total: number } | null) =>
+        set(
+          (state) => {
+            state.importProgress = progress;
+          },
+          false,
+          'setImportProgress'
         ),
 
       // ─────────────────────────────────────────────────────────────────────
@@ -610,6 +624,13 @@ export const selectToast = (state: UIState): ToastState =>
  */
 export const selectIsToastVisible = (state: UIState): boolean =>
   state.toast.show;
+
+/**
+ * Selector: Retorna o progresso de geração de embeddings no import (v1.52.35)
+ * @example const importProgress = useUIStore(selectImportProgress);
+ */
+export const selectImportProgress = (state: UIState): { current: number; total: number } | null =>
+  state.importProgress;
 
 /**
  * Selector: Retorna dados do Double Check Review (v1.37.58)
