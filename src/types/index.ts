@@ -983,6 +983,8 @@ export interface TextPreviewState {
   isOpen: boolean;
   title: string;
   text: string;
+  /** v1.52.26: renderiza em "modo leitura" (fonte normal, falas por timestamp). */
+  readable?: boolean;
 }
 
 /** Estado do toast de notificação */
@@ -1820,6 +1822,8 @@ export interface TextPreviewModalProps {
   onClose: () => void;
   title: string;
   text: string;
+  /** v1.52.26: renderiza em "modo leitura" (fonte normal, falas por timestamp). */
+  readable?: boolean;
 }
 
 export interface ExtractModelConfirmModalProps {

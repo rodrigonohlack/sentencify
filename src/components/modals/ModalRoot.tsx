@@ -437,6 +437,7 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
         onClose={closeTextPreview}
         title={textPreview.title}
         text={textPreview.text}
+        readable={textPreview.readable}
       />
 
       {/* ═══════════════════════════════════════════════════════════════════ */}

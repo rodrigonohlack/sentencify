@@ -74,3 +74,7 @@ export {
   buildProofDecisionPrompt
 } from './proof-decision-helpers';
 export type { ProofDataSource, ProofDecisionDataResult } from './proof-decision-helpers';
+
+// Transcript segmentation (v1.52.26) - modo leitura do preview de prova
+export { segmentTranscript } from './transcriptSegments';
+export type { TranscriptSegment } from './transcriptSegments';

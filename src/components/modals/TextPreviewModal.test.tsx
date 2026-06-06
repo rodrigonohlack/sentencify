@@ -175,4 +175,42 @@ describe('TextPreviewModal', () => {
       expect(preElement.className).toContain('whitespace-pre-wrap');
     });
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MODO LEITURA (readable) - v1.52.26
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Modo leitura (readable)', () => {
+    const transcript = '(0:00) Bom dia, Excelência. (0:08) Pode iniciar.';
+
+    it('não usa <pre> monoespaçado quando readable', () => {
+      const { container } = render(
+        <TextPreviewModal {...defaultProps} text={transcript} readable />
+      );
+      expect(container.querySelector('pre')).toBeNull();
+    });
+
+    it('destaca os timestamps e mantém o texto das falas', () => {
+      render(<TextPreviewModal {...defaultProps} text={transcript} readable />);
+      expect(screen.getByText('(0:00)')).toBeInTheDocument();
+      expect(screen.getByText('(0:08)')).toBeInTheDocument();
+      expect(screen.getByText('Bom dia, Excelência.')).toBeInTheDocument();
+      expect(screen.getByText('Pode iniciar.')).toBeInTheDocument();
+    });
+
+    it('exibe texto puro (sem timestamps) de forma legível', () => {
+      render(<TextPreviewModal {...defaultProps} text="Apenas um texto colado." readable />);
+      expect(screen.getByText('Apenas um texto colado.')).toBeInTheDocument();
+    });
+
+    it('mostra "Sem conteúdo" quando o texto está vazio no modo leitura', () => {
+      render(<TextPreviewModal {...defaultProps} text="" readable />);
+      expect(screen.getByText('Sem conteúdo')).toBeInTheDocument();
+    });
+
+    it('mantém o modo monoespaçado quando readable é falso/ausente', () => {
+      const { container } = render(<TextPreviewModal {...defaultProps} text={transcript} />);
+      expect(container.querySelector('pre')).not.toBeNull();
+    });
+  });
 });

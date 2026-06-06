@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.26',
+    date: '2026-06-05',
+    feature: 'feat(provas): o preview da primeira frase de uma prova de TEXTO (transcrição importada da prova oral ou texto colado) agora é clicável e abre a transcrição completa em uma janela de leitura. Ao passar o mouse, o trecho ganha sublinhado e um ícone de lupa indicando que é clicável. A janela reaproveita o TextPreviewModal já existente, mas em um novo "modo leitura" (readable): em vez da fonte monoespaçada estilo log, o texto aparece em fonte normal com espaçamento confortável e cada fala separada em bloco próprio, com o timestamp (0:00) destacado em azul. Texto sem timestamps é exibido legível e corrido. A segmentação por timestamp é uma função pura testada (segmentTranscript em src/utils/transcriptSegments.ts, formatos M:SS / MM:SS / H:MM:SS). O preview de texto extraído de PDF continua usando o modo monoespaçado anterior (sem alteração).',
+  },
+  {
     version: '1.52.25',
     date: '2026-06-05',
     feature: 'fix(double-check): ao escolher Claude Local (CLI) como provider de verificação, o seletor de modelo mostrava as versões desatualizadas da API (Sonnet 4.5 / Opus 4.5) em vez dos modelos do CLI. Causa-raiz: o bloco de opções agrupava claude-cli junto com claude (API), listando os IDs da API (claude-sonnet-4-20250514 / claude-opus-4-5-20251101); e o default ao trocar para claude-cli também apontava para o modelo da API. Fix: claude-cli ganhou seu próprio bloco de opções com os modelos corretos do CLI (claude-sonnet-4-6 Sonnet 4.6 / claude-opus-4-8 Opus 4.8) e o default de troca passou a claude-sonnet-4-6. Regressão em ConfigModal.test.tsx. Obs.: usuários que já tinham claude-cli selecionado com o modelo antigo devem reescolher o modelo uma vez.',

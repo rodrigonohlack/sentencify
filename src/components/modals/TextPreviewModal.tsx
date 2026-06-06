@@ -10,10 +10,17 @@
 import React from 'react';
 import { Eye, X } from 'lucide-react';
 import { CSS } from './BaseModal';
+import { segmentTranscript } from '../../utils/transcriptSegments';
 import type { TextPreviewModalProps } from '../../types';
 
 // v1.21.16: Modal de preview de texto extraído
-export const TextPreviewModal = React.memo(({ isOpen, onClose, title, text }: TextPreviewModalProps) => {
+// v1.52.26: modo leitura (readable) para transcrições de prova
+export const TextPreviewModal = React.memo(({ isOpen, onClose, title, text, readable }: TextPreviewModalProps) => {
+  // v1.52.26: segmenta a transcrição por timestamp apenas no modo leitura
+  const segments = React.useMemo(
+    () => (readable ? segmentTranscript(text) : []),
+    [readable, text]
+  );
   // v1.35.67: ESC handler
   React.useEffect(() => {
     if (!isOpen) return;
@@ -53,11 +60,31 @@ export const TextPreviewModal = React.memo(({ isOpen, onClose, title, text }: Te
             <X className="w-5 h-5 theme-text-tertiary" />
           </button>
         </div>
-        <div className="p-4 max-h-[70vh] overflow-y-auto">
-          <pre className="whitespace-pre-wrap text-sm theme-text-secondary font-mono bg-black/20 p-4 rounded-lg">
-            {text || 'Sem conteúdo'}
-          </pre>
-        </div>
+        {readable ? (
+          // v1.52.26: modo leitura — fonte normal, falas separadas por timestamp
+          <div className="p-4 max-h-[70vh] overflow-y-auto space-y-3">
+            {segments.length === 0 ? (
+              <p className="text-sm theme-text-muted">Sem conteúdo</p>
+            ) : (
+              segments.map((seg, i) => (
+                <p key={i} className="text-sm leading-relaxed theme-text-secondary">
+                  {seg.timestamp && (
+                    <span className="inline-block mr-2 font-mono text-xs px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 align-baseline">
+                      {seg.timestamp}
+                    </span>
+                  )}
+                  <span className="whitespace-pre-wrap">{seg.text}</span>
+                </p>
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="p-4 max-h-[70vh] overflow-y-auto">
+            <pre className="whitespace-pre-wrap text-sm theme-text-secondary font-mono bg-black/20 p-4 rounded-lg">
+              {text || 'Sem conteúdo'}
+            </pre>
+          </div>
+        )}
       </div>
     </div>
   );

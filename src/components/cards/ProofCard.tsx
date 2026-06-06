@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { FileText, Sparkles, AlertCircle, Loader2, Check, Scale, Trash2, Paperclip, Plus, X, Edit2 } from 'lucide-react';
+import { FileText, Sparkles, AlertCircle, Loader2, Check, Scale, Trash2, Paperclip, Plus, X, Edit2, Search } from 'lucide-react';
 import { ProcessingModeSelector } from '../ui/ProcessingModeSelector';
 import VoiceButton from '../VoiceButton';
 import { anonymizeText } from '../../utils/text';
@@ -419,9 +419,19 @@ export const ProofCard = React.memo(({
             </div>
           )}
 
-          {/* Preview de Texto (apenas para tipo TEXTO) */}
+          {/* Preview de Texto clicável → abre transcrição completa (v1.52.26) */}
           {!isPdf && proof.text && (
-            <p className="text-xs theme-text-muted line-clamp-2 mb-2">{proof.text.substring(0, 150)}...</p>
+            <button
+              type="button"
+              onClick={() => setTextPreview?.({ isOpen: true, title: proof.name, text: proof.text ?? '', readable: true })}
+              title="Ver transcrição completa"
+              className="group w-full text-left mb-2 flex items-start gap-1.5 cursor-pointer"
+            >
+              <span className="text-xs theme-text-muted line-clamp-2 group-hover:theme-text-secondary group-hover:underline transition-colors">
+                {proof.text.substring(0, 150)}...
+              </span>
+              <Search className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
           )}
 
           {/* Toggle PDF/Texto - APENAS para PDFs */}
