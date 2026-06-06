@@ -12,6 +12,7 @@
 import React from 'react';
 import { QuillDecisionEditor, QuillMiniRelatorioEditor } from './QuillEditors';
 import { CSS } from '../../constants/styles';
+import { isRelatorio } from '../../utils/text';
 import { useEditorStore } from '../../stores/useEditorStore';
 import { useRegenerationStore } from '../../stores/useRegenerationStore';
 import { useTopicsStore } from '../../stores/useTopicsStore';
@@ -79,6 +80,18 @@ const DecisionEditorContainer = React.memo(React.forwardRef<HTMLDivElement, Comb
     setPreviewingModel,
     contextualInsertFn
   } = useModelsStore();
+
+  // v1.52.31: texto do RELATÓRIO geral do processo para a consulta rápida no editor
+  const processoRelatorio = React.useMemo(() => {
+    const source =
+      storeSelectedTopics && storeSelectedTopics.length > 0
+        ? storeSelectedTopics
+        : storeExtractedTopics;
+    const relatorioTopic = source?.find(isRelatorio);
+    return relatorioTopic
+      ? relatorioTopic.editedRelatorio || relatorioTopic.relatorio || ''
+      : '';
+  }, [storeSelectedTopics, storeExtractedTopics]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // EXTRAIR PROPS (compatibilidade com formato novo e legado)
@@ -308,6 +321,7 @@ const DecisionEditorContainer = React.memo(React.forwardRef<HTMLDivElement, Comb
           onPreviewModel={onPreviewModel}
           sanitizeHTML={sanitizeHTML}
           topicRelatorio={topic.relatorio || topic.editedRelatorio || ''}
+          processoRelatorio={processoRelatorio}
           onFindSuggestions={findSuggestions}
           onSlashCommand={callbacks.onSlashCommand}
           isDirty={isDirty}

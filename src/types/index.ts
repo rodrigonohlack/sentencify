@@ -1989,6 +1989,8 @@ export interface QuillDecisionEditorProps {
   onPreviewModel?: (model: Model) => void;
   sanitizeHTML?: (html: string) => string;
   topicRelatorio?: string;
+  /** v1.52.31: texto do RELATÓRIO geral do processo (para consulta rápida no editor) */
+  processoRelatorio?: string;
   onFindSuggestions?: (topic: Topic) => Promise<{ suggestions: Model[]; source: string | null }>;
   onSlashCommand?: OnSlashCommandCallback;
   isDirty?: boolean;

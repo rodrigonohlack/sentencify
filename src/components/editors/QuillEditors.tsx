@@ -11,6 +11,7 @@ import React from 'react';
 import { Save, Sparkles, Scale, BookOpen, Clock, XCircle, Pencil, Lightbulb } from 'lucide-react';
 import { CSS } from '../modals/BaseModal';
 import { VoiceButton } from '../VoiceButton';
+import { RelatorioConsultaPanel } from './RelatorioConsultaPanel';
 import { SpacingDropdown, FontSizeDropdown, EditorWidthDropdown } from '../ui';
 import { useQuillEditor, sanitizeQuillHTML } from '../../hooks/useQuillEditor';
 import { useSpacingControl, useFontSizeControl, useFullscreen, useAIIntegration, useEditorWidthControl } from '../../hooks';
@@ -686,6 +687,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
   onPreviewModel,
   sanitizeHTML,
   topicRelatorio = '',
+  processoRelatorio = '',
   onFindSuggestions,
   onSlashCommand,
   isDirty: propsIsDirty,
@@ -1030,6 +1032,26 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
               </div>
             )}
           </div>
+        </div>
+
+        {/* v1.52.31: consulta rápida ao mini-relatório do tópico e ao RELATÓRIO processual.
+            Aparece em ambos os modos (normal e fullscreen). */}
+        <div className="flex flex-wrap items-center gap-2 mb-2 flex-shrink-0">
+          <span className={CSS.textMuted}>Consultar:</span>
+          <RelatorioConsultaPanel
+            label="Mini-relatório"
+            html={topicRelatorio || ''}
+            sanitizeHTML={sanitizeHTML}
+            disabled={!(topicRelatorio || '').trim()}
+          />
+          {topicTitle.toUpperCase() !== 'RELATÓRIO' && (
+            <RelatorioConsultaPanel
+              label="Relatório"
+              html={processoRelatorio || ''}
+              sanitizeHTML={sanitizeHTML}
+              disabled={!(processoRelatorio || '').trim()}
+            />
+          )}
         </div>
 
         <div
