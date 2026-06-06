@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.31',
+    date: '2026-06-06',
+    feature: 'feat(editor): consulta rápida ao mini-relatório do tópico e ao RELATÓRIO processual direto no editor de decisão. Abaixo da barra de botões (Salvar/Voz/...), uma linha "Consultar:" exibe dois chips — Mini-relatório (resumo de fatos do tópico atual) e Relatório (texto do tópico RELATÓRIO geral do processo). Passar o mouse abre um card flutuante read-only com o texto (sanitizado, serif, claro/escuro); clicar fixa o card, que fica rolável (max-height 60vh) até clicar fora ou no ✕. Disponível em ambos os modos do editor (normal e tela cheia) — resolve a perda de acesso ao relatório quando se edita em fullscreen. Chip fica desabilitado quando o texto está vazio; o chip "Relatório" é ocultado ao editar o próprio tópico RELATÓRIO. Novo componente isolado RelatorioConsultaPanel (com testes); o texto do RELATÓRIO geral é resolvido no DecisionEditorContainer via useTopicsStore e repassado por nova prop processoRelatorio.',
+  },
+  {
     version: '1.52.30',
     date: '2026-06-06',
     feature: 'fix(editor): CAUSA-RAIZ da piscada do split view de modelos (o fix da v1.52.29 não resolveu — não era layout). Diagnóstico confirmado por instrumentação no browser: a prop onFindSuggestions chega ao FullscreenModelPanel com identidade NOVA a cada re-render do pai (callbacks não-memoizados no App churnam a cada keystroke e a cada toggle de "Não salvo"). Como onFindSuggestions era dependência do useEffect que busca as sugestões, o effect re-rodava a cada re-render → setLoading(true) + limpava a lista → as sugestões (com as estrelas de relevância) sumiam e reapareciam = a piscada. Não era remontagem nem reflow. Fix: a referência de onFindSuggestions passou a ser guardada num ref (atualizado a cada render) e foi removida das deps do effect, que agora só re-dispara o refetch quando os inputs reais mudam (models, topicTitle, topicCategory, topicRelatorio). Verificado: ao digitar, o painel re-renderiza mas o effect de sugestões NÃO re-roda mais (antes rodava a cada tecla). A melhoria de layout do badge "Não salvo" da v1.52.29 foi mantida (é benigna).',
