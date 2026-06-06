@@ -866,7 +866,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
           </label>
         )}
 
-        <div className="flex flex-wrap gap-2 mb-2 flex-shrink-0">
+        <div className="flex flex-wrap gap-2 mb-1 flex-shrink-0">
           <button
             onClick={onSaveWithoutClosing}
             className="px-3 py-1.5 text-white text-xs rounded flex items-center gap-1 bg-green-600 hover:bg-green-700 transition-colors"

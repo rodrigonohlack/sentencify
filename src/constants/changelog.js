@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.32',
+    date: '2026-06-06',
+    feature: 'fix(editor): a consulta rápida do Mini-relatório (v1.52.31) renderizava sem negrito e com parágrafos colados, enquanto o Relatório geral renderizava certo. Causa: o card recebia topicRelatorio com precedência relatorio || editedRelatorio — ou seja, o texto ORIGINAL da IA (sem o HTML de formatação) em vez do texto editado/exibido. O editor de mini-relatório usa editedRelatorio || relatorio (com formatação). Fix: alinhar a precedência do topicRelatorio passado ao editor de decisão para editedRelatorio || relatorio, batendo com o que o usuário vê no editor (negrito e quebras de parágrafo preservados); como efeito colateral benigno, o scoring local de modelos passa a usar o texto editado (mais atual). Ajuste de layout: a linha "Consultar:" estava com um vão visível abaixo dos botões Salvar/Voz — a margem inferior da barra de botões foi reduzida (mb-2 → mb-1) para os chips ficarem colados logo abaixo.',
+  },
+  {
     version: '1.52.31',
     date: '2026-06-06',
     feature: 'feat(editor): consulta rápida ao mini-relatório do tópico e ao RELATÓRIO processual direto no editor de decisão. Abaixo da barra de botões (Salvar/Voz/...), uma linha "Consultar:" exibe dois chips — Mini-relatório (resumo de fatos do tópico atual) e Relatório (texto do tópico RELATÓRIO geral do processo). Passar o mouse abre um card flutuante read-only com o texto (sanitizado, serif, claro/escuro); clicar fixa o card, que fica rolável (max-height 60vh) até clicar fora ou no ✕. Disponível em ambos os modos do editor (normal e tela cheia) — resolve a perda de acesso ao relatório quando se edita em fullscreen. Chip fica desabilitado quando o texto está vazio; o chip "Relatório" é ocultado ao editar o próprio tópico RELATÓRIO. Novo componente isolado RelatorioConsultaPanel (com testes); o texto do RELATÓRIO geral é resolvido no DecisionEditorContainer via useTopicsStore e repassado por nova prop processoRelatorio.',
