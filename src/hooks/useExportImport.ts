@@ -197,7 +197,8 @@ export function useExportImport({
 
   // Import models
   const importModels = React.useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const input = event.target;
+    const file = input.files?.[0];
     if (!file) return;
 
     try {
@@ -289,6 +290,11 @@ export function useExportImport({
 
     } catch (err) {
       setError('Erro ao importar modelos: ' + (err as Error).message);
+    } finally {
+      // v1.52.34: resetar o input em TODOS os caminhos (sucesso, validação
+      // inválida e erro). Sem isso, selecionar o mesmo arquivo .json de novo
+      // não dispara o onChange e o import parece "não fazer nada".
+      input.value = '';
     }
   }, [modelLibrary, aiIntegration.aiSettings.modelSemanticEnabled, searchModelReady, cloudSync, showToast, setError, generateModelId, checkDuplicate]);
 

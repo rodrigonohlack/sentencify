@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.34',
+    date: '2026-06-06',
+    feature: 'fix(modelos): importar modelos não resetava o input de arquivo, então selecionar o MESMO .json de novo não disparava o onChange e o import parecia "não fazer nada" (sem toast, sem erro). Agora o input.value é resetado em TODOS os caminhos (sucesso, arquivo inválido e erro) via finally, espelhando o comportamento já correto do importAiSettings. Permite reimportar o mesmo arquivo sem recarregar a página.',
+  },
+  {
     version: '1.52.33',
     date: '2026-06-06',
     feature: 'fix(editor): a linha "Consultar:" (Mini-relatório/Relatório) ainda aparecia com um vão abaixo dos botões Salvar/Voz. Causa real: o grupo Fonte/Espaçamento/Largura (ml-auto) quebra para uma segunda linha alinhada à direita, e a linha "Consultar:" ficava numa TERCEIRA linha — o "espaço" era a linha do Fonte/Espaçamento vazia do lado esquerdo. Fix: os chips de consulta foram movidos para DENTRO da própria toolbar, à esquerda do grupo Fonte/Espaçamento, de modo que ocupem a mesma linha (sem linha extra). A margem da toolbar voltou a mb-2 (o editor volta a vir logo após a toolbar).',
