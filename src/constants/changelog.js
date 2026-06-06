@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.33',
+    date: '2026-06-06',
+    feature: 'fix(editor): a linha "Consultar:" (Mini-relatório/Relatório) ainda aparecia com um vão abaixo dos botões Salvar/Voz. Causa real: o grupo Fonte/Espaçamento/Largura (ml-auto) quebra para uma segunda linha alinhada à direita, e a linha "Consultar:" ficava numa TERCEIRA linha — o "espaço" era a linha do Fonte/Espaçamento vazia do lado esquerdo. Fix: os chips de consulta foram movidos para DENTRO da própria toolbar, à esquerda do grupo Fonte/Espaçamento, de modo que ocupem a mesma linha (sem linha extra). A margem da toolbar voltou a mb-2 (o editor volta a vir logo após a toolbar).',
+  },
+  {
     version: '1.52.32',
     date: '2026-06-06',
     feature: 'fix(editor): a consulta rápida do Mini-relatório (v1.52.31) renderizava sem negrito e com parágrafos colados, enquanto o Relatório geral renderizava certo. Causa: o card recebia topicRelatorio com precedência relatorio || editedRelatorio — ou seja, o texto ORIGINAL da IA (sem o HTML de formatação) em vez do texto editado/exibido. O editor de mini-relatório usa editedRelatorio || relatorio (com formatação). Fix: alinhar a precedência do topicRelatorio passado ao editor de decisão para editedRelatorio || relatorio, batendo com o que o usuário vê no editor (negrito e quebras de parágrafo preservados); como efeito colateral benigno, o scoring local de modelos passa a usar o texto editado (mais atual). Ajuste de layout: a linha "Consultar:" estava com um vão visível abaixo dos botões Salvar/Voz — a margem inferior da barra de botões foi reduzida (mb-2 → mb-1) para os chips ficarem colados logo abaixo.',

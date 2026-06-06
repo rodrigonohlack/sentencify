@@ -866,7 +866,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
           </label>
         )}
 
-        <div className="flex flex-wrap gap-2 mb-1 flex-shrink-0">
+        <div className="flex flex-wrap gap-2 mb-2 flex-shrink-0">
           <button
             onClick={onSaveWithoutClosing}
             className="px-3 py-1.5 text-white text-xs rounded flex items-center gap-1 bg-green-600 hover:bg-green-700 transition-colors"
@@ -1004,6 +1004,27 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
             Não salvo
           </span>
 
+          {/* v1.52.32: consulta rápida ao mini-relatório do tópico e ao RELATÓRIO
+              processual. Fica DENTRO da toolbar (à esquerda do grupo Fonte/Espaçamento)
+              para ocupar a mesma linha, sem criar uma linha extra/vão abaixo dos botões. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={CSS.textMuted}>Consultar:</span>
+            <RelatorioConsultaPanel
+              label="Mini-relatório"
+              html={topicRelatorio || ''}
+              sanitizeHTML={sanitizeHTML}
+              disabled={!(topicRelatorio || '').trim()}
+            />
+            {topicTitle.toUpperCase() !== 'RELATÓRIO' && (
+              <RelatorioConsultaPanel
+                label="Relatório"
+                html={processoRelatorio || ''}
+                sanitizeHTML={sanitizeHTML}
+                disabled={!(processoRelatorio || '').trim()}
+              />
+            )}
+          </div>
+
           <div className="ml-auto flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className={CSS.textMuted}>Fonte:</span>
@@ -1032,26 +1053,6 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
               </div>
             )}
           </div>
-        </div>
-
-        {/* v1.52.31: consulta rápida ao mini-relatório do tópico e ao RELATÓRIO processual.
-            Aparece em ambos os modos (normal e fullscreen). */}
-        <div className="flex flex-wrap items-center gap-2 mb-2 flex-shrink-0">
-          <span className={CSS.textMuted}>Consultar:</span>
-          <RelatorioConsultaPanel
-            label="Mini-relatório"
-            html={topicRelatorio || ''}
-            sanitizeHTML={sanitizeHTML}
-            disabled={!(topicRelatorio || '').trim()}
-          />
-          {topicTitle.toUpperCase() !== 'RELATÓRIO' && (
-            <RelatorioConsultaPanel
-              label="Relatório"
-              html={processoRelatorio || ''}
-              sanitizeHTML={sanitizeHTML}
-              disabled={!(processoRelatorio || '').trim()}
-            />
-          )}
         </div>
 
         <div
