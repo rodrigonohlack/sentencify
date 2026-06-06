@@ -445,9 +445,19 @@ import { deaccent } from './lib.mjs';
  */
 export function detectSignals(text) {
   const t = deaccent(String(text)).toLowerCase();
-  const outcomeOrder = ['improcedente', 'procedente', 'indeferid', 'deferid', 'acolh', 'rejeit', 'sem nexo', 'concausa', 'nexo direto'];
+  // [stem, chaveCanônica]: o stem detectado pode diferir da chave emitida.
+  // Ordem importa: "indefer/indefir" antes de "defer/defir"; as flexões
+  // "defere-se"/"deferido" (stem "defer") e "defiro" (stem "defir") mapeiam
+  // ambas à chave "deferid", para não sobre-separar boilerplate idêntico.
+  const outcomeOrder = [
+    ['improcedente', 'improcedente'], ['procedente', 'procedente'],
+    ['indefer', 'indeferid'], ['indefir', 'indeferid'],
+    ['defer', 'deferid'], ['defir', 'deferid'],
+    ['acolh', 'acolh'], ['rejeit', 'rejeit'],
+    ['sem nexo', 'sem nexo'], ['concausa', 'concausa'], ['nexo direto', 'nexo direto'],
+  ];
   let outcomeKey = null;
-  for (const k of outcomeOrder) { if (t.includes(k)) { outcomeKey = k; break; } }
+  for (const [m, k] of outcomeOrder) { if (t.includes(m)) { outcomeKey = k; break; } }
   let partyKey = 'padrao';
   if (t.includes('massa falida')) partyKey = 'massa_falida';
   else if (t.includes('fazenda publica')) partyKey = 'fazenda_publica';
