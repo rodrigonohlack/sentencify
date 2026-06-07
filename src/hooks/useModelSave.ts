@@ -18,6 +18,7 @@ import type { Model, NewModelData, SimilarityWarningState } from '../types';
 import { generateModelId } from '../utils/text';
 import { TFIDFSimilarity } from '../services/EmbeddingsServices';
 import AIModelService from '../services/AIModelService';
+import { buildModelEmbeddingText } from '../utils/modelEmbeddingText';
 
 // ════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -92,15 +93,6 @@ export interface UseModelSaveReturn {
 // ════════════════════════════════════════════════════════════════════════════
 
 /**
- * Remove HTML tags e retorna texto puro
- */
-const stripHTML = (html: string): string => {
-  const div = document.createElement('div');
-  div.innerHTML = html || '';
-  return div.textContent || div.innerText || '';
-};
-
-/**
  * Gera embedding para um modelo se IA local estiver ativa
  */
 const generateModelEmbedding = async (
@@ -111,14 +103,8 @@ const generateModelEmbedding = async (
   if (!modelSemanticEnabled || !searchModelReady || modelData.embedding) {
     return modelData.embedding;
   }
-
   try {
-    const text = [
-      modelData.title,
-      modelData.keywords,
-      stripHTML(modelData.content).slice(0, 2000)
-    ].filter(Boolean).join(' ');
-    return await AIModelService.getEmbedding(text, 'passage');
+    return await AIModelService.getEmbedding(buildModelEmbeddingText(modelData), 'passage');
   } catch (err) {
     console.warn('[MODEL-EMBED] Erro ao gerar embedding:', err);
     return undefined;
