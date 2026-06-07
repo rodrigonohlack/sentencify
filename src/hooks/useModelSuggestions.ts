@@ -73,7 +73,7 @@ export interface UseModelSuggestionsReturn {
 /**
  * Calcula pontuação de relevância entre um modelo e um tópico
  */
-function scoreModel(model: Model, topicTitle: string, topicCategory: string, topicRelatorio: string): number {
+export function scoreModel(model: Model, topicTitle: string, topicCategory: string, topicRelatorio: string): number {
   let score = 0;
 
   const titleLower = (topicTitle || '').toLowerCase();
@@ -111,6 +111,60 @@ function scoreModel(model: Model, topicTitle: string, topicCategory: string, top
   });
 
   return score;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RANKING LOCAL HÍBRIDO (lexical + semântico) — v1.52.40
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Parâmetros do ranking local. SEM_FLOOR/SEM_CEIL recalibram o cosseno do E5
+ * (baseline alto ~0.75) para uma faixa útil 0–1. Pesos combinam o sinal semântico
+ * com o lexical (scoreModel). Valores iniciais — ajuste fino é empírico.
+ */
+export const LOCAL_RANK_CONFIG = {
+  SEM_FLOOR: 0.72,
+  SEM_CEIL: 0.88,
+  LEX_CAP: 80,
+  W_SEM: 0.65,
+  W_LEX: 0.35,
+  TOP_N: 5,
+} as const;
+
+const clamp01 = (x: number): number => Math.max(0, Math.min(1, x));
+
+/**
+ * Ranqueia modelos para um tópico combinando similaridade semântica (cosseno
+ * rescalado do E5) com pontuação lexical (scoreModel), aplicando corte por
+ * threshold e pin de favoritos (estrela primeiro). Função pura e testável.
+ */
+export function rankModelsLocal(
+  models: Model[],
+  topic: { title: string; category?: string; relatorio?: string },
+  qEmb: number[],
+  threshold: number
+): Model[] {
+  const cfg = LOCAL_RANK_CONFIG;
+  const scored = models
+    .filter(m => m.embedding?.length === 768)
+    .map(m => {
+      const sem = AIModelService.cosineSimilarity(qEmb, m.embedding || []);
+      const semScaled = clamp01((sem - cfg.SEM_FLOOR) / (cfg.SEM_CEIL - cfg.SEM_FLOOR));
+      const lex = scoreModel(m, topic.title, topic.category || '', topic.relatorio || '');
+      const lexNorm = Math.min(lex / cfg.LEX_CAP, 1);
+      const final = cfg.W_SEM * semScaled + cfg.W_LEX * lexNorm;
+      return { ...m, similarity: final };
+    })
+    .filter(m => (m.similarity || 0) >= threshold);
+
+  // Pin de favoritos: estrela primeiro (entre si por score), depois os demais por score.
+  scored.sort((a, b) => {
+    const favDiff = (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0);
+    if (favDiff !== 0) return favDiff;
+    return (b.similarity || 0) - (a.similarity || 0);
+  });
+
+  return scored.slice(0, cfg.TOP_N);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
