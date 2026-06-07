@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.45',
+    date: '2026-06-07',
+    feature: 'feat(modelos): ao clicar "Gerar com IA" no título do cadastro de modelos, a IA passa a gerar também a CATEGORIA (= o TEMA do modelo) na mesma chamada. Para evitar duplicatas "quase iguais" (ex: "Horas Extras" vs "horas extras" vs "Sobrejornada"), a lista de categorias existentes é enviada no prompt com instrução de reutilizar uma delas quando o tema for equivalente (inclusive sinônimos), só criando nova quando nenhuma servir. Rede de segurança léxica: se a IA devolver uma grafia diferente de uma categoria existente (caixa/acento), o app adota a grafia da existente; categoria nova vem em Title Case. Resposta sem JSON válido cai em fallback (título plano + tema derivado), sem quebrar.',
+  },
+  {
     version: '1.52.44',
     date: '2026-06-07',
     feature: 'perf(modelos): o prompt de refinamento de sugestões via LLM enviava o CONTEÚDO COMPLETO (HTML) de até 10 modelos candidatos no campo "Resumo" — inflando a requisição para dezenas de KB só para receber de volta uma lista de IDs. Agora o conteúdo de cada candidato é limpo de HTML e cortado em 300 chars, derrubando o tamanho do prompt em ~90% sem perda relevante para o ranking (título/categoria/keywords carregam o sinal).',

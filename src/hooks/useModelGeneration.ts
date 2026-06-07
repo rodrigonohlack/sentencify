@@ -6,8 +6,9 @@
  */
 
 import React, { useCallback } from 'react';
-import type { AIMessage, AICallOptions, NewModelData } from '../types';
+import type { AIMessage, AICallOptions, NewModelData, Model } from '../types';
 import { AI_PROMPTS } from '../prompts';
+import { resolveTitleAndCategory } from '../utils/categoryNormalization';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -22,6 +23,8 @@ export interface AIIntegrationForModelGen {
 export interface ModelLibraryForModelGen {
   newModel: NewModelData;
   setNewModel: (model: NewModelData | ((prev: NewModelData) => NewModelData)) => void;
+  /** Modelos existentes — usados para deduplicar a categoria gerada via IA */
+  models: Model[];
 }
 
 export interface UseModelGenerationProps {
@@ -149,18 +152,31 @@ Não adicione explicações, apenas as keywords separadas por vírgula.`;
     setError('');
 
     try {
+      // Categorias já existentes (mesma derivação usada no formulário): a IA deve
+      // reutilizar uma delas quando o tema for equivalente, evitando duplicatas.
+      const existingCategories = [...new Set(
+        modelLibrary.models
+          .map((m) => m.category)
+          .filter((c): c is string => !!c && c.trim() !== '')
+      )].sort();
+
       const prompt = `${AI_PROMPTS.roles.classificacao}
 
 CONTEÚDO DO MODELO:
 ${editorContent}
 
-TAREFA:
-Analise o conteúdo acima e gere um TÍTULO padronizado para este modelo de decisão.
+CATEGORIAS JÁ EXISTENTES (reutilize uma destas quando o tema for equivalente, mesmo que o nome use sinônimos; só crie nova se nenhuma servir):
+${existingCategories.join('\n') || '(nenhuma ainda)'}
 
-FORMATO OBRIGATÓRIO:
+TAREFA:
+Analise o conteúdo acima e gere, para este modelo de decisão:
+1. Um TÍTULO padronizado
+2. A CATEGORIA do modelo (apenas o TEMA — assunto principal, sem subtema nem resultado)
+
+FORMATO OBRIGATÓRIO DO TÍTULO:
 TEMA - SUBTEMA - RESULTADO (PROCEDENTE/IMPROCEDENTE)
 
-EXEMPLOS VÁLIDOS:
+EXEMPLOS VÁLIDOS DE TÍTULO:
 - HORAS EXTRAS - SOBREJORNADA HABITUAL - PROCEDENTE
 - RESCISÃO INDIRETA - ATRASO SALARIAL - PROCEDENTE
 - DANOS MORAIS - ASSÉDIO MORAL - IMPROCEDENTE
@@ -168,28 +184,35 @@ EXEMPLOS VÁLIDOS:
 - VÍNCULO EMPREGATÍCIO - PEJOTIZAÇÃO - PROCEDENTE
 - EQUIPARAÇÃO SALARIAL - IDENTIDADE DE FUNÇÕES - IMPROCEDENTE
 
-REGRAS:
+REGRAS DO TÍTULO:
 1. TEMA: Assunto principal (ex: HORAS EXTRAS, DANOS MORAIS, VÍNCULO)
 2. SUBTEMA: Especificação do tema (ex: SOBREJORNADA, ASSÉDIO, PEJOTIZAÇÃO)
 3. RESULTADO: PROCEDENTE, IMPROCEDENTE ou PARCIALMENTE PROCEDENTE
 4. Sempre em MAIÚSCULAS
 5. Separar com " - " (hífen com espaços)
 
-Responda APENAS com o título no formato especificado, sem explicações.`;
+REGRAS DA CATEGORIA:
+1. É apenas o TEMA do modelo (ex: "Horas Extras", "Danos Morais", "Vínculo Empregatício")
+2. Se uma categoria existente for equivalente ao tema, repita-a EXATAMENTE como está na lista acima
+3. Caso contrário, crie uma nova em Title Case
 
-      const title = await aiIntegration.callAI([{
+Responda APENAS com JSON válido, sem explicações:
+{"title": "...", "category": "..."}`;
+
+      const raw = await aiIntegration.callAI([{
         role: 'user',
         content: [{ type: 'text', text: prompt }]
       }], {
-        maxTokens: 100,
+        maxTokens: 200,
         useInstructions: false,
         temperature: 0.1,
         topP: 0.9,
         topK: 40
       });
 
-      if (title) {
-        modelLibrary.setNewModel(prev => ({ ...prev, title: title.trim() }));
+      if (raw) {
+        const { title, category } = resolveTitleAndCategory(raw, existingCategories);
+        modelLibrary.setNewModel(prev => ({ ...prev, title, category }));
       } else {
         setError('Não foi possível gerar o título. Tente novamente.');
       }

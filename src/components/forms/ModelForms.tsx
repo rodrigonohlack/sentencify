@@ -50,7 +50,7 @@ export const ModelFormFields = React.memo(({
             onClick={onGenerateTitle}
             disabled={generatingTitle || !formData.content}
             className="flex items-center gap-1 px-3 py-1 text-xs text-white bg-blue-600 disabled:theme-bg-tertiary disabled:cursor-not-allowed rounded hover-blue-700-from-600 transition-colors"
-            title="Gerar titulo com IA baseado no conteudo"
+            title="Gerar título e categoria com IA baseado no conteúdo"
           >
             {generatingTitle ? (
               <>
@@ -193,6 +193,13 @@ export const ModelFormModal = React.forwardRef<HTMLDivElement, ModelFormModalPro
       setLocalModel(prev => ({ ...prev, title: newModel.title }));
     }
   }, [isOpen, newModel.title]);
+
+  // v1.52.45: Sincronizar localModel quando IA gera categoria (junto com o título)
+  React.useEffect(() => {
+    if (isOpen && newModel.category && newModel.category !== localModel.category) {
+      setLocalModel(prev => ({ ...prev, category: newModel.category || '' }));
+    }
+  }, [isOpen, newModel.category]);
 
   // v1.37.11: Sincronizar localModel quando IA gera keywords
   React.useEffect(() => {
