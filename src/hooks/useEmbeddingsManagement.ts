@@ -37,6 +37,10 @@ export interface IndexedDBForEmbeddings {
   saveModels: (models: Model[]) => Promise<void>;
 }
 
+export interface CloudSyncForEmbeddings {
+  trackChangeBatch?: (changes: Array<{ operation: 'create' | 'update' | 'delete'; model: Partial<Model> & { id: string } }>) => void;
+}
+
 export interface UseEmbeddingsManagementProps {
   showToast: (message: string, type: 'success' | 'error' | 'info') => void;
   modelLibrary: ModelLibraryForEmbeddings;
@@ -44,6 +48,8 @@ export interface UseEmbeddingsManagementProps {
   jurisprudencia: JurisprudenciaForEmbeddings;
   indexedDB: IndexedDBForEmbeddings;
   searchModelReady: boolean;
+  /** v1.52.40: sync na nuvem dos embeddings reindexados (pode ser null na 1ª render). */
+  cloudSync?: CloudSyncForEmbeddings | null;
 }
 
 export interface UseEmbeddingsManagementReturn {
@@ -115,7 +121,12 @@ export function useEmbeddingsManagement({
   jurisprudencia,
   indexedDB,
   searchModelReady,
+  cloudSync,
 }: UseEmbeddingsManagementProps): UseEmbeddingsManagementReturn {
+
+  // v1.52.40: ref para cloudSync (pode ser null na 1ª render, igual ao useModelSave)
+  const cloudSyncRef = useRef(cloudSync);
+  useEffect(() => { cloudSyncRef.current = cloudSync; }, [cloudSync]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ESTADO - Contagens
@@ -577,6 +588,18 @@ export function useEmbeddingsManagement({
 
       await indexedDB.saveModels(updatedModels);
       modelLibrary.setModels(updatedModels);
+
+      // v1.52.40: empurrar os embeddings (re)gerados para o cloud sync, como nas demais
+      // mutações de modelo (useModelSave). A fila em memória do trackChange leva o
+      // embedding; sem isso, um reindex local divergiria do servidor.
+      const trackBatch = cloudSyncRef.current?.trackChangeBatch;
+      if (trackBatch) {
+        const changes = updatedModels
+          .filter(m => embeddingsMap.has(m.id))
+          .map(m => ({ operation: 'update' as const, model: m }));
+        if (changes.length) trackBatch(changes);
+      }
+
       showToast(`${targets.length} embeddings de modelos ${force ? 'reindexados' : 'gerados'}`, 'success');
     } catch (err) {
       showToast('Erro ao gerar embeddings: ' + (err as Error).message, 'error');

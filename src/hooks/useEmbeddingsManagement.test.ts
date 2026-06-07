@@ -1454,6 +1454,44 @@ describe('useEmbeddingsManagement', () => {
       expect(props.showToast).toHaveBeenCalledWith('Nenhum modelo para reindexar', 'info');
     });
 
+    it('empurra os modelos (re)embeddados para o cloud sync via trackChangeBatch', async () => {
+      const trackChangeBatch = vi.fn();
+      const props = { ...createDefaultProps(), cloudSync: { trackChangeBatch } };
+      props.searchModelReady = true;
+      props.modelLibrary.models = [
+        { id: 'm1', title: 'M1', content: 'c1' }, // sem embedding → entra
+        { id: 'm2', title: 'M2', content: 'c2', embedding: new Array(768).fill(0.1) }, // já tem → não entra no force=false
+      ] as any[];
+
+      const { result } = renderHook(() => useEmbeddingsManagement(props));
+
+      await act(async () => {
+        await result.current.generateModelEmbeddings(false);
+      });
+
+      // Só m1 foi (re)embeddado → só ele vai no batch, como 'update', com embedding 768
+      expect(trackChangeBatch).toHaveBeenCalledTimes(1);
+      const changes = trackChangeBatch.mock.calls[0][0];
+      expect(changes).toHaveLength(1);
+      expect(changes[0].operation).toBe('update');
+      expect(changes[0].model.id).toBe('m1');
+      expect(changes[0].model.embedding).toHaveLength(768);
+    });
+
+    it('não quebra quando cloudSync é null (sem sync)', async () => {
+      const props = { ...createDefaultProps(), cloudSync: null };
+      props.searchModelReady = true;
+      props.modelLibrary.models = [{ id: 'm1', title: 'M1', content: 'c1' }] as any[];
+
+      const { result } = renderHook(() => useEmbeddingsManagement(props));
+
+      await act(async () => {
+        await result.current.generateModelEmbeddings(false);
+      });
+
+      expect(props.showToast).toHaveBeenCalledWith('1 embeddings de modelos gerados', 'success');
+    });
+
     it('should reset generatingModelEmbeddings after success', async () => {
       const props = createDefaultProps();
       props.searchModelReady = true;

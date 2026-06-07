@@ -1781,6 +1781,7 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     jurisprudencia,
     indexedDB,
     searchModelReady,
+    cloudSync,
   });
 
   // v1.40.07: Variáveis não utilizadas removidas (agora em ConfigModal via useEmbeddingsManagement)
