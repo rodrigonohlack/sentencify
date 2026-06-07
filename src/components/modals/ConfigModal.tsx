@@ -2800,29 +2800,32 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                           </div>
                         </div>
                       )}
-                      {modelEmbeddingsCount > 0 && !aiSettings.useLocalAIForSuggestions && (
-                        <div className="mt-2 pt-3 border-t theme-border-subtle">
-                          <label className="block text-xs theme-text-muted mb-2">
-                            Modelo para sugestões via LLM
-                            <span className="block opacity-70">Usado quando "Sugestões via IA Local" está desligado</span>
-                          </label>
-                          <select
-                            value={aiSettings.suggestionModel || 'haiku'}
-                            onChange={(e) => setAiSettings({ ...aiSettings, suggestionModel: e.target.value as VoiceImprovementModel })}
-                            className="w-full px-3 py-2 rounded-lg theme-bg-primary theme-text-primary theme-border-input border text-sm"
-                          >
-                            {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
-                              .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys))
-                              .map(([key, config]) => (
-                                <option key={key} value={key}>{config.displayName}</option>
-                              ))
-                            }
-                          </select>
-                          {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
-                            .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys)).length === 0 && (
-                            <p className="text-xs text-red-400 mt-2">Configure pelo menos uma API key para usar este recurso.</p>
-                          )}
-                        </div>
+                    </div>
+                  )}
+
+                  {/* v1.52.41: seletor do modelo LLM — visível sempre que as sugestões NÃO usam IA
+                      Local (independe de embeddings, pois o caminho LLM não os usa) */}
+                  {!aiSettings.useLocalAIForSuggestions && (
+                    <div className="mt-3 pt-3 border-t theme-border-subtle">
+                      <label className="block text-xs theme-text-muted mb-2">
+                        Modelo para sugestões via LLM
+                        <span className="block opacity-70">Usado quando "Sugestões via IA Local" está desligado</span>
+                      </label>
+                      <select
+                        value={aiSettings.suggestionModel || 'haiku'}
+                        onChange={(e) => setAiSettings({ ...aiSettings, suggestionModel: e.target.value as VoiceImprovementModel })}
+                        className="w-full px-3 py-2 rounded-lg theme-bg-primary theme-text-primary theme-border-input border text-sm"
+                      >
+                        {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
+                          .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys))
+                          .map(([key, config]) => (
+                            <option key={key} value={key}>{config.displayName}</option>
+                          ))
+                        }
+                      </select>
+                      {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
+                        .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys)).length === 0 && (
+                        <p className="text-xs text-red-400 mt-2">Configure pelo menos uma API key para usar este recurso.</p>
                       )}
                     </div>
                   )}
