@@ -2814,7 +2814,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   <Bot className="w-4 h-4" aria-hidden /> Sugestões de Modelos (via LLM)
                 </label>
                 <p className="text-xs theme-text-muted mb-2">
-                  Modelo usado para sugerir modelos aos tópicos quando a busca semântica local (E5) não está em uso.
+                  Modelo usado para sugerir modelos aos tópicos quando a IA Local (E5) não está em uso.
                 </p>
                 <select
                   value={aiSettings.suggestionModel || 'haiku'}
