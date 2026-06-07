@@ -105,6 +105,19 @@ Drive (pasta) → [1] Seleção → [2] Segmentação → [3] Placeholders → [
   clusters → barato.
 - Parâmetro: limiar de similaridade.
 
+### [4b] Dedup global cross-tema (addendum — validado na rodada de 100)
+- **Gap descoberto:** o clustering de [4] só compara DENTRO do mesmo tema
+  normalizado. Capítulos quase idênticos com cabeçalhos diferentes (ex.:
+  "HONORÁRIOS SUCUMBENCIAIS" vs "Honorários advocatícios", ou o mesmo boilerplate
+  rotulado de formas distintas por subagentes paralelos) caem em temas distintos,
+  nunca são comparados e **sobrevivem como duplicatas**. Medido na rodada de 100:
+  ~33 pares com cosseno ≥ 0,90 entre os modelos finais.
+- **Solução:** 2º passe **`dedupe-global.mjs`** sobre os modelos montados —
+  cosseno TF-IDF GLOBAL (ignora tema), funde pares ≥ 0,90 mantendo o conteúdo
+  mais completo e preferindo o rótulo polido (não-CAIXA-ALTA). Conservador (0,90)
+  para preservar variantes legítimas; 0,85 para dedup mais agressivo.
+- Passo OBRIGATÓRIO do pipeline (Etapa 7b do SKILL.md), entre o build e o report.
+
 ### [5] Saída JSON
 - Emite o array `[{title, content, keywords, category}]` em arquivo local.
 - Usuário importa pela tela de modelos do Sentencify.
