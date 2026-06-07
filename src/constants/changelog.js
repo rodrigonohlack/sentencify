@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.44',
+    date: '2026-06-07',
+    feature: 'perf(modelos): o prompt de refinamento de sugestões via LLM enviava o CONTEÚDO COMPLETO (HTML) de até 10 modelos candidatos no campo "Resumo" — inflando a requisição para dezenas de KB só para receber de volta uma lista de IDs. Agora o conteúdo de cada candidato é limpo de HTML e cortado em 300 chars, derrubando o tamanho do prompt em ~90% sem perda relevante para o ranking (título/categoria/keywords carregam o sinal).',
+  },
+  {
     version: '1.52.43',
     date: '2026-06-07',
     feature: 'fix(modelos): o card "Sugestões de Modelos (via LLM)" agora aparece SEMPRE na seção Busca & Dados. Antes ele só renderizava quando "Sugestões via IA Local" estava desligado — mas o toggle que controla isso vive dentro do bloco do E5-base; se o usuário tivesse deixado esse flag ligado e depois desligasse o E5, o toggle ficava inacessível e o seletor sumia (armadilha). Como o card só configura QUAL LLM usar (aplicado quando as sugestões não usam a IA Local), passou a ser sempre visível.',
