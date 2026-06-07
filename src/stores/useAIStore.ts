@@ -274,6 +274,7 @@ const initialAISettings: AISettings = {
   modelSemanticEnabled: false,
   modelSemanticThreshold: 40,
   useLocalAIForSuggestions: false,
+  suggestionModel: 'haiku',
   useLocalAIForJuris: false,
   quickPrompts: DEFAULT_QUICK_PROMPTS,
   logThinking: false,

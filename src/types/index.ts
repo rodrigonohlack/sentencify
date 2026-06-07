@@ -371,6 +371,8 @@ export interface AISettings {
   modelSemanticEnabled?: boolean;
   modelSemanticThreshold?: number;
   useLocalAIForSuggestions?: boolean;
+  /** v1.52.40: Modelo LLM para sugestão de modelos quando IA Local está desligada (reusa a lista da Voz). Default 'haiku'. */
+  suggestionModel?: VoiceImprovementModel;
   useLocalAIForJuris?: boolean;
   quickPrompts: QuickPrompt[];
   logThinking?: boolean;
