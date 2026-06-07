@@ -35,6 +35,7 @@ vi.mock('../services/AIModelService', () => ({
 // Importar mocks para referência direta nos testes
 import { EmbeddingsService, JurisEmbeddingsService, EmbeddingsCDNService } from '../services/EmbeddingsServices';
 import AIModelService from '../services/AIModelService';
+import { MODEL_EMBED_CONTENT_LEAD } from '../utils/modelEmbeddingText';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -1401,7 +1402,7 @@ describe('useEmbeddingsManagement', () => {
       expect(callArg).not.toContain('<i>');
     });
 
-    it('should truncate content to 2000 chars', async () => {
+    it('should truncate content to MODEL_EMBED_CONTENT_LEAD (400) chars', async () => {
       const props = createDefaultProps();
       props.searchModelReady = true;
       const longContent = 'A'.repeat(5000);
@@ -1416,8 +1417,79 @@ describe('useEmbeddingsManagement', () => {
       });
 
       const callArg = (AIModelService.getEmbedding as any).mock.calls[0][0] as string;
-      // Title is empty, keywords empty, content is stripped and sliced to 2000
-      expect(callArg.length).toBeLessThanOrEqual(2000);
+      // Title is empty, keywords empty, content is stripped and sliced to MODEL_EMBED_CONTENT_LEAD
+      expect(callArg.length).toBeLessThanOrEqual(MODEL_EMBED_CONTENT_LEAD);
+    });
+
+    it('com force=true: regera TODOS os modelos, inclusive os que já têm embedding', async () => {
+      const props = createDefaultProps();
+      props.searchModelReady = true;
+      props.modelLibrary.models = [
+        { id: 'm1', title: 'M1', content: 'c1', embedding: new Array(768).fill(0.1) }, // já tem embedding válido
+        { id: 'm2', title: 'M2', content: 'c2' }, // sem embedding
+      ] as any[];
+
+      const { result } = renderHook(() => useEmbeddingsManagement(props));
+
+      await act(async () => {
+        await result.current.generateModelEmbeddings(true);
+      });
+
+      // force=true deve processar os dois (inclusive m1 que já tinha embedding 768-dim)
+      expect(AIModelService.getEmbedding).toHaveBeenCalledTimes(2);
+      expect(props.showToast).toHaveBeenCalledWith('2 embeddings de modelos reindexados', 'success');
+    });
+
+    it('com force=true e biblioteca vazia: mostra "Nenhum modelo para reindexar"', async () => {
+      const props = createDefaultProps();
+      props.searchModelReady = true;
+      props.modelLibrary.models = [];
+
+      const { result } = renderHook(() => useEmbeddingsManagement(props));
+
+      await act(async () => {
+        await result.current.generateModelEmbeddings(true);
+      });
+
+      expect(props.showToast).toHaveBeenCalledWith('Nenhum modelo para reindexar', 'info');
+    });
+
+    it('empurra os modelos (re)embeddados para o cloud sync via trackChangeBatch', async () => {
+      const trackChangeBatch = vi.fn();
+      const props = { ...createDefaultProps(), cloudSync: { trackChangeBatch } };
+      props.searchModelReady = true;
+      props.modelLibrary.models = [
+        { id: 'm1', title: 'M1', content: 'c1' }, // sem embedding → entra
+        { id: 'm2', title: 'M2', content: 'c2', embedding: new Array(768).fill(0.1) }, // já tem → não entra no force=false
+      ] as any[];
+
+      const { result } = renderHook(() => useEmbeddingsManagement(props));
+
+      await act(async () => {
+        await result.current.generateModelEmbeddings(false);
+      });
+
+      // Só m1 foi (re)embeddado → só ele vai no batch, como 'update', com embedding 768
+      expect(trackChangeBatch).toHaveBeenCalledTimes(1);
+      const changes = trackChangeBatch.mock.calls[0][0];
+      expect(changes).toHaveLength(1);
+      expect(changes[0].operation).toBe('update');
+      expect(changes[0].model.id).toBe('m1');
+      expect(changes[0].model.embedding).toHaveLength(768);
+    });
+
+    it('não quebra quando cloudSync é null (sem sync)', async () => {
+      const props = { ...createDefaultProps(), cloudSync: null };
+      props.searchModelReady = true;
+      props.modelLibrary.models = [{ id: 'm1', title: 'M1', content: 'c1' }] as any[];
+
+      const { result } = renderHook(() => useEmbeddingsManagement(props));
+
+      await act(async () => {
+        await result.current.generateModelEmbeddings(false);
+      });
+
+      expect(props.showToast).toHaveBeenCalledWith('1 embeddings de modelos gerados', 'success');
     });
 
     it('should reset generatingModelEmbeddings after success', async () => {

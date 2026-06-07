@@ -193,6 +193,12 @@ vi.mock('../../hooks', () => ({
     'grok-instant': { provider: 'grok', model: 'grok-4-1-fast-non-reasoning', displayName: 'Grok Instant' },
     'deepseek-flash': { provider: 'deepseek', model: 'deepseek-v4-flash', displayName: 'DeepSeek V4 Flash' },
   },
+  // Espelha a lógica real: CLIs sempre disponíveis; cloud exige API key não-vazia.
+  isFastModelAvailable: (config: { provider?: string }, apiKeys?: Record<string, string>) => {
+    if (config?.provider === 'claude-cli' || config?.provider === 'codex-cli') return true;
+    const key = apiKeys?.[config?.provider ?? ''];
+    return !!(key && key.trim().length > 0);
+  },
 }));
 
 // Mock services

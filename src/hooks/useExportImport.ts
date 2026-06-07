@@ -10,6 +10,7 @@
 import React from 'react';
 import AIModelService from '../services/AIModelService';
 import { stripInlineColors } from '../utils/color-stripper';
+import { buildModelEmbeddingText } from '../utils/modelEmbeddingText';
 import type { Model, AISettings } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -252,11 +253,6 @@ export function useExportImport({
       if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady && newModels.length > 0) {
         const modelsWithoutEmbedding = newModels.filter(m => !m.embedding || m.embedding.length !== 768);
         if (modelsWithoutEmbedding.length > 0) {
-          const stripHTML = (html: string) => {
-            const div = document.createElement('div');
-            div.innerHTML = html || '';
-            return div.textContent || div.innerText || '';
-          };
           // v1.52.35: reporta progresso — a geração roda o modelo de embedding
           // local (E5) um por vez e pode demorar; sem isso o import parece travado.
           const totalToEmbed = modelsWithoutEmbedding.length;
@@ -264,7 +260,7 @@ export function useExportImport({
           let embedded = 0;
           for (const model of modelsWithoutEmbedding) {
             try {
-              const text = [model.title, model.keywords, stripHTML(model.content).slice(0, 2000)].filter(Boolean).join(' ');
+              const text = buildModelEmbeddingText(model);
               model.embedding = await AIModelService.getEmbedding(text, 'passage');
             } catch (err) {
               console.warn('[MODEL-EMBED] Erro ao gerar embedding para modelo importado:', err);

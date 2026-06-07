@@ -382,6 +382,18 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
     }
   }, [aiSettings, setAiSettings]);
 
+  // v1.52.40: auto-reset do modelo de sugestão se a key sumir
+  React.useEffect(() => {
+    const selected = aiSettings.suggestionModel || 'haiku';
+    const cfg = VOICE_MODEL_CONFIG[selected];
+    if (cfg && isFastModelAvailable(cfg, aiSettings.apiKeys)) return;
+    const firstAvailable = (Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
+      .find(([, c]) => isFastModelAvailable(c, aiSettings.apiKeys));
+    if (firstAvailable && firstAvailable[0] !== selected) {
+      setAiSettings({ ...aiSettings, suggestionModel: firstAvailable[0] });
+    }
+  }, [aiSettings, setAiSettings]);
+
   // ─────────────────────────────────────────────────────────────────────────────
   // NAVEGAÇÃO POR SEÇÃO (sidebar) — v1.52.22
   // ─────────────────────────────────────────────────────────────────────────────
@@ -2755,10 +2767,18 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   {aiSettings.modelSemanticEnabled && (
                     <div className="space-y-3 pt-2 border-t theme-border-subtle">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <button onClick={generateModelEmbeddings} disabled={generatingModelEmbeddings}
+                        <button onClick={() => generateModelEmbeddings(false)} disabled={generatingModelEmbeddings}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${!generatingModelEmbeddings ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-400 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed'}`}>
                           {generatingModelEmbeddings ? (<><RefreshCw className="w-3 h-3 animate-spin" /> Gerando... {modelEmbeddingsProgress.current}/{modelEmbeddingsProgress.total}</>) : (<><Sparkles className="w-3 h-3" /> Gerar Embeddings</>)}
                         </button>
+                        {modelEmbeddingsCount > 0 && (
+                          <button
+                            onClick={() => { if (window.confirm('Reindexar recalcula o embedding de TODOS os modelos com a nova fórmula. Pode levar um tempo. Continuar?')) generateModelEmbeddings(true); }}
+                            disabled={generatingModelEmbeddings}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium theme-bg-secondary-50 theme-text-tertiary border theme-border-input hover-theme-bg-secondary transition-colors disabled:opacity-50">
+                            <RefreshCw className="w-3 h-3" /> Reindexar
+                          </button>
+                        )}
                         {modelEmbeddingsCount > 0 && (<button onClick={clearModelEmbeddings} className="px-2 py-1.5 text-red-500 dark:text-red-400 text-xs"><Trash2 className="w-3 h-3" /></button>)}
                       </div>
                       {generatingModelEmbeddings && modelEmbeddingsProgress.total > 0 && (
@@ -2778,6 +2798,30 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                                onClick={() => setAiSettings({ ...aiSettings, useLocalAIForSuggestions: !aiSettings.useLocalAIForSuggestions })}>
                             <div className="toggle-knob"></div>
                           </div>
+                        </div>
+                      )}
+                      {modelEmbeddingsCount > 0 && !aiSettings.useLocalAIForSuggestions && (
+                        <div className="mt-2 pt-3 border-t theme-border-subtle">
+                          <label className="block text-xs theme-text-muted mb-2">
+                            Modelo para sugestões via LLM
+                            <span className="block opacity-70">Usado quando "Sugestões via IA Local" está desligado</span>
+                          </label>
+                          <select
+                            value={aiSettings.suggestionModel || 'haiku'}
+                            onChange={(e) => setAiSettings({ ...aiSettings, suggestionModel: e.target.value as VoiceImprovementModel })}
+                            className="w-full px-3 py-2 rounded-lg theme-bg-primary theme-text-primary theme-border-input border text-sm"
+                          >
+                            {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
+                              .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys))
+                              .map(([key, config]) => (
+                                <option key={key} value={key}>{config.displayName}</option>
+                              ))
+                            }
+                          </select>
+                          {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
+                            .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys)).length === 0 && (
+                            <p className="text-xs text-red-400 mt-2">Configure pelo menos uma API key para usar este recurso.</p>
+                          )}
                         </div>
                       )}
                     </div>

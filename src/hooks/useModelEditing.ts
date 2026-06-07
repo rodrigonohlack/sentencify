@@ -12,6 +12,7 @@ import type { Model, SimilarityWarningState } from '../types';
 import { generateModelId } from '../utils/text';
 import { TFIDFSimilarity } from '../services/EmbeddingsServices';
 import AIModelService from '../services/AIModelService';
+import { buildModelEmbeddingText } from '../utils/modelEmbeddingText';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -96,19 +97,6 @@ export interface UseModelEditingReturn {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * Strips HTML tags from a string
- */
-const stripHTML = (html: string): string => {
-  const div = document.createElement('div');
-  div.innerHTML = html || '';
-  return div.textContent || div.innerText || '';
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
 // HOOK
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -165,7 +153,7 @@ export function useModelEditing(props: UseModelEditingProps): UseModelEditingRet
       if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
         await new Promise(resolve => setTimeout(resolve, 50));
         try {
-          const text = [updatedModel.title, updatedModel.keywords, stripHTML(updatedModel.content).slice(0, 2000)].filter(Boolean).join(' ');
+          const text = buildModelEmbeddingText(updatedModel);
           updatedModel.embedding = await AIModelService.getEmbedding(text, 'passage');
         } catch (err) {
           console.warn('[MODEL-EMBED] Erro ao regenerar embedding:', err);
@@ -261,7 +249,7 @@ export function useModelEditing(props: UseModelEditingProps): UseModelEditingRet
     if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
       await new Promise(resolve => setTimeout(resolve, 50));
       try {
-        const text = [modelData.title, modelData.keywords, stripHTML(modelData.content).slice(0, 2000)].filter(Boolean).join(' ');
+        const text = buildModelEmbeddingText(modelData);
         modelData.embedding = await AIModelService.getEmbedding(text, 'passage');
       } catch (err) {
         console.warn('[MODEL-EMBED] Erro ao gerar embedding:', err);
@@ -348,7 +336,7 @@ export function useModelEditing(props: UseModelEditingProps): UseModelEditingRet
       if (aiIntegration.aiSettings.modelSemanticEnabled && searchModelReady) {
         await new Promise(resolve => setTimeout(resolve, 50));
         try {
-          const text = [duplicatedModel.title, duplicatedModel.keywords, stripHTML(duplicatedModel.content).slice(0, 2000)].filter(Boolean).join(' ');
+          const text = buildModelEmbeddingText(duplicatedModel);
           duplicatedModel.embedding = await AIModelService.getEmbedding(text, 'passage');
         } catch (err) {
           console.warn('[MODEL-EMBED] Erro ao gerar embedding:', err);

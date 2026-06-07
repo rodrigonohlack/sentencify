@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.40',
+    date: '2026-06-07',
+    feature: 'feat(modelos): classificador de sugestões via IA Local reescrito para ranking híbrido — combina similaridade semântica (cosseno do E5 rescalado para faixa útil, já que o E5 tem baseline alto) com a pontuação lexical de título/categoria/keywords, e FIXA os modelos favoritos (estrela) no topo. A query agora usa título + categoria (antes só o título). O texto do embedding de cada modelo passou a ser título + keywords + lead de 400 chars do conteúdo (antes 2000 chars, que diluíam o sinal e puxavam irrelevantes) — consolidado num único util buildModelEmbeddingText. Novo botão "Reindexar modelos" em Busca & Dados recalcula todos os embeddings com a nova fórmula. O slider de threshold passou a operar sobre o score combinado (escala 0–1 calibrada). Quando a IA Local de sugestões está desligada (busca via LLM), agora dá para escolher um modelo barato dedicado (mesma lista da Melhoria de Voz) em Busca & Dados, em vez de cair sempre no modelo padrão.',
+  },
+  {
     version: '1.52.39',
     date: '2026-06-07',
     feature: 'fix(modelos): inserir no editor um modelo cujo conteúdo guarda as quebras como texto plano (\\n) — caso de modelos importados via JSON — colava tudo corrido, sem separar parágrafos. As duas vias de inserção (insertModelContent via dangerouslyPasteHTML e handleInsertModel do editor global, que concatena no HTML do tópico) passam o conteúdo por ensureHtmlParagraphs antes de inserir, complementando o fix de visualização do v1.52.38. No-op para modelos que já são HTML estruturado.',
