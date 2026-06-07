@@ -104,6 +104,14 @@ export function injectQuillStyles(): void {
       margin-bottom: 0.25em !important;  /* v1.5.11: Espaçamento sutil para aparência de quebra única */
     }
 
+    /* v1.52.46: Justificado por padrão nos editores (relatório, mini-relatório,
+       decisão individual e global) — consistente com a exportação, que já usa
+       text-align: justify. O :not([class*="ql-align"]) preserva alinhamentos
+       escolhidos manualmente pela toolbar (center/right/left/justify). */
+    .ql-editor p:not([class*="ql-align"]) {
+      text-align: justify !important;
+    }
+
     /* Negrito - apenas peso (herda cor do tema) */
     .ql-editor strong,
     .ql-editor b {

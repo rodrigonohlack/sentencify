@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.46',
+    date: '2026-06-07',
+    feature: 'feat(editor): os campos de edição de relatório, mini-relatório e decisão (individual e global) agora aparecem JUSTIFICADOS por padrão, em vez de alinhados à esquerda. É uma mudança puramente visual via CSS (regra .ql-editor p:not([class*="ql-align"]) { text-align: justify }), aplicada a todos os editores Quill de uma vez — o HTML salvo não muda e a exportação para Word/PDF já usava justify, então o resultado final continua idêntico; muda só a experiência de edição, que passa a refletir a saída. Alinhamentos escolhidos manualmente pela toolbar (centro/direita/esquerda) são preservados.',
+  },
+  {
     version: '1.52.45',
     date: '2026-06-07',
     feature: 'feat(modelos): ao clicar "Gerar com IA" no título do cadastro de modelos, a IA passa a gerar também a CATEGORIA (= o TEMA do modelo) na mesma chamada. Para evitar duplicatas "quase iguais" (ex: "Horas Extras" vs "horas extras" vs "Sobrejornada"), a lista de categorias existentes é enviada no prompt com instrução de reutilizar uma delas quando o tema for equivalente (inclusive sinônimos), só criando nova quando nenhuma servir. Rede de segurança léxica: se a IA devolver uma grafia diferente de uma categoria existente (caixa/acento), o app adota a grafia da existente; categoria nova vem em Title Case. Resposta sem JSON válido cai em fallback (título plano + tema derivado), sem quebrar.',
