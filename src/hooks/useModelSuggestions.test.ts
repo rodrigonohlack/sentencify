@@ -473,6 +473,32 @@ describe('useModelSuggestions', () => {
         expect.objectContaining({ provider: 'openai', model: 'gpt-4o-mini' })
       );
     });
+
+    it('trunca o conteúdo dos candidatos no prompt (não manda o documento inteiro)', async () => {
+      const hugeContent = '<p>' + 'x'.repeat(5000) + '</p>';
+      (useModelsStore.getState as ReturnType<typeof vi.fn>).mockReturnValue({
+        models: [createMockModel({ id: 'm1', title: 'HORAS EXTRAS', category: 'MÉRITO', content: hugeContent })],
+      });
+      mockCallAI.mockResolvedValue('["m1"]');
+
+      const ai = createMockAIIntegration({ useLocalAIForSuggestions: false });
+
+      const { result } = renderHook(() => useModelSuggestions({
+        aiIntegration: ai as any,
+        apiCache: { get: () => null, set: vi.fn() },
+        searchModelReady: false,
+      }));
+
+      await act(async () => {
+        await result.current.findSuggestions(createMockTopic({ title: 'HORAS EXTRAS', category: 'MÉRITO' }));
+      });
+
+      const messages = mockCallAI.mock.calls[0][0] as { content: { text: string }[] }[];
+      const promptText = messages[0].content[0].text;
+      // o conteúdo de 5000 'x' não pode entrar inteiro; só um trecho curto (~300 chars)
+      expect(promptText).not.toContain('x'.repeat(400));
+      expect(promptText).toContain('x'.repeat(100));
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

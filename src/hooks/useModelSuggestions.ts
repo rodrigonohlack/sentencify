@@ -19,7 +19,11 @@ import { useModelsStore } from '../stores/useModelsStore';
 import AIModelService from '../services/AIModelService';
 import { AI_PROMPTS } from '../prompts';
 import { isSpecialTopic } from '../utils/text';
+import { stripHtmlToText } from '../utils/modelEmbeddingText';
 import { VOICE_MODEL_CONFIG } from './useVoiceImprovement';
+
+/** Tamanho máximo do trecho de conteúdo enviado por candidato no prompt de refinamento. */
+const REFINE_SNIPPET_LEN = 300;
 import type { Model, Topic, AIMessage, AICallOptions } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -199,7 +203,7 @@ MODELOS CANDIDATOS:
 ${topCandidates.map((m: Model, i: number) => `${i + 1}. [ID: ${m.id}] ${m.title}
    Categoria: ${m.category || 'N/A'}
    Keywords: ${m.keywords || 'N/A'}
-   Resumo: ${m.content || 'N/A'}`).join('\n\n')}
+   Resumo: ${stripHtmlToText(m.content).slice(0, REFINE_SNIPPET_LEN) || 'N/A'}`).join('\n\n')}
 
 TAREFA:
 Analise semanticamente qual desses modelos é mais relevante para o tópico em questão.
