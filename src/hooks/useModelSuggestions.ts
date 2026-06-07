@@ -19,6 +19,7 @@ import { useModelsStore } from '../stores/useModelsStore';
 import AIModelService from '../services/AIModelService';
 import { AI_PROMPTS } from '../prompts';
 import { isSpecialTopic } from '../utils/text';
+import { VOICE_MODEL_CONFIG } from './useVoiceImprovement';
 import type { Model, Topic, AIMessage, AICallOptions } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -29,17 +30,10 @@ export interface AIIntegrationForSuggestions {
   aiSettings: {
     useLocalAIForSuggestions?: boolean;
     modelSemanticThreshold?: number;
+    suggestionModel?: import('../types').VoiceImprovementModel;
   };
   buildApiRequest: (messages: AIMessage[], optionsOrMaxTokens?: AICallOptions | number) => Record<string, unknown>;
-  callAI: (messages: AIMessage[], options?: {
-    maxTokens?: number;
-    useInstructions?: boolean;
-    disableThinking?: boolean;
-    logMetrics?: boolean;
-    temperature?: number;
-    topP?: number;
-    topK?: number;
-  }) => Promise<string>;
+  callAI: (messages: AIMessage[], options?: AICallOptions) => Promise<string>;
 }
 
 export interface APICacheForSuggestions {
@@ -220,7 +214,10 @@ Formato: ["id1", "id2", "id3", ...]
 
 Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, retorne array vazio: []`;
 
-      // Usar Sonnet 4.5 (modelo padrão) para recomendação de modelos
+      // v1.52.40: modelo LLM escolhido p/ sugestão (fallback haiku)
+      const modelKey = aiIntegration.aiSettings.suggestionModel || 'haiku';
+      const modelCfg = VOICE_MODEL_CONFIG[modelKey] || VOICE_MODEL_CONFIG['haiku'];
+
       const messages: AIMessage[] = [{
         role: 'user',
         content: [{ type: 'text', text: prompt }]
@@ -229,6 +226,8 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
       let textContent;
       try {
         textContent = await aiIntegration.callAI(messages, {
+          provider: modelCfg.provider,
+          model: modelCfg.model,
           maxTokens: 300,
           useInstructions: false,
           disableThinking: true,

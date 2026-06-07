@@ -448,6 +448,31 @@ describe('useModelSuggestions', () => {
       // Should still return candidates
       expect(suggestions.suggestions).toHaveLength(1);
     });
+
+    it('refineWithAI envia provider/model do suggestionModel selecionado para callAI', async () => {
+      (useModelsStore.getState as ReturnType<typeof vi.fn>).mockReturnValue({
+        models: [createMockModel({ id: 'm1', title: 'HORAS EXTRAS', category: 'MÉRITO' })],
+      });
+      mockCallAI.mockResolvedValue('["m1"]');
+
+      const ai = createMockAIIntegration({ useLocalAIForSuggestions: false });
+      (ai.aiSettings as any).suggestionModel = 'gpt-4o-mini';
+
+      const { result } = renderHook(() => useModelSuggestions({
+        aiIntegration: ai as any,
+        apiCache: { get: () => null, set: vi.fn() },
+        searchModelReady: false,
+      }));
+
+      await act(async () => {
+        await result.current.findSuggestions(createMockTopic({ title: 'HORAS EXTRAS', category: 'MÉRITO' }));
+      });
+
+      expect(mockCallAI).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ provider: 'openai', model: 'gpt-4o-mini' })
+      );
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
