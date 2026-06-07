@@ -97,6 +97,14 @@ Drive (pasta) → [1] Seleção → [2] Segmentação → [3] Placeholders → [
   - tipo de parte: `massa falida`, `fazenda pública`, `pessoa jurídica`
   - resultado: `indeferid*`
   - nexo: `concausa`/`nexo direto`/`sem nexo`
+- **Desfecho vem da DECISÃO, não do pedido das partes** (fix validado na rodada
+  de 100): `detectSignals` pega a ÚLTIMA ocorrência dos marcadores (o dispositivo
+  do capítulo está no fim), senão confunde "requer o indeferimento" (pedido do
+  réu, no início) com "defiro" (decisão, no fim). Regex com lookbehind evita
+  casar `defer` dentro de `indefer` e `procedente` dentro de `improcedente`.
+- **Snippet de rotulagem = início + FIM** do capítulo: sem o fim, o rotulador
+  não vê o que foi decidido e confabula o título. O prompt do rotulador trata o
+  `outcomeKey` como dica (pode errar) e proíbe inventar circunstâncias ausentes.
 - Cluster quase-idêntico (sim alta) → 1 canônico = representante mais completo
   (mais longo / mais citações).
 - Clusters de teses distintas → 1 modelo por variante.
