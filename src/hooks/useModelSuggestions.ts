@@ -281,12 +281,13 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
     // v1.29.05: Não gerar sugestões para tópicos especiais (RELATÓRIO e DISPOSITIVO)
     if (isSpecialTopic(topic)) return { suggestions: [], source: null };
 
-    // v1.28.02: IA Local para sugestões (sem API Claude)
+    // v1.28.02 / v1.52.40: IA Local para sugestões (sem API). Ranking híbrido + pin de favoritos.
     if (aiIntegration.aiSettings.useLocalAIForSuggestions && searchModelReady && models.some(m => m.embedding?.length === 768)) {
       if (!topic?.title || topic.title.length < 3) return { suggestions: [], source: null };
-      // v1.32.22: Usar apenas título para query mais focada
-      const topicText = topic.title;
-      const cacheKey = `suggestions_local_${topicText}`;
+      const topicCategory = topic.category || '';
+      // v1.52.40: query enriquecida (título + categoria) em vez de só o título
+      const queryText = [topic.title, topicCategory].filter(Boolean).join(' ');
+      const cacheKey = `suggestions_local_${queryText}`;
       const cached = apiCache.get(cacheKey);
       if (cached && typeof cached === 'string') {
         try {
@@ -296,14 +297,14 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
       try {
         await new Promise(r => setTimeout(r, 0)); // Yield para UI não congelar
         // v1.32.20: toLowerCase para E5 case-sensitive
-        const qEmb = await AIModelService.getEmbedding(topicText.toLowerCase(), 'query');
-        const threshold = (aiIntegration.aiSettings.modelSemanticThreshold || 60) / 100;
-        const results = models
-          .filter(m => m.embedding?.length === 768)
-          .map(m => ({ ...m, similarity: AIModelService.cosineSimilarity(qEmb, m.embedding || []) }))
-          .filter(m => m.similarity >= threshold)
-          .sort((a, b) => b.similarity - a.similarity)
-          .slice(0, 5);
+        const qEmb = await AIModelService.getEmbedding(queryText.toLowerCase(), 'query');
+        const threshold = (aiIntegration.aiSettings.modelSemanticThreshold || 40) / 100;
+        const results = rankModelsLocal(
+          models,
+          { title: topic.title, category: topicCategory, relatorio: topic.relatorio || topic.editedRelatorio || '' },
+          qEmb,
+          threshold
+        );
         const result: SuggestionsResult = { suggestions: results, source: 'local' };
         apiCache.set(cacheKey, JSON.stringify(result));
         return result;
