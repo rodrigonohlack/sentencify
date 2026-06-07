@@ -14,6 +14,7 @@ import type {
 import { EmbeddingsService, JurisEmbeddingsService, EmbeddingsCDNService } from '../services/EmbeddingsServices';
 import AIModelService from '../services/AIModelService';
 import { useUIStore } from '../stores/useUIStore';
+import { buildModelEmbeddingText } from '../utils/modelEmbeddingText';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -90,7 +91,7 @@ export interface UseEmbeddingsManagementReturn {
   clearModelEmbeddings: () => Promise<void>;
 
   // Handlers - Geração
-  generateModelEmbeddings: () => Promise<void>;
+  generateModelEmbeddings: (force?: boolean) => Promise<void>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -532,41 +533,38 @@ export function useEmbeddingsManagement({
   // HANDLERS - Geração de embeddings de modelos
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const generateModelEmbeddings = useCallback(async () => {
+  const generateModelEmbeddings = useCallback(async (force = false) => {
     if (!searchModelReady) {
       showToast('Modelo de busca não está pronto', 'error');
       return;
     }
     if (generatingModelEmbeddings) return;
 
-    const modelsWithoutEmbedding = modelLibrary.models.filter(m => !m.embedding || m.embedding.length !== 768);
-    if (!modelsWithoutEmbedding.length) {
-      showToast('Todos os modelos já têm embeddings', 'info');
+    // force=true: reindexa TODOS (recalcula). force=false: só os que faltam.
+    const targets = force
+      ? modelLibrary.models
+      : modelLibrary.models.filter(m => !m.embedding || m.embedding.length !== 768);
+
+    if (!targets.length) {
+      showToast(force ? 'Nenhum modelo para reindexar' : 'Todos os modelos já têm embeddings', 'info');
       return;
     }
 
     setGeneratingModelEmbeddings(true);
-    setModelEmbeddingsProgress({ current: 0, total: modelsWithoutEmbedding.length });
+    setModelEmbeddingsProgress({ current: 0, total: targets.length });
 
     // Yield para React renderizar estado de loading
     await new Promise(resolve => setTimeout(resolve, 50));
 
     try {
-      const stripHTML = (html: string) => {
-        const div = document.createElement('div');
-        div.innerHTML = html || '';
-        return div.textContent || div.innerText || '';
-      };
-
       // v1.37.57: Coletar embeddings em um Map (evita mutação de objetos frozen do Zustand/Immer)
       const embeddingsMap = new Map<string, number[]>();
 
-      for (let i = 0; i < modelsWithoutEmbedding.length; i++) {
-        const model = modelsWithoutEmbedding[i];
-        const text = [model.title, model.keywords, stripHTML(model.content).slice(0, 2000)].filter(Boolean).join(' ');
-        const embedding = await AIModelService.getEmbedding(text, 'passage');
+      for (let i = 0; i < targets.length; i++) {
+        const model = targets[i];
+        const embedding = await AIModelService.getEmbedding(buildModelEmbeddingText(model), 'passage');
         embeddingsMap.set(model.id, embedding);
-        setModelEmbeddingsProgress({ current: i + 1, total: modelsWithoutEmbedding.length });
+        setModelEmbeddingsProgress({ current: i + 1, total: targets.length });
         // Yield to event loop para permitir que React renderize o progresso
         await new Promise(resolve => setTimeout(resolve, 0));
       }
@@ -577,10 +575,9 @@ export function useEmbeddingsManagement({
         return embedding ? { ...m, embedding } : m;
       });
 
-      // Salvar modelos atualizados
       await indexedDB.saveModels(updatedModels);
       modelLibrary.setModels(updatedModels);
-      showToast(`${modelsWithoutEmbedding.length} embeddings de modelos gerados`, 'success');
+      showToast(`${targets.length} embeddings de modelos ${force ? 'reindexados' : 'gerados'}`, 'success');
     } catch (err) {
       showToast('Erro ao gerar embeddings: ' + (err as Error).message, 'error');
       console.error('[MODEL-SEARCH] Erro:', err);
