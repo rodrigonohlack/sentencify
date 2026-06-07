@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.47',
+    date: '2026-06-07',
+    feature: 'fix(modelos): corrigido crash "Cannot add property embedding, object is not extensible" ao salvar modelo pelo painel de "Modelo Similar Encontrado" (Salvar mesmo assim/Substituir) com a IA Local (E5) ligada. Causa raiz: o similarityWarning é guardado no useModelsStore, cujo middleware immer CONGELA (Object.freeze) o state; os fluxos de save tentavam mutar esse objeto congelado (model.embedding = ...). Agora executeSaveModel/executeSaveAsNew/executeExtractedModelSave clonam a entrada antes de gerar/remover embedding, e o caminho de importação em LOTE (processBulkSaveNext + handlers) clona arrays e itens em vez de mutá-los. Adicionados testes de regressão com objetos congelados.',
+  },
+  {
     version: '1.52.46',
     date: '2026-06-07',
     feature: 'feat(editor): os campos de edição de relatório, mini-relatório e decisão (individual e global) agora aparecem JUSTIFICADOS por padrão, em vez de alinhados à esquerda. É uma mudança puramente visual via CSS (regra .ql-editor p:not([class*="ql-align"]) { text-align: justify }), aplicada a todos os editores Quill de uma vez — o HTML salvo não muda e a exportação para Word/PDF já usava justify, então o resultado final continua idêntico; muda só a experiência de edição, que passa a refletir a saída. Alinhamentos escolhidos manualmente pela toolbar (centro/direita/esquerda) são preservados.',

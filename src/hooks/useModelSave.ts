@@ -162,24 +162,28 @@ export function useModelSave({
     isReplace = false,
     replaceId: string | null = null
   ) => {
+    // v1.52.47: clonar — o modelData pode vir CONGELADO (immer) do similarityWarning;
+    // mutar embedding direto lançaria "object is not extensible".
+    const data = { ...modelData };
+
     // Gerar embedding se modelo de busca estiver pronto E opção ativada
-    if (aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
+    if (aiSettings.modelSemanticEnabled && searchModelReady && !data.embedding) {
       await new Promise(resolve => setTimeout(resolve, 50));
-      modelData.embedding = await generateModelEmbedding(modelData, aiSettings.modelSemanticEnabled, searchModelReady);
-    } else if (!aiSettings.modelSemanticEnabled && modelData.embedding) {
-      delete modelData.embedding;
+      data.embedding = await generateModelEmbedding(data, aiSettings.modelSemanticEnabled, searchModelReady);
+    } else if (!aiSettings.modelSemanticEnabled && data.embedding) {
+      delete data.embedding;
     }
 
     if (isReplace && replaceId) {
-      const updatedModel = { ...modelData, id: replaceId, updatedAt: new Date().toISOString() };
+      const updatedModel = { ...data, id: replaceId, updatedAt: new Date().toISOString() };
       const updated = modelLibrary.models.map(m => m.id === replaceId ? updatedModel : m);
       modelLibrary.setModels(updated as Model[]);
       if (cloudSyncRef.current?.trackChange) cloudSyncRef.current.trackChange('update', updatedModel as Model);
       TFIDFSimilarity.invalidate();
       apiCache.invalidate('suggestions_');
     } else {
-      modelLibrary.setModels(prev => [...prev, modelData as Model]);
-      if (cloudSyncRef.current?.trackChange) cloudSyncRef.current.trackChange('create', modelData as Model);
+      modelLibrary.setModels(prev => [...prev, data as Model]);
+      if (cloudSyncRef.current?.trackChange) cloudSyncRef.current.trackChange('create', data as Model);
       TFIDFSimilarity.invalidate();
       apiCache.invalidate('suggestions_');
     }
@@ -355,22 +359,25 @@ export function useModelSave({
     isReplace = false,
     replaceId: string | null = null
   ) => {
+    // v1.52.47: clonar — modelData pode vir CONGELADO (immer) do similarityWarning.
+    const data = { ...modelData };
+
     // Gerar embedding se modelo de busca estiver pronto E opção ativada
-    if (aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
+    if (aiSettings.modelSemanticEnabled && searchModelReady && !data.embedding) {
       await new Promise(resolve => setTimeout(resolve, 50));
-      modelData.embedding = await generateModelEmbedding(modelData, aiSettings.modelSemanticEnabled, searchModelReady);
-    } else if (!aiSettings.modelSemanticEnabled && modelData.embedding) {
-      delete modelData.embedding;
+      data.embedding = await generateModelEmbedding(data, aiSettings.modelSemanticEnabled, searchModelReady);
+    } else if (!aiSettings.modelSemanticEnabled && data.embedding) {
+      delete data.embedding;
     }
 
     if (isReplace && replaceId) {
-      const updatedModel = { ...modelData, id: replaceId, updatedAt: new Date().toISOString() };
+      const updatedModel = { ...data, id: replaceId, updatedAt: new Date().toISOString() };
       const updated = modelLibrary.models.map(m => m.id === replaceId ? updatedModel : m);
       modelLibrary.setModels(updated as Model[]);
       if (cloudSyncRef.current?.trackChange) cloudSyncRef.current.trackChange('update', updatedModel as Model);
     } else {
-      modelLibrary.setModels(prev => [...prev, modelData as Model]);
-      if (cloudSyncRef.current?.trackChange) cloudSyncRef.current.trackChange('create', modelData as Model);
+      modelLibrary.setModels(prev => [...prev, data as Model]);
+      if (cloudSyncRef.current?.trackChange) cloudSyncRef.current.trackChange('create', data as Model);
     }
 
     modelLibrary.setHasUnsavedChanges(true);
@@ -389,21 +396,24 @@ export function useModelSave({
     isReplace = false,
     replaceId: string | null = null
   ) => {
+    // v1.52.47: clonar — modelData pode vir CONGELADO (immer) do similarityWarning.
+    const data = { ...modelData };
+
     // Gerar embedding se modelo de busca estiver pronto E opção ativada
-    if (aiSettings.modelSemanticEnabled && searchModelReady && !modelData.embedding) {
+    if (aiSettings.modelSemanticEnabled && searchModelReady && !data.embedding) {
       await new Promise(resolve => setTimeout(resolve, 50));
-      modelData.embedding = await generateModelEmbedding(modelData, aiSettings.modelSemanticEnabled, searchModelReady);
-    } else if (!aiSettings.modelSemanticEnabled && modelData.embedding) {
-      delete modelData.embedding;
+      data.embedding = await generateModelEmbedding(data, aiSettings.modelSemanticEnabled, searchModelReady);
+    } else if (!aiSettings.modelSemanticEnabled && data.embedding) {
+      delete data.embedding;
     }
 
     if (isReplace && replaceId) {
-      const updatedModel = { ...modelData, id: replaceId, updatedAt: new Date().toISOString() };
+      const updatedModel = { ...data, id: replaceId, updatedAt: new Date().toISOString() };
       const updated = modelLibrary.models.map(m => m.id === replaceId ? updatedModel : m);
       modelLibrary.setModels(updated as Model[]);
       if (cloudSyncRef.current?.trackChange) cloudSyncRef.current.trackChange('update', updatedModel as Model);
     } else {
-      const newModel: Model = { ...modelData, id: crypto.randomUUID(), updatedAt: new Date().toISOString() } as Model;
+      const newModel: Model = { ...data, id: crypto.randomUUID(), updatedAt: new Date().toISOString() } as Model;
       modelLibrary.setModels(prev => [...prev, newModel]);
       if (cloudSyncRef.current?.trackChange) cloudSyncRef.current.trackChange('create', newModel);
     }
@@ -429,15 +439,19 @@ export function useModelSave({
     if (queue.length === 0) {
       if (saved.length > 0 || replacements.length > 0) {
         // Gerar embeddings para todos os modelos novos se IA local ativa E opção ativada
+        // v1.52.47: reatribuir com clone em vez de mutar — os itens podem vir
+        // CONGELADOS (immer) do similarityWarning bulk.
         if (aiSettings.modelSemanticEnabled && searchModelReady) {
-          for (const model of saved) {
-            if (!model.embedding) {
-              model.embedding = await generateModelEmbedding(model, aiSettings.modelSemanticEnabled, searchModelReady);
+          for (let i = 0; i < saved.length; i++) {
+            if (!saved[i].embedding) {
+              const emb = await generateModelEmbedding(saved[i], aiSettings.modelSemanticEnabled, searchModelReady);
+              if (emb) saved[i] = { ...saved[i], embedding: emb };
             }
           }
-          for (const { newModel } of replacements) {
-            if (!newModel.embedding) {
-              newModel.embedding = await generateModelEmbedding(newModel, aiSettings.modelSemanticEnabled, searchModelReady);
+          for (let i = 0; i < replacements.length; i++) {
+            if (!replacements[i].newModel.embedding) {
+              const emb = await generateModelEmbedding(replacements[i].newModel, aiSettings.modelSemanticEnabled, searchModelReady);
+              if (emb) replacements[i] = { ...replacements[i], newModel: { ...replacements[i].newModel, embedding: emb } };
             }
           }
         }
@@ -506,7 +520,9 @@ export function useModelSave({
     const w = modelLibrary.similarityWarning;
     if (w?.context === 'saveBulkModel') {
       modelLibrary.setSimilarityWarning(null);
-      setTimeout(() => processBulkSaveNext(w.bulkQueue || [], w.bulkSaved || [], (w.bulkSkipped || 0) + 1, w.bulkReplacements || []), 0);
+      // v1.52.47: clonar arrays — vêm CONGELADOS (immer) do similarityWarning e
+      // processBulkSaveNext os muta (push/reatribuição).
+      setTimeout(() => processBulkSaveNext([...(w.bulkQueue || [])], [...(w.bulkSaved || [])], (w.bulkSkipped || 0) + 1, [...(w.bulkReplacements || [])]), 0);
     } else {
       modelLibrary.setSimilarityWarning(null);
     }
@@ -528,9 +544,9 @@ export function useModelSave({
     else if (w.context === 'saveBulkModel') {
       setSavingFromSimilarity(false);
       modelLibrary.setSimilarityWarning(null);
-      const bulkSaved = w.bulkSaved || [];
-      bulkSaved.push(w.newModel);
-      setTimeout(() => processBulkSaveNext(w.bulkQueue || [], bulkSaved, w.bulkSkipped || 0, w.bulkReplacements || []), 0);
+      // v1.52.47: clonar arrays/itens — vêm CONGELADOS (immer) do similarityWarning.
+      const bulkSaved = [...(w.bulkSaved || []), { ...w.newModel }];
+      setTimeout(() => processBulkSaveNext([...(w.bulkQueue || [])], bulkSaved, w.bulkSkipped || 0, [...(w.bulkReplacements || [])]), 0);
       return;
     }
 
@@ -554,9 +570,9 @@ export function useModelSave({
     else if (w.context === 'saveBulkModel') {
       setSavingFromSimilarity(false);
       modelLibrary.setSimilarityWarning(null);
-      const bulkReplacements = w.bulkReplacements || [];
-      bulkReplacements.push({ oldId: w.similarModel.id, newModel: w.newModel });
-      setTimeout(() => processBulkSaveNext(w.bulkQueue || [], w.bulkSaved || [], w.bulkSkipped || 0, bulkReplacements), 0);
+      // v1.52.47: clonar arrays/itens — vêm CONGELADOS (immer) do similarityWarning.
+      const bulkReplacements = [...(w.bulkReplacements || []), { oldId: w.similarModel.id, newModel: { ...w.newModel } }];
+      setTimeout(() => processBulkSaveNext([...(w.bulkQueue || [])], [...(w.bulkSaved || [])], w.bulkSkipped || 0, bulkReplacements), 0);
       return;
     }
 

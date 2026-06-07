@@ -1084,8 +1084,11 @@ describe('useModelSave', () => {
           await result.current.executeSaveModel(modelData);
         });
 
-        // The embedding should be deleted from modelData
-        expect(modelData.embedding).toBeUndefined();
+        // v1.52.47: a entrada não é mais mutada (poderia vir congelada); o embedding
+        // é removido do objeto SALVO (clone), verificado via setModels.
+        const call = (mockProps.modelLibrary.setModels as any).mock.calls[0][0];
+        const saved = typeof call === 'function' ? call([])[0] : call[0];
+        expect(saved.embedding).toBeUndefined();
       });
 
       it('should not generate embedding when searchModelReady is false', async () => {
@@ -1246,7 +1249,10 @@ describe('useModelSave', () => {
           await result.current.executeSaveAsNew(modelData);
         });
 
-        expect(modelData.embedding).toBeUndefined();
+        // v1.52.47: entrada não mutada; embedding removido do objeto SALVO (clone).
+        const call = (mockProps.modelLibrary.setModels as any).mock.calls[0][0];
+        const saved = typeof call === 'function' ? call([])[0] : call[0];
+        expect(saved.embedding).toBeUndefined();
       });
     });
   });
@@ -1388,7 +1394,10 @@ describe('useModelSave', () => {
           await result.current.executeExtractedModelSave(modelData);
         });
 
-        expect(modelData.embedding).toBeUndefined();
+        // v1.52.47: entrada não mutada; embedding removido do objeto SALVO (clone).
+        const call = (mockProps.modelLibrary.setModels as any).mock.calls[0][0];
+        const saved = typeof call === 'function' ? call([])[0] : call[0];
+        expect(saved.embedding).toBeUndefined();
       });
     });
   });
@@ -2220,6 +2229,80 @@ describe('useModelSave', () => {
 
       // Both should complete without error
       expect(result.current.savingModel).toBe(false);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // REGRESSÃO: payload congelado (immer) vindo do similarityWarning
+  // useModelsStore usa o middleware immer, que congela (Object.freeze) o state —
+  // inclusive similarityWarning.newModel e os arrays do bulk. Os fluxos de save
+  // não podem MUTAR esses objetos (ex.: model.embedding = ...), senão lançam
+  // "Cannot add property embedding, object is not extensible".
+  // ═══════════════════════════════════════════════════════════════════════════
+  describe('Frozen similarityWarning payload (immer regression)', () => {
+    it('handleSimilaritySaveNew gera embedding em newModel congelado sem lançar', async () => {
+      mockProps.aiSettings.modelSemanticEnabled = true;
+      mockProps.searchModelReady = true;
+      const frozenNew = Object.freeze(createMockModel({ id: 'frozen-new', title: 'Frozen' }));
+      mockProps.modelLibrary.similarityWarning = createMockSimilarityWarning({
+        context: 'saveModel',
+        newModel: frozenNew,
+      });
+      const { result } = renderHook(() => useModelSave(mockProps));
+
+      await act(async () => {
+        await result.current.handleSimilaritySaveNew();
+      });
+
+      expect(mockGetEmbedding).toHaveBeenCalled();
+      const call = (mockProps.modelLibrary.setModels as any).mock.calls[0][0];
+      const saved = typeof call === 'function' ? call([])[0] : call[0];
+      expect(saved.embedding).toEqual([0.1, 0.2, 0.3]);
+    });
+
+    it('handleSimilarityReplace gera embedding em newModel congelado sem lançar', async () => {
+      mockProps.aiSettings.modelSemanticEnabled = true;
+      mockProps.searchModelReady = true;
+      const similar = createMockModel({ id: 'similar-id' });
+      const frozenNew = Object.freeze(createMockModel({ id: 'frozen-new', title: 'Frozen' }));
+      mockProps.modelLibrary.models = [similar];
+      mockProps.modelLibrary.similarityWarning = createMockSimilarityWarning({
+        context: 'saveModel',
+        newModel: frozenNew,
+        similarModel: similar,
+      });
+      const { result } = renderHook(() => useModelSave(mockProps));
+
+      await act(async () => {
+        await result.current.handleSimilarityReplace();
+      });
+
+      expect(mockGetEmbedding).toHaveBeenCalled();
+      expect(mockProps.modelLibrary.setModels).toHaveBeenCalled();
+    });
+
+    it('bulk: handleSimilaritySaveNew não quebra com bulkSaved/newModel congelados', async () => {
+      mockProps.aiSettings.modelSemanticEnabled = true;
+      mockProps.searchModelReady = true;
+      const frozenPrev = Object.freeze(createMockModel({ id: 'bulk-prev', title: 'Prev' }));
+      const frozenNew = Object.freeze(createMockModel({ id: 'bulk-new', title: 'New' }));
+      mockProps.modelLibrary.similarityWarning = createMockSimilarityWarning({
+        context: 'saveBulkModel',
+        newModel: frozenNew,
+        bulkQueue: [],
+        bulkSaved: Object.freeze([frozenPrev]) as any,
+        bulkSkipped: 0,
+        bulkReplacements: Object.freeze([]) as any,
+      });
+      const { result } = renderHook(() => useModelSave(mockProps));
+
+      await act(async () => {
+        await result.current.handleSimilaritySaveNew();
+        await vi.runAllTimersAsync();
+      });
+
+      // Finalização do bulk chama setModels sem lançar TypeError
+      expect(mockProps.modelLibrary.setModels).toHaveBeenCalled();
     });
   });
 });
