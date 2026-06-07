@@ -191,9 +191,13 @@ const useAIIntegration = () => {
   // v1.36.62: Usa addTokenUsage do Zustand store
   // v1.37.91: Aceita model/provider para tracking por modelo
   const logCacheMetrics = React.useCallback((
-    data: { usage?: { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number } },
+    data: {
+      usage?: { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number };
+      /** v1.52.48: custo real propagado pelo bridge (claude CLI). */
+      total_cost_usd?: number;
+    },
     model?: string,
-    provider?: 'claude' | 'gemini' | 'openai' | 'grok'
+    provider?: 'claude' | 'gemini' | 'openai' | 'grok' | 'claude-cli'
   ) => {
     if (data.usage) {
       addTokenUsage({
@@ -202,7 +206,8 @@ const useAIIntegration = () => {
         cacheRead: data.usage.cache_read_input_tokens || 0,
         cacheCreation: data.usage.cache_creation_input_tokens || 0,
         model,
-        provider
+        provider,
+        costUSD: data.total_cost_usd
       });
     }
   }, [addTokenUsage]);
@@ -488,8 +493,9 @@ const useAIIntegration = () => {
 
         // Logar metricas de cache
         if (logMetrics) {
+          // v1.52.48: distingue claude-cli (assinatura, custo real via bridge) de claude API (pago).
           const effectiveModel = model || aiSettings?.claudeModel || 'claude-sonnet-4-20250514';
-          logCacheMetrics(data, effectiveModel, 'claude');
+          logCacheMetrics(data, effectiveModel, localBridge ? 'claude-cli' : 'claude');
         }
 
         // Verificar erros da API
@@ -1175,6 +1181,8 @@ const useAIIntegration = () => {
 
         // v1.37.91: Usa addTokenUsage com model/provider para tracking por modelo
         if (logMetrics) {
+          // v1.52.48: distingue codex-cli (assinatura) de openai API (pago). O Codex CLI
+          // não reporta custo, então costUSD fica indefinido e a UI o trata como assinatura.
           const metrics = extractTokenMetrics(data, 'openai');
           addTokenUsage({
             input: metrics.input,
@@ -1182,7 +1190,7 @@ const useAIIntegration = () => {
             cacheRead: metrics.cacheRead,
             cacheCreation: metrics.cacheCreation,
             model,
-            provider: 'openai'
+            provider: localBridge ? 'codex-cli' : 'openai'
           });
         }
 

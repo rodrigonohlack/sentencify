@@ -422,6 +422,34 @@ describe('useAIStore', () => {
 
       expect(useAIStore.getState().tokenMetrics.totalInput).toBe(150);
     });
+
+    // v1.52.48: CLI local (assinatura) não pode se fundir com API HTTP (paga)
+    it('should NOT merge claude-cli and claude API in byModel even with same model id', () => {
+      const store = useAIStore.getState();
+
+      store.addTokenUsage({ input: 100, output: 50, model: 'claude-sonnet-4-6', provider: 'claude' });
+      store.addTokenUsage({ input: 3, output: 6, model: 'claude-sonnet-4-6', provider: 'claude-cli' });
+
+      const byModel = useAIStore.getState().tokenMetrics.byModel!;
+      // Chave composta provider:model → dois baldes distintos
+      expect(byModel['claude:claude-sonnet-4-6'].input).toBe(100);
+      expect(byModel['claude-cli:claude-sonnet-4-6'].input).toBe(3);
+      expect(byModel['claude:claude-sonnet-4-6'].provider).toBe('claude');
+      expect(byModel['claude-cli:claude-sonnet-4-6'].provider).toBe('claude-cli');
+      // model "limpo" preservado para lookup de preço/display
+      expect(byModel['claude-cli:claude-sonnet-4-6'].model).toBe('claude-sonnet-4-6');
+    });
+
+    it('should accumulate real costUSD per model and globally', () => {
+      const store = useAIStore.getState();
+
+      store.addTokenUsage({ input: 3, output: 6, model: 'claude-sonnet-4-6', provider: 'claude-cli', costUSD: 0.05 });
+      store.addTokenUsage({ input: 4, output: 8, model: 'claude-sonnet-4-6', provider: 'claude-cli', costUSD: 0.03 });
+
+      const state = useAIStore.getState();
+      expect(state.tokenMetrics.byModel!['claude-cli:claude-sonnet-4-6'].costUSD).toBeCloseTo(0.08);
+      expect(state.tokenMetrics.totalCost).toBeCloseTo(0.08);
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

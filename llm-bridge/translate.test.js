@@ -155,6 +155,24 @@ test('translateResponse: result de sucesso vira Messages API', () => {
   assert.equal(out.body.usage.input_tokens, 10);
   assert.equal(out.body.usage.output_tokens, 5);
 });
+
+// v1.52.48: custo real do CLI é propagado para o app usar em vez de estimar por token×preço
+test('translateResponse: propaga total_cost_usd quando presente', () => {
+  const RESULT_COST = JSON.stringify({
+    type: 'result', subtype: 'success', is_error: false,
+    result: 'oi', session_id: 'sess-c', total_cost_usd: 0.05428185,
+    usage: { input_tokens: 3, output_tokens: 6, cache_read_input_tokens: 17422, cache_creation_input_tokens: 13055 },
+  });
+  const out = translateResponse(`${RESULT_COST}\n`, 'claude-sonnet-4-6');
+  assert.equal(out.status, 200);
+  assert.equal(out.body.total_cost_usd, 0.05428185);
+});
+
+test('translateResponse: total_cost_usd ausente vira undefined (sem custo forjado)', () => {
+  const out = translateResponse(`${RESULT_OK}\n`, 'claude-sonnet-4-6');
+  assert.equal(out.status, 200);
+  assert.equal(out.body.total_cost_usd, undefined);
+});
 test('translateResponse: "Not logged in" → 401 auth error', () => {
   const out = translateResponse(`${RESULT_NOAUTH}\n`, 'm');
   assert.equal(out.status, 401);

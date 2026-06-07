@@ -56,6 +56,7 @@ import type {
   ClaudeCliEffort,
   CodexCliReasoning,
   GeminiThinkingLevel,
+  PerModelMetrics,
   QuickPrompt,
   TopicoComplementar,
   TopicCategory,
@@ -3150,6 +3151,29 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
             const getDeepseekPrices = (modelId?: string) =>
               modelId === 'deepseek-v4-pro' ? deepseekProPrices : deepseekFlashPrices;
 
+            // v1.52.48: providers de CLI local rodam na assinatura (custo marginal ~$0 até
+            // 15/jun). Não têm tabela de preço de API — usam o custo real reportado (costUSD).
+            const isSubscriptionProvider = (p?: string) => p === 'claude-cli' || p === 'codex-cli';
+            const pricesFor = (provider?: string, modelId?: string) =>
+              provider === 'grok' ? getGrokPrices(modelId)
+                : provider === 'gemini' ? getGeminiPrices(modelId)
+                  : provider === 'deepseek' ? getDeepseekPrices(modelId)
+                    : (provider === 'openai' || provider === 'codex-cli') ? openaiPrices
+                      : sonnetPrices; // claude / claude-cli
+            /**
+             * Custo de uma entrada byModel. Providers de assinatura (CLI) usam o custo real
+             * reportado pelo provider; os demais estimam por token×preço de API. Isso evita
+             * inflar o custo do CLI com o overhead de contexto do Claude Code (~30k tok/chamada).
+             */
+            const costOfModel = (m: PerModelMetrics) => {
+              if (isSubscriptionProvider(m.provider)) return m.costUSD || 0;
+              const p = pricesFor(m.provider, m.model);
+              return ((m.input / 1000000) * p.input)
+                + ((m.output / 1000000) * p.output)
+                + ((m.cacheRead / 1000000) * p.cacheRead)
+                + ((m.cacheCreation / 1000000) * p.cacheWrite);
+            };
+
             return (
               <div className="border-t theme-border-secondary pt-4 mt-4">
                 <label className="flex items-center gap-1.5 text-sm font-medium theme-text-tertiary mb-3">
@@ -3226,22 +3250,11 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                           {Object.entries(metrics.byModel)
                             .sort((a, b) => (b[1].input + b[1].output) - (a[1].input + a[1].output))
-                            .map(([modelId, modelMetrics]) => {
-                              // Calcular custo real baseado no provider e modelo específico
-                              const providerPrices = modelMetrics.provider === 'grok'
-                                ? getGrokPrices(modelId)
-                                : modelMetrics.provider === 'gemini'
-                                  ? getGeminiPrices(modelId)
-                                  : modelMetrics.provider === 'deepseek'
-                                    ? getDeepseekPrices(modelId)
-                                    : ({
-                                        claude: sonnetPrices,
-                                        openai: openaiPrices
-                                      }[modelMetrics.provider as 'claude' | 'openai'] || sonnetPrices);
-                              const modelCost = ((modelMetrics.input / 1000000) * providerPrices.input) +
-                                              ((modelMetrics.output / 1000000) * providerPrices.output) +
-                                              ((modelMetrics.cacheRead / 1000000) * providerPrices.cacheRead) +
-                                              ((modelMetrics.cacheCreation / 1000000) * providerPrices.cacheWrite);
+                            .map(([key, modelMetrics]) => {
+                              // v1.52.48: chave é composta (provider:model); model "limpo" para display/preço.
+                              const bareModel = modelMetrics.model || key;
+                              const subscription = isSubscriptionProvider(modelMetrics.provider);
+                              const modelCost = costOfModel(modelMetrics);
                               const providerColors = {
                                 claude: 'text-orange-400',
                                 'claude-cli': 'text-amber-400',
@@ -3253,12 +3266,15 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                               };
                               const colorClass = providerColors[modelMetrics.provider] || 'theme-text-secondary';
                               return (
-                                <div key={modelId} className="theme-bg-primary-50 rounded p-2 text-xs">
+                                <div key={key} className="theme-bg-primary-50 rounded p-2 text-xs">
                                   <div className="flex justify-between items-center mb-1">
-                                    <span className={`font-medium truncate max-w-[180px] ${colorClass}`} title={modelId}>
-                                      {modelId.replace(/-\d{8}$/, '')}
+                                    <span className={`font-medium truncate max-w-[180px] ${colorClass}`} title={bareModel}>
+                                      {bareModel.replace(/-\d{8}$/, '')}
+                                      {subscription && <span className="ml-1 theme-text-muted font-normal">(CLI)</span>}
                                     </span>
-                                    <span className="font-mono text-yellow-400">${modelCost.toFixed(4)}</span>
+                                    <span className="font-mono text-yellow-400" title={subscription ? 'Custo na assinatura (marginal ~$0 até 15/jun)' : 'Custo estimado por token×preço de API'}>
+                                      ${modelCost.toFixed(4)}{subscription && '*'}
+                                    </span>
                                   </div>
                                   <div className="flex justify-between text-xs theme-text-muted">
                                     <span className="inline-flex items-center gap-1"><Download className="w-3 h-3" aria-hidden /> {formatNumber(modelMetrics.input)} | <Upload className="w-3 h-3" aria-hidden /> {formatNumber(modelMetrics.output)}</span>
@@ -3272,25 +3288,15 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                         <div className="flex justify-between items-center mt-3 pt-2 border-t theme-border-secondary">
                           <span className="font-medium theme-text-primary text-sm inline-flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" aria-hidden /> Custo Total Real:</span>
                           <span className="font-mono font-bold text-yellow-400">
-                            ${Object.entries(metrics.byModel).reduce((acc, [mId, m]) => {
-                              const prices = m.provider === 'grok'
-                                ? getGrokPrices(mId)
-                                : m.provider === 'gemini'
-                                  ? getGeminiPrices(mId)
-                                  : m.provider === 'deepseek'
-                                    ? getDeepseekPrices(mId)
-                                    : ({
-                                        claude: sonnetPrices,
-                                        openai: openaiPrices
-                                      }[m.provider as 'claude' | 'openai'] || sonnetPrices);
-                              return acc +
-                                ((m.input / 1000000) * prices.input) +
-                                ((m.output / 1000000) * prices.output) +
-                                ((m.cacheRead / 1000000) * prices.cacheRead) +
-                                ((m.cacheCreation / 1000000) * prices.cacheWrite);
-                            }, 0).toFixed(4)}
+                            ${Object.values(metrics.byModel).reduce((acc, m) => acc + costOfModel(m), 0).toFixed(4)}
                           </span>
                         </div>
+                        {/* v1.52.48: nota sobre custo de assinatura (CLI local) */}
+                        {Object.values(metrics.byModel).some((m) => isSubscriptionProvider(m.provider)) && (
+                          <p className="theme-text-muted text-[11px] mt-1.5 leading-snug">
+                            * Providers CLI local rodam na assinatura (custo marginal ~$0 até 15/jun); o valor é o custo-equivalente reportado pelo próprio CLI, não cobrado por token de API.
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>

@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.48',
+    date: '2026-06-07',
+    feature: 'fix(tokens): a contagem de uso/custo do provider Claude CLI local (e Codex CLI) deixou de ser misturada com a da API HTTP paga. (1) O breakdown "por modelo" agora indexa por provider:model — antes, chamadas via CLI e via API que usavam o mesmo model id (ex: claude-sonnet-4-6) caíam no MESMO balde e se fundiam. (2) O provider passou a ser registrado como claude-cli/codex-cli (antes era hardcoded "claude"/"openai"). (3) O custo do CLI deixou de ser estimado por token×preço de API (que inflava o valor por causa dos ~30k tokens de contexto do Claude Code embutidos em cada chamada): o bridge llm-bridge agora propaga o total_cost_usd reportado pelo próprio CLI, e a UI usa esse custo real, rotulado como "assinatura" (custo marginal ~$0 até 15/jun). Codex não reporta custo, então aparece como assinatura sem cifra. Requer reiniciar o daemon llm-bridge para o custo real passar a fluir.',
+  },
+  {
     version: '1.52.47',
     date: '2026-06-07',
     feature: 'fix(modelos): corrigido crash "Cannot add property embedding, object is not extensible" ao salvar modelo pelo painel de "Modelo Similar Encontrado" (Salvar mesmo assim/Substituir) com a IA Local (E5) ligada. Causa raiz: o similarityWarning é guardado no useModelsStore, cujo middleware immer CONGELA (Object.freeze) o state; os fluxos de save tentavam mutar esse objeto congelado (model.embedding = ...). Agora executeSaveModel/executeSaveAsNew/executeExtractedModelSave clonam a entrada antes de gerar/remover embedding, e o caminho de importação em LOTE (processBulkSaveNext + handlers) clona arrays e itens em vez de mutá-los. Adicionados testes de regressão com objetos congelados.',

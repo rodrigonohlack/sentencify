@@ -739,12 +739,25 @@ export type ModalState = Record<ModalKey, boolean>;
 
 /** v1.37.91: Métricas por modelo específico */
 export interface PerModelMetrics {
-  provider: 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
+  /** v1.52.48: 'claude-cli'/'codex-cli' distinguem provider local (assinatura) do API HTTP (pago). */
+  provider: 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli';
+  /**
+   * v1.52.48: Model ID "limpo" (ex.: "claude-sonnet-4-6"). A chave do byModel passou a ser
+   * composta (`provider:model`) para não fundir CLI e API HTTP que usam o mesmo modelo;
+   * este campo guarda o id sem o prefixo de provider, usado para lookup de preço e display.
+   */
+  model?: string;
   input: number;
   output: number;
   cacheRead: number;
   cacheCreation: number;
   requestCount: number;
+  /**
+   * v1.52.48: Custo real em USD reportado pelo próprio provider (ex.: total_cost_usd do
+   * claude CLI). Quando presente, a UI usa este valor em vez de estimar por token×preço.
+   * Para CLI local representa o custo-equivalente consumido da assinatura (marginal ~$0).
+   */
+  costUSD?: number;
 }
 
 export interface TokenMetrics {

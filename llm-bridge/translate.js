@@ -213,6 +213,10 @@ export function translateResponse(stdout, model) {
       cache_read_input_tokens: u.cache_read_input_tokens || 0,
       cache_creation_input_tokens: u.cache_creation_input_tokens || 0,
     },
+    // v1.52.48: custo real reportado pelo CLI (preço-equivalente de API; na assinatura é
+    // custo marginal ~$0). O app usa isso em vez de estimar por token×preço, evitando
+    // inflar o custo com o overhead de contexto do Claude Code embutido em cada chamada.
+    total_cost_usd: typeof result.total_cost_usd === 'number' ? result.total_cost_usd : undefined,
   };
 
   // Grounding: extrair URLs do markdown do result + queries dos tool_use anteriores

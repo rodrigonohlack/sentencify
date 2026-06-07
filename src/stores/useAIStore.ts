@@ -366,7 +366,9 @@ interface AIStoreState {
     cacheRead?: number;
     cacheCreation?: number;
     model?: string;
-    provider?: 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek';
+    provider?: 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli';
+    /** v1.52.48: Custo real reportado pelo provider (ex.: total_cost_usd do claude CLI). */
+    costUSD?: number;
   }) => void;
   resetTokenMetrics: () => void;
 
@@ -711,20 +713,29 @@ export const useAIStore = create<AIStoreState>()(
               state.tokenMetrics.totalCacheCreation = (state.tokenMetrics.totalCacheCreation || 0) + (usage.cacheCreation || 0);
               state.tokenMetrics.requestCount = (state.tokenMetrics.requestCount || 0) + 1;
               state.tokenMetrics.lastUpdated = new Date().toISOString();
+              // v1.52.48: Custo real agregado (quando o provider reporta, ex.: claude CLI)
+              if (usage.costUSD) {
+                state.tokenMetrics.totalCost = (state.tokenMetrics.totalCost || 0) + usage.costUSD;
+              }
 
               // v1.37.91: Tracking por modelo
               if (usage.model && usage.provider) {
                 if (!state.tokenMetrics.byModel) {
                   state.tokenMetrics.byModel = {};
                 }
-                const existing = state.tokenMetrics.byModel[usage.model];
-                state.tokenMetrics.byModel[usage.model] = {
+                // v1.52.48: chave composta provider:model — evita fundir CLI (assinatura) e
+                // API HTTP (pago) quando ambos usam o mesmo model id (ex.: claude-sonnet-4-6).
+                const key = `${usage.provider}:${usage.model}`;
+                const existing = state.tokenMetrics.byModel[key];
+                state.tokenMetrics.byModel[key] = {
                   provider: usage.provider,
+                  model: usage.model,
                   input: (existing?.input || 0) + (usage.input || 0),
                   output: (existing?.output || 0) + (usage.output || 0),
                   cacheRead: (existing?.cacheRead || 0) + (usage.cacheRead || 0),
                   cacheCreation: (existing?.cacheCreation || 0) + (usage.cacheCreation || 0),
-                  requestCount: (existing?.requestCount || 0) + 1
+                  requestCount: (existing?.requestCount || 0) + 1,
+                  costUSD: (existing?.costUSD || 0) + (usage.costUSD || 0)
                 };
               }
             },
