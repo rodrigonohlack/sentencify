@@ -24,11 +24,13 @@ export function stripHtmlToText(html: string | null | undefined): string {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&#(\d+);/g, (_m, code) => String.fromCharCode(parseInt(code, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_m, hex) => String.fromCharCode(parseInt(hex, 16)))
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-interface ModelEmbedInput {
+export interface ModelEmbedInput {
   title?: string;
   keywords?: string | string[];
   content?: string;
@@ -39,9 +41,10 @@ interface ModelEmbedInput {
  * título + keywords + lead curto do conteúdo (sem ruído de boilerplate de 2000 chars).
  */
 export function buildModelEmbeddingText(model: ModelEmbedInput): string {
-  const keywords = typeof model.keywords === 'string'
+  const keywords = (typeof model.keywords === 'string'
     ? model.keywords
-    : (model.keywords || []).join(' ');
+    : (model.keywords || []).join(' ')
+  ).trim();
   const lead = stripHtmlToText(model.content).slice(0, MODEL_EMBED_CONTENT_LEAD);
   return [model.title, keywords, lead].filter(Boolean).join(' ');
 }

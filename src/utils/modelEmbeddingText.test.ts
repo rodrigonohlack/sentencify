@@ -12,6 +12,10 @@ describe('stripHtmlToText', () => {
     expect(stripHtmlToText('')).toBe('');
     expect(stripHtmlToText(null)).toBe('');
   });
+  it('decodifica entidades numéricas (decimal e hex)', () => {
+    expect(stripHtmlToText('a&#160;b')).toBe('a b');
+    expect(stripHtmlToText('x&#x27;y')).toBe("x'y");
+  });
 });
 
 describe('buildModelEmbeddingText', () => {
@@ -31,5 +35,8 @@ describe('buildModelEmbeddingText', () => {
   });
   it('omite campos vazios (filter Boolean)', () => {
     expect(buildModelEmbeddingText({ title: 'Só título', keywords: '', content: '' })).toBe('Só título');
+  });
+  it('não gera espaço duplo quando keywords-array são vazias', () => {
+    expect(buildModelEmbeddingText({ title: 'T', keywords: ['', ''], content: '' })).toBe('T');
   });
 });
