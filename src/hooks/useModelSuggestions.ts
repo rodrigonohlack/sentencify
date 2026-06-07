@@ -155,13 +155,13 @@ export function rankModelsLocal(
       const final = cfg.W_SEM * semScaled + cfg.W_LEX * lexNorm;
       return { ...m, similarity: final };
     })
-    .filter(m => (m.similarity || 0) >= threshold);
+    .filter(m => (m.similarity ?? 0) >= threshold);
 
   // Pin de favoritos: estrela primeiro (entre si por score), depois os demais por score.
   scored.sort((a, b) => {
     const favDiff = (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0);
     if (favDiff !== 0) return favDiff;
-    return (b.similarity || 0) - (a.similarity || 0);
+    return (b.similarity ?? 0) - (a.similarity ?? 0);
   });
 
   return scored.slice(0, cfg.TOP_N);
