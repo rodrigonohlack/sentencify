@@ -475,6 +475,20 @@ describe('ConfigModal', () => {
       expect(screen.getByText(/Busca Semântica/i)).toBeInTheDocument();
     });
 
+    it('mostra o seletor de Sugestões de Modelos (via LLM) mesmo com E5 off e useLocalAIForSuggestions=true', () => {
+      // v1.52.43: o card é independente do E5-base e sempre renderiza (não fica preso à armadilha
+      // do toggle "Sugestões via IA Local", que vive dentro do bloco do E5).
+      mockAiSettings = createMockAiSettings({
+        semanticSearchEnabled: false,
+        modelSemanticEnabled: false,
+        useLocalAIForSuggestions: true,
+      });
+      render(<ConfigModal isOpen={true} onClose={vi.fn()} />);
+      expect(screen.getByText('Sugestões de Modelos (via LLM)')).toBeInTheDocument();
+      // O select existe e tem ao menos uma opção (CLIs locais estão sempre disponíveis no mock).
+      expect(screen.getAllByRole('combobox').length).toBeGreaterThan(0);
+    });
+
     it('should render Token Usage section', () => {
       render(<ConfigModal isOpen={true} onClose={vi.fn()} />);
       expect(screen.getByText(/Uso de Tokens/i)).toBeInTheDocument();

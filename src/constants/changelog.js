@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.43',
+    date: '2026-06-07',
+    feature: 'fix(modelos): o card "Sugestões de Modelos (via LLM)" agora aparece SEMPRE na seção Busca & Dados. Antes ele só renderizava quando "Sugestões via IA Local" estava desligado — mas o toggle que controla isso vive dentro do bloco do E5-base; se o usuário tivesse deixado esse flag ligado e depois desligasse o E5, o toggle ficava inacessível e o seletor sumia (armadilha). Como o card só configura QUAL LLM usar (aplicado quando as sugestões não usam a IA Local), passou a ser sempre visível.',
+  },
+  {
     version: '1.52.42',
     date: '2026-06-07',
     feature: 'fix(modelos): o seletor "Sugestões de Modelos (via LLM)" estava dentro do bloco do toggle mestre "IA Local (Busca Semântica) E5-base" — então quem nunca ligava o E5 não conseguia escolher o modelo de sugestão por LLM (justamente o caminho usado por quem NÃO usa busca semântica local). Virou um card independente na seção Busca & Dados, fora de qualquer gate do E5-base, visível sempre que "Sugestões via IA Local" está desligado.',

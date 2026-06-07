@@ -2806,34 +2806,34 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               </div>
             )}
 
-            {/* v1.52.42: Sugestões de Modelos via LLM — card INDEPENDENTE, fora do gate do E5-base.
-                O caminho LLM não usa embeddings; aparece sempre que "Sugestões via IA Local" está off. */}
-            {!aiSettings.useLocalAIForSuggestions && (
-              <div className="theme-bg-secondary-50 rounded-lg p-4 border theme-border-input">
-                <label className="flex items-center gap-2 text-sm font-medium theme-text-tertiary mb-1">
-                  <Bot className="w-4 h-4" aria-hidden /> Sugestões de Modelos (via LLM)
-                </label>
-                <p className="text-xs theme-text-muted mb-2">
-                  Modelo usado para sugerir modelos aos tópicos quando a IA Local (E5) não está em uso.
-                </p>
-                <select
-                  value={aiSettings.suggestionModel || 'haiku'}
-                  onChange={(e) => setAiSettings({ ...aiSettings, suggestionModel: e.target.value as VoiceImprovementModel })}
-                  className="w-full px-3 py-2 rounded-lg theme-bg-primary theme-text-primary theme-border-input border text-sm"
-                >
-                  {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
-                    .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys))
-                    .map(([key, config]) => (
-                      <option key={key} value={key}>{config.displayName}</option>
-                    ))
-                  }
-                </select>
+            {/* v1.52.43: Sugestões de Modelos via LLM — card INDEPENDENTE, fora do gate do E5-base
+                E sempre visível (não depende de useLocalAIForSuggestions, cujo toggle vive dentro do
+                bloco do E5 e poderia ficar inacessível). Só configura QUAL LLM usar; é aplicado
+                quando as sugestões não usam a IA Local. */}
+            <div className="theme-bg-secondary-50 rounded-lg p-4 border theme-border-input">
+              <label className="flex items-center gap-2 text-sm font-medium theme-text-tertiary mb-1">
+                <Bot className="w-4 h-4" aria-hidden /> Sugestões de Modelos (via LLM)
+              </label>
+              <p className="text-xs theme-text-muted mb-2">
+                Modelo usado para sugerir modelos aos tópicos quando a IA Local (E5) não está em uso.
+              </p>
+              <select
+                value={aiSettings.suggestionModel || 'haiku'}
+                onChange={(e) => setAiSettings({ ...aiSettings, suggestionModel: e.target.value as VoiceImprovementModel })}
+                className="w-full px-3 py-2 rounded-lg theme-bg-primary theme-text-primary theme-border-input border text-sm"
+              >
                 {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
-                  .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys)).length === 0 && (
-                  <p className="text-xs text-red-400 mt-2">Configure pelo menos uma API key para usar este recurso.</p>
-                )}
-              </div>
-            )}
+                  .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys))
+                  .map(([key, config]) => (
+                    <option key={key} value={key}>{config.displayName}</option>
+                  ))
+                }
+              </select>
+              {(Object.entries(VOICE_MODEL_CONFIG) as [VoiceImprovementModel, typeof VOICE_MODEL_CONFIG['haiku']][])
+                .filter(([, config]) => isFastModelAvailable(config, aiSettings.apiKeys)).length === 0 && (
+                <p className="text-xs text-red-400 mt-2">Configure pelo menos uma API key para usar este recurso.</p>
+              )}
+            </div>
           </div>
 
           {/* ═══════════════════════════════════════════════════════════════════════════════
