@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.37',
+    date: '2026-06-07',
+    feature: 'fix(modelos): o rótulo do campo de título no editor de modelos aparecia como "Titulo", sem acento. Corrigido para "Título".',
+  },
+  {
     version: '1.52.36',
     date: '2026-06-07',
     feature: 'fix(sync): importar uma base grande de modelos JÁ com embeddings estourava a cota do localStorage (QuotaExceededError em sentencify-pending-changes), porque a fila de mudanças pendentes do CloudSync persistia os vetores (768 floats ≈ 3KB/modelo). Agora o embedding é omitido APENAS do cache de durabilidade em localStorage; a fila em memória mantém o vetor e o push para a nuvem continua enviando embeddings normalmente (servidor aceita até 100mb). Elimina o erro sem alterar a sincronização real.',

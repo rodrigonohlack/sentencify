@@ -45,7 +45,7 @@ export const ModelFormFields = React.memo(({
       {/* Campo Titulo com botao de geracao IA */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium theme-text-tertiary">Titulo</label>
+          <label className="block text-sm font-medium theme-text-tertiary">Título</label>
           <button
             onClick={onGenerateTitle}
             disabled={generatingTitle || !formData.content}
