@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.42',
+    date: '2026-06-07',
+    feature: 'fix(modelos): o seletor "Sugestões de Modelos (via LLM)" estava dentro do bloco do toggle mestre "IA Local (Busca Semântica) E5-base" — então quem nunca ligava o E5 não conseguia escolher o modelo de sugestão por LLM (justamente o caminho usado por quem NÃO usa busca semântica local). Virou um card independente na seção Busca & Dados, fora de qualquer gate do E5-base, visível sempre que "Sugestões via IA Local" está desligado.',
+  },
+  {
     version: '1.52.41',
     date: '2026-06-07',
     feature: 'fix(modelos): o seletor "Modelo para sugestões via LLM" (Config → Busca & Dados → Modelos) só aparecia quando havia embeddings de modelos gerados E a busca semântica de modelos estava ligada — exatamente o oposto do seu público-alvo, já que o caminho via LLM nem usa embeddings. Agora ele aparece sempre que "Sugestões via IA Local" está desligado, independente de embeddings, e foi movido para o nível do card (não fica mais escondido dentro do bloco da busca semântica).',
