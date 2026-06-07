@@ -291,8 +291,10 @@ describe('useModelSuggestions', () => {
 
   describe('Local AI', () => {
     it('should use local AI when enabled and model ready', async () => {
+      // Model title + category match the topic → lexical=80/80=1.0, semScaled=0.5 (cosine 0.8)
+      // final = 0.65*0.5 + 0.35*1.0 = 0.675 ≥ threshold(60/100=0.60) → model survives ranking
       const modelsWithEmbedding = [
-        createMockModel({ id: 'model-1', embedding: new Array(768).fill(0.1) })
+        createMockModel({ id: 'model-1', title: 'HORAS EXTRAS', category: 'MÉRITO', embedding: new Array(768).fill(0.1) })
       ];
       (useModelsStore.getState as ReturnType<typeof vi.fn>).mockReturnValue({
         models: modelsWithEmbedding
@@ -314,11 +316,13 @@ describe('useModelSuggestions', () => {
       let suggestions: any;
       await act(async () => {
         suggestions = await result.current.findSuggestions(
-          createMockTopic({ title: 'HORAS EXTRAS' })
+          createMockTopic({ title: 'HORAS EXTRAS', category: 'MÉRITO' })
         );
       });
 
       expect(suggestions.source).toBe('local');
+      expect(suggestions.suggestions.length).toBeGreaterThan(0);
+      expect(suggestions.suggestions[0].id).toBe('model-1');
       expect(mockCallAI).not.toHaveBeenCalled();
     });
 

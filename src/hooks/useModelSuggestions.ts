@@ -287,7 +287,7 @@ Inclua APENAS modelos que sejam realmente relevantes. Se nenhum for relevante, r
       const topicCategory = topic.category || '';
       // v1.52.40: query enriquecida (título + categoria) em vez de só o título
       const queryText = [topic.title, topicCategory].filter(Boolean).join(' ');
-      const cacheKey = `suggestions_local_${queryText}`;
+      const cacheKey = `suggestions_local_${topic.title}|${topicCategory}`;
       const cached = apiCache.get(cacheKey);
       if (cached && typeof cached === 'string') {
         try {
