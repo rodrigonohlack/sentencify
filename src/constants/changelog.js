@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.40',
+    date: '2026-06-07',
+    feature: 'feat(modelos): dropdown de modelo LLM para sugestões em Busca & Dados — quando "Sugestões via IA Local" está desligado, o usuário pode escolher qual modelo (Haiku, Sonnet etc.) será usado para sugestões via API. Inclui auto-reset do modelo selecionado caso a API key correspondente seja removida.',
+  },
+  {
     version: '1.52.39',
     date: '2026-06-07',
     feature: 'fix(modelos): inserir no editor um modelo cujo conteúdo guarda as quebras como texto plano (\\n) — caso de modelos importados via JSON — colava tudo corrido, sem separar parágrafos. As duas vias de inserção (insertModelContent via dangerouslyPasteHTML e handleInsertModel do editor global, que concatena no HTML do tópico) passam o conteúdo por ensureHtmlParagraphs antes de inserir, complementando o fix de visualização do v1.52.38. No-op para modelos que já são HTML estruturado.',
