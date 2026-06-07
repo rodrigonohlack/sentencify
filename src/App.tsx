@@ -109,7 +109,7 @@ import { searchModelsBySimilarity } from './utils/models';
 
 // v1.36.96: Context helpers extraídos
 import { fastHashUtil } from './utils/context-helpers';
-import { htmlToFormattedText } from './utils/html-conversion';
+import { htmlToFormattedText, ensureHtmlParagraphs } from './utils/html-conversion';
 
 // v1.35.79: Tipos TypeScript centralizados (ETAPA 0 reorganização completa)
 import type {
@@ -2354,7 +2354,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       const position = range ? range.index : quill.getLength() - 1;
 
       // Sanitizar conteúdo antes de inserir
-      const sanitizedContent = sanitizeHTML(content);
+      // v1.52.39: ensureHtmlParagraphs converte modelos em texto plano (\n) para
+      // parágrafos antes de colar — senão dangerouslyPasteHTML colapsa as quebras.
+      // No-op para conteúdo que já é HTML estruturado.
+      const sanitizedContent = sanitizeHTML(ensureHtmlParagraphs(content));
 
       // Inserir quebras de linha antes do conteúdo
       quill.insertText(position, '\n\n');

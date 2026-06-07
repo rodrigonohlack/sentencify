@@ -51,6 +51,7 @@ import type {
 
 // Utils
 import { normalizeHTMLSpacing } from '../../utils/text';
+import { ensureHtmlParagraphs } from '../../utils/html-conversion';
 import { buildChatContext } from '../../utils/chat-context-builder';
 
 // Prompts
@@ -404,6 +405,10 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     if (currentFocusedTopic?.index === undefined) return;
 
     const topicIndex = currentFocusedTopic.index;
+    // v1.52.39: modelos em texto plano (\n) viram parágrafos antes de concatenar
+    // no HTML do tópico — senão as quebras colapsam ao renderizar no Quill.
+    // No-op para conteúdo que já é HTML estruturado.
+    const normalizedContent = ensureHtmlParagraphs(modelContent);
     setLocalTopics(prev => {
       const updated = [...prev];
       const currentContent = updated[topicIndex].editedFundamentacao ||
@@ -411,7 +416,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
 
       // Adicionar ao final do conteúdo existente
       updated[topicIndex].editedFundamentacao = currentContent +
-        (currentContent ? '<p><br></p>' : '') + modelContent;
+        (currentContent ? '<p><br></p>' : '') + normalizedContent;
 
       return updated;
     });

@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.39',
+    date: '2026-06-07',
+    feature: 'fix(modelos): inserir no editor um modelo cujo conteúdo guarda as quebras como texto plano (\\n) — caso de modelos importados via JSON — colava tudo corrido, sem separar parágrafos. As duas vias de inserção (insertModelContent via dangerouslyPasteHTML e handleInsertModel do editor global, que concatena no HTML do tópico) passam o conteúdo por ensureHtmlParagraphs antes de inserir, complementando o fix de visualização do v1.52.38. No-op para modelos que já são HTML estruturado.',
+  },
+  {
     version: '1.52.38',
     date: '2026-06-07',
     feature: 'fix(modelos): no preview "Visualizar" de um modelo do painel de sugestões, modelos cujo conteúdo guarda as quebras de parágrafo como quebras de linha em texto plano (\\n) — caso típico de modelos importados via JSON — apareciam com o texto todo corrido, sem separação entre parágrafos. O editor Quill exibia certo porque normaliza o conteúdo, mas a <div> de visualização colapsava os \\n em espaço (comportamento padrão de whitespace HTML). Novo util ensureHtmlParagraphs envolve cada parágrafo de texto plano em <p> antes de exibir (paridade com o editor), sem tocar em conteúdo que já tem tags de bloco (<p>/<br>/headings/listas) — zero regressão para modelos criados no editor. Sanitização DOMPurify continua sendo o último passo.',
