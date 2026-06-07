@@ -14,6 +14,7 @@ import { QuillEditorBase, getQuillToolbarConfig } from '../editors';
 import { useAIIntegration } from '../../hooks';
 import { useVoiceImprovement } from '../../hooks/useVoiceImprovement';
 import { useAIStore } from '../../stores/useAIStore';
+import { ensureHtmlParagraphs } from '../../utils/html-conversion';
 import type { QuillInstance, ModelPreviewModalProps } from '../../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -74,8 +75,11 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
   const { improveText } = useVoiceImprovement({ callAI });
 
   // Conteúdo Sanitizado (Memoizado para Performance)
+  // v1.52.38: ensureHtmlParagraphs converte modelos com quebras em texto plano (\n)
+  // para parágrafos HTML, dando paridade visual com o editor Quill. Sanitização
+  // (DOMPurify) é aplicada POR ÚLTIMO, sobre o resultado já convertido.
   const sanitizedContent = React.useMemo(
-    () => model ? sanitizeHTML(model.content || '<p class="theme-text-muted">Conteúdo não disponível</p>') : '',
+    () => model ? sanitizeHTML(ensureHtmlParagraphs(model.content) || '<p class="theme-text-muted">Conteúdo não disponível</p>') : '',
     [model?.content, sanitizeHTML]
   );
 

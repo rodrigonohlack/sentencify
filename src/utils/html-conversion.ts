@@ -107,6 +107,38 @@ export function plainTextToHtml(text: string): string {
   return html;
 }
 
+/**
+ * Garante que o conteúdo tenha estrutura de parágrafos em HTML para exibição.
+ *
+ * Modelos importados via JSON podem ter as quebras de parágrafo representadas
+ * por `\n` literais (texto plano) em vez de tags `<p>`. Ao renderizar esse
+ * conteúdo direto numa `<div>` (dangerouslySetInnerHTML), o HTML colapsa os
+ * `\n` em espaço e o texto aparece "corrido". O editor Quill, por normalizar
+ * o conteúdo, exibe os parágrafos corretamente — esta função dá ao preview a
+ * mesma paridade.
+ *
+ * - Se o conteúdo JÁ contém tags de bloco (`<p>`, `<div>`, `<br>`, headings,
+ *   listas, blockquote), assume-se HTML estruturado e retorna-se inalterado
+ *   (zero regressão para modelos criados no editor).
+ * - Caso contrário, trata-se como texto plano: cada linha vira um `<p>`
+ *   (linhas vazias viram `<p><br></p>`, replicando o parágrafo vazio do Quill),
+ *   preservando eventuais tags inline (`<strong>`, `<em>`...).
+ *
+ * @param content - Conteúdo do modelo (HTML estruturado ou texto plano com `\n`)
+ * @returns HTML com parágrafos garantidos
+ */
+export function ensureHtmlParagraphs(content: string | null | undefined): string {
+  if (!content) return '';
+
+  const hasBlockTags = /<(p|div|br|h[1-6]|ul|ol|li|blockquote)\b/i.test(content);
+  if (hasBlockTags) return content;
+
+  return content
+    .split('\n')
+    .map((line) => (line.trim() === '' ? '<p><br></p>' : `<p>${line}</p>`))
+    .join('');
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // LIMPEZA PARA EXPORTAÇÃO
 // ═══════════════════════════════════════════════════════════════════════════

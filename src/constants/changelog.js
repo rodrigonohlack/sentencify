@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.38',
+    date: '2026-06-07',
+    feature: 'fix(modelos): no preview "Visualizar" de um modelo do painel de sugestões, modelos cujo conteúdo guarda as quebras de parágrafo como quebras de linha em texto plano (\\n) — caso típico de modelos importados via JSON — apareciam com o texto todo corrido, sem separação entre parágrafos. O editor Quill exibia certo porque normaliza o conteúdo, mas a <div> de visualização colapsava os \\n em espaço (comportamento padrão de whitespace HTML). Novo util ensureHtmlParagraphs envolve cada parágrafo de texto plano em <p> antes de exibir (paridade com o editor), sem tocar em conteúdo que já tem tags de bloco (<p>/<br>/headings/listas) — zero regressão para modelos criados no editor. Sanitização DOMPurify continua sendo o último passo.',
+  },
+  {
     version: '1.52.37',
     date: '2026-06-07',
     feature: 'fix(modelos): o rótulo do campo de título no editor de modelos aparecia como "Titulo", sem acento. Corrigido para "Título".',

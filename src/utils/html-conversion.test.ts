@@ -11,6 +11,7 @@ import {
   htmlToFormattedText,
   plainTextToHtml,
   cleanHtmlForExport,
+  ensureHtmlParagraphs,
 } from './html-conversion';
 
 // Mock sanitizeHTML para retornar o input sem alteração (função pura testada separadamente)
@@ -738,6 +739,52 @@ describe('html-conversion utilities', () => {
         expect(result).not.toContain('<span');
         expect(result).toContain('<b>Multiple layers</b>');
       });
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ensureHtmlParagraphs
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('ensureHtmlParagraphs', () => {
+    it('should return empty string for null/undefined/empty', () => {
+      expect(ensureHtmlParagraphs(null)).toBe('');
+      expect(ensureHtmlParagraphs(undefined)).toBe('');
+      expect(ensureHtmlParagraphs('')).toBe('');
+    });
+
+    it('should leave HTML with <p> tags untouched (no regression)', () => {
+      const html = '<p>Parágrafo 1</p><p>Parágrafo 2</p>';
+      expect(ensureHtmlParagraphs(html)).toBe(html);
+    });
+
+    it('should leave HTML with <br> untouched', () => {
+      const html = 'Linha 1<br>Linha 2';
+      expect(ensureHtmlParagraphs(html)).toBe(html);
+    });
+
+    it('should leave HTML with block tags (div, headings, lists) untouched', () => {
+      expect(ensureHtmlParagraphs('<h2>Título</h2>')).toBe('<h2>Título</h2>');
+      expect(ensureHtmlParagraphs('<ul><li>a</li></ul>')).toBe('<ul><li>a</li></ul>');
+    });
+
+    it('should wrap plain text paragraphs separated by \\n in <p> tags', () => {
+      const text = 'Primeiro parágrafo.\nSegundo parágrafo.';
+      expect(ensureHtmlParagraphs(text)).toBe('<p>Primeiro parágrafo.</p><p>Segundo parágrafo.</p>');
+    });
+
+    it('should convert blank lines (\\n\\n) into empty paragraphs', () => {
+      const text = 'A\n\nB';
+      expect(ensureHtmlParagraphs(text)).toBe('<p>A</p><p><br></p><p>B</p>');
+    });
+
+    it('should preserve inline tags in plain-text content', () => {
+      const text = 'Texto com <strong>negrito</strong>.\nOutra linha.';
+      expect(ensureHtmlParagraphs(text)).toBe('<p>Texto com <strong>negrito</strong>.</p><p>Outra linha.</p>');
+    });
+
+    it('should handle single line of plain text', () => {
+      expect(ensureHtmlParagraphs('Apenas uma linha')).toBe('<p>Apenas uma linha</p>');
     });
   });
 });
