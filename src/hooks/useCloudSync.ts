@@ -250,17 +250,28 @@ export function useCloudSync({ onModelsReceived, modelsLoaded = false }: UseClou
 
   // Persistir pendentes
   // v1.35.2: try-catch para evitar crash se localStorage cheio
+  // v1.52.36: NÃO persistir o campo `embedding` no localStorage — ele é o grosso
+  // do peso (768 floats ≈ 3KB/modelo) e estourava a cota ao importar bases
+  // grandes já com embeddings (QuotaExceededError). A fila EM MEMÓRIA
+  // (pendingChangesRef) mantém o embedding e é ela que faz o push; o localStorage
+  // é só durabilidade pós-crash. Se houver crash antes do sync, o modelo é
+  // re-enviado sem embedding e o servidor preserva o anterior (COALESCE) ou o
+  // backfill local regenera — degradação aceitável e rara.
   useEffect(() => {
     try {
       if (pendingChanges.length > 0) {
-        localStorage.setItem(PENDING_KEY, JSON.stringify(pendingChanges));
+        const lightweight = pendingChanges.map((c) =>
+          c.model && (c.model as { embedding?: unknown }).embedding
+            ? { ...c, model: { ...c.model, embedding: undefined } }
+            : c
+        );
+        localStorage.setItem(PENDING_KEY, JSON.stringify(lightweight));
       } else {
         localStorage.removeItem(PENDING_KEY);
       }
     } catch (err) {
-      // QuotaExceededError - localStorage cheio
-      console.error('[CloudSync] Erro ao persistir pendingChanges:', err instanceof Error ? err.message : err);
-      // Limpar pendentes antigos para evitar loop de erro
+      // QuotaExceededError - localStorage cheio (fallback: descartar durabilidade)
+      console.warn('[CloudSync] pendingChanges não cabe no localStorage; mantendo só em memória:', err instanceof Error ? err.message : err);
       localStorage.removeItem(PENDING_KEY);
     }
   }, [pendingChanges]);

@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.52.36',
+    date: '2026-06-07',
+    feature: 'fix(sync): importar uma base grande de modelos JÁ com embeddings estourava a cota do localStorage (QuotaExceededError em sentencify-pending-changes), porque a fila de mudanças pendentes do CloudSync persistia os vetores (768 floats ≈ 3KB/modelo). Agora o embedding é omitido APENAS do cache de durabilidade em localStorage; a fila em memória mantém o vetor e o push para a nuvem continua enviando embeddings normalmente (servidor aceita até 100mb). Elimina o erro sem alterar a sincronização real.',
+  },
+  {
     version: '1.52.35',
     date: '2026-06-06',
     feature: 'feat(modelos): indicador de progresso "Gerando embeddings… X/N" durante o import de modelos. Quando o JSON importado não traz embeddings, o app os gera rodando o modelo local (E5) um por vez — em lotes grandes isso demorava em silêncio e parecia travado. Agora um indicador com spinner aparece ao lado dos botões do Banco de Modelos e atualiza a cada modelo processado (estado importProgress no useUIStore), some ao concluir ou falhar.',
