@@ -2763,7 +2763,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                           <button
                             onClick={() => { if (window.confirm('Reindexar recalcula o embedding de TODOS os modelos com a nova fórmula. Pode levar um tempo. Continuar?')) generateModelEmbeddings(true); }}
                             disabled={generatingModelEmbeddings}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium theme-bg-secondary-50 theme-text-tertiary border theme-border-input hover:theme-bg-secondary-30 transition-colors disabled:opacity-50">
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium theme-bg-secondary-50 theme-text-tertiary border theme-border-input hover-theme-bg-secondary transition-colors disabled:opacity-50">
                             <RefreshCw className="w-3 h-3" /> Reindexar
                           </button>
                         )}
