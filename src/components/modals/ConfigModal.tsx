@@ -2755,10 +2755,18 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   {aiSettings.modelSemanticEnabled && (
                     <div className="space-y-3 pt-2 border-t theme-border-subtle">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <button onClick={generateModelEmbeddings} disabled={generatingModelEmbeddings}
+                        <button onClick={() => generateModelEmbeddings(false)} disabled={generatingModelEmbeddings}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${!generatingModelEmbeddings ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-400 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed'}`}>
                           {generatingModelEmbeddings ? (<><RefreshCw className="w-3 h-3 animate-spin" /> Gerando... {modelEmbeddingsProgress.current}/{modelEmbeddingsProgress.total}</>) : (<><Sparkles className="w-3 h-3" /> Gerar Embeddings</>)}
                         </button>
+                        {modelEmbeddingsCount > 0 && (
+                          <button
+                            onClick={() => { if (window.confirm('Reindexar recalcula o embedding de TODOS os modelos com a nova fórmula. Pode levar um tempo. Continuar?')) generateModelEmbeddings(true); }}
+                            disabled={generatingModelEmbeddings}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium theme-bg-secondary-50 theme-text-tertiary border theme-border-input hover:theme-bg-secondary-30 transition-colors disabled:opacity-50">
+                            <RefreshCw className="w-3 h-3" /> Reindexar
+                          </button>
+                        )}
                         {modelEmbeddingsCount > 0 && (<button onClick={clearModelEmbeddings} className="px-2 py-1.5 text-red-500 dark:text-red-400 text-xs"><Trash2 className="w-3 h-3" /></button>)}
                       </div>
                       {generatingModelEmbeddings && modelEmbeddingsProgress.total > 0 && (
