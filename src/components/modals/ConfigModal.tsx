@@ -956,7 +956,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 3: Pensamento Prolongado
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div className={activeSection === 'providers' ? 'mb-6' : 'hidden'}>
+          <div className={activeSection === 'providers' && aiSettings.provider !== 'manual' ? 'mb-6' : 'hidden'}>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">
               Pensamento Prolongado (Extended Thinking)
             </label>
@@ -3517,6 +3517,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     ? getModelDisplayName(aiSettings.claudeCliModel || 'claude-sonnet-4-6')
                     : aiSettings.provider === 'codex-cli'
                     ? getModelDisplayName(aiSettings.codexCliModel || 'gpt-5.5')
+                    : aiSettings.provider === 'manual'
+                    ? 'Sem provider (copiar/colar)'
                     : getModelDisplayName(aiSettings.claudeModel || aiSettings.model || '')}
                 </span>
                 {aiSettings.useExtendedThinking && <span className="ml-2 text-purple-400">• Pensamento prolongado ativo</span>}
