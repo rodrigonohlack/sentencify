@@ -1477,7 +1477,7 @@ const useAIIntegration = () => {
 
     // Modo Sem Provider: serializa o prompt e aguarda o usuário colar a resposta
     if (provider === 'manual') {
-      const promptText = serializeForManual(messages, options, () => getAiInstructions() as Array<{ type: 'text'; text: string }>);
+      const promptText = serializeForManual(messages, options, getAiInstructions);
       const raw = await useManualCallStore.getState().enqueue(promptText, { title: options.manualTitle });
       return normalizeManualResponse(raw);
     }
@@ -2189,7 +2189,7 @@ const useAIIntegration = () => {
       case 'codex-cli':
         return callOpenAIAPI(messages, { ...options, localBridge: true, model: options.model || aiSettings.codexCliModel || 'gpt-5.5' });
       case 'manual': {
-        const promptText = serializeForManual(messages, options, () => getAiInstructions() as Array<{ type: 'text'; text: string }>);
+        const promptText = serializeForManual(messages, options, getAiInstructions);
         const raw = await useManualCallStore.getState().enqueue(promptText, { title: options.manualTitle });
         return normalizeManualResponse(raw);
       }

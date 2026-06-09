@@ -39,7 +39,7 @@ function blockToText(block: AIMessageContent): string {
 export function serializeForManual(
   messages: AIMessage[],
   options: { useInstructions?: boolean },
-  getAiInstructions: () => Array<{ type: 'text'; text: string }>,
+  getAiInstructions: () => Array<{ text: string }>,
 ): string {
   const parts: string[] = [];
 
