@@ -73,6 +73,8 @@ import {
   StreamingModal
 } from './index';
 
+import { ManualCallModal } from './ManualCallModal';
+
 import type { SavedProvaOralAnalysis } from '../../apps/prova-oral/types';
 import type { ProvaOralSectionKey } from '../../utils/formatProvaOralImport';
 
@@ -446,6 +448,7 @@ export const ModalRoot: React.FC<ModalRootProps> = ({
 
       <ChangelogModal />
       <DoubleCheckReviewModal />
+      <ManualCallModal />
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* MODAIS DE IMPORT PROVA ORAL (v1.39.08) */}
