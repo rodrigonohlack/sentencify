@@ -10,6 +10,7 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { anonymizeText } from '../utils/text';
 import { getCorrectionDescription } from '../utils/double-check-utils';
+import { isPdfBinaryAllowed } from '../utils/manualCall';
 import { useUIStore } from '../stores/useUIStore';
 import { isOralProof } from '../components/ai/AIAssistantComponents';
 import { ORAL_PROOF_ANALYSIS_INSTRUCTIONS, buildOralProofSynthesisSection } from '../prompts/oral-proof-analysis';
@@ -189,7 +190,7 @@ export const useProofAnalysis = ({
         });
       }
       // Depois: PDFs binarios (modo pdf-puro ou fallback)
-      if (docs.peticoes?.length > 0) {
+      if (docs.peticoes?.length > 0 && isPdfBinaryAllowed(aiIntegration.aiSettings.provider)) {
         const textCount = docs.peticoesText?.length || 0;
         docs.peticoes.forEach((base64: string, index: number) => {
           const label = index === 0 && textCount === 0 ? 'PETICAO INICIAL' : `PETICAO ${textCount + index + 1}`;
@@ -216,7 +217,7 @@ export const useProofAnalysis = ({
           });
         });
       }
-      if (docs.contestacoes?.length > 0) {
+      if (docs.contestacoes?.length > 0 && isPdfBinaryAllowed(aiIntegration.aiSettings.provider)) {
         const textCount = docs.contestacoesText?.length || 0;
         docs.contestacoes.forEach((base64: string, index: number) => {
           contentArray.push({ type: 'text', text: `CONTESTACAO ${textCount + index + 1} (documento PDF a seguir):` });
@@ -240,7 +241,7 @@ export const useProofAnalysis = ({
           });
         });
       }
-      if (docs.complementares?.length > 0) {
+      if (docs.complementares?.length > 0 && isPdfBinaryAllowed(aiIntegration.aiSettings.provider)) {
         const textCount = docs.complementaresText?.length || 0;
         docs.complementares.forEach((base64: string, index: number) => {
           contentArray.push({ type: 'text', text: `DOCUMENTO COMPLEMENTAR ${textCount + index + 1} (documento PDF a seguir):` });
@@ -254,7 +255,7 @@ export const useProofAnalysis = ({
     }
 
     return contentArray;
-  }, [analyzedDocuments]);
+  }, [analyzedDocuments, aiIntegration]);
 
   /**
    * Analisa uma prova documental
@@ -311,8 +312,9 @@ export const useProofAnalysis = ({
 
         if (proofMode === 'pdf-puro') {
           // Usuario escolheu PDF puro explicitamente
-          if (shouldAnonymize) {
+          if (shouldAnonymize || !isPdfBinaryAllowed(aiIntegration.aiSettings.provider)) {
             // v1.21.9: Fallback para texto extraido quando anonimizacao ativa
+            // ou quando provider não suporta PDF binário (manual/grok)
             const extractedText = proofManager.extractedProofTexts[proofId];
             if (extractedText) {
               contentArray.push({
@@ -387,8 +389,8 @@ export const useProofAnalysis = ({
                 type: 'text' as const,
                 text: `<anexo numero="${attachmentNumber}" nome="${attachment.name}" tipo="PDF">\n${maybeAnonymize(attachmentText)}\n</anexo>`
               });
-            } else if (attachment.file && !shouldAnonymize) {
-              // PDF binário se não extraído e anonimização desativada
+            } else if (attachment.file && !shouldAnonymize && isPdfBinaryAllowed(aiIntegration.aiSettings.provider)) {
+              // PDF binário se não extraído, anonimização desativada e provider suporta binário
               contentArray.push({
                 type: 'text' as const,
                 text: `<anexo numero="${attachmentNumber}" nome="${attachment.name}" tipo="PDF binário">`

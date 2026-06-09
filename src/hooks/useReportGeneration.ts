@@ -15,6 +15,7 @@
 import React from 'react';
 import { normalizeHTMLSpacing, removeMetaComments } from '../utils/text';
 import { withRetry, AI_RETRY_DEFAULTS } from '../utils/retry';
+import { isPdfBinaryAllowed } from '../utils/manualCall';
 import { AI_PROMPTS } from '../prompts';
 import { parseAIResponse, RastreabilidadeResponseSchema } from '../schemas/ai-responses';
 import { splitReportIntoParagraphs } from '../utils/reportParagraphs';
@@ -180,7 +181,7 @@ export const useReportGeneration = ({
           });
         });
       }
-      if (docsToUse.peticoes?.length > 0) {
+      if (docsToUse.peticoes?.length > 0 && isPdfBinaryAllowed(aiIntegration.aiSettings.provider)) {
         const textCount = docsToUse.peticoesText?.length || 0;
         docsToUse.peticoes.forEach((base64: string, index: number) => {
           const label = index === 0 && textCount === 0 ? 'PETIÇÃO INICIAL' : `PETIÇÃO ${textCount + index + 1}`;
@@ -205,7 +206,7 @@ export const useReportGeneration = ({
           });
         });
       }
-      if (docsToUse.contestacoes?.length > 0) {
+      if (docsToUse.contestacoes?.length > 0 && isPdfBinaryAllowed(aiIntegration.aiSettings.provider)) {
         const textCount = docsToUse.contestacoesText?.length || 0;
         docsToUse.contestacoes.forEach((base64: string, index: number) => {
           contentArray.push({ type: 'text', text: `CONTESTAÇÃO ${textCount + index + 1} (documento PDF a seguir):` });
@@ -229,7 +230,7 @@ export const useReportGeneration = ({
           });
         });
       }
-      if (docsToUse.complementares?.length > 0) {
+      if (docsToUse.complementares?.length > 0 && isPdfBinaryAllowed(aiIntegration.aiSettings.provider)) {
         const textCount = docsToUse.complementaresText?.length || 0;
         docsToUse.complementares.forEach((base64: string, index: number) => {
           contentArray.push({ type: 'text', text: `DOCUMENTO COMPLEMENTAR ${textCount + index + 1} (documento PDF a seguir):` });
@@ -243,7 +244,7 @@ export const useReportGeneration = ({
     }
 
     return contentArray;
-  }, [docs]);
+  }, [docs, aiIntegration]);
 
   /**
    * Função base que retorna componentes reutilizáveis para prompts de mini-relatório

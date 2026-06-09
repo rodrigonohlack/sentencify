@@ -13,6 +13,7 @@
 import React, { useRef, useEffect } from 'react';
 import useFactsComparisonCache from './useFactsComparisonCache';
 import { useUIStore } from '../stores/useUIStore';
+import { isPdfBinaryAllowed } from '../utils/manualCall';
 import { parseAIResponse, extractJSON, FactsComparisonSchema } from '../schemas/ai-responses';
 import {
   buildMiniRelatorioComparisonPrompt,
@@ -29,7 +30,8 @@ import type {
   AIDocumentContent,
   AnalyzedDocuments,
   DoubleCheckReviewResult,
-  DoubleCheckCorrection
+  DoubleCheckCorrection,
+  AIProvider
 } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -59,6 +61,7 @@ export interface AIIntegrationForFactsComparison {
     }
   ) => Promise<string>;
   aiSettings: {
+    provider: AIProvider;
     doubleCheck?: {
       enabled: boolean;
       operations: {
@@ -213,8 +216,8 @@ export function useFactsComparison({
       if (hasTextForMessage || source === 'mini-relatorio') {
         // Texto simples
         messageContent = [{ type: 'text', text: prompt }];
-      } else {
-        // v1.36.22: Incluir PDFs binários como fallback
+      } else if (isPdfBinaryAllowed(aiIntegration.aiSettings.provider)) {
+        // v1.36.22: Incluir PDFs binários como fallback (apenas quando provider suporta)
         messageContent = [{ type: 'text', text: prompt }];
 
         // Adicionar petições como PDF
@@ -255,6 +258,9 @@ export function useFactsComparison({
             }
           } as AIDocumentContent);
         }
+      } else {
+        // Provider não suporta PDF binário (manual/grok) — só texto
+        messageContent = [{ type: 'text', text: prompt }];
       }
 
       // v1.40.10: Usar streaming para evitar timeout em operações longas

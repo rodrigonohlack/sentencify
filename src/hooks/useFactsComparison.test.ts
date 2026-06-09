@@ -48,6 +48,7 @@ describe('useFactsComparison', () => {
   const createMockAiIntegration = (response: string = '{"tabela": [], "fatosIncontroversos": [], "fatosControversos": [], "pontosChave": [], "resumo": ""}') => ({
     callAI: vi.fn().mockResolvedValue(response),
     aiSettings: {
+      provider: 'claude' as const,
       doubleCheck: {
         enabled: false,
         operations: {
