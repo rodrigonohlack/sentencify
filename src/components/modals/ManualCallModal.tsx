@@ -53,7 +53,7 @@ export const ManualCallModal: React.FC = () => {
     <BaseModal
       isOpen
       onClose={handleCancel}
-      title={pending.meta?.title || 'cole no seu LLM'}
+      title={pending.meta?.title || 'Chamada manual'}
       subtitle="Sem Provider · copie o prompt, gere a resposta em qualquer LLM e cole abaixo"
       icon={<ClipboardCopy />}
       iconColor="blue"

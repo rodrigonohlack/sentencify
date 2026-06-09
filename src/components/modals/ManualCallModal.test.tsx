@@ -13,7 +13,8 @@ describe('ManualCallModal', () => {
 
   it('não renderiza conteúdo sem pending', () => {
     const { container } = render(<ManualCallModal />);
-    expect(container.textContent).not.toContain('cole no seu LLM');
+    expect(container.textContent).not.toContain('Chamada manual');
+    expect(container.textContent).not.toContain('RESPOSTA');
   });
 
   it('mostra o prompt e resolve ao confirmar', async () => {
