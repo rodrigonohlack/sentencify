@@ -566,6 +566,48 @@ describe('useModelSuggestions', () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // MANUAL PROVIDER TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Manual Provider (Sem Provider)', () => {
+    it('no modo manual, retorna resultado local e NÃO chama callAI', async () => {
+      const models = [
+        createMockModel({ id: 'model-1', title: 'Horas Extras', category: 'MÉRITO' }),
+        createMockModel({ id: 'model-2', title: 'Horas', category: 'MÉRITO' })
+      ];
+      (useModelsStore.getState as ReturnType<typeof vi.fn>).mockReturnValue({ models });
+
+      mockCacheGet.mockReturnValue(null);
+      mockCallAI.mockResolvedValue('["model-2", "model-1"]');
+
+      const ai = createMockAIIntegration({ useLocalAIForSuggestions: false });
+      (ai.aiSettings as any).provider = 'manual';
+
+      const { result } = renderHook(() =>
+        useModelSuggestions({
+          aiIntegration: ai as any,
+          apiCache: createMockAPICache(),
+          searchModelReady: false
+        })
+      );
+
+      let suggestions: any;
+      await act(async () => {
+        suggestions = await result.current.findSuggestions(
+          createMockTopic({ title: 'HORAS EXTRAS', category: 'MÉRITO' })
+        );
+      });
+
+      // Deve retornar candidatos locais sem reordenação por IA
+      expect(mockCallAI).not.toHaveBeenCalled();
+      // Deve retornar sugestões baseadas no ranking local
+      expect(suggestions.suggestions.length).toBeGreaterThan(0);
+      // model-1 tem title "Horas Extras" → mais relevante pelo score local
+      expect(suggestions.suggestions[0].id).toBe('model-1');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // CALLBACK STABILITY TESTS
   // ═══════════════════════════════════════════════════════════════════════════
 

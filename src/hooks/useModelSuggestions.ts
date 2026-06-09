@@ -35,6 +35,8 @@ export interface AIIntegrationForSuggestions {
     useLocalAIForSuggestions?: boolean;
     modelSemanticThreshold?: number;
     suggestionModel?: import('../types').VoiceImprovementModel;
+    /** v1.52.50: Necessário para gate do modo manual */
+    provider?: import('../types').AIProvider;
   };
   buildApiRequest: (messages: AIMessage[], optionsOrMaxTokens?: AICallOptions | number) => Record<string, unknown>;
   callAI: (messages: AIMessage[], options?: AICallOptions) => Promise<string>;
@@ -190,6 +192,11 @@ export function useModelSuggestions({
     topicRelatorio: string
   ): Promise<Model[]> => {
     if (topCandidates.length === 0) return [];
+
+    // v1.52.50: No modo Sem Provider, usar ranking local diretamente (sem LLM)
+    if (aiIntegration.aiSettings.provider === 'manual') {
+      return topCandidates;
+    }
 
     try {
       const prompt = `${AI_PROMPTS.roles.relevancia}

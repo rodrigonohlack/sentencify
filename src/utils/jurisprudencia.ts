@@ -14,6 +14,7 @@ import {
   SEARCH_STOPWORDS,
   SINONIMOS_JURIDICOS
 } from '../hooks';
+import { useAIStore } from '../stores/useAIStore';
 import type { Precedente, JurisFiltros, AIMessage } from '../types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -404,8 +405,10 @@ export const findJurisprudenciaHelper = async (
   const candidates = scored.filter(p => p.score > 0).sort((a, b) => b.score - a.score).slice(0, 40) as (Precedente & { similarity: number })[];
 
   // 7. Se tiver candidatos suficientes, usar IA para refinar
+  // v1.52.50: No modo Sem Provider, manter somente o ranking local (sem LLM)
+  const currentProvider = useAIStore.getState().aiSettings.provider;
   let results: (Precedente & { similarity: number })[];
-  if (candidates.length > 3 && callLLM) {
+  if (candidates.length > 3 && callLLM && currentProvider !== 'manual') {
     const refined = await refineJurisWithAIHelper(topicTitle, miniRelatorio, candidates, callLLM);
     // Adicionar similarity baseado na posição no ranking
     results = refined.map((p, i) => ({ ...p, similarity: 1 - (i * 0.05) }));
