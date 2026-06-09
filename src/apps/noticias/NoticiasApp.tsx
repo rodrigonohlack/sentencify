@@ -29,6 +29,7 @@ import { useAIIntegration } from './hooks/useAIIntegration';
 
 // Modal base
 import { BaseModal } from '../../components/modals/BaseModal';
+import { ManualCallModal } from '../../components/modals/ManualCallModal';
 
 // Utilitários de data
 import { formatFullDate } from './utils/date-utils';
@@ -520,6 +521,7 @@ const NoticiasAppContent: React.FC = () => {
         onClose={() => setIsManualInputOpen(false)}
         onSubmit={handleManualAdd}
       />
+      <ManualCallModal />
     </div>
   );
 };

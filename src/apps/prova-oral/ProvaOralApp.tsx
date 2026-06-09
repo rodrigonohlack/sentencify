@@ -29,6 +29,7 @@ import {
 import { useProvaOralStore } from './stores';
 import { ThemeStyles } from '../../styles';
 import { useThemeManagement } from '../../hooks';
+import { ManualCallModal } from '../../components/modals/ManualCallModal';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // APP CONTENT
@@ -183,6 +184,7 @@ const AppContent: React.FC = () => {
         onClose={closeHistorico}
         onLoad={() => setShowResults(true)}
       />
+      <ManualCallModal />
     </div>
   );
 };

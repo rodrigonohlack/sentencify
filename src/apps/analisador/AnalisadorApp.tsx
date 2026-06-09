@@ -33,6 +33,7 @@ import { Button, ToastProvider, useToast } from './components/ui';
 import { useAnalysesStore, useResultStore } from './stores';
 import { useAnalysesAPI } from './hooks';
 import { useThemeManagement } from '../../hooks';
+import { ManualCallModal } from '../../components/modals/ManualCallModal';
 import type { SavedAnalysis } from './types/analysis.types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -248,6 +249,7 @@ const AnalisadorContent: React.FC = () => {
       <SettingsModal isOpen={settingsOpen} onClose={handleCloseSettings} />
       <HistoricoModal onSelectAnalysis={handleSelectAnalysis} />
       <ImportAnalysisModal isOpen={importOpen} onClose={handleCloseImport} />
+      <ManualCallModal />
     </div>
   );
 };

@@ -2170,7 +2170,7 @@ const useAIIntegration = () => {
     messages: AIMessage[],
     options: AIStreamOptions = {}
   ): Promise<string> => {
-    const provider = options.provider || aiSettings.provider;
+    const provider = options.provider || aiSettings.provider || 'claude';
 
     switch (provider) {
       case 'claude':

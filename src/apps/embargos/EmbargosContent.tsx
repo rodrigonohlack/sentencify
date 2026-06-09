@@ -27,6 +27,7 @@ import {
 } from './stores';
 import { useAutoSave, useLocalHistory } from './hooks';
 import { useThemeManagement } from '../../hooks';
+import { ManualCallModal } from '../../components/modals/ManualCallModal';
 
 export const EmbargosContent: React.FC = () => {
   const synthesis = useSynthesisStore(s => s.synthesis);
@@ -144,6 +145,7 @@ export const EmbargosContent: React.FC = () => {
         onClose={() => setHistoricoOpen(false)}
         onSelectAndOpen={() => setHistoricoOpen(false)}
       />
+      <ManualCallModal />
     </div>
   );
 };
