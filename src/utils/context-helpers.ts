@@ -12,6 +12,8 @@ import type { AIMessageContent, ProofFile, ProofText, ProofAttachment, Anonymiza
 import { anonymizeText } from './text';
 import { isOralProof } from '../components';
 import { wrapUserContent } from './prompt-safety';
+import { isPdfBinaryAllowed } from './manualCall';
+import { useAIStore } from '../stores/useAIStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PREPARE DOCUMENTS CONTEXT
@@ -269,7 +271,9 @@ export const prepareProofsContext = async (
         const nomesParaAnonimizar = anonConfig?.nomesUsuario || [];
 
         if (attachment.type === 'pdf') {
-          const usePdfPuro = attachment.processingMode === 'pdf-puro';
+          // No modo Sem Provider (e Grok), PDF binário não é aceito → força texto extraído.
+          const usePdfPuro = attachment.processingMode === 'pdf-puro'
+            && isPdfBinaryAllowed(useAIStore.getState().aiSettings.provider);
 
           if (usePdfPuro) {
             // Usuário escolheu PDF Puro (binário) → enviar PDF direto ao Claude
@@ -471,7 +475,9 @@ export const prepareOralProofsContext = async (
         const nomesParaAnonimizar = anonConfig?.nomesUsuario || [];
 
         if (attachment.type === 'pdf') {
-          const usePdfPuro = attachment.processingMode === 'pdf-puro';
+          // No modo Sem Provider (e Grok), PDF binário não é aceito → força texto extraído.
+          const usePdfPuro = attachment.processingMode === 'pdf-puro'
+            && isPdfBinaryAllowed(useAIStore.getState().aiSettings.provider);
 
           if (usePdfPuro) {
             if (anonymizationEnabled) {
