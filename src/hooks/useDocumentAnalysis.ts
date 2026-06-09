@@ -13,6 +13,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import { anonymizeText, normalizeHTMLSpacing } from '../utils/text';
+import { resolveEffectiveMode } from '../utils/documentMode';
 import { parseAIResponse, extractJSON, TopicExtractionSchema } from '../schemas/ai-responses';
 import type { PromptInjectionDetection, DivergenciaPedido } from '../schemas/ai-responses';
 import { buildAnalysisPrompt } from '../prompts';
@@ -272,12 +273,12 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       const globalOcrEngine = aiIntegration.aiSettings?.ocrEngine;
       const anonConfig = aiIntegration.aiSettings?.anonymization;
       const anonymizationEnabled = anonConfig?.enabled;
-      const blockedModes = ['claude-vision', 'gemini-vision', 'pdf-puro'];
-
-      const getEffectiveMode = (docMode: string | undefined) => {
-        if (anonymizationEnabled && docMode && blockedModes.includes(docMode)) return 'pdfjs';
-        return docMode || globalOcrEngine || 'pdfjs';
-      };
+      const getEffectiveMode = (docMode: string | undefined) =>
+        resolveEffectiveMode(docMode, {
+          provider: aiIntegration.aiSettings.provider,
+          anonymizationEnabled: !!anonymizationEnabled,
+          globalOcrEngine,
+        });
 
       const maybeAnonymize = (text: string) =>
         anonymizationEnabled ? anonymizeText(text, anonConfig, nomesParaAnonimizar) : text;
