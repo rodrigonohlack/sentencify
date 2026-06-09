@@ -42,7 +42,8 @@ export const BaseModal = React.memo(({
   size = 'md',
   children,
   footer,
-  preventClose = false
+  preventClose = false,
+  overlayClassName
 }: BaseModalProps) => {
   // ESC handler - deve vir antes do early return para cleanup funcionar
   React.useEffect(() => {
@@ -89,7 +90,7 @@ export const BaseModal = React.memo(({
 
   // v1.52.27: clicar fora NÃO fecha mais o modal (evita fechamento acidental). Fechar só por ESC ou X.
   return (
-    <div className={CSS.modalOverlay}>
+    <div className={overlayClassName || CSS.modalOverlay}>
       <div
         className={`${CSS.modalContainer} ${sizes[size] || sizes.md} w-full animate-modal`}
         style={{ animation: 'modalFadeIn 0.2s ease-out' }}

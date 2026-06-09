@@ -2749,6 +2749,8 @@ export interface BaseModalProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   preventClose?: boolean;
+  /** Override completo da className do overlay (ex.: z-index mais alto p/ ficar acima de outros overlays). */
+  overlayClassName?: string;
 }
 
 export interface AnonymizationNamesModalProps {

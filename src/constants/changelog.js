@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.53.1',
+    date: '2026-06-09',
+    feature: 'fix(manual): no modo Sem Provider, o modal "Chamada manual" agora fica acima de qualquer overlay de geração. Antes, ao disparar o Ctrl+K (Auto Complete / "Gerar redação com IA"), o popover do inline-generate (z-[120]) ficava na frente do modal manual (z-[90]) e exibia "Gerando redação…" cobrindo o prompt — impedindo copiar/colar. O BaseModal ganhou um override opcional de z-index do overlay (overlayClassName) e o ManualCallModal passou a usar z-[130], ficando topo de tudo.',
+  },
+  {
     version: '1.53.0',
     date: '2026-06-09',
     feature: 'feat(provider): novo modo "Sem Provider (copiar/colar)" — um fallback de custo $0 para usar o SentencifyAI (e subapps) sem API paga nem o bridge local. Ao selecionar "Sem Provider" em Provedores & Modelos, toda chamada de IA elegível, em vez de fazer requisição, abre um modal único: em cima o prompt pronto (com botão Copiar), embaixo um campo para colar a resposta gerada em qualquer LLM (Claude web, Claude Code, etc.); ao confirmar, o fluxo segue como se a resposta tivesse vindo da API. Funciona em geração de texto da decisão, gerador de dispositivo, revisor de sentença, extrator/gerador de modelo, renomear/unir/dividir/reordenar tópicos, análise inicial dos documentos, mini-relatório, confronto de fatos, análise de provas, e nos subapps Embargos, Analisador e Notícias. A prova oral abre um modal por fase (1 a 3). Sem streaming no modo manual (resposta inteira de uma vez). PDF puro é proibido no modo manual — exige texto extraído (PDF.js/Tesseract/Vision), como já ocorre com o Grok. Recursos incompatíveis ficam desligados no modo manual: voz (mic + melhoria), Double Check e multiagente; refino de sugestão de modelo, legislação e jurisprudência seguem só em IA local (embeddings E5), sem abrir o modal. Implementado via um broker em Zustand (useManualCallStore) que transforma a chamada assíncrona profunda numa ida-e-volta de UI, interceptado no topo dos despachadores callAI/callAIStream das 5 cópias de useAIIntegration (app + subapps).',

@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { ClipboardCopy, Check } from 'lucide-react';
-import { BaseModal } from './BaseModal';
+import { BaseModal, CSS } from './BaseModal';
 import { Button } from '../ui/Button';
 import { useManualCallStore } from '../../stores/useManualCallStore';
 
@@ -58,6 +58,9 @@ export const ManualCallModal: React.FC = () => {
       icon={<ClipboardCopy />}
       iconColor="blue"
       size="lg"
+      // O modal manual precisa ficar acima de qualquer overlay de geração
+      // (ex.: popover do Ctrl+K em z-[120]), pois é o que o usuário precisa usar.
+      overlayClassName={CSS.modalOverlay.replace('z-[90]', 'z-[130]')}
       footer={
         <div className="flex justify-end gap-2 w-full">
           <Button variant="secondary" onClick={handleCancel}>
