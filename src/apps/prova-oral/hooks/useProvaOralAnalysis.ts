@@ -280,6 +280,7 @@ Se algum item acima não foi cumprido, REFAÇA antes de responder.`;
           [{ role: 'user', content: userPromptPhase1 }],
           {
             systemPrompt: PROVA_ORAL_TRANSCRIPTION_PROMPT,
+            manualTitle: 'Prova oral — fase 1 de 3 (transcrição)',
             maxTokens,
             onChunk: (fullText) => {
               if (!phase1Started) {
@@ -363,6 +364,7 @@ CHECKLIST OBRIGATÓRIO:
           [{ role: 'user', content: userPromptPhase2 }],
           {
             systemPrompt: PROVA_ORAL_JURIDICAL_ANALYSIS_PROMPT,
+            manualTitle: 'Prova oral — fase 2 de 3 (análise jurídica)',
             maxTokens,
             onChunk: (fullText) => {
               if (!phase2Started) {
@@ -465,6 +467,7 @@ CHECKLIST OBRIGATÓRIO:
           [{ role: 'user', content: userPromptPhase3 }],
           {
             systemPrompt: PROVA_ORAL_PROBATORY_ANALYSIS_PROMPT,
+            manualTitle: 'Prova oral — fase 3 de 3 (valoração probatória)',
             maxTokens,
             onChunk: (fullText) => {
               if (!phase3Started) {
