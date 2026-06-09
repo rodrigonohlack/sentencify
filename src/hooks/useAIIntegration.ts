@@ -14,6 +14,8 @@ import { API_BASE } from '../constants/api';
 import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../utils/claude-cli-bridge';
 import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../utils/codex-cli-bridge';
 import { withRetry } from '../utils/retry';
+import { serializeForManual, normalizeManualResponse } from '../utils/manualCall';
+import { useManualCallStore } from '../stores/useManualCallStore';
 import { rasterizePdfDocumentBlocks } from '../utils/pdfRasterize';
 // v1.42.02: Registry provider-agnostic para habilitar web search
 import { applyWebSearchTool, extractGrounding, withWebSearchHint } from '../utils/ai-tools/webSearch';
@@ -1473,6 +1475,13 @@ const useAIIntegration = () => {
   const callAI = React.useCallback(async (messages: AIMessage[], options: AICallOptions = {}) => {
     const provider = options.provider || aiSettings.provider || 'claude';
 
+    // Modo Sem Provider: serializa o prompt e aguarda o usuário colar a resposta
+    if (provider === 'manual') {
+      const promptText = serializeForManual(messages, options, () => getAiInstructions() as Array<{ type: 'text'; text: string }>);
+      const raw = await useManualCallStore.getState().enqueue(promptText, { title: options.manualTitle });
+      return normalizeManualResponse(raw);
+    }
+
     // v1.35.97: OpenAI GPT-5.2
     if (provider === 'openai') {
       return await callOpenAIAPI(messages, {
@@ -1527,7 +1536,7 @@ const useAIIntegration = () => {
       ...options,
       model: options.model || aiSettings.claudeModel || 'claude-sonnet-4-20250514'
     });
-  }, [aiSettings, callLLM, callGeminiAPI, callOpenAIAPI, callGrokAPI, callDeepseekAPI]);
+  }, [aiSettings, callLLM, callGeminiAPI, callOpenAIAPI, callGrokAPI, callDeepseekAPI, getAiInstructions]);
 
   // ========================================
   // END MULTI-PROVIDER SUPPORT
@@ -2179,10 +2188,15 @@ const useAIIntegration = () => {
         return callLLM(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
       case 'codex-cli':
         return callOpenAIAPI(messages, { ...options, localBridge: true, model: options.model || aiSettings.codexCliModel || 'gpt-5.5' });
+      case 'manual': {
+        const promptText = serializeForManual(messages, options, () => getAiInstructions() as Array<{ type: 'text'; text: string }>);
+        const raw = await useManualCallStore.getState().enqueue(promptText, { title: options.manualTitle });
+        return normalizeManualResponse(raw);
+      }
       default:
         return callClaudeAPIStream(messages, options);
     }
-  }, [aiSettings.provider, aiSettings.claudeCliModel, aiSettings.codexCliModel, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM, callOpenAIAPI]);
+  }, [aiSettings.provider, aiSettings.claudeCliModel, aiSettings.codexCliModel, callClaudeAPIStream, callGeminiAPIStream, callOpenAIAPIStream, callGrokAPIStream, callDeepseekAPIStream, callLLM, callOpenAIAPI, getAiInstructions]);
 
   /**
    * Chama a API com streaming para provider/modelo específico (para double check)

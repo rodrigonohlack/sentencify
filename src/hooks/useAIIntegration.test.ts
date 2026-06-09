@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 
 // Mock stores before importing the hook
 const mockAddTokenUsage = vi.fn();
@@ -73,6 +73,7 @@ vi.mock('../schemas/ai-responses', () => ({
 
 import { useAIIntegration } from './useAIIntegration';
 import { useAIStore } from '../stores/useAIStore';
+import { useManualCallStore } from '../stores/useManualCallStore';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPER: create mock fetch response
@@ -2475,6 +2476,34 @@ describe('useAIIntegration', () => {
       const fetchCalls = vi.mocked(global.fetch).mock.calls;
       const body = JSON.parse((fetchCalls[0][1] as RequestInit).body as string);
       expect(body.reasoning_effort).not.toBe('minimal');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // callAI - provider manual (modo Sem Provider)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('callAI - provider manual', () => {
+    beforeEach(() => {
+      useManualCallStore.setState({ pending: null });
+    });
+
+    it('callAI no modo manual enfileira no broker e retorna a resposta normalizada', async () => {
+      const { result } = renderHook(() => useAIIntegration());
+
+      let promise: Promise<string> | undefined;
+      act(() => {
+        promise = result.current.callAI(
+          [{ role: 'user', content: [{ type: 'text', text: 'oi' }] }] as any,
+          { provider: 'manual' }
+        );
+      });
+
+      await waitFor(() => expect(useManualCallStore.getState().pending).not.toBeNull());
+
+      act(() => useManualCallStore.getState().resolveCurrent('```json\n{"ok":1}\n```'));
+
+      await expect(promise!).resolves.toBe('{"ok":1}');
     });
   });
 

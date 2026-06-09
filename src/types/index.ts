@@ -967,6 +967,8 @@ export interface AICallOptions {
   onGrounding?: (metadata: GroundingMetadata) => void;
   /** Quando true, roteia a chamada Claude para o daemon local (llm-bridge) em vez da API. */
   localBridge?: boolean;
+  /** Título opcional exibido no modal do modo manual (ex.: "Prova oral — fase 2 de 3"). */
+  manualTitle?: string;
 }
 
 /** Tipo para função callAI */
