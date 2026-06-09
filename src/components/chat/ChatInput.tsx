@@ -30,7 +30,7 @@ export const ChatInput = React.memo(({
   // v1.38.5: Voice improvement com IA
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
-  const { improveText } = useVoiceImprovement({ callAI });
+  const { improveText } = useVoiceImprovement({ callAI, provider: aiSettings.provider });
 
   const handleSend = () => {
     if (!value.trim() || disabled) return;
@@ -63,6 +63,7 @@ export const ChatInput = React.memo(({
           ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
           : undefined
         }
+        disabled={aiSettings.provider === 'manual'}
       />
       <button
         onClick={handleSend}

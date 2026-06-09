@@ -99,6 +99,8 @@ export function isFastModelAvailable(
 interface UseVoiceImprovementProps {
   /** Função callAI do useAIIntegration - reutiliza infraestrutura existente */
   callAI: CallAIFunction;
+  /** Provider ativo (opcional). Quando 'manual', as funções de melhoria retornam o texto original sem chamar a IA. */
+  provider?: string;
 }
 
 interface UseVoiceImprovementReturn {
@@ -120,7 +122,7 @@ interface UseVoiceImprovementReturn {
  * const { improveText, isImproving } = useVoiceImprovement({ callAI });
  * const improved = await improveText('texto ditado', 'haiku');
  */
-export function useVoiceImprovement({ callAI }: UseVoiceImprovementProps): UseVoiceImprovementReturn {
+export function useVoiceImprovement({ callAI, provider }: UseVoiceImprovementProps): UseVoiceImprovementReturn {
   const [isImproving, setIsImproving] = React.useState(false);
 
   /**
@@ -133,6 +135,11 @@ export function useVoiceImprovement({ callAI }: UseVoiceImprovementProps): UseVo
     rawText: string,
     model: VoiceImprovementModel
   ): Promise<string> => {
+    // Melhoria de voz indisponível no modo Sem Provider
+    if (provider === 'manual') {
+      return rawText;
+    }
+
     // Texto muito curto não precisa de melhoria
     if (rawText.trim().length < 10) {
       return rawText;
@@ -174,7 +181,7 @@ export function useVoiceImprovement({ callAI }: UseVoiceImprovementProps): UseVo
     } finally {
       setIsImproving(false);
     }
-  }, [callAI]);
+  }, [callAI, provider]);
 
   /**
    * v1.51.4: Limpa uma INSTRUÇÃO ditada (comando do Ctrl+K) — corrige pontuação/vícios de
@@ -184,6 +191,9 @@ export function useVoiceImprovement({ callAI }: UseVoiceImprovementProps): UseVo
     rawText: string,
     model: VoiceImprovementModel
   ): Promise<string> => {
+    // Melhoria de voz indisponível no modo Sem Provider
+    if (provider === 'manual') return rawText;
+
     if (rawText.trim().length < 10) return rawText;
 
     let config = VOICE_MODEL_CONFIG[model];
@@ -210,7 +220,7 @@ export function useVoiceImprovement({ callAI }: UseVoiceImprovementProps): UseVo
     } finally {
       setIsImproving(false);
     }
-  }, [callAI]);
+  }, [callAI, provider]);
 
   return { improveText, improveInstruction, isImproving };
 }

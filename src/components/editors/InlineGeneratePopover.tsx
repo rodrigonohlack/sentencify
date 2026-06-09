@@ -36,6 +36,8 @@ export interface InlineGeneratePopoverProps {
   voiceImproveEnabled?: boolean;
   /** v1.51.2: função de melhoria do texto ditado (recebe cru, retorna melhorado) */
   onImproveVoice?: (text: string) => Promise<string>;
+  /** Desabilita o botão de voz (ex: provider === 'manual') */
+  voiceDisabled?: boolean;
 }
 
 interface Geometry {
@@ -111,6 +113,7 @@ export const InlineGeneratePopover: React.FC<InlineGeneratePopoverProps> = ({
   onCancel,
   voiceImproveEnabled = false,
   onImproveVoice,
+  voiceDisabled = false,
 }) => {
   const [instruction, setInstruction] = React.useState('');
   // Geometria: usa a última salva; senão, ancora no cursor
@@ -277,6 +280,7 @@ export const InlineGeneratePopover: React.FC<InlineGeneratePopoverProps> = ({
                   improveWithAI={voiceImproveEnabled}
                   onImproveText={onImproveVoice}
                   onError={(err) => console.warn('[InlineGenerate][Voz]', err)}
+                  disabled={voiceDisabled}
                 />
                 <button
                   onClick={() => {

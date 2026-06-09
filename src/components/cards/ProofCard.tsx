@@ -50,7 +50,7 @@ export const ProofCard = React.memo(({
   // v1.37.90: Usa callAI do useAIIntegration para tracking de tokens
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
-  const { improveText } = useVoiceImprovement({ callAI });
+  const { improveText } = useVoiceImprovement({ callAI, provider: aiSettings.provider });
 
   // Handler: Remover vínculo de tópico
   const handleUnlinkTopic = React.useCallback((topicTitle: string) => {
@@ -880,6 +880,7 @@ export const ProofCard = React.memo(({
                   ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
                   : undefined
                 }
+                disabled={aiSettings.provider === 'manual'}
               />
             </div>
             <textarea

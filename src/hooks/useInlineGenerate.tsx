@@ -37,6 +37,8 @@ export interface UseInlineGenerateOptions {
   voiceImproveEnabled?: boolean;
   /** v1.51.2: função de melhoria do texto ditado */
   onImproveVoice?: (text: string) => Promise<string>;
+  /** Desabilita o botão de voz no popover (ex: provider === 'manual') */
+  voiceDisabled?: boolean;
   /**
    * v1.52.20: identidade da instância corrente do Quill. Muda quando o Quill é
    * recriado (ex.: remount ao alternar fullscreen, que troca o `key` do wrapper e
@@ -59,7 +61,7 @@ export function useInlineGenerate(
   quillRef: React.MutableRefObject<QuillInstance | null>,
   options: UseInlineGenerateOptions
 ): { overlay: React.ReactNode } {
-  const { enabled, generate, editorTheme, quillReady, voiceImproveEnabled, onImproveVoice, instanceKey } = options;
+  const { enabled, generate, editorTheme, quillReady, voiceImproveEnabled, onImproveVoice, voiceDisabled, instanceKey } = options;
 
   const [mode, setMode] = React.useState<PopoverState>('closed');
   const [anchor, setAnchor] = React.useState<{ top: number; left: number; lineTop: number }>({ top: 0, left: 0, lineTop: 0 });
@@ -256,6 +258,7 @@ export function useInlineGenerate(
       onCancel={close}
       voiceImproveEnabled={voiceImproveEnabled}
       onImproveVoice={onImproveVoice}
+      voiceDisabled={voiceDisabled}
     />
   );
 

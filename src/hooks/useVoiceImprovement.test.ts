@@ -168,4 +168,36 @@ describe('useVoiceImprovement', () => {
       expect(callOptions.model).toBe('claude-haiku-4-5-20251001');
     });
   });
+
+  describe('modo Sem Provider (provider === manual)', () => {
+    it('improveText deve retornar texto original sem chamar callAI', async () => {
+      const { result } = renderHook(() =>
+        useVoiceImprovement({ callAI: mockCallAI, provider: 'manual' })
+      );
+
+      const textoOriginal = 'este texto é longo o suficiente para acionar a melhoria';
+      let improved = '';
+      await act(async () => {
+        improved = await result.current.improveText(textoOriginal, 'haiku');
+      });
+
+      expect(improved).toBe(textoOriginal);
+      expect(mockCallAI).not.toHaveBeenCalled();
+    });
+
+    it('improveInstruction deve retornar texto original sem chamar callAI', async () => {
+      const { result } = renderHook(() =>
+        useVoiceImprovement({ callAI: mockCallAI, provider: 'manual' })
+      );
+
+      const instrucaoOriginal = 'adicione mais detalhes sobre o aviso prévio';
+      let improved = '';
+      await act(async () => {
+        improved = await result.current.improveInstruction(instrucaoOriginal, 'haiku');
+      });
+
+      expect(improved).toBe(instrucaoOriginal);
+      expect(mockCallAI).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -70,7 +70,7 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
   // v1.37.90: Usa callAI do useAIIntegration para tracking de tokens
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
-  const { improveText } = useVoiceImprovement({ callAI });
+  const { improveText } = useVoiceImprovement({ callAI, provider: aiSettings.provider });
 
   // v1.40.31: Auto Complete com IA
   const autoComplete = useAIStore(selectAutoComplete);
@@ -227,6 +227,7 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
                         ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
                         : undefined
                       }
+                      disabled={aiSettings.provider === 'manual'}
                     />
                   </div>
                 </div>

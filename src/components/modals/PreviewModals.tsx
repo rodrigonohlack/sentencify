@@ -72,7 +72,7 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
   // v1.38.5: Voice improvement com IA
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
-  const { improveText } = useVoiceImprovement({ callAI });
+  const { improveText } = useVoiceImprovement({ callAI, provider: aiSettings.provider });
 
   // Conteúdo Sanitizado (Memoizado para Performance)
   // v1.52.38: ensureHtmlParagraphs converte modelos com quebras em texto plano (\n)
@@ -258,6 +258,7 @@ export const ModelPreviewModal: React.FC<ModelPreviewModalProps> = ({
                     ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
                     : undefined
                   }
+                  disabled={aiSettings.provider === 'manual'}
                 />
               </div>
               <div

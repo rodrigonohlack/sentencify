@@ -54,7 +54,7 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
   // v1.37.90: Usa callAI do useAIIntegration para tracking de tokens
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
-  const { improveText, improveInstruction } = useVoiceImprovement({ callAI });
+  const { improveText, improveInstruction } = useVoiceImprovement({ callAI, provider: aiSettings.provider });
 
   // v1.51.0: Geração inline com IA via Ctrl+K (apenas campo fundamentacao)
   // v1.51.2: ditado por voz da instrução respeita a flag de Melhoria de Voz
@@ -65,7 +65,8 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
     quillReady: quillReady ?? false,
     voiceImproveEnabled: aiSettings.voiceImprovement?.enabled,
     // v1.51.4: ditado da INSTRUÇÃO usa limpeza de comando (não o prompt de texto jurídico)
-    onImproveVoice: (text) => improveInstruction(text, aiSettings.voiceImprovement?.model || 'haiku')
+    onImproveVoice: (text) => improveInstruction(text, aiSettings.voiceImprovement?.model || 'haiku'),
+    voiceDisabled: aiSettings.provider === 'manual'
   });
 
   // v1.20.4: Expor métodos de formatação para componente pai
@@ -256,6 +257,7 @@ export const FieldEditor = React.memo(React.forwardRef<FieldEditorRef, FieldEdit
               ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
               : undefined
             }
+            disabled={aiSettings.provider === 'manual'}
           />
         )}
       </div>

@@ -394,7 +394,7 @@ export const QuillModelEditor = React.forwardRef<QuillInstance, QuillModelEditor
   // v1.38.4: Voice improvement com IA
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
-  const { improveText } = useVoiceImprovement({ callAI });
+  const { improveText } = useVoiceImprovement({ callAI, provider: aiSettings.provider });
 
   const toolbarConfig = React.useMemo(() => getQuillToolbarConfig('full'), []);
 
@@ -437,6 +437,7 @@ export const QuillModelEditor = React.forwardRef<QuillInstance, QuillModelEditor
               ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
               : undefined
             }
+            disabled={aiSettings.provider === 'manual'}
           />
 
           {onOpenAIAssistant && (
@@ -522,6 +523,8 @@ interface AIRegenerationSectionProps {
   // v1.38.5: Voice improvement com IA
   improveWithAI?: boolean;
   onImproveText?: (text: string) => Promise<string>;
+  /** Desabilita o botão de voz (ex: provider === 'manual') */
+  voiceDisabled?: boolean;
 }
 
 /**
@@ -535,7 +538,8 @@ export const AIRegenerationSection = React.memo(({
   onRegenerate,
   contextLabel = 'texto',
   improveWithAI,
-  onImproveText
+  onImproveText,
+  voiceDisabled = false
 }: AIRegenerationSectionProps) => {
   const [localInstruction, setLocalInstruction] = React.useState(customInstruction);
 
@@ -596,6 +600,7 @@ export const AIRegenerationSection = React.memo(({
           className="self-start mt-1"
           improveWithAI={improveWithAI}
           onImproveText={onImproveText}
+          disabled={voiceDisabled}
         />
       </div>
 
@@ -746,7 +751,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
   // v1.38.5: Voice improvement com IA
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
-  const { improveText, improveInstruction } = useVoiceImprovement({ callAI });
+  const { improveText, improveInstruction } = useVoiceImprovement({ callAI, provider: aiSettings.provider });
 
   // v1.51.0: Geração inline com IA via Ctrl+K (substitui o Auto Complete automático)
   // v1.51.2: ditado por voz da instrução respeita a flag de Melhoria de Voz
@@ -759,6 +764,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
     voiceImproveEnabled: aiSettings.voiceImprovement?.enabled,
     // v1.51.4: ditado da INSTRUÇÃO usa limpeza de comando (não o prompt de texto jurídico)
     onImproveVoice: (text: string) => improveInstruction(text, aiSettings.voiceImprovement?.model || 'haiku'),
+    voiceDisabled: aiSettings.provider === 'manual',
     // v1.52.20: re-subscreve o Ctrl+K quando o Quill é recriado (remount do fullscreen)
     instanceKey: readyNonce
   });
@@ -885,6 +891,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
               ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
               : undefined
             }
+            disabled={aiSettings.provider === 'manual'}
           />
 
           {onOpenAIAssistant && (
@@ -1085,6 +1092,7 @@ export const QuillDecisionEditor = React.forwardRef<QuillInstance, QuillDecision
               ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
               : undefined
             }
+            voiceDisabled={aiSettings.provider === 'manual'}
           />
         )}
       </div>
@@ -1178,7 +1186,7 @@ export const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstanc
   // v1.38.5: Voice improvement com IA
   const aiSettings = useAIStore((state) => state.aiSettings);
   const { callAI } = useAIIntegration();
-  const { improveText } = useVoiceImprovement({ callAI });
+  const { improveText } = useVoiceImprovement({ callAI, provider: aiSettings.provider });
 
   const toolbarConfig = React.useMemo(() => false, []);
 
@@ -1221,6 +1229,7 @@ export const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstanc
             ? (text) => improveText(text, aiSettings.voiceImprovement?.model || 'haiku')
             : undefined
           }
+          voiceDisabled={aiSettings.provider === 'manual'}
         />
       )}
     </div>

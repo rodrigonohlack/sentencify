@@ -44,6 +44,10 @@ export interface VoiceButtonProps {
   improveWithAI?: boolean;
   /** v1.37.88: Função para melhorar texto (recebe raw, retorna Promise<melhorado>) */
   onImproveText?: (text: string) => Promise<string>;
+  /** Desabilita o botão (ex: provider === 'manual') */
+  disabled?: boolean;
+  /** Título/tooltip quando desabilitado (sobrescreve o padrão) */
+  disabledTitle?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -58,7 +62,9 @@ export const VoiceButton: React.FC<VoiceButtonProps> = memo(({
   idleText = 'Voz',
   recordingText = 'Ouvindo...',
   improveWithAI = false,
-  onImproveText
+  onImproveText,
+  disabled = false,
+  disabledTitle = 'Indisponível no modo Sem Provider'
 }) => {
   // v1.35.60: Estado para texto interim (preview flutuante)
   const [interimText, setInterimText] = useState('');
@@ -113,9 +119,11 @@ export const VoiceButton: React.FC<VoiceButtonProps> = memo(({
   const sizeClasses = size === 'sm'
     ? 'p-1.5'
     : 'px-3 py-1.5 text-xs';
-  const stateClasses = voice.isRecording
-    ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse ring-2 ring-red-400/50'
-    : 'bg-indigo-600 hover:bg-indigo-700 text-white';
+  const stateClasses = disabled
+    ? 'bg-slate-600 text-slate-400 opacity-50 cursor-not-allowed dark:bg-slate-700 dark:text-slate-500'
+    : voice.isRecording
+      ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse ring-2 ring-red-400/50'
+      : 'bg-indigo-600 hover:bg-indigo-700 text-white';
 
   // Ícone
   const Icon = voice.isRecording ? MicOff : Mic;
@@ -125,9 +133,11 @@ export const VoiceButton: React.FC<VoiceButtonProps> = memo(({
   const buttonText = voice.isRecording ? recordingText : idleText;
 
   // Título/tooltip
-  const title = voice.isRecording
-    ? 'Clique para parar o ditado'
-    : 'Clique para ditar por voz';
+  const title = disabled
+    ? disabledTitle
+    : voice.isRecording
+      ? 'Clique para parar o ditado'
+      : 'Clique para ditar por voz';
 
   return (
     <div className="relative">
@@ -162,11 +172,12 @@ export const VoiceButton: React.FC<VoiceButtonProps> = memo(({
       {/* Botão */}
       <button
         type="button"
-        onClick={voice.toggle}
+        onClick={disabled ? undefined : voice.toggle}
+        disabled={disabled}
         className={`${baseClasses} ${sizeClasses} ${stateClasses} ${className}`}
         title={title}
         aria-label={title}
-        aria-pressed={voice.isRecording}
+        aria-pressed={disabled ? false : voice.isRecording}
       >
         <Icon className={iconSize} />
         {size === 'md' && <span>{buttonText}</span>}
