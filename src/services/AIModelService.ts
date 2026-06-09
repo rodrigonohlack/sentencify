@@ -4,7 +4,7 @@
  * @version 1.36.60
  *
  * Modelos:
- * - NER: Xenova/distilbert-base-multilingual-cased-ner-hrl
+ * - NER: RNCC83/lenerbr-ner-onnx (LeNER-br jurídico BR; labels PESSOA/ORGANIZACAO/LOCAL/TEMPO/LEGISLACAO/JURISPRUDENCIA)
  * - Embeddings: Xenova/multilingual-e5-base
  *
  * @dependencies transformers.js (WASM), Web Worker API
@@ -268,57 +268,32 @@ const AIModelService = {
     if (!this.isReady('ner')) await this.init('ner');
 
     const cleanText = text.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
-    const CHUNK_SIZE = 1000;
-    const OVERLAP = 200;
-    let allRaw: NERRawEntity[] = [];
+    // v1.52.49: chunk de 400 chars (≤ ~402 tokens) garante <512 do BERT — evita o
+    // crash do ONNX (max_position_embeddings=512), pois o tokenizer não trunca.
+    // Não há Title-Case: o LeNER-br foi treinado em texto jurídico real (ALL CAPS
+    // comum) e lida melhor com o texto cru.
+    const CHUNK_SIZE = 400;
+    const OVERLAP = 100;
+    const allEnts: NERProcessedEntity[] = [];
 
     for (let i = 0; i < cleanText.length; i += (CHUNK_SIZE - OVERLAP)) {
-      let chunk = cleanText.slice(i, i + CHUNK_SIZE);
+      const chunk = cleanText.slice(i, i + CHUNK_SIZE);
       if (chunk.length < 10) continue;
 
-      // Segment Title Case para ALL CAPS
-      chunk = chunk.replace(
-        /\b([A-ZÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]{2,}(?:\s+[A-ZÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ]{2,})+)\b/g,
-        (match: string) => match.toLowerCase().replace(/(?:^|\s)\S/g, (a: string) => a.toUpperCase())
-      );
-
       try {
-        const chunkEntities = await this._call('ner', chunk, { truncation: true, max_length: 512 }) as NERRawEntity[];
-
-        // OFFSETS MANUAIS via indexOf (Transformers.js retorna start/end incorretos)
-        // Busca case-insensitive (BERT retorna "Mac" mas texto é "MACEDO")
-        let cursor = 0;
-        const chunkLower = chunk.toLowerCase();
-        const adjusted = chunkEntities.reduce((acc: NERRawEntity[], e: NERRawEntity) => {
-          if (e.word === '[UNK]' || e.word === '[CLS]' || e.word === '[SEP]') return acc;
-          const cleanWord = (e.word || '').replace(/^##/, '');
-          if (!cleanWord) return acc;
-          const idx = chunkLower.indexOf(cleanWord.toLowerCase(), cursor);
-          if (idx !== -1) {
-            cursor = idx + cleanWord.length;
-            acc.push({ ...e, start: idx + i, end: idx + cleanWord.length + i });
-          }
-          return acc;
-        }, []);
-
-        allRaw = allRaw.concat(adjusted);
+        // O worker devolve cada token com a forma de vocabulário (com '##') e
+        // offsets de caractere CORRETOS (relativos ao chunk, via pretokenizer).
+        const chunkTokens = await this._call('ner', chunk) as NERRawEntity[];
+        // Agrega no espaço do chunk; reposiciona para o texto completo (+i).
+        for (const e of this.aggregateEntities(chunkTokens, chunk)) {
+          allEnts.push({ ...e, start: e.start + i, end: e.end + i });
+        }
       } catch (err) {
-        console.warn('[NER] Erro no chunk:', (err as Error).message);
+        console.error('[NER] Falha ao processar chunk (nomes nele podem não ser anonimizados):', (err as Error).message);
       }
     }
 
-    // Deduplicar (incluir tipo de entidade na key para não confundir Mac/LOC com Mac/PER)
-    const seen = new Set<string>();
-    const unique = allRaw.filter((e: NERRawEntity) => {
-      const entityType = (e.entity || '').replace(/^(B-|I-)/, ''); // PER, LOC, ORG
-      const key = `${e.word?.toLowerCase()}-${entityType}-${Math.floor((e.start || 0) / 50)}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    const processed = this.processTokens(unique);
-    const result = this.mergeOrgLoc(processed, cleanText);
+    const result = this.dedupOverlapping(allEnts);
 
     // Liberar memória NER após uso (modelo será recarregado no próximo uso)
     this.unload('ner');
@@ -327,105 +302,91 @@ const AIModelService = {
   },
 
   /**
-   * Processar tokens NER com healing de subtokens órfãos
-   * Healing: se subtoken (##xxx) é entidade mas prefixo foi 'O', unir se adjacentes
+   * Remove entidades duplicadas pela SOBREPOSIÇÃO de offset (v1.52.49). O overlap
+   * entre chunks gera a mesma entidade em posições sobrepostas (às vezes uma cortada
+   * na borda) → mantém a de maior span. Nomes distintos ficam em posições que não se
+   * sobrepõem, então não são removidos (evita falso-merge de homônimos).
    */
-  processTokens(rawEntities: NERRawEntity[]): NERProcessedEntity[] {
-    const sorted = [...rawEntities].sort((a: NERRawEntity, b: NERRawEntity) => a.start - b.start);
-
-    console.log('[NER] Tokens brutos:', rawEntities.slice(0, 50).map((t: NERRawEntity) =>
-      `${t.word}(${t.entity}:${t.start}-${t.end})`).join(', '));
-
-    const result: NERProcessedEntity[] = [];
-    let current: NERProcessedEntity | null = null;
-    let pendingPrefix: { word: string; end: number; start: number } | null = null;
-
-    for (const token of sorted) {
-      const isSubtoken = (token.word || '').startsWith('##');
-      const cleanWord = (token.word || '').replace(/^##/, '');
-      if (!cleanWord) continue;
-
-      // Se token é 'O', guardar como possível prefixo
-      if (token.entity === 'O') {
-        pendingPrefix = { word: cleanWord, end: token.end, start: token.start };
+  dedupOverlapping(entities: NERProcessedEntity[]): NERProcessedEntity[] {
+    const cand = entities
+      .filter((e: NERProcessedEntity) => e.text && e.start != null)
+      .sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+    const res: NERProcessedEntity[] = [];
+    for (const g of cand) {
+      const ov = res.find((k) => k.type === g.type && g.start < k.end && k.start < g.end);
+      if (ov) {
+        if ((g.end - g.start) > (ov.end - ov.start)) { ov.start = g.start; ov.end = g.end; ov.text = g.text; ov.score = g.score; }
         continue;
       }
-
-      const entityType = (token.entity || '').replace(/^(B-|I-)/, '');
-      let wordToUse = cleanWord;
-
-      // HEALING - Se é subtoken entidade e temos prefixo pendente adjacente
-      if (isSubtoken && pendingPrefix && token.start === pendingPrefix.end) {
-        wordToUse = pendingPrefix.word + cleanWord;
-        console.log(`[NER] Healing: "${pendingPrefix.word}" + "##${cleanWord}" → "${wordToUse}"`);
-      }
-      pendingPrefix = null;
-
-      if (current) {
-        const distance = token.start - current.end;
-
-        // FUSÃO: mesmo tipo E adjacente (distance 0 ou 1)
-        if (current.type === entityType && distance >= 0 && distance <= 1) {
-          const separator = distance === 0 ? '' : ' ';
-          current.text += separator + wordToUse;
-          current.end = token.end;
-          current.score = Math.min(current.score, token.score || 1);
-          continue;
-        }
-      }
-
-      // NOVA ENTIDADE
-      if (current) result.push(current);
-      current = {
-        text: wordToUse,
-        type: entityType,
-        score: token.score || 1,
-        start: token.start,
-        end: token.end
-      };
+      res.push({ ...g });
     }
-
-    if (current) result.push(current);
-    return result;
+    return res;
   },
 
   /**
-   * Fundir ORG + LOC quando conectados por "DE/DO/DA"
-   * Ex: "COMPANHIA DE TRANSITO" (ORG) + "MACAPA" (LOC) → "COMPANHIA DE TRANSITO DE MACAPA" (ORG)
+   * Agrega tokens NER em entidades, ao estilo do aggregation_strategy do HuggingFace
+   * (v1.52.49). Substitui a reconstrução por offset+healing, que truncava nomes.
+   *
+   * (1) agrupa subtokens '##' na mesma PALAVRA;
+   * (2) rotula a palavra com a 1ª label != 'O' entre seus subtokens (score = máximo);
+   * (3) agrupa PALAVRAS contíguas do mesmo tipo, quebrando em 'O';
+   * (4) o texto da entidade é o SLICE EXATO do documento entre o início da 1ª palavra
+   *     e o fim da última — por construção, impossível truncar/fragmentar um nome.
    */
-  mergeOrgLoc(entities: NERProcessedEntity[], originalText: string): NERProcessedEntity[] {
-    const result: NERProcessedEntity[] = [];
-    let i = 0;
+  aggregateEntities(tokens: NERRawEntity[], fullText: string): NERProcessedEntity[] {
+    const sorted = [...tokens].sort((a: NERRawEntity, b: NERRawEntity) => a.start - b.start);
+    const stripType = (e: string): string => (e || '').replace(/^(B-|I-)/, '');
 
-    while (i < entities.length) {
-      const current = entities[i];
-      const next = entities[i + 1];
-
-      // Padrão ORG + (LOC ou ORG curto) com preposição no meio
-      const isOrgOrLoc = next && (next.type === 'LOC' || next.type === 'ORG');
-      const nextIsShort = next && next.text.split(/\s+/).length <= 2;
-
-      if (next && current.type === 'ORG' && isOrgOrLoc && nextIsShort) {
-        const gap = originalText.substring(current.end, next.start).trim().toUpperCase();
-
-        if (gap === 'DE' || gap === 'DO' || gap === 'DA' || gap === 'DOS' || gap === 'DAS') {
-          result.push({
-            text: `${current.text} ${gap} ${next.text}`,
-            type: 'ORG',
-            score: Math.min(current.score, next.score),
-            start: current.start,
-            end: next.end
-          });
-          i += 2;
-          continue;
-        }
-      }
-
-      result.push(current);
-      i++;
+    if (sorted.length) {
+      console.log('[NER] Tokens brutos:', sorted.slice(0, 50).map((t: NERRawEntity) =>
+        `${t.word}(${t.entity}:${t.start}-${t.end})`).join(', '));
     }
 
-    return result;
+    // (1)+(2) subtokens '##' -> PALAVRAS, com label = 1ª != 'O' e score máximo
+    type Word = { start: number; end: number; type: string; score: number };
+    const words: Word[] = [];
+    let parts: NERRawEntity[] = [];
+    const flushWord = (): void => {
+      if (!parts.length) return;
+      let type = 'O', score = 0;
+      for (const p of parts) {
+        const tp = stripType(p.entity);
+        if (tp !== 'O' && type === 'O') type = tp;
+        if ((p.score || 0) > score) score = p.score || 0;
+      }
+      words.push({ start: parts[0].start, end: parts[parts.length - 1].end, type, score });
+      parts = [];
+    };
+    for (const t of sorted) {
+      const isSub = (t.word || '').startsWith('##');
+      if (isSub && parts.length) parts.push(t);
+      else { flushWord(); parts = [t]; }
+    }
+    flushWord();
+
+    // (3) PALAVRAS contíguas do mesmo tipo (quebra em 'O')
+    const grouped: NERProcessedEntity[] = [];
+    let current: NERProcessedEntity | null = null;
+    for (const w of words) {
+      if (w.type === 'O') { if (current) { grouped.push(current); current = null; } continue; }
+      if (current && current.type === w.type) {
+        current.end = w.end;
+        current.score = Math.min(current.score, w.score);
+      } else {
+        if (current) grouped.push(current);
+        current = { text: '', type: w.type, score: w.score, start: w.start, end: w.end };
+      }
+    }
+    if (current) grouped.push(current);
+
+    // (4) texto = slice EXATO do documento, sem pontuação nas bordas
+    return grouped
+      .map((e: NERProcessedEntity) => ({
+        ...e,
+        text: fullText.slice(e.start, e.end).replace(/\s+/g, ' ').trim()
+          .replace(/^[^\p{L}\p{N}]+/u, '').replace(/[^\p{L}\p{N}]+$/u, ''),
+      }))
+      .filter((e: NERProcessedEntity) => e.text.length >= 2);
   },
 
   /**

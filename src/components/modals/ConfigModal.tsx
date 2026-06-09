@@ -2498,7 +2498,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                       {nerEnabled && (
                         <div className="theme-bg-tertiary rounded-lg p-3 border theme-border-input">
                           <p className="text-xs theme-text-muted mb-3">
-                            Modelo NER multilíngue - baixado automaticamente do HuggingFace (~150MB).
+                            Modelo NER jurídico brasileiro (LeNER-br) - baixado automaticamente do HuggingFace (~104MB).
                           </p>
                           <div className="space-y-2 mb-3">
                             <div className="flex items-center justify-between">
@@ -2520,7 +2520,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs font-medium"
                                   >
                                     <Download className="w-3 h-3" />
-                                    Baixar Agora (~150MB)
+                                    Baixar Agora (~104MB)
                                   </button>
                                 )}
                               </div>

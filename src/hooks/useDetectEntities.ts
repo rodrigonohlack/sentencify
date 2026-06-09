@@ -30,6 +30,15 @@ const STOP_WORDS_EXACT = [
   'JUIZ', 'JUÍZO', 'VARA', 'TST', 'TRT'
 ];
 
+// v1.52.49: Fragmentos isolados a descartar quando a entidade detectada é EXATAMENTE
+// uma destas palavras (igualdade total, não word-boundary). O LeNER-br às vezes emite
+// o sufixo societário ou um pedaço de órgão como span separado (ex.: "EIRELI", "LTDA",
+// "REGIÃO" de "8ª Região"). Não afeta nomes que CONTÊM a palavra (ex.: "FENIX ... LTDA").
+const ISOLATED_DISCARD = [
+  'LTDA', 'EIRELI', 'EI', 'ME', 'EPP', 'S/A', 'S.A', 'S.A.', 'SA',
+  'REGIÃO', 'REGIAO', 'COMARCA', 'TRIBUNAL', 'VARA'
+];
+
 // v1.25.22: Lista de gentílicos/estados civis que não são nomes de pessoas
 const GENTILIC_WORDS = [
   'PARAENSE', 'PAULISTA', 'CARIOCA', 'MINEIRO', 'MINEIRA',
@@ -100,8 +109,14 @@ const containsExactWord = (text: string, word: string): boolean => {
   return regex.test(text);
 };
 
-// Fuzzy similarity para deduplicação
-const similarity = (a: string, b: string): number => {
+// Remove acentos para comparação tolerante (SERVIÇOS == SERVICOS)
+const stripAccents = (s: string): string =>
+  s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+// Fuzzy similarity para deduplicação (v1.52.49: insensível a acento)
+const similarity = (aRaw: string, bRaw: string): number => {
+  const a = stripAccents(aRaw);
+  const b = stripAccents(bRaw);
   const longer = a.length > b.length ? a : b;
   const shorter = a.length > b.length ? b : a;
   if (longer.length === 0) return 1.0;
@@ -271,6 +286,7 @@ export function useDetectEntities({
       });
       const nomesFiltrados = [...seen.values()].filter(item =>
         item.text.length >= 4 &&
+        !ISOLATED_DISCARD.includes(item.text.trim()) &&
         !STOP_WORDS_CONTAINS.some(sw => item.text.includes(sw)) &&
         !STOP_WORDS_EXACT.some(sw => containsExactWord(item.text, sw)) &&
         !GENTILIC_WORDS.includes(item.text.trim())

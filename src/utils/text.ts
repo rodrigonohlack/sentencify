@@ -97,7 +97,13 @@ export const anonymizeText = (text: string, config: AnonymizationSettings | null
       return escaped;
     };
 
-    nomesUsuario.forEach((nome, index) => {
+    // v1.52.49: aplicar nomes mais LONGOS primeiro — assim um nome completo é
+    // substituído antes de qualquer fragmento/sobrenome contido nele, evitando
+    // vazamento parcial (ex.: "ANA SILVA" antes de "SILVA").
+    const nomesOrdenados = [...nomesUsuario].sort(
+      (a, b) => (b || '').trim().length - (a || '').trim().length
+    );
+    nomesOrdenados.forEach((nome, index) => {
       if (!nome || nome.trim().length < 2) return;
       // Remover anotações entre parênteses: "EMPRESA LTDA (1ª reclamada)" → "EMPRESA LTDA"
       let nomeClean = nome.trim().replace(/\s*\([^)]*\)\s*$/, '').trim();

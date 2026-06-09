@@ -1251,4 +1251,61 @@ describe('useDetectEntities', () => {
       );
     });
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SEÇÃO 9: LeNER-br — descarte de fragmentos isolados e dedup insensível a acento
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('LeNER-br: fragmentos isolados e dedup com acento (v1.52.49)', () => {
+    it('should discard isolated suffix/generic fragments but keep names that contain them', async () => {
+      mockExtractEntities.mockResolvedValue([
+        createNEREntity({ text: 'FULANO REAL', type: 'PER', score: 0.95 }),
+        createNEREntity({ text: 'FUKUSHIMA SERVICOS LTDA', type: 'ORG', score: 0.95 }),
+        createNEREntity({ text: 'LTDA', type: 'ORG', score: 0.95 }),
+        createNEREntity({ text: 'EIRELI', type: 'ORG', score: 0.95 }),
+        createNEREntity({ text: 'REGIÃO', type: 'ORG', score: 0.95 }),
+      ]);
+      const props = createDefaultProps({
+        nerIncludeOrg: true,
+        pastedPeticaoTexts: [{ id: '1', text: 'A'.repeat(200), name: 'doc.txt' }],
+      });
+      const { result } = renderHook(() => useDetectEntities(props));
+
+      await act(async () => {
+        await result.current.detectarNomesAutomaticamente();
+      });
+
+      const calledWith = (props.setAnonymizationNamesText as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+      const lines = calledWith.split('\n');
+      // nomes reais preservados (FUKUSHIMA contém "LTDA" mas não é só isso)
+      expect(lines).toContain('FULANO REAL');
+      expect(lines).toContain('FUKUSHIMA SERVICOS LTDA');
+      // fragmentos isolados descartados
+      expect(lines).not.toContain('LTDA');
+      expect(lines).not.toContain('EIRELI');
+      expect(lines).not.toContain('REGIÃO');
+    });
+
+    it('should deduplicate ORG names that differ only by accent (SERVIÇOS == SERVICOS)', async () => {
+      mockExtractEntities.mockResolvedValue([
+        createNEREntity({ text: 'FENIX SERVIÇOS ESPECIALIZADOS LTDA', type: 'ORG', score: 0.95 }),
+        createNEREntity({ text: 'FENIX SERVICOS ESPECIALIZADOS', type: 'ORG', score: 0.95 }),
+      ]);
+      const props = createDefaultProps({
+        nerIncludeOrg: true,
+        pastedPeticaoTexts: [{ id: '1', text: 'A'.repeat(200), name: 'doc.txt' }],
+      });
+      const { result } = renderHook(() => useDetectEntities(props));
+
+      await act(async () => {
+        await result.current.detectarNomesAutomaticamente();
+      });
+
+      const calledWith = (props.setAnonymizationNamesText as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+      const fenix = calledWith.split('\n').filter(l => l.includes('FENIX'));
+      // as duas variantes (com/sem acento) colapsam em uma única, mantendo a mais completa
+      expect(fenix).toHaveLength(1);
+      expect(fenix[0]).toBe('FENIX SERVIÇOS ESPECIALIZADOS LTDA');
+    });
+  });
 });

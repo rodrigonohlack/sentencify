@@ -3,7 +3,8 @@
  * v1.32.09 - Transformers.js via npm
  *
  * Modelos:
- * - NER: Xenova/bert-base-multilingual-cased-ner-hrl (PER, ORG, LOC) - BERT completo para qualidade
+ * - NER: RNCC83/lenerbr-ner-onnx (PESSOA, ORGANIZACAO, LOCAL, TEMPO, LEGISLACAO, JURISPRUDENCIA)
+ *        LeNER-br jurídico BR (BERTimbau fine-tune) convertido p/ ONNX int8 — recall superior em peças
  * - Embeddings: Xenova/multilingual-e5-base (busca semântica)
  */
 
@@ -17,13 +18,50 @@ env.useBrowserCache = true;
 let nerPipeline = null;
 let searchPipeline = null;
 
+/**
+ * Mapa token→caractere robusto via OFFSET_MAPPING VERDADEIRO (v1.52.49).
+ *
+ * O transformers.js v2.17.2 retorna start/end SEMPRE null (TODO no upstream) e o
+ * pipeline decodifica cada token apagando o prefixo '##'. Reconstruir por indexOf
+ * GALOPA: tokens curtos/pontuação (ex.: o '.'/':' de um nº de processo) casam uma
+ * ocorrência distante e o cursor pula nomes inteiros, dropando-os (vazamento).
+ *
+ * Solução: a regex do BertPreTokenizer ([^\s\p{P}]+|[\p{P}]) dá a posição REAL de
+ * cada palavra/pontuação no texto; cada wordpiece fica DENTRO da sua palavra
+ * (galope estruturalmente impossível). convert_ids_to_tokens PRESERVA o '##' para
+ * sabermos quando uma palavra continua.
+ */
+const PRETOKEN_RE = /[^\s\p{P}]+|[\p{P}]/gu;
+function computeCharSpans(tokenizer, text) {
+  const enc = tokenizer(text);
+  const ids = Array.from(enc.input_ids.data).map(Number);
+  const toks = tokenizer.model.convert_ids_to_tokens(ids);
+  const pre = [...text.matchAll(PRETOKEN_RE)].map((m) => [m.index, m.index + m[0].length]);
+  const spans = new Array(toks.length).fill(null);
+  let p = -1, inner = 0;
+  for (let j = 0; j < toks.length; j++) {
+    const t = toks[j];
+    if (t === '[CLS]' || t === '[SEP]' || t === '[PAD]' || t === '[MASK]') continue;
+    const isSub = t.startsWith('##');
+    const surf = t.replace(/^##/, '');
+    if (!isSub) { p++; if (p >= pre.length) break; inner = pre[p][0]; }
+    if (p < 0 || p >= pre.length) continue;
+    const pend = pre[p][1];
+    const st = inner;
+    const en = t === '[UNK]' ? pend : Math.min(pend, inner + surf.length);
+    spans[j] = [st, en];
+    inner = en;
+  }
+  return { toks, spans };
+}
+
 // Inicializar pipeline NER
 async function initNER(onProgress) {
   if (nerPipeline) return nerPipeline;
 
   nerPipeline = await pipeline(
     'token-classification',
-    'Xenova/bert-base-multilingual-cased-ner-hrl',
+    'RNCC83/lenerbr-ner-onnx',
     {
       quantized: true,
       progress_callback: (progress) => {
@@ -80,10 +118,34 @@ self.onmessage = async (event) => {
         result = { ready: true };
         break;
 
-      case 'ner':
+      case 'ner': {
         const ner = await initNER(onProgress);
-        result = await ner(text, options);
+        // Guarda anti-crash: o ONNX do LeNER tem max_position_embeddings=512 e o
+        // tokenizer NÃO trunca (model_max_length é uma sentinela gigante). Um texto
+        // que gere >512 tokens crasharia o modelo. O chamador já fatia em ~400
+        // chars (≤ ~402 tokens), então isto só protege chamadas anômalas: como
+        // cada token consome ≥1 char, texto ≤500 chars nunca passa de 500 tokens.
+        let safeText = text;
+        if (text.length > 500) {
+          const { spans: s0 } = computeCharSpans(ner.tokenizer, text);
+          const cut = s0.slice(0, 500).reverse().find((x) => x);
+          if (cut) safeText = text.slice(0, cut[1]);
+        }
+        // ignore_labels: [] → mantém TODOS os tokens (inclusive 'O') para alinhar
+        // o índice de cada entidade ao mapa token→char de computeCharSpans.
+        const rawTokens = await ner(safeText, { ignore_labels: [] });
+        const { toks, spans } = computeCharSpans(ner.tokenizer, safeText);
+        result = rawTokens
+          .filter((e) => spans[e.index])
+          .map((e) => ({
+            entity: e.entity,
+            score: e.score,
+            word: toks[e.index],
+            start: spans[e.index][0],
+            end: spans[e.index][1],
+          }));
         break;
+      }
 
       case 'embedding':
         const search = await initSearch(onProgress);
