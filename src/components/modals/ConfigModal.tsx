@@ -614,10 +614,32 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   </div>
                 </div>
               </button>
+              <button
+                onClick={() => setAiSettings({ ...aiSettings, provider: 'manual' })}
+                className={`p-3 rounded-lg border-2 transition-all text-left ${
+                  aiSettings.provider === 'manual'
+                    ? 'bg-slate-600/20 border-slate-500'
+                    : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <ProviderIcon provider="manual" size={20} className="text-slate-400" />
+                  <div>
+                    <div className="font-semibold theme-text-primary text-sm">Sem Provider</div>
+                    <div className="text-xs theme-text-muted">copiar / colar · $0</div>
+                  </div>
+                </div>
+              </button>
             </div>
 
             {/* Model Selection based on provider */}
             <div className="mt-3">
+              {aiSettings.provider === 'manual' ? (
+                <div className="text-xs theme-text-muted p-3 rounded-lg theme-bg-secondary-30 border theme-border-input">
+                  Modo manual: cada chamada de IA abre um modal para você copiar o prompt e colar a resposta de qualquer LLM. Sem modelo nem chave de API.
+                </div>
+              ) : (
+              <>
               <label className="block text-xs theme-text-muted mb-1">
                 Modelo {aiSettings.provider === 'claude' || aiSettings.provider === 'claude-cli' ? 'Claude' :
                        aiSettings.provider === 'gemini' ? 'Gemini' :
@@ -697,13 +719,15 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   <option value="deepseek-v4-pro">DeepSeek V4 Pro ($1.74/$3.48 por 1M) - 1M contexto, quase fronteira</option>
                 </select>
               )}
+              </>
+              )}
             </div>
           </div>
 
           {/* ═══════════════════════════════════════════════════════════════════════════════
               SEÇÃO 2: Chaves API
               ═══════════════════════════════════════════════════════════════════════════════ */}
-          <div className={activeSection === 'providers' ? 'mb-6' : 'hidden'}>
+          <div className={activeSection === 'providers' && aiSettings.provider !== 'manual' ? 'mb-6' : 'hidden'}>
             <label className="block text-sm font-medium theme-text-tertiary mb-3">
               Chaves API <span className="text-xs font-normal theme-text-muted">(armazenadas localmente)</span>
             </label>
