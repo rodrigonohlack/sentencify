@@ -142,8 +142,8 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
                   setError={setError}
                   extractTextFromPDFWithMode={documentServices.extractTextFromPDFWithMode}
                   anonymizationEnabled={aiSettings?.anonymization?.enabled}
-                  binaryPdfBlocked={aiSettings?.provider === 'grok' || aiSettings?.provider === 'deepseek'}
-                  blockReason={aiSettings?.provider === 'deepseek' ? 'deepseek' : aiSettings?.provider === 'grok' ? 'grok' : undefined}
+                  binaryPdfBlocked={aiSettings?.provider === 'grok' || aiSettings?.provider === 'deepseek' || aiSettings?.provider === 'manual'}
+                  blockReason={aiSettings?.provider === 'deepseek' ? 'deepseek' : aiSettings?.provider === 'grok' ? 'grok' : aiSettings?.provider === 'manual' ? 'manual' : undefined}
                   anonConfig={aiSettings?.anonymization}
                   nomesParaAnonimizar={aiSettings?.anonymization?.nomesUsuario || []}
                   editorTheme={appTheme}
@@ -162,8 +162,8 @@ export const ProofsTab: React.FC<ProofsTabProps> = ({
                   setError={setError}
                   extractTextFromPDFWithMode={documentServices.extractTextFromPDFWithMode}
                   anonymizationEnabled={aiSettings?.anonymization?.enabled}
-                  binaryPdfBlocked={aiSettings?.provider === 'grok' || aiSettings?.provider === 'deepseek'}
-                  blockReason={aiSettings?.provider === 'deepseek' ? 'deepseek' : aiSettings?.provider === 'grok' ? 'grok' : undefined}
+                  binaryPdfBlocked={aiSettings?.provider === 'grok' || aiSettings?.provider === 'deepseek' || aiSettings?.provider === 'manual'}
+                  blockReason={aiSettings?.provider === 'deepseek' ? 'deepseek' : aiSettings?.provider === 'grok' ? 'grok' : aiSettings?.provider === 'manual' ? 'manual' : undefined}
                   anonConfig={aiSettings?.anonymization}
                   nomesParaAnonimizar={aiSettings?.anonymization?.nomesUsuario || []}
                   editorTheme={appTheme}

@@ -45,6 +45,7 @@ export const ProcessingModeSelector = React.memo(({
       if (blockReason === 'deepseek') return 'PDF Binário (DeepSeek)';
       if (blockReason === 'grok') return 'PDF Binário (Grok)';
       if (blockReason === 'codex-cli') return 'PDF Binário (Codex CLI)';
+      if (blockReason === 'manual') return 'PDF Binário (Sem Provider)';
       return 'PDF Binário (provider sem suporte)';
     }
     return 'PDF Puro (binário)';
@@ -56,6 +57,7 @@ export const ProcessingModeSelector = React.memo(({
       if (blockReason === 'deepseek') return 'DeepSeek não suporta PDF binário (text-only em abr/2026)';
       if (blockReason === 'grok') return 'Grok não suporta PDF binário';
       if (blockReason === 'codex-cli') return 'Codex CLI não suporta PDF binário (text-only)';
+      if (blockReason === 'manual') return 'Modo Sem Provider não envia PDF binário — extraia o texto (PDF.js/Tesseract)';
       return 'Provider atual não suporta PDF binário';
     }
     return undefined;

@@ -408,13 +408,16 @@ export const ProofCard = React.memo(({
                   {blockReason === 'deepseek' ? 'DeepSeek selecionado:'
                     : blockReason === 'grok' ? 'Grok selecionado:'
                     : blockReason === 'codex-cli' ? 'Codex Local (CLI) selecionado:'
+                    : blockReason === 'manual' ? 'Modo Sem Provider:'
                     : 'Provider sem suporte:'}
                 </span>{' '}
                 {blockReason === 'deepseek'
                   ? 'DeepSeek não suporta PDF binário (text-only). Extraia o texto primeiro.'
                   : blockReason === 'codex-cli'
                     ? 'Codex CLI não suporta PDF binário (text-only). Extraia o texto primeiro.'
-                    : 'Provider atual não suporta PDF binário. Extraia o texto primeiro.'}
+                    : blockReason === 'manual'
+                      ? 'No modo Sem Provider o PDF binário não é enviado. Extraia o texto primeiro.'
+                      : 'Provider atual não suporta PDF binário. Extraia o texto primeiro.'}
               </div>
             </div>
           )}
