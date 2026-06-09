@@ -210,7 +210,7 @@ const USD_TO_BRL = 5.50;
 // ═══════════════════════════════════════════════════════════════════════════════
 
 interface EstimateOptions {
-  provider?: 'anthropic' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli';
+  provider?: 'anthropic' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli' | 'manual';
   thinkingBudget?: string;
   useExtendedThinking?: boolean;
   geminiThinkingLevel?: string;
@@ -232,9 +232,11 @@ const estimateCostAndTime = (
     topicsPerRequest = 1
   } = options;
 
-  // Providers CLI locais (claude-cli e codex-cli) rodam sob assinatura — custo $0
+  // Providers CLI locais (claude-cli/codex-cli) rodam sob assinatura e Sem Provider (manual)
+  // não tem chamada de API — custo $0 em todos.
   const isLocalCli = provider === 'claude-cli' || provider === 'codex-cli';
-  const prices = isLocalCli
+  const isZeroCost = isLocalCli || provider === 'manual';
+  const prices = isZeroCost
     ? { input: 0, output: 0 }
     : (MODEL_PRICES[model] || MODEL_PRICES['claude-sonnet-4-20250514']);
 
@@ -1188,7 +1190,7 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
     // real para o estimador, que zera o custo internamente quando é CLI local.
     const estimateProvider = provider === 'claude' ? 'anthropic' : provider;
     return estimateCostAndTime(topicsToGenerate, model, parallelRequests, {
-      provider: estimateProvider as 'anthropic' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli',
+      provider: estimateProvider as 'anthropic' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli' | 'manual',
       thinkingBudget,
       useExtendedThinking,
       geminiThinkingLevel,
@@ -1198,6 +1200,8 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
 
   // v1.50.2: Sufixo "· assinatura" no rótulo de custo quando provider CLI local
   const isLocalCliProvider = provider === 'claude-cli' || provider === 'codex-cli';
+  // Modo Sem Provider (manual): sem custo e sem tempo estimável (você cola a resposta)
+  const isManualProvider = provider === 'manual';
 
   const specialTopicIds = useMemo(() => {
     return new Set(
@@ -1565,15 +1569,19 @@ const TopicCurationModal: React.FC<TopicCurationModalProps> = ({
             >
               <DollarSign className="w-4 h-4 text-green-500" />
               <span className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
-                ~R$ {estimate.costBRL} ({MODEL_NAMES[model] || model}{isLocalCliProvider ? ' · assinatura' : ''}{estimate.thinkingLabel ? ` + ${estimate.thinkingLabel}` : ''})
+                {isManualProvider
+                  ? 'Sem custo (Sem Provider · copiar/colar)'
+                  : `~R$ ${estimate.costBRL} (${MODEL_NAMES[model] || model}${isLocalCliProvider ? ' · assinatura' : ''}${estimate.thinkingLabel ? ` + ${estimate.thinkingLabel}` : ''})`}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-blue-500" />
-              <span className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
-                ~{estimate.timeMinutes} min
-              </span>
-            </div>
+            {!isManualProvider && (
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-blue-500" />
+                <span className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                  ~{estimate.timeMinutes} min
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Botão Cancelar removido - apenas Confirmar disponível */}
