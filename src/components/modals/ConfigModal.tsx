@@ -1313,8 +1313,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               Double Check de Respostas
             </label>
 
-            {/* Toggle principal */}
+            {/* Toggle principal — indisponível no modo Sem Provider (seria 2ª chamada manual) */}
             <button
+              disabled={aiSettings.provider === 'manual'}
               onClick={() => {
                 const current = aiSettings.doubleCheck || {
                   enabled: false,
@@ -1329,7 +1330,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                 });
               }}
               className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                aiSettings.doubleCheck?.enabled
+                aiSettings.provider === 'manual'
+                  ? 'theme-bg-secondary-30 theme-border-input opacity-50 cursor-not-allowed'
+                  : aiSettings.doubleCheck?.enabled
                   ? 'bg-purple-600/20 border-purple-500'
                   : 'theme-bg-secondary-30 theme-border-input hover-theme-border'
               }`}
@@ -1345,7 +1348,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                     )}
                   </div>
                   <p className="text-xs theme-text-muted mt-1">
-                    Reanalisa respostas da IA para detectar falhas, omissões e falsos positivos.
+                    {aiSettings.provider === 'manual'
+                      ? 'Indisponível no modo Sem Provider (seria uma segunda chamada manual).'
+                      : 'Reanalisa respostas da IA para detectar falhas, omissões e falsos positivos.'}
                   </p>
                 </div>
                 <div className={`w-12 h-6 rounded-full transition-colors relative ${
@@ -1358,8 +1363,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
               </div>
             </button>
 
-            {/* Opções expandidas quando ativado */}
-            {aiSettings.doubleCheck?.enabled && (
+            {/* Opções expandidas quando ativado (ocultas no modo Sem Provider) */}
+            {aiSettings.doubleCheck?.enabled && aiSettings.provider !== 'manual' && (
               <div className="mt-4 space-y-4 p-4 rounded-lg theme-bg-secondary-30 border theme-border-input">
                 {/* Seletor de Provider */}
                 <div>

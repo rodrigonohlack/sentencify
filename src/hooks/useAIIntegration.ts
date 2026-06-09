@@ -2291,8 +2291,9 @@ const useAIIntegration = () => {
   ): Promise<{ verified: string; corrections: DoubleCheckCorrection[]; summary: string; confidence?: number; failed?: boolean }> => {
     const { doubleCheck } = aiSettings;
 
-    // Se double check desabilitado ou operação não selecionada, retornar original
-    if (!doubleCheck?.enabled || !doubleCheck.operations[operation]) {
+    // Double Check é desligado no modo Sem Provider (seria uma 2ª chamada manual — sem
+    // sentido no fallback de custo) ou se desabilitado/operação não selecionada.
+    if (aiSettings.provider === 'manual' || !doubleCheck?.enabled || !doubleCheck.operations[operation]) {
       return { verified: originalResponse, corrections: [], summary: '' };
     }
 

@@ -2315,6 +2315,38 @@ describe('useAIIntegration', () => {
       expect(dcResult.corrections).toEqual([]);
     });
 
+    it('should skip double check in manual mode even when enabled', async () => {
+      const fetchSpy = vi.mocked(global.fetch);
+      fetchSpy.mockClear();
+      mockStoreWith({
+        aiSettings: {
+          ...defaultMockState.aiSettings,
+          provider: 'manual',
+          doubleCheck: {
+            enabled: true,
+            provider: 'claude',
+            model: 'claude-sonnet-4-20250514',
+            operations: { topicExtraction: true }
+          }
+        }
+      });
+
+      const { result } = renderHook(() => useAIIntegration());
+      let dcResult: any;
+
+      await act(async () => {
+        dcResult = await result.current.performDoubleCheck(
+          'topicExtraction',
+          '{"topics": ["A"]}',
+          [{ type: 'text', text: 'context' }] as any
+        );
+      });
+
+      expect(dcResult.verified).toBe('{"topics": ["A"]}');
+      expect(dcResult.corrections).toEqual([]);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
     it('should return failed result on API error', async () => {
       // The default mock has doubleCheck.enabled=true and topicExtraction=true
       vi.mocked(global.fetch).mockRejectedValue(new Error('Network error'));
