@@ -217,6 +217,7 @@ export interface ApiTestStatuses {
   deepseek: ApiTestStatus;
   'claude-cli'?: ApiTestStatus; // Sem API key — status de teste não aplicável
   'codex-cli'?: ApiTestStatus; // Sem API key — status de teste não aplicável
+  'manual'?: ApiTestStatus; // Sem API key — status de teste não aplicável
 }
 
 /** Estado inicial dos testes de API */
@@ -930,6 +931,7 @@ export const selectCurrentModel = (state: AIStoreState): string => {
     case 'openai': return openaiModel;
     case 'grok': return grokModel;
     case 'deepseek': return deepseekModel;
+    case 'manual': return 'manual';
     default: return claudeModel;
   }
 };

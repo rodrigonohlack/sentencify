@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { ClipboardCopy } from 'lucide-react';
 import type { AIProvider } from '../../types';
 
 interface ProviderIconProps {
@@ -112,6 +113,8 @@ export const ProviderIcon: React.FC<ProviderIconProps> = ({ provider, size = 20,
       return <ClaudeIcon size={size} className={className} />;
     case 'codex-cli':
       return <OpenAIIcon size={size} className={className} />;
+    case 'manual':
+      return <ClipboardCopy size={size} className={className} />;
     default:
       return null;
   }

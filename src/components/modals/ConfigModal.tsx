@@ -1377,7 +1377,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                         openai: 'gpt-5.2-chat-latest',
                         grok: 'grok-4-1-fast-reasoning',
                         deepseek: 'deepseek-v4-flash',
-                        'codex-cli': 'gpt-5.5'
+                        'codex-cli': 'gpt-5.5',
+                        manual: 'manual'
                       };
                       setAiSettings({
                         ...aiSettings,

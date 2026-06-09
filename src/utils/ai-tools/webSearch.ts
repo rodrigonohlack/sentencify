@@ -25,7 +25,7 @@
 
 import type { GroundingMetadata } from '../../types';
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli' | 'manual';
 
 export interface WebSearchProviderAdapter {
   /** Se este provider suporta web search via este registry no momento. */
@@ -124,6 +124,7 @@ export const WEB_SEARCH_REGISTRY: Record<AIProvider, WebSearchProviderAdapter> =
   'codex-cli': localBridgeAdapter,    // bridge local injeta web_search=true e devolve grounding pronto
   grok: noopAdapter,                  // v2: live_search (nativo no Grok 4+)
   deepseek: noopAdapter,              // DeepSeek V4 não tem web search nativo (v1.43.00)
+  manual: noopAdapter,                // manual: sem IA, web search não se aplica
 };
 
 // ═══════════════════════════════════════════════════════════════════════════

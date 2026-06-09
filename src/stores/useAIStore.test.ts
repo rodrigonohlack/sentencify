@@ -127,6 +127,17 @@ describe('useAIStore', () => {
       store.setDeepseekModel('deepseek-v4-flash');
       expect(useAIStore.getState().aiSettings.deepseekModel).toBe('deepseek-v4-flash');
     });
+
+    it('selectCurrentModel retorna "manual" quando provider é manual', () => {
+      const state = {
+        aiSettings: {
+          provider: 'manual',
+          claudeModel: 'claude-x', claudeCliModel: '', codexCliModel: '',
+          geminiModel: '', openaiModel: '', grokModel: '', deepseekModel: '',
+        },
+      } as any;
+      expect(selectCurrentModel(state)).toBe('manual');
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

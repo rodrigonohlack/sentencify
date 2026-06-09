@@ -247,7 +247,7 @@ export const MAX_PROOF_ANALYSES = 5;
 // AI SETTINGS TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli' | 'manual';
 export type OCREngine = 'pdfjs' | 'tesseract' | 'pdf-puro' | 'claude-vision' | 'gemini-vision';
 export type GeminiThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
 export type OpenAIReasoningLevel = 'low' | 'medium' | 'high' | 'xhigh';
@@ -346,7 +346,7 @@ export interface AISettings {
   deepseekModel: DeepseekModel;
   deepseekThinking: boolean;
   deepseekReasoningEffort: DeepseekReasoningEffort;
-  apiKeys: { claude: string; gemini: string; openai: string; grok: string; deepseek: string; 'claude-cli'?: string; 'codex-cli'?: string };
+  apiKeys: { claude: string; gemini: string; openai: string; grok: string; deepseek: string; 'claude-cli'?: string; 'codex-cli'?: string; 'manual'?: string };
   useExtendedThinking: boolean;
   thinkingBudget: string;
   geminiThinkingLevel: GeminiThinkingLevel;
