@@ -8,7 +8,7 @@
  *              devem ser movidos para cá sem revisão.
  */
 
-export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli';
+export type AIProvider = 'claude' | 'gemini' | 'openai' | 'grok' | 'deepseek' | 'claude-cli' | 'codex-cli' | 'manual';
 
 /**
  * Providers de CLI local que autenticam por login OAuth (Claude Code / ChatGPT)
@@ -46,6 +46,7 @@ export interface APIKeys {
   deepseek: string;
   'claude-cli'?: string; // Sem API key — usa login OAuth local
   'codex-cli'?: string; // Sem API key — usa OAuth ChatGPT local
+  'manual'?: string;    // Sem API key — usuário cola a resposta manualmente
 }
 
 export interface AISettings {
@@ -99,6 +100,8 @@ export interface AICallOptions {
   temperature?: number | null;
   /** Quando true, roteia para o daemon llm-bridge local em vez do proxy remoto. */
   localBridge?: boolean;
+  /** Título opcional exibido no modal do modo manual (ex.: "Prova oral — fase 2 de 3"). */
+  manualTitle?: string;
 }
 
 export interface TokenMetrics {

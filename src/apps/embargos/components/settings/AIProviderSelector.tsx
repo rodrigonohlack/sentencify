@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Brain, Sparkles, MessageCircle, Zap, Check } from 'lucide-react';
+import { Brain, Sparkles, MessageCircle, Zap, Check, Clipboard } from 'lucide-react';
 import { useAIStore } from '../../stores';
 import { AI_PROVIDERS } from '../../constants/models';
 import type { AIProvider } from '../../../../types/ai';
@@ -16,7 +16,8 @@ const providerIcons: Record<AIProvider, React.ReactNode> = {
   openai: <MessageCircle className="w-5 h-5" />,
   'codex-cli': <MessageCircle className="w-5 h-5" />,
   grok: <Zap className="w-5 h-5" />,
-  deepseek: <Zap className="w-5 h-5" />
+  deepseek: <Zap className="w-5 h-5" />,
+  manual: <Clipboard className="w-5 h-5" />
 };
 
 export const AIProviderSelector: React.FC = () => {

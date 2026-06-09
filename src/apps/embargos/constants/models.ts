@@ -142,6 +142,18 @@ export const AI_PROVIDERS: Record<AIProvider, ProviderInfo> = {
         description: '$1.74/$3.48 por 1M - 1M contexto, quase fronteira'
       }
     ]
+  },
+  manual: {
+    name: 'Sem Provider (copiar/colar)',
+    icon: 'clipboard',
+    models: [
+      {
+        id: 'manual',
+        name: 'Copiar/Colar',
+        recommended: true,
+        description: 'Usuário copia o prompt e cola a resposta manualmente'
+      }
+    ]
   }
 };
 

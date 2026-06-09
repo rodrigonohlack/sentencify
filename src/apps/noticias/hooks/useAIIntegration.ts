@@ -8,6 +8,9 @@ import { useAIStore } from '../stores';
 import { API_BASE } from '../constants';
 import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../../../utils/claude-cli-bridge';
 import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../../../utils/codex-cli-bridge';
+import { serializeForManual, normalizeManualResponse } from '../../../utils/manualCall';
+import { useManualCallStore } from '../../../stores/useManualCallStore';
+import type { AIMessage as CoreAIMessage } from '../../../types';
 import type { AIMessage, AICallOptions, ClaudeContentBlock, OpenAIMessage, GrokMessage, GeminiMessage } from '../types';
 
 const RETRY_MAX_ATTEMPTS = 3;
@@ -478,6 +481,13 @@ export const useAIIntegration = () => {
     options: AICallOptions = {}
   ): Promise<string> => {
     const provider = aiSettings.provider;
+
+    // Modo Sem Provider: serializa o prompt e aguarda o usuário colar a resposta
+    if (provider === 'manual') {
+      const promptText = serializeForManual(messages as unknown as CoreAIMessage[], options, () => []);
+      const raw = await useManualCallStore.getState().enqueue(promptText, { title: options.manualTitle });
+      return normalizeManualResponse(raw);
+    }
 
     switch (provider) {
       case 'claude':
