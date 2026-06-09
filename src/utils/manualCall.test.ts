@@ -28,6 +28,27 @@ describe('manualCall', () => {
     expect(out).toContain('texto simples');
   });
 
+  it('serializeForManual inclui options.systemPrompt (usado pelos subapps)', () => {
+    const out = serializeForManual(
+      [{ role: 'user', content: 'corpo da mensagem' }],
+      { systemPrompt: 'PROMPT DE SISTEMA DO SUBAPP' },
+      () => [] // subapps não têm getAiInstructions
+    );
+    expect(out).toContain('PROMPT DE SISTEMA DO SUBAPP');
+    expect(out).toContain('corpo da mensagem');
+    // sistema vem antes do corpo
+    expect(out.indexOf('PROMPT DE SISTEMA DO SUBAPP')).toBeLessThan(out.indexOf('corpo da mensagem'));
+  });
+
+  it('serializeForManual aceita content como bloco único (não-array)', () => {
+    const out = serializeForManual(
+      [{ role: 'user', content: { type: 'text', text: 'bloco único' } }],
+      {},
+      () => []
+    );
+    expect(out).toContain('bloco único');
+  });
+
   it('serializeForManual lança ManualUnsupportedError em bloco binário', () => {
     expect(() =>
       serializeForManual(

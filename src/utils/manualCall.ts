@@ -1,4 +1,14 @@
-import type { AIProvider, AIMessage, AIMessageContent } from '../types';
+import type { AIProvider } from '../types';
+
+/**
+ * Mensagem mínima que o serializer manual entende. `content` é `unknown` de propósito:
+ * cobre tanto o AIMessage de `types/index.ts` (app principal) quanto o de `types/ai.ts`
+ * (subapps) sem casts; o conteúdo é estreitado em runtime (só lemos `type` e `text`).
+ */
+export interface SerializableMessage {
+  role?: string;
+  content: unknown;
+}
 
 /** Lançado quando o modo manual recebe conteúdo que não consegue serializar (ex.: PDF binário). */
 export class ManualUnsupportedError extends Error {
@@ -22,27 +32,36 @@ export function isPdfBinaryAllowed(provider: AIProvider): boolean {
 }
 
 /** Extrai o texto de um bloco de conteúdo; lança em blocos binários (document/image). */
-function blockToText(block: AIMessageContent): string {
+function blockToText(block: unknown): string {
   if (typeof block === 'string') return block;
-  if (block && typeof block === 'object' && 'type' in block) {
-    if (block.type === 'text') return block.text ?? '';
-    // document / image / qualquer binário
+  if (block && typeof block === 'object') {
+    const b = block as { type?: string; text?: string };
+    if (b.type === 'text' || (b.type == null && typeof b.text === 'string')) {
+      return b.text ?? '';
+    }
+    // document / image / qualquer binário sem texto
     throw new ManualUnsupportedError();
   }
   return '';
 }
 
 /**
- * Monta um prompt único, copiável e autossuficiente: instruções de sistema (se aplicável)
- * + texto de todas as mensagens. Lança ManualUnsupportedError se houver bloco binário.
+ * Monta um prompt único, copiável e autossuficiente: instruções de sistema
+ * (de `options.systemPrompt` — usado pelos subapps — e/ou de `getAiInstructions()`
+ * — usado pelo app principal) + texto de todas as mensagens.
+ * Lança ManualUnsupportedError se houver bloco binário.
  */
 export function serializeForManual(
-  messages: AIMessage[],
-  options: { useInstructions?: boolean },
+  messages: SerializableMessage[],
+  options: { useInstructions?: boolean; systemPrompt?: string | null },
   getAiInstructions: () => Array<{ text: string }>,
 ): string {
   const parts: string[] = [];
 
+  // Subapps passam o sistema via options.systemPrompt; o app principal via getAiInstructions.
+  if (options.systemPrompt && options.systemPrompt.trim()) {
+    parts.push(options.systemPrompt.trim());
+  }
   if (options.useInstructions !== false) {
     const instr = getAiInstructions();
     const instrText = instr.map((b) => b.text).join('\n\n').trim();
@@ -55,6 +74,9 @@ export function serializeForManual(
       parts.push(content);
     } else if (Array.isArray(content)) {
       for (const block of content) parts.push(blockToText(block));
+    } else if (content) {
+      // content pode ser um único bloco (não-array), como no AIMessage do app principal
+      parts.push(blockToText(content));
     }
   }
 
