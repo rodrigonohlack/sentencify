@@ -291,17 +291,24 @@ router.put('/:id', (req, res) => {
 
     const now = new Date().toISOString();
 
-    // Verificar acesso (dono ou destinatário compartilhado) — mesmo padrão do GET /:id
-    const accessCheck = db.prepare(`
-      SELECT id FROM prova_oral_analyses
+    // Edição é privilégio EXCLUSIVO do dono. O compartilhamento (prova_oral_access)
+    // concede apenas leitura — um destinatário não pode alterar a análise alheia.
+    // Distinguimos 404 (não existe / nem é visível) de 403 (vê por compartilhamento,
+    // mas não é dono) para não permitir escrita por quem só tem acesso de leitura.
+    const target = db.prepare(`
+      SELECT user_id FROM prova_oral_analyses
       WHERE id = ? AND deleted_at IS NULL
         AND (user_id = ? OR user_id IN (
           SELECT owner_id FROM prova_oral_access WHERE recipient_id = ?
         ))
     `).get(id, userId, userId);
 
-    if (!accessCheck) {
+    if (!target) {
       return res.status(404).json({ error: 'Análise não encontrada' });
+    }
+
+    if (target.user_id !== userId) {
+      return res.status(403).json({ error: 'Apenas o dono da análise pode editá-la' });
     }
 
     // Re-extrair colunas desnormalizadas para manter em sincronia com o JSON.
@@ -320,7 +327,7 @@ router.put('/:id', (req, res) => {
       result = db.prepare(`
         UPDATE prova_oral_analyses
         SET resultado = ?, numero_processo = ?, reclamante = ?, reclamada = ?, vara = ?, updated_at = ?
-        WHERE id = ? AND deleted_at IS NULL
+        WHERE id = ? AND user_id = ? AND deleted_at IS NULL
       `).run(
         JSON.stringify(resultado),
         numeroProcesso,
@@ -328,14 +335,15 @@ router.put('/:id', (req, res) => {
         reclamada,
         vara,
         now,
-        id
+        id,
+        userId
       );
     } else {
       result = db.prepare(`
         UPDATE prova_oral_analyses
         SET resultado = ?, updated_at = ?
-        WHERE id = ? AND deleted_at IS NULL
-      `).run(JSON.stringify(resultado), now, id);
+        WHERE id = ? AND user_id = ? AND deleted_at IS NULL
+      `).run(JSON.stringify(resultado), now, id, userId);
     }
 
     if (result.changes === 0) {

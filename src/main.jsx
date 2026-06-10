@@ -3,6 +3,12 @@ import ReactDOM from 'react-dom/client';
 import * as Sentry from '@sentry/react';
 import './index.css'; // Tailwind CSS
 import App from './App';
+import { installApiAuthInterceptor } from './utils/installApiAuthInterceptor';
+
+// v1.53.3: anexa o JWT de sessão a toda chamada ao backend próprio (/api/...),
+// permitindo que as rotas de proxy de IA exijam autenticação (fecha o open proxy).
+// Deve rodar ANTES de qualquer fetch da aplicação.
+installApiAuthInterceptor();
 
 // v1.35.12: Sentry error tracking
 Sentry.init({

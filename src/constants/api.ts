@@ -15,7 +15,7 @@ export const getApiBase = (): string => {
   if (!import.meta.env.PROD) {
     return 'http://localhost:3001';
   }
-  // Produção: usar mesmo domínio (funciona tanto no Render quanto no Vercel)
+  // Produção: usar mesmo domínio (Render)
   return '';
 };
 

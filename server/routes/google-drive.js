@@ -20,8 +20,22 @@ import {
   fetchUserInfo,
   encryptRefreshToken,
   decryptRefreshToken,
+  encryptToken,
+  decryptToken,
   isAccessTokenValid,
 } from '../services/GoogleDriveAuthService.js';
+
+// Decifra um access token armazenado. Tokens legados (gravados em texto puro
+// antes da v1.53.3) não decifram → retorna null para forçar refresh. Como o
+// access token vive ~1h, o legado se resolve sozinho rapidamente.
+function decryptAccessTokenSafe(stored) {
+  if (!stored) return null;
+  try {
+    return decryptToken(stored);
+  } catch {
+    return null;
+  }
+}
 
 const router = express.Router();
 
@@ -126,7 +140,7 @@ router.get('/callback', async (req, res) => {
       userInfo.id,
       userInfo.picture || null,
       encrypted,
-      tokens.accessToken,
+      encryptToken(tokens.accessToken),
       expiresAt,
       tokens.scope || ''
     );
@@ -155,11 +169,12 @@ router.get('/access-token', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Google Drive não conectado', code: 'NOT_CONNECTED' });
     }
 
-    // Se ainda válido, retorna direto
-    if (row.access_token && isAccessTokenValid(row.access_token_expires_at)) {
+    // Se ainda válido, retorna direto (decifrando o token armazenado)
+    const plainAccess = decryptAccessTokenSafe(row.access_token);
+    if (plainAccess && isAccessTokenValid(row.access_token_expires_at)) {
       db.prepare('UPDATE google_drive_tokens SET last_used_at = datetime(\'now\') WHERE user_id = ?').run(req.user.id);
       return res.json({
-        access_token: row.access_token,
+        access_token: plainAccess,
         expires_at: row.access_token_expires_at,
       });
     }
@@ -186,7 +201,7 @@ router.get('/access-token', authMiddleware, async (req, res) => {
       UPDATE google_drive_tokens
       SET access_token = ?, access_token_expires_at = ?, last_used_at = datetime('now')
       WHERE user_id = ?
-    `).run(refreshed.accessToken, expiresAt, req.user.id);
+    `).run(encryptToken(refreshed.accessToken), expiresAt, req.user.id);
 
     return res.json({
       access_token: refreshed.accessToken,
@@ -216,7 +231,8 @@ router.post('/disconnect', authMiddleware, async (req, res) => {
         const refreshToken = decryptRefreshToken(row.refresh_token_encrypted);
         await revokeToken(refreshToken);
       } catch (e) {
-        if (row.access_token) await revokeToken(row.access_token);
+        const plainAccess = decryptAccessTokenSafe(row.access_token);
+        if (plainAccess) await revokeToken(plainAccess);
       }
 
       db.prepare('DELETE FROM google_drive_tokens WHERE user_id = ?').run(req.user.id);

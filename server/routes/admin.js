@@ -15,7 +15,14 @@ const adminAuth = (req, res, next) => {
   const storedHash = process.env.ACCESS_PASSWORD_HASH;
 
   if (!storedHash) {
-    // Modo desenvolvimento - liberar acesso
+    // Sem hash configurado: liberar APENAS fora de produção (dev local).
+    // Em produção, fail-closed — senão o painel admin (allowlist de e-mails,
+    // stats) ficaria aberto a qualquer um caso a env var não esteja setada.
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(503).json({
+        error: 'Administração indisponível: ACCESS_PASSWORD_HASH não configurado',
+      });
+    }
     return next();
   }
 

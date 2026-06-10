@@ -3,12 +3,24 @@
 
 import express from 'express';
 import crypto from 'crypto';
+import rateLimit from 'express-rate-limit';
 import { v4 as uuidv4 } from 'uuid';
 import { getDb } from '../db/database.js';
 import authMiddleware from '../middleware/auth.js';
 import emailService from '../services/EmailService.js';
 
 const router = express.Router();
+
+// v1.53.3: limiter estrito para o lookup público de token (GET /library/:token).
+// O token é entrópico (32 bytes hex), mas a rota é a única sem authMiddleware e
+// expõe metadados do dono — limitar dificulta enumeração/brute-force por IP.
+const tokenLookupLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas requisições. Tente novamente em instantes.' },
+});
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/share/library
@@ -174,7 +186,7 @@ router.get('/library/shared-with-me', authMiddleware, (req, res) => {
 // GET /api/share/library/:token
 // Validar token e obter info do compartilhamento (público)
 // ═══════════════════════════════════════════════════════════════
-router.get('/library/:token', (req, res) => {
+router.get('/library/:token', tokenLookupLimiter, (req, res) => {
   try {
     const { token } = req.params;
     const db = getDb();

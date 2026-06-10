@@ -44,6 +44,7 @@ import finDashboardRoutes from './routes/financeiro-dashboard.js';
 import finSettingsRoutes from './routes/financeiro-settings.js';
 import googleDriveRoutes from './routes/google-drive.js';
 import financeiroAccess from './middleware/financeiro-access.js';
+import authMiddleware from './middleware/auth.js';
 import { initDatabase } from './db/database.js';
 import rssScheduler from './services/RSSSchedulerService.js';
 
@@ -59,20 +60,28 @@ const app = express();
 // Sem isso, todos os usuários parecem vir do mesmo IP (o IP do proxy)
 app.set('trust proxy', 1);
 
-// CORS para permitir requests do frontend (Render + Vercel + localhost + domínio próprio)
+// CORS para permitir requests do frontend (Render + localhost + domínio próprio)
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
   'http://127.0.0.1:3000',
   'https://sentencify.onrender.com',
-  'https://sentencifyai.vercel.app',
   'https://sentencify.ia.br',
   'https://www.sentencify.ia.br'
 ];
 
 // v1.35.44: COOP header para permitir comunicação com popup do Google OAuth
+// v1.53.3: headers de segurança adicionais (equivalente ao essencial do helmet,
+// sem nova dependência). HSTS só em produção (HTTPS via Render/Cloudflare).
 app.use((req, res, next) => {
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
   next();
 });
 
@@ -231,11 +240,15 @@ app.use('/api/financeiro/settings', financeiroAccess, finSettingsRoutes);
 app.use('/api/google-drive', googleDriveRoutes);
 
 // Rotas de proxy para APIs de IA
-app.use('/api/claude', claudeRoutes);
-app.use('/api/gemini', geminiRoutes);
-app.use('/api/openai', openaiRoutes);
-app.use('/api/grok', grokRoutes);
-app.use('/api/deepseek', deepseekRoutes);
+// v1.53.3: exigem authMiddleware — fecha o vetor de "open proxy" (anônimo usando
+// o servidor para encaminhar prompts a provedores de IA). O frontend injeta o JWT
+// via installApiAuthInterceptor. O provider "Claude Local (CLI)" não passa por aqui
+// (chama o daemon bridge em localhost:8787 diretamente).
+app.use('/api/claude', authMiddleware, claudeRoutes);
+app.use('/api/gemini', authMiddleware, geminiRoutes);
+app.use('/api/openai', authMiddleware, openaiRoutes);
+app.use('/api/grok', authMiddleware, grokRoutes);
+app.use('/api/deepseek', authMiddleware, deepseekRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

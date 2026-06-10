@@ -50,7 +50,8 @@ function getKey() {
 }
 
 // Formato armazenado: base64(iv) + ':' + base64(authTag) + ':' + base64(ciphertext)
-export function encryptRefreshToken(plain) {
+// Funções genéricas — servem tanto para refresh token quanto para access token.
+export function encryptToken(plain) {
   const key = getKey();
   const iv = crypto.randomBytes(12); // GCM padrão
   const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
@@ -59,11 +60,11 @@ export function encryptRefreshToken(plain) {
   return `${iv.toString('base64')}:${authTag.toString('base64')}:${ciphertext.toString('base64')}`;
 }
 
-export function decryptRefreshToken(stored) {
+export function decryptToken(stored) {
   const key = getKey();
   const [ivB64, tagB64, ctB64] = stored.split(':');
   if (!ivB64 || !tagB64 || !ctB64) {
-    throw new Error('Formato inválido de refresh token criptografado');
+    throw new Error('Formato inválido de token criptografado');
   }
   const iv = Buffer.from(ivB64, 'base64');
   const authTag = Buffer.from(tagB64, 'base64');
@@ -72,6 +73,10 @@ export function decryptRefreshToken(stored) {
   decipher.setAuthTag(authTag);
   return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
 }
+
+// Aliases retrocompatíveis (uso histórico restrito ao refresh token).
+export const encryptRefreshToken = encryptToken;
+export const decryptRefreshToken = decryptToken;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // OAUTH STATE — JWT curto com userId + nonce (CSRF protection)

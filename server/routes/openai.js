@@ -73,7 +73,9 @@ router.post('/chat', async (req, res) => {
  */
 router.get('/models', async (req, res) => {
   try {
-    const apiKey = req.query.apiKey;
+    // v1.53.3: key via header x-api-key (não query string) — evita vazar a
+    // credencial em logs de acesso do Render / proxies intermediários.
+    const apiKey = req.headers['x-api-key'];
 
     if (!apiKey) {
       return res.status(401).json({
