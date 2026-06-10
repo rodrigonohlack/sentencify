@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.53.2',
+    date: '2026-06-09',
+    feature: 'fix(analisador): a seção "Provas Requeridas" não quebra mais quando a análise vem sem o bloco de provas de uma das partes (ex.: processo sem contestação não traz `provas.reclamada`). Antes o componente lia `provas.reclamante.testemunhal` / `provas.reclamada.*` direto e estourava ao acessar `.testemunhal` de um objeto inexistente. Agora há um fallback `PROVA_VAZIA` (todos os campos false) aplicado via `provas?.reclamante ?? PROVA_VAZIA` e `provas?.reclamada ?? PROVA_VAZIA`, e todas as referências passam pelas variáveis seguras.',
+  },
+  {
     version: '1.53.1',
     date: '2026-06-09',
     feature: 'fix(manual): no modo Sem Provider, o modal "Chamada manual" agora fica acima de qualquer overlay de geração. Antes, ao disparar o Ctrl+K (Auto Complete / "Gerar redação com IA"), o popover do inline-generate (z-[120]) ficava na frente do modal manual (z-[90]) e exibia "Gerando redação…" cobrindo o prompt — impedindo copiar/colar. O BaseModal ganhou um override opcional de z-index do overlay (overlayClassName) e o ManualCallModal passou a usar z-[130], ficando topo de tudo.',
