@@ -114,7 +114,7 @@ router.post('/confirm', authMiddleware, (req, res) => {
 
     const reconcileStmt = db.prepare(`
       UPDATE expenses SET source = 'csv', csv_import_id = ?, billing_month = COALESCE(?, billing_month), updated_at = datetime('now')
-      WHERE id = ? AND source = 'csv_projected'
+      WHERE id = ? AND user_id = ? AND source = 'csv_projected'
     `);
 
     const doImport = db.transaction(() => {
@@ -131,7 +131,7 @@ router.post('/confirm', authMiddleware, (req, res) => {
 
         // ═══ Scenario 1: Reconciliation ═══
         if (row.isReconciliation && row.projectedExpenseId) {
-          reconcileStmt.run(importId, rowBillingMonth, row.projectedExpenseId);
+          reconcileStmt.run(importId, rowBillingMonth, row.projectedExpenseId, req.user.id);
           reconciledCount++;
           continue;
         }
@@ -230,11 +230,11 @@ router.delete('/imports/:id', authMiddleware, (req, res) => {
       if (groups.length > 0) {
         const placeholders = groups.map(() => '?').join(',');
         db.prepare(
-          `UPDATE expenses SET deleted_at = datetime('now') WHERE installment_group_id IN (${placeholders}) AND source = 'csv_projected' AND deleted_at IS NULL`
-        ).run(...groups);
+          `UPDATE expenses SET deleted_at = datetime('now') WHERE installment_group_id IN (${placeholders}) AND user_id = ? AND source = 'csv_projected' AND deleted_at IS NULL`
+        ).run(...groups, req.user.id);
       }
 
-      db.prepare('DELETE FROM csv_imports WHERE id = ?').run(req.params.id);
+      db.prepare('DELETE FROM csv_imports WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id);
     });
 
     doDelete();

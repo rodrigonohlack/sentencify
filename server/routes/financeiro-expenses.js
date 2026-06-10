@@ -147,14 +147,14 @@ router.put('/:id', authMiddleware, (req, res) => {
         notes = COALESCE(?, notes),
         is_refund = CASE WHEN ? IS NOT NULL THEN CASE WHEN ? < 0 THEN 1 ELSE 0 END ELSE is_refund END,
         updated_at = datetime('now')
-      WHERE id = ?
+      WHERE id = ? AND user_id = ?
     `).run(
       purchase_date || null, description || null, value_brl ?? null,
       'category_id' in req.body ? (req.body.category_id || null) : existing.category_id,
       category_source || null,
       card_holder || null, card_last_four || null, installment || null, notes || null,
       value_brl ?? null, value_brl ?? null,
-      req.params.id
+      req.params.id, req.user.id
     );
 
     const expense = db.prepare(`

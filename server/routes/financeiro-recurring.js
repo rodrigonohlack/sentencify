@@ -79,8 +79,8 @@ router.put('/:id', authMiddleware, (req, res) => {
         due_day = COALESCE(?, due_day),
         notes = COALESCE(?, notes),
         updated_at = datetime('now')
-      WHERE id = ?
-    `).run(description || null, value_brl ?? null, category_id || null, due_day || null, notes || null, req.params.id);
+      WHERE id = ? AND user_id = ?
+    `).run(description || null, value_brl ?? null, category_id || null, due_day || null, notes || null, req.params.id, req.user.id);
 
     const recurring = db.prepare(`
       SELECT r.*, c.name as category_name, c.icon as category_icon, c.color as category_color
@@ -123,7 +123,7 @@ router.post('/:id/toggle', authMiddleware, (req, res) => {
     }
 
     const newState = existing.is_active ? 0 : 1;
-    db.prepare("UPDATE recurring_expenses SET is_active = ?, updated_at = datetime('now') WHERE id = ?").run(newState, req.params.id);
+    db.prepare("UPDATE recurring_expenses SET is_active = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?").run(newState, req.params.id, req.user.id);
 
     res.json({ success: true, is_active: newState });
   } catch (error) {
