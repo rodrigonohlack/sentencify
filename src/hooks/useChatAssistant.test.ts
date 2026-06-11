@@ -594,6 +594,81 @@ describe('useChatAssistant', () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // EXTRACT REVISION (v1.53.20)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('extractRevision (v1.53.20)', () => {
+    const splitRevisao = (raw: string) => {
+      const m = raw.match(/<revisao>([\s\S]*?)<\/revisao>/);
+      return m
+        ? { corpo: raw.replace(m[0], '').trim(), revisao: m[1].trim() }
+        : { corpo: raw, revisao: null };
+    };
+
+    it('separa a revisão do corpo: content fica limpo e revisao vai pro campo', async () => {
+      const mockAI = createMockAIIntegration('Texto da resposta.\n\n<revisao>Dados conferidos.</revisao>');
+      const { result } = renderHook(() => useChatAssistant(mockAI, { extractRevision: splitRevisao }));
+      const contextBuilder = vi.fn(() => 'Context');
+
+      let sendResult: { success: boolean; response?: string | null } = { success: false };
+      await act(async () => {
+        sendResult = await result.current.send('Oi', contextBuilder);
+      });
+
+      const assistantMsg = result.current.history[1];
+      expect(assistantMsg.content).toBe('Texto da resposta.');
+      expect(assistantMsg.revisao).toBe('Dados conferidos.');
+      // O retorno (usado para inserir no editor) também vem sem a revisão
+      expect(sendResult.response).toBe('Texto da resposta.');
+    });
+
+    it('resposta sem revisão: content intacto e campo ausente', async () => {
+      const mockAI = createMockAIIntegration('Resposta sem bloco de revisão.');
+      const { result } = renderHook(() => useChatAssistant(mockAI, { extractRevision: splitRevisao }));
+      const contextBuilder = vi.fn(() => 'Context');
+
+      await act(async () => {
+        await result.current.send('Oi', contextBuilder);
+      });
+
+      const assistantMsg = result.current.history[1];
+      expect(assistantMsg.content).toBe('Resposta sem bloco de revisão.');
+      expect(assistantMsg.revisao).toBeUndefined();
+    });
+
+    it('replay não reenvia a revisão à API (histórico guarda só o corpo)', async () => {
+      const mockAI = createMockAIIntegration('Corpo.\n\n<revisao>Conferido.</revisao>');
+      const { result } = renderHook(() => useChatAssistant(mockAI, { extractRevision: splitRevisao }));
+      const contextBuilder = vi.fn(() => 'Context');
+
+      await act(async () => {
+        await result.current.send('First', contextBuilder);
+      });
+      await act(async () => {
+        await result.current.send('Second', contextBuilder);
+      });
+
+      const secondCallArgs = mockAI.callAI.mock.calls[1][0];
+      // Mensagem do assistente reenviada do histórico: sem a tag
+      expect(secondCallArgs[1].content).toBe('Corpo.');
+      expect(secondCallArgs[1].content).not.toContain('<revisao>');
+    });
+
+    it('sem a opção, comportamento atual (revisão fica inline no content)', async () => {
+      const mockAI = createMockAIIntegration('Texto.\n\n<revisao>Conferido.</revisao>');
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+      const contextBuilder = vi.fn(() => 'Context');
+
+      await act(async () => {
+        await result.current.send('Oi', contextBuilder);
+      });
+
+      expect(result.current.history[1].content).toContain('<revisao>');
+      expect(result.current.history[1].revisao).toBeUndefined();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // UPDATE LAST ASSISTANT MESSAGE TESTS
   // ═══════════════════════════════════════════════════════════════════════════
 

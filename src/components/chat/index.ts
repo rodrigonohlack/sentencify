@@ -5,6 +5,7 @@
  */
 
 export { ChatBubble } from './ChatBubble';
+export { ChatRevisaoFooter } from './ChatRevisaoFooter';
 export { ChatHistoryArea } from './ChatHistoryArea';
 export { ChatInput } from './ChatInput';
 export { InsertDropdown } from './InsertDropdown';

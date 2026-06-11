@@ -154,6 +154,7 @@ vi.mock('../FactsComparisonModal', () => ({
 
 vi.mock('../../utils/text', () => ({
   normalizeHTMLSpacing: vi.fn((html: string) => html),
+  extractRevisao: vi.fn((text: string) => ({ corpo: text, revisao: null })),
 }));
 
 vi.mock('../../utils/chat-context-builder', () => ({

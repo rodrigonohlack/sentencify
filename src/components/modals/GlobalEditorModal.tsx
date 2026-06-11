@@ -50,7 +50,7 @@ import type {
 } from '../../types';
 
 // Utils
-import { normalizeHTMLSpacing } from '../../utils/text';
+import { normalizeHTMLSpacing, extractRevisao } from '../../utils/text';
 import { ensureHtmlParagraphs } from '../../utils/html-conversion';
 import { buildChatContext } from '../../utils/chat-context-builder';
 
@@ -183,7 +183,9 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     getChat: chatHistoryCache.getChat,
     deleteChat: chatHistoryCache.deleteChat,
     // v1.53.17: lembrete de estilo por turno (texto jurídico saiu do hook genérico)
-    perTurnReminder: PER_TURN_STYLE_REMINDER
+    perTurnReminder: PER_TURN_STYLE_REMINDER,
+    // v1.53.20: auto-revisão da IA sai do corpo e vira painel colapsável na bolha
+    extractRevision: extractRevisao
   });
 
   // v1.24: Versionamento de campos

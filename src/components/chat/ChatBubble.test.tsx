@@ -270,4 +270,61 @@ describe('ChatBubble', () => {
       expect(() => render(<ChatBubble msg={msg} onUse={mockOnUse} showUse={false} />)).not.toThrow();
     });
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // REVISÃO DA IA (v1.53.20)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Revisão da IA (v1.53.20)', () => {
+    it('mostra o footer colapsável quando a mensagem tem revisao', () => {
+      const msg: ChatMessage = {
+        role: 'assistant',
+        content: 'Corpo da resposta.',
+        revisao: 'Dados conferidos: tudo consta dos autos.',
+        ts: Date.now(),
+      };
+      render(<ChatBubble msg={msg} onUse={mockOnUse} showUse={false} />);
+
+      // Botão visível, conteúdo recolhido por padrão
+      expect(screen.getByText('Revisão da IA')).toBeInTheDocument();
+      expect(screen.queryByText('Dados conferidos: tudo consta dos autos.')).not.toBeInTheDocument();
+
+      // Expande ao clicar
+      fireEvent.click(screen.getByText('Revisão da IA'));
+      expect(screen.getByText('Dados conferidos: tudo consta dos autos.')).toBeInTheDocument();
+    });
+
+    it('não mostra o footer sem revisao', () => {
+      const msg: ChatMessage = {
+        role: 'assistant',
+        content: 'Corpo da resposta.',
+        ts: Date.now(),
+      };
+      render(<ChatBubble msg={msg} onUse={mockOnUse} showUse={false} />);
+      expect(screen.queryByText('Revisão da IA')).not.toBeInTheDocument();
+    });
+
+    it('a revisão NÃO sai no "Usar" (onUse recebe só o corpo)', () => {
+      const msg: ChatMessage = {
+        role: 'assistant',
+        content: 'Corpo da resposta.',
+        revisao: 'Conferido.',
+        ts: Date.now(),
+      };
+      render(<ChatBubble msg={msg} onUse={mockOnUse} showUse={true} />);
+      fireEvent.click(screen.getByText('Usar ↑'));
+      expect(mockOnUse).toHaveBeenCalledWith('Corpo da resposta.');
+    });
+
+    it('não mostra footer em mensagens do usuário', () => {
+      const msg: ChatMessage = {
+        role: 'user',
+        content: 'Pergunta.',
+        revisao: 'não deveria existir',
+        ts: Date.now(),
+      };
+      render(<ChatBubble msg={msg} onUse={mockOnUse} showUse={false} />);
+      expect(screen.queryByText('Revisão da IA')).not.toBeInTheDocument();
+    });
+  });
 });

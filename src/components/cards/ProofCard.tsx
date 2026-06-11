@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { FileText, Sparkles, AlertCircle, Loader2, Check, Scale, Trash2, Paperclip, Plus, X, Edit2, Search } from 'lucide-react';
+import { FileText, Sparkles, AlertCircle, Loader2, Check, Scale, Trash2, Paperclip, Plus, X, Edit2, Search, ShieldCheck } from 'lucide-react';
 import { ProcessingModeSelector } from '../ui/ProcessingModeSelector';
 import VoiceButton from '../VoiceButton';
 import { anonymizeText } from '../../utils/text';
@@ -45,6 +45,8 @@ export const ProofCard = React.memo(({
   // Estado local para edição inline de análises
   const [editingAnalysisId, setEditingAnalysisId] = React.useState<string | null>(null);
   const [editingText, setEditingText] = React.useState('');
+  // v1.53.20: análise com auto-revisão da IA — painel colapsável por análise
+  const [revisaoVisibleId, setRevisaoVisibleId] = React.useState<string | null>(null);
 
   // v1.37.88: Voice improvement com IA
   // v1.37.90: Usa callAI do useAIIntegration para tracking de tokens
@@ -809,6 +811,21 @@ export const ProofCard = React.memo(({
                     </div>
                     {/* Botões de ação - tema claro/escuro compatível */}
                     <div className="flex items-center gap-1">
+                      {/* v1.53.20: auto-revisão da IA (quando presente) — painel colapsável */}
+                      {analysis.revisao && (
+                        <button
+                          onClick={() => setRevisaoVisibleId(prev => prev === analysis.id ? null : analysis.id)}
+                          className={`p-1 rounded transition-all ${
+                            revisaoVisibleId === analysis.id
+                              ? 'theme-bg-tertiary'
+                              : 'opacity-0 group-hover:opacity-100 hover:theme-bg-tertiary'
+                          }`}
+                          title="Revisão da IA (conferência anti-alucinação)"
+                          aria-expanded={revisaoVisibleId === analysis.id}
+                        >
+                          <ShieldCheck className="w-3 h-3 theme-text-muted" />
+                        </button>
+                      )}
                       {/* Botão editar */}
                       <button
                         onClick={() => handleStartEdit(analysis)}
@@ -860,6 +877,19 @@ export const ProofCard = React.memo(({
                     >
                       <p className="text-xs theme-text-tertiary whitespace-pre-wrap">
                         {analysis.result}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* v1.53.20: painel da auto-revisão da IA (fora do texto da análise) */}
+                  {analysis.revisao && revisaoVisibleId === analysis.id && (
+                    <div className="mt-2 p-2 rounded theme-bg-secondary border theme-border-input">
+                      <div className="flex items-center gap-1 mb-1">
+                        <ShieldCheck className="w-3 h-3 theme-text-muted" aria-hidden="true" />
+                        <span className="text-xs font-medium theme-text-muted">Revisão da IA</span>
+                      </div>
+                      <p className="text-xs theme-text-muted whitespace-pre-wrap leading-relaxed">
+                        {analysis.revisao}
                       </p>
                     </div>
                   )}

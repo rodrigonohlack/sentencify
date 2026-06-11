@@ -104,7 +104,7 @@ import AIModelService from './services/AIModelService';
 // v1.36.81: TFIDFSimilarity movido para useModelEditing hook
 
 // v1.36.81: Utilitários extraídos
-import { normalizeHTMLSpacing, isSpecialTopic, isRelatorio, isDispositivo, generateModelId } from './utils/text';
+import { normalizeHTMLSpacing, isSpecialTopic, isRelatorio, isDispositivo, generateModelId, extractRevisao } from './utils/text';
 import { searchModelsBySimilarity } from './utils/models';
 
 // v1.36.96: Context helpers extraídos
@@ -474,7 +474,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     getChat: chatHistoryCache.getChat,
     deleteChat: chatHistoryCache.deleteChat,
     // v1.53.17: lembrete de estilo por turno (texto jurídico saiu do hook genérico)
-    perTurnReminder: PER_TURN_STYLE_REMINDER
+    perTurnReminder: PER_TURN_STYLE_REMINDER,
+    // v1.53.20: auto-revisão da IA sai do corpo e vira painel colapsável na bolha
+    extractRevision: extractRevisao
   });
 
   // v1.38.16: Toggle "Incluir petições e contestações" persistido por tópico

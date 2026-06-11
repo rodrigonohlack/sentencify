@@ -44,6 +44,14 @@ export interface ChatCacheOptions {
    * src/prompts/system.ts e é passado pelos consumidores.
    */
   perTurnReminder?: string;
+  /**
+   * v1.53.20: separa metadado da resposta (ex.: auto-revisão da IA) do corpo exibido.
+   * Aplicado à resposta do assistente antes de gravar no histórico: `corpo` vira o
+   * content (exibido, copiado, reenviado à API) e `revisao` vai para o campo próprio
+   * da mensagem. O hook é tier-0 genérico: a função (extractRevisao de utils/text)
+   * é passada pelos consumidores.
+   */
+  extractRevision?: (raw: string) => { corpo: string; revisao: string | null };
 }
 
 export interface UseChatAssistantReturn {
@@ -294,13 +302,19 @@ export function useChatAssistant(
 
       const trimmedResponse = response.trim();
 
+      // v1.53.20: separa a auto-revisão do corpo — content guarda só o corpo (exibido,
+      // copiado, reenviado à API); a revisão vai pro campo próprio da mensagem.
+      const extracted = cacheOptions?.extractRevision?.(trimmedResponse);
+      const assistantContent = extracted ? extracted.corpo : trimmedResponse;
+
       // Atualiza histórico (com limite). Se houve grounding, anexa na msg do assistente.
       setHistory(prev => {
         const assistantMsg: ChatMessage = {
           role: 'assistant',
-          content: trimmedResponse,
+          content: assistantContent,
           ts: Date.now(),
-          ...(capturedGrounding ? { groundingMetadata: capturedGrounding } : {})
+          ...(capturedGrounding ? { groundingMetadata: capturedGrounding } : {}),
+          ...(extracted?.revisao ? { revisao: extracted.revisao } : {})
         };
         let newHistory: ChatMessage[];
         if (prev.length === 0) {
@@ -333,7 +347,8 @@ export function useChatAssistant(
       });
 
       // v1.38.34: Retornar response diretamente para evitar race condition com lastResponse memoizado
-      return { success: true, response: trimmedResponse };
+      // v1.53.20: retorna o corpo (sem a revisão) — é o que vai para editor/minuta
+      return { success: true, response: assistantContent };
 
     } catch (err) {
       // Adiciona mensagem de erro ao histórico
@@ -345,7 +360,7 @@ export function useChatAssistant(
     } finally {
       setGenerating(false);
     }
-  }, [history, aiIntegration, cacheOptions?.perTurnReminder]);
+  }, [history, aiIntegration, cacheOptions?.perTurnReminder, cacheOptions?.extractRevision]);
 
   return { history, generating, send, clear, lastResponse, updateLastAssistantMessage, setHistory };
 }

@@ -211,6 +211,53 @@ export const removeMetaComments = (text: string | null | undefined): string => {
   return cleaned.trim();
 };
 
+/** Resultado da extração da auto-revisão da IA (v1.53.20) */
+export interface TextoComRevisao {
+  /** Texto da resposta sem o bloco de revisão */
+  corpo: string;
+  /** Conteúdo da revisão, ou null quando a resposta não traz revisão identificável */
+  revisao: string | null;
+}
+
+/**
+ * v1.53.20: separa a auto-revisão da IA do corpo da resposta (chat e análise de provas).
+ * O system pede a revisão dentro de <revisao>...</revisao> como último elemento; se o
+ * modelo não obedecer o formato, cai no padrão legado (parágrafo final "Revisão: ...").
+ * Sem nenhum dos dois, devolve o texto intacto — nunca pior que o comportamento antigo.
+ */
+export const extractRevisao = (text: string | null | undefined): TextoComRevisao => {
+  if (!text) return { corpo: text ?? '', revisao: null };
+
+  // 1. Formato pedido pelo system: <revisao>...</revisao> (tolera <p> envolvendo a tag)
+  const tagPattern = /(?:<p>\s*)?<revisao>([\s\S]*?)<\/revisao>(?:\s*<\/p>)?/i;
+  const tagMatch = text.match(tagPattern);
+  if (tagMatch) {
+    const revisao = tagMatch[1].trim();
+    const corpo = text.replace(tagPattern, '').replace(/(?:<p>\s*<\/p>|\n{3,})\s*$/g, '').trim();
+    return { corpo, revisao: revisao || null };
+  }
+
+  // 1b. Tag aberta sem fechamento no fim da resposta (truncamento por maxTokens)
+  const openTagMatch = text.match(/(?:<p>\s*)?<revisao>([\s\S]*)$/i);
+  if (openTagMatch) {
+    const revisao = openTagMatch[1].replace(/<\/?p>/gi, ' ').trim();
+    const corpo = text.slice(0, openTagMatch.index).trim();
+    return { corpo, revisao: revisao || null };
+  }
+
+  // 2. Padrão legado: parágrafo FINAL começando com "Revisão:" (com ou sem markup)
+  const legacyPattern = /(?:\n\s*\n|<p>)\s*(?:<strong>|\*\*)?\s*Revis[ãa]o\s*:?\s*(?:<\/strong>|\*\*)?\s*:?\s*([\s\S]+?)(?:<\/p>)?\s*$/i;
+  const legacyMatch = text.match(legacyPattern);
+  if (legacyMatch && typeof legacyMatch.index === 'number') {
+    const revisao = legacyMatch[1].replace(/<\/?[a-z][^>]*>/gi, ' ').replace(/\s+/g, ' ').trim();
+    const corpo = text.slice(0, legacyMatch.index).trim();
+    // Conservador: só extrai se sobra corpo real (evita engolir resposta inteira)
+    if (corpo && revisao) return { corpo, revisao };
+  }
+
+  return { corpo: text, revisao: null };
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // HELPERS DE TÓPICOS ESPECIAIS
 // ═══════════════════════════════════════════════════════════════════════════════

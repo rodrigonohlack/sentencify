@@ -15,6 +15,7 @@ import {
   isDispositivo,
   generateModelId,
   plainTextToHtml,
+  extractRevisao,
 } from './text';
 import type { Topic, AnonymizationSettings } from '../types';
 
@@ -631,6 +632,57 @@ describe('text utilities', () => {
       const text = 'A & B\nC < D > E';
       const expected = 'A &amp; B<br>C &lt; D &gt; E';
       expect(plainTextToHtml(text)).toBe(expected);
+    });
+  });
+
+  // v1.53.20: separação da auto-revisão da IA (chat e análise de provas)
+  describe('extractRevisao', () => {
+    it('extrai a revisão da tag <revisao> e limpa o corpo', () => {
+      const texto = '<p>A prova oral confirma a jornada alegada.</p>\n\n<revisao>Conferi datas e nomes citados: todos constam dos depoimentos.</revisao>';
+      const { corpo, revisao } = extractRevisao(texto);
+      expect(corpo).toBe('<p>A prova oral confirma a jornada alegada.</p>');
+      expect(revisao).toBe('Conferi datas e nomes citados: todos constam dos depoimentos.');
+    });
+
+    it('tolera a tag embrulhada em <p>', () => {
+      const texto = '<p>Análise do depoimento.</p><p><revisao>Sem alucinações identificadas.</revisao></p>';
+      const { corpo, revisao } = extractRevisao(texto);
+      expect(corpo).toBe('<p>Análise do depoimento.</p>');
+      expect(revisao).toBe('Sem alucinações identificadas.');
+    });
+
+    it('tag aberta sem fechamento (truncamento): extrai o que houver', () => {
+      const texto = 'Corpo da resposta completo.\n\n<revisao>Conferi os dados mas';
+      const { corpo, revisao } = extractRevisao(texto);
+      expect(corpo).toBe('Corpo da resposta completo.');
+      expect(revisao).toBe('Conferi os dados mas');
+    });
+
+    it('fallback legado: parágrafo final "Revisão:" sem tag', () => {
+      const texto = 'A testemunha confirmou o horário.\n\nRevisão: não houve alucinação ao citar dados.';
+      const { corpo, revisao } = extractRevisao(texto);
+      expect(corpo).toBe('A testemunha confirmou o horário.');
+      expect(revisao).toBe('não houve alucinação ao citar dados.');
+    });
+
+    it('sem revisão identificável: devolve o texto intacto', () => {
+      const texto = '<p>Resposta normal sem bloco de revisão.</p>';
+      const { corpo, revisao } = extractRevisao(texto);
+      expect(corpo).toBe(texto);
+      expect(revisao).toBeNull();
+    });
+
+    it('não extrai "Revisão" que aparece no MEIO do texto (só parágrafo final)', () => {
+      const texto = 'A Revisão: criteriosa dos autos mostra X.\n\nConclui-se pela procedência.';
+      const { corpo, revisao } = extractRevisao(texto);
+      expect(corpo).toBe(texto);
+      expect(revisao).toBeNull();
+    });
+
+    it('lida com null/undefined/vazio', () => {
+      expect(extractRevisao(null)).toEqual({ corpo: '', revisao: null });
+      expect(extractRevisao(undefined)).toEqual({ corpo: '', revisao: null });
+      expect(extractRevisao('')).toEqual({ corpo: '', revisao: null });
     });
   });
 });

@@ -128,7 +128,11 @@ JURISPRUDÊNCIA E DOUTRINA: NUNCA cite súmulas, OJs, jurisprudência, doutrina 
 
 Por favor, forneça uma análise completa e detalhada em uma única mensagem contínua, mantendo a mesma profundidade de análise e atenção aos detalhes. Evite quebrar a resposta em múltiplas mensagens, mas mantenha a organização lógica do texto usando parágrafos bem estruturados.`;
 
-export const AI_INSTRUCTIONS_REVISAO_FINAL = `Ao final de cada resposta, revise-a e identifique se houve alucinação ao citar dados.`;
+// v1.53.20: a revisão sai em formato delimitado (<revisao>...</revisao>) para a aplicação
+// exibi-la em painel separado — fora do texto, onde um copiar/colar desatento a levaria
+// para a minuta. extractRevisao (utils/text.ts) faz a extração, com fallback para o
+// padrão antigo ("Revisão: ..." em parágrafo final) quando o modelo ignora o formato.
+export const AI_INSTRUCTIONS_REVISAO_FINAL = `Ao final de cada resposta, revise-a e identifique se houve alucinação ao citar dados. Escreva o resultado dessa revisão como ÚLTIMO elemento da resposta, dentro do bloco <revisao>...</revisao> (breve, uma a três frases). Todo comentário sobre a revisão deve ficar dentro desse bloco.`;
 
 // v1.53.11: Revisão SILENCIOSA — substitui a REVISAO_FINAL nas tarefas cuja saída vai
 // direto pro editor ou é JSON (semRevisaoFinal). A REVISAO_FINAL pedia revisão "ao final

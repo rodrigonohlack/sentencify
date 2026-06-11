@@ -37,6 +37,7 @@ vi.mock('../stores/useUIStore', () => ({
 
 vi.mock('../utils/text', () => ({
   anonymizeText: vi.fn((text: string) => `[ANONIMIZADO] ${text}`),
+  extractRevisao: vi.fn((text: string) => ({ corpo: text, revisao: null })),
 }));
 
 vi.mock('../utils/double-check-utils', () => ({

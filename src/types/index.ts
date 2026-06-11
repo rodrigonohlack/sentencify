@@ -242,6 +242,8 @@ export interface ProofAnalysisResult {
   topicTitle?: string;
   timestamp: string;
   sourceProvaOralId?: string;  // Rastreabilidade para análises importadas de Prova Oral
+  /** v1.53.20: auto-revisão da IA, extraída do texto (tag <revisao>) — exibida à parte */
+  revisao?: string;
 }
 
 /** Limite máximo de análises por prova */
@@ -1084,6 +1086,12 @@ export interface ChatMessage {
    * que dispararam uma busca.
    */
   groundingMetadata?: GroundingMetadata;
+  /**
+   * v1.53.20: auto-revisão da IA extraída do corpo da resposta (tag <revisao>).
+   * Exibida em painel colapsável separado — fora do texto, para não vazar
+   * para a minuta em copiar/colar ou "Usar".
+   */
+  revisao?: string;
 }
 
 /** Entrada de cache do histórico de chat por tópico (v1.37.92) */
@@ -2350,7 +2358,7 @@ export interface JurisprudenciaCardProps {
 }
 
 export interface ChatBubbleProps {
-  msg: { role: string; content: string; ts?: number; error?: string; groundingMetadata?: GroundingMetadata };
+  msg: { role: string; content: string; ts?: number; error?: string; groundingMetadata?: GroundingMetadata; revisao?: string };
   onUse: (content: string) => void;
   showUse: boolean;
   sanitizeHTML?: (html: string) => string;

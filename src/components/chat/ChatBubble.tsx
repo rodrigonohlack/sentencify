@@ -8,6 +8,7 @@ import React from 'react';
 import { User, Bot, AlertTriangle } from 'lucide-react';
 import type { ChatBubbleProps } from '../../types';
 import { ChatGroundingFooter } from './ChatGroundingFooter';
+import { ChatRevisaoFooter } from './ChatRevisaoFooter';
 
 /**
  * v1.19.4: Converter Markdown básico para HTML
@@ -57,6 +58,10 @@ export const ChatBubble = React.memo(({
         {/* v1.42.02: Fontes consultadas na web (apenas msgs do assistente com grounding) */}
         {!isUser && msg.groundingMetadata && (
           <ChatGroundingFooter metadata={msg.groundingMetadata} />
+        )}
+        {/* v1.53.20: auto-revisão da IA em painel colapsável (fora do corpo do texto) */}
+        {!isUser && msg.revisao && (
+          <ChatRevisaoFooter revisao={msg.revisao} />
         )}
         {msg.error && (
           <div className="text-xs text-red-400 mt-1 flex items-center gap-1">

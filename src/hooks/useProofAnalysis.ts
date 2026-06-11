@@ -8,7 +8,7 @@
  */
 
 import { useCallback, useRef, useEffect } from 'react';
-import { anonymizeText } from '../utils/text';
+import { anonymizeText, extractRevisao } from '../utils/text';
 import { getCorrectionDescription } from '../utils/double-check-utils';
 import { isPdfBinaryAllowed } from '../utils/manualCall';
 import { useUIStore } from '../stores/useUIStore';
@@ -568,7 +568,10 @@ ${customInstructions ? `INSTRUÇÕES DO MAGISTRADO:\n${customInstructions}\n` : 
       // ═══════════════════════════════════════════════════════════════════════════
       // DOUBLE CHECK DA ANÁLISE DE PROVA (v1.37.65)
       // ═══════════════════════════════════════════════════════════════════════════
-      let finalResult = textContent.trim();
+      // v1.53.20: separa a auto-revisão (tag <revisao>) do corpo da análise — o Double
+      // Check verifica e a UI exibe só o corpo; a revisão vai pro campo próprio.
+      const { corpo: corpoAnalise, revisao: revisaoAnalise } = extractRevisao(textContent.trim());
+      let finalResult = corpoAnalise;
 
       if (aiIntegration.aiSettings.doubleCheck?.enabled &&
           aiIntegration.aiSettings.doubleCheck?.operations?.proofAnalysis &&
@@ -642,7 +645,8 @@ ${customInstructions ? `INSTRUÇÕES DO MAGISTRADO:\n${customInstructions}\n` : 
       // Armazenar resultado (usar finalResult que pode ter sido corrigido pelo Double Check)
       proofManager.addProofAnalysis(proofId, {
         type: analysisType as 'contextual' | 'livre',
-        result: finalResult
+        result: finalResult,
+        ...(revisaoAnalise ? { revisao: revisaoAnalise } : {})
       });
 
     } catch (err) {
