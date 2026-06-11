@@ -267,7 +267,7 @@ IMPORTANTE:
 - Use linguagem formal e técnico-jurídica adequada
 - Mantenha primeira pessoa do singular (DECIDO, julgo, reconheço, etc.)
 - Seja objetivo e claro em cada item
-- **NUNCA USE NUMERAÇÃO ROMANA (I, II, III, IV)** - use apenas hífens (-) ou bullets
+- **Numere os itens sequencialmente com algarismos arábicos (1, 2, 3...)** e os subitens com letras (a, b, c); na lista de verbas, use marcadores (*). NUNCA use numeração romana (I, II, III, IV)
 - **NÃO INCLUA JUSTIFICATIVAS OU FUNDAMENTOS** - apenas o resultado
 - **USE O "RESULTADO SELECIONADO PELO USUÁRIO"** - foi escolhido manualmente
 - **NÃO INVERTA OS RESULTADOS** - se diz IMPROCEDENTE, escreva IMPROCEDENTE
@@ -531,7 +531,7 @@ IMPORTANTE:
 - Use linguagem formal e técnico-jurídica adequada
 - Mantenha primeira pessoa do singular (DECIDO, julgo, reconheço, etc.)
 - Seja objetivo e claro em cada item
-- **NUNCA USE NUMERAÇÃO ROMANA (I, II, III, IV)** - use apenas hífens (-) ou bullets
+- **Numere os itens sequencialmente com algarismos arábicos (1, 2, 3...)** e os subitens com letras (a, b, c); na lista de verbas, use marcadores (*). NUNCA use numeração romana (I, II, III, IV)
 - **NÃO INCLUA JUSTIFICATIVAS OU FUNDAMENTOS** - apenas o resultado
 - **USE O "RESULTADO SELECIONADO PELO USUÁRIO"** - foi escolhido manualmente
 - **NÃO INVERTA OS RESULTADOS** - se diz IMPROCEDENTE, escreva IMPROCEDENTE
