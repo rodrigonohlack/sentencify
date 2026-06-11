@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { useAIStore } from '../stores/useAIStore';
-import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
+import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_SAFETY_BASE, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
 import { API_BASE } from '../constants/api';
 import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../utils/claude-cli-bridge';
 import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../utils/codex-cli-bridge';
@@ -218,7 +218,12 @@ const useAIIntegration = () => {
   // v1.35.76: Estilo personalizado SUBSTITUI (não complementa) o estilo default
   // v1.53.7: opts.semFormatoNarrativo usa o STYLE sem a proibição de enumerações
   // (geração de DISPOSITIVO, cuja estrutura exige itens numerados)
-  const getAiInstructions = React.useCallback((opts?: { semFormatoNarrativo?: boolean }) => {
+  // v1.53.10: opts.semRevisaoFinal usa SAFETY_BASE — sem a instrução de auto-revisão
+  // ("revise-a e identifique se houve alucinação"), que gera bloco "Revisão:..." no fim.
+  // Para tarefas cuja saída vai DIRETO pro editor ou é JSON (dispositivo, relatórios,
+  // geração de texto, extração de tópicos/modelos), onde esse bloco é indesejado e cada
+  // prompt precisava de contra-instruções ("Responda APENAS...", proibicaoMetaComentarios).
+  const getAiInstructions = React.useCallback((opts?: { semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean }) => {
     const customPrompt = aiSettings?.customPrompt?.trim();
     // v1.41.07: Bloco de anonimização injetado APENAS quando anonimização está ativa,
     // evitando que a IA use [VALOR]/[NOME] espontaneamente como placeholders.
@@ -226,12 +231,16 @@ const useAIIntegration = () => {
       ? `\n\n${AI_INSTRUCTIONS_ANONYMIZATION}`
       : '';
 
+    const safetyBlock = opts?.semRevisaoFinal
+      ? AI_INSTRUCTIONS_SAFETY_BASE
+      : AI_INSTRUCTIONS_SAFETY;
+
     if (customPrompt) {
       // SUBSTITUTIVO: customPrompt substitui STYLE, mas CORE e SAFETY permanecem
       return [
         {
           type: "text",
-          text: `${AI_INSTRUCTIONS_CORE}\n\n📝 ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO:\n${customPrompt}\n\n${AI_INSTRUCTIONS_SAFETY}${anonBlock}`,
+          text: `${AI_INSTRUCTIONS_CORE}\n\n📝 ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO:\n${customPrompt}\n\n${safetyBlock}${anonBlock}`,
           cache_control: { type: "ephemeral" }
         }
       ];
@@ -245,7 +254,7 @@ const useAIIntegration = () => {
     return [
       {
         type: "text",
-        text: `${AI_INSTRUCTIONS_CORE}\n\n${styleBlock}\n\n${AI_INSTRUCTIONS_SAFETY}${anonBlock}`,
+        text: `${AI_INSTRUCTIONS_CORE}\n\n${styleBlock}\n\n${safetyBlock}${anonBlock}`,
         cache_control: { type: "ephemeral" }
       }
     ];
@@ -266,7 +275,8 @@ const useAIIntegration = () => {
       temperature = null,
       topP = null,
       topK = null,
-      semFormatoNarrativo = false
+      semFormatoNarrativo = false,
+      semRevisaoFinal = false
     } = options;
 
     let savedModel = null;
@@ -368,7 +378,7 @@ const useAIIntegration = () => {
       ];
     } else if (useInstructions) {
       // getAiInstructions() já retorna array com cache_control
-      finalSystemPrompt = getAiInstructions({ semFormatoNarrativo });
+      finalSystemPrompt = getAiInstructions({ semFormatoNarrativo, semRevisaoFinal });
     }
 
     if (finalSystemPrompt) {
@@ -903,7 +913,7 @@ const useAIIntegration = () => {
     // v1.32.29: Resolver systemPrompt igual ao Claude (useInstructions -> getAiInstructions)
     let finalSystemPrompt = systemPrompt;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo });
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map(i => i.text || i).join('\n\n')
         : instructions;
@@ -1099,7 +1109,7 @@ const useAIIntegration = () => {
     // Resolver systemPrompt
     let finalSystemPrompt = systemPrompt as string | null;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo });
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
         : instructions;
@@ -1715,7 +1725,7 @@ const useAIIntegration = () => {
     // Resolver systemPrompt
     let finalSystemPrompt = systemPrompt as string | null;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo });
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
         : instructions;
@@ -1816,7 +1826,7 @@ const useAIIntegration = () => {
     // Resolver systemPrompt
     let finalSystemPrompt = systemPrompt as string | null;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo });
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
         : instructions;

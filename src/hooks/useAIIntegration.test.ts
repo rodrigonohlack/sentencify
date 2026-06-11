@@ -44,7 +44,11 @@ vi.mock('../prompts', () => ({
   AI_INSTRUCTIONS: 'Test AI instructions full',
   AI_INSTRUCTIONS_CORE: 'Test AI instructions core',
   AI_INSTRUCTIONS_STYLE: 'Test AI instructions style',
+  AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO: 'Test AI instructions style sem formato narrativo',
   AI_INSTRUCTIONS_SAFETY: 'Test AI instructions safety',
+  // String propositalmente SEM o prefixo "Test AI instructions safety" para que
+  // not.toContain(SAFETY) funcione nos testes de semRevisaoFinal.
+  AI_INSTRUCTIONS_SAFETY_BASE: 'Test AI safety base sem revisao',
   AI_INSTRUCTIONS_ANONYMIZATION: 'Test AI instructions anonymization',
 }));
 
@@ -2255,6 +2259,48 @@ describe('useAIIntegration', () => {
       expect(instructions[0].text).toContain('Test AI instructions core');
       expect(instructions[0].text).toContain('Test AI instructions safety');
       expect(instructions[0].cache_control).toEqual({ type: 'ephemeral' });
+    });
+
+    // v1.53.7
+    it('semFormatoNarrativo usa o STYLE sem formato narrativo', () => {
+      const { result } = renderHook(() => useAIIntegration());
+      const instructions = result.current.getAiInstructions({ semFormatoNarrativo: true });
+
+      expect(instructions[0].text).toContain('Test AI instructions style sem formato narrativo');
+      expect(instructions[0].text).not.toContain('Test AI instructions style\n');
+    });
+
+    // v1.53.10
+    it('semRevisaoFinal usa SAFETY_BASE (sem auto-revisão) no caminho default', () => {
+      const { result } = renderHook(() => useAIIntegration());
+      const instructions = result.current.getAiInstructions({ semRevisaoFinal: true });
+
+      expect(instructions[0].text).toContain('Test AI safety base sem revisao');
+      expect(instructions[0].text).not.toContain('Test AI instructions safety');
+      expect(instructions[0].text).toContain('Test AI instructions core');
+      expect(instructions[0].text).toContain('Test AI instructions style');
+    });
+
+    it('semRevisaoFinal usa SAFETY_BASE também no caminho com customPrompt', () => {
+      mockStoreWith({
+        aiSettings: { ...defaultMockState.aiSettings, customPrompt: 'Write like a poet' }
+      });
+
+      const { result } = renderHook(() => useAIIntegration());
+      const instructions = result.current.getAiInstructions({ semRevisaoFinal: true });
+
+      expect(instructions[0].text).toContain('Write like a poet');
+      expect(instructions[0].text).toContain('Test AI safety base sem revisao');
+      expect(instructions[0].text).not.toContain('Test AI instructions safety');
+    });
+
+    it('flags combinadas: semFormatoNarrativo + semRevisaoFinal', () => {
+      const { result } = renderHook(() => useAIIntegration());
+      const instructions = result.current.getAiInstructions({ semFormatoNarrativo: true, semRevisaoFinal: true });
+
+      expect(instructions[0].text).toContain('Test AI instructions style sem formato narrativo');
+      expect(instructions[0].text).toContain('Test AI safety base sem revisao');
+      expect(instructions[0].text).not.toContain('Test AI instructions safety');
     });
   });
 

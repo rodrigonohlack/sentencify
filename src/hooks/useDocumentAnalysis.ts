@@ -98,6 +98,8 @@ export interface AIIntegrationForAnalysis {
   callAI: (messages: AIMessage[], options?: {
     maxTokens?: number;
     useInstructions?: boolean;
+    /** v1.53.10: safety sem auto-revisão final (saída é JSON) */
+    semRevisaoFinal?: boolean;
     extractText?: boolean;
     temperature?: number;
     topP?: number;
@@ -107,6 +109,8 @@ export interface AIIntegrationForAnalysis {
   callAIStream?: (messages: AIMessage[], options?: {
     maxTokens?: number;
     useInstructions?: boolean;
+    /** v1.53.10: safety sem auto-revisão final (saída é JSON) */
+    semRevisaoFinal?: boolean;
     temperature?: number;
     topP?: number;
     topK?: number;
@@ -597,6 +601,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         textContent = await aiIntegration.callAIStream(messages, {
           maxTokens: 16000,
           useInstructions: true,
+          semRevisaoFinal: true,
           temperature: 0.2,
           topP: 0.85,
           topK: 40
@@ -606,6 +611,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
         const data = await aiIntegration.callAI(messages, {
           maxTokens: 16000,
           useInstructions: true,
+          semRevisaoFinal: true,
           extractText: false,
           temperature: 0.2,
           topP: 0.85,

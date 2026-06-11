@@ -938,6 +938,11 @@ export interface AICallOptions {
    *  enumerações) no system prompt — para tarefas com estrutura enumerada (DISPOSITIVO).
    *  Só tem efeito com useInstructions: true e sem customPrompt do magistrado. */
   semFormatoNarrativo?: boolean;
+  /** v1.53.10: usa o SAFETY sem a instrução de auto-revisão final ("revise-a e identifique
+   *  se houve alucinação") no system prompt — para tarefas cuja saída vai direto pro editor
+   *  ou é JSON (dispositivo, relatórios, geração de texto, extrações), onde o bloco
+   *  "Revisão:..." é indesejado. Só tem efeito com useInstructions: true. */
+  semRevisaoFinal?: boolean;
   /** v1.38.44: Override do thinking level do Gemini para chamadas específicas */
   geminiThinkingLevel?: GeminiThinkingLevel;
   /** v1.43.08: Override do thinking do DeepSeek (Double Check usa isso) */

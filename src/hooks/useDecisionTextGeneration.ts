@@ -69,6 +69,8 @@ export interface AIIntegrationForDecisionText {
     options?: {
       maxTokens?: number;
       useInstructions?: boolean;
+      /** v1.53.10: safety sem auto-revisão final (saída vai direto pro editor) */
+      semRevisaoFinal?: boolean;
       systemPrompt?: string | null;
       logMetrics?: boolean;
       temperature?: number;
@@ -82,6 +84,8 @@ export interface AIIntegrationForDecisionText {
     options?: {
       maxTokens?: number;
       useInstructions?: boolean;
+      /** v1.53.10: safety sem auto-revisão final (saída vai direto pro editor) */
+      semRevisaoFinal?: boolean;
       systemPrompt?: string | null;
       logMetrics?: boolean;
       temperature?: number;
@@ -376,6 +380,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
       }], {
         maxTokens: 4000,
         useInstructions: true,
+        semRevisaoFinal: true,
         logMetrics: true,
         temperature: 0.5,
         topP: 0.9,
@@ -719,6 +724,7 @@ Responda APENAS com o texto gerado, sem prefácio, sem explicações, sem markdo
       }], {
         maxTokens: 4000,
         useInstructions: true,
+        semRevisaoFinal: true,
         temperature: 0.6,
         topP: 0.9,
         topK: 100

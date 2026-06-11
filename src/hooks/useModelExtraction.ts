@@ -23,6 +23,8 @@ export interface AIIntegrationForModelExtraction {
     options?: {
       maxTokens?: number;
       useInstructions?: boolean;
+      /** v1.53.10: safety sem auto-revisão final (saída é JSON) */
+      semRevisaoFinal?: boolean;
       logMetrics?: boolean;
       temperature?: number;
       topP?: number;
@@ -344,6 +346,7 @@ ${decisionText}`;
       }], {
         maxTokens: 16000,
         useInstructions: true,
+        semRevisaoFinal: true,
         logMetrics: true,
         temperature: 0.4,
         topP: 0.9,

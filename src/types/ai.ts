@@ -104,6 +104,11 @@ export interface AICallOptions {
    *  enumerações) no system prompt — para tarefas com estrutura enumerada (DISPOSITIVO).
    *  Só tem efeito com useInstructions: true e sem customPrompt do magistrado. */
   semFormatoNarrativo?: boolean;
+  /** v1.53.10: usa o SAFETY sem a instrução de auto-revisão final ("revise-a e identifique
+   *  se houve alucinação") no system prompt — para tarefas cuja saída vai direto pro editor
+   *  ou é JSON (dispositivo, relatórios, geração de texto, extrações), onde o bloco
+   *  "Revisão:..." é indesejado. Só tem efeito com useInstructions: true. */
+  semRevisaoFinal?: boolean;
   /** Título opcional exibido no modal do modo manual (ex.: "Prova oral — fase 2 de 3"). */
   manualTitle?: string;
 }

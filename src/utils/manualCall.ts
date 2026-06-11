@@ -53,8 +53,8 @@ function blockToText(block: unknown): string {
  */
 export function serializeForManual(
   messages: SerializableMessage[],
-  options: { useInstructions?: boolean; systemPrompt?: string | null; semFormatoNarrativo?: boolean },
-  getAiInstructions: (opts?: { semFormatoNarrativo?: boolean }) => Array<{ text: string }>,
+  options: { useInstructions?: boolean; systemPrompt?: string | null; semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean },
+  getAiInstructions: (opts?: { semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean }) => Array<{ text: string }>,
 ): string {
   const parts: string[] = [];
 
@@ -63,10 +63,12 @@ export function serializeForManual(
     parts.push(options.systemPrompt.trim());
   }
   if (options.useInstructions !== false) {
-    // v1.53.7: repassa a variante de estilo (DISPOSITIVO sem proibição de enumerações)
-    const instr = getAiInstructions(
-      options.semFormatoNarrativo ? { semFormatoNarrativo: true } : undefined
-    );
+    // v1.53.7/v1.53.10: repassa as variantes de system (estilo sem formato narrativo,
+    // safety sem auto-revisão final)
+    const instr = getAiInstructions({
+      semFormatoNarrativo: options.semFormatoNarrativo,
+      semRevisaoFinal: options.semRevisaoFinal,
+    });
     const instrText = instr.map((b) => b.text).join('\n\n').trim();
     if (instrText) parts.push(instrText);
   }

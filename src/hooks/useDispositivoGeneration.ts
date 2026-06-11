@@ -29,6 +29,8 @@ export interface AIIntegrationForDispositivo {
     useInstructions?: boolean;
     /** v1.53.7: estilo sem proibição de enumerações (dispositivo é enumerado) */
     semFormatoNarrativo?: boolean;
+    /** v1.53.10: safety sem auto-revisão final (saída vai direto pro editor) */
+    semRevisaoFinal?: boolean;
     onChunk?: StreamChunkCallback;
   }) => Promise<string>;
   aiSettings: {
@@ -307,6 +309,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           maxTokens: 8000,
           useInstructions: true,
           semFormatoNarrativo: true,
+          semRevisaoFinal: true,
           onChunk
         });
       } else {
@@ -317,6 +320,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           maxTokens: 8000,
           useInstructions: true,
           semFormatoNarrativo: true,
+          semRevisaoFinal: true,
           logMetrics: true,
           temperature: 0.3,
           topP: 0.9,
@@ -571,6 +575,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           maxTokens: 8000,
           useInstructions: true,
           semFormatoNarrativo: true,
+          semRevisaoFinal: true,
           onChunk
         });
       } else {
@@ -581,6 +586,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
           maxTokens: 8000,
           useInstructions: true,
           semFormatoNarrativo: true,
+          semRevisaoFinal: true,
           logMetrics: true,
           temperature: 0.3,
           topP: 0.9,

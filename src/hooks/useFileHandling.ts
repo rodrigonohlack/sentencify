@@ -70,6 +70,8 @@ export interface AIIntegrationForFileHandling {
     options?: {
       maxTokens?: number;
       useInstructions?: boolean;
+      /** v1.53.10: safety sem auto-revisão final (saída é JSON) */
+      semRevisaoFinal?: boolean;
       timeout?: number;
       abortSignal?: AbortSignal;
       logMetrics?: boolean;
@@ -238,6 +240,7 @@ export function useFileHandling({
     }], {
       maxTokens: BULK_AI_CONFIG.maxTokens,
       useInstructions: true,
+      semRevisaoFinal: true,
       timeout: BULK_AI_CONFIG.timeout,
       abortSignal: abortSignal || undefined,
       logMetrics: true,

@@ -85,6 +85,8 @@ export interface AIIntegrationForReports {
   callAI: (messages: AIMessage[], options?: {
     maxTokens?: number;
     useInstructions?: boolean;
+    /** v1.53.10: safety sem auto-revisão final (saída vai direto pro editor) */
+    semRevisaoFinal?: boolean;
     temperature?: number;
     topP?: number;
     topK?: number;
@@ -94,6 +96,8 @@ export interface AIIntegrationForReports {
   callAIStream?: (messages: AIMessage[], options?: {
     maxTokens?: number;
     useInstructions?: boolean;
+    /** v1.53.10: safety sem auto-revisão final (saída vai direto pro editor) */
+    semRevisaoFinal?: boolean;
     temperature?: number;
     topP?: number;
     topK?: number;
@@ -438,6 +442,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
       }], {
         maxTokens,
         useInstructions: true,
+        semRevisaoFinal: true,
         onChunk
       });
     } else {
@@ -447,6 +452,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
       }], {
         maxTokens,
         useInstructions: true,
+        semRevisaoFinal: true,
         temperature: 0.4,
         topP: 0.9,
         topK: 60
@@ -565,6 +571,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
       }], {
         maxTokens,
         useInstructions: true,
+        semRevisaoFinal: true,
         onChunk
       });
     } else {
@@ -575,6 +582,7 @@ Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado,
       }], {
         maxTokens,
         useInstructions: true,
+        semRevisaoFinal: true,
         extractText: false,
         temperature: 0.4,
         topP: 0.9,
@@ -813,6 +821,7 @@ Responda APENAS com o texto do relatório formatado em HTML, pronto para ser ins
       const options = {
         maxTokens: 8000,
         useInstructions: true,
+        semRevisaoFinal: true,
         logMetrics: true,
         temperature: 0.4,
         topP: 0.9,
