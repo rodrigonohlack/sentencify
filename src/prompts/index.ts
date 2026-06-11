@@ -15,7 +15,9 @@ export {
   AI_INSTRUCTIONS_SAFETY_SILENCIOSA,
   AI_INSTRUCTIONS_REVISAO_SILENCIOSA,
   AI_INSTRUCTIONS_ANONYMIZATION,
-  resolveStyleBlock
+  resolveStyleBlock,
+  buildStyleAnchor,
+  PER_TURN_STYLE_REMINDER
 } from './system';
 export { AI_PROMPTS, SOCRATIC_INTERN_LOGIC } from './ai-prompts';
 export {

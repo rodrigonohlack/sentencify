@@ -20,23 +20,11 @@ import type { ChatMessage, CallAIFunction, AIMessageContent, GroundingMetadata }
  */
 export const MAX_CHAT_HISTORY_MESSAGES = 20;
 
-/**
- * v1.53.5: Lembrete de estilo anexado à mensagem do usuário nos turnos SEGUINTES do chat
- * (apenas no payload da API — o histórico exibido/persistido guarda a mensagem original).
- * Nos turnos posteriores ao primeiro, as instruções de estilo ficam soterradas atrás dos
- * documentos da primeira mensagem e a redação frequentemente as ignorava — exigindo o
- * "aplique o estilo" manual do usuário. O fluxo socrático (pergunta → resposta → redação)
- * torna isso pior: a redação de fato acontece justamente nos turnos seguintes.
- */
-export const PER_TURN_STYLE_REMINDER = `
-
-(Quando esta resposta incluir texto para a decisão, aplique rigorosamente o ESTILO DE REDAÇÃO definido nas instruções desta conversa e formate em HTML.)`;
-
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** Opções de persistência de cache (v1.37.92) */
+/** Opções de persistência de cache (v1.37.92) e de comportamento do chat (v1.53.17) */
 export interface ChatCacheOptions {
   /** Título do tópico para identificar o chat no cache */
   topicTitle?: string;
@@ -48,6 +36,14 @@ export interface ChatCacheOptions {
   getChat?: (topicTitle: string) => Promise<ChatMessage[]>;
   /** Função para deletar chat do cache */
   deleteChat?: (topicTitle: string) => Promise<void>;
+  /**
+   * v1.53.17: texto anexado à mensagem do usuário nos turnos SEGUINTES — apenas no
+   * payload da API (o histórico exibido/persistido guarda a mensagem original) e só no
+   * último turno (os anteriores são reenviados crus, preservando o prompt caching).
+   * O hook é tier-0 genérico: o texto em si (PER_TURN_STYLE_REMINDER) vive em
+   * src/prompts/system.ts e é passado pelos consumidores.
+   */
+  perTurnReminder?: string;
 }
 
 export interface UseChatAssistantReturn {
@@ -273,12 +269,12 @@ export function useChatAssistant(
         }
 
         // Nova mensagem
-        // v1.53.5: lembrete de estilo só no payload da API (histórico guarda a original);
-        // apenas o último turno carrega o lembrete — os anteriores são reenviados crus,
-        // preservando o prefixo estável para o prompt caching.
+        // v1.53.5: lembrete só no payload da API (histórico guarda a original); apenas o
+        // último turno carrega o lembrete — os anteriores são reenviados crus, preservando
+        // o prefixo estável para o prompt caching. v1.53.17: texto vem da opção.
         apiMessages.push({
           role: 'user' as const,
-          content: message + PER_TURN_STYLE_REMINDER
+          content: message + (cacheOptions?.perTurnReminder ?? '')
         });
       }
 
@@ -349,7 +345,7 @@ export function useChatAssistant(
     } finally {
       setGenerating(false);
     }
-  }, [history, aiIntegration]);
+  }, [history, aiIntegration, cacheOptions?.perTurnReminder]);
 
   return { history, generating, send, clear, lastResponse, updateLastAssistantMessage, setHistory };
 }

@@ -6,7 +6,10 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, PER_TURN_STYLE_REMINDER } from './useChatAssistant';
+import { useChatAssistant, MAX_CHAT_HISTORY_MESSAGES } from './useChatAssistant';
+// v1.53.17: o texto do lembrete vive em src/prompts/system.ts; o hook (tier-0 genérico)
+// recebe-o via opção perTurnReminder
+import { PER_TURN_STYLE_REMINDER } from '../prompts/system';
 
 describe('useChatAssistant', () => {
   // Mock AI integration
@@ -532,7 +535,7 @@ describe('useChatAssistant', () => {
 
     it('anexa lembrete de estilo apenas no payload da API do turno seguinte', async () => {
       const mockAI = createMockAIIntegration();
-      const { result } = renderHook(() => useChatAssistant(mockAI));
+      const { result } = renderHook(() => useChatAssistant(mockAI, { perTurnReminder: PER_TURN_STYLE_REMINDER }));
       const contextBuilder = vi.fn(() => 'Full context content');
 
       await act(async () => {
@@ -553,7 +556,7 @@ describe('useChatAssistant', () => {
 
     it('turnos anteriores são reenviados crus (sem lembrete acumulado)', async () => {
       const mockAI = createMockAIIntegration();
-      const { result } = renderHook(() => useChatAssistant(mockAI));
+      const { result } = renderHook(() => useChatAssistant(mockAI, { perTurnReminder: PER_TURN_STYLE_REMINDER }));
       const contextBuilder = vi.fn(() => 'Full context content');
 
       await act(async () => {
@@ -571,6 +574,22 @@ describe('useChatAssistant', () => {
       expect(thirdCallArgs[2].content).toBe('Second');
       // Apenas a mensagem nova ("Third") carrega o lembrete
       expect(thirdCallArgs[thirdCallArgs.length - 1].content).toBe('Third' + PER_TURN_STYLE_REMINDER);
+    });
+
+    it('sem perTurnReminder, a mensagem vai crua (hook genérico, sem texto jurídico)', async () => {
+      const mockAI = createMockAIIntegration();
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+      const contextBuilder = vi.fn(() => 'Full context content');
+
+      await act(async () => {
+        await result.current.send('First', contextBuilder);
+      });
+      await act(async () => {
+        await result.current.send('Second', contextBuilder);
+      });
+
+      const secondCallArgs = mockAI.callAI.mock.calls[1][0];
+      expect(secondCallArgs[secondCallArgs.length - 1].content).toBe('Second');
     });
   });
 

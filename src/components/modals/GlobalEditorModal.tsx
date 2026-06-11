@@ -60,7 +60,7 @@ import {
   buildDocumentosComparisonPrompt,
   buildPdfComparisonPrompt
 } from '../../prompts/facts-comparison-prompts';
-import { buildInlineGenerateSystemPrompt, buildInlineFimBlock } from '../../prompts/system';
+import { buildInlineGenerateSystemPrompt, buildInlineFimBlock, PER_TURN_STYLE_REMINDER } from '../../prompts/system';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -181,7 +181,9 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
     isOpen: showAIAssistant,
     saveChat: chatHistoryCache.saveChat,
     getChat: chatHistoryCache.getChat,
-    deleteChat: chatHistoryCache.deleteChat
+    deleteChat: chatHistoryCache.deleteChat,
+    // v1.53.17: lembrete de estilo por turno (texto jurídico saiu do hook genérico)
+    perTurnReminder: PER_TURN_STYLE_REMINDER
   });
 
   // v1.24: Versionamento de campos

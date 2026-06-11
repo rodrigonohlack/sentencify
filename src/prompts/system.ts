@@ -84,6 +84,37 @@ ${custom}`
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
+// RE-ANCHORING DE ESTILO (v1.53.17: unificado aqui — antes em chat-context-builder e
+// useChatAssistant, dois textos irmãos mantidos separados)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * v1.53.5: lembrete de estilo anexado à mensagem do usuário nos turnos SEGUINTES do chat
+ * (apenas no payload da API — o histórico exibido/persistido guarda a mensagem original).
+ * Nos turnos posteriores ao primeiro, as instruções de estilo ficam soterradas atrás dos
+ * documentos da primeira mensagem e a redação frequentemente as ignorava — exigindo o
+ * "aplique o estilo" manual do usuário. O fluxo socrático (pergunta → resposta → redação)
+ * torna isso pior: a redação de fato acontece justamente nos turnos seguintes.
+ * v1.53.17: movido de useChatAssistant (hook tier-0 genérico, sem texto jurídico) — os
+ * consumidores passam este texto via opção `perTurnReminder`.
+ */
+export const PER_TURN_STYLE_REMINDER = `
+
+(Quando esta resposta incluir texto para a decisão, aplique rigorosamente o ESTILO DE REDAÇÃO definido nas instruções desta conversa e formate em HTML.)`;
+
+/**
+ * v1.53.5: âncora de estilo junto à instrução final da PRIMEIRA mensagem do chat/inline —
+ * instruções de estilo distantes (atrás dos documentos) eram frequentemente ignoradas.
+ * v1.53.13: cede à instrução do usuário (ex.: "liste os pedidos" deve produzir lista,
+ * apesar da proibição de enumerações do estilo) e ao pacote de conhecimento, cuja seção
+ * declara expressamente prioridade sobre o estilo padrão.
+ * v1.53.16: aponta para as instruções do system (a cópia do bloco na mensagem foi removida).
+ */
+export function buildStyleAnchor(hasKnowledgePackage: boolean): string {
+  return `Ao redigir texto para a decisão, aplique rigorosamente o ESTILO DE REDAÇÃO definido nas instruções desta conversa, naquilo que não conflitar com a instrução do usuário${hasKnowledgePackage ? ' nem com as INSTRUÇÕES VINCULANTES do pacote de conhecimento selecionado, que prevalecem sobre o estilo' : ''}.`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 // SAFETY: Proibições (IMUTÁVEL — sempre presente)
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // v1.51.0: SAFETY dividido — BASE (proibições de invenção) + REVISÃO FINAL (instrução de

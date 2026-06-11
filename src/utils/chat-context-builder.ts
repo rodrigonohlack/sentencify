@@ -13,6 +13,7 @@
  */
 
 import { AI_PROMPTS, SOCRATIC_INTERN_LOGIC } from '../prompts/ai-prompts';
+import { buildStyleAnchor } from '../prompts/system';
 import { INSTRUCAO_NAO_PRESUMIR } from '../prompts/instrucoes';
 import { prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext } from './context-helpers';
 import type { AIMessageContent, AnonymizationSettings } from '../types';
@@ -267,12 +268,9 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
   // 9. Instrução do usuário por ÚLTIMO (maior peso — pode refinar ou sobrepor o pacote)
   // v1.51.0: no modo inline (Ctrl+K) o texto vai direto pra decisão — sem o andaime de
   // "confirme antes / Nenhuma informação pendente" (que gerava o preâmbulo meta).
-  // v1.53.5: re-anchoring do estilo junto à instrução final — instruções de estilo
-  // distantes (atrás dos documentos) eram frequentemente ignoradas na redação.
-  // v1.53.13: o anchor cede à instrução do usuário (ex.: "liste os pedidos" deve produzir
-  // lista, apesar da proibição de enumerações do estilo) e ao pacote de conhecimento,
-  // cuja seção declara expressamente prioridade sobre o estilo padrão.
-  const styleAnchor = `Ao redigir texto para a decisão, aplique rigorosamente o ESTILO DE REDAÇÃO definido nas instruções desta conversa, naquilo que não conflitar com a instrução do usuário${params.knowledgePackage ? ' nem com as INSTRUÇÕES VINCULANTES do pacote de conhecimento selecionado, que prevalecem sobre o estilo' : ''}.`;
+  // v1.53.17: âncora de estilo via buildStyleAnchor (fonte única em src/prompts/system.ts,
+  // junto do PER_TURN_STYLE_REMINDER — racional e histórico documentados lá).
+  const styleAnchor = buildStyleAnchor(!!params.knowledgePackage);
   contentArray.push({
     type: 'text',
     text: inlineMode

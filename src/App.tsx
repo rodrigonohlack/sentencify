@@ -83,7 +83,7 @@ import useChatHistoryCache from './hooks/useChatHistoryCache';
 
 // v1.35.26: Prompts de IA movidos para src/prompts/
 // v1.37.18: buildDocumentContentArray, buildMiniReportPrompt, buildBatchMiniReportPrompt extraídos
-import { AI_INSTRUCTIONS_STYLE, AI_PROMPTS, buildDocumentContentArray } from './prompts';
+import { AI_INSTRUCTIONS_STYLE, AI_PROMPTS, buildDocumentContentArray, PER_TURN_STYLE_REMINDER } from './prompts';
 
 // v1.36.95: Estilos centralizados
 import { CSS } from './constants/styles';
@@ -472,7 +472,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     isOpen: modals.aiAssistant,
     saveChat: chatHistoryCache.saveChat,
     getChat: chatHistoryCache.getChat,
-    deleteChat: chatHistoryCache.deleteChat
+    deleteChat: chatHistoryCache.deleteChat,
+    // v1.53.17: lembrete de estilo por turno (texto jurídico saiu do hook genérico)
+    perTurnReminder: PER_TURN_STYLE_REMINDER
   });
 
   // v1.38.16: Toggle "Incluir petições e contestações" persistido por tópico
