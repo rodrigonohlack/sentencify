@@ -358,8 +358,9 @@ export interface BuildDispositivoPromptParams {
   /** Modelo personalizado de dispositivo do usuário */
   modeloDispositivo?: string;
   /**
-   * Instrução do usuário na REGENERAÇÃO (string, possivelmente vazia).
-   * `undefined` = geração inicial (sem os blocos de instrução customizada).
+   * Instrução do usuário na REGENERAÇÃO. Quando não-vazia, injeta o bloco
+   * "⚠️ INSTRUÇÃO ADICIONAL DO USUÁRIO" após o modelo. Vazia ou undefined =
+   * prompt idêntico ao da geração inicial.
    */
   instrucaoCustomizada?: string;
 }
@@ -369,8 +370,11 @@ export interface BuildDispositivoPromptParams {
  * v1.53.14: fonte única — antes duplicado verbatim em generateDispositivo e
  * regenerateDispositivoWithInstruction (useDispositivoGeneration.ts).
  *
- * Na regeneração, a instrução do usuário é injetada em DOIS pontos (topo +
- * "INSTRUÇÃO ADICIONAL" após o modelo), preservando o comportamento original.
+ * v1.53.19: a instrução do usuário (regeneração) é injetada UMA vez, no bloco
+ * "INSTRUÇÃO ADICIONAL" após o modelo — posição tardia (mais peso por recência)
+ * e na ordem certa para sobrepor o modelo personalizado. Antes era injetada 2×
+ * (uma cópia idêntica no topo, adicionada quando a de baixo parecia ignorada,
+ * sem remover a original v1.5.8c).
  */
 export function buildDispositivoPromptText(params: BuildDispositivoPromptParams): string {
   const {
@@ -382,18 +386,7 @@ export function buildDispositivoPromptText(params: BuildDispositivoPromptParams)
     instrucaoCustomizada,
   } = params;
 
-  const isRegeneracao = instrucaoCustomizada !== undefined;
   const instrucao = (instrucaoCustomizada || '').trim();
-
-  const blocoInstrucaoTopo = instrucao ? `
-═══════════════════════════════════════════════════════════════
-📝 INSTRUÇÃO CUSTOMIZADA DO USUÁRIO:
-═══════════════════════════════════════════════════════════════
-
-${instrucao}
-
-═══════════════════════════════════════════════════════════════
-` : '';
 
   const blocoInstrucaoAdicional = instrucao ? `
 
@@ -410,7 +403,7 @@ Por favor, considere esta instrução adicional ao gerar o dispositivo, mantendo
 
   return `Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
 
-${isRegeneracao ? `${blocoInstrucaoTopo}\n\n` : ''}ATENÇÃO CRÍTICA: O usuário SELECIONOU EXPLICITAMENTE o resultado de cada decisão. Use EXATAMENTE o resultado fornecido, sem interpretação.
+ATENÇÃO CRÍTICA: O usuário SELECIONOU EXPLICITAMENTE o resultado de cada decisão. Use EXATAMENTE o resultado fornecido, sem interpretação.
 
 Com base nos tópicos e resultados fornecidos abaixo, gere um DISPOSITIVO completo e bem estruturado para uma sentença trabalhista.
 

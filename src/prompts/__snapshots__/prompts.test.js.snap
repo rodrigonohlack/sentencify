@@ -1705,16 +1705,6 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 exports[`Prompts - Snapshot Tests > buildDispositivoPromptText (v1.53.14) > snapshot: regeneração com instrução customizada 1`] = `
 "Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
 
-
-═══════════════════════════════════════════════════════════════
-📝 INSTRUÇÃO CUSTOMIZADA DO USUÁRIO:
-═══════════════════════════════════════════════════════════════
-
-Use ordem alfabética nos itens.
-
-═══════════════════════════════════════════════════════════════
-
-
 ATENÇÃO CRÍTICA: O usuário SELECIONOU EXPLICITAMENTE o resultado de cada decisão. Use EXATAMENTE o resultado fornecido, sem interpretação.
 
 Com base nos tópicos e resultados fornecidos abaixo, gere um DISPOSITIVO completo e bem estruturado para uma sentença trabalhista.

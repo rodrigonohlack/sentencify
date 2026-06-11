@@ -355,13 +355,16 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       expect(prompt).not.toContain('INSTRUÇÃO ADICIONAL DO USUÁRIO');
     });
 
-    it('regeneração com instrução injeta os DOIS blocos (topo + adicional)', () => {
+    // v1.53.19: a instrução era injetada 2× (cópia idêntica no topo + bloco original
+    // v1.5.8c após o modelo) — deduplicada para o bloco único ADICIONAL (posição tardia)
+    it('regeneração com instrução injeta o bloco ADICIONAL uma única vez', () => {
       const prompt = buildDispositivoPromptText({
         ...fixture,
         instrucaoCustomizada: 'Use ordem alfabética nos itens.'
       });
-      expect(prompt).toContain('📝 INSTRUÇÃO CUSTOMIZADA DO USUÁRIO:');
       expect(prompt).toContain('⚠️ INSTRUÇÃO ADICIONAL DO USUÁRIO (v1.5.8c):');
+      expect(prompt).not.toContain('📝 INSTRUÇÃO CUSTOMIZADA DO USUÁRIO:');
+      expect(prompt.split('Use ordem alfabética nos itens.').length - 1).toBe(1);
     });
 
     it('regeneração SEM instrução (string vazia) não injeta blocos', () => {
