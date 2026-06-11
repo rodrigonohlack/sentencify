@@ -13,6 +13,9 @@ import {
   AI_INSTRUCTIONS_STYLE,
   AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO,
   AI_INSTRUCTIONS_SAFETY,
+  AI_INSTRUCTIONS_SAFETY_BASE,
+  AI_INSTRUCTIONS_SAFETY_SILENCIOSA,
+  AI_INSTRUCTIONS_REVISAO_SILENCIOSA,
   AI_INSTRUCTIONS_ANONYMIZATION
 } from './system.js';
 
@@ -290,6 +293,14 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       expect(AI_INSTRUCTIONS_SAFETY).toContain('revise-a e identifique se houve alucinação');
       // v1.41.07: bloco ANONIMIZAÇÃO extraído para AI_INSTRUCTIONS_ANONYMIZATION
       expect(AI_INSTRUCTIONS_SAFETY).not.toContain('ANONIMIZAÇÃO DE DADOS');
+    });
+
+    // v1.53.11-12: variante silenciosa — revisão interna ANTES de finalizar, sem parecer textual
+    it('SAFETY_SILENCIOSA = BASE + revisão silenciosa, sem o parecer textual', () => {
+      expect(AI_INSTRUCTIONS_SAFETY_SILENCIOSA).toBe(`${AI_INSTRUCTIONS_SAFETY_BASE}\n\n${AI_INSTRUCTIONS_REVISAO_SILENCIOSA}`);
+      expect(AI_INSTRUCTIONS_SAFETY_SILENCIOSA).toContain('REVISÃO INTERNA');
+      expect(AI_INSTRUCTIONS_SAFETY_SILENCIOSA).toContain('PROIBIÇÕES ABSOLUTAS');
+      expect(AI_INSTRUCTIONS_SAFETY_SILENCIOSA).not.toContain('Ao final de cada resposta');
     });
 
     it('ANONYMIZATION deve conter placeholders de anonimização', () => {

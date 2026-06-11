@@ -48,8 +48,7 @@ vi.mock('../prompts', () => ({
   AI_INSTRUCTIONS_SAFETY: 'Test AI instructions safety',
   // String propositalmente SEM o prefixo "Test AI instructions safety" para que
   // not.toContain(SAFETY) funcione nos testes de semRevisaoFinal.
-  AI_INSTRUCTIONS_SAFETY_BASE: 'Test AI safety base sem revisao',
-  AI_INSTRUCTIONS_REVISAO_SILENCIOSA: 'Test AI revisao silenciosa interna',
+  AI_INSTRUCTIONS_SAFETY_SILENCIOSA: 'Test AI safety silenciosa completa',
   AI_INSTRUCTIONS_ANONYMIZATION: 'Test AI instructions anonymization',
 }));
 
@@ -2271,19 +2270,18 @@ describe('useAIIntegration', () => {
       expect(instructions[0].text).not.toContain('Test AI instructions style\n');
     });
 
-    // v1.53.10 / v1.53.11: sem a auto-revisão textual, com a revisão silenciosa no lugar
-    it('semRevisaoFinal usa SAFETY_BASE + revisão silenciosa no caminho default', () => {
+    // v1.53.10-12: sem a auto-revisão textual, com o SAFETY silencioso no lugar
+    it('semRevisaoFinal usa SAFETY_SILENCIOSA no caminho default', () => {
       const { result } = renderHook(() => useAIIntegration());
       const instructions = result.current.getAiInstructions({ semRevisaoFinal: true });
 
-      expect(instructions[0].text).toContain('Test AI safety base sem revisao');
-      expect(instructions[0].text).toContain('Test AI revisao silenciosa interna');
+      expect(instructions[0].text).toContain('Test AI safety silenciosa completa');
       expect(instructions[0].text).not.toContain('Test AI instructions safety');
       expect(instructions[0].text).toContain('Test AI instructions core');
       expect(instructions[0].text).toContain('Test AI instructions style');
     });
 
-    it('semRevisaoFinal usa SAFETY_BASE + revisão silenciosa também no caminho com customPrompt', () => {
+    it('semRevisaoFinal usa SAFETY_SILENCIOSA também no caminho com customPrompt', () => {
       mockStoreWith({
         aiSettings: { ...defaultMockState.aiSettings, customPrompt: 'Write like a poet' }
       });
@@ -2292,8 +2290,7 @@ describe('useAIIntegration', () => {
       const instructions = result.current.getAiInstructions({ semRevisaoFinal: true });
 
       expect(instructions[0].text).toContain('Write like a poet');
-      expect(instructions[0].text).toContain('Test AI safety base sem revisao');
-      expect(instructions[0].text).toContain('Test AI revisao silenciosa interna');
+      expect(instructions[0].text).toContain('Test AI safety silenciosa completa');
       expect(instructions[0].text).not.toContain('Test AI instructions safety');
     });
 
@@ -2302,8 +2299,7 @@ describe('useAIIntegration', () => {
       const instructions = result.current.getAiInstructions({ semFormatoNarrativo: true, semRevisaoFinal: true });
 
       expect(instructions[0].text).toContain('Test AI instructions style sem formato narrativo');
-      expect(instructions[0].text).toContain('Test AI safety base sem revisao');
-      expect(instructions[0].text).toContain('Test AI revisao silenciosa interna');
+      expect(instructions[0].text).toContain('Test AI safety silenciosa completa');
       expect(instructions[0].text).not.toContain('Test AI instructions safety');
     });
   });

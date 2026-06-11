@@ -2,7 +2,8 @@
 // 🤖 INSTRUÇÕES DO SISTEMA (System Prompt para LLM)
 // Refatorado em v1.35.76 para suportar estilo personalizado substitutivo
 //
-// @version 1.53.6 - Bloco de qualidade textual unificado com AI_PROMPTS.estiloRedacao
+// @version 1.53.12 - Variantes de system por tarefa (STYLE sem formato narrativo,
+//                    SAFETY silencioso); qualidade textual unificada com AI_PROMPTS
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 import { AI_PROMPTS } from './ai-prompts';
@@ -95,6 +96,13 @@ export const AI_INSTRUCTIONS_SAFETY = `${AI_INSTRUCTIONS_SAFETY_BASE}
 
 ${AI_INSTRUCTIONS_REVISAO_FINAL}`;
 
+// v1.53.12: variante "silenciosa" do SAFETY — FONTE ÚNICA usada por getAiInstructions
+// (flag semRevisaoFinal) e pelo system dedicado da geração inline (Ctrl+K), evitando que
+// a composição BASE+SILENCIOSA seja montada inline em dois lugares e divirja.
+export const AI_INSTRUCTIONS_SAFETY_SILENCIOSA = `${AI_INSTRUCTIONS_SAFETY_BASE}
+
+${AI_INSTRUCTIONS_REVISAO_SILENCIOSA}`;
+
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // ANONYMIZATION: Preservação de placeholders (CONDICIONAL — só quando anonimização ativa)
 // v1.41.07: Extraído de AI_INSTRUCTIONS_SAFETY para evitar que a IA use [VALOR]/[NOME]
@@ -135,9 +143,7 @@ export function buildInlineGenerateSystemPrompt(opts: { customPrompt?: string; a
 
 ${style}
 
-${AI_INSTRUCTIONS_SAFETY_BASE}
-
-${AI_INSTRUCTIONS_REVISAO_SILENCIOSA}${anon}
+${AI_INSTRUCTIONS_SAFETY_SILENCIOSA}${anon}
 
 ${INLINE_OUTPUT_RULE}`;
 }

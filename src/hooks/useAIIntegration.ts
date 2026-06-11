@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { useAIStore } from '../stores/useAIStore';
-import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_SAFETY_BASE, AI_INSTRUCTIONS_REVISAO_SILENCIOSA, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
+import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_SAFETY_SILENCIOSA, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
 import { API_BASE } from '../constants/api';
 import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../utils/claude-cli-bridge';
 import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../utils/codex-cli-bridge';
@@ -234,7 +234,7 @@ const useAIIntegration = () => {
       : '';
 
     const safetyBlock = opts?.semRevisaoFinal
-      ? `${AI_INSTRUCTIONS_SAFETY_BASE}\n\n${AI_INSTRUCTIONS_REVISAO_SILENCIOSA}`
+      ? AI_INSTRUCTIONS_SAFETY_SILENCIOSA
       : AI_INSTRUCTIONS_SAFETY;
 
     if (customPrompt) {
@@ -1272,7 +1272,7 @@ const useAIIntegration = () => {
 
     let finalSystemPrompt = systemPrompt as string | null;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions();
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
         : instructions;
@@ -1392,7 +1392,7 @@ const useAIIntegration = () => {
 
     let finalSystemPrompt = systemPrompt as string | null;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions();
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
         : instructions;
@@ -1623,7 +1623,7 @@ const useAIIntegration = () => {
     // Resolver systemPrompt
     let finalSystemPrompt = systemPrompt;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions();
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
         : instructions;
@@ -1925,7 +1925,7 @@ const useAIIntegration = () => {
 
     let finalSystemPrompt = systemPrompt as string | null;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions();
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
         : instructions;
@@ -2067,7 +2067,7 @@ const useAIIntegration = () => {
     // Resolver systemPrompt
     let finalSystemPrompt = systemPrompt;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions();
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
         : instructions;
