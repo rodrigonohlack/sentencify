@@ -96,11 +96,6 @@ describe('Prompts - Snapshot Tests', () => {
       expect(prompt).toMatchSnapshot();
     });
 
-    it('snapshot: formatacaoParagrafos', () => {
-      const prompt = AI_PROMPTS.formatacaoParagrafos('<p>Parágrafo 1</p><p>Parágrafo 2</p>');
-      expect(prompt).toMatchSnapshot();
-    });
-
     it('snapshot: numeracaoReclamadas', () => {
       expect(AI_PROMPTS.numeracaoReclamadas).toMatchSnapshot();
     });

@@ -369,13 +369,6 @@ describe('promptBuilders', () => {
         expect(result.formatacaoHTML.length).toBeGreaterThan(0);
       });
 
-      it('should include formatacaoParagrafos', () => {
-        const docs: AnalyzedDocumentsForPrompt = {};
-        const result = buildMiniReportPromptCore(docs, undefined, null);
-        expect(result.formatacaoParagrafos).toBeDefined();
-        expect(result.formatacaoParagrafos.length).toBeGreaterThan(0);
-      });
-
       it('should include preservarAnonimizacao', () => {
         const docs: AnalyzedDocumentsForPrompt = {};
         const result = buildMiniReportPromptCore(docs, undefined, null);

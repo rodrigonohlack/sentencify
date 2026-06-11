@@ -284,8 +284,8 @@ export function useDispositivoGeneration({
           aiIntegration.aiSettings.doubleCheck?.operations.dispositivo) {
 
         // v1.37.68: Usar promptText completo (contém todas as regras e modelo personalizado)
-        // promptText inclui: AI_PROMPTS.roles.redacao, buildPartesDoProcesso, buildTopicosSection,
-        // regraFundamentalDispositivo, estiloRedacao, modeloDispositivo (se configurado)
+        // promptText inclui: buildPartesDoProcesso, buildTopicosSection,
+        // regraFundamentalDispositivo, modeloDispositivo (se configurado)
         try {
           const { verified, corrections, summary, confidence, failed } = await aiIntegration.performDoubleCheck(
             'dispositivo',

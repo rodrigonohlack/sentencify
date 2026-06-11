@@ -175,9 +175,11 @@ describe('document-analysis-prompts', () => {
       expect(result).toContain('"category"');
     });
 
-    it('deve conter instrução de formatação de parágrafos', () => {
+    it('deve conter instrução de formatação HTML com regra de parágrafos', () => {
       const result = buildAnalysisPrompt(0, 0, baseAISettings);
-      expect(result).toContain('FORMATAÇÃO DE PARÁGRAFOS');
+      // v1.53.18: formatacaoParagrafos foi fundida em formatacaoHTML
+      expect(result).toContain('FORMATAÇÃO HTML (CRÍTICO)');
+      expect(result).toContain('cada parágrafo em sua própria tag <p>');
     });
 
     it('deve conter instrução de numeração de reclamadas', () => {

@@ -688,9 +688,7 @@ INSTRUÇÕES IMPORTANTES:
 
 ${AI_PROMPTS.numeracaoReclamadas}
 
-${AI_PROMPTS.formatacaoHTML("<strong>JOÃO DA SILVA</strong>, qualificado na inicial...")}
-
-${AI_PROMPTS.formatacaoParagrafos("<p>JOÃO DA SILVA, qualificado na inicial...</p><p>Em defesa, a reclamada...</p>")}
+${AI_PROMPTS.formatacaoHTML("<p><strong>JOÃO DA SILVA</strong>, qualificado na inicial...</p><p>Em defesa, a reclamada...</p>")}
 
 ${aiIntegration.aiSettings?.anonymization?.enabled ? AI_PROMPTS.preservarAnonimizacao : ''}
 

@@ -245,8 +245,7 @@ ${anonymizationEnabled ? AI_PROMPTS.preservarAnonimizacao : ''}
 ⚠️ NÃO INCLUIR MINI-RELATÓRIO no texto gerado.
 
 Quando gerar texto para a decisão, responda em HTML.
-${AI_PROMPTS.formatacaoHTML("A <strong>CLT</strong> estabelece...")}
-${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágrafo.</p>")}`
+${AI_PROMPTS.formatacaoHTML("<p>A <strong>CLT</strong> estabelece...</p><p>Nesse contexto, ...</p>")}`
   });
 
   // 8. Injetar pacote de conhecimento (template geral do juiz)

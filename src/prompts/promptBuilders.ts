@@ -53,7 +53,6 @@ export interface MiniReportPromptCore {
   numeracaoPrompt: string;
   partesInfo: string;
   formatacaoHTML: string;
-  formatacaoParagrafos: string;
   nivelDetalhe: string;
   preservarAnonimizacao: string;
   proibicaoMetaComentarios: string;
@@ -232,8 +231,7 @@ ${partesProcesso.reclamadas.map((r, i: number) => `- ${i + 1}ª Reclamada: ${r}`
     modeloPersonalizado,
     numeracaoPrompt,
     partesInfo,
-    formatacaoHTML: AI_PROMPTS.formatacaoHTML("O <strong>reclamante</strong> narra que..."),
-    formatacaoParagrafos: AI_PROMPTS.formatacaoParagrafos("<p>O reclamante narra...</p><p>A primeira reclamada, em defesa...</p>"),
+    formatacaoHTML: AI_PROMPTS.formatacaoHTML("<p>O <strong>reclamante</strong> narra que...</p><p>A primeira reclamada, em defesa...</p>"),
     nivelDetalhe: aiSettings?.detailedMiniReports ? `⚠️ NÍVEL DE DETALHE - FATOS:
 Gere com alto nível de detalhe em relação aos FATOS alegados pelas partes.
 A descrição fática (postulatória e defensiva) deve ter alto nível de detalhe.
@@ -285,8 +283,6 @@ ${core.numeracaoPrompt}
 
 ${core.formatacaoHTML}
 
-${core.formatacaoParagrafos}
-
 ${core.nivelDetalhe}
 
 ${core.preservarAnonimizacao}
@@ -331,8 +327,6 @@ ${core.partesInfo}
 ${core.numeracaoPrompt}
 
 ${core.formatacaoHTML}
-
-${core.formatacaoParagrafos}
 
 ${core.nivelDetalhe}
 
@@ -414,9 +408,7 @@ Por favor, considere esta instrução adicional ao gerar o dispositivo, mantendo
 ═══════════════════════════════════════════════════════════════
 ` : '';
 
-  return `${AI_PROMPTS.roles.redacao}
-
-Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
+  return `Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
 
 ${isRegeneracao ? `${blocoInstrucaoTopo}\n\n` : ''}ATENÇÃO CRÍTICA: O usuário SELECIONOU EXPLICITAMENTE o resultado de cada decisão. Use EXATAMENTE o resultado fornecido, sem interpretação.
 
@@ -458,9 +450,7 @@ IMPORTANTE:
 - Organize os itens de forma lógica (questões processuais primeiro, depois mérito, pedidos não decididos por último)
 - Para resultados "NÃO DEFINIDO", deixe MUITO CLARO que não foram apreciados
 
-${AI_PROMPTS.formatacaoHTML("<strong>JULGAR PROCEDENTE</strong> o pedido de...")}
-
-${AI_PROMPTS.formatacaoParagrafos("<p>Ante o exposto...</p><p>REJEITAR a preliminar...</p>")}
+${AI_PROMPTS.formatacaoHTML("<p>Ante o exposto, resolvo <strong>JULGAR PROCEDENTE</strong> o pedido de...</p><p>REJEITAR a preliminar...</p>")}
 
 ${AI_PROMPTS.numeracaoReclamadas}
 

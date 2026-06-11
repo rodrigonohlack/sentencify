@@ -63,7 +63,6 @@ vi.mock('../prompts/ai-prompts', () => ({
     numeracaoReclamadas: '[NUMERACAO_RECLAMADAS]',
     preservarAnonimizacao: '[PRESERVAR_ANONIMIZACAO]',
     formatacaoHTML: (ex: string) => `[FORMATACAO_HTML: ${ex}]`,
-    formatacaoParagrafos: (ex: string) => `[FORMATACAO_PARAGRAFOS: ${ex}]`,
   },
   SOCRATIC_INTERN_LOGIC: '[SOCRATIC_INTERN_LOGIC]',
 }));
@@ -569,8 +568,8 @@ describe('buildChatContext', () => {
       const result = await buildChatContext(createParams());
       const allText = getAllText(result);
 
+      // v1.53.18: formatacaoParagrafos foi fundida em formatacaoHTML
       expect(allText).toContain('[FORMATACAO_HTML:');
-      expect(allText).toContain('[FORMATACAO_PARAGRAFOS:');
     });
 
     it('inclui aviso sobre mini-relatório', async () => {

@@ -67,7 +67,7 @@ ${totalComplementares > 0 ?
 `"A presente reclamação foi ajuizada em [data se constar]. ${totalContestacoes > 0 ? 'Foram apresentadas contestações.' : 'Não houve apresentação de contestação.'} ${totalContestacoes > 0 ? 'As partes manifestaram-se nos autos.' : ''} O processo encontra-se em fase de sentença."`
 }
 
-${AI_PROMPTS.formatacaoParagrafos("<p>O reclamante narra...</p><p>A primeira reclamada, em defesa...</p>")}
+${AI_PROMPTS.formatacaoHTML("<p>O reclamante narra...</p><p>A primeira reclamada, em defesa...</p>")}
 
 ${aiSettings.detailedMiniReports ? `NÍVEL DE DETALHE - FATOS:
 Gere com alto nível de detalhe em relação aos FATOS alegados pelas partes.

@@ -7,6 +7,10 @@
  * @version 1.35.76
  */
 
+// v1.53.18: flags de variante do system prompt compartilhadas com os subapps (fonte única)
+import type { SystemPromptVariantOptions } from './ai';
+export type { SystemPromptVariantOptions } from './ai';
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TOPIC TYPES
 // ═══════════════════════════════════════════════════════════════════════════
@@ -914,8 +918,11 @@ export interface GroundingMetadata {
   }>;
 }
 
-/** Opções para chamada de IA */
-export interface AICallOptions {
+/** Opções para chamada de IA
+ *  v1.53.18: as flags de variante do system (semFormatoNarrativo/semRevisaoFinal) vêm de
+ *  SystemPromptVariantOptions (types/ai.ts) — fonte única compartilhada com o AICallOptions
+ *  dos subapps, que é um contrato distinto de propósito (não unificar o resto). */
+export interface AICallOptions extends SystemPromptVariantOptions {
   useInstructions?: boolean;
   maxTokens?: number;
   temperature?: number;
@@ -934,15 +941,6 @@ export interface AICallOptions {
   /** v1.37.90: Override do provider para chamadas específicas (ex: voice improvement) */
   /** v1.43.06: deepseek adicionado ao union */
   provider?: AIProvider;
-  /** v1.53.7: usa o estilo de redação SEM o item "FORMATO NARRATIVO CONTÍNUO" (proibição de
-   *  enumerações) no system prompt — para tarefas com estrutura enumerada (DISPOSITIVO).
-   *  Só tem efeito com useInstructions: true e sem customPrompt do magistrado. */
-  semFormatoNarrativo?: boolean;
-  /** v1.53.10: usa o SAFETY sem a instrução de auto-revisão final ("revise-a e identifique
-   *  se houve alucinação") no system prompt — para tarefas cuja saída vai direto pro editor
-   *  ou é JSON (dispositivo, relatórios, geração de texto, extrações), onde o bloco
-   *  "Revisão:..." é indesejado. Só tem efeito com useInstructions: true. */
-  semRevisaoFinal?: boolean;
   /** v1.38.44: Override do thinking level do Gemini para chamadas específicas */
   geminiThinkingLevel?: GeminiThinkingLevel;
   /** v1.43.08: Override do thinking do DeepSeek (Double Check usa isso) */

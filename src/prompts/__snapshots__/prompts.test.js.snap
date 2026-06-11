@@ -505,17 +505,9 @@ exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot:
   - Negrito: <strong>texto</strong> ou <b>texto</b>
   - Itálico: <em>texto</em> ou <i>texto</i>
   - Quebra de linha: <br>
-  - Parágrafos: <p>texto</p>
+  - Parágrafos: cada parágrafo em sua própria tag <p>conteúdo</p> — NÃO use quebras de linha de texto (\\n\\n)
 - Exemplo correto: "Exemplo de <strong>texto</strong>"
 - Exemplo ERRADO: "**E**xemplo de texto""
-`;
-
-exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: formatacaoParagrafos 1`] = `
-"⚠️ IMPORTANTE - FORMATAÇÃO DE PARÁGRAFOS:
-- Cada parágrafo deve estar em tags <p>: <p>conteúdo do parágrafo</p>
-- NÃO use quebras de linha texto (\\n\\n), use tags HTML
-- Exemplo correto: "<p>Parágrafo 1</p><p>Parágrafo 2</p>"
-- Exemplo ERRADO: "Parágrafo 1Parágrafo 2""
 `;
 
 exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: numeracaoReclamadas 1`] = `
@@ -1142,7 +1134,7 @@ FORMATO DA RESPOSTA
   - Negrito: <strong>texto</strong> ou <b>texto</b>
   - Itálico: <em>texto</em> ou <i>texto</i>
   - Quebra de linha: <br>
-  - Parágrafos: <p>texto</p>
+  - Parágrafos: cada parágrafo em sua própria tag <p>conteúdo</p> — NÃO use quebras de linha de texto (\\n\\n)
 - Exemplo correto: "<div style="border-left: 3px solid #f59e0b;">Vulnerabilidade</div>"
 - Exemplo ERRADO: "**V**ulnerabilidade"
 
@@ -1379,7 +1371,7 @@ FORMATO DA RESPOSTA
   - Negrito: <strong>texto</strong> ou <b>texto</b>
   - Itálico: <em>texto</em> ou <i>texto</i>
   - Quebra de linha: <br>
-  - Parágrafos: <p>texto</p>
+  - Parágrafos: cada parágrafo em sua própria tag <p>conteúdo</p> — NÃO use quebras de linha de texto (\\n\\n)
 - Exemplo correto: "<div style="border-left: 3px solid #f59e0b;">Vulnerabilidade</div>"
 - Exemplo ERRADO: "**V**ulnerabilidade"
 
@@ -1427,9 +1419,7 @@ Se NÃO encontrar vulnerabilidades significativas, atribua nota A e informe com 
 `;
 
 exports[`Prompts - Snapshot Tests > buildDispositivoPromptText (v1.53.14) > snapshot: geração inicial (sem instrução customizada) 1`] = `
-"Você é um assistente especializado em redação de decisões judiciais trabalhistas.
-
-Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
+"Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
 
 ATENÇÃO CRÍTICA: O usuário SELECIONOU EXPLICITAMENTE o resultado de cada decisão. Use EXATAMENTE o resultado fornecido, sem interpretação.
 
@@ -1673,15 +1663,9 @@ IMPORTANTE:
   - Negrito: <strong>texto</strong> ou <b>texto</b>
   - Itálico: <em>texto</em> ou <i>texto</i>
   - Quebra de linha: <br>
-  - Parágrafos: <p>texto</p>
-- Exemplo correto: "<strong>JULGAR PROCEDENTE</strong> o pedido de..."
-- Exemplo ERRADO: "**JULGAR** **PROCEDENTE** o pedido de..."
-
-⚠️ IMPORTANTE - FORMATAÇÃO DE PARÁGRAFOS:
-- Cada parágrafo deve estar em tags <p>: <p>conteúdo do parágrafo</p>
-- NÃO use quebras de linha texto (\\n\\n), use tags HTML
-- Exemplo correto: "<p>Ante o exposto...</p><p>REJEITAR a preliminar...</p>"
-- Exemplo ERRADO: "Ante o exposto...REJEITAR a preliminar..."
+  - Parágrafos: cada parágrafo em sua própria tag <p>conteúdo</p> — NÃO use quebras de linha de texto (\\n\\n)
+- Exemplo correto: "<p>Ante o exposto, resolvo <strong>JULGAR PROCEDENTE</strong> o pedido de...</p><p>REJEITAR a preliminar...</p>"
+- Exemplo ERRADO: "**A**nte o exposto, resolvo **JULGAR** **PROCEDENTE** o pedido de...**REJEITAR** a preliminar..."
 
 ⚠️ IMPORTANTE - ALGORITMO DE NUMERAÇÃO DAS RECLAMADAS:
 
@@ -1719,9 +1703,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 `;
 
 exports[`Prompts - Snapshot Tests > buildDispositivoPromptText (v1.53.14) > snapshot: regeneração com instrução customizada 1`] = `
-"Você é um assistente especializado em redação de decisões judiciais trabalhistas.
-
-Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
+"Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
 
 
 ═══════════════════════════════════════════════════════════════
@@ -1986,15 +1968,9 @@ IMPORTANTE:
   - Negrito: <strong>texto</strong> ou <b>texto</b>
   - Itálico: <em>texto</em> ou <i>texto</i>
   - Quebra de linha: <br>
-  - Parágrafos: <p>texto</p>
-- Exemplo correto: "<strong>JULGAR PROCEDENTE</strong> o pedido de..."
-- Exemplo ERRADO: "**JULGAR** **PROCEDENTE** o pedido de..."
-
-⚠️ IMPORTANTE - FORMATAÇÃO DE PARÁGRAFOS:
-- Cada parágrafo deve estar em tags <p>: <p>conteúdo do parágrafo</p>
-- NÃO use quebras de linha texto (\\n\\n), use tags HTML
-- Exemplo correto: "<p>Ante o exposto...</p><p>REJEITAR a preliminar...</p>"
-- Exemplo ERRADO: "Ante o exposto...REJEITAR a preliminar..."
+  - Parágrafos: cada parágrafo em sua própria tag <p>conteúdo</p> — NÃO use quebras de linha de texto (\\n\\n)
+- Exemplo correto: "<p>Ante o exposto, resolvo <strong>JULGAR PROCEDENTE</strong> o pedido de...</p><p>REJEITAR a preliminar...</p>"
+- Exemplo ERRADO: "**A**nte o exposto, resolvo **JULGAR** **PROCEDENTE** o pedido de...**REJEITAR** a preliminar..."
 
 ⚠️ IMPORTANTE - ALGORITMO DE NUMERAÇÃO DAS RECLAMADAS:
 

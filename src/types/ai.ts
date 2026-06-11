@@ -86,7 +86,26 @@ export interface AIMessageContent {
   };
 }
 
-export interface AICallOptions {
+/**
+ * v1.53.18: flags de variante do system prompt — FONTE ÚNICA, compartilhada entre o
+ * AICallOptions do app principal (types/index.ts) e o dos subapps (este arquivo).
+ * Os dois AICallOptions são contratos intencionalmente DISTINTOS (subapps autônomos,
+ * campos e nulabilidade diferentes) e não devem ser unificados — mas estas flags já
+ * driftaram uma vez (foram sincronizadas à mão), então só elas vivem aqui.
+ */
+export interface SystemPromptVariantOptions {
+  /** v1.53.7: usa o estilo de redação SEM o item "FORMATO NARRATIVO CONTÍNUO" (proibição de
+   *  enumerações) no system prompt — para tarefas com estrutura enumerada (DISPOSITIVO).
+   *  Só tem efeito com useInstructions: true e sem customPrompt do magistrado. */
+  semFormatoNarrativo?: boolean;
+  /** v1.53.10: usa o SAFETY sem a instrução de auto-revisão final ("revise-a e identifique
+   *  se houve alucinação") no system prompt — para tarefas cuja saída vai direto pro editor
+   *  ou é JSON (dispositivo, relatórios, geração de texto, extrações), onde o bloco
+   *  "Revisão:..." é indesejado. Só tem efeito com useInstructions: true. */
+  semRevisaoFinal?: boolean;
+}
+
+export interface AICallOptions extends SystemPromptVariantOptions {
   maxTokens?: number;
   systemPrompt?: string | null;
   useInstructions?: boolean;
@@ -100,15 +119,6 @@ export interface AICallOptions {
   temperature?: number | null;
   /** Quando true, roteia para o daemon llm-bridge local em vez do proxy remoto. */
   localBridge?: boolean;
-  /** v1.53.7: usa o estilo de redação SEM o item "FORMATO NARRATIVO CONTÍNUO" (proibição de
-   *  enumerações) no system prompt — para tarefas com estrutura enumerada (DISPOSITIVO).
-   *  Só tem efeito com useInstructions: true e sem customPrompt do magistrado. */
-  semFormatoNarrativo?: boolean;
-  /** v1.53.10: usa o SAFETY sem a instrução de auto-revisão final ("revise-a e identifique
-   *  se houve alucinação") no system prompt — para tarefas cuja saída vai direto pro editor
-   *  ou é JSON (dispositivo, relatórios, geração de texto, extrações), onde o bloco
-   *  "Revisão:..." é indesejado. Só tem efeito com useInstructions: true. */
-  semRevisaoFinal?: boolean;
   /** Título opcional exibido no modal do modo manual (ex.: "Prova oral — fase 2 de 3"). */
   manualTitle?: string;
 }

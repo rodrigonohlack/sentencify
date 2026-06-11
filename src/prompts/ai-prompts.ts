@@ -41,7 +41,6 @@ interface AIPromptsType {
     noMarkdown: string;
   };
   formatacaoHTML: (exemplo: string) => string;
-  formatacaoParagrafos: (exemplo: string) => string;
   estiloRedacao: string;
   /** v1.53.7: variante SEM o item "FORMATO NARRATIVO CONTÍNUO" (proibição de enumerações) —
    *  para tarefas cuja estrutura exige itens numerados (geração de DISPOSITIVO). */
@@ -222,23 +221,19 @@ export const AI_PROMPTS: AIPromptsType = {
     noMarkdown: '❌ NÃO use Markdown. Use apenas HTML ou texto puro.'
   },
   // Bloco 1: Formatação HTML (9 linhas) - Aparece em 5 funções
+  // v1.53.18: regras de parágrafo fundidas aqui — formatacaoParagrafos era subconjunto
+  // e aparecia sempre colado a este bloco (duas seções "⚠️" pro mesmo assunto)
   formatacaoHTML: (exemplo: string): string => `⚠️ FORMATAÇÃO HTML (CRÍTICO):
 - **NÃO USE MARKDOWN** (❌ **texto**, ❌ *texto*, ❌ ##título)
 - **USE HTML** para formatação:
   - Negrito: <strong>texto</strong> ou <b>texto</b>
   - Itálico: <em>texto</em> ou <i>texto</i>
   - Quebra de linha: <br>
-  - Parágrafos: <p>texto</p>
+  - Parágrafos: cada parágrafo em sua própria tag <p>conteúdo</p> — NÃO use quebras de linha de texto (\\n\\n)
 - Exemplo correto: "${exemplo}"
 - Exemplo ERRADO: "${exemplo.replace(/<\/?[^>]+(>|$)/g, '').replace(/([A-ZÀÁÂÃÄÉÊËÍÏÓÔÕÖÚÜÇ]+)/g, '**$1**')}"`,
 
   // Bloco 2: Formatação de Parágrafos (5 linhas) - Aparece em 8+ funções
-  formatacaoParagrafos: (exemplo: string): string => `⚠️ IMPORTANTE - FORMATAÇÃO DE PARÁGRAFOS:
-- Cada parágrafo deve estar em tags <p>: <p>conteúdo do parágrafo</p>
-- NÃO use quebras de linha texto (\\n\\n), use tags HTML
-- Exemplo correto: "${exemplo}"
-- Exemplo ERRADO: "${exemplo.replace(/<\/?p>/g, '').replace(/(<br>)+/g, '\\n\\n')}"`,
-
   // Bloco 3: Estilo de Redação - Aparece em 6+ funções
   // v1.53.7: montado por buildEstiloRedacao() (itens com numeração automática, ver acima)
   estiloRedacao: buildEstiloRedacao(),

@@ -364,9 +364,7 @@ O texto deve:
 - Citar fatos específicos dos autos quando relevante
 - Aplicar bases legais quando apropriado
 
-${AI_PROMPTS.formatacaoHTML("A <strong>CLT</strong> estabelece que...")}
-
-${AI_PROMPTS.formatacaoParagrafos("<p>Passo a analisar...</p><p>A CLT estabelece...</p>")}
+${AI_PROMPTS.formatacaoHTML("<p>Passo a analisar...</p><p>A <strong>CLT</strong> estabelece que...</p>")}
 
 ${AI_PROMPTS.numeracaoReclamadas}
 

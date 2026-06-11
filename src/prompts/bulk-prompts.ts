@@ -19,9 +19,9 @@ TAREFA: Analise o documento jurídico fornecido e identifique TODOS os tópicos/
 ⚠️ ATENÇÃO - REGRAS DE GENERALIZAÇÃO (MUITO IMPORTANTE):
 
 1. **REMOVA informações específicas do caso concreto:**
-   - ❌ NÃO use nomes de partes (ex: "João da Silva", "Empresa XYZ Ltda")
-   - ❌ NÃO use valores monetários específicos (ex: "R$ 5.000,00")
-   - ❌ NÃO use datas específicas (ex: "10/05/2023")
+   - ❌ NÃO use nomes de partes (pessoas ou empresas)
+   - ❌ NÃO use valores monetários específicos
+   - ❌ NÃO use datas específicas
    - ❌ NÃO use números de processo
    - ❌ NÃO use endereços ou locais específicos
 
