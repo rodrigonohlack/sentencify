@@ -16,7 +16,7 @@ import React from 'react';
 import { normalizeHTMLSpacing, removeMetaComments } from '../utils/text';
 import { withRetry, AI_RETRY_DEFAULTS } from '../utils/retry';
 import { isPdfBinaryAllowed } from '../utils/manualCall';
-import { AI_PROMPTS } from '../prompts';
+import { AI_PROMPTS, resolveStyleBlock } from '../prompts';
 import { parseAIResponse, RastreabilidadeResponseSchema } from '../schemas/ai-responses';
 import { splitReportIntoParagraphs } from '../utils/reportParagraphs';
 import { buildTracingSources, buildSourceTracingPrompt, mapTracingResponse } from '../utils/sourceTracing';
@@ -297,7 +297,8 @@ ${partesProcesso.reclamadas.map((r, i: number) => `- ${i + 1}ª Reclamada: ${r}`
 Gere com alto nível de detalhe em relação aos FATOS alegados pelas partes.
 A descrição fática (postulatória e defensiva) deve ter alto nível de detalhe.
 ` : '',
-      estiloRedacao: AI_PROMPTS.estiloRedacao,
+      // v1.53.13: estilo personalizado do magistrado SUBSTITUI o default também na mensagem
+      estiloRedacao: resolveStyleBlock(aiIntegration.aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao),
       preservarAnonimizacao: aiIntegration.aiSettings?.anonymization?.enabled ? AI_PROMPTS.preservarAnonimizacao : '',
       proibicaoMetaComentarios: AI_PROMPTS.proibicaoMetaComentarios
     };
@@ -806,7 +807,7 @@ ${AI_PROMPTS.formatacaoHTML("<strong>JOÃO DA SILVA</strong>, qualificado na ini
 
 ${AI_PROMPTS.formatacaoParagrafos("<p>JOÃO DA SILVA, qualificado na inicial...</p><p>Em defesa, a reclamada...</p>")}
 
-${AI_PROMPTS.estiloRedacao}
+${resolveStyleBlock(aiIntegration.aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao)}
 
 ${aiIntegration.aiSettings?.anonymization?.enabled ? AI_PROMPTS.preservarAnonimizacao : ''}
 

@@ -50,6 +50,11 @@ vi.mock('../prompts', () => ({
   // not.toContain(SAFETY) funcione nos testes de semRevisaoFinal.
   AI_INSTRUCTIONS_SAFETY_SILENCIOSA: 'Test AI safety silenciosa completa',
   AI_INSTRUCTIONS_ANONYMIZATION: 'Test AI instructions anonymization',
+  // v1.53.13: mesma semântica da produção (custom substitui o default)
+  resolveStyleBlock: (customPrompt: string | null | undefined, defaultStyle: string) =>
+    customPrompt?.trim()
+      ? `📝 ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO:\n${customPrompt.trim()}`
+      : defaultStyle,
 }));
 
 // Mock constants/api

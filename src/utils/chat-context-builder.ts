@@ -13,6 +13,7 @@
  */
 
 import { AI_PROMPTS, SOCRATIC_INTERN_LOGIC } from '../prompts/ai-prompts';
+import { resolveStyleBlock } from '../prompts/system';
 import { INSTRUCAO_NAO_PRESUMIR } from '../prompts/instrucoes';
 import { prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext } from './context-helpers';
 import type { AIMessageContent, AnonymizationSettings } from '../types';
@@ -218,11 +219,8 @@ ${currentContent || 'Ainda não foi escrito nada'}`;
   }
 
   // 6.5. Bloco de estilo: personalizado do magistrado (substitutivo) ou padrão
-  const customStyle = params.customStylePrompt?.trim();
-  const styleBlock = customStyle
-    ? `📝 ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO (substitui o estilo padrão — siga-o rigorosamente):
-${customStyle}`
-    : AI_PROMPTS.estiloRedacao;
+  // v1.53.13: via resolveStyleBlock (fonte única da regra de substituição)
+  const styleBlock = resolveStyleBlock(params.customStylePrompt, AI_PROMPTS.estiloRedacao);
 
   // 7. Montar prompt completo
   contentArray.push({
@@ -279,7 +277,10 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
   // "confirme antes / Nenhuma informação pendente" (que gerava o preâmbulo meta).
   // v1.53.5: re-anchoring do estilo junto à instrução final — instruções de estilo
   // distantes (atrás dos documentos) eram frequentemente ignoradas na redação.
-  const styleAnchor = 'Ao redigir texto para a decisão, aplique rigorosamente o ESTILO DE REDAÇÃO definido acima.';
+  // v1.53.13: o anchor cede à instrução do usuário (ex.: "liste os pedidos" deve produzir
+  // lista, apesar da proibição de enumerações do estilo) e ao pacote de conhecimento,
+  // cuja seção declara expressamente prioridade sobre o estilo padrão.
+  const styleAnchor = `Ao redigir texto para a decisão, aplique rigorosamente o ESTILO DE REDAÇÃO definido acima, naquilo que não conflitar com a instrução do usuário${params.knowledgePackage ? ' nem com as INSTRUÇÕES VINCULANTES do pacote de conhecimento selecionado, que prevalecem sobre o estilo' : ''}.`;
   contentArray.push({
     type: 'text',
     text: inlineMode

@@ -12,6 +12,7 @@
 
 import type { Topic, AITextContent, AIDocumentContent } from '../types';
 import { AI_PROMPTS } from './ai-prompts';
+import { resolveStyleBlock } from './system';
 import { wrapUserContent } from '../utils/prompt-safety';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -38,6 +39,8 @@ export interface AISettingsForPrompt {
   modeloRelatorio?: string;
   detailedMiniReports?: boolean;
   anonymization?: { enabled?: boolean };
+  /** v1.53.13: estilo personalizado do magistrado — substitui o bloco default na mensagem */
+  customPrompt?: string;
 }
 
 export interface PartesProcesso {
@@ -238,7 +241,8 @@ ${partesProcesso.reclamadas.map((r, i: number) => `- ${i + 1}ª Reclamada: ${r}`
 Gere com alto nível de detalhe em relação aos FATOS alegados pelas partes.
 A descrição fática (postulatória e defensiva) deve ter alto nível de detalhe.
 ` : '',
-    estiloRedacao: AI_PROMPTS.estiloRedacao,
+    // v1.53.13: estilo personalizado do magistrado SUBSTITUI o default também na mensagem
+    estiloRedacao: resolveStyleBlock(aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao),
     preservarAnonimizacao: aiSettings?.anonymization?.enabled ? AI_PROMPTS.preservarAnonimizacao : '',
     proibicaoMetaComentarios: AI_PROMPTS.proibicaoMetaComentarios
   };

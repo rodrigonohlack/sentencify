@@ -53,6 +53,7 @@ Prefira "dispensa" e "dispensado" em vez de "demissão" e "demitido" (ex: "dispe
    - Sequência lógica de argumentação
    - Progressão natural do raciocínio jurídico
    - Conclusões que decorrem naturalmente das premissas
+   - Unidade temática em cada parágrafo
 
 4. **FORMATO NARRATIVO CONTÍNUO:**
    - ❌ SEM enumerações (1., 2., 3... / a), b), c)... / I, II, III...)
@@ -66,6 +67,7 @@ Prefira "dispensa" e "dispensado" em vez de "demissão" e "demitido" (ex: "dispe
    - Explicações claras dos institutos jurídicos
    - Leitura agradável e envolvente
    - Tom professoral, mas não pedante
+   - Raciocínio fácil de acompanhar
 
 6. **EXEMPLO DE PROGRESSÃO TEXTUAL ADEQUADA:**
 
@@ -206,6 +208,7 @@ Prefira "dispensa" e "dispensado" em vez de "demissão" e "demitido" (ex: "dispe
    - Sequência lógica de argumentação
    - Progressão natural do raciocínio jurídico
    - Conclusões que decorrem naturalmente das premissas
+   - Unidade temática em cada parágrafo
 
 4. **FORMATO NARRATIVO CONTÍNUO:**
    - ❌ SEM enumerações (1., 2., 3... / a), b), c)... / I, II, III...)
@@ -219,6 +222,7 @@ Prefira "dispensa" e "dispensado" em vez de "demissão" e "demitido" (ex: "dispe
    - Explicações claras dos institutos jurídicos
    - Leitura agradável e envolvente
    - Tom professoral, mas não pedante
+   - Raciocínio fácil de acompanhar
 
 6. **EXEMPLO DE PROGRESSÃO TEXTUAL ADEQUADA:**
 
@@ -326,6 +330,7 @@ exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot:
    - Sequência lógica de argumentação
    - Progressão natural do raciocínio jurídico
    - Conclusões que decorrem naturalmente das premissas
+   - Unidade temática em cada parágrafo
 
 4. **FORMATO NARRATIVO CONTÍNUO:**
    - ❌ SEM enumerações (1., 2., 3... / a), b), c)... / I, II, III...)
@@ -339,6 +344,7 @@ exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot:
    - Explicações claras dos institutos jurídicos
    - Leitura agradável e envolvente
    - Tom professoral, mas não pedante
+   - Raciocínio fácil de acompanhar
 
 6. **EXEMPLO DE PROGRESSÃO TEXTUAL ADEQUADA:**
 
@@ -421,12 +427,14 @@ exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot:
    - Sequência lógica de argumentação
    - Progressão natural do raciocínio jurídico
    - Conclusões que decorrem naturalmente das premissas
+   - Unidade temática em cada parágrafo
 
 4. **DIDÁTICA E CLAREZA:**
    - Linguagem acessível, mas técnica quando necessário
    - Explicações claras dos institutos jurídicos
    - Leitura agradável e envolvente
    - Tom professoral, mas não pedante
+   - Raciocínio fácil de acompanhar
 
 5. **EXEMPLO DE PROGRESSÃO TEXTUAL ADEQUADA:**
 
@@ -540,6 +548,7 @@ exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot:
 1. MANTER esses placeholders exatamente como estão no texto gerado
 2. JAMAIS substituir os placeholders por valores inventados ou inferidos
 3. JAMAIS criar dados fictícios (nomes, valores, datas, documentos) que não existam no contexto fornecido
+4. JAMAIS inferir ou deduzir dados não fornecidos (nomes, salários, datas, documentos) a partir de outros elementos do contexto
 Exemplo: Se o texto diz "salário de [VALOR]", escreva "salário de [VALOR]" - NÃO escreva "salário de R$ 1.500,00""
 `;
 

@@ -26,6 +26,7 @@ import type {
 } from '../types';
 import type { QuillInstance } from '../types';
 import { AI_PROMPTS } from '../prompts/ai-prompts';
+import { resolveStyleBlock } from '../prompts/system';
 import { buildInlineGenerateSystemPrompt, buildInlineFimBlock } from '../prompts/system';
 import { stripInlineColors } from '../utils/color-stripper';
 import { prepareDocumentsContext, prepareProofsContext } from '../utils/context-helpers';
@@ -349,7 +350,7 @@ ${aiIntegration.aiInstruction}
 - NÃO inicie com "Trata-se de...", "Cuida-se de...", "O reclamante postula..."
 - Vá DIRETO para a análise jurídica, fundamentação e conclusão
 
-${AI_PROMPTS.estiloRedacao}
+${resolveStyleBlock(aiIntegration.aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao)}
 
 Com base em TODOS os elementos acima (contexto do tópico, documentos processuais e instrução do usuário), gere o texto solicitado.
 
@@ -704,7 +705,7 @@ ${aiIntegration.aiInstructionModel}
 - Vá DIRETO para a análise jurídica, fundamentação e conclusão
 - Use termos genéricos ("o reclamante", "a reclamada", "os documentos dos autos")
 
-${AI_PROMPTS.estiloRedacao}
+${resolveStyleBlock(aiIntegration.aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao)}
 
 Baseado no contexto acima e na instrução do usuário, gere o texto solicitado. O texto deve:
 - Ser adequado para um modelo reutilizável de decisão judicial trabalhista

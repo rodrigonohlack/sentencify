@@ -29,7 +29,8 @@ import {
   BULK_API_TIMEOUT_MS,
   VALID_FILE_EXTENSIONS,
   VALID_FILE_TYPES,
-  MAX_BULK_FILES
+  MAX_BULK_FILES,
+  resolveStyleBlock,
 } from '../prompts';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -228,9 +229,10 @@ export function useFileHandling({
     const textToAnalyze = textContent.trim();
 
     // Construir prompt usando função externa
+    // v1.53.13: estilo personalizado do magistrado SUBSTITUI o default também na mensagem
     const analysisPrompt = buildBulkAnalysisPrompt(
       textToAnalyze,
-      AI_PROMPTS.estiloRedacao || ''
+      resolveStyleBlock(aiIntegration.aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao)
     );
 
     // Chamar IA com configurações otimizadas

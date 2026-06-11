@@ -68,6 +68,21 @@ export const AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO = `${ESTILO_COMUNICACAO
 
 ${AI_PROMPTS.estiloRedacaoSemFormatoNarrativo}`;
 
+/**
+ * v1.53.13: FONTE ÚNICA da regra "estilo personalizado do magistrado SUBSTITUI o default".
+ * Antes havia 3 cópias inline (getAiInstructions, buildInlineGenerateSystemPrompt e
+ * chat-context-builder) com headers já divergentes entre si — e os prompts montados fora
+ * do chat (geração de texto, relatórios, dispositivo, extração de modelos) nem aplicavam
+ * a substituição, colando o estilo default na mensagem mesmo com customPrompt definido.
+ */
+export function resolveStyleBlock(customPrompt: string | null | undefined, defaultStyle: string): string {
+  const custom = customPrompt?.trim();
+  return custom
+    ? `📝 ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO (substitui o estilo padrão — siga-o rigorosamente):
+${custom}`
+    : defaultStyle;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // SAFETY: Proibições (IMUTÁVEL — sempre presente)
 // ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -134,10 +149,7 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 const INLINE_OUTPUT_RULE = `FORMATO DA RESPOSTA (geração inline no editor): sua resposta será inserida DIRETAMENTE na decisão, no ponto do cursor. Escreva EXCLUSIVAMENTE o texto da redação solicitada, em HTML, começando imediatamente pela fundamentação e terminando no último parágrafo do texto jurídico. Entregue apenas a redação final, pronta para ser inserida.`;
 
 export function buildInlineGenerateSystemPrompt(opts: { customPrompt?: string; anonymizationEnabled?: boolean }): string {
-  const custom = opts.customPrompt?.trim();
-  const style = custom
-    ? `📝 ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO:\n${custom}`
-    : AI_INSTRUCTIONS_STYLE;
+  const style = resolveStyleBlock(opts.customPrompt, AI_INSTRUCTIONS_STYLE);
   const anon = opts.anonymizationEnabled ? `\n\n${AI_INSTRUCTIONS_ANONYMIZATION}` : '';
   return `${AI_INSTRUCTIONS_CORE}
 

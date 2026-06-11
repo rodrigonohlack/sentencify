@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { AI_PROMPTS } from '../prompts/ai-prompts';
+import { resolveStyleBlock } from '../prompts/system';
 import { generateModelId } from '../utils/text';
 import { TFIDFSimilarity } from '../services/EmbeddingsServices';
 import type { Topic, Model, AIMessageContent } from '../types';
@@ -18,6 +19,8 @@ import type { Topic, Model, AIMessageContent } from '../types';
 // ═══════════════════════════════════════════════════════════════════════════
 
 export interface AIIntegrationForModelExtraction {
+  /** v1.53.13: estilo personalizado do magistrado — substitui o bloco default na mensagem */
+  aiSettings?: { customPrompt?: string };
   callAI: (
     messages: Array<{ role: string; content: AIMessageContent[] }>,
     options?: {
@@ -298,7 +301,7 @@ Identifique onde termina o mini-relatorio e onde comeca a fundamentacao. Mantenh
 
 Voce entendeu? INICIE DIRETAMENTE NA ANALISE JURIDICA. ZERO mini-relatorio.
 
-${AI_PROMPTS.estiloRedacao}
+${resolveStyleBlock(aiIntegration?.aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao)}
 
 CONTEXTO DO TÓPICO ORIGINAL:
 Título: ${editingTopic.title}

@@ -458,6 +458,61 @@ describe('useChatAssistant', () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // RECUPERAÇÃO DE FALHAS (v1.53.13)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Recuperação de falhas (v1.53.13)', () => {
+    it('reconstrói o contexto no retry após falha do PRIMEIRO envio', async () => {
+      const callAI = vi.fn()
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValue('AI response');
+      const { result } = renderHook(() => useChatAssistant({ callAI }));
+      const contextBuilder = vi.fn(() => 'Full context content');
+
+      await act(async () => {
+        await result.current.send('First', contextBuilder);
+      });
+      expect(result.current.history[0].error).toBe('Network error');
+
+      await act(async () => {
+        await result.current.send('Retry', contextBuilder);
+      });
+
+      const secondCallArgs = callAI.mock.calls[1][0];
+      // Antes do fix: primeira mensagem ia como '' (contexto perdido) + msg falha reenviada
+      expect(secondCallArgs[0].content).toBe('Full context content');
+      expect(secondCallArgs).toHaveLength(1);
+      expect(contextBuilder).toHaveBeenCalledTimes(2);
+
+      // A mensagem do retry vira a âncora (contentForApi) para os próximos turnos
+      const anchor = result.current.history.find(m => !!m.contentForApi);
+      expect(anchor?.content).toBe('Retry');
+    });
+
+    it('mensagens com erro no meio da conversa não são reenviadas (roles alternados)', async () => {
+      const callAI = vi.fn()
+        .mockResolvedValueOnce('R1')
+        .mockRejectedValueOnce(new Error('429'))
+        .mockResolvedValueOnce('R3');
+      const { result } = renderHook(() => useChatAssistant({ callAI }));
+      const contextBuilder = vi.fn(() => 'Full context content');
+
+      await act(async () => { await result.current.send('First', contextBuilder); });
+      await act(async () => { await result.current.send('Fails', contextBuilder); });
+      await act(async () => { await result.current.send('Third', contextBuilder); });
+
+      const thirdCallArgs = callAI.mock.calls[2][0];
+      // Antes do fix: a msg falha era reenviada → dois turnos 'user' consecutivos (400 da API)
+      expect(thirdCallArgs.map((m: { role: string }) => m.role)).toEqual(['user', 'assistant', 'user']);
+      expect(thirdCallArgs.some((m: { content: unknown }) =>
+        typeof m.content === 'string' && m.content.startsWith('Fails')
+      )).toBe(false);
+      // A msg falha continua visível no histórico (com error), só não vai pra API
+      expect(result.current.history.some(m => m.content === 'Fails' && m.error)).toBe(true);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // PER-TURN STYLE REMINDER (v1.53.5)
   // ═══════════════════════════════════════════════════════════════════════════
 

@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { useAIStore } from '../stores/useAIStore';
-import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_SAFETY_SILENCIOSA, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
+import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_SAFETY_SILENCIOSA, AI_INSTRUCTIONS_ANONYMIZATION, resolveStyleBlock } from '../prompts';
 import { API_BASE } from '../constants/api';
 import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../utils/claude-cli-bridge';
 import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../utils/codex-cli-bridge';
@@ -237,22 +237,13 @@ const useAIIntegration = () => {
       ? AI_INSTRUCTIONS_SAFETY_SILENCIOSA
       : AI_INSTRUCTIONS_SAFETY;
 
-    if (customPrompt) {
-      // SUBSTITUTIVO: customPrompt substitui STYLE, mas CORE e SAFETY permanecem
-      return [
-        {
-          type: "text",
-          text: `${AI_INSTRUCTIONS_CORE}\n\n📝 ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO:\n${customPrompt}\n\n${safetyBlock}${anonBlock}`,
-          cache_control: { type: "ephemeral" }
-        }
-      ];
-    }
+    // SUBSTITUTIVO: customPrompt substitui STYLE (via resolveStyleBlock, fonte única da
+    // regra), mas CORE e SAFETY permanecem
+    const styleBlock = resolveStyleBlock(
+      customPrompt,
+      opts?.semFormatoNarrativo ? AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO : AI_INSTRUCTIONS_STYLE
+    );
 
-    const styleBlock = opts?.semFormatoNarrativo
-      ? AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO
-      : AI_INSTRUCTIONS_STYLE;
-
-    // Sem customização: monta com CORE + STYLE default + SAFETY (+ anon se ativo)
     return [
       {
         type: "text",
@@ -261,6 +252,24 @@ const useAIIntegration = () => {
       }
     ];
   }, [aiSettings]);
+
+  // v1.53.13: CHOKEPOINT único da resolução do system prompt em texto plano.
+  // Antes, este bloco existia copiado em 9 resolvers de provider — e a v1.53.10
+  // esqueceu de atualizar 5 deles ao introduzir as flags (corrigido na v1.53.12).
+  // Centralizar impede a reincidência quando surgir a próxima variante de system.
+  // (O caminho Claude não-stream/buildApiRequest fica fora: precisa da forma ARRAY
+  // com cache_control para prompt caching, não do texto plano.)
+  const resolveSystemPromptText = React.useCallback((
+    systemPrompt: string | null | undefined,
+    options: { useInstructions?: boolean; semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean }
+  ): string | null => {
+    if (systemPrompt) return systemPrompt;
+    if (!options.useInstructions) return null;
+    const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
+    return Array.isArray(instructions)
+      ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
+      : instructions;
+  }, [getAiInstructions]);
 
   // Build API Request
   const buildApiRequest = React.useCallback((messages: AIMessage[], optionsOrMaxTokens: AICallOptions | number = {}) => {
@@ -900,7 +909,6 @@ const useAIIntegration = () => {
     const {
       maxTokens = 4000,
       systemPrompt = null,
-      useInstructions = false,
       model = aiSettings.geminiModel || 'gemini-3-flash-preview',
       temperature = null,
       topP = null,
@@ -913,13 +921,7 @@ const useAIIntegration = () => {
     } = options;
 
     // v1.32.29: Resolver systemPrompt igual ao Claude (useInstructions -> getAiInstructions)
-    let finalSystemPrompt = systemPrompt;
-    if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
-      finalSystemPrompt = Array.isArray(instructions)
-        ? instructions.map(i => i.text || i).join('\n\n')
-        : instructions;
-    }
+    let finalSystemPrompt = resolveSystemPromptText(systemPrompt, options);
 
     // AbortController para timeout
     const internalController = timeout ? new AbortController() : null;
@@ -1096,7 +1098,6 @@ const useAIIntegration = () => {
     const {
       maxTokens = OPENAI_CONFIG.MAX_TOKENS_DEFAULT,
       systemPrompt = null,
-      useInstructions = false,
       model = aiSettings.openaiModel || 'gpt-5.2-chat-latest',
       timeout = null,
       abortSignal = null,
@@ -1109,13 +1110,7 @@ const useAIIntegration = () => {
     } = options;
 
     // Resolver systemPrompt
-    let finalSystemPrompt = systemPrompt as string | null;
-    if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
-      finalSystemPrompt = Array.isArray(instructions)
-        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
-        : instructions;
-    }
+    let finalSystemPrompt = resolveSystemPromptText(systemPrompt, options);
     // Quando web search está ativo no provider local (codex-cli), injeta hint
     // forçando citação em [título](url) — necessário pra `translate.codex.js`
     // extrair grounding — e limitando buscas.
@@ -1263,20 +1258,13 @@ const useAIIntegration = () => {
     const {
       maxTokens = GROK_CONFIG.MAX_TOKENS_DEFAULT,
       systemPrompt = null,
-      useInstructions = false,
       model = aiSettings.grokModel || 'grok-4-1-fast-reasoning',
       abortSignal = null,
       logMetrics = true,
       extractText = true
     } = options;
 
-    let finalSystemPrompt = systemPrompt as string | null;
-    if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
-      finalSystemPrompt = Array.isArray(instructions)
-        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
-        : instructions;
-    }
+    let finalSystemPrompt = resolveSystemPromptText(systemPrompt, options);
 
     // Funcao de requisicao que sera retentada
     const makeRequest = async () => {
@@ -1377,7 +1365,6 @@ const useAIIntegration = () => {
     const {
       maxTokens = DEEPSEEK_CONFIG.MAX_TOKENS_DEFAULT,
       systemPrompt = null,
-      useInstructions = false,
       model = aiSettings.deepseekModel || 'deepseek-v4-flash',
       abortSignal = null,
       logMetrics = true,
@@ -1390,13 +1377,7 @@ const useAIIntegration = () => {
       deepseekJsonMode = false
     } = options;
 
-    let finalSystemPrompt = systemPrompt as string | null;
-    if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
-      finalSystemPrompt = Array.isArray(instructions)
-        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
-        : instructions;
-    }
+    let finalSystemPrompt = resolveSystemPromptText(systemPrompt, options);
 
     const makeRequest = async () => {
       try {
@@ -1611,7 +1592,6 @@ const useAIIntegration = () => {
     const {
       maxTokens = 8000,
       systemPrompt = null,
-      useInstructions = false,
       model = aiSettings.claudeModel,
       disableThinking = false,
       onChunk
@@ -1621,13 +1601,7 @@ const useAIIntegration = () => {
     const thinkingBudget = parseInt(aiSettings.thinkingBudget) || 10000;
 
     // Resolver systemPrompt
-    let finalSystemPrompt = systemPrompt;
-    if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
-      finalSystemPrompt = Array.isArray(instructions)
-        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
-        : instructions;
-    }
+    let finalSystemPrompt = resolveSystemPromptText(systemPrompt, options);
 
     const requestBody: Record<string, unknown> = {
       model,
@@ -1718,20 +1692,13 @@ const useAIIntegration = () => {
     const {
       maxTokens = 8000,
       systemPrompt = null,
-      useInstructions = false,
       model = aiSettings.openaiModel,
       disableThinking = false,
       onChunk
     } = options;
 
     // Resolver systemPrompt
-    let finalSystemPrompt = systemPrompt as string | null;
-    if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
-      finalSystemPrompt = Array.isArray(instructions)
-        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
-        : instructions;
-    }
+    let finalSystemPrompt = resolveSystemPromptText(systemPrompt, options);
 
     const openaiMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
 
@@ -1820,19 +1787,12 @@ const useAIIntegration = () => {
     const {
       maxTokens = 8000,
       systemPrompt = null,
-      useInstructions = false,
       model = aiSettings.grokModel,
       onChunk
     } = options;
 
     // Resolver systemPrompt
-    let finalSystemPrompt = systemPrompt as string | null;
-    if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
-      finalSystemPrompt = Array.isArray(instructions)
-        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
-        : instructions;
-    }
+    let finalSystemPrompt = resolveSystemPromptText(systemPrompt, options);
 
     const grokMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
 
@@ -1912,7 +1872,6 @@ const useAIIntegration = () => {
     const {
       maxTokens = 8000,
       systemPrompt = null,
-      useInstructions = false,
       model = aiSettings.deepseekModel || 'deepseek-v4-flash',
       onChunk,
       disableThinking = false,
@@ -1923,13 +1882,7 @@ const useAIIntegration = () => {
       deepseekJsonMode = false
     } = options;
 
-    let finalSystemPrompt = systemPrompt as string | null;
-    if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
-      finalSystemPrompt = Array.isArray(instructions)
-        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
-        : instructions;
-    }
+    let finalSystemPrompt = resolveSystemPromptText(systemPrompt, options);
 
     const deepseekMessages = convertToOpenAIFormat(messages, finalSystemPrompt);
 
@@ -2058,20 +2011,13 @@ const useAIIntegration = () => {
     const {
       maxTokens = 8000,
       systemPrompt = null,
-      useInstructions = false,
       model = aiSettings.geminiModel,
       disableThinking = false,
       onChunk
     } = options;
 
     // Resolver systemPrompt
-    let finalSystemPrompt = systemPrompt;
-    if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
-      finalSystemPrompt = Array.isArray(instructions)
-        ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
-        : instructions;
-    }
+    let finalSystemPrompt = resolveSystemPromptText(systemPrompt, options);
 
     const geminiRequest = convertToGeminiFormat(messages, finalSystemPrompt);
 

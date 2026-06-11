@@ -30,6 +30,9 @@ vi.mock('../schemas/ai-responses', () => ({
 
 vi.mock('../prompts', () => ({
   AI_PROMPTS: { estiloRedacao: 'estilo formal' },
+  // v1.53.13: mesma semântica da produção (custom substitui o default)
+  resolveStyleBlock: vi.fn((customPrompt: string | undefined, defaultStyle: string) =>
+    customPrompt?.trim() ? `custom: ${customPrompt}` : defaultStyle),
   buildBulkAnalysisPrompt: vi.fn().mockReturnValue('prompt de análise'),
   BULK_AI_CONFIG: { maxTokens: 8000, timeout: 180000, temperature: 0.3, topP: 0.9, topK: 50 },
   INTER_BATCH_DELAY: 100, // Reduced for tests

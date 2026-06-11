@@ -92,7 +92,8 @@ const ESTILO_REDACAO_ITENS: ReadonlyArray<{ readonly id: string; readonly texto:
     texto: `**COERÊNCIA:**
    - Sequência lógica de argumentação
    - Progressão natural do raciocínio jurídico
-   - Conclusões que decorrem naturalmente das premissas`,
+   - Conclusões que decorrem naturalmente das premissas
+   - Unidade temática em cada parágrafo`,
   },
   {
     id: 'formato-narrativo',
@@ -109,7 +110,8 @@ const ESTILO_REDACAO_ITENS: ReadonlyArray<{ readonly id: string; readonly texto:
    - Linguagem acessível, mas técnica quando necessário
    - Explicações claras dos institutos jurídicos
    - Leitura agradável e envolvente
-   - Tom professoral, mas não pedante`,
+   - Tom professoral, mas não pedante
+   - Raciocínio fácil de acompanhar`,
   },
   {
     id: 'exemplo-progressao',
@@ -286,6 +288,7 @@ PROIBIDO: Inventar numeração diferente da do relatório.`,
 1. MANTER esses placeholders exatamente como estão no texto gerado
 2. JAMAIS substituir os placeholders por valores inventados ou inferidos
 3. JAMAIS criar dados fictícios (nomes, valores, datas, documentos) que não existam no contexto fornecido
+4. JAMAIS inferir ou deduzir dados não fornecidos (nomes, salários, datas, documentos) a partir de outros elementos do contexto
 Exemplo: Se o texto diz "salário de [VALOR]", escreva "salário de [VALOR]" - NÃO escreva "salário de R$ 1.500,00"`,
 
   // Bloco 5b: Proibição de Meta-Comentários (v1.35.29)

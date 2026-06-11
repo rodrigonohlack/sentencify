@@ -239,8 +239,15 @@ export function useChatAssistant(
       // v1.19.5: Calcular contexto antes (suporta async)
       let contextContent: AIMessageContent[] | string | null = null;
 
-      if (history.length === 0) {
-        // Primeira interação: contexto completo + mensagem
+      // v1.53.13: âncora = primeira mensagem do histórico com contexto utilizável.
+      // Se o PRIMEIRO envio falhou (o catch grava a mensagem com `error` e SEM
+      // contentForApi), o histórico existe mas não tem contexto — antes, o retry
+      // enviava '' como primeira mensagem (contexto silenciosamente perdido e bloco
+      // de texto vazio rejeitado pela API), quebrando o chat do tópico até limpar.
+      const anchorIndex = history.findIndex(m => !!m.contentForApi);
+
+      if (anchorIndex === -1) {
+        // Primeira interação (ou histórico só com tentativas falhas): contexto completo + mensagem
         contextContent = await Promise.resolve(contextBuilder(message));
         apiMessages.push({
           role: 'user' as const,
@@ -251,11 +258,14 @@ export function useChatAssistant(
         // Primeira mensagem com contexto (para cache hit)
         apiMessages.push({
           role: 'user' as const,
-          content: history[0].contentForApi || ''
+          content: history[anchorIndex].contentForApi || ''
         });
 
         // Resto do histórico
-        for (let i = 1; i < history.length; i++) {
+        for (let i = anchorIndex + 1; i < history.length; i++) {
+          // v1.53.13: mensagens que falharam (`error`) nunca tiveram resposta — reenviá-las
+          // criaria dois turnos 'user' consecutivos, rejeitados pela Messages API.
+          if (history[i].error) continue;
           apiMessages.push({
             role: history[i].role as 'user' | 'assistant',
             content: history[i].content
@@ -305,17 +315,21 @@ export function useChatAssistant(
           ];
         } else {
           // Interações seguintes
+          // v1.53.13: se o contexto foi (re)construído neste turno (primeiro envio havia
+          // falhado), salva contentForApi nesta mensagem — ela vira a âncora dos próximos.
           newHistory = [
             ...prev,
-            { role: 'user', content: message, ts: Date.now() },
+            { role: 'user', content: message, ts: Date.now(), ...(contextContent ? { contentForApi: contextContent } : {}) },
             assistantMsg
           ];
         }
 
         // Aplicar limite de mensagens (manter primeira msg com contexto + últimas N)
         if (newHistory.length > MAX_CHAT_HISTORY_MESSAGES) {
-          const firstMsg = newHistory[0]; // Manter contexto
-          const recentMsgs = newHistory.slice(-(MAX_CHAT_HISTORY_MESSAGES - 1));
+          // v1.53.13: a msg a preservar é a âncora (primeira COM contentForApi), não
+          // cegamente a [0] — que pode ser uma tentativa falha sem contexto.
+          const firstMsg = newHistory.find(m => !!m.contentForApi) || newHistory[0];
+          const recentMsgs = newHistory.slice(-(MAX_CHAT_HISTORY_MESSAGES - 1)).filter(m => m !== firstMsg);
           return [firstMsg, ...recentMsgs];
         }
 

@@ -8,7 +8,7 @@
 
 import { useCallback, useRef, useEffect } from 'react';
 import type { Topic, AIMessage, AICallOptions, AIMessageContent, DoubleCheckCorrection, DoubleCheckReviewResult } from '../types';
-import { AI_PROMPTS } from '../prompts';
+import { AI_PROMPTS, resolveStyleBlock } from '../prompts';
 import { normalizeHTMLSpacing, isRelatorio } from '../utils/text';
 import { useUIStore } from '../stores/useUIStore';
 
@@ -35,6 +35,8 @@ export interface AIIntegrationForDispositivo {
   }) => Promise<string>;
   aiSettings: {
     modeloDispositivo?: string;
+    /** v1.53.13: estilo personalizado do magistrado — substitui o bloco default na mensagem */
+    customPrompt?: string;
     anonymization?: { enabled?: boolean };
     doubleCheck?: {
       enabled: boolean;
@@ -246,7 +248,7 @@ INSTRUÇÕES PARA O DISPOSITIVO:
 
 ${AI_PROMPTS.regraFundamentalDispositivo}
 
-${AI_PROMPTS.estiloRedacaoSemFormatoNarrativo}
+${resolveStyleBlock(aiIntegration.aiSettings.customPrompt, AI_PROMPTS.estiloRedacaoSemFormatoNarrativo)}
 
 ${aiIntegration.aiSettings.modeloDispositivo ? `
 ═══════════════════════════════════════════════════════════════
@@ -501,7 +503,7 @@ INSTRUÇÕES PARA O DISPOSITIVO:
 
 ${AI_PROMPTS.regraFundamentalDispositivo}
 
-${AI_PROMPTS.estiloRedacaoSemFormatoNarrativo}
+${resolveStyleBlock(aiIntegration.aiSettings.customPrompt, AI_PROMPTS.estiloRedacaoSemFormatoNarrativo)}
 
 ${aiIntegration.aiSettings.modeloDispositivo ? `
 ═══════════════════════════════════════════════════════════════
