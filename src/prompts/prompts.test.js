@@ -11,6 +11,7 @@ import {
   AI_INSTRUCTIONS,
   AI_INSTRUCTIONS_CORE,
   AI_INSTRUCTIONS_STYLE,
+  AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO,
   AI_INSTRUCTIONS_SAFETY,
   AI_INSTRUCTIONS_ANONYMIZATION
 } from './system.js';
@@ -59,6 +60,31 @@ describe('Prompts - Snapshot Tests', () => {
   describe('Prompts de Estilo e Formatação', () => {
     it('snapshot: estiloRedacao', () => {
       expect(AI_PROMPTS.estiloRedacao).toMatchSnapshot();
+    });
+
+    // v1.53.7: variante para tarefas com estrutura enumerada (DISPOSITIVO)
+    it('snapshot: estiloRedacaoSemFormatoNarrativo', () => {
+      expect(AI_PROMPTS.estiloRedacaoSemFormatoNarrativo).toMatchSnapshot();
+    });
+
+    it('estiloRedacao completo mantém FORMATO NARRATIVO como item 4 e 12 itens', () => {
+      expect(AI_PROMPTS.estiloRedacao).toContain('4. **FORMATO NARRATIVO CONTÍNUO');
+      expect(AI_PROMPTS.estiloRedacao).toContain('12. **PRECISÃO REFERENCIAL');
+    });
+
+    it('estiloRedacaoSemFormatoNarrativo não contém a proibição de enumerações', () => {
+      const prompt = AI_PROMPTS.estiloRedacaoSemFormatoNarrativo;
+      expect(prompt).not.toContain('FORMATO NARRATIVO CONTÍNUO');
+      expect(prompt).not.toContain('SEM enumerações');
+      expect(prompt).not.toContain('PROSA CORRIDA');
+    });
+
+    it('estiloRedacaoSemFormatoNarrativo renumera os itens sem buraco', () => {
+      const prompt = AI_PROMPTS.estiloRedacaoSemFormatoNarrativo;
+      expect(prompt).toContain('3. **COERÊNCIA');
+      expect(prompt).toContain('4. **DIDÁTICA E CLAREZA');
+      expect(prompt).toContain('11. **PRECISÃO REFERENCIAL');
+      expect(prompt).not.toContain('12. **');
     });
 
     it('snapshot: formatacaoHTML', () => {
@@ -249,6 +275,14 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       expect(AI_INSTRUCTIONS_STYLE).toContain('COERÊNCIA');
       expect(AI_INSTRUCTIONS_STYLE).toContain('FORMATO NARRATIVO CONTÍNUO');
       expect(AI_INSTRUCTIONS_STYLE).toContain('DIDÁTICA E CLAREZA');
+    });
+
+    // v1.53.7: variante do STYLE para a geração de DISPOSITIVO (estrutura enumerada)
+    it('STYLE_SEM_FORMATO_NARRATIVO mantém comunicação e qualidade, sem proibir enumerações', () => {
+      expect(AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO).toContain('Estilo de Comunicação');
+      expect(AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO).toContain('EXIGÊNCIAS DE QUALIDADE TEXTUAL');
+      expect(AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO).not.toContain('FORMATO NARRATIVO CONTÍNUO');
+      expect(AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO).not.toContain('SEM enumerações');
     });
 
     it('SAFETY deve conter proibições e instrução final', () => {

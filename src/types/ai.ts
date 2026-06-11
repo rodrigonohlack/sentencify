@@ -100,6 +100,10 @@ export interface AICallOptions {
   temperature?: number | null;
   /** Quando true, roteia para o daemon llm-bridge local em vez do proxy remoto. */
   localBridge?: boolean;
+  /** v1.53.7: usa o estilo de redação SEM o item "FORMATO NARRATIVO CONTÍNUO" (proibição de
+   *  enumerações) no system prompt — para tarefas com estrutura enumerada (DISPOSITIVO).
+   *  Só tem efeito com useInstructions: true e sem customPrompt do magistrado. */
+  semFormatoNarrativo?: boolean;
   /** Título opcional exibido no modal do modo manual (ex.: "Prova oral — fase 2 de 3"). */
   manualTitle?: string;
 }

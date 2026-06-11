@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { useAIStore } from '../stores/useAIStore';
-import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
+import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
 import { API_BASE } from '../constants/api';
 import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../utils/claude-cli-bridge';
 import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../utils/codex-cli-bridge';
@@ -216,7 +216,9 @@ const useAIIntegration = () => {
 
   // Retorna array com cache_control para Prompt Caching
   // v1.35.76: Estilo personalizado SUBSTITUI (não complementa) o estilo default
-  const getAiInstructions = React.useCallback(() => {
+  // v1.53.7: opts.semFormatoNarrativo usa o STYLE sem a proibição de enumerações
+  // (geração de DISPOSITIVO, cuja estrutura exige itens numerados)
+  const getAiInstructions = React.useCallback((opts?: { semFormatoNarrativo?: boolean }) => {
     const customPrompt = aiSettings?.customPrompt?.trim();
     // v1.41.07: Bloco de anonimização injetado APENAS quando anonimização está ativa,
     // evitando que a IA use [VALOR]/[NOME] espontaneamente como placeholders.
@@ -235,11 +237,15 @@ const useAIIntegration = () => {
       ];
     }
 
+    const styleBlock = opts?.semFormatoNarrativo
+      ? AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO
+      : AI_INSTRUCTIONS_STYLE;
+
     // Sem customização: monta com CORE + STYLE default + SAFETY (+ anon se ativo)
     return [
       {
         type: "text",
-        text: `${AI_INSTRUCTIONS_CORE}\n\n${AI_INSTRUCTIONS_STYLE}\n\n${AI_INSTRUCTIONS_SAFETY}${anonBlock}`,
+        text: `${AI_INSTRUCTIONS_CORE}\n\n${styleBlock}\n\n${AI_INSTRUCTIONS_SAFETY}${anonBlock}`,
         cache_control: { type: "ephemeral" }
       }
     ];
@@ -259,7 +265,8 @@ const useAIIntegration = () => {
       disableThinking = false,
       temperature = null,
       topP = null,
-      topK = null
+      topK = null,
+      semFormatoNarrativo = false
     } = options;
 
     let savedModel = null;
@@ -361,7 +368,7 @@ const useAIIntegration = () => {
       ];
     } else if (useInstructions) {
       // getAiInstructions() já retorna array com cache_control
-      finalSystemPrompt = getAiInstructions();
+      finalSystemPrompt = getAiInstructions({ semFormatoNarrativo });
     }
 
     if (finalSystemPrompt) {
@@ -896,7 +903,7 @@ const useAIIntegration = () => {
     // v1.32.29: Resolver systemPrompt igual ao Claude (useInstructions -> getAiInstructions)
     let finalSystemPrompt = systemPrompt;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions();
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map(i => i.text || i).join('\n\n')
         : instructions;
@@ -1092,7 +1099,7 @@ const useAIIntegration = () => {
     // Resolver systemPrompt
     let finalSystemPrompt = systemPrompt as string | null;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions();
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
         : instructions;
@@ -1708,7 +1715,7 @@ const useAIIntegration = () => {
     // Resolver systemPrompt
     let finalSystemPrompt = systemPrompt as string | null;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions();
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
         : instructions;
@@ -1809,7 +1816,7 @@ const useAIIntegration = () => {
     // Resolver systemPrompt
     let finalSystemPrompt = systemPrompt as string | null;
     if (!finalSystemPrompt && useInstructions) {
-      const instructions = getAiInstructions();
+      const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo });
       finalSystemPrompt = Array.isArray(instructions)
         ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
         : instructions;

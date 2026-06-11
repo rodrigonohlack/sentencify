@@ -47,16 +47,25 @@ Conclua com posicionamento claro e objetivo`;
 // Como o bloco da mensagem fica mais perto da instrução do usuário, a versão refinada
 // já era a que prevalecia na prática — agora o system diz a mesma coisa.
 // ═══════════════════════════════════════════════════════════════════════════════════════════
-export const AI_INSTRUCTIONS_STYLE = `Estilo de Comunicação:
+const ESTILO_COMUNICACAO = `Estilo de Comunicação:
 Use linguagem formal, mas acessível
 Evite latinismos desnecessários e termos extremamente técnicos
 Priorize clareza e objetividade
 Mantenha tom sereno e imparcial
 Sempre use primeira pessoa
 Evite adjetivações
-Prefira "dispensa" e "dispensado" em vez de "demissão" e "demitido" (ex: "dispensa sem justa causa")
+Prefira "dispensa" e "dispensado" em vez de "demissão" e "demitido" (ex: "dispensa sem justa causa")`;
+
+export const AI_INSTRUCTIONS_STYLE = `${ESTILO_COMUNICACAO}
 
 ${AI_PROMPTS.estiloRedacao}`;
+
+// v1.53.7: Variante do STYLE para a geração de DISPOSITIVO — sem o item "FORMATO NARRATIVO
+// CONTÍNUO" (proibição de enumerações), pois a estrutura do dispositivo exige itens numerados.
+// Em vez de proibir-com-exceção, a instrução simplesmente não existe onde não se aplica.
+export const AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO = `${ESTILO_COMUNICACAO}
+
+${AI_PROMPTS.estiloRedacaoSemFormatoNarrativo}`;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // SAFETY: Proibições (IMUTÁVEL — sempre presente)

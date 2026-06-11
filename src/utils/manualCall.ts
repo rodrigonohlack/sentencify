@@ -53,8 +53,8 @@ function blockToText(block: unknown): string {
  */
 export function serializeForManual(
   messages: SerializableMessage[],
-  options: { useInstructions?: boolean; systemPrompt?: string | null },
-  getAiInstructions: () => Array<{ text: string }>,
+  options: { useInstructions?: boolean; systemPrompt?: string | null; semFormatoNarrativo?: boolean },
+  getAiInstructions: (opts?: { semFormatoNarrativo?: boolean }) => Array<{ text: string }>,
 ): string {
   const parts: string[] = [];
 
@@ -63,7 +63,10 @@ export function serializeForManual(
     parts.push(options.systemPrompt.trim());
   }
   if (options.useInstructions !== false) {
-    const instr = getAiInstructions();
+    // v1.53.7: repassa a variante de estilo (DISPOSITIVO sem proibição de enumerações)
+    const instr = getAiInstructions(
+      options.semFormatoNarrativo ? { semFormatoNarrativo: true } : undefined
+    );
     const instrText = instr.map((b) => b.text).join('\n\n').trim();
     if (instrText) parts.push(instrText);
   }

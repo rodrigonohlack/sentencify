@@ -934,6 +934,10 @@ export interface AICallOptions {
   /** v1.37.90: Override do provider para chamadas específicas (ex: voice improvement) */
   /** v1.43.06: deepseek adicionado ao union */
   provider?: AIProvider;
+  /** v1.53.7: usa o estilo de redação SEM o item "FORMATO NARRATIVO CONTÍNUO" (proibição de
+   *  enumerações) no system prompt — para tarefas com estrutura enumerada (DISPOSITIVO).
+   *  Só tem efeito com useInstructions: true e sem customPrompt do magistrado. */
+  semFormatoNarrativo?: boolean;
   /** v1.38.44: Override do thinking level do Gemini para chamadas específicas */
   geminiThinkingLevel?: GeminiThinkingLevel;
   /** v1.43.08: Override do thinking do DeepSeek (Double Check usa isso) */

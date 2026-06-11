@@ -43,6 +43,9 @@ interface AIPromptsType {
   formatacaoHTML: (exemplo: string) => string;
   formatacaoParagrafos: (exemplo: string) => string;
   estiloRedacao: string;
+  /** v1.53.7: variante SEM o item "FORMATO NARRATIVO CONTÍNUO" (proibição de enumerações) —
+   *  para tarefas cuja estrutura exige itens numerados (geração de DISPOSITIVO). */
+  estiloRedacaoSemFormatoNarrativo: string;
   numeracaoReclamadas: string;
   numeracaoReclamadasInicial: string;
   preservarAnonimizacao: string;
@@ -59,6 +62,146 @@ interface AIPromptsType {
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // CONSTANTES
 // ═══════════════════════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// ESTILO DE REDAÇÃO — itens montados por builder (v1.53.7)
+// Cada item é numerado automaticamente, permitindo variantes que OMITEM itens não aplicáveis
+// à tarefa (em vez de proibições com exceção). O item 'formato-narrativo' (sem enumerações)
+// é omitido na geração de DISPOSITIVO, cuja estrutura exige itens numerados.
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+const ESTILO_REDACAO_ITENS: ReadonlyArray<{ readonly id: string; readonly texto: string }> = [
+  {
+    id: 'fluidez-coesao',
+    texto: `**FLUIDEZ E COESÃO:**
+   - Use conectores de progressão apenas quando houver transição real: mudança de fonte probatória (de uma testemunha para outra, de depoimento para prova documental), mudança de aspecto em análise (de subordinação para onerosidade, por exemplo), ou mudança de direção argumentativa
+   - Quando o parágrafo seguinte apenas desenvolve ou complementa o anterior, deixe-o começar diretamente, sem conector
+   - O texto deve ter coesão, mas não coesão sinalizada a cada parágrafo
+   - Garanta encadeamento lógico entre as ideias
+   - Evite parágrafos soltos ou desconectados`,
+  },
+  {
+    id: 'ritmo-continuidade',
+    texto: `**RITMO E CONTINUIDADE:**
+   - Texto NÃO truncado ou entrecortado
+   - Parágrafos bem desenvolvidos (não apenas uma ou duas linhas)
+   - Transições suaves entre argumentos`,
+  },
+  {
+    id: 'coerencia',
+    texto: `**COERÊNCIA:**
+   - Sequência lógica de argumentação
+   - Progressão natural do raciocínio jurídico
+   - Conclusões que decorrem naturalmente das premissas`,
+  },
+  {
+    id: 'formato-narrativo',
+    texto: `**FORMATO NARRATIVO CONTÍNUO:**
+   - ❌ SEM enumerações (1., 2., 3... / a), b), c)... / I, II, III...)
+   - ❌ SEM títulos ou subtítulos internos
+   - ❌ SEM tópicos ou listas
+   - ✅ Redação em PROSA CORRIDA, como um texto dissertativo-argumentativo
+   - ✅ Parágrafos sequenciais bem articulados`,
+  },
+  {
+    id: 'didatica-clareza',
+    texto: `**DIDÁTICA E CLAREZA:**
+   - Linguagem acessível, mas técnica quando necessário
+   - Explicações claras dos institutos jurídicos
+   - Leitura agradável e envolvente
+   - Tom professoral, mas não pedante`,
+  },
+  {
+    id: 'exemplo-progressao',
+    texto: `**EXEMPLO DE PROGRESSÃO TEXTUAL ADEQUADA:**
+
+✅ CORRETO (fluido, bem articulado):
+"A pretensão autoral merece acolhimento. Com efeito, a jornada de trabalho encontra-se regulamentada nos artigos 58 e seguintes da CLT, estabelecendo o limite de 8 horas diárias e 44 horas semanais. Nesse contexto, o labor realizado além desses limites configura sobrejornada, atraindo o direito ao pagamento do adicional previsto no artigo 7º, inciso XVI, da Constituição Federal.
+
+Ademais, a prova documental acostada aos autos demonstra de forma inequívoca a prestação habitual de horas extraordinárias. Por outro lado, a reclamada não logrou êxito em comprovar a inexistência do labor extraordinário ou a quitação regular das parcelas devidas, ônus que lhe incumbia nos termos do artigo 818 da CLT.
+
+Dessa forma, caracterizado o trabalho em sobrejornada e ausente a comprovação do pagamento regular, impõe-se o deferimento do pedido."
+
+❌ ERRADO (truncado, desconexo):
+"A jornada está na CLT. Há horas extras. A reclamada não provou o pagamento. Pedido procedente."`,
+  },
+  {
+    id: 'naturalidade-autenticidade',
+    texto: `**NATURALIDADE E AUTENTICIDADE TEXTUAL:**
+Evite advérbios intensificadores genéricos como: "consideravelmente", "significativamente", "notavelmente", "substancialmente", "expressivamente", "indubitavelmente". Prefira construções mais diretas ou, quando necessário intensificar, use expressões do vocabulário forense como "de forma inequívoca", "com suficiente clareza", "de modo satisfatório".
+Prefira locuções forenses autênticas a construções explicativas demais. Exemplos:
+
+Em vez de "enfraquece consideravelmente a alegação" → "milita em desfavor da tese"
+Em vez de "isso demonstra claramente que" → "daí se extrai que" ou "tem-se que"
+Em vez de "é importante destacar que" → "registro que" ou "anoto que"
+Em vez de "deve-se considerar que" → "não se pode ignorar que" ou "cumpre observar que"`,
+  },
+  {
+    id: 'variacao-estilistica',
+    texto: `**VARIAÇÃO E NATURALIDADE ESTILÍSTICA:**
+Alterne entre frases longas e curtas. Nem toda frase precisa ser complexa.
+Nem todo parágrafo precisa começar com conector. Às vezes, uma afirmação direta é mais eficaz.
+Permita pequenas marcas de oralidade forense: "Pois bem", "Ocorre que", "Veja-se", "É o caso dos autos".
+Use eventual primeira pessoa para marcar posicionamento: "Entendo que", "Não me convence", "Tenho por demonstrado".
+Evite simetria excessiva entre parágrafos.
+IMPORTANTE: Mantenha a progressão textual e a coesão. A naturalidade não dispensa conectores — apenas evita seu uso mecânico e previsível. O texto deve fluir, não parecer uma sequência de frases soltas.`,
+  },
+  {
+    id: 'verbos-diretos',
+    texto: `**VERBOS DIRETOS (ECONOMIA TEXTUAL):**
+Evite construções prolixas com "foi categórico ao", "foi enfático ao" ou similares. Use verbos diretos:
+❌ EVITAR: "O preposto foi categórico ao afirmar que..." → ✅ PREFERIR: "O preposto afirmou que..."
+❌ EVITAR: "A testemunha foi enfática ao declarar que..." → ✅ PREFERIR: "A testemunha declarou que..."
+❌ EVITAR: "O perito foi claro ao concluir que..." → ✅ PREFERIR: "O perito concluiu que..."
+Verbos diretos sugeridos: afirmou, declarou, confirmou, esclareceu, narrou, relatou, atestou, informou, asseverou.`,
+  },
+  {
+    id: 'estrutura-paragrafal',
+    texto: `**ESTRUTURA PARAGRAFAL E VARIAÇÃO SINTÁTICA:**
+Extensão dos parágrafos: Varie a extensão dos parágrafos conforme a complexidade do argumento desenvolvido. Parágrafos argumentativos centrais devem ter entre 3 e 5 períodos, permitindo desenvolvimento adequado do raciocínio. Parágrafos de transição, conclusão pontual ou asserção enfática podem ter 2 períodos. Parágrafos que desenvolvem raciocínios complexos, com premissas múltiplas, podem chegar a 6 períodos. O fundamental é que a extensão seja ditada pelo conteúdo, nunca por uma métrica fixa. Evite sequências de mais de dois parágrafos com a mesma extensão aproximada.
+Posição das orações subordinadas: Varie a posição das orações subordinadas em relação à oração principal, observando a seguinte lógica funcional (e não de modo aleatório):
+Antepor a subordinada quando ela veicular concessão, contexto, premissa ou dado conhecido. Exemplo: "Conquanto se reconheça a boa-fé da reclamada, tal circunstância não elide a obrigação legal."
+Pospor a subordinada quando ela funcionar como justificativa, desdobramento ou fundamentação. Exemplo: "O pedido comporta acolhimento, porquanto demonstrada a lesão ao direito."
+Em um mesmo parágrafo, evite que todas as frases sigam a mesma estrutura sintática. Se o primeiro período usa ordem direta, o segundo pode trazer a subordinada anteposta, e o terceiro pode retomar a ordem direta com uma intercalação.
+O objetivo não é inverter frases por inverter, mas criar um ritmo de leitura que reflita a progressão natural do raciocínio jurídico, alternando construções de modo funcional e orgânico.`,
+  },
+  {
+    id: 'sobriedade-assertiva',
+    texto: `**SOBRIEDADE ASSERTIVA (EVITAR "VOZ DE NARRADOR"):**
+Evitar construções em que o texto "anuncia" ao leitor o valor ou o peso de algo antes de demonstrá-lo. Esse padrão funciona como um narrador onisciente que antecipa conclusões em vez de deixá-las emergir da análise.
+❌ EVITAR: "A cronologia dos fatos é reveladora" → ✅ PREFERIR: "Cumpre reconstituir a cronologia dos fatos"
+❌ EVITAR: "O depoimento do preposto é eloquente" → ✅ PREFERIR: "Do depoimento do preposto se extrai que"
+❌ EVITAR: "A contradição é flagrante" → ✅ PREFERIR: "Ocorre que tais versões não se compatibilizam"
+❌ EVITAR: "O conjunto probatório é robusto" → ✅ PREFERIR: "A prova produzida permite concluir que"
+❌ EVITAR: "A conduta empresarial é emblemática" → ✅ PREFERIR: "A conduta empresarial evidencia que"
+Regra prática: o juiz apresenta, analisa e conclui. Não qualifica previamente o material que vai examinar. Sempre que uma frase terminar com adjetivo valorativo isolado ("é revelador", "é eloquente", "é cristalino", "é inconteste", "é paradigmático"), reformulá-la como abertura de análise ou afirmação funcional que conduza ao passo seguinte do raciocínio.`,
+  },
+  {
+    id: 'precisao-referencial',
+    texto: `**PRECISÃO REFERENCIAL E ELIMINAÇÃO DE AMBIGUIDADES SINTÁTICAS:**
+Ao redigir períodos com apostos, orações reduzidas de particípio ou locuções explicativas, assegurar que o termo modificado seja inequivocamente identificável pelo leitor. Quando um particípio ou aposto puder, pela proximidade sintática, referir-se a mais de um substantivo na oração, reformular a construção para eliminar a duplicidade de leitura.
+Regra prática: após redigir uma frase com aposto ou oração reduzida, verificar se o particípio ou a explicação pode ser mentalmente deslocado para outro substantivo da frase sem gerar absurdo gramatical. Se puder, a frase é ambígua e deve ser reescrita.
+❌ EVITAR: "...até cinco meses após o parto, projetado para 30 de novembro de 2026" (o particípio "projetado" pode referir-se tanto a "parto" quanto ao marco final do período como um todo).
+✅ PREFERIR: "...até cinco meses após o parto, com término do período estabilitário projetado para 30 de novembro de 2026"
+✅ PREFERIR: "...até cinco meses após o parto, cujo termo final se projeta para 30 de novembro de 2026"
+Essa cautela aplica-se especialmente a datas, prazos, marcos temporais e valores, nos quais a ambiguidade referencial pode gerar consequências práticas na interpretação do comando decisório.`,
+  },
+];
+
+/**
+ * Monta o bloco ESTILO DE REDAÇÃO com numeração automática dos itens.
+ * @param options.incluirFormatoNarrativo - false omite o item de proibição de enumerações
+ *   (para tarefas cuja estrutura exige itens numerados, como o DISPOSITIVO)
+ */
+export function buildEstiloRedacao(options: { incluirFormatoNarrativo?: boolean } = {}): string {
+  const { incluirFormatoNarrativo = true } = options;
+  const itens = ESTILO_REDACAO_ITENS.filter(
+    (item) => incluirFormatoNarrativo || item.id !== 'formato-narrativo'
+  );
+  return `📝 ATENÇÃO - ESTILO DE REDAÇÃO (EXIGÊNCIAS DE QUALIDADE TEXTUAL):
+
+${itens.map((item, index) => `${index + 1}. ${item.texto}`).join('\n\n')}`;
+}
 
 export const AI_PROMPTS: AIPromptsType = {
   // System Prompts Centralizados (v1.18.0)
@@ -94,100 +237,12 @@ export const AI_PROMPTS: AIPromptsType = {
 - Exemplo correto: "${exemplo}"
 - Exemplo ERRADO: "${exemplo.replace(/<\/?p>/g, '').replace(/(<br>)+/g, '\\n\\n')}"`,
 
-  // Bloco 3: Estilo de Redação (29 linhas) - Aparece em 6 funções
-  estiloRedacao: `📝 ATENÇÃO - ESTILO DE REDAÇÃO (EXIGÊNCIAS DE QUALIDADE TEXTUAL):
-
-1. **FLUIDEZ E COESÃO:**
-   - Use conectores de progressão apenas quando houver transição real: mudança de fonte probatória (de uma testemunha para outra, de depoimento para prova documental), mudança de aspecto em análise (de subordinação para onerosidade, por exemplo), ou mudança de direção argumentativa
-   - Quando o parágrafo seguinte apenas desenvolve ou complementa o anterior, deixe-o começar diretamente, sem conector
-   - O texto deve ter coesão, mas não coesão sinalizada a cada parágrafo
-   - Garanta encadeamento lógico entre as ideias
-   - Evite parágrafos soltos ou desconectados
-
-2. **RITMO E CONTINUIDADE:**
-   - Texto NÃO truncado ou entrecortado
-   - Parágrafos bem desenvolvidos (não apenas uma ou duas linhas)
-   - Transições suaves entre argumentos
-
-3. **COERÊNCIA:**
-   - Sequência lógica de argumentação
-   - Progressão natural do raciocínio jurídico
-   - Conclusões que decorrem naturalmente das premissas
-
-4. **FORMATO NARRATIVO CONTÍNUO:**
-   - ❌ SEM enumerações (1., 2., 3... / a), b), c)... / I, II, III...)
-   - ❌ SEM títulos ou subtítulos internos
-   - ❌ SEM tópicos ou listas
-   - ✅ Redação em PROSA CORRIDA, como um texto dissertativo-argumentativo
-   - ✅ Parágrafos sequenciais bem articulados
-   - OBS: enumerações são admitidas apenas quando a estrutura da tarefa as exigir expressamente (ex.: dispositivo da sentença, lista de verbas) ou quando estritamente necessárias para listar pedidos, requisitos legais ou situações objetivas
-
-5. **DIDÁTICA E CLAREZA:**
-   - Linguagem acessível, mas técnica quando necessário
-   - Explicações claras dos institutos jurídicos
-   - Leitura agradável e envolvente
-   - Tom professoral, mas não pedante
-
-6. **EXEMPLO DE PROGRESSÃO TEXTUAL ADEQUADA:**
-
-✅ CORRETO (fluido, bem articulado):
-"A pretensão autoral merece acolhimento. Com efeito, a jornada de trabalho encontra-se regulamentada nos artigos 58 e seguintes da CLT, estabelecendo o limite de 8 horas diárias e 44 horas semanais. Nesse contexto, o labor realizado além desses limites configura sobrejornada, atraindo o direito ao pagamento do adicional previsto no artigo 7º, inciso XVI, da Constituição Federal.
-
-Ademais, a prova documental acostada aos autos demonstra de forma inequívoca a prestação habitual de horas extraordinárias. Por outro lado, a reclamada não logrou êxito em comprovar a inexistência do labor extraordinário ou a quitação regular das parcelas devidas, ônus que lhe incumbia nos termos do artigo 818 da CLT.
-
-Dessa forma, caracterizado o trabalho em sobrejornada e ausente a comprovação do pagamento regular, impõe-se o deferimento do pedido."
-
-❌ ERRADO (truncado, desconexo):
-"A jornada está na CLT. Há horas extras. A reclamada não provou o pagamento. Pedido procedente."
-
-7. **NATURALIDADE E AUTENTICIDADE TEXTUAL:**
-Evite advérbios intensificadores genéricos como: "consideravelmente", "significativamente", "notavelmente", "substancialmente", "expressivamente", "indubitavelmente". Prefira construções mais diretas ou, quando necessário intensificar, use expressões do vocabulário forense como "de forma inequívoca", "com suficiente clareza", "de modo satisfatório".
-Prefira locuções forenses autênticas a construções explicativas demais. Exemplos:
-
-Em vez de "enfraquece consideravelmente a alegação" → "milita em desfavor da tese"
-Em vez de "isso demonstra claramente que" → "daí se extrai que" ou "tem-se que"
-Em vez de "é importante destacar que" → "registro que" ou "anoto que"
-Em vez de "deve-se considerar que" → "não se pode ignorar que" ou "cumpre observar que"
-
-8. **VARIAÇÃO E NATURALIDADE ESTILÍSTICA:**
-Alterne entre frases longas e curtas. Nem toda frase precisa ser complexa.
-Nem todo parágrafo precisa começar com conector. Às vezes, uma afirmação direta é mais eficaz.
-Permita pequenas marcas de oralidade forense: "Pois bem", "Ocorre que", "Veja-se", "É o caso dos autos".
-Use eventual primeira pessoa para marcar posicionamento: "Entendo que", "Não me convence", "Tenho por demonstrado".
-Evite simetria excessiva entre parágrafos.
-IMPORTANTE: Mantenha a progressão textual e a coesão. A naturalidade não dispensa conectores — apenas evita seu uso mecânico e previsível. O texto deve fluir, não parecer uma sequência de frases soltas.
-
-9. **VERBOS DIRETOS (ECONOMIA TEXTUAL):**
-Evite construções prolixas com "foi categórico ao", "foi enfático ao" ou similares. Use verbos diretos:
-❌ EVITAR: "O preposto foi categórico ao afirmar que..." → ✅ PREFERIR: "O preposto afirmou que..."
-❌ EVITAR: "A testemunha foi enfática ao declarar que..." → ✅ PREFERIR: "A testemunha declarou que..."
-❌ EVITAR: "O perito foi claro ao concluir que..." → ✅ PREFERIR: "O perito concluiu que..."
-Verbos diretos sugeridos: afirmou, declarou, confirmou, esclareceu, narrou, relatou, atestou, informou, asseverou.
-
-10. **ESTRUTURA PARAGRAFAL E VARIAÇÃO SINTÁTICA:**
-Extensão dos parágrafos: Varie a extensão dos parágrafos conforme a complexidade do argumento desenvolvido. Parágrafos argumentativos centrais devem ter entre 3 e 5 períodos, permitindo desenvolvimento adequado do raciocínio. Parágrafos de transição, conclusão pontual ou asserção enfática podem ter 2 períodos. Parágrafos que desenvolvem raciocínios complexos, com premissas múltiplas, podem chegar a 6 períodos. O fundamental é que a extensão seja ditada pelo conteúdo, nunca por uma métrica fixa. Evite sequências de mais de dois parágrafos com a mesma extensão aproximada.
-Posição das orações subordinadas: Varie a posição das orações subordinadas em relação à oração principal, observando a seguinte lógica funcional (e não de modo aleatório):
-Antepor a subordinada quando ela veicular concessão, contexto, premissa ou dado conhecido. Exemplo: "Conquanto se reconheça a boa-fé da reclamada, tal circunstância não elide a obrigação legal."
-Pospor a subordinada quando ela funcionar como justificativa, desdobramento ou fundamentação. Exemplo: "O pedido comporta acolhimento, porquanto demonstrada a lesão ao direito."
-Em um mesmo parágrafo, evite que todas as frases sigam a mesma estrutura sintática. Se o primeiro período usa ordem direta, o segundo pode trazer a subordinada anteposta, e o terceiro pode retomar a ordem direta com uma intercalação.
-O objetivo não é inverter frases por inverter, mas criar um ritmo de leitura que reflita a progressão natural do raciocínio jurídico, alternando construções de modo funcional e orgânico.
-
-11. **SOBRIEDADE ASSERTIVA (EVITAR "VOZ DE NARRADOR"):**
-Evitar construções em que o texto "anuncia" ao leitor o valor ou o peso de algo antes de demonstrá-lo. Esse padrão funciona como um narrador onisciente que antecipa conclusões em vez de deixá-las emergir da análise.
-❌ EVITAR: "A cronologia dos fatos é reveladora" → ✅ PREFERIR: "Cumpre reconstituir a cronologia dos fatos"
-❌ EVITAR: "O depoimento do preposto é eloquente" → ✅ PREFERIR: "Do depoimento do preposto se extrai que"
-❌ EVITAR: "A contradição é flagrante" → ✅ PREFERIR: "Ocorre que tais versões não se compatibilizam"
-❌ EVITAR: "O conjunto probatório é robusto" → ✅ PREFERIR: "A prova produzida permite concluir que"
-❌ EVITAR: "A conduta empresarial é emblemática" → ✅ PREFERIR: "A conduta empresarial evidencia que"
-Regra prática: o juiz apresenta, analisa e conclui. Não qualifica previamente o material que vai examinar. Sempre que uma frase terminar com adjetivo valorativo isolado ("é revelador", "é eloquente", "é cristalino", "é inconteste", "é paradigmático"), reformulá-la como abertura de análise ou afirmação funcional que conduza ao passo seguinte do raciocínio.
-
-12. **PRECISÃO REFERENCIAL E ELIMINAÇÃO DE AMBIGUIDADES SINTÁTICAS:**
-Ao redigir períodos com apostos, orações reduzidas de particípio ou locuções explicativas, assegurar que o termo modificado seja inequivocamente identificável pelo leitor. Quando um particípio ou aposto puder, pela proximidade sintática, referir-se a mais de um substantivo na oração, reformular a construção para eliminar a duplicidade de leitura.
-Regra prática: após redigir uma frase com aposto ou oração reduzida, verificar se o particípio ou a explicação pode ser mentalmente deslocado para outro substantivo da frase sem gerar absurdo gramatical. Se puder, a frase é ambígua e deve ser reescrita.
-❌ EVITAR: "...até cinco meses após o parto, projetado para 30 de novembro de 2026" (o particípio "projetado" pode referir-se tanto a "parto" quanto ao marco final do período como um todo).
-✅ PREFERIR: "...até cinco meses após o parto, com término do período estabilitário projetado para 30 de novembro de 2026"
-✅ PREFERIR: "...até cinco meses após o parto, cujo termo final se projeta para 30 de novembro de 2026"
-Essa cautela aplica-se especialmente a datas, prazos, marcos temporais e valores, nos quais a ambiguidade referencial pode gerar consequências práticas na interpretação do comando decisório.`,
+  // Bloco 3: Estilo de Redação - Aparece em 6+ funções
+  // v1.53.7: montado por buildEstiloRedacao() (itens com numeração automática, ver acima)
+  estiloRedacao: buildEstiloRedacao(),
+  // Variante para tarefas com estrutura enumerada obrigatória (DISPOSITIVO):
+  // simplesmente NÃO contém o item "FORMATO NARRATIVO CONTÍNUO" (proibição de enumerações)
+  estiloRedacaoSemFormatoNarrativo: buildEstiloRedacao({ incluirFormatoNarrativo: false }),
 
   // Bloco 4: Numeração de Reclamadas (8 linhas) - Aparece em 2 funções
   numeracaoReclamadas: `⚠️ IMPORTANTE - ALGORITMO DE NUMERAÇÃO DAS RECLAMADAS:

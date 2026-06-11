@@ -27,6 +27,8 @@ export interface AIIntegrationForDispositivo {
   callAIStream?: (messages: AIMessage[], options?: {
     maxTokens?: number;
     useInstructions?: boolean;
+    /** v1.53.7: estilo sem proibição de enumerações (dispositivo é enumerado) */
+    semFormatoNarrativo?: boolean;
     onChunk?: StreamChunkCallback;
   }) => Promise<string>;
   aiSettings: {
@@ -242,7 +244,7 @@ INSTRUÇÕES PARA O DISPOSITIVO:
 
 ${AI_PROMPTS.regraFundamentalDispositivo}
 
-${AI_PROMPTS.estiloRedacao}
+${AI_PROMPTS.estiloRedacaoSemFormatoNarrativo}
 
 ${aiIntegration.aiSettings.modeloDispositivo ? `
 ═══════════════════════════════════════════════════════════════
@@ -304,6 +306,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         }], {
           maxTokens: 8000,
           useInstructions: true,
+          semFormatoNarrativo: true,
           onChunk
         });
       } else {
@@ -313,6 +316,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         }], {
           maxTokens: 8000,
           useInstructions: true,
+          semFormatoNarrativo: true,
           logMetrics: true,
           temperature: 0.3,
           topP: 0.9,
@@ -493,7 +497,7 @@ INSTRUÇÕES PARA O DISPOSITIVO:
 
 ${AI_PROMPTS.regraFundamentalDispositivo}
 
-${AI_PROMPTS.estiloRedacao}
+${AI_PROMPTS.estiloRedacaoSemFormatoNarrativo}
 
 ${aiIntegration.aiSettings.modeloDispositivo ? `
 ═══════════════════════════════════════════════════════════════
@@ -566,6 +570,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         }], {
           maxTokens: 8000,
           useInstructions: true,
+          semFormatoNarrativo: true,
           onChunk
         });
       } else {
@@ -575,6 +580,7 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
         }], {
           maxTokens: 8000,
           useInstructions: true,
+          semFormatoNarrativo: true,
           logMetrics: true,
           temperature: 0.3,
           topP: 0.9,
