@@ -536,13 +536,11 @@ PROIBIDO: Inventar numeração diferente da do relatório."
 `;
 
 exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: preservarAnonimizacao 1`] = `
-"⚠️ ANONIMIZAÇÃO - PRESERVAÇÃO OBRIGATÓRIA:
-Se o texto contiver placeholders como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [PROCESSO], etc.:
-- ✅ MANTENHA os placeholders exatamente como estão no texto gerado
-- ❌ NÃO substitua por valores inventados ou inferidos
-- ❌ NÃO infira ou deduza dados não fornecidos (nomes, salários, datas, documentos)
-Exemplo correto: "O reclamante [PESSOA 1] percebia salário de [VALOR]"
-Exemplo ERRADO: "O reclamante João da Silva percebia salário de R$ 2.000,00""
+"ANONIMIZAÇÃO DE DADOS: Quando o texto fornecido contiver placeholders de anonimização como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [OAB], [CEP], [RG], [PIS], [CTPS], [CONTA], [PROCESSO], você DEVE:
+1. MANTER esses placeholders exatamente como estão no texto gerado
+2. JAMAIS substituir os placeholders por valores inventados ou inferidos
+3. JAMAIS criar dados fictícios (nomes, valores, datas, documentos) que não existam no contexto fornecido
+Exemplo: Se o texto diz "salário de [VALOR]", escreva "salário de [VALOR]" - NÃO escreva "salário de R$ 1.500,00""
 `;
 
 exports[`Prompts - Snapshot Tests > Prompts de Estilo e Formatação > snapshot: proibicaoMetaComentarios 1`] = `

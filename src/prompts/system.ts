@@ -91,12 +91,10 @@ ${AI_INSTRUCTIONS_REVISAO_FINAL}`;
 // ANONYMIZATION: Preservação de placeholders (CONDICIONAL — só quando anonimização ativa)
 // v1.41.07: Extraído de AI_INSTRUCTIONS_SAFETY para evitar que a IA use [VALOR]/[NOME]
 // como placeholders espontâneos quando anonimização está desligada.
+// v1.53.9: Texto unificado — a fonte única é AI_PROMPTS.preservarAnonimizacao (antes havia
+// duas redações divergentes, com listas de placeholders diferentes, aqui e em ai-prompts.ts).
 // ═══════════════════════════════════════════════════════════════════════════════════════════
-export const AI_INSTRUCTIONS_ANONYMIZATION = `ANONIMIZAÇÃO DE DADOS: Quando o texto fornecido contiver placeholders de anonimização como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [OAB], [CEP], [RG], [PIS], [CTPS], [CONTA], [PROCESSO], você DEVE:
-1. MANTER esses placeholders exatamente como estão no texto gerado
-2. JAMAIS substituir os placeholders por valores inventados ou inferidos
-3. JAMAIS criar dados fictícios (nomes, valores, datas, documentos) que não existam no contexto fornecido
-Exemplo: Se o texto diz "salário de [VALOR]", escreva "salário de [VALOR]" - NÃO escreva "salário de R$ 1.500,00"`;
+export const AI_INSTRUCTIONS_ANONYMIZATION = AI_PROMPTS.preservarAnonimizacao;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // AI_INSTRUCTIONS: Concatenação completa (backward compatible)

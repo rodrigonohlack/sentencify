@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.53.9',
+    date: '2026-06-10',
+    feature: 'fix(prompts): unifica os dois blocos de anonimização divergentes (achado da auditoria de prompts; mesma receita da unificação do estilo em v1.53.6). Havia duas redações da mesma instrução: AI_INSTRUCTIONS_ANONYMIZATION no system (lista COMPLETA de placeholders: [PESSOA], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [OAB], [CEP], [RG], [PIS], [CTPS], [CONTA], [PROCESSO]) e AI_PROMPTS.preservarAnonimizacao nas mensagens (lista parcial + "etc."), e no chat com anonimização ativa as duas entravam juntas. Agora AI_PROMPTS.preservarAnonimizacao é a FONTE ÚNICA com o texto da lista completa, e AI_INSTRUCTIONS_ANONYMIZATION referencia ela. Mensagens (mini-relatório, relatório, chat, batch) passam a receber a lista completa de placeholders. Bônus: o exemplo negativo com dados concretos ("O reclamante João da Silva percebia salário de R$ 2.000,00") saiu do prompt — fica só o exemplo neutro de [VALOR]. Snapshot de preservarAnonimizacao atualizado (mudança intencional).',
+  },
+  {
     version: '1.53.8',
     date: '2026-06-10',
     feature: 'fix(dispositivo): corrige contradição interna no prompt de geração do dispositivo (achado da auditoria de prompts). A mesma mensagem dizia "NUNCA USE NUMERAÇÃO ROMANA (I, II, III, IV) - use apenas hífens (-) ou bullets" e, logo abaixo, instrucoesDispositivoPadrao mandava "numerando-os sequencialmente (1, 2, 3...)" com subitens a), b), c) e lista de verbas com marcadores "*" — o "use apenas hífens ou bullets" proibia exatamente a numeração que a estrutura obrigatória exige. A intenção real era só vetar numeração romana. Reescrito como instrução positiva nos 2 pontos (generateDispositivo e regenerateDispositivoWithInstruction): "Numere os itens sequencialmente com algarismos arábicos (1, 2, 3...) e os subitens com letras (a, b, c); na lista de verbas, use marcadores (*). NUNCA use numeração romana (I, II, III, IV)" — agora coerente com a estrutura obrigatória e com o item 6 do checklist final.',

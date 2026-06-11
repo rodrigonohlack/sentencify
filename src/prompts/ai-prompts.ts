@@ -279,13 +279,14 @@ PROIBIDO: Inventar numeração diferente da do relatório.`,
    - NÃO USE: "a primeira reclamada" ou "a primeira ré"`,
 
   // Bloco 5: Preservação de Anonimização (v1.17.0)
-  preservarAnonimizacao: `⚠️ ANONIMIZAÇÃO - PRESERVAÇÃO OBRIGATÓRIA:
-Se o texto contiver placeholders como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [PROCESSO], etc.:
-- ✅ MANTENHA os placeholders exatamente como estão no texto gerado
-- ❌ NÃO substitua por valores inventados ou inferidos
-- ❌ NÃO infira ou deduza dados não fornecidos (nomes, salários, datas, documentos)
-Exemplo correto: "O reclamante [PESSOA 1] percebia salário de [VALOR]"
-Exemplo ERRADO: "O reclamante João da Silva percebia salário de R$ 2.000,00"`,
+  // v1.53.9: FONTE ÚNICA da instrução de anonimização. Antes havia duas versões divergentes:
+  // esta (lista parcial de placeholders + "etc.") e AI_INSTRUCTIONS_ANONYMIZATION em system.ts
+  // (lista completa). Unificadas no texto da lista completa; system.ts agora referencia esta.
+  preservarAnonimizacao: `ANONIMIZAÇÃO DE DADOS: Quando o texto fornecido contiver placeholders de anonimização como [PESSOA 1], [PESSOA 2], [VALOR], [CPF], [CNPJ], [EMAIL], [TELEFONE], [OAB], [CEP], [RG], [PIS], [CTPS], [CONTA], [PROCESSO], você DEVE:
+1. MANTER esses placeholders exatamente como estão no texto gerado
+2. JAMAIS substituir os placeholders por valores inventados ou inferidos
+3. JAMAIS criar dados fictícios (nomes, valores, datas, documentos) que não existam no contexto fornecido
+Exemplo: Se o texto diz "salário de [VALOR]", escreva "salário de [VALOR]" - NÃO escreva "salário de R$ 1.500,00"`,
 
   // Bloco 5b: Proibição de Meta-Comentários (v1.35.29)
   proibicaoMetaComentarios: `❌ NÃO INCLUA ao final do texto:
