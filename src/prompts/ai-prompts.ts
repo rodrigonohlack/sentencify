@@ -10,7 +10,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 /** Tópico processado para dispositivo */
-interface TopicoDispositivo {
+export interface TopicoDispositivo {
   titulo: string;
   categoria: string;
   resultado: string;
@@ -19,7 +19,7 @@ interface TopicoDispositivo {
 }
 
 /** Tópico sem decisão */
-interface TopicoSemDecisao {
+export interface TopicoSemDecisao {
   titulo: string;
   categoria: string;
   relatorio: string;

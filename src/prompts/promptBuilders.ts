@@ -12,6 +12,7 @@
 
 import type { Topic, AITextContent, AIDocumentContent } from '../types';
 import { AI_PROMPTS } from './ai-prompts';
+import type { TopicoDispositivo, TopicoSemDecisao } from './ai-prompts';
 import { resolveStyleBlock } from './system';
 import { wrapUserContent } from '../utils/prompt-safety';
 
@@ -358,4 +359,134 @@ IMPORTANTE: Responda APENAS com um JSON válido no formato:
 }
 
 Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado, na mesma ordem.`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUILD DISPOSITIVO PROMPT
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface BuildDispositivoPromptParams {
+  /** Primeiro parágrafo do RELATÓRIO (fonte dos nomes das partes) */
+  primeiroParagrafoRelatorio: string;
+  anonymizationEnabled: boolean;
+  topicosComDecisao: TopicoDispositivo[];
+  topicosSemDecisao: TopicoSemDecisao[];
+  /** Estilo personalizado do magistrado — substitui o bloco default */
+  customPrompt?: string;
+  /** Modelo personalizado de dispositivo do usuário */
+  modeloDispositivo?: string;
+  /**
+   * Instrução do usuário na REGENERAÇÃO (string, possivelmente vazia).
+   * `undefined` = geração inicial (sem os blocos de instrução customizada).
+   */
+  instrucaoCustomizada?: string;
+}
+
+/**
+ * Constrói o prompt de geração/regeneração do DISPOSITIVO da sentença.
+ * v1.53.14: fonte única — antes duplicado verbatim em generateDispositivo e
+ * regenerateDispositivoWithInstruction (useDispositivoGeneration.ts).
+ *
+ * Na regeneração, a instrução do usuário é injetada em DOIS pontos (topo +
+ * "INSTRUÇÃO ADICIONAL" após o modelo), preservando o comportamento original.
+ */
+export function buildDispositivoPromptText(params: BuildDispositivoPromptParams): string {
+  const {
+    primeiroParagrafoRelatorio,
+    anonymizationEnabled,
+    topicosComDecisao,
+    topicosSemDecisao,
+    customPrompt,
+    modeloDispositivo,
+    instrucaoCustomizada,
+  } = params;
+
+  const isRegeneracao = instrucaoCustomizada !== undefined;
+  const instrucao = (instrucaoCustomizada || '').trim();
+
+  const blocoInstrucaoTopo = instrucao ? `
+═══════════════════════════════════════════════════════════════
+📝 INSTRUÇÃO CUSTOMIZADA DO USUÁRIO:
+═══════════════════════════════════════════════════════════════
+
+${instrucao}
+
+═══════════════════════════════════════════════════════════════
+` : '';
+
+  const blocoInstrucaoAdicional = instrucao ? `
+
+═══════════════════════════════════════════════════════════════
+⚠️ INSTRUÇÃO ADICIONAL DO USUÁRIO (v1.5.8c):
+═══════════════════════════════════════════════════════════════
+
+${instrucao}
+
+Por favor, considere esta instrução adicional ao gerar o dispositivo, mantendo todas as demais regras e estruturas definidas acima.
+
+═══════════════════════════════════════════════════════════════
+` : '';
+
+  return `${AI_PROMPTS.roles.redacao}
+
+Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
+
+${isRegeneracao ? `${blocoInstrucaoTopo}\n\n` : ''}ATENÇÃO CRÍTICA: O usuário SELECIONOU EXPLICITAMENTE o resultado de cada decisão. Use EXATAMENTE o resultado fornecido, sem interpretação.
+
+Com base nos tópicos e resultados fornecidos abaixo, gere um DISPOSITIVO completo e bem estruturado para uma sentença trabalhista.
+
+${AI_PROMPTS.buildPartesDoProcesso(primeiroParagrafoRelatorio, anonymizationEnabled)}
+
+${AI_PROMPTS.buildTopicosSection(topicosComDecisao, topicosSemDecisao)}
+
+INSTRUÇÕES PARA O DISPOSITIVO:
+
+${AI_PROMPTS.regraFundamentalDispositivo}
+
+${resolveStyleBlock(customPrompt, AI_PROMPTS.estiloRedacaoSemFormatoNarrativo)}
+
+${modeloDispositivo ? `
+═══════════════════════════════════════════════════════════════
+MODELO PERSONALIZADO DO USUÁRIO:
+═══════════════════════════════════════════════════════════════
+
+Use o seguinte modelo como referência para estruturar o dispositivo:
+
+${modeloDispositivo}
+
+⚠️ INSTRUÇÕES PARA PLACEHOLDERS:
+Se o modelo personalizado contiver placeholders como [RECLAMANTE], [RECLAMADA], [PRIMEIRA RECLAMADA], [SEGUNDA RECLAMADA], etc., substitua-os pelos nomes reais extraídos da seção "PARTES DO PROCESSO" acima.
+
+Importante: Use o RESULTADO SELECIONADO PELO USUÁRIO para cada tópico.
+
+═══════════════════════════════════════════════════════════════
+` : AI_PROMPTS.instrucoesDispositivoPadrao}${blocoInstrucaoAdicional}
+
+IMPORTANTE:
+- Use linguagem formal e técnico-jurídica adequada
+- Mantenha primeira pessoa do singular (DECIDO, julgo, reconheço, etc.)
+- Seja objetivo e claro em cada item
+- **Numere os itens sequencialmente com algarismos arábicos (1, 2, 3...)** e os subitens com letras (a, b, c); na lista de verbas, use marcadores (*). NUNCA use numeração romana (I, II, III, IV)
+- **NÃO INCLUA JUSTIFICATIVAS OU FUNDAMENTOS** - apenas o resultado
+- **USE O "RESULTADO SELECIONADO PELO USUÁRIO"** - foi escolhido manualmente
+- **NÃO INVERTA OS RESULTADOS** - se diz IMPROCEDENTE, escreva IMPROCEDENTE
+- Organize os itens de forma lógica (questões processuais primeiro, depois mérito, pedidos não decididos por último)
+- Para resultados "NÃO DEFINIDO", deixe MUITO CLARO que não foram apreciados
+
+${AI_PROMPTS.formatacaoHTML("<strong>JULGAR PROCEDENTE</strong> o pedido de...")}
+
+${AI_PROMPTS.formatacaoParagrafos("<p>Ante o exposto...</p><p>REJEITAR a preliminar...</p>")}
+
+${AI_PROMPTS.numeracaoReclamadas}
+
+CHECKLIST DE VERIFICAÇÃO FINAL:
+1. ✓ Usei o "RESULTADO SELECIONADO PELO USUÁRIO" para cada tópico?
+2. ✓ Se diz "IMPROCEDENTE", escrevi "IMPROCEDENTE" (não "PROCEDENTE")?
+3. ✓ Se diz "PROCEDENTE", escrevi "PROCEDENTE" (não "IMPROCEDENTE")?
+4. ✓ Não inverti nenhum resultado escolhido pelo usuário?
+5. ✓ Omiti justificativas e incluí apenas o resultado?
+6. ✓ NÃO usei numeração romana (I, II, III, IV)?
+7. ✓ Usei HTML (<strong>, <em>, <br>) ao invés de markdown (**, *, ##)?
+
+Responda APENAS com o texto completo do dispositivo em HTML, sem explicações adicionais.`;
 }

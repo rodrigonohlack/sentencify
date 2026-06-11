@@ -8,7 +8,7 @@
 
 import { useCallback, useRef, useEffect } from 'react';
 import type { Topic, AIMessage, AICallOptions, AIMessageContent, DoubleCheckCorrection, DoubleCheckReviewResult } from '../types';
-import { AI_PROMPTS, resolveStyleBlock } from '../prompts';
+import { buildDispositivoPromptText } from '../prompts';
 import { normalizeHTMLSpacing, isRelatorio } from '../utils/text';
 import { useUIStore } from '../stores/useUIStore';
 
@@ -232,68 +232,16 @@ export function useDispositivoGeneration({
       }
 
       // Preparar prompt com contexto dos tópicos
-      const promptText = `${AI_PROMPTS.roles.redacao}
-
-Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
-
-ATENÇÃO CRÍTICA: O usuário SELECIONOU EXPLICITAMENTE o resultado de cada decisão. Use EXATAMENTE o resultado fornecido, sem interpretação.
-
-Com base nos tópicos e resultados fornecidos abaixo, gere um DISPOSITIVO completo e bem estruturado para uma sentença trabalhista.
-
-${AI_PROMPTS.buildPartesDoProcesso(primeiroParagrafoRelatorio, !!aiIntegration.aiSettings.anonymization?.enabled)}
-
-${AI_PROMPTS.buildTopicosSection(topicosComDecisao, topicosSemDecisao)}
-
-INSTRUÇÕES PARA O DISPOSITIVO:
-
-${AI_PROMPTS.regraFundamentalDispositivo}
-
-${resolveStyleBlock(aiIntegration.aiSettings.customPrompt, AI_PROMPTS.estiloRedacaoSemFormatoNarrativo)}
-
-${aiIntegration.aiSettings.modeloDispositivo ? `
-═══════════════════════════════════════════════════════════════
-MODELO PERSONALIZADO DO USUÁRIO:
-═══════════════════════════════════════════════════════════════
-
-Use o seguinte modelo como referência para estruturar o dispositivo:
-
-${aiIntegration.aiSettings.modeloDispositivo}
-
-⚠️ INSTRUÇÕES PARA PLACEHOLDERS:
-Se o modelo personalizado contiver placeholders como [RECLAMANTE], [RECLAMADA], [PRIMEIRA RECLAMADA], [SEGUNDA RECLAMADA], etc., substitua-os pelos nomes reais extraídos da seção "PARTES DO PROCESSO" acima.
-
-Importante: Use o RESULTADO SELECIONADO PELO USUÁRIO para cada tópico.
-
-═══════════════════════════════════════════════════════════════
-` : AI_PROMPTS.instrucoesDispositivoPadrao}
-
-IMPORTANTE:
-- Use linguagem formal e técnico-jurídica adequada
-- Mantenha primeira pessoa do singular (DECIDO, julgo, reconheço, etc.)
-- Seja objetivo e claro em cada item
-- **Numere os itens sequencialmente com algarismos arábicos (1, 2, 3...)** e os subitens com letras (a, b, c); na lista de verbas, use marcadores (*). NUNCA use numeração romana (I, II, III, IV)
-- **NÃO INCLUA JUSTIFICATIVAS OU FUNDAMENTOS** - apenas o resultado
-- **USE O "RESULTADO SELECIONADO PELO USUÁRIO"** - foi escolhido manualmente
-- **NÃO INVERTA OS RESULTADOS** - se diz IMPROCEDENTE, escreva IMPROCEDENTE
-- Organize os itens de forma lógica (questões processuais primeiro, depois mérito, pedidos não decididos por último)
-- Para resultados "NÃO DEFINIDO", deixe MUITO CLARO que não foram apreciados
-
-${AI_PROMPTS.formatacaoHTML("<strong>JULGAR PROCEDENTE</strong> o pedido de...")}
-
-${AI_PROMPTS.formatacaoParagrafos("<p>Ante o exposto...</p><p>REJEITAR a preliminar...</p>")}
-
-${AI_PROMPTS.numeracaoReclamadas}
-
-CHECKLIST DE VERIFICAÇÃO FINAL:
-1. ✓ Usei o "RESULTADO SELECIONADO PELO USUÁRIO" para cada tópico?
-2. ✓ Se diz "IMPROCEDENTE", escrevi "IMPROCEDENTE" (não "PROCEDENTE")?
-3. ✓ Se diz "PROCEDENTE", escrevi "PROCEDENTE" (não "IMPROCEDENTE")?
-4. ✓ Não inverti nenhum resultado escolhido pelo usuário?
-5. ✓ Omiti justificativas e incluí apenas o resultado?
-6. ✓ NÃO usei numeração romana (I, II, III, IV)?
-7. ✓ Usei HTML (<strong>, <em>, <br>) ao invés de markdown (**, *, ##)?
-
-Responda APENAS com o texto completo do dispositivo em HTML, sem explicações adicionais.`;
+      // v1.53.14: fonte única do prompt (buildDispositivoPromptText) — antes duplicado
+      // verbatim com regenerateDispositivoWithInstruction
+      const promptText = buildDispositivoPromptText({
+        primeiroParagrafoRelatorio,
+        anonymizationEnabled: !!aiIntegration.aiSettings.anonymization?.enabled,
+        topicosComDecisao,
+        topicosSemDecisao,
+        customPrompt: aiIntegration.aiSettings.customPrompt,
+        modeloDispositivo: aiIntegration.aiSettings.modeloDispositivo,
+      });
 
       const contentArray: AIMessageContent[] = [{
         type: 'text' as const,
@@ -477,89 +425,17 @@ Responda APENAS com o texto completo do dispositivo em HTML, sem explicações a
 
       const instrucaoCustomizada = aiIntegration.dispositivoInstruction?.trim() || '';
 
-      const promptText = `${AI_PROMPTS.roles.redacao}
-
-Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
-
-${instrucaoCustomizada ? `
-═══════════════════════════════════════════════════════════════
-📝 INSTRUÇÃO CUSTOMIZADA DO USUÁRIO:
-═══════════════════════════════════════════════════════════════
-
-${instrucaoCustomizada}
-
-═══════════════════════════════════════════════════════════════
-` : ''}
-
-ATENÇÃO CRÍTICA: O usuário SELECIONOU EXPLICITAMENTE o resultado de cada decisão. Use EXATAMENTE o resultado fornecido, sem interpretação.
-
-Com base nos tópicos e resultados fornecidos abaixo, gere um DISPOSITIVO completo e bem estruturado para uma sentença trabalhista.
-
-${AI_PROMPTS.buildPartesDoProcesso(primeiroParagrafoRelatorio, !!aiIntegration.aiSettings.anonymization?.enabled)}
-
-${AI_PROMPTS.buildTopicosSection(topicosComDecisao, topicosSemDecisao)}
-
-INSTRUÇÕES PARA O DISPOSITIVO:
-
-${AI_PROMPTS.regraFundamentalDispositivo}
-
-${resolveStyleBlock(aiIntegration.aiSettings.customPrompt, AI_PROMPTS.estiloRedacaoSemFormatoNarrativo)}
-
-${aiIntegration.aiSettings.modeloDispositivo ? `
-═══════════════════════════════════════════════════════════════
-MODELO PERSONALIZADO DO USUÁRIO:
-═══════════════════════════════════════════════════════════════
-
-Use o seguinte modelo como referência para estruturar o dispositivo:
-
-${aiIntegration.aiSettings.modeloDispositivo}
-
-⚠️ INSTRUÇÕES PARA PLACEHOLDERS:
-Se o modelo personalizado contiver placeholders como [RECLAMANTE], [RECLAMADA], [PRIMEIRA RECLAMADA], [SEGUNDA RECLAMADA], etc., substitua-os pelos nomes reais extraídos da seção "PARTES DO PROCESSO" acima.
-
-Importante: Use o RESULTADO SELECIONADO PELO USUÁRIO para cada tópico.
-
-═══════════════════════════════════════════════════════════════
-` : AI_PROMPTS.instrucoesDispositivoPadrao}${(aiIntegration.dispositivoInstruction || '').trim() ? `
-
-═══════════════════════════════════════════════════════════════
-⚠️ INSTRUÇÃO ADICIONAL DO USUÁRIO (v1.5.8c):
-═══════════════════════════════════════════════════════════════
-
-${(aiIntegration.dispositivoInstruction || '').trim()}
-
-Por favor, considere esta instrução adicional ao gerar o dispositivo, mantendo todas as demais regras e estruturas definidas acima.
-
-═══════════════════════════════════════════════════════════════
-` : ''}
-
-IMPORTANTE:
-- Use linguagem formal e técnico-jurídica adequada
-- Mantenha primeira pessoa do singular (DECIDO, julgo, reconheço, etc.)
-- Seja objetivo e claro em cada item
-- **Numere os itens sequencialmente com algarismos arábicos (1, 2, 3...)** e os subitens com letras (a, b, c); na lista de verbas, use marcadores (*). NUNCA use numeração romana (I, II, III, IV)
-- **NÃO INCLUA JUSTIFICATIVAS OU FUNDAMENTOS** - apenas o resultado
-- **USE O "RESULTADO SELECIONADO PELO USUÁRIO"** - foi escolhido manualmente
-- **NÃO INVERTA OS RESULTADOS** - se diz IMPROCEDENTE, escreva IMPROCEDENTE
-- Organize os itens de forma lógica (questões processuais primeiro, depois mérito, pedidos não decididos por último)
-- Para resultados "NÃO DEFINIDO", deixe MUITO CLARO que não foram apreciados
-
-${AI_PROMPTS.formatacaoHTML("<strong>JULGAR PROCEDENTE</strong> o pedido de...")}
-
-${AI_PROMPTS.formatacaoParagrafos("<p>Ante o exposto...</p><p>REJEITAR a preliminar...</p>")}
-
-${AI_PROMPTS.numeracaoReclamadas}
-
-CHECKLIST DE VERIFICAÇÃO FINAL:
-1. ✓ Usei o "RESULTADO SELECIONADO PELO USUÁRIO" para cada tópico?
-2. ✓ Se diz "IMPROCEDENTE", escrevi "IMPROCEDENTE" (não "PROCEDENTE")?
-3. ✓ Se diz "PROCEDENTE", escrevi "PROCEDENTE" (não "IMPROCEDENTE")?
-4. ✓ Não inverti nenhum resultado escolhido pelo usuário?
-5. ✓ Omiti justificativas e incluí apenas o resultado?
-6. ✓ NÃO usei numeração romana (I, II, III, IV)?
-7. ✓ Usei HTML (<strong>, <em>, <br>) ao invés de markdown (**, *, ##)?
-
-Responda APENAS com o texto completo do dispositivo em HTML, sem explicações adicionais.`;
+      // v1.53.14: fonte única do prompt (buildDispositivoPromptText); instrucaoCustomizada
+      // definida (mesmo vazia) marca a REGENERAÇÃO — injeta os blocos de instrução do usuário
+      const promptText = buildDispositivoPromptText({
+        primeiroParagrafoRelatorio,
+        anonymizationEnabled: !!aiIntegration.aiSettings.anonymization?.enabled,
+        topicosComDecisao,
+        topicosSemDecisao,
+        customPrompt: aiIntegration.aiSettings.customPrompt,
+        modeloDispositivo: aiIntegration.aiSettings.modeloDispositivo,
+        instrucaoCustomizada,
+      });
 
       const contentArray: AIMessageContent[] = [{
         type: 'text' as const,

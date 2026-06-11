@@ -28,7 +28,8 @@ export {
   buildDocumentContentArray,
   buildMiniReportPromptCore,
   buildMiniReportPrompt,
-  buildBatchMiniReportPrompt
+  buildBatchMiniReportPrompt,
+  buildDispositivoPromptText
 } from './promptBuilders';
 export type {
   AnalyzedDocumentsForPrompt,
@@ -36,7 +37,8 @@ export type {
   AISettingsForPrompt,
   PartesProcesso,
   MiniReportPromptCore,
-  BuildMiniReportPromptOptions
+  BuildMiniReportPromptOptions,
+  BuildDispositivoPromptParams
 } from './promptBuilders';
 export {
   buildBulkAnalysisPrompt,

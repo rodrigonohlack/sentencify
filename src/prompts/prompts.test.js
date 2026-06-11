@@ -18,6 +18,7 @@ import {
   AI_INSTRUCTIONS_REVISAO_SILENCIOSA,
   AI_INSTRUCTIONS_ANONYMIZATION
 } from './system.js';
+import { buildDispositivoPromptText } from './promptBuilders';
 
 describe('Prompts - Snapshot Tests', () => {
   describe('Prompt de Ordenação (reorderTopicsViaLLM)', () => {
@@ -325,6 +326,60 @@ ${AI_INSTRUCTIONS_SAFETY}`;
 
     it('snapshot: AI_INSTRUCTIONS_SAFETY', () => {
       expect(AI_INSTRUCTIONS_SAFETY).toMatchSnapshot();
+    });
+  });
+
+  // v1.53.14: prompt do dispositivo extraído para fonte única (antes duplicado
+  // verbatim entre generateDispositivo e regenerateDispositivoWithInstruction)
+  describe('buildDispositivoPromptText (v1.53.14)', () => {
+    const fixture = {
+      primeiroParagrafoRelatorio: 'FULANO DE TAL ajuizou reclamação trabalhista em face de EMPRESA X LTDA.',
+      anonymizationEnabled: false,
+      topicosComDecisao: [
+        { titulo: 'HORAS EXTRAS', categoria: 'Mérito', resultado: 'PROCEDENTE', relatorio: 'O autor alega jornada extensa.', decisao: 'Defiro horas extras.' }
+      ],
+      topicosSemDecisao: [
+        { titulo: 'FGTS', categoria: 'Mérito', relatorio: 'Diferenças de FGTS.' }
+      ]
+    };
+
+    it('snapshot: geração inicial (sem instrução customizada)', () => {
+      expect(buildDispositivoPromptText(fixture)).toMatchSnapshot();
+    });
+
+    it('snapshot: regeneração com instrução customizada', () => {
+      expect(buildDispositivoPromptText({
+        ...fixture,
+        instrucaoCustomizada: 'Use ordem alfabética nos itens.'
+      })).toMatchSnapshot();
+    });
+
+    it('geração inicial NÃO contém blocos de instrução customizada', () => {
+      const prompt = buildDispositivoPromptText(fixture);
+      expect(prompt).not.toContain('INSTRUÇÃO CUSTOMIZADA DO USUÁRIO');
+      expect(prompt).not.toContain('INSTRUÇÃO ADICIONAL DO USUÁRIO');
+    });
+
+    it('regeneração com instrução injeta os DOIS blocos (topo + adicional)', () => {
+      const prompt = buildDispositivoPromptText({
+        ...fixture,
+        instrucaoCustomizada: 'Use ordem alfabética nos itens.'
+      });
+      expect(prompt).toContain('📝 INSTRUÇÃO CUSTOMIZADA DO USUÁRIO:');
+      expect(prompt).toContain('⚠️ INSTRUÇÃO ADICIONAL DO USUÁRIO (v1.5.8c):');
+    });
+
+    it('regeneração SEM instrução (string vazia) não injeta blocos', () => {
+      const prompt = buildDispositivoPromptText({ ...fixture, instrucaoCustomizada: '' });
+      expect(prompt).not.toContain('INSTRUÇÃO CUSTOMIZADA DO USUÁRIO');
+      expect(prompt).not.toContain('INSTRUÇÃO ADICIONAL DO USUÁRIO');
+    });
+
+    it('estilo personalizado do magistrado substitui o default', () => {
+      const prompt = buildDispositivoPromptText({ ...fixture, customPrompt: 'Frases curtas.' });
+      expect(prompt).toContain('ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO');
+      expect(prompt).toContain('Frases curtas.');
+      expect(prompt).not.toContain(AI_PROMPTS.estiloRedacaoSemFormatoNarrativo);
     });
   });
 });

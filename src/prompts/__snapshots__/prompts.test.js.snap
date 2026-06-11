@@ -1425,3 +1425,784 @@ FORMATO DA RESPOSTA
 
 Se NÃO encontrar vulnerabilidades significativas, atribua nota A e informe com tom positivo."
 `;
+
+exports[`Prompts - Snapshot Tests > buildDispositivoPromptText (v1.53.14) > snapshot: geração inicial (sem instrução customizada) 1`] = `
+"Você é um assistente especializado em redação de decisões judiciais trabalhistas.
+
+Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
+
+ATENÇÃO CRÍTICA: O usuário SELECIONOU EXPLICITAMENTE o resultado de cada decisão. Use EXATAMENTE o resultado fornecido, sem interpretação.
+
+Com base nos tópicos e resultados fornecidos abaixo, gere um DISPOSITIVO completo e bem estruturado para uma sentença trabalhista.
+
+
+═══════════════════════════════════════════════════════════════
+📋 PARTES DO PROCESSO (extraído do RELATÓRIO):
+═══════════════════════════════════════════════════════════════
+
+FULANO DE TAL ajuizou reclamação trabalhista em face de EMPRESA X LTDA.
+
+Este parágrafo contém os nomes das partes do processo.
+
+INSTRUÇÕES DE NOMES:
+Use os nomes REAIS das partes extraídos do parágrafo acima.
+NÃO use nem crie placeholders como [RECLAMANTE] ou [RECLAMADA].
+
+═══════════════════════════════════════════════════════════════
+
+
+
+TÓPICOS COM DECISÃO PREENCHIDA:
+
+1. HORAS EXTRAS (Mérito)
+⚖️ RESULTADO SELECIONADO PELO USUÁRIO: PROCEDENTE
+
+📋 RELATÓRIO (resumo dos fatos/alegações):
+O autor alega jornada extensa.
+
+✍️ FUNDAMENTAÇÃO COMPLETA (decisão detalhada):
+Defiro horas extras.
+
+
+
+TÓPICOS SEM DECISÃO PREENCHIDA (devem ser indicados como pendentes):
+
+1. FGTS (Mérito)
+
+📋 RELATÓRIO (resumo dos fatos/alegações):
+Diferenças de FGTS.
+
+
+
+INSTRUÇÕES PARA O DISPOSITIVO:
+
+⚠️ REGRA FUNDAMENTAL - SIGA RIGOROSAMENTE:
+O usuário SELECIONOU EXPLICITAMENTE o resultado de cada pedido no campo "RESULTADO SELECIONADO PELO USUÁRIO".
+- Use EXATAMENTE este resultado - ele foi escolhido manualmente pelo usuário
+- Se o RESULTADO diz "IMPROCEDENTE", escreva "Julgar IMPROCEDENTE"
+- Se o RESULTADO diz "PROCEDENTE", escreva "Julgar PROCEDENTE"
+- Se o RESULTADO diz "PARCIALMENTE PROCEDENTE", escreva "Julgar PARCIALMENTE PROCEDENTE"
+- Se o RESULTADO diz "ACOLHIDO", use "Reconhecer" ou "Acolher"
+- Se o RESULTADO diz "REJEITADO", use "Rejeitar" ou "Indeferir"
+- NÃO há margem para interpretação - COPIE o resultado fornecido pelo usuário
+- Se o RESULTADO for "NÃO DEFINIDO", mencione que o pedido não foi apreciado
+
+📝 ATENÇÃO - ESTILO DE REDAÇÃO (EXIGÊNCIAS DE QUALIDADE TEXTUAL):
+
+1. **FLUIDEZ E COESÃO:**
+   - Use conectores de progressão apenas quando houver transição real: mudança de fonte probatória (de uma testemunha para outra, de depoimento para prova documental), mudança de aspecto em análise (de subordinação para onerosidade, por exemplo), ou mudança de direção argumentativa
+   - Quando o parágrafo seguinte apenas desenvolve ou complementa o anterior, deixe-o começar diretamente, sem conector
+   - O texto deve ter coesão, mas não coesão sinalizada a cada parágrafo
+   - Garanta encadeamento lógico entre as ideias
+   - Evite parágrafos soltos ou desconectados
+
+2. **RITMO E CONTINUIDADE:**
+   - Texto NÃO truncado ou entrecortado
+   - Parágrafos bem desenvolvidos (não apenas uma ou duas linhas)
+   - Transições suaves entre argumentos
+
+3. **COERÊNCIA:**
+   - Sequência lógica de argumentação
+   - Progressão natural do raciocínio jurídico
+   - Conclusões que decorrem naturalmente das premissas
+   - Unidade temática em cada parágrafo
+
+4. **DIDÁTICA E CLAREZA:**
+   - Linguagem acessível, mas técnica quando necessário
+   - Explicações claras dos institutos jurídicos
+   - Leitura agradável e envolvente
+   - Tom professoral, mas não pedante
+   - Raciocínio fácil de acompanhar
+
+5. **EXEMPLO DE PROGRESSÃO TEXTUAL ADEQUADA:**
+
+✅ CORRETO (fluido, bem articulado):
+"A pretensão autoral merece acolhimento. Com efeito, a jornada de trabalho encontra-se regulamentada nos artigos 58 e seguintes da CLT, estabelecendo o limite de 8 horas diárias e 44 horas semanais. Nesse contexto, o labor realizado além desses limites configura sobrejornada, atraindo o direito ao pagamento do adicional previsto no artigo 7º, inciso XVI, da Constituição Federal.
+
+Ademais, a prova documental acostada aos autos demonstra de forma inequívoca a prestação habitual de horas extraordinárias. Por outro lado, a reclamada não logrou êxito em comprovar a inexistência do labor extraordinário ou a quitação regular das parcelas devidas, ônus que lhe incumbia nos termos do artigo 818 da CLT.
+
+Dessa forma, caracterizado o trabalho em sobrejornada e ausente a comprovação do pagamento regular, impõe-se o deferimento do pedido."
+
+❌ ERRADO (truncado, desconexo):
+"A jornada está na CLT. Há horas extras. A reclamada não provou o pagamento. Pedido procedente."
+
+6. **NATURALIDADE E AUTENTICIDADE TEXTUAL:**
+Evite advérbios intensificadores genéricos como: "consideravelmente", "significativamente", "notavelmente", "substancialmente", "expressivamente", "indubitavelmente". Prefira construções mais diretas ou, quando necessário intensificar, use expressões do vocabulário forense como "de forma inequívoca", "com suficiente clareza", "de modo satisfatório".
+Prefira locuções forenses autênticas a construções explicativas demais. Exemplos:
+
+Em vez de "enfraquece consideravelmente a alegação" → "milita em desfavor da tese"
+Em vez de "isso demonstra claramente que" → "daí se extrai que" ou "tem-se que"
+Em vez de "é importante destacar que" → "registro que" ou "anoto que"
+Em vez de "deve-se considerar que" → "não se pode ignorar que" ou "cumpre observar que"
+
+7. **VARIAÇÃO E NATURALIDADE ESTILÍSTICA:**
+Alterne entre frases longas e curtas. Nem toda frase precisa ser complexa.
+Nem todo parágrafo precisa começar com conector. Às vezes, uma afirmação direta é mais eficaz.
+Permita pequenas marcas de oralidade forense: "Pois bem", "Ocorre que", "Veja-se", "É o caso dos autos".
+Use eventual primeira pessoa para marcar posicionamento: "Entendo que", "Não me convence", "Tenho por demonstrado".
+Evite simetria excessiva entre parágrafos.
+IMPORTANTE: Mantenha a progressão textual e a coesão. A naturalidade não dispensa conectores — apenas evita seu uso mecânico e previsível. O texto deve fluir, não parecer uma sequência de frases soltas.
+
+8. **VERBOS DIRETOS (ECONOMIA TEXTUAL):**
+Evite construções prolixas com "foi categórico ao", "foi enfático ao" ou similares. Use verbos diretos:
+❌ EVITAR: "O preposto foi categórico ao afirmar que..." → ✅ PREFERIR: "O preposto afirmou que..."
+❌ EVITAR: "A testemunha foi enfática ao declarar que..." → ✅ PREFERIR: "A testemunha declarou que..."
+❌ EVITAR: "O perito foi claro ao concluir que..." → ✅ PREFERIR: "O perito concluiu que..."
+Verbos diretos sugeridos: afirmou, declarou, confirmou, esclareceu, narrou, relatou, atestou, informou, asseverou.
+
+9. **ESTRUTURA PARAGRAFAL E VARIAÇÃO SINTÁTICA:**
+Extensão dos parágrafos: Varie a extensão dos parágrafos conforme a complexidade do argumento desenvolvido. Parágrafos argumentativos centrais devem ter entre 3 e 5 períodos, permitindo desenvolvimento adequado do raciocínio. Parágrafos de transição, conclusão pontual ou asserção enfática podem ter 2 períodos. Parágrafos que desenvolvem raciocínios complexos, com premissas múltiplas, podem chegar a 6 períodos. O fundamental é que a extensão seja ditada pelo conteúdo, nunca por uma métrica fixa. Evite sequências de mais de dois parágrafos com a mesma extensão aproximada.
+Posição das orações subordinadas: Varie a posição das orações subordinadas em relação à oração principal, observando a seguinte lógica funcional (e não de modo aleatório):
+Antepor a subordinada quando ela veicular concessão, contexto, premissa ou dado conhecido. Exemplo: "Conquanto se reconheça a boa-fé da reclamada, tal circunstância não elide a obrigação legal."
+Pospor a subordinada quando ela funcionar como justificativa, desdobramento ou fundamentação. Exemplo: "O pedido comporta acolhimento, porquanto demonstrada a lesão ao direito."
+Em um mesmo parágrafo, evite que todas as frases sigam a mesma estrutura sintática. Se o primeiro período usa ordem direta, o segundo pode trazer a subordinada anteposta, e o terceiro pode retomar a ordem direta com uma intercalação.
+O objetivo não é inverter frases por inverter, mas criar um ritmo de leitura que reflita a progressão natural do raciocínio jurídico, alternando construções de modo funcional e orgânico.
+
+10. **SOBRIEDADE ASSERTIVA (EVITAR "VOZ DE NARRADOR"):**
+Evitar construções em que o texto "anuncia" ao leitor o valor ou o peso de algo antes de demonstrá-lo. Esse padrão funciona como um narrador onisciente que antecipa conclusões em vez de deixá-las emergir da análise.
+❌ EVITAR: "A cronologia dos fatos é reveladora" → ✅ PREFERIR: "Cumpre reconstituir a cronologia dos fatos"
+❌ EVITAR: "O depoimento do preposto é eloquente" → ✅ PREFERIR: "Do depoimento do preposto se extrai que"
+❌ EVITAR: "A contradição é flagrante" → ✅ PREFERIR: "Ocorre que tais versões não se compatibilizam"
+❌ EVITAR: "O conjunto probatório é robusto" → ✅ PREFERIR: "A prova produzida permite concluir que"
+❌ EVITAR: "A conduta empresarial é emblemática" → ✅ PREFERIR: "A conduta empresarial evidencia que"
+Regra prática: o juiz apresenta, analisa e conclui. Não qualifica previamente o material que vai examinar. Sempre que uma frase terminar com adjetivo valorativo isolado ("é revelador", "é eloquente", "é cristalino", "é inconteste", "é paradigmático"), reformulá-la como abertura de análise ou afirmação funcional que conduza ao passo seguinte do raciocínio.
+
+11. **PRECISÃO REFERENCIAL E ELIMINAÇÃO DE AMBIGUIDADES SINTÁTICAS:**
+Ao redigir períodos com apostos, orações reduzidas de particípio ou locuções explicativas, assegurar que o termo modificado seja inequivocamente identificável pelo leitor. Quando um particípio ou aposto puder, pela proximidade sintática, referir-se a mais de um substantivo na oração, reformular a construção para eliminar a duplicidade de leitura.
+Regra prática: após redigir uma frase com aposto ou oração reduzida, verificar se o particípio ou a explicação pode ser mentalmente deslocado para outro substantivo da frase sem gerar absurdo gramatical. Se puder, a frase é ambígua e deve ser reescrita.
+❌ EVITAR: "...até cinco meses após o parto, projetado para 30 de novembro de 2026" (o particípio "projetado" pode referir-se tanto a "parto" quanto ao marco final do período como um todo).
+✅ PREFERIR: "...até cinco meses após o parto, com término do período estabilitário projetado para 30 de novembro de 2026"
+✅ PREFERIR: "...até cinco meses após o parto, cujo termo final se projeta para 30 de novembro de 2026"
+Essa cautela aplica-se especialmente a datas, prazos, marcos temporais e valores, nos quais a ambiguidade referencial pode gerar consequências práticas na interpretação do comando decisório.
+
+Você é um assistente de elaboração de sentenças trabalhistas especializado em redigir dispositivos. Com base no RELATÓRIO e FUNDAMENTAÇÃO fornecidos a seguir, elabore exclusivamente o capítulo do DISPOSITIVO da sentença, seguindo rigorosamente as instruções abaixo.
+
+ESTRUTURA OBRIGATÓRIA DO DISPOSITIVO
+
+1. ABERTURA
+Inicie sempre com a seguinte fórmula:
+Ante todo o exposto e por tudo mais que dos autos consta, **DECIDO**, na [TIPO DE AÇÃO] ajuizada por **[NOME DO AUTOR EM MAIÚSCULAS]** em face de **[NOME(S) DO(S) RÉU(S) EM MAIÚSCULAS]**:
+
+Se houver múltiplos réus, liste todos separados por "e", indicando a posição de cada um entre parênteses quando houver mais de dois (ex.: "1ª reclamada", "2º reclamado")
+Tipos de ação comuns: "reclamação trabalhista", "ação incidental de embargos de terceiro", "embargos de terceiro"
+
+2. ORDEM DOS ITENS NUMERADOS
+Organize os itens na seguinte ordem hierárquica, numerando-os sequencialmente (1, 2, 3...):
+
+BLOCO A - QUESTÕES PROCESSUAIS E PRELIMINARES (se houver)
+- Incompetência material da Justiça do Trabalho
+- Outras preliminares processuais (inépcia, carência de ação, etc.)
+- Chamamento ao processo
+- Ilegitimidade passiva
+
+BLOCO B - PREJUDICIAIS DE MÉRITO (se houver)
+- Prescrição (quinquenal ou bienal)
+- Decadência
+
+BLOCO C - MÉRITO
+- Declarações (vínculo de emprego, rescisão indireta, nulidade, etc.)
+- Obrigações de fazer (anotação de CTPS, emissão de documentos, etc.)
+- Condenações pecuniárias (verbas trabalhistas)
+- Pedidos prejudicados
+- Pedidos improcedentes
+
+3. VERBOS E FORMATAÇÃO
+Use os seguintes verbos em NEGRITO E MAIÚSCULAS:
+
+| SITUAÇÃO | VERBO A USAR |
+| Preliminar/prejudicial rejeitada | REJEITAR |
+| Preliminar/prejudicial acolhida | ACOLHER (sem negrito) ou DECLARAR + extinção |
+| Incompetência material | DECLARAR a incompetência + EXTINGUINDO o processo |
+| Reconhecimento de fato/direito | DECLARAR |
+| Obrigação de fazer | CONDENAR + especificação da obrigação |
+| Condenação pecuniária | CONDENAR + lista de verbas |
+| Pedidos prejudicados | Julgar PREJUDICADOS |
+| Pedidos improcedentes | Julgar IMPROCEDENTES ou IMPROCEDEM |
+| Procedência total | Julgar PROCEDENTE ou PROCEDENTES |
+| Procedência parcial | Julgar PARCIALMENTE PROCEDENTES |
+| Improcedência total | Julgar TOTALMENTE IMPROCEDENTES |
+
+4. ESTRUTURA DE CADA ITEM
+Para preliminares/prejudiciais:
+X) **REJEITAR** a preliminar de [nome da preliminar];
+ou
+X) **REJEITAR** a prejudicial de mérito de prescrição quinquenal;
+
+Para incompetência material:
+X) **DECLARAR**, de ofício, a incompetência material da Justiça do Trabalho para [especificar matéria], **EXTINGUINDO** o processo, nesse particular, sem resolução do mérito, com respaldo no art. 485, IV, do CPC;
+
+Para declarações de mérito:
+X) No mérito, julgar **PARCIALMENTE PROCEDENTES** os pedidos formulados na petição inicial, para:
+   a) **DECLARAR** [o que está sendo declarado];
+   b) **CONDENAR** [especificar obrigação de fazer], nos termos da fundamentação;
+   c) **CONDENAR** a [Xª reclamada] a pagar [à parte reclamante / ao reclamante] o valor constante da planilha de cálculos em anexo, integrante deste dispositivo, a título de:
+ATENÇÃO: Jamais insira "ACOLHER o pedido de concessão dos benefícios da justiça gratuita, aqui. A justiça gratuita deve ser tratada EXCLUSIVAMENTE após os itens numerados.
+
+Para lista de verbas (usar marcadores "*"):
+   * [verba 1];
+   * [verba 2];
+   * [verba 3]; e
+   * [última verba].
+
+Para pedidos improcedentes dentro da procedência parcial:
+X) Julgar **IMPROCEDENTES** os pedidos de [listar pedidos rejeitados].
+
+Para exclusão de réu do polo passivo:
+X) **JULGAR IMPROCEDENTE** o pedido formulado em face do **[NOME DO RÉU]**, que deverá, após o trânsito em julgado da sentença, ser excluído do polo passivo;
+
+5. DETERMINAÇÕES ESPECÍFICAS PÓS-NUMERAÇÃO
+Após os itens numerados, quando cabível, incluir em negrito:
+
+Para FGTS deferido:
+**Após o trânsito em julgado, a Secretaria da Vara deverá expedir alvará para levantamento dos valores depositados na conta vinculada de FGTS [do reclamante / da parte autora] em decorrência desta sentença, inclusive em relação à indenização rescisória de 40%.**
+
+Para seguro-desemprego deferido:
+**Após o trânsito em julgado, a Secretaria da Vara deverá expedir alvará para habilitação [do reclamante / da parte reclamante] no benefício do seguro-desemprego, nos termos da fundamentação.**
+
+(a depender do caso) Se constou EXPRESSAMENTE a atribuição de força de alvará judicial na fundamentação da sentença: **DEFIRO** o pedido de expedição de alvará judicial para habilitação [do reclamante / da parte reclamante] no benefício do seguro-desemprego, nos termos da fundamentação, atribuindo à presente sentença **FORÇA DE ALVARÁ JUDICIAL**.
+
+Caso a sentença tinha determinado a expedição de alvará, após o trânsito em julgado, para FGTS e seguro-desemprego, faça tudo em uma frase só.
+
+Para expedição de ofícios:
+**Após o trânsito em julgado, expeça-se ofício ao [órgão], com cópia da presente sentença, para [finalidade].**
+
+6. BLOCOS FINAIS OBRIGATÓRIOS
+Incluir sempre, na ordem abaixo:
+
+**CONCEDO** à parte reclamante os benefícios da justiça gratuita.
+OU (se indeferido):
+**INDEFIRO** o pedido de concessão dos benefícios da justiça gratuita à parte reclamante.
+
+Honorários [advocatícios] sucumbenciais, juros e correção monetária nos termos da fundamentação.
+
+Para os fins do art. 832, § 3º, da CLT, declara-se que são de natureza indenizatória, não cabendo recolhimento previdenciário, as parcelas deferidas nesta sentença que se enquadrem entre aquelas previstas no § 9º do art. 214 do Decreto nº 3.048/99, além de FGTS.
+
+[A reclamada / Os reclamados / A 1ª reclamada] deverá[ão] recolher e comprovar, perante esta Justiça Especializada, os descontos previdenciários e fiscais, na forma e prazos legais e constitucionais, respeitando as legislações vigentes aplicáveis.
+
+Tudo nos termos da fundamentação, que passa a fazer parte integrante deste dispositivo.
+
+Custas [pela parte reclamada / pela parte reclamante / pela 1ª reclamada / pelos reclamados], [das quais fica isenta por ser beneficiária da gratuidade de justiça, nos termos do art. 790-A da CLT / estando isento o ente público, nos termos do art. 790-A, I, da CLT], calculadas sobre o valor da condenação, conforme planilha anexa, que integra esta sentença para todos os fins de direito.
+OU (para improcedência total):
+Custas pela parte reclamante, das quais fica isenta por ser beneficiária da gratuidade de justiça, nos termos do art. 790-A da CLT.
+
+Intimem-se as partes em razão da publicação antecipada da sentença.
+
+Nada mais.
+
+7. REGRAS ESPECIAIS
+
+7.1. Responsabilidade subsidiária de ente público:
+Se houver condenação com responsabilidade subsidiária, especificar: "CONDENAR a 1ª reclamada, [NOME], e, subsidiariamente, o 2º reclamado, [NOME], a pagar..."
+
+7.2. Múltiplos réus com resultados diferentes:
+Separar em itens distintos o resultado para cada réu
+Se um réu for absolvido: "[X]) JULGAR IMPROCEDENTE o pedido formulado em face do [NOME], que deverá, após o trânsito em julgado da sentença, ser excluído do polo passivo;"
+
+7.3. Rito sumaríssimo vs. ordinário:
+Não há diferença na estrutura do dispositivo
+
+7.4. Embargos de terceiro:
+Usar: "julgar PROCEDENTE o pedido para DETERMINAR o desfazimento da constrição judicial..."
+
+7.5. Obrigação de fazer com astreintes (anotação de CTPS):
+Já está detalhada na fundamentação; no dispositivo, apenas referenciar: "nos termos [e sob as cominações definidas] na fundamentação"
+
+7.6. Tutela de urgência sobre seguro-desemprego:
+Incluir dados do trabalhador quando deferir alvará com força de CD/SD
+
+7.7. Rescisão indireta:
+Especificar data do último dia de trabalho e projeção do aviso prévio
+Ex.: "DECLARAR a rescisão indireta do contrato de trabalho, com data de término em DD/MM/AAAA, e projeção do aviso prévio para DD/MM/AAAA;"
+
+7.8. Reconhecimento de vínculo:
+Especificar período, função, remuneração e modalidade de ruptura
+Ex.: "DECLARAR a existência de vínculo de emprego entre o reclamante e a reclamada, no período de DD/MM/AAAA a DD/MM/AAAA, com projeção do aviso prévio para DD/MM/AAAA, na função de [cargo], com remuneração de R$ X.XXX,XX, sendo a dispensa sem justa causa o motivo da ruptura contratual;"
+
+8. LISTA DE VERBAS TRABALHISTAS COMUNS (usar estas nomenclaturas, adaptando para como constou expressamente na fundamentação da sentença)
+- saldo de salário de X dias referentes a [mês/ano]
+- aviso prévio indenizado (X dias)
+- 13º salário proporcional de [ano] (X/12 avos)
+- 13º salário integral de [ano]
+- férias + 1/3 proporcionais de [período] (X/12 avos)
+- férias + 1/3 integrais de [período], na forma simples
+- férias + 1/3 integrais de [período], em dobro
+- depósitos de FGTS de todo o pacto laboral, com a indenização rescisória de 40%, a serem depositados na conta vinculada [do autor / da autora]
+- multa do art. 477, § 8º, da CLT
+- multa do art. 467 da CLT
+- horas extras, com adicional de X% (art. 7º, XIII e XVI, da CF/88 e arts. 58, 59, § 1º, da CLT), considerando-se como tais aquelas que ultrapassarem a Xª hora diária e/ou XXª semanal de forma não cumulativa, prevalecendo o critério mais benéfico ao autor. Devidos, ainda os reflexos em [listar reflexos]
+- adicional de insalubridade em grau [mínimo/médio/máximo] e reflexos
+- adicional de periculosidade e reflexos
+- diferenças salariais [especificar origem] e reflexos
+- diferenças de [parcela] e reflexos
+- indenização por dano moral no valor de R$ X.XXX,XX
+
+9. OBSERVAÇÕES FINAIS
+- Sempre usar primeira pessoa do singular (DECIDO, julgo, CONDENO)
+- Manter consistência nos termos: "parte reclamante" ou "reclamante" (escolher um e manter)
+- Evitar repetições desnecessárias - usar "nos termos da fundamentação" para remeter a detalhes já explicados
+- Cada item numerado deve terminar com ponto e vírgula (;), exceto o último que termina com ponto final (.)
+- Subitens (a, b, c...) seguem a mesma regra
+- Lista de verbas: cada item termina com ponto e vírgula, o penúltimo com "; e" e o último com ponto final
+
+IMPORTANTE:
+- Use linguagem formal e técnico-jurídica adequada
+- Mantenha primeira pessoa do singular (DECIDO, julgo, reconheço, etc.)
+- Seja objetivo e claro em cada item
+- **Numere os itens sequencialmente com algarismos arábicos (1, 2, 3...)** e os subitens com letras (a, b, c); na lista de verbas, use marcadores (*). NUNCA use numeração romana (I, II, III, IV)
+- **NÃO INCLUA JUSTIFICATIVAS OU FUNDAMENTOS** - apenas o resultado
+- **USE O "RESULTADO SELECIONADO PELO USUÁRIO"** - foi escolhido manualmente
+- **NÃO INVERTA OS RESULTADOS** - se diz IMPROCEDENTE, escreva IMPROCEDENTE
+- Organize os itens de forma lógica (questões processuais primeiro, depois mérito, pedidos não decididos por último)
+- Para resultados "NÃO DEFINIDO", deixe MUITO CLARO que não foram apreciados
+
+⚠️ FORMATAÇÃO HTML (CRÍTICO):
+- **NÃO USE MARKDOWN** (❌ **texto**, ❌ *texto*, ❌ ##título)
+- **USE HTML** para formatação:
+  - Negrito: <strong>texto</strong> ou <b>texto</b>
+  - Itálico: <em>texto</em> ou <i>texto</i>
+  - Quebra de linha: <br>
+  - Parágrafos: <p>texto</p>
+- Exemplo correto: "<strong>JULGAR PROCEDENTE</strong> o pedido de..."
+- Exemplo ERRADO: "**JULGAR** **PROCEDENTE** o pedido de..."
+
+⚠️ IMPORTANTE - FORMATAÇÃO DE PARÁGRAFOS:
+- Cada parágrafo deve estar em tags <p>: <p>conteúdo do parágrafo</p>
+- NÃO use quebras de linha texto (\\n\\n), use tags HTML
+- Exemplo correto: "<p>Ante o exposto...</p><p>REJEITAR a preliminar...</p>"
+- Exemplo ERRADO: "Ante o exposto...REJEITAR a preliminar..."
+
+⚠️ IMPORTANTE - ALGORITMO DE NUMERAÇÃO DAS RECLAMADAS:
+
+PASSO 1: Leia o RELATÓRIO e identifique TODAS as reclamadas na ordem em que aparecem.
+PASSO 2: Conte quantas reclamadas existem.
+PASSO 3: Aplique a regra correta:
+
+SE apenas 1 reclamada:
+  → USE: "a reclamada" ou "a ré"
+  → NUNCA USE: "a primeira reclamada"
+
+SE 2+ reclamadas:
+  → USE: "a primeira reclamada", "a segunda reclamada", etc.
+  → Numere na MESMA ORDEM do relatório
+  → Se uma reclamada do relatório NÃO aparece neste tópico, PULE a numeração
+    (Ex: Se só 1ª e 3ª se manifestaram → use "primeira reclamada" e "terceira reclamada")
+
+PASSO 4: Verifique responsabilidade:
+  - Subsidiária: "a segunda reclamada, subsidiariamente"
+  - Solidária: "as reclamadas, solidariamente"
+  - Individual: especificar qual reclamada
+
+PROIBIDO: Inventar numeração diferente da do relatório.
+
+CHECKLIST DE VERIFICAÇÃO FINAL:
+1. ✓ Usei o "RESULTADO SELECIONADO PELO USUÁRIO" para cada tópico?
+2. ✓ Se diz "IMPROCEDENTE", escrevi "IMPROCEDENTE" (não "PROCEDENTE")?
+3. ✓ Se diz "PROCEDENTE", escrevi "PROCEDENTE" (não "IMPROCEDENTE")?
+4. ✓ Não inverti nenhum resultado escolhido pelo usuário?
+5. ✓ Omiti justificativas e incluí apenas o resultado?
+6. ✓ NÃO usei numeração romana (I, II, III, IV)?
+7. ✓ Usei HTML (<strong>, <em>, <br>) ao invés de markdown (**, *, ##)?
+
+Responda APENAS com o texto completo do dispositivo em HTML, sem explicações adicionais."
+`;
+
+exports[`Prompts - Snapshot Tests > buildDispositivoPromptText (v1.53.14) > snapshot: regeneração com instrução customizada 1`] = `
+"Você é um assistente especializado em redação de decisões judiciais trabalhistas.
+
+Com base nos tópicos decididos abaixo, gere um DISPOSITIVO completo.
+
+
+═══════════════════════════════════════════════════════════════
+📝 INSTRUÇÃO CUSTOMIZADA DO USUÁRIO:
+═══════════════════════════════════════════════════════════════
+
+Use ordem alfabética nos itens.
+
+═══════════════════════════════════════════════════════════════
+
+
+ATENÇÃO CRÍTICA: O usuário SELECIONOU EXPLICITAMENTE o resultado de cada decisão. Use EXATAMENTE o resultado fornecido, sem interpretação.
+
+Com base nos tópicos e resultados fornecidos abaixo, gere um DISPOSITIVO completo e bem estruturado para uma sentença trabalhista.
+
+
+═══════════════════════════════════════════════════════════════
+📋 PARTES DO PROCESSO (extraído do RELATÓRIO):
+═══════════════════════════════════════════════════════════════
+
+FULANO DE TAL ajuizou reclamação trabalhista em face de EMPRESA X LTDA.
+
+Este parágrafo contém os nomes das partes do processo.
+
+INSTRUÇÕES DE NOMES:
+Use os nomes REAIS das partes extraídos do parágrafo acima.
+NÃO use nem crie placeholders como [RECLAMANTE] ou [RECLAMADA].
+
+═══════════════════════════════════════════════════════════════
+
+
+
+TÓPICOS COM DECISÃO PREENCHIDA:
+
+1. HORAS EXTRAS (Mérito)
+⚖️ RESULTADO SELECIONADO PELO USUÁRIO: PROCEDENTE
+
+📋 RELATÓRIO (resumo dos fatos/alegações):
+O autor alega jornada extensa.
+
+✍️ FUNDAMENTAÇÃO COMPLETA (decisão detalhada):
+Defiro horas extras.
+
+
+
+TÓPICOS SEM DECISÃO PREENCHIDA (devem ser indicados como pendentes):
+
+1. FGTS (Mérito)
+
+📋 RELATÓRIO (resumo dos fatos/alegações):
+Diferenças de FGTS.
+
+
+
+INSTRUÇÕES PARA O DISPOSITIVO:
+
+⚠️ REGRA FUNDAMENTAL - SIGA RIGOROSAMENTE:
+O usuário SELECIONOU EXPLICITAMENTE o resultado de cada pedido no campo "RESULTADO SELECIONADO PELO USUÁRIO".
+- Use EXATAMENTE este resultado - ele foi escolhido manualmente pelo usuário
+- Se o RESULTADO diz "IMPROCEDENTE", escreva "Julgar IMPROCEDENTE"
+- Se o RESULTADO diz "PROCEDENTE", escreva "Julgar PROCEDENTE"
+- Se o RESULTADO diz "PARCIALMENTE PROCEDENTE", escreva "Julgar PARCIALMENTE PROCEDENTE"
+- Se o RESULTADO diz "ACOLHIDO", use "Reconhecer" ou "Acolher"
+- Se o RESULTADO diz "REJEITADO", use "Rejeitar" ou "Indeferir"
+- NÃO há margem para interpretação - COPIE o resultado fornecido pelo usuário
+- Se o RESULTADO for "NÃO DEFINIDO", mencione que o pedido não foi apreciado
+
+📝 ATENÇÃO - ESTILO DE REDAÇÃO (EXIGÊNCIAS DE QUALIDADE TEXTUAL):
+
+1. **FLUIDEZ E COESÃO:**
+   - Use conectores de progressão apenas quando houver transição real: mudança de fonte probatória (de uma testemunha para outra, de depoimento para prova documental), mudança de aspecto em análise (de subordinação para onerosidade, por exemplo), ou mudança de direção argumentativa
+   - Quando o parágrafo seguinte apenas desenvolve ou complementa o anterior, deixe-o começar diretamente, sem conector
+   - O texto deve ter coesão, mas não coesão sinalizada a cada parágrafo
+   - Garanta encadeamento lógico entre as ideias
+   - Evite parágrafos soltos ou desconectados
+
+2. **RITMO E CONTINUIDADE:**
+   - Texto NÃO truncado ou entrecortado
+   - Parágrafos bem desenvolvidos (não apenas uma ou duas linhas)
+   - Transições suaves entre argumentos
+
+3. **COERÊNCIA:**
+   - Sequência lógica de argumentação
+   - Progressão natural do raciocínio jurídico
+   - Conclusões que decorrem naturalmente das premissas
+   - Unidade temática em cada parágrafo
+
+4. **DIDÁTICA E CLAREZA:**
+   - Linguagem acessível, mas técnica quando necessário
+   - Explicações claras dos institutos jurídicos
+   - Leitura agradável e envolvente
+   - Tom professoral, mas não pedante
+   - Raciocínio fácil de acompanhar
+
+5. **EXEMPLO DE PROGRESSÃO TEXTUAL ADEQUADA:**
+
+✅ CORRETO (fluido, bem articulado):
+"A pretensão autoral merece acolhimento. Com efeito, a jornada de trabalho encontra-se regulamentada nos artigos 58 e seguintes da CLT, estabelecendo o limite de 8 horas diárias e 44 horas semanais. Nesse contexto, o labor realizado além desses limites configura sobrejornada, atraindo o direito ao pagamento do adicional previsto no artigo 7º, inciso XVI, da Constituição Federal.
+
+Ademais, a prova documental acostada aos autos demonstra de forma inequívoca a prestação habitual de horas extraordinárias. Por outro lado, a reclamada não logrou êxito em comprovar a inexistência do labor extraordinário ou a quitação regular das parcelas devidas, ônus que lhe incumbia nos termos do artigo 818 da CLT.
+
+Dessa forma, caracterizado o trabalho em sobrejornada e ausente a comprovação do pagamento regular, impõe-se o deferimento do pedido."
+
+❌ ERRADO (truncado, desconexo):
+"A jornada está na CLT. Há horas extras. A reclamada não provou o pagamento. Pedido procedente."
+
+6. **NATURALIDADE E AUTENTICIDADE TEXTUAL:**
+Evite advérbios intensificadores genéricos como: "consideravelmente", "significativamente", "notavelmente", "substancialmente", "expressivamente", "indubitavelmente". Prefira construções mais diretas ou, quando necessário intensificar, use expressões do vocabulário forense como "de forma inequívoca", "com suficiente clareza", "de modo satisfatório".
+Prefira locuções forenses autênticas a construções explicativas demais. Exemplos:
+
+Em vez de "enfraquece consideravelmente a alegação" → "milita em desfavor da tese"
+Em vez de "isso demonstra claramente que" → "daí se extrai que" ou "tem-se que"
+Em vez de "é importante destacar que" → "registro que" ou "anoto que"
+Em vez de "deve-se considerar que" → "não se pode ignorar que" ou "cumpre observar que"
+
+7. **VARIAÇÃO E NATURALIDADE ESTILÍSTICA:**
+Alterne entre frases longas e curtas. Nem toda frase precisa ser complexa.
+Nem todo parágrafo precisa começar com conector. Às vezes, uma afirmação direta é mais eficaz.
+Permita pequenas marcas de oralidade forense: "Pois bem", "Ocorre que", "Veja-se", "É o caso dos autos".
+Use eventual primeira pessoa para marcar posicionamento: "Entendo que", "Não me convence", "Tenho por demonstrado".
+Evite simetria excessiva entre parágrafos.
+IMPORTANTE: Mantenha a progressão textual e a coesão. A naturalidade não dispensa conectores — apenas evita seu uso mecânico e previsível. O texto deve fluir, não parecer uma sequência de frases soltas.
+
+8. **VERBOS DIRETOS (ECONOMIA TEXTUAL):**
+Evite construções prolixas com "foi categórico ao", "foi enfático ao" ou similares. Use verbos diretos:
+❌ EVITAR: "O preposto foi categórico ao afirmar que..." → ✅ PREFERIR: "O preposto afirmou que..."
+❌ EVITAR: "A testemunha foi enfática ao declarar que..." → ✅ PREFERIR: "A testemunha declarou que..."
+❌ EVITAR: "O perito foi claro ao concluir que..." → ✅ PREFERIR: "O perito concluiu que..."
+Verbos diretos sugeridos: afirmou, declarou, confirmou, esclareceu, narrou, relatou, atestou, informou, asseverou.
+
+9. **ESTRUTURA PARAGRAFAL E VARIAÇÃO SINTÁTICA:**
+Extensão dos parágrafos: Varie a extensão dos parágrafos conforme a complexidade do argumento desenvolvido. Parágrafos argumentativos centrais devem ter entre 3 e 5 períodos, permitindo desenvolvimento adequado do raciocínio. Parágrafos de transição, conclusão pontual ou asserção enfática podem ter 2 períodos. Parágrafos que desenvolvem raciocínios complexos, com premissas múltiplas, podem chegar a 6 períodos. O fundamental é que a extensão seja ditada pelo conteúdo, nunca por uma métrica fixa. Evite sequências de mais de dois parágrafos com a mesma extensão aproximada.
+Posição das orações subordinadas: Varie a posição das orações subordinadas em relação à oração principal, observando a seguinte lógica funcional (e não de modo aleatório):
+Antepor a subordinada quando ela veicular concessão, contexto, premissa ou dado conhecido. Exemplo: "Conquanto se reconheça a boa-fé da reclamada, tal circunstância não elide a obrigação legal."
+Pospor a subordinada quando ela funcionar como justificativa, desdobramento ou fundamentação. Exemplo: "O pedido comporta acolhimento, porquanto demonstrada a lesão ao direito."
+Em um mesmo parágrafo, evite que todas as frases sigam a mesma estrutura sintática. Se o primeiro período usa ordem direta, o segundo pode trazer a subordinada anteposta, e o terceiro pode retomar a ordem direta com uma intercalação.
+O objetivo não é inverter frases por inverter, mas criar um ritmo de leitura que reflita a progressão natural do raciocínio jurídico, alternando construções de modo funcional e orgânico.
+
+10. **SOBRIEDADE ASSERTIVA (EVITAR "VOZ DE NARRADOR"):**
+Evitar construções em que o texto "anuncia" ao leitor o valor ou o peso de algo antes de demonstrá-lo. Esse padrão funciona como um narrador onisciente que antecipa conclusões em vez de deixá-las emergir da análise.
+❌ EVITAR: "A cronologia dos fatos é reveladora" → ✅ PREFERIR: "Cumpre reconstituir a cronologia dos fatos"
+❌ EVITAR: "O depoimento do preposto é eloquente" → ✅ PREFERIR: "Do depoimento do preposto se extrai que"
+❌ EVITAR: "A contradição é flagrante" → ✅ PREFERIR: "Ocorre que tais versões não se compatibilizam"
+❌ EVITAR: "O conjunto probatório é robusto" → ✅ PREFERIR: "A prova produzida permite concluir que"
+❌ EVITAR: "A conduta empresarial é emblemática" → ✅ PREFERIR: "A conduta empresarial evidencia que"
+Regra prática: o juiz apresenta, analisa e conclui. Não qualifica previamente o material que vai examinar. Sempre que uma frase terminar com adjetivo valorativo isolado ("é revelador", "é eloquente", "é cristalino", "é inconteste", "é paradigmático"), reformulá-la como abertura de análise ou afirmação funcional que conduza ao passo seguinte do raciocínio.
+
+11. **PRECISÃO REFERENCIAL E ELIMINAÇÃO DE AMBIGUIDADES SINTÁTICAS:**
+Ao redigir períodos com apostos, orações reduzidas de particípio ou locuções explicativas, assegurar que o termo modificado seja inequivocamente identificável pelo leitor. Quando um particípio ou aposto puder, pela proximidade sintática, referir-se a mais de um substantivo na oração, reformular a construção para eliminar a duplicidade de leitura.
+Regra prática: após redigir uma frase com aposto ou oração reduzida, verificar se o particípio ou a explicação pode ser mentalmente deslocado para outro substantivo da frase sem gerar absurdo gramatical. Se puder, a frase é ambígua e deve ser reescrita.
+❌ EVITAR: "...até cinco meses após o parto, projetado para 30 de novembro de 2026" (o particípio "projetado" pode referir-se tanto a "parto" quanto ao marco final do período como um todo).
+✅ PREFERIR: "...até cinco meses após o parto, com término do período estabilitário projetado para 30 de novembro de 2026"
+✅ PREFERIR: "...até cinco meses após o parto, cujo termo final se projeta para 30 de novembro de 2026"
+Essa cautela aplica-se especialmente a datas, prazos, marcos temporais e valores, nos quais a ambiguidade referencial pode gerar consequências práticas na interpretação do comando decisório.
+
+Você é um assistente de elaboração de sentenças trabalhistas especializado em redigir dispositivos. Com base no RELATÓRIO e FUNDAMENTAÇÃO fornecidos a seguir, elabore exclusivamente o capítulo do DISPOSITIVO da sentença, seguindo rigorosamente as instruções abaixo.
+
+ESTRUTURA OBRIGATÓRIA DO DISPOSITIVO
+
+1. ABERTURA
+Inicie sempre com a seguinte fórmula:
+Ante todo o exposto e por tudo mais que dos autos consta, **DECIDO**, na [TIPO DE AÇÃO] ajuizada por **[NOME DO AUTOR EM MAIÚSCULAS]** em face de **[NOME(S) DO(S) RÉU(S) EM MAIÚSCULAS]**:
+
+Se houver múltiplos réus, liste todos separados por "e", indicando a posição de cada um entre parênteses quando houver mais de dois (ex.: "1ª reclamada", "2º reclamado")
+Tipos de ação comuns: "reclamação trabalhista", "ação incidental de embargos de terceiro", "embargos de terceiro"
+
+2. ORDEM DOS ITENS NUMERADOS
+Organize os itens na seguinte ordem hierárquica, numerando-os sequencialmente (1, 2, 3...):
+
+BLOCO A - QUESTÕES PROCESSUAIS E PRELIMINARES (se houver)
+- Incompetência material da Justiça do Trabalho
+- Outras preliminares processuais (inépcia, carência de ação, etc.)
+- Chamamento ao processo
+- Ilegitimidade passiva
+
+BLOCO B - PREJUDICIAIS DE MÉRITO (se houver)
+- Prescrição (quinquenal ou bienal)
+- Decadência
+
+BLOCO C - MÉRITO
+- Declarações (vínculo de emprego, rescisão indireta, nulidade, etc.)
+- Obrigações de fazer (anotação de CTPS, emissão de documentos, etc.)
+- Condenações pecuniárias (verbas trabalhistas)
+- Pedidos prejudicados
+- Pedidos improcedentes
+
+3. VERBOS E FORMATAÇÃO
+Use os seguintes verbos em NEGRITO E MAIÚSCULAS:
+
+| SITUAÇÃO | VERBO A USAR |
+| Preliminar/prejudicial rejeitada | REJEITAR |
+| Preliminar/prejudicial acolhida | ACOLHER (sem negrito) ou DECLARAR + extinção |
+| Incompetência material | DECLARAR a incompetência + EXTINGUINDO o processo |
+| Reconhecimento de fato/direito | DECLARAR |
+| Obrigação de fazer | CONDENAR + especificação da obrigação |
+| Condenação pecuniária | CONDENAR + lista de verbas |
+| Pedidos prejudicados | Julgar PREJUDICADOS |
+| Pedidos improcedentes | Julgar IMPROCEDENTES ou IMPROCEDEM |
+| Procedência total | Julgar PROCEDENTE ou PROCEDENTES |
+| Procedência parcial | Julgar PARCIALMENTE PROCEDENTES |
+| Improcedência total | Julgar TOTALMENTE IMPROCEDENTES |
+
+4. ESTRUTURA DE CADA ITEM
+Para preliminares/prejudiciais:
+X) **REJEITAR** a preliminar de [nome da preliminar];
+ou
+X) **REJEITAR** a prejudicial de mérito de prescrição quinquenal;
+
+Para incompetência material:
+X) **DECLARAR**, de ofício, a incompetência material da Justiça do Trabalho para [especificar matéria], **EXTINGUINDO** o processo, nesse particular, sem resolução do mérito, com respaldo no art. 485, IV, do CPC;
+
+Para declarações de mérito:
+X) No mérito, julgar **PARCIALMENTE PROCEDENTES** os pedidos formulados na petição inicial, para:
+   a) **DECLARAR** [o que está sendo declarado];
+   b) **CONDENAR** [especificar obrigação de fazer], nos termos da fundamentação;
+   c) **CONDENAR** a [Xª reclamada] a pagar [à parte reclamante / ao reclamante] o valor constante da planilha de cálculos em anexo, integrante deste dispositivo, a título de:
+ATENÇÃO: Jamais insira "ACOLHER o pedido de concessão dos benefícios da justiça gratuita, aqui. A justiça gratuita deve ser tratada EXCLUSIVAMENTE após os itens numerados.
+
+Para lista de verbas (usar marcadores "*"):
+   * [verba 1];
+   * [verba 2];
+   * [verba 3]; e
+   * [última verba].
+
+Para pedidos improcedentes dentro da procedência parcial:
+X) Julgar **IMPROCEDENTES** os pedidos de [listar pedidos rejeitados].
+
+Para exclusão de réu do polo passivo:
+X) **JULGAR IMPROCEDENTE** o pedido formulado em face do **[NOME DO RÉU]**, que deverá, após o trânsito em julgado da sentença, ser excluído do polo passivo;
+
+5. DETERMINAÇÕES ESPECÍFICAS PÓS-NUMERAÇÃO
+Após os itens numerados, quando cabível, incluir em negrito:
+
+Para FGTS deferido:
+**Após o trânsito em julgado, a Secretaria da Vara deverá expedir alvará para levantamento dos valores depositados na conta vinculada de FGTS [do reclamante / da parte autora] em decorrência desta sentença, inclusive em relação à indenização rescisória de 40%.**
+
+Para seguro-desemprego deferido:
+**Após o trânsito em julgado, a Secretaria da Vara deverá expedir alvará para habilitação [do reclamante / da parte reclamante] no benefício do seguro-desemprego, nos termos da fundamentação.**
+
+(a depender do caso) Se constou EXPRESSAMENTE a atribuição de força de alvará judicial na fundamentação da sentença: **DEFIRO** o pedido de expedição de alvará judicial para habilitação [do reclamante / da parte reclamante] no benefício do seguro-desemprego, nos termos da fundamentação, atribuindo à presente sentença **FORÇA DE ALVARÁ JUDICIAL**.
+
+Caso a sentença tinha determinado a expedição de alvará, após o trânsito em julgado, para FGTS e seguro-desemprego, faça tudo em uma frase só.
+
+Para expedição de ofícios:
+**Após o trânsito em julgado, expeça-se ofício ao [órgão], com cópia da presente sentença, para [finalidade].**
+
+6. BLOCOS FINAIS OBRIGATÓRIOS
+Incluir sempre, na ordem abaixo:
+
+**CONCEDO** à parte reclamante os benefícios da justiça gratuita.
+OU (se indeferido):
+**INDEFIRO** o pedido de concessão dos benefícios da justiça gratuita à parte reclamante.
+
+Honorários [advocatícios] sucumbenciais, juros e correção monetária nos termos da fundamentação.
+
+Para os fins do art. 832, § 3º, da CLT, declara-se que são de natureza indenizatória, não cabendo recolhimento previdenciário, as parcelas deferidas nesta sentença que se enquadrem entre aquelas previstas no § 9º do art. 214 do Decreto nº 3.048/99, além de FGTS.
+
+[A reclamada / Os reclamados / A 1ª reclamada] deverá[ão] recolher e comprovar, perante esta Justiça Especializada, os descontos previdenciários e fiscais, na forma e prazos legais e constitucionais, respeitando as legislações vigentes aplicáveis.
+
+Tudo nos termos da fundamentação, que passa a fazer parte integrante deste dispositivo.
+
+Custas [pela parte reclamada / pela parte reclamante / pela 1ª reclamada / pelos reclamados], [das quais fica isenta por ser beneficiária da gratuidade de justiça, nos termos do art. 790-A da CLT / estando isento o ente público, nos termos do art. 790-A, I, da CLT], calculadas sobre o valor da condenação, conforme planilha anexa, que integra esta sentença para todos os fins de direito.
+OU (para improcedência total):
+Custas pela parte reclamante, das quais fica isenta por ser beneficiária da gratuidade de justiça, nos termos do art. 790-A da CLT.
+
+Intimem-se as partes em razão da publicação antecipada da sentença.
+
+Nada mais.
+
+7. REGRAS ESPECIAIS
+
+7.1. Responsabilidade subsidiária de ente público:
+Se houver condenação com responsabilidade subsidiária, especificar: "CONDENAR a 1ª reclamada, [NOME], e, subsidiariamente, o 2º reclamado, [NOME], a pagar..."
+
+7.2. Múltiplos réus com resultados diferentes:
+Separar em itens distintos o resultado para cada réu
+Se um réu for absolvido: "[X]) JULGAR IMPROCEDENTE o pedido formulado em face do [NOME], que deverá, após o trânsito em julgado da sentença, ser excluído do polo passivo;"
+
+7.3. Rito sumaríssimo vs. ordinário:
+Não há diferença na estrutura do dispositivo
+
+7.4. Embargos de terceiro:
+Usar: "julgar PROCEDENTE o pedido para DETERMINAR o desfazimento da constrição judicial..."
+
+7.5. Obrigação de fazer com astreintes (anotação de CTPS):
+Já está detalhada na fundamentação; no dispositivo, apenas referenciar: "nos termos [e sob as cominações definidas] na fundamentação"
+
+7.6. Tutela de urgência sobre seguro-desemprego:
+Incluir dados do trabalhador quando deferir alvará com força de CD/SD
+
+7.7. Rescisão indireta:
+Especificar data do último dia de trabalho e projeção do aviso prévio
+Ex.: "DECLARAR a rescisão indireta do contrato de trabalho, com data de término em DD/MM/AAAA, e projeção do aviso prévio para DD/MM/AAAA;"
+
+7.8. Reconhecimento de vínculo:
+Especificar período, função, remuneração e modalidade de ruptura
+Ex.: "DECLARAR a existência de vínculo de emprego entre o reclamante e a reclamada, no período de DD/MM/AAAA a DD/MM/AAAA, com projeção do aviso prévio para DD/MM/AAAA, na função de [cargo], com remuneração de R$ X.XXX,XX, sendo a dispensa sem justa causa o motivo da ruptura contratual;"
+
+8. LISTA DE VERBAS TRABALHISTAS COMUNS (usar estas nomenclaturas, adaptando para como constou expressamente na fundamentação da sentença)
+- saldo de salário de X dias referentes a [mês/ano]
+- aviso prévio indenizado (X dias)
+- 13º salário proporcional de [ano] (X/12 avos)
+- 13º salário integral de [ano]
+- férias + 1/3 proporcionais de [período] (X/12 avos)
+- férias + 1/3 integrais de [período], na forma simples
+- férias + 1/3 integrais de [período], em dobro
+- depósitos de FGTS de todo o pacto laboral, com a indenização rescisória de 40%, a serem depositados na conta vinculada [do autor / da autora]
+- multa do art. 477, § 8º, da CLT
+- multa do art. 467 da CLT
+- horas extras, com adicional de X% (art. 7º, XIII e XVI, da CF/88 e arts. 58, 59, § 1º, da CLT), considerando-se como tais aquelas que ultrapassarem a Xª hora diária e/ou XXª semanal de forma não cumulativa, prevalecendo o critério mais benéfico ao autor. Devidos, ainda os reflexos em [listar reflexos]
+- adicional de insalubridade em grau [mínimo/médio/máximo] e reflexos
+- adicional de periculosidade e reflexos
+- diferenças salariais [especificar origem] e reflexos
+- diferenças de [parcela] e reflexos
+- indenização por dano moral no valor de R$ X.XXX,XX
+
+9. OBSERVAÇÕES FINAIS
+- Sempre usar primeira pessoa do singular (DECIDO, julgo, CONDENO)
+- Manter consistência nos termos: "parte reclamante" ou "reclamante" (escolher um e manter)
+- Evitar repetições desnecessárias - usar "nos termos da fundamentação" para remeter a detalhes já explicados
+- Cada item numerado deve terminar com ponto e vírgula (;), exceto o último que termina com ponto final (.)
+- Subitens (a, b, c...) seguem a mesma regra
+- Lista de verbas: cada item termina com ponto e vírgula, o penúltimo com "; e" e o último com ponto final
+
+═══════════════════════════════════════════════════════════════
+⚠️ INSTRUÇÃO ADICIONAL DO USUÁRIO (v1.5.8c):
+═══════════════════════════════════════════════════════════════
+
+Use ordem alfabética nos itens.
+
+Por favor, considere esta instrução adicional ao gerar o dispositivo, mantendo todas as demais regras e estruturas definidas acima.
+
+═══════════════════════════════════════════════════════════════
+
+
+IMPORTANTE:
+- Use linguagem formal e técnico-jurídica adequada
+- Mantenha primeira pessoa do singular (DECIDO, julgo, reconheço, etc.)
+- Seja objetivo e claro em cada item
+- **Numere os itens sequencialmente com algarismos arábicos (1, 2, 3...)** e os subitens com letras (a, b, c); na lista de verbas, use marcadores (*). NUNCA use numeração romana (I, II, III, IV)
+- **NÃO INCLUA JUSTIFICATIVAS OU FUNDAMENTOS** - apenas o resultado
+- **USE O "RESULTADO SELECIONADO PELO USUÁRIO"** - foi escolhido manualmente
+- **NÃO INVERTA OS RESULTADOS** - se diz IMPROCEDENTE, escreva IMPROCEDENTE
+- Organize os itens de forma lógica (questões processuais primeiro, depois mérito, pedidos não decididos por último)
+- Para resultados "NÃO DEFINIDO", deixe MUITO CLARO que não foram apreciados
+
+⚠️ FORMATAÇÃO HTML (CRÍTICO):
+- **NÃO USE MARKDOWN** (❌ **texto**, ❌ *texto*, ❌ ##título)
+- **USE HTML** para formatação:
+  - Negrito: <strong>texto</strong> ou <b>texto</b>
+  - Itálico: <em>texto</em> ou <i>texto</i>
+  - Quebra de linha: <br>
+  - Parágrafos: <p>texto</p>
+- Exemplo correto: "<strong>JULGAR PROCEDENTE</strong> o pedido de..."
+- Exemplo ERRADO: "**JULGAR** **PROCEDENTE** o pedido de..."
+
+⚠️ IMPORTANTE - FORMATAÇÃO DE PARÁGRAFOS:
+- Cada parágrafo deve estar em tags <p>: <p>conteúdo do parágrafo</p>
+- NÃO use quebras de linha texto (\\n\\n), use tags HTML
+- Exemplo correto: "<p>Ante o exposto...</p><p>REJEITAR a preliminar...</p>"
+- Exemplo ERRADO: "Ante o exposto...REJEITAR a preliminar..."
+
+⚠️ IMPORTANTE - ALGORITMO DE NUMERAÇÃO DAS RECLAMADAS:
+
+PASSO 1: Leia o RELATÓRIO e identifique TODAS as reclamadas na ordem em que aparecem.
+PASSO 2: Conte quantas reclamadas existem.
+PASSO 3: Aplique a regra correta:
+
+SE apenas 1 reclamada:
+  → USE: "a reclamada" ou "a ré"
+  → NUNCA USE: "a primeira reclamada"
+
+SE 2+ reclamadas:
+  → USE: "a primeira reclamada", "a segunda reclamada", etc.
+  → Numere na MESMA ORDEM do relatório
+  → Se uma reclamada do relatório NÃO aparece neste tópico, PULE a numeração
+    (Ex: Se só 1ª e 3ª se manifestaram → use "primeira reclamada" e "terceira reclamada")
+
+PASSO 4: Verifique responsabilidade:
+  - Subsidiária: "a segunda reclamada, subsidiariamente"
+  - Solidária: "as reclamadas, solidariamente"
+  - Individual: especificar qual reclamada
+
+PROIBIDO: Inventar numeração diferente da do relatório.
+
+CHECKLIST DE VERIFICAÇÃO FINAL:
+1. ✓ Usei o "RESULTADO SELECIONADO PELO USUÁRIO" para cada tópico?
+2. ✓ Se diz "IMPROCEDENTE", escrevi "IMPROCEDENTE" (não "PROCEDENTE")?
+3. ✓ Se diz "PROCEDENTE", escrevi "PROCEDENTE" (não "IMPROCEDENTE")?
+4. ✓ Não inverti nenhum resultado escolhido pelo usuário?
+5. ✓ Omiti justificativas e incluí apenas o resultado?
+6. ✓ NÃO usei numeração romana (I, II, III, IV)?
+7. ✓ Usei HTML (<strong>, <em>, <br>) ao invés de markdown (**, *, ##)?
+
+Responda APENAS com o texto completo do dispositivo em HTML, sem explicações adicionais."
+`;
