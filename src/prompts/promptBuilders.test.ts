@@ -376,12 +376,6 @@ describe('promptBuilders', () => {
         expect(result.formatacaoParagrafos.length).toBeGreaterThan(0);
       });
 
-      it('should include estiloRedacao', () => {
-        const docs: AnalyzedDocumentsForPrompt = {};
-        const result = buildMiniReportPromptCore(docs, undefined, null);
-        expect(result.estiloRedacao).toBeDefined();
-      });
-
       it('should include preservarAnonimizacao', () => {
         const docs: AnalyzedDocumentsForPrompt = {};
         const result = buildMiniReportPromptCore(docs, undefined, null);

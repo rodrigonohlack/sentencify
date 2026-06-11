@@ -26,7 +26,6 @@ import type {
 } from '../types';
 import type { QuillInstance } from '../types';
 import { AI_PROMPTS } from '../prompts/ai-prompts';
-import { resolveStyleBlock } from '../prompts/system';
 import { buildInlineGenerateSystemPrompt, buildInlineFimBlock } from '../prompts/system';
 import { stripInlineColors } from '../utils/color-stripper';
 import { prepareDocumentsContext, prepareProofsContext } from '../utils/context-helpers';
@@ -350,7 +349,7 @@ ${aiIntegration.aiInstruction}
 - NÃO inicie com "Trata-se de...", "Cuida-se de...", "O reclamante postula..."
 - Vá DIRETO para a análise jurídica, fundamentação e conclusão
 
-${resolveStyleBlock(aiIntegration.aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao)}
+Aplique rigorosamente o ESTILO DE REDAÇÃO definido nas instruções desta conversa.
 
 Com base em TODOS os elementos acima (contexto do tópico, documentos processuais e instrução do usuário), gere o texto solicitado.
 
@@ -454,7 +453,6 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
       anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
       anonymizationSettings: aiIntegration?.aiSettings?.anonymization as AnonymizationSettings | undefined,
       knowledgePackage: options.knowledgePackage,
-      customStylePrompt: aiIntegration?.aiSettings?.customPrompt,
     });
   }, [editingTopic, selectedTopics, topicContextScope, analyzedDocuments, proofManager, storage.fileToBase64, aiIntegration?.aiSettings?.anonymization, aiIntegration?.aiSettings?.customPrompt, editorRef]);
 
@@ -496,7 +494,6 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
       anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
       anonymizationSettings: aiIntegration?.aiSettings?.anonymization as AnonymizationSettings | undefined,
       inlineMode: true,
-      customStylePrompt: aiIntegration?.aiSettings?.customPrompt,
     });
 
     // System prompt dedicado: sem auto-revisão final e sem o "raciocínio em voz alta"
@@ -705,7 +702,7 @@ ${aiIntegration.aiInstructionModel}
 - Vá DIRETO para a análise jurídica, fundamentação e conclusão
 - Use termos genéricos ("o reclamante", "a reclamada", "os documentos dos autos")
 
-${resolveStyleBlock(aiIntegration.aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao)}
+Aplique rigorosamente o ESTILO DE REDAÇÃO definido nas instruções desta conversa.
 
 Baseado no contexto acima e na instrução do usuário, gere o texto solicitado. O texto deve:
 - Ser adequado para um modelo reutilizável de decisão judicial trabalhista

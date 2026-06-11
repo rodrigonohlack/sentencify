@@ -18,7 +18,6 @@ import { withRetry, AI_RETRY_DEFAULTS } from '../utils/retry';
 import { isPdfBinaryAllowed } from '../utils/manualCall';
 import {
   AI_PROMPTS,
-  resolveStyleBlock,
   buildMiniReportPrompt as buildMiniReportPromptShared,
   buildBatchMiniReportPrompt as buildBatchMiniReportPromptShared
 } from '../prompts';
@@ -692,8 +691,6 @@ ${AI_PROMPTS.numeracaoReclamadas}
 ${AI_PROMPTS.formatacaoHTML("<strong>JOÃO DA SILVA</strong>, qualificado na inicial...")}
 
 ${AI_PROMPTS.formatacaoParagrafos("<p>JOÃO DA SILVA, qualificado na inicial...</p><p>Em defesa, a reclamada...</p>")}
-
-${resolveStyleBlock(aiIntegration.aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao)}
 
 ${aiIntegration.aiSettings?.anonymization?.enabled ? AI_PROMPTS.preservarAnonimizacao : ''}
 

@@ -175,43 +175,26 @@ describe('buildChatContext', () => {
       expect(getAllText(result)).toContain('[INSTRUCAO_NAO_PRESUMIR]');
     });
 
-    it('inclui estilo de redação no prompt', async () => {
-      const result = await buildChatContext(createParams());
-
-      expect(getAllText(result)).toContain('[ESTILO_REDACAO]');
-    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ESTILO DE REDAÇÃO (v1.53.5)
+  // ESTILO DE REDAÇÃO (v1.53.16: SÓ no system — sem cópia na mensagem)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  describe('Estilo de redação (v1.53.5)', () => {
-    it('customStylePrompt SUBSTITUI o estilo padrão na mensagem', async () => {
-      const result = await buildChatContext(createParams({
-        customStylePrompt: 'Escreva em períodos curtos, sem conectores.',
-      }));
-      const allText = getAllText(result);
-
-      expect(allText).toContain('ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO');
-      expect(allText).toContain('Escreva em períodos curtos, sem conectores.');
-      expect(allText).not.toContain('[ESTILO_REDACAO]');
-    });
-
-    it('sem customStylePrompt usa o estilo padrão', async () => {
+  describe('Estilo de redação (v1.53.16: só no system)', () => {
+    it('NÃO copia o bloco de estilo na mensagem (vai só no system)', async () => {
       const result = await buildChatContext(createParams());
       const allText = getAllText(result);
 
-      expect(allText).toContain('[ESTILO_REDACAO]');
+      expect(allText).not.toContain('[ESTILO_REDACAO]');
       expect(allText).not.toContain('ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO');
     });
 
-    it('customStylePrompt só com espaços cai no estilo padrão', async () => {
-      const result = await buildChatContext(createParams({
-        customStylePrompt: '   ',
-      }));
+    it('styleAnchor aponta para as instruções da conversa (system)', async () => {
+      const result = await buildChatContext(createParams());
+      const lastItem = getLastTextItem(result);
 
-      expect(getAllText(result)).toContain('[ESTILO_REDACAO]');
+      expect(lastItem.text).toContain('ESTILO DE REDAÇÃO definido nas instruções desta conversa');
     });
 
     it('re-ancora o estilo junto à instrução do usuário (modo chat)', async () => {

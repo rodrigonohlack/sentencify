@@ -8,8 +8,6 @@
  */
 
 import React from 'react';
-import { AI_PROMPTS } from '../prompts/ai-prompts';
-import { resolveStyleBlock } from '../prompts/system';
 import { generateModelId } from '../utils/text';
 import { TFIDFSimilarity } from '../services/EmbeddingsServices';
 import type { Topic, Model, AIMessageContent } from '../types';
@@ -301,7 +299,7 @@ Identifique onde termina o mini-relatorio e onde comeca a fundamentacao. Mantenh
 
 Voce entendeu? INICIE DIRETAMENTE NA ANALISE JURIDICA. ZERO mini-relatorio.
 
-${resolveStyleBlock(aiIntegration?.aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao)}
+Na redação do modelo, siga rigorosamente o ESTILO DE REDAÇÃO definido nas instruções desta conversa.
 
 CONTEXTO DO TÓPICO ORIGINAL:
 Título: ${editingTopic.title}

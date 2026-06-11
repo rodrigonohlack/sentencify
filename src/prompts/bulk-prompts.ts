@@ -6,11 +6,12 @@
 
 /**
  * Prompt para análise de documentos e extração de modelos jurídicos
+ * v1.53.16: o bloco de estilo não é mais colado na mensagem — a chamada usa
+ * useInstructions:true e o ESTILO DE REDAÇÃO (inclusive customPrompt) já vai no system
  * @param textToAnalyze - Texto do documento a ser analisado
- * @param estiloRedacao - Estilo de redação do juiz (AI_PROMPTS.estiloRedacao)
  * @returns Prompt completo para a IA
  */
-export const buildBulkAnalysisPrompt = (textToAnalyze: string, estiloRedacao: string): string => {
+export const buildBulkAnalysisPrompt = (textToAnalyze: string): string => {
   return `Você é um assistente jurídico especializado em criar modelos de decisão trabalhista GENÉRICOS e REUTILIZÁVEIS.
 
 TAREFA: Analise o documento jurídico fornecido e identifique TODOS os tópicos/assuntos jurídicos distintos que podem se tornar modelos de decisão completos.
@@ -170,9 +171,7 @@ Identifique onde termina o mini-relatorio e onde comeca a fundamentacao. Mantenh
 
 Voce entendeu? INICIE DIRETAMENTE NA ANALISE JURIDICA. ZERO mini-relatorio.
 
-${estiloRedacao}
-
-A redação do modelo deve ser de EXCELENTE QUALIDADE, seguindo rigorosamente estes critérios.
+A redação do modelo deve ser de EXCELENTE QUALIDADE, seguindo rigorosamente o ESTILO DE REDAÇÃO definido nas instruções desta conversa.
 
 IMPORTANTE:
 - Um documento pode conter 1, 2, 3 ou mais tópicos diferentes

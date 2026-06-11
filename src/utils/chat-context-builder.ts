@@ -13,7 +13,6 @@
  */
 
 import { AI_PROMPTS, SOCRATIC_INTERN_LOGIC } from '../prompts/ai-prompts';
-import { resolveStyleBlock } from '../prompts/system';
 import { INSTRUCAO_NAO_PRESUMIR } from '../prompts/instrucoes';
 import { prepareDocumentsContext, prepareProofsContext, prepareOralProofsContext } from './context-helpers';
 import type { AIMessageContent, AnonymizationSettings } from '../types';
@@ -83,12 +82,6 @@ export interface BuildChatContextParams {
   /** v1.51.0: Geração inline (Ctrl+K) — omite o modo socrático e o INSTRUCAO_NAO_PRESUMIR
    *  (que fazem a IA "narrar" a avaliação de pendências antes de redigir). */
   inlineMode?: boolean;
-  /** v1.53.5: Estilo de redação personalizado do magistrado (aiSettings.customPrompt).
-   *  Quando definido, SUBSTITUI o bloco de estilo padrão (AI_PROMPTS.estiloRedacao) na
-   *  mensagem — mesma semântica substitutiva já aplicada ao system prompt em
-   *  getAiInstructions. Sem isso, o modelo recebia o estilo personalizado no system e o
-   *  estilo padrão (divergente) colado na instrução final, que ganhava por recência. */
-  customStylePrompt?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -218,11 +211,11 @@ Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
 ${currentContent || 'Ainda não foi escrito nada'}`;
   }
 
-  // 6.5. Bloco de estilo: personalizado do magistrado (substitutivo) ou padrão
-  // v1.53.13: via resolveStyleBlock (fonte única da regra de substituição)
-  const styleBlock = resolveStyleBlock(params.customStylePrompt, AI_PROMPTS.estiloRedacao);
-
   // 7. Montar prompt completo
+  // v1.53.16: o bloco de ESTILO DE REDAÇÃO não é mais copiado na mensagem — ele já vai
+  // no system em TODAS as chamadas deste contexto (chat: useInstructions:true; inline:
+  // buildInlineGenerateSystemPrompt), inclusive na variante customPrompt do magistrado.
+  // O re-anchoring (styleAnchor junto à instrução + lembrete por turno) permanece.
   contentArray.push({
     type: 'text',
     text: `Você está auxiliando na redação de uma DECISÃO JUDICIAL TRABALHISTA.
@@ -245,7 +238,6 @@ ${inlineMode ? '' : INSTRUCAO_NAO_PRESUMIR}
 
 ${inlineMode ? '' : SOCRATIC_INTERN_LOGIC}
 
-${styleBlock}
 ${AI_PROMPTS.numeracaoReclamadas}
 ${anonymizationEnabled ? AI_PROMPTS.preservarAnonimizacao : ''}
 
@@ -280,7 +272,7 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
   // v1.53.13: o anchor cede à instrução do usuário (ex.: "liste os pedidos" deve produzir
   // lista, apesar da proibição de enumerações do estilo) e ao pacote de conhecimento,
   // cuja seção declara expressamente prioridade sobre o estilo padrão.
-  const styleAnchor = `Ao redigir texto para a decisão, aplique rigorosamente o ESTILO DE REDAÇÃO definido acima, naquilo que não conflitar com a instrução do usuário${params.knowledgePackage ? ' nem com as INSTRUÇÕES VINCULANTES do pacote de conhecimento selecionado, que prevalecem sobre o estilo' : ''}.`;
+  const styleAnchor = `Ao redigir texto para a decisão, aplique rigorosamente o ESTILO DE REDAÇÃO definido nas instruções desta conversa, naquilo que não conflitar com a instrução do usuário${params.knowledgePackage ? ' nem com as INSTRUÇÕES VINCULANTES do pacote de conhecimento selecionado, que prevalecem sobre o estilo' : ''}.`;
   contentArray.push({
     type: 'text',
     text: inlineMode

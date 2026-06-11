@@ -375,11 +375,12 @@ ${AI_INSTRUCTIONS_SAFETY}`;
       expect(prompt).not.toContain('INSTRUÇÃO ADICIONAL DO USUÁRIO');
     });
 
-    it('estilo personalizado do magistrado substitui o default', () => {
-      const prompt = buildDispositivoPromptText({ ...fixture, customPrompt: 'Frases curtas.' });
-      expect(prompt).toContain('ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO');
-      expect(prompt).toContain('Frases curtas.');
+    // v1.53.16: o estilo NÃO vai mais na mensagem do dispositivo — só no system,
+    // via semFormatoNarrativo:true (que cobre também o customPrompt do magistrado)
+    it('não copia o bloco de estilo na mensagem (vai só no system)', () => {
+      const prompt = buildDispositivoPromptText(fixture);
       expect(prompt).not.toContain(AI_PROMPTS.estiloRedacaoSemFormatoNarrativo);
+      expect(prompt).not.toContain('ESTILO DE REDAÇÃO');
     });
   });
 });

@@ -35,8 +35,6 @@ export interface AIIntegrationForDispositivo {
   }) => Promise<string>;
   aiSettings: {
     modeloDispositivo?: string;
-    /** v1.53.13: estilo personalizado do magistrado — substitui o bloco default na mensagem */
-    customPrompt?: string;
     anonymization?: { enabled?: boolean };
     doubleCheck?: {
       enabled: boolean;
@@ -234,12 +232,13 @@ export function useDispositivoGeneration({
       // Preparar prompt com contexto dos tópicos
       // v1.53.14: fonte única do prompt (buildDispositivoPromptText) — antes duplicado
       // verbatim com regenerateDispositivoWithInstruction
+      // v1.53.16: estilo SÓ no system (semFormatoNarrativo:true carrega a variante certa,
+      // inclusive customPrompt do magistrado) — cópia na mensagem removida
       const promptText = buildDispositivoPromptText({
         primeiroParagrafoRelatorio,
         anonymizationEnabled: !!aiIntegration.aiSettings.anonymization?.enabled,
         topicosComDecisao,
         topicosSemDecisao,
-        customPrompt: aiIntegration.aiSettings.customPrompt,
         modeloDispositivo: aiIntegration.aiSettings.modeloDispositivo,
       });
 
@@ -432,7 +431,6 @@ export function useDispositivoGeneration({
         anonymizationEnabled: !!aiIntegration.aiSettings.anonymization?.enabled,
         topicosComDecisao,
         topicosSemDecisao,
-        customPrompt: aiIntegration.aiSettings.customPrompt,
         modeloDispositivo: aiIntegration.aiSettings.modeloDispositivo,
         instrucaoCustomizada,
       });

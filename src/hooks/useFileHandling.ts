@@ -22,7 +22,6 @@ import { TFIDFSimilarity } from '../services/EmbeddingsServices';
 import { parseAIResponse, extractJSON, BulkExtractionSchema } from '../schemas/ai-responses';
 import { withRetry, AI_RETRY_DEFAULTS } from '../utils/retry';
 import {
-  AI_PROMPTS,
   buildBulkAnalysisPrompt,
   BULK_AI_CONFIG,
   INTER_BATCH_DELAY,
@@ -30,7 +29,6 @@ import {
   VALID_FILE_EXTENSIONS,
   VALID_FILE_TYPES,
   MAX_BULK_FILES,
-  resolveStyleBlock,
 } from '../prompts';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -229,11 +227,8 @@ export function useFileHandling({
     const textToAnalyze = textContent.trim();
 
     // Construir prompt usando função externa
-    // v1.53.13: estilo personalizado do magistrado SUBSTITUI o default também na mensagem
-    const analysisPrompt = buildBulkAnalysisPrompt(
-      textToAnalyze,
-      resolveStyleBlock(aiIntegration.aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao)
-    );
+    // v1.53.16: estilo SÓ no system (useInstructions:true, inclusive customPrompt)
+    const analysisPrompt = buildBulkAnalysisPrompt(textToAnalyze);
 
     // Chamar IA com configurações otimizadas
     const aiResponseText = await aiIntegration.callAI([{

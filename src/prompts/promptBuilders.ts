@@ -13,7 +13,6 @@
 import type { Topic, AITextContent, AIDocumentContent } from '../types';
 import { AI_PROMPTS } from './ai-prompts';
 import type { TopicoDispositivo, TopicoSemDecisao } from './ai-prompts';
-import { resolveStyleBlock } from './system';
 import { wrapUserContent } from '../utils/prompt-safety';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -40,8 +39,6 @@ export interface AISettingsForPrompt {
   modeloRelatorio?: string;
   detailedMiniReports?: boolean;
   anonymization?: { enabled?: boolean };
-  /** v1.53.13: estilo personalizado do magistrado — substitui o bloco default na mensagem */
-  customPrompt?: string;
 }
 
 export interface PartesProcesso {
@@ -58,7 +55,6 @@ export interface MiniReportPromptCore {
   formatacaoHTML: string;
   formatacaoParagrafos: string;
   nivelDetalhe: string;
-  estiloRedacao: string;
   preservarAnonimizacao: string;
   proibicaoMetaComentarios: string;
 }
@@ -242,8 +238,6 @@ ${partesProcesso.reclamadas.map((r, i: number) => `- ${i + 1}ª Reclamada: ${r}`
 Gere com alto nível de detalhe em relação aos FATOS alegados pelas partes.
 A descrição fática (postulatória e defensiva) deve ter alto nível de detalhe.
 ` : '',
-    // v1.53.13: estilo personalizado do magistrado SUBSTITUI o default também na mensagem
-    estiloRedacao: resolveStyleBlock(aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao),
     preservarAnonimizacao: aiSettings?.anonymization?.enabled ? AI_PROMPTS.preservarAnonimizacao : '',
     proibicaoMetaComentarios: AI_PROMPTS.proibicaoMetaComentarios
   };
@@ -295,8 +289,6 @@ ${core.formatacaoParagrafos}
 
 ${core.nivelDetalhe}
 
-${core.estiloRedacao}
-
 ${core.preservarAnonimizacao}
 
 ${core.proibicaoMetaComentarios}
@@ -344,8 +336,6 @@ ${core.formatacaoParagrafos}
 
 ${core.nivelDetalhe}
 
-${core.estiloRedacao}
-
 ${core.preservarAnonimizacao}
 
 ${core.proibicaoMetaComentarios}
@@ -371,8 +361,6 @@ export interface BuildDispositivoPromptParams {
   anonymizationEnabled: boolean;
   topicosComDecisao: TopicoDispositivo[];
   topicosSemDecisao: TopicoSemDecisao[];
-  /** Estilo personalizado do magistrado — substitui o bloco default */
-  customPrompt?: string;
   /** Modelo personalizado de dispositivo do usuário */
   modeloDispositivo?: string;
   /**
@@ -396,7 +384,6 @@ export function buildDispositivoPromptText(params: BuildDispositivoPromptParams)
     anonymizationEnabled,
     topicosComDecisao,
     topicosSemDecisao,
-    customPrompt,
     modeloDispositivo,
     instrucaoCustomizada,
   } = params;
@@ -442,8 +429,6 @@ ${AI_PROMPTS.buildTopicosSection(topicosComDecisao, topicosSemDecisao)}
 INSTRUÇÕES PARA O DISPOSITIVO:
 
 ${AI_PROMPTS.regraFundamentalDispositivo}
-
-${resolveStyleBlock(customPrompt, AI_PROMPTS.estiloRedacaoSemFormatoNarrativo)}
 
 ${modeloDispositivo ? `
 ═══════════════════════════════════════════════════════════════
