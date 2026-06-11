@@ -82,6 +82,12 @@ export interface BuildChatContextParams {
   /** v1.51.0: Geração inline (Ctrl+K) — omite o modo socrático e o INSTRUCAO_NAO_PRESUMIR
    *  (que fazem a IA "narrar" a avaliação de pendências antes de redigir). */
   inlineMode?: boolean;
+  /** v1.53.5: Estilo de redação personalizado do magistrado (aiSettings.customPrompt).
+   *  Quando definido, SUBSTITUI o bloco de estilo padrão (AI_PROMPTS.estiloRedacao) na
+   *  mensagem — mesma semântica substitutiva já aplicada ao system prompt em
+   *  getAiInstructions. Sem isso, o modelo recebia o estilo personalizado no system e o
+   *  estilo padrão (divergente) colado na instrução final, que ganhava por recência. */
+  customStylePrompt?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -211,6 +217,13 @@ Decisão: ${t.editedFundamentacao || t.fundamentacao || 'Não escrita'}
 ${currentContent || 'Ainda não foi escrito nada'}`;
   }
 
+  // 6.5. Bloco de estilo: personalizado do magistrado (substitutivo) ou padrão
+  const customStyle = params.customStylePrompt?.trim();
+  const styleBlock = customStyle
+    ? `📝 ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO (substitui o estilo padrão — siga-o rigorosamente):
+${customStyle}`
+    : AI_PROMPTS.estiloRedacao;
+
   // 7. Montar prompt completo
   contentArray.push({
     type: 'text',
@@ -234,7 +247,7 @@ ${inlineMode ? '' : INSTRUCAO_NAO_PRESUMIR}
 
 ${inlineMode ? '' : SOCRATIC_INTERN_LOGIC}
 
-${AI_PROMPTS.estiloRedacao}
+${styleBlock}
 ${AI_PROMPTS.numeracaoReclamadas}
 ${anonymizationEnabled ? AI_PROMPTS.preservarAnonimizacao : ''}
 
@@ -264,13 +277,20 @@ ${AI_PROMPTS.formatacaoParagrafos("<p>Primeiro parágrafo.</p><p>Segundo parágr
   // 9. Instrução do usuário por ÚLTIMO (maior peso — pode refinar ou sobrepor o pacote)
   // v1.51.0: no modo inline (Ctrl+K) o texto vai direto pra decisão — sem o andaime de
   // "confirme antes / Nenhuma informação pendente" (que gerava o preâmbulo meta).
+  // v1.53.5: re-anchoring do estilo junto à instrução final — instruções de estilo
+  // distantes (atrás dos documentos) eram frequentemente ignoradas na redação.
+  const styleAnchor = 'Ao redigir texto para a decisão, aplique rigorosamente o ESTILO DE REDAÇÃO definido acima.';
   contentArray.push({
     type: 'text',
     text: inlineMode
       ? `🎯 INSTRUÇÃO DO USUÁRIO:
-${userMessage}`
+${userMessage}
+
+${styleAnchor}`
       : `🎯 INSTRUÇÃO DO USUÁRIO:
 ${userMessage}
+
+${styleAnchor}
 
 Quando faltar informação expressa necessária à redação, PERGUNTE ao usuário antes de redigir. Prefira perguntar a presumir.
 

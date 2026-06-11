@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useChatAssistant, MAX_CHAT_HISTORY_MESSAGES } from './useChatAssistant';
+import { useChatAssistant, MAX_CHAT_HISTORY_MESSAGES, PER_TURN_STYLE_REMINDER } from './useChatAssistant';
 
 describe('useChatAssistant', () => {
   // Mock AI integration
@@ -454,6 +454,68 @@ describe('useChatAssistant', () => {
       // Second call should include contentForApi from first message
       const secondCallArgs = mockAI.callAI.mock.calls[1][0];
       expect(secondCallArgs[0].content).toBe('Full context content');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PER-TURN STYLE REMINDER (v1.53.5)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Per-turn style reminder (v1.53.5)', () => {
+    it('não anexa lembrete na primeira mensagem (contexto já re-ancora o estilo)', async () => {
+      const mockAI = createMockAIIntegration();
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+      const contextBuilder = vi.fn(() => 'Full context content');
+
+      await act(async () => {
+        await result.current.send('First', contextBuilder);
+      });
+
+      const firstCallArgs = mockAI.callAI.mock.calls[0][0];
+      expect(firstCallArgs[0].content).toBe('Full context content');
+    });
+
+    it('anexa lembrete de estilo apenas no payload da API do turno seguinte', async () => {
+      const mockAI = createMockAIIntegration();
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+      const contextBuilder = vi.fn(() => 'Full context content');
+
+      await act(async () => {
+        await result.current.send('First', contextBuilder);
+      });
+      await act(async () => {
+        await result.current.send('Second', contextBuilder);
+      });
+
+      const secondCallArgs = mockAI.callAI.mock.calls[1][0];
+      const lastApiMessage = secondCallArgs[secondCallArgs.length - 1];
+      expect(lastApiMessage.content).toBe('Second' + PER_TURN_STYLE_REMINDER);
+      expect(lastApiMessage.content).toContain('ESTILO DE REDAÇÃO');
+
+      // Histórico exibido/persistido guarda a mensagem original, sem lembrete
+      expect(result.current.history[2].content).toBe('Second');
+    });
+
+    it('turnos anteriores são reenviados crus (sem lembrete acumulado)', async () => {
+      const mockAI = createMockAIIntegration();
+      const { result } = renderHook(() => useChatAssistant(mockAI));
+      const contextBuilder = vi.fn(() => 'Full context content');
+
+      await act(async () => {
+        await result.current.send('First', contextBuilder);
+      });
+      await act(async () => {
+        await result.current.send('Second', contextBuilder);
+      });
+      await act(async () => {
+        await result.current.send('Third', contextBuilder);
+      });
+
+      const thirdCallArgs = mockAI.callAI.mock.calls[2][0];
+      // "Second" reenviado do histórico, sem o lembrete
+      expect(thirdCallArgs[2].content).toBe('Second');
+      // Apenas a mensagem nova ("Third") carrega o lembrete
+      expect(thirdCallArgs[thirdCallArgs.length - 1].content).toBe('Third' + PER_TURN_STYLE_REMINDER);
     });
   });
 

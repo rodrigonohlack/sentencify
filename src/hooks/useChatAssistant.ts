@@ -20,6 +20,18 @@ import type { ChatMessage, CallAIFunction, AIMessageContent, GroundingMetadata }
  */
 export const MAX_CHAT_HISTORY_MESSAGES = 20;
 
+/**
+ * v1.53.5: Lembrete de estilo anexado à mensagem do usuário nos turnos SEGUINTES do chat
+ * (apenas no payload da API — o histórico exibido/persistido guarda a mensagem original).
+ * Nos turnos posteriores ao primeiro, as instruções de estilo ficam soterradas atrás dos
+ * documentos da primeira mensagem e a redação frequentemente as ignorava — exigindo o
+ * "aplique o estilo" manual do usuário. O fluxo socrático (pergunta → resposta → redação)
+ * torna isso pior: a redação de fato acontece justamente nos turnos seguintes.
+ */
+export const PER_TURN_STYLE_REMINDER = `
+
+(Quando esta resposta incluir texto para a decisão, aplique rigorosamente o ESTILO DE REDAÇÃO definido nas instruções desta conversa e formate em HTML.)`;
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -251,9 +263,12 @@ export function useChatAssistant(
         }
 
         // Nova mensagem
+        // v1.53.5: lembrete de estilo só no payload da API (histórico guarda a original);
+        // apenas o último turno carrega o lembrete — os anteriores são reenviados crus,
+        // preservando o prefixo estável para o prompt caching.
         apiMessages.push({
           role: 'user' as const,
-          content: message
+          content: message + PER_TURN_STYLE_REMINDER
         });
       }
 

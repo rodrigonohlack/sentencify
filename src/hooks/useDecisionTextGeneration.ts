@@ -448,8 +448,9 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
       anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
       anonymizationSettings: aiIntegration?.aiSettings?.anonymization as AnonymizationSettings | undefined,
       knowledgePackage: options.knowledgePackage,
+      customStylePrompt: aiIntegration?.aiSettings?.customPrompt,
     });
-  }, [editingTopic, selectedTopics, topicContextScope, analyzedDocuments, proofManager, storage.fileToBase64, aiIntegration?.aiSettings?.anonymization, editorRef]);
+  }, [editingTopic, selectedTopics, topicContextScope, analyzedDocuments, proofManager, storage.fileToBase64, aiIntegration?.aiSettings?.anonymization, aiIntegration?.aiSettings?.customPrompt, editorRef]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // v1.51.0: GERAÇÃO INLINE (Ctrl+K)
@@ -489,6 +490,7 @@ Responda APENAS com o texto gerado em HTML, sem prefácio, sem explicações. Ge
       anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
       anonymizationSettings: aiIntegration?.aiSettings?.anonymization as AnonymizationSettings | undefined,
       inlineMode: true,
+      customStylePrompt: aiIntegration?.aiSettings?.customPrompt,
     });
 
     // System prompt dedicado: sem auto-revisão final e sem o "raciocínio em voz alta"

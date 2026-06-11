@@ -183,6 +183,53 @@ describe('buildChatContext', () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // ESTILO DE REDAÇÃO (v1.53.5)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Estilo de redação (v1.53.5)', () => {
+    it('customStylePrompt SUBSTITUI o estilo padrão na mensagem', async () => {
+      const result = await buildChatContext(createParams({
+        customStylePrompt: 'Escreva em períodos curtos, sem conectores.',
+      }));
+      const allText = getAllText(result);
+
+      expect(allText).toContain('ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO');
+      expect(allText).toContain('Escreva em períodos curtos, sem conectores.');
+      expect(allText).not.toContain('[ESTILO_REDACAO]');
+    });
+
+    it('sem customStylePrompt usa o estilo padrão', async () => {
+      const result = await buildChatContext(createParams());
+      const allText = getAllText(result);
+
+      expect(allText).toContain('[ESTILO_REDACAO]');
+      expect(allText).not.toContain('ESTILO DE REDAÇÃO PERSONALIZADO PELO MAGISTRADO');
+    });
+
+    it('customStylePrompt só com espaços cai no estilo padrão', async () => {
+      const result = await buildChatContext(createParams({
+        customStylePrompt: '   ',
+      }));
+
+      expect(getAllText(result)).toContain('[ESTILO_REDACAO]');
+    });
+
+    it('re-ancora o estilo junto à instrução do usuário (modo chat)', async () => {
+      const result = await buildChatContext(createParams());
+      const lastItem = getLastTextItem(result);
+
+      expect(lastItem.text).toContain('aplique rigorosamente o ESTILO DE REDAÇÃO');
+    });
+
+    it('re-ancora o estilo junto à instrução do usuário (modo inline)', async () => {
+      const result = await buildChatContext(createParams({ inlineMode: true }));
+      const lastItem = getLastTextItem(result);
+
+      expect(lastItem.text).toContain('aplique rigorosamente o ESTILO DE REDAÇÃO');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // ESCOPO DE CONTEXTO
   // ═══════════════════════════════════════════════════════════════════════════
 

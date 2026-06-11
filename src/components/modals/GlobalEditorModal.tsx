@@ -894,8 +894,9 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
       fileToBase64: fileToBase64 || (async () => ''),
       anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
       anonymizationSettings: aiIntegration?.aiSettings?.anonymization,
+      customStylePrompt: aiIntegration?.aiSettings?.customPrompt,
     });
-  }, [localTopics, aiAssistantTopicIndex, globalContextScope, analyzedDocuments, proofManager, fileToBase64, aiIntegration?.aiSettings?.anonymization]);
+  }, [localTopics, aiAssistantTopicIndex, globalContextScope, analyzedDocuments, proofManager, fileToBase64, aiIntegration?.aiSettings?.anonymization, aiIntegration?.aiSettings?.customPrompt]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // v1.51.0: Geração inline (Ctrl+K) — mesmo contexto do Assistente IA, mas com o
@@ -936,6 +937,7 @@ const GlobalEditorModal: React.FC<GlobalEditorModalProps> = ({
       anonymizationEnabled: aiIntegration?.aiSettings?.anonymization?.enabled,
       anonymizationSettings: aiIntegration?.aiSettings?.anonymization,
       inlineMode: true,
+      customStylePrompt: aiIntegration?.aiSettings?.customPrompt,
     });
 
     // System prompt dedicado da geração inline: usa o provider/modelo principal, mas sem a
