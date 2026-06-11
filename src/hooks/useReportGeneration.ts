@@ -16,7 +16,12 @@ import React from 'react';
 import { normalizeHTMLSpacing, removeMetaComments } from '../utils/text';
 import { withRetry, AI_RETRY_DEFAULTS } from '../utils/retry';
 import { isPdfBinaryAllowed } from '../utils/manualCall';
-import { AI_PROMPTS, resolveStyleBlock } from '../prompts';
+import {
+  AI_PROMPTS,
+  resolveStyleBlock,
+  buildMiniReportPrompt as buildMiniReportPromptShared,
+  buildBatchMiniReportPrompt as buildBatchMiniReportPromptShared
+} from '../prompts';
 import { parseAIResponse, RastreabilidadeResponseSchema } from '../schemas/ai-responses';
 import { splitReportIntoParagraphs } from '../utils/reportParagraphs';
 import { buildTracingSources, buildSourceTracingPrompt, mapTracingResponse } from '../utils/sourceTracing';
@@ -251,61 +256,10 @@ export const useReportGeneration = ({
   }, [docs, aiIntegration]);
 
   /**
-   * Função base que retorna componentes reutilizáveis para prompts de mini-relatório
-   */
-  const buildMiniReportPromptCore = React.useCallback((options: { isInitialGeneration?: boolean } = {}) => {
-    const { isInitialGeneration = false } = options;
-
-    const totalContestacoes = (docs.contestacoes?.length || 0) +
-                              (docs.contestacoesText?.length || 0);
-
-    const modeloPersonalizado = aiIntegration.aiSettings?.modeloRelatorio?.trim();
-
-    const modeloBase = modeloPersonalizado || `PRIMEIRO PARÁGRAFO (alegações do autor):
-"O reclamante narra [resumo]. Sustenta [argumentos]. Indica que [situação]. Em decorrência, postula [pedido]."
-
-SEGUNDO PARÁGRAFO (primeira defesa):
-${totalContestacoes > 0 ? '"A primeira reclamada, em defesa, alega [argumentos]. Sustenta que [posição]."' : '"Não houve apresentação de contestação."'}
-
-${totalContestacoes > 1 ? `TERCEIRO PARÁGRAFO (segunda defesa):
-"A segunda ré, por sua vez, nega [posição]. Aduz [argumentos]."` : ''}
-
-${totalContestacoes > 2 ? `QUARTO PARÁGRAFO (terceira defesa):
-"A terceira reclamada também contesta [argumentos]. Sustenta [posição]."` : ''}`;
-
-    const numeracaoPrompt = isInitialGeneration
-      ? AI_PROMPTS.numeracaoReclamadasInicial
-      : AI_PROMPTS.numeracaoReclamadas;
-
-    let partesInfo = '';
-    if (partesProcesso?.reclamadas?.length && partesProcesso.reclamadas.length > 0) {
-      partesInfo = `\nPARTES DO PROCESSO:
-- Reclamante: ${partesProcesso.reclamante || 'Não identificado'}
-${partesProcesso.reclamadas.map((r, i: number) => `- ${i + 1}ª Reclamada: ${r}`).join('\n')}
-`;
-    }
-
-    return {
-      totalContestacoes,
-      modeloBase,
-      modeloPersonalizado,
-      numeracaoPrompt,
-      partesInfo,
-      formatacaoHTML: AI_PROMPTS.formatacaoHTML("O <strong>reclamante</strong> narra que..."),
-      formatacaoParagrafos: AI_PROMPTS.formatacaoParagrafos("<p>O reclamante narra...</p><p>A primeira reclamada, em defesa...</p>"),
-      nivelDetalhe: aiIntegration.aiSettings?.detailedMiniReports ? `⚠️ NÍVEL DE DETALHE - FATOS:
-Gere com alto nível de detalhe em relação aos FATOS alegados pelas partes.
-A descrição fática (postulatória e defensiva) deve ter alto nível de detalhe.
-` : '',
-      // v1.53.13: estilo personalizado do magistrado SUBSTITUI o default também na mensagem
-      estiloRedacao: resolveStyleBlock(aiIntegration.aiSettings?.customPrompt, AI_PROMPTS.estiloRedacao),
-      preservarAnonimizacao: aiIntegration.aiSettings?.anonymization?.enabled ? AI_PROMPTS.preservarAnonimizacao : '',
-      proibicaoMetaComentarios: AI_PROMPTS.proibicaoMetaComentarios
-    };
-  }, [docs, aiIntegration.aiSettings, partesProcesso]);
-
-  /**
    * Helper para prompt de mini-relatório INDIVIDUAL
+   * v1.53.15: delega à fonte única em promptBuilders.ts — a cópia local idêntica
+   * (core + builders) foi removida; espelhos duplicados já divergiram antes
+   * (a regra do customPrompt chegou só no chat em v1.53.5)
    */
   const buildMiniReportPrompt = React.useCallback((options: {
     title?: string;
@@ -313,84 +267,16 @@ A descrição fática (postulatória e defensiva) deve ter alto nível de detalh
     instruction?: string;
     currentRelatorio?: string;
     isInitialGeneration?: boolean;
-  } = {}) => {
-    const {
-      title,
-      context = '',
-      instruction = '',
-      currentRelatorio = '',
-      isInitialGeneration = false
-    } = options;
-
-    const core = buildMiniReportPromptCore({ isInitialGeneration });
-
-    return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestação${core.totalContestacoes > 1 ? 'ões' : ''})` : ' (petição inicial)'}, gere um mini-relatório narrativo para o tópico "${title}".
-
-${instruction ? `INSTRUÇÃO DO USUÁRIO:\n${instruction}\n` : ''}
-
-${context ? `CONTEXTO:\n${context}\n` : ''}
-
-${currentRelatorio ? `MINI-RELATÓRIO ATUAL:\n${currentRelatorio}\n` : ''}
-
-${core.modeloPersonalizado ? `MODELO PERSONALIZADO:\n${core.modeloBase}` : `FORMATO PADRÃO:\n${core.modeloBase}`}
-${core.partesInfo}
-${core.numeracaoPrompt}
-
-${core.formatacaoHTML}
-
-${core.formatacaoParagrafos}
-
-${core.nivelDetalhe}
-
-${core.estiloRedacao}
-
-${core.preservarAnonimizacao}
-
-${core.proibicaoMetaComentarios}
-
-Responda APENAS com o texto do mini-relatório formatado em HTML, sem JSON, sem markdown, sem prefixo.`;
-  }, [buildMiniReportPromptCore]);
+  } = {}) => buildMiniReportPromptShared(docs, aiIntegration.aiSettings, partesProcesso, options),
+  [docs, aiIntegration.aiSettings, partesProcesso]);
 
   /**
    * Helper para prompt de mini-relatórios BATCH
+   * v1.53.15: delega à fonte única em promptBuilders.ts
    */
-  const buildBatchMiniReportPrompt = React.useCallback((topics: Topic[], options: { isInitialGeneration?: boolean } = {}) => {
-    const { isInitialGeneration = false } = options;
-
-    const core = buildMiniReportPromptCore({ isInitialGeneration });
-    const topicsList = topics.map((t: Topic, i: number) => `${i + 1}. "${t.title}"`).join('\n');
-
-    return `Com base nos documentos processuais fornecidos acima${core.totalContestacoes > 0 ? ` (petição inicial e ${core.totalContestacoes} contestação${core.totalContestacoes > 1 ? 'ões' : ''})` : ' (petição inicial)'}, gere mini-relatórios narrativos para os seguintes ${topics.length} tópicos:
-
-${topicsList}
-
-FORMATO DE CADA MINI-RELATÓRIO:
-${core.modeloBase}
-${core.partesInfo}
-${core.numeracaoPrompt}
-
-${core.formatacaoHTML}
-
-${core.formatacaoParagrafos}
-
-${core.nivelDetalhe}
-
-${core.estiloRedacao}
-
-${core.preservarAnonimizacao}
-
-${core.proibicaoMetaComentarios}
-
-IMPORTANTE: Responda APENAS com um JSON válido no formato:
-{
-  "reports": [
-    { "title": "TÍTULO DO TÓPICO 1", "relatorio": "<p>Mini-relatório HTML...</p>" },
-    { "title": "TÍTULO DO TÓPICO 2", "relatorio": "<p>Mini-relatório HTML...</p>" }
-  ]
-}
-
-Gere EXATAMENTE ${topics.length} mini-relatórios, um para cada tópico listado, na mesma ordem.`;
-  }, [buildMiniReportPromptCore]);
+  const buildBatchMiniReportPrompt = React.useCallback((topics: Topic[], options: { isInitialGeneration?: boolean } = {}) =>
+    buildBatchMiniReportPromptShared(topics, docs, aiIntegration.aiSettings, partesProcesso, options),
+  [docs, aiIntegration.aiSettings, partesProcesso]);
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // FUNÇÕES PRINCIPAIS
