@@ -120,6 +120,7 @@ export const AI_PROMPTS: AIPromptsType = {
    - ❌ SEM tópicos ou listas
    - ✅ Redação em PROSA CORRIDA, como um texto dissertativo-argumentativo
    - ✅ Parágrafos sequenciais bem articulados
+   - OBS: enumerações são admitidas apenas quando a estrutura da tarefa as exigir expressamente (ex.: dispositivo da sentença, lista de verbas) ou quando estritamente necessárias para listar pedidos, requisitos legais ou situações objetivas
 
 5. **DIDÁTICA E CLAREZA:**
    - Linguagem acessível, mas técnica quando necessário
