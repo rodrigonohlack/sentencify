@@ -83,6 +83,14 @@ Por favor, forneça uma análise completa e detalhada em uma única mensagem con
 
 export const AI_INSTRUCTIONS_REVISAO_FINAL = `Ao final de cada resposta, revise-a e identifique se houve alucinação ao citar dados.`;
 
+// v1.53.11: Revisão SILENCIOSA — substitui a REVISAO_FINAL nas tarefas cuja saída vai
+// direto pro editor ou é JSON (semRevisaoFinal). A REVISAO_FINAL pedia revisão "ao final
+// da resposta", o que só produzia um PARECER textual depois do texto pronto (sem poder
+// corrigi-lo) — e esse parecer ainda era suprimido pelas contra-instruções. Esta versão
+// pede a conferência ANTES de finalizar (com thinking ativo, ela ocorre no raciocínio)
+// e deixa explícito que a verificação é interna, sem comentários na resposta.
+export const AI_INSTRUCTIONS_REVISAO_SILENCIOSA = `REVISÃO INTERNA: antes de finalizar a resposta, confira que cada dado citado — datas, valores, nomes, números de documentos, dispositivos legais, súmulas/OJs e trechos de depoimentos — consta EXPRESSAMENTE do material fornecido, e corrija qualquer item que não constar. Essa conferência é interna: a resposta final deve conter apenas o texto solicitado, sem comentários sobre a verificação.`;
+
 export const AI_INSTRUCTIONS_SAFETY = `${AI_INSTRUCTIONS_SAFETY_BASE}
 
 ${AI_INSTRUCTIONS_REVISAO_FINAL}`;
@@ -127,7 +135,9 @@ export function buildInlineGenerateSystemPrompt(opts: { customPrompt?: string; a
 
 ${style}
 
-${AI_INSTRUCTIONS_SAFETY_BASE}${anon}
+${AI_INSTRUCTIONS_SAFETY_BASE}
+
+${AI_INSTRUCTIONS_REVISAO_SILENCIOSA}${anon}
 
 ${INLINE_OUTPUT_RULE}`;
 }

@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { useAIStore } from '../stores/useAIStore';
-import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_SAFETY_BASE, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
+import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_SAFETY_BASE, AI_INSTRUCTIONS_REVISAO_SILENCIOSA, AI_INSTRUCTIONS_ANONYMIZATION } from '../prompts';
 import { API_BASE } from '../constants/api';
 import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../utils/claude-cli-bridge';
 import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../utils/codex-cli-bridge';
@@ -223,6 +223,8 @@ const useAIIntegration = () => {
   // Para tarefas cuja saída vai DIRETO pro editor ou é JSON (dispositivo, relatórios,
   // geração de texto, extração de tópicos/modelos), onde esse bloco é indesejado e cada
   // prompt precisava de contra-instruções ("Responda APENAS...", proibicaoMetaComentarios).
+  // v1.53.11: a revisão NÃO foi eliminada — virou REVISAO_SILENCIOSA: conferência dos dados
+  // ANTES de finalizar (ocorre no thinking quando ativo), sem comentários na resposta.
   const getAiInstructions = React.useCallback((opts?: { semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean }) => {
     const customPrompt = aiSettings?.customPrompt?.trim();
     // v1.41.07: Bloco de anonimização injetado APENAS quando anonimização está ativa,
@@ -232,7 +234,7 @@ const useAIIntegration = () => {
       : '';
 
     const safetyBlock = opts?.semRevisaoFinal
-      ? AI_INSTRUCTIONS_SAFETY_BASE
+      ? `${AI_INSTRUCTIONS_SAFETY_BASE}\n\n${AI_INSTRUCTIONS_REVISAO_SILENCIOSA}`
       : AI_INSTRUCTIONS_SAFETY;
 
     if (customPrompt) {
