@@ -53,8 +53,8 @@ function blockToText(block: unknown): string {
  */
 export function serializeForManual(
   messages: SerializableMessage[],
-  options: { useInstructions?: boolean; systemPrompt?: string | null; semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean },
-  getAiInstructions: (opts?: { semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean }) => Array<{ text: string }>,
+  options: { useInstructions?: boolean; systemPrompt?: string | null; semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean; revisaoCorretiva?: boolean },
+  getAiInstructions: (opts?: { semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean; revisaoCorretiva?: boolean }) => Array<{ text: string }>,
 ): string {
   const parts: string[] = [];
 
@@ -68,6 +68,7 @@ export function serializeForManual(
     const instr = getAiInstructions({
       semFormatoNarrativo: options.semFormatoNarrativo,
       semRevisaoFinal: options.semRevisaoFinal,
+      revisaoCorretiva: options.revisaoCorretiva,
     });
     const instrText = instr.map((b) => b.text).join('\n\n').trim();
     if (instrText) parts.push(instrText);

@@ -153,6 +153,18 @@ export const AI_INSTRUCTIONS_SAFETY_SILENCIOSA = `${AI_INSTRUCTIONS_SAFETY_BASE}
 
 ${AI_INSTRUCTIONS_REVISAO_SILENCIOSA}`;
 
+// v1.53.24: variante CORRETIVA + REPORTADA — corrige ANTES de finalizar (como a SILENCIOSA,
+// que removia alucinações) E reporta no <revisao> (como a FINAL, para o painel). Criada após
+// a v1.53.22 trocar a SILENCIOSA pela FINAL no RELATÓRIO e o template de relatório voltar a
+// fazer a IA "preencher" fases processuais inexistentes (manifestação/audiência/instrução/
+// conciliação) — a FINAL só comenta depois, sem corrigir. Nomeia as fases explicitamente.
+export const AI_INSTRUCTIONS_REVISAO_CORRETIVA = `REVISÃO ANTI-ALUCINAÇÃO: antes de finalizar, confira que cada dado citado — datas, valores, nomes, números de documentos, dispositivos legais, súmulas/OJs e trechos de depoimentos — e cada fase ou ato processual narrado — manifestações das partes, audiência, instrução, produção de provas (perícia, prova emprestada, testemunhas), razões finais e tentativas de conciliação — consta EXPRESSAMENTE de algum documento fornecido. REMOVA do texto qualquer item, frase ou parágrafo sem respaldo no material; na dúvida, OMITA. ATENÇÃO ESPECIAL: audiência, instrução, produção de provas em audiência e tentativas de conciliação só podem ser relatadas se houver ATA DE AUDIÊNCIA (ou documento equivalente) nos autos — o mero PEDIDO de designação de audiência na petição inicial NÃO significa que a audiência ocorreu, portanto NÃO afirme que houve audiência nem que as propostas conciliatórias restaram infrutíferas/prejudicadas. Só então finalize. Feita essa correção, registre como ÚLTIMO elemento da resposta, dentro do bloco <revisao>...</revisao> (uma a três frases), o que conferiu e o que removeu ou ajustou — esse bloco é a ÚNICA menção à revisão; todo o resto da resposta é apenas o texto solicitado.`;
+
+// v1.53.24: SAFETY com a variante corretiva (BASE de proibições + REVISAO_CORRETIVA).
+export const AI_INSTRUCTIONS_SAFETY_CORRETIVA = `${AI_INSTRUCTIONS_SAFETY_BASE}
+
+${AI_INSTRUCTIONS_REVISAO_CORRETIVA}`;
+
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // ANONYMIZATION: Preservação de placeholders (CONDICIONAL — só quando anonimização ativa)
 // v1.41.07: Extraído de AI_INSTRUCTIONS_SAFETY para evitar que a IA use [VALOR]/[NOME]

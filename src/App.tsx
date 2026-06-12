@@ -104,7 +104,7 @@ import AIModelService from './services/AIModelService';
 // v1.36.81: TFIDFSimilarity movido para useModelEditing hook
 
 // v1.36.81: Utilitários extraídos
-import { normalizeHTMLSpacing, isSpecialTopic, isRelatorio, isDispositivo, generateModelId, extractRevisao } from './utils/text';
+import { normalizeHTMLSpacing, isSpecialTopic, isRelatorio, isDispositivo, generateModelId, extractRevisao, extractReportRevisao } from './utils/text';
 import { searchModelsBySimilarity } from './utils/models';
 
 // v1.36.96: Context helpers extraídos
@@ -1890,7 +1890,9 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     if (cachedRelatorio) {
       setEditingTopic(prev => {
         if (!prev) return prev;
-        return { ...prev, editedRelatorio: cachedRelatorio as string };
+        // v1.53.22: cache guarda só o corpo; zera revisaoIA p/ não exibir a revisão
+        // de OUTRA geração (ciclo instrução A→B→A reapareceria com a revisão de B).
+        return { ...prev, editedRelatorio: cachedRelatorio as string, revisaoIA: undefined };
       });
       closeModal('regenerateRelatorioCustom');
       return;
@@ -1900,14 +1902,16 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
     try {
       const isRelatorioTopic = editingTopic.title.toUpperCase().includes('RELATÓRIO');
       const instructionMentionsComplementares = /\b(documento complementar|ata|audiência|prova|juntad[oa]|anexad[oa]|complementar)\b/i.test(aiIntegration.relatorioInstruction);
-      const htmlContent = await generateMiniReport({
+      const raw = await generateMiniReport({
         title: editingTopic.title,
         instruction: aiIntegration.relatorioInstruction,
         currentRelatorio: editingTopic.editedRelatorio || editingTopic.relatorio,
-        includeComplementares: isRelatorioTopic || instructionMentionsComplementares
+        includeComplementares: isRelatorioTopic || instructionMentionsComplementares,
+        withRevision: true
       });
+      const { corpo: htmlContent, revisao } = extractReportRevisao(raw);
       apiCache.set(cacheKey, htmlContent);
-      const updatedTopic = { ...editingTopic, editedRelatorio: htmlContent, relatorio: htmlContent };
+      const updatedTopic = { ...editingTopic, editedRelatorio: htmlContent, relatorio: htmlContent, revisaoIA: revisao || undefined };
       setEditingTopic(updatedTopic);
       if (relatorioRef.current) {
         relatorioRef.current.root.innerHTML = normalizeHTMLSpacing(sanitizeHTML(htmlContent));
@@ -1935,10 +1939,10 @@ const LegalDecisionEditor = ({ onLogout, cloudSync, receivedModels, activeShared
       if (instrucao) {
         contentArray.push({ type: 'text', text: `⚠️ INSTRUÇÃO ADICIONAL DO USUÁRIO:\n${instrucao}` });
       }
-      const relatorioGerado = await generateRelatorioProcessual(contentArray);
-      if (!relatorioGerado?.trim()) throw new Error('Relatório gerado está vazio');
-      const htmlContent = normalizeHTMLSpacing(relatorioGerado.trim());
-      const updatedTopic = { ...editingTopic, editedRelatorio: htmlContent };
+      const { corpo, revisao } = await generateRelatorioProcessual(contentArray);
+      if (!corpo?.trim()) throw new Error('Relatório gerado está vazio');
+      const htmlContent = normalizeHTMLSpacing(corpo.trim());
+      const updatedTopic = { ...editingTopic, editedRelatorio: htmlContent, revisaoIA: revisao || undefined };
       setEditingTopic(updatedTopic);
       if (relatorioRef.current) {
         relatorioRef.current.root.innerHTML = normalizeHTMLSpacing(sanitizeHTML(htmlContent));

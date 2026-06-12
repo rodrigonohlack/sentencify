@@ -272,6 +272,7 @@ const DecisionEditorContainer = React.memo(React.forwardRef<HTMLDivElement, Comb
         <QuillMiniRelatorioEditor
           ref={relatorioRef}
           content={topic.editedRelatorio || topic.relatorio || ''}
+          revisao={topic.revisaoIA}
           topicTitle={topic.title}
           onChange={callbacks.onRelatorioChange}
           onRegenerate={callbacks.onRegenerateRelatorio}

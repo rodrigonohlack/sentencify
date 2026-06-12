@@ -103,6 +103,11 @@ export interface SystemPromptVariantOptions {
    *  ou é JSON (dispositivo, relatórios, geração de texto, extrações), onde o bloco
    *  "Revisão:..." é indesejado. Só tem efeito com useInstructions: true. */
   semRevisaoFinal?: boolean;
+  /** v1.53.24: usa o SAFETY com a revisão CORRETIVA + REPORTADA — confere e CORRIGE/REMOVE
+   *  alucinações ANTES de finalizar (como a silenciosa) E emite o bloco <revisao> para o
+   *  painel (como a final). Para o RELATÓRIO, onde o texto vai pro editor mas a auto-revisão
+   *  é exibida à parte. Tem precedência sobre semRevisaoFinal. Só com useInstructions: true. */
+  revisaoCorretiva?: boolean;
 }
 
 export interface AICallOptions extends SystemPromptVariantOptions {

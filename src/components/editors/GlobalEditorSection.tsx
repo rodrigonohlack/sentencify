@@ -12,6 +12,7 @@
 import React from 'react';
 import { ChevronDown, Scale, Sparkles } from 'lucide-react';
 import { FieldEditor, InlineFormattingToolbar } from './FieldEditor';
+import { ChatRevisaoFooter } from '../chat';
 import { VoiceButton } from '../VoiceButton';
 import { VersionSelect } from '../version';
 import { useAIStore, selectAutoComplete } from '../../stores/useAIStore';
@@ -118,19 +119,24 @@ const GlobalEditorSection: React.FC<GlobalEditorSectionProps> = ({
       {!isCollapsed && (
         <div className="p-4 space-y-4 theme-bg-secondary">
           {isRelatorio ? (
-            // RELATÓRIO: apenas editedRelatorio
-            <FieldEditor
-              label="Relatório"
-              fieldType="relatorio"
-              content={topic.editedRelatorio || topic.relatorio || ''}
-              onChange={(html: string) => onFieldChange(topicIndex, 'editedRelatorio', html)}
-              onFocus={() => onFieldFocus?.(topicIndex, 'relatorio', null)}
-              onSlashCommand={onSlashCommand}
-              quillReady={quillReady}
-              quillError={quillError}
-              minHeight="200px"
-              editorTheme={editorTheme}
-            />
+            // RELATÓRIO: apenas editedRelatorio + painel da auto-revisão (v1.53.22)
+            <>
+              <FieldEditor
+                label="Relatório"
+                fieldType="relatorio"
+                content={topic.editedRelatorio || topic.relatorio || ''}
+                onChange={(html: string) => onFieldChange(topicIndex, 'editedRelatorio', html)}
+                onFocus={() => onFieldFocus?.(topicIndex, 'relatorio', null)}
+                onSlashCommand={onSlashCommand}
+                quillReady={quillReady}
+                quillError={quillError}
+                minHeight="200px"
+                editorTheme={editorTheme}
+              />
+              {topic.revisaoIA?.trim() && (
+                <ChatRevisaoFooter revisao={topic.revisaoIA} />
+              )}
+            </>
           ) : isDispositivo ? (
             // DISPOSITIVO: apenas editedContent
             <FieldEditor

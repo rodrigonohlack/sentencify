@@ -12,6 +12,7 @@ import { Save, Sparkles, Scale, BookOpen, Clock, XCircle, Pencil, Lightbulb } fr
 import { CSS } from '../modals/BaseModal';
 import { VoiceButton } from '../VoiceButton';
 import { RelatorioConsultaPanel } from './RelatorioConsultaPanel';
+import { ChatRevisaoFooter } from '../chat';
 import { SpacingDropdown, FontSizeDropdown, EditorWidthDropdown } from '../ui';
 import { useQuillEditor, sanitizeQuillHTML } from '../../hooks/useQuillEditor';
 import { useSpacingControl, useFontSizeControl, useFullscreen, useAIIntegration, useEditorWidthControl } from '../../hooks';
@@ -1148,7 +1149,8 @@ export const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstanc
   quillError: propsQuillError,
   editorTheme: propsEditorTheme,
   toggleEditorTheme: _toggleEditorTheme3,
-  onSlashCommand
+  onSlashCommand,
+  revisao
 }, ref) => {
   const { quillInstanceRef: _quillInstanceRef, customModules, handleQuillReady } = useQuillEditor({
     ref,
@@ -1216,6 +1218,8 @@ export const QuillMiniRelatorioEditor = React.memo(React.forwardRef<QuillInstanc
           ⌨️ <strong>Ctrl+S</strong> = Salvar sem fechar
         </span>
       </p>
+
+      {revisao?.trim() && <ChatRevisaoFooter revisao={revisao} />}
 
       {showRegenerateSection && onRegenerate && (
         <AIRegenerationSection

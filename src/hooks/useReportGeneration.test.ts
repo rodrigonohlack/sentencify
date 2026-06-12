@@ -421,13 +421,14 @@ describe('useReportGeneration', () => {
 
       const { result } = renderHook(() => useReportGeneration(defaultProps as any));
 
-      let report: string = '';
+      let report: any;
       await act(async () => {
-        report = await result.current.generateRelatorioProcessual(['Conteúdo processual']);
+        report = await result.current.generateRelatorioProcessual(['Conteúdo processual'] as any);
       });
 
       // Report should contain some content (may include fallback template)
-      expect(report.length).toBeGreaterThan(0);
+      expect(report.corpo.length).toBeGreaterThan(0);
+      expect(report.revisao).toBeNull();
     });
 
     it('should return fallback template on API failure', async () => {
@@ -435,13 +436,84 @@ describe('useReportGeneration', () => {
 
       const { result } = renderHook(() => useReportGeneration(defaultProps as any));
 
-      let report: string = '';
+      let report: any;
       await act(async () => {
-        report = await result.current.generateRelatorioProcessual(['content']);
+        report = await result.current.generateRelatorioProcessual(['content'] as any);
       });
 
       // Returns a fallback template, not empty
-      expect(report).toContain('RELATÓRIO');
+      expect(report.corpo).toContain('RELATÓRIO');
+      expect(report.revisao).toBeNull();
     });
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// v1.53.22: pede a auto-revisão (<revisao>) e a segrega do corpo
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import type { AIIntegrationForReports } from './useReportGeneration';
+
+function makeAiIntegration(streamReturn: string): AIIntegrationForReports {
+  return {
+    callAI: vi.fn(async () => streamReturn),
+    callAIStream: vi.fn(async () => streamReturn),
+    extractResponseText: vi.fn((d) => String(d)),
+    getModelDisplayName: vi.fn((m) => m),
+    aiSettings: { provider: 'claude' } as AIIntegrationForReports['aiSettings'],
+    setRegeneratingRelatorio: vi.fn(),
+  };
+}
+
+const baseProps = (ai: AIIntegrationForReports) => ({
+  aiIntegration: ai,
+  analyzedDocuments: null,
+  partesProcesso: null,
+});
+
+describe('generateRelatorioProcessual — revisão segregada', () => {
+  it('usa a revisão CORRETIVA (revisaoCorretiva:true) e retorna { corpo, revisao }', async () => {
+    const ai = makeAiIntegration('<p>É o relatório. Decido.</p><revisao>Conferi: tudo consta.</revisao>');
+    const { result } = renderHook(() => useReportGeneration(baseProps(ai)));
+
+    const out = await result.current.generateRelatorioProcessual([]);
+
+    expect(out.corpo).toBe('<p>É o relatório. Decido.</p>');
+    expect(out.revisao).toBe('Conferi: tudo consta.');
+    // v1.53.24: corrige ANTES de finalizar (não a revisão FINAL que só comenta depois)
+    const opts = (ai.callAIStream as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    expect(opts.revisaoCorretiva).toBe(true);
+  });
+
+  it('sem tag <revisao>: corpo intacto, revisao null', async () => {
+    const ai = makeAiIntegration('<p>É o relatório. Decido.</p>');
+    const { result } = renderHook(() => useReportGeneration(baseProps(ai)));
+    const out = await result.current.generateRelatorioProcessual([]);
+    expect(out.corpo).toBe('<p>É o relatório. Decido.</p>');
+    expect(out.revisao).toBeNull();
+  });
+});
+
+describe('generateMiniReport withRevision', () => {
+  it('withRevision:false (default) — descarta a revisão e retorna string limpa', async () => {
+    const ai = makeAiIntegration('<p>Mini.</p><revisao>conferido</revisao>');
+    const { result } = renderHook(() => useReportGeneration(baseProps(ai)));
+    const out = await result.current.generateMiniReport({ title: 'HORAS EXTRAS' });
+    expect(typeof out).toBe('string');
+    expect(out).toBe('<p>Mini.</p>');
+    // lote/comuns: silenciosa (corrige sem reportar), sem a corretiva
+    const opts = (ai.callAI as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    expect(opts.semRevisaoFinal).toBe(true);
+    expect(opts.revisaoCorretiva).toBe(false);
+  });
+
+  it('withRevision:true — pede revisão e devolve o texto com a <revisao> intacta', async () => {
+    const ai = makeAiIntegration('<p>Relatório.</p><revisao>conferido</revisao>');
+    const { result } = renderHook(() => useReportGeneration(baseProps(ai)));
+    const out = await result.current.generateMiniReport({ title: 'RELATÓRIO', withRevision: true });
+    expect(out).toContain('<revisao>conferido</revisao>');
+    // v1.53.24: regen do RELATÓRIO usa a corretiva (corrige antes + reporta)
+    const opts = (ai.callAI as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    expect(opts.revisaoCorretiva).toBe(true);
   });
 });

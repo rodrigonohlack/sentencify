@@ -13,6 +13,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import { anonymizeText, normalizeHTMLSpacing } from '../utils/text';
+import type { RelatorioComRevisao } from '../utils/text';
 import { resolveEffectiveMode } from '../utils/documentMode';
 import { parseAIResponse, extractJSON, TopicExtractionSchema } from '../schemas/ai-responses';
 import type { PromptInjectionDetection, DivergenciaPedido } from '../schemas/ai-responses';
@@ -150,7 +151,7 @@ export interface UseDocumentAnalysisProps {
   setError: (error: string) => void;
   // Funcoes auxiliares
   showToast: (msg: string, type: 'success' | 'error' | 'info' | 'warning') => void;
-  generateRelatorioProcessual: (content: AIMessageContent[]) => Promise<string>;
+  generateRelatorioProcessual: (content: AIMessageContent[]) => Promise<RelatorioComRevisao>;
   generateMiniReportsBatch: (
     topics: Topic[],
     options?: {
@@ -935,8 +936,8 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
       setAnalysisProgress('Gerando relatório processual...');
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      const relatórioProcessual = await generateRelatorioProcessual(relatórioContentArray);
-      const relatórioHtml = normalizeHTMLSpacing(relatórioProcessual.trim());
+      const { corpo: relatórioCorpo, revisao: relatórioRevisao } = await generateRelatorioProcessual(relatórioContentArray);
+      const relatórioHtml = normalizeHTMLSpacing(relatórioCorpo.trim());
 
       // Buscar tópicos complementares configurados pelo usuário
       const topicosComplementaresConfig = aiIntegration.aiSettings?.topicosComplementares || [];
@@ -1031,6 +1032,7 @@ export const useDocumentAnalysis = (props: UseDocumentAnalysisProps): UseDocumen
           category: 'RELATÓRIO',
           relatorio: relatórioHtml,
           editedFundamentacao: relatórioHtml,
+          revisaoIA: relatórioRevisao || undefined,
         },
         ...topicsComRelatorios.map((topic: Topic, index: number) => ({ ...topic, order: index + 1 })),
         ...topicosComplementaresUnicos

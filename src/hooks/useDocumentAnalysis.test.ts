@@ -1324,7 +1324,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should close curation modal and set analyzing=true', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>Relatorio processual</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>Relatorio processual</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({ results: [], errors: [] });
 
       const props = createDefaultProps();
@@ -1342,7 +1342,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should call generateRelatorioProcessual with relatórioContentArray', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>Relatorio gerado</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>Relatorio gerado</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({ results: [], errors: [] });
 
       const props = createDefaultProps();
@@ -1361,7 +1361,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should call generateMiniReportsBatch for curated topics', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>Report</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>Report</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({
         results: [
           { title: 'Horas Extras', relatorio: '<p>Mini report HE</p>' },
@@ -1384,7 +1384,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should set extractedTopics with RELATORIO as first topic', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>Report content</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>Report content</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({
         results: [{ title: 'Horas Extras', relatorio: '<p>HE</p>' }],
         errors: [{ title: 'FGTS', error: 'timeout' }],
@@ -1407,7 +1407,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should call setAnalyzedDocuments with document data', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>R</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>R</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({ results: [], errors: [] });
 
       const props = createDefaultProps();
@@ -1430,7 +1430,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should call setSelectedTopics', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>R</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>R</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({
         results: [{ title: 'Horas Extras', relatorio: '<p>HE</p>' }],
         errors: [],
@@ -1450,7 +1450,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should set activeTab to topics on success', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>R</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>R</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({ results: [], errors: [] });
 
       const props = createDefaultProps();
@@ -1467,7 +1467,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should show success toast on completion', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>R</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>R</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({ results: [], errors: [] });
 
       const props = createDefaultProps();
@@ -1487,7 +1487,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should show warning toast when some mini-reports fail', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>R</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>R</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({
         results: [{ title: 'Horas Extras', relatorio: '<p>ok</p>' }],
         errors: [{ title: 'FGTS', error: 'timeout' }],
@@ -1544,7 +1544,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should clear pendingCurationData after success', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>R</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>R</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({ results: [], errors: [] });
 
       const props = createDefaultProps();
@@ -1561,7 +1561,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should filter out RELATORIO topic from curated topics', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>R</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>R</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({ results: [], errors: [] });
 
       const curationWithRelatorio = {
@@ -1589,7 +1589,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should close analysis modal on success', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>R</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>R</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({ results: [], errors: [] });
 
       const props = createDefaultProps();
@@ -1606,7 +1606,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should set partesProcesso from curation data', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>R</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>R</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({ results: [], errors: [] });
 
       const props = createDefaultProps();
@@ -2211,7 +2211,7 @@ describe('useDocumentAnalysis', () => {
     });
 
     it('should handle handleCurationConfirm with topicosComplementares in aiSettings', async () => {
-      mockGenerateRelatorioProcessual.mockResolvedValue('<p>R</p>');
+      mockGenerateRelatorioProcessual.mockResolvedValue({ corpo: '<p>R</p>', revisao: null });
       mockGenerateMiniReportsBatch.mockResolvedValue({ results: [], errors: [] });
 
       const curationData: CurationData = {

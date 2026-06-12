@@ -16,6 +16,8 @@ import {
   generateModelId,
   plainTextToHtml,
   extractRevisao,
+  cleanReportBody,
+  extractReportRevisao,
 } from './text';
 import type { Topic, AnonymizationSettings } from '../types';
 
@@ -683,6 +685,66 @@ describe('text utilities', () => {
       expect(extractRevisao(null)).toEqual({ corpo: '', revisao: null });
       expect(extractRevisao(undefined)).toEqual({ corpo: '', revisao: null });
       expect(extractRevisao('')).toEqual({ corpo: '', revisao: null });
+    });
+  });
+
+  describe('cleanReportBody', () => {
+    // Regressão v1.53.21: a auto-revisão vazava no tópico RELATÓRIO porque os caminhos de
+    // mini-relatório usavam só removeMetaComments, cujos padrões [^<]*$ nunca casam num
+    // relatório HTML (termina em </p>). cleanReportBody passa a aplicar extractRevisao antes.
+    it('remove a auto-revisão da IA quando ela vaza num <p> final do relatório', () => {
+      const html = '<p>É o relatório. Decido.</p><p>Revisão concluída: os dados foram extraídos fielmente dos documentos, sem invenção de conteúdo.</p>';
+      expect(cleanReportBody(html)).toBe('<p>É o relatório. Decido.</p>');
+    });
+
+    it('remove meta-comentário que NÃO começa com "Revisão" (segunda camada)', () => {
+      const texto = 'JOÃO narra que foi dispensado sem justa causa.\n\nConfirmo que não houve alucinação ao citar dados.';
+      expect(cleanReportBody(texto)).toBe('JOÃO narra que foi dispensado sem justa causa.');
+    });
+
+    it('preserva relatório legítimo sem auto-revisão', () => {
+      const html = '<p>O <strong>reclamante</strong> narra que foi admitido em 2020.</p><p>Em defesa, a reclamada nega o vínculo.</p>';
+      expect(cleanReportBody(html)).toBe(html);
+    });
+
+    it('lida com null/undefined/vazio', () => {
+      expect(cleanReportBody(null)).toBe('');
+      expect(cleanReportBody(undefined)).toBe('');
+      expect(cleanReportBody('')).toBe('');
+    });
+  });
+
+  describe('extractReportRevisao', () => {
+    it('separa corpo limpo e revisão de um relatório HTML com <revisao>', () => {
+      const html = '<p>É o relatório. Decido.</p><revisao>Conferi datas e partes: tudo consta dos autos.</revisao>';
+      const { corpo, revisao } = extractReportRevisao(html);
+      expect(corpo).toBe('<p>É o relatório. Decido.</p>');
+      expect(revisao).toBe('Conferi datas e partes: tudo consta dos autos.');
+    });
+
+    it('aplica removeMetaComments ao corpo (variante que não começa com "Revisão")', () => {
+      const texto = 'JOÃO narra a dispensa.\n\nConfirmo que não houve alucinação ao citar dados.';
+      const { corpo, revisao } = extractReportRevisao(texto);
+      expect(corpo).toBe('JOÃO narra a dispensa.');
+      expect(revisao).toBeNull();
+    });
+
+    it('sem revisão: corpo intacto, revisao null', () => {
+      const html = '<p>O reclamante narra que foi admitido em 2020.</p>';
+      const { corpo, revisao } = extractReportRevisao(html);
+      expect(corpo).toBe(html);
+      expect(revisao).toBeNull();
+    });
+
+    it('null/undefined/vazio', () => {
+      expect(extractReportRevisao(null)).toEqual({ corpo: '', revisao: null });
+      expect(extractReportRevisao(undefined)).toEqual({ corpo: '', revisao: null });
+      expect(extractReportRevisao('')).toEqual({ corpo: '', revisao: null });
+    });
+
+    it('cleanReportBody devolve exatamente o corpo de extractReportRevisao', () => {
+      const html = '<p>Corpo.</p><revisao>rev</revisao>';
+      expect(cleanReportBody(html)).toBe(extractReportRevisao(html).corpo);
     });
   });
 });

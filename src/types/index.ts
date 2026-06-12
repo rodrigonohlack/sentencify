@@ -63,6 +63,8 @@ export interface Topic {
   isInitialGeneration?: boolean;
   documentsOverride?: unknown;
   isComplementar?: boolean;
+  /** v1.53.22: auto-revisão da IA (tag <revisao>) do RELATÓRIO, exibida em painel à parte. */
+  revisaoIA?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2050,6 +2052,8 @@ export interface QuillMiniRelatorioEditorProps {
   editorTheme?: 'dark' | 'light' | string;
   toggleEditorTheme?: () => void;
   onSlashCommand?: OnSlashCommandCallback;
+  /** v1.53.23: auto-revisão da IA (Topic.revisaoIA) exibida em painel colapsável. */
+  revisao?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

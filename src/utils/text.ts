@@ -258,6 +258,31 @@ export const extractRevisao = (text: string | null | undefined): TextoComRevisao
   return { corpo: text, revisao: null };
 };
 
+/** Resultado da separação corpo/revisão de um relatório (v1.53.22). */
+export interface RelatorioComRevisao {
+  corpo: string;
+  revisao: string | null;
+}
+
+/**
+ * v1.53.22: separa o corpo (limpo) da auto-revisão de um relatório, em forma estruturada.
+ * É a fonte única da limpeza de relatórios: extractRevisao (HTML-aware) separa a <revisao>,
+ * e removeMetaComments varre o corpo por variantes meta que NÃO começam com "Revisão".
+ * Usada pelo RELATÓRIO (pede a revisão e exibe em painel) e pelo cleanReportBody (descarte).
+ */
+export const extractReportRevisao = (text: string | null | undefined): RelatorioComRevisao => {
+  const { corpo, revisao } = extractRevisao(text);
+  return { corpo: removeMetaComments(corpo), revisao };
+};
+
+/**
+ * v1.53.21: corpo de relatório sem a auto-revisão (descarte). Usado nos mini-relatórios
+ * comuns, que seguem com revisão silenciosa e não têm painel. Delega a extractReportRevisao.
+ */
+export const cleanReportBody = (text: string | null | undefined): string => {
+  return extractReportRevisao(text).corpo;
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // HELPERS DE TÓPICOS ESPECIAIS
 // ═══════════════════════════════════════════════════════════════════════════════

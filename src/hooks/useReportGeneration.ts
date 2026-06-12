@@ -13,7 +13,8 @@
  */
 
 import React from 'react';
-import { normalizeHTMLSpacing, removeMetaComments } from '../utils/text';
+import { normalizeHTMLSpacing, cleanReportBody, extractReportRevisao } from '../utils/text';
+import type { RelatorioComRevisao } from '../utils/text';
 import { withRetry, AI_RETRY_DEFAULTS } from '../utils/retry';
 import { isPdfBinaryAllowed } from '../utils/manualCall';
 import {
@@ -55,6 +56,9 @@ export interface GenerateMiniReportOptions {
   useStreaming?: boolean;
   /** v1.39.09: Callback para receber texto conforme chega */
   onChunk?: StreamChunkCallback;
+  /** v1.53.22: pede a auto-revisão (<revisao>) e devolve o texto SEM descartá-la,
+   *  para o consumidor (RELATÓRIO) separar corpo/revisão. Default false. */
+  withRevision?: boolean;
 }
 
 /** Opções para geração de múltiplos mini-relatórios */
@@ -91,6 +95,8 @@ export interface AIIntegrationForReports {
     useInstructions?: boolean;
     /** v1.53.10: safety sem auto-revisão final (saída vai direto pro editor) */
     semRevisaoFinal?: boolean;
+    /** v1.53.24: safety corretiva — corrige antes de finalizar E reporta no <revisao> */
+    revisaoCorretiva?: boolean;
     temperature?: number;
     topP?: number;
     topK?: number;
@@ -102,6 +108,8 @@ export interface AIIntegrationForReports {
     useInstructions?: boolean;
     /** v1.53.10: safety sem auto-revisão final (saída vai direto pro editor) */
     semRevisaoFinal?: boolean;
+    /** v1.53.24: safety corretiva — corrige antes de finalizar E reporta no <revisao> */
+    revisaoCorretiva?: boolean;
     temperature?: number;
     topP?: number;
     topK?: number;
@@ -134,7 +142,7 @@ export interface UseReportGenerationReturn {
   generateMiniReport: (options?: GenerateMiniReportOptions) => Promise<string>;
   generateMultipleMiniReports: (topics: Topic[], options?: MultipleReportsOptions) => Promise<Array<{ title: string; relatorio: string }>>;
   generateMiniReportsBatch: (topics: Topic[], options?: BatchOptions) => Promise<BatchResult>;
-  generateRelatorioProcessual: (contentArray: AIMessageContent[]) => Promise<string>;
+  generateRelatorioProcessual: (contentArray: AIMessageContent[]) => Promise<RelatorioComRevisao>;
   traceReportSources: (topic: Topic) => Promise<RelatorioRastreabilidade>;
   isGeneratingReport: boolean;
 }
@@ -296,7 +304,8 @@ export const useReportGeneration = ({
       maxTokens = 4000,
       documentsOverride = null,
       useStreaming = false,
-      onChunk
+      onChunk,
+      withRevision = false
     } = options;
 
     // 1. Construir array de documentos
@@ -329,6 +338,7 @@ export const useReportGeneration = ({
         maxTokens,
         useInstructions: true,
         semRevisaoFinal: true,
+        revisaoCorretiva: withRevision,
         onChunk
       });
     } else {
@@ -339,14 +349,20 @@ export const useReportGeneration = ({
         maxTokens,
         useInstructions: true,
         semRevisaoFinal: true,
+        revisaoCorretiva: withRevision,
         temperature: 0.4,
         topP: 0.9,
         topK: 60
       });
     }
 
-    // 4. Normalizar e retornar
-    return removeMetaComments(normalizeHTMLSpacing(result));
+    // 4. Normalizar e retornar (cleanReportBody descarta a auto-revisão que o modelo
+    //    às vezes escreve apesar da revisão silenciosa — v1.53.21)
+    // withRevision: devolve o texto com a <revisao> intacta (consumidor separa);
+    // senão, descarta a revisão (mini-relatórios comuns).
+    return withRevision
+      ? normalizeHTMLSpacing(result)
+      : cleanReportBody(normalizeHTMLSpacing(result));
   }, [aiIntegration, buildDocumentContentArray, buildMiniReportPrompt]);
 
   /**
@@ -488,7 +504,7 @@ export const useReportGeneration = ({
       if (parsed.reports && Array.isArray(parsed.reports)) {
         return parsed.reports.map((r: { title: string; relatorio?: string }) => ({
           title: r.title,
-          relatorio: removeMetaComments(normalizeHTMLSpacing(r.relatorio || ''))
+          relatorio: cleanReportBody(normalizeHTMLSpacing(r.relatorio || ''))
         }));
       }
       throw new Error('Formato de resposta inválido');
@@ -500,7 +516,7 @@ export const useReportGeneration = ({
           if (parsed.reports && Array.isArray(parsed.reports)) {
             return parsed.reports.map((r: { title: string; relatorio?: string }) => ({
               title: r.title,
-              relatorio: removeMetaComments(normalizeHTMLSpacing(r.relatorio || ''))
+              relatorio: cleanReportBody(normalizeHTMLSpacing(r.relatorio || ''))
             }));
           }
         } catch {
@@ -648,7 +664,7 @@ export const useReportGeneration = ({
    */
   const generateRelatorioProcessual = React.useCallback(async (
     contentArray: AIMessageContent[]
-  ): Promise<string> => {
+  ): Promise<RelatorioComRevisao> => {
     try {
       const modeloPersonalizado = aiIntegration.aiSettings?.modeloTopicoRelatorio?.trim();
       const modeloBase = modeloPersonalizado || AI_PROMPTS.instrucoesRelatorioPadrao;
@@ -703,7 +719,10 @@ Responda APENAS com o texto do relatório formatado em HTML, pronto para ser ins
       const options = {
         maxTokens: 8000,
         useInstructions: true,
-        semRevisaoFinal: true,
+        // v1.53.24: revisão CORRETIVA — corrige/remove alucinações ANTES de finalizar
+        // (a v1.53.22 usou semRevisaoFinal:false = revisão FINAL, que só comentava depois
+        // sem corrigir, e o template de relatório voltou a inventar fases processuais).
+        revisaoCorretiva: true,
         logMetrics: true,
         temperature: 0.4,
         topP: 0.9,
@@ -714,15 +733,18 @@ Responda APENAS com o texto do relatório formatado em HTML, pronto para ser ins
         ? await aiIntegration.callAIStream(messages, options)
         : await aiIntegration.callAI(messages, options);
 
-      return normalizeHTMLSpacing(textContent.trim());
+      return extractReportRevisao(normalizeHTMLSpacing(textContent.trim()));
     } catch {
-      return `SENTENÇA
+      return {
+        corpo: `SENTENÇA
 
 I - RELATÓRIO
 
 Relatório processual não pôde ser gerado automaticamente. Por favor, edite este tópico manualmente.
 
-DECIDE-SE.`;
+DECIDE-SE.`,
+        revisao: null,
+      };
     }
   }, [aiIntegration]);
 

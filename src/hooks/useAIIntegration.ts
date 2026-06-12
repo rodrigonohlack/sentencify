@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { useAIStore } from '../stores/useAIStore';
-import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_SAFETY_SILENCIOSA, AI_INSTRUCTIONS_ANONYMIZATION, resolveStyleBlock } from '../prompts';
+import { AI_INSTRUCTIONS_CORE, AI_INSTRUCTIONS_STYLE, AI_INSTRUCTIONS_STYLE_SEM_FORMATO_NARRATIVO, AI_INSTRUCTIONS_SAFETY, AI_INSTRUCTIONS_SAFETY_SILENCIOSA, AI_INSTRUCTIONS_SAFETY_CORRETIVA, AI_INSTRUCTIONS_ANONYMIZATION, resolveStyleBlock } from '../prompts';
 import { API_BASE } from '../constants/api';
 import { getClaudeCliBridgeUrl, CLAUDE_CLI_MESSAGES_PATH } from '../utils/claude-cli-bridge';
 import { getCodexCliBridgeUrl, CODEX_CLI_MESSAGES_PATH } from '../utils/codex-cli-bridge';
@@ -225,7 +225,7 @@ const useAIIntegration = () => {
   // prompt precisava de contra-instruções ("Responda APENAS...", proibicaoMetaComentarios).
   // v1.53.11: a revisão NÃO foi eliminada — virou REVISAO_SILENCIOSA: conferência dos dados
   // ANTES de finalizar (ocorre no thinking quando ativo), sem comentários na resposta.
-  const getAiInstructions = React.useCallback((opts?: { semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean }) => {
+  const getAiInstructions = React.useCallback((opts?: { semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean; revisaoCorretiva?: boolean }) => {
     const customPrompt = aiSettings?.customPrompt?.trim();
     // v1.41.07: Bloco de anonimização injetado APENAS quando anonimização está ativa,
     // evitando que a IA use [VALOR]/[NOME] espontaneamente como placeholders.
@@ -233,9 +233,13 @@ const useAIIntegration = () => {
       ? `\n\n${AI_INSTRUCTIONS_ANONYMIZATION}`
       : '';
 
-    const safetyBlock = opts?.semRevisaoFinal
-      ? AI_INSTRUCTIONS_SAFETY_SILENCIOSA
-      : AI_INSTRUCTIONS_SAFETY;
+    // v1.53.24: revisaoCorretiva (corrige+reporta) tem precedência; senão, silenciosa
+    // (corrige, sem reporte) com semRevisaoFinal; senão, final (reporta, sem corrigir).
+    const safetyBlock = opts?.revisaoCorretiva
+      ? AI_INSTRUCTIONS_SAFETY_CORRETIVA
+      : opts?.semRevisaoFinal
+        ? AI_INSTRUCTIONS_SAFETY_SILENCIOSA
+        : AI_INSTRUCTIONS_SAFETY;
 
     // SUBSTITUTIVO: customPrompt substitui STYLE (via resolveStyleBlock, fonte única da
     // regra), mas CORE e SAFETY permanecem
@@ -261,11 +265,11 @@ const useAIIntegration = () => {
   // com cache_control para prompt caching, não do texto plano.)
   const resolveSystemPromptText = React.useCallback((
     systemPrompt: string | null | undefined,
-    options: { useInstructions?: boolean; semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean }
+    options: { useInstructions?: boolean; semFormatoNarrativo?: boolean; semRevisaoFinal?: boolean; revisaoCorretiva?: boolean }
   ): string | null => {
     if (systemPrompt) return systemPrompt;
     if (!options.useInstructions) return null;
-    const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal });
+    const instructions = getAiInstructions({ semFormatoNarrativo: options.semFormatoNarrativo, semRevisaoFinal: options.semRevisaoFinal, revisaoCorretiva: options.revisaoCorretiva });
     return Array.isArray(instructions)
       ? instructions.map((i: Record<string, unknown>) => i.text || i).join('\n\n')
       : instructions;
@@ -287,7 +291,8 @@ const useAIIntegration = () => {
       topP = null,
       topK = null,
       semFormatoNarrativo = false,
-      semRevisaoFinal = false
+      semRevisaoFinal = false,
+      revisaoCorretiva = false
     } = options;
 
     let savedModel = null;
@@ -389,7 +394,7 @@ const useAIIntegration = () => {
       ];
     } else if (useInstructions) {
       // getAiInstructions() já retorna array com cache_control
-      finalSystemPrompt = getAiInstructions({ semFormatoNarrativo, semRevisaoFinal });
+      finalSystemPrompt = getAiInstructions({ semFormatoNarrativo, semRevisaoFinal, revisaoCorretiva });
     }
 
     if (finalSystemPrompt) {
