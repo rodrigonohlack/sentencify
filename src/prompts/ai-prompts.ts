@@ -540,10 +540,11 @@ ou
 [Embora devidamente notificada, a reclamada deixou de contestar os pedidos e de comparecer à audiência, razão pela qual foi declarada sua revelia e aplicada a pena de confissão ficta quanto à matéria de fato, nos termos do art. 844 da CLT.]
 
 5. MANIFESTAÇÃO SOBRE CONTESTAÇÃO
-Incluir quando houver:
+⚠️ Incluir SOMENTE se houver, entre os documentos fornecidos, uma petição de manifestação/réplica da parte autora. Na ausência desse documento, NÃO escreva este parágrafo (a existência de contestação não implica que houve manifestação).
 [A parte reclamante apresentou manifestação sobre as contestações e documentos, rechaçando as teses defensivas e reiterando os termos da petição inicial. / Sobre as defesas e documentos, a parte autora manifestou-se por escrito. / A parte reclamante se manifestou sobre as defesas e documentos.]
 
 6. INSTRUÇÃO PROCESSUAL
+⚠️ Esta seção inteira (audiência, provas em audiência, razões finais) só se aplica quando houver ata/termo de audiência entre os documentos fornecidos. Se os autos contiverem apenas petição inicial e contestação(ões), PULE a seção 6 por completo — não houve audiência a relatar.
 
 6.1. Audiência e provas:
 - Mencionar o que ocorreu na audiência de forma concisa
@@ -585,7 +586,8 @@ ou
 Razões finais prejudicadas em razão da ausência das partes.
 
 7. TENTATIVAS DE CONCILIAÇÃO
-Incluir uma das seguintes fórmulas:
+⚠️ Incluir SOMENTE se houver ata/termo de audiência registrando a tentativa. O pedido de "designação de audiência de conciliação" na petição inicial NÃO é conciliação ocorrida. Sem ata de audiência nos autos, NÃO escreva nenhuma das fórmulas abaixo.
+Quando houver ata, usar uma das seguintes fórmulas:
 - As tentativas de conciliação restaram prejudicadas.
 - Propostas conciliatórias prejudicadas.
 - Propostas conciliatórias infrutíferas.
@@ -654,6 +656,8 @@ ou
 
 11. MODELO DE RELATÓRIO PADRÃO (RITO ORDINÁRIO)
 
+⚠️ O modelo abaixo cobre o caso MAIS COMUM: autos com petição inicial e contestação(ões), SEM ata de audiência. Nesse caso o relatório vai da identificação das partes à síntese das defesas e ENCERRA. NÃO escreva manifestação da parte autora, audiência, instrução, produção de provas em audiência, razões finais ou conciliação — esses atos só existem se houver ata/termo de audiência (ou manifestação juntada) ENTRE OS DOCUMENTOS FORNECIDOS. Petição inicial e contestação, sozinhas, NÃO geram essas fases. Siga este gabarito quando só houver inicial e contestação:
+
 ### **RELATÓRIO**
 
 **[NOME DO AUTOR]**, devidamente qualificado na petição inicial, ajuizou reclamação trabalhista contra **[NOME DO RÉU]** (1ª reclamada) e **[NOME DO OUTRO RÉU]** (2º reclamado), também qualificados, alegando, em síntese, que foi admitido pela 1ª reclamada em [DATA] para exercer a função de [CARGO], [prestando serviços em favor do 2º reclamado, se for o caso]. Narrou que [RESUMO DOS FATOS PRINCIPAIS]. Afirmou ter sido [dispensado sem justa causa / vítima de rescisão indireta / etc.] em [DATA], [sem receber as verbas rescisórias devidas / ocasião em que percebia remuneração de R$ X.XXX,XX].
@@ -662,15 +666,18 @@ Com base em tais fatos, requereu [SÍNTESE DOS PEDIDOS PRINCIPAIS]. Postulou, ai
 
 A 1ª reclamada, [NOME], apresentou contestação sob o Id [XXXX], na qual [arguiu preliminar de... / sustentou...]. No mérito, [defendeu... / impugnou... / pugnou pela improcedência dos pedidos].
 
-O 2º reclamado, [NOME], em sua contestação (Id [XXXX]), [alegou... / defendeu...]. Ao final, requereu [sua exclusão do polo passivo / a improcedência dos pedidos].
-
-A parte reclamante apresentou manifestação sobre as contestações e documentos, rechaçando as teses defensivas e reiterando os termos da petição inicial.
-
-Em audiência (Id [XXXX]), [foram recusadas as propostas conciliatórias / frustrada a tentativa de conciliação]. [Descrição sucinta da instrução]. Sem outras provas a produzir, foi encerrada a instrução processual, com razões finais remissivas pelas partes.
-
-[Autos conclusos para julgamento. / Propostas conciliatórias infrutíferas.]
+O 2º reclamado, [NOME], em sua contestação (Id [XXXX]), [alegou... / defendeu...]. Ao final, requereu [sua exclusão do polo passivo / a improcedência dos pedidos]. [Caso algum réu NÃO tenha contestado nos autos fornecidos, em vez deste parágrafo escreva: "A contestação do 2º reclamado, [NOME], é inexistente nos autos fornecidos." — sem declarar revelia, que depende de ata.]
 
 É o relatório. Decido.
+
+11.1. PARÁGRAFOS ADICIONAIS — INCLUIR SOMENTE SE O DOCUMENTO DA FASE ESTIVER ENTRE OS FORNECIDOS
+
+Os parágrafos abaixo NÃO fazem parte do gabarito comum. Insira-os, ANTES de "É o relatório. Decido.", apenas quando houver o documento correspondente nos autos (conforme as seções 5, 6 e 7) — caso contrário, OMITA-OS por completo:
+
+- Manifestação da parte autora (somente se houver petição de manifestação/réplica juntada): "A parte reclamante apresentou manifestação sobre as contestações e documentos, rechaçando as teses defensivas e reiterando os termos da petição inicial."
+- Audiência/instrução (somente se houver ata/termo de audiência): "Em audiência (Id [XXXX]), [foram recusadas as propostas conciliatórias / frustrada a tentativa de conciliação]. [Descrição da instrução conforme a ata]. Sem outras provas a produzir, foi encerrada a instrução processual, com razões finais remissivas pelas partes."
+
+Atenção: o mero pedido de "designação de audiência de conciliação e instrução" feito na petição inicial NÃO é audiência ocorrida e NÃO autoriza nenhum dos parágrafos acima.
 
 12. CHECKLIST FINAL
 Antes de finalizar, verificar:
@@ -680,9 +687,10 @@ Antes de finalizar, verificar:
 - Pedidos resumidos de forma objetiva
 - Valor da causa mencionado
 - Contestação(ões) resumida(s)
-- Revelia indicada (quando aplicável)
-- Instrução processual descrita
-- Tentativas de conciliação mencionadas
+- Revelia indicada APENAS se houver ata de audiência comprovando a ausência (nunca presumir revelia só pela falta da contestação)
+- Instrução processual descrita APENAS se houver ata/termo de audiência nos autos (caso contrário, ausente de propósito)
+- Tentativas de conciliação mencionadas APENAS se registradas em ata de audiência (caso contrário, ausentes de propósito)
+- Confirmado que NÃO foi narrada nenhuma fase (manifestação/audiência/instrução/conciliação) sem documento que a comprove
 - Encerramento com "É o relatório. Decido."
 - Texto fluido, sem bullets ou enumerações
 - Ausência de juízos de valor ou antecipação de mérito
