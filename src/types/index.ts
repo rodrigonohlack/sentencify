@@ -456,6 +456,9 @@ export interface DoubleCheckSettings {
   // v1.43.08: DeepSeek V4 thinking config específico para Double Check
   deepseekThinking?: boolean;                 // true = thinking enabled, false = disabled
   deepseekReasoningEffort?: 'high' | 'max';   // usado quando thinking = true
+  // v1.53.28: thinking config específico dos CLIs locais para Double Check
+  claudeCliEffort?: ClaudeCliEffort;          // off/low/medium/high/xhigh/max (default DC: high)
+  codexCliReasoning?: CodexCliReasoning;      // minimal/low/medium/high (default DC: medium)
 }
 
 /** Resultado do Double Check */
@@ -951,6 +954,10 @@ export interface AICallOptions extends SystemPromptVariantOptions {
   deepseekThinking?: boolean;
   /** v1.43.08: Override do reasoning_effort do DeepSeek */
   deepseekReasoningEffort?: 'high' | 'max';
+  /** v1.53.28: Override do effort do Claude CLI local (Double Check usa isso) */
+  claudeCliEffort?: ClaudeCliEffort;
+  /** v1.53.28: Override do reasoning do Codex CLI local (Double Check usa isso) */
+  codexCliReasoning?: CodexCliReasoning;
   /**
    * v1.43.11: Força DeepSeek a retornar JSON via response_format.
    * Só aplica em callDeepseekAPI/callDeepseekAPIStream — outros providers ignoram.

@@ -1492,6 +1492,70 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose }) => 
                   </select>
                 </div>
 
+                {/* v1.53.28: Claude CLI — nível de raciocínio (effort) específico do Double Check */}
+                {aiSettings.doubleCheck?.provider === 'claude-cli' && (
+                  <div>
+                    <label className="block text-xs font-medium theme-text-tertiary mb-2">
+                      Nível de raciocínio (effort)
+                    </label>
+                    <select
+                      value={aiSettings.doubleCheck?.claudeCliEffort || 'high'}
+                      onChange={(e) => {
+                        setAiSettings({
+                          ...aiSettings,
+                          doubleCheck: {
+                            ...aiSettings.doubleCheck!,
+                            claudeCliEffort: e.target.value as ClaudeCliEffort
+                          }
+                        });
+                      }}
+                      className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
+                    >
+                      <option value="off">Desligado (padrão do CLI)</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="xhigh">Xhigh</option>
+                      <option value="max">Max</option>
+                    </select>
+                    <p className="text-xs theme-text-muted mt-1 inline-flex items-center gap-1.5">
+                      <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />
+                      Esforço de raciocínio do Claude Code local na verificação. Maior = mais lento e mais a fundo.
+                    </p>
+                  </div>
+                )}
+
+                {/* v1.53.28: Codex CLI — nível de raciocínio (reasoning) específico do Double Check */}
+                {aiSettings.doubleCheck?.provider === 'codex-cli' && (
+                  <div>
+                    <label className="block text-xs font-medium theme-text-tertiary mb-2">
+                      Nível de raciocínio (reasoning)
+                    </label>
+                    <select
+                      value={aiSettings.doubleCheck?.codexCliReasoning || 'medium'}
+                      onChange={(e) => {
+                        setAiSettings({
+                          ...aiSettings,
+                          doubleCheck: {
+                            ...aiSettings.doubleCheck!,
+                            codexCliReasoning: e.target.value as CodexCliReasoning
+                          }
+                        });
+                      }}
+                      className="w-full p-2 rounded-lg theme-bg-secondary border theme-border-input theme-text-primary text-sm"
+                    >
+                      <option value="minimal">Minimal</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                    <p className="text-xs theme-text-muted mt-1 inline-flex items-center gap-1.5">
+                      <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />
+                      Esforço de raciocínio do Codex CLI local na verificação. Maior = mais lento e mais a fundo.
+                    </p>
+                  </div>
+                )}
+
                 {/* Thinking Config específico para Double Check */}
                 {aiSettings.doubleCheck?.provider === 'claude' && (
                   <div>

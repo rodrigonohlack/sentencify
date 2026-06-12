@@ -3,6 +3,11 @@
 
 export const CHANGELOG = [
   {
+    version: '1.53.28',
+    date: '2026-06-12',
+    feature: 'fix(double-check): adiciona seletor de nível de raciocínio para os providers de verificação Claude Local (CLI) e Codex Local (CLI), que estavam sem a opção — ao contrário de todos os demais (Claude API, Gemini, GPT-5.2, Grok, DeepSeek). Antes, a verificação via CLI herdava silenciosamente o effort GLOBAL do provider principal; agora o Double Check tem effort próprio e independente (DoubleCheckSettings.claudeCliEffort / codexCliReasoning), com default fixo (Claude CLI = high, Codex CLI = medium), espelhando o padrão já usado por Gemini/DeepSeek no DC. callLLM/callOpenAIAPI passam a respeitar os overrides via AICallOptions; callDoubleCheckAPIStream injeta os campos do doubleCheck.',
+  },
+  {
     version: '1.53.27',
     date: '2026-06-11',
     feature: 'feat(relatório): REINTRODUZ o painel de auto-revisão segregada no RELATÓRIO — agora seguro, porque a causa da alucinação era o template (consertado na v1.53.26), não a revisão. A feature (revertida na v1.53.26) foi trazida de volta do branch backup/revisao-segregada-v1.53.25 POR CIMA do template consertado, sem desfazê-lo. O RELATÓRIO volta a usar a revisão CORRETIVA (revisaoCorretiva): a IA confere e corrige/remove alucinações ANTES de finalizar E reporta no bloco <revisao>; extractReportRevisao separa corpo/revisão; Topic.revisaoIA persiste; ChatRevisaoFooter exibe em painel colapsável nas DUAS superfícies de edição (GlobalEditorSection e QuillMiniRelatorioEditor via DecisionEditorContainer). Dupla proteção anti-alucinação: template consertado (não induz fases) + revisão corretiva (rede). cleanReportBody mantido p/ os mini-relatórios do lote (silenciosos). Painel de revisão segue ativo no chat/provas. Aguarda validação do usuário com Gemini Flash.',

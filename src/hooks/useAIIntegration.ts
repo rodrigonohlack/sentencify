@@ -440,7 +440,8 @@ const useAIIntegration = () => {
       validateResponse = true,
       localBridge = false,
       webSearch = false,
-      onGrounding
+      onGrounding,
+      claudeCliEffort: optClaudeCliEffort  // v1.53.28: override do effort do CLI (Double Check)
     } = options;
 
     // v1.32.33: Auto-aumentar timeout para 5 min quando thinking budget >= 40K
@@ -481,9 +482,10 @@ const useAIIntegration = () => {
           // do CLI (translate.js não adiciona --effort). Antes, effort=high fazia o Haiku
           // "pensar" pesado mesmo em tarefas leves (ex.: rewrite de voz levava 30-40s e
           // queimava ~5k tokens de reasoning). Sem disableThinking, respeita o effort global.
+          // v1.53.28: optClaudeCliEffort (Double Check) tem precedência sobre o global.
           (requestBody as Record<string, unknown>).effort = disableThinking
             ? 'off'
-            : (aiSettings.claudeCliEffort || 'high');
+            : (optClaudeCliEffort || aiSettings.claudeCliEffort || 'high');
         }
         if (localBridge && webSearch) {
           (requestBody as Record<string, unknown>).web_search = true;
@@ -1111,7 +1113,8 @@ const useAIIntegration = () => {
       disableThinking = false,
       localBridge = false,
       webSearch = false,
-      onGrounding
+      onGrounding,
+      codexCliReasoning: optCodexCliReasoning  // v1.53.28: override do reasoning do CLI (Double Check)
     } = options;
 
     // Resolver systemPrompt
@@ -1161,9 +1164,10 @@ const useAIIntegration = () => {
           // v1.50.55: disableThinking (Voz / Auto Complete) → 'minimal', o menor reasoning
           // que o GPT-5.5 aceita (não há 'off' como no Claude CLI; mesma estratégia do
           // Gemini). Sem disableThinking, respeita o reasoning global configurado.
+          // v1.53.28: optCodexCliReasoning (Double Check) tem precedência sobre o global.
           requestBody.reasoning_effort = disableThinking
             ? 'minimal'
-            : (aiSettings.codexCliReasoning || 'medium');
+            : (optCodexCliReasoning || aiSettings.codexCliReasoning || 'medium');
           if (webSearch) requestBody.web_search = true;
         }
 
@@ -2234,10 +2238,12 @@ const useAIIntegration = () => {
       return await callDeepseekAPIStream(messages, options);
     }
     if (provider === 'claude-cli') {
-      return await callLLM(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6' });
+      // v1.53.28: effort independente do Double Check (default próprio 'high', não herda o global)
+      return await callLLM(messages, { ...options, localBridge: true, model: options.model || aiSettings.claudeCliModel || 'claude-sonnet-4-6', claudeCliEffort: dcSettings?.claudeCliEffort || 'high' });
     }
     if (provider === 'codex-cli') {
-      return await callOpenAIAPI(messages, { ...options, localBridge: true, model: options.model || aiSettings.codexCliModel || 'gpt-5.5' });
+      // v1.53.28: reasoning independente do Double Check (default próprio 'medium', não herda o global)
+      return await callOpenAIAPI(messages, { ...options, localBridge: true, model: options.model || aiSettings.codexCliModel || 'gpt-5.5', codexCliReasoning: dcSettings?.codexCliReasoning || 'medium' });
     }
     // Default: Claude
     return await callClaudeAPIStream(messages, options);
